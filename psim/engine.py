@@ -48,6 +48,17 @@ class Ball(object):
         self.history = {'t': [], 'rvw': [], 's': []}
 
 
+    def store(self, t, r, v, w, s):
+        self.history['t'].append(t)
+        self.history['rvw'].append(np.array([r, v, w]))
+        self.history['s'].append(s)
+
+
+    def update(self, r, v, w, s):
+        self.rvw = np.array([r, v, w])
+        self.s = s
+
+
 class Cue(object):
     def __init__(self, M=psim.M, brand=None):
         self.M = M
@@ -78,16 +89,16 @@ class ShotSimulation(object):
 
         # cue-ball is at table center
         self.balls['cue'] = Ball('cue')
-        self.balls['cue'].rvw[0] = [self.table.center[0], self.table.center[1], 0]
+        self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
 
 
     def start(self):
         self.cue.strike(
             ball = self.balls['cue'],
-            V0 = 1,
+            V0 = 0.6,
             phi = 90,
-            theta = 45,
-            a = 0.6,
+            theta = 20,
+            a = -0.5,
             b = 0.0,
         )
 
@@ -95,9 +106,42 @@ class ShotSimulation(object):
 
         print(f"time of slide state: {physics.get_slide_time(q.rvw[1], q.rvw[2], R=q.R, u_s=self.table.u_s, g=psim.g)}")
         print(f"time of spin state: {physics.get_spin_time(q.rvw[2], R=q.R, u_sp=self.table.u_sp, g=psim.g)}")
-        print(f"time of roll state: {physics.get_roll_time(q.rvw[1], u_r=self.table.u_r, g=psim.g)}")
 
-        r_T, v_T, w_T = physics.evolve_ball_motion(*q.rvw, R=q.R, m=q.m, u_s=self.table.u_s, u_sp=self.table.u_sp, g=psim.g, t=0.1)
+        for t in np.arange(0, 10, 0.05):
+
+            r, v, w, s = physics.evolve_ball_motion(
+                *q.rvw,
+                R=q.R,
+                m=q.m,
+                u_s=self.table.u_s,
+                u_sp=self.table.u_sp,
+                u_r=self.table.u_r,
+                g=psim.g,
+                t=t,
+            )
+
+            q.store(t, r, v, w, s)
+
+        import pandas as pd
+        import matplotlib.pyplot as plt
+
+        fig = plt.figure(figsize=(5, 10))
+        ax = fig.add_subplot(111)
+        ax.set_xlim(self.table.L, self.table.R)
+        ax.set_ylim(self.table.B, self.table.T)
+
+        rvw = np.array(q.history['rvw'])
+        x = rvw[:, 0, 0]
+        y = rvw[:, 0, 1]
+        s = np.array(q.history['s'])
+        df = pd.DataFrame({'x':x, 'y':y, 'state':s})
+
+        groups = df.groupby('state')
+        for name, group in groups:
+            ax.plot(group['x'], group['y'], marker="o", linestyle="", label=name, ms=2.)
+
+        ax.legend()
+        plt.show()
 
         print(f"position after strike: {q.rvw[0]}")
         print(f"position after evolve: {r_T}")

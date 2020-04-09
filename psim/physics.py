@@ -22,6 +22,37 @@ def get_spin_time(w_0, R, u_sp, g):
     return np.abs(w_0[2]) * 2/5*R/u_sp/g
 
 
+def evolve_ball_motion(r_0, v_0, w_0, R, m, u_s, u_sp, u_r, g, t):
+
+    # The timers for spinning and sliding start immediately
+    tau_slide = get_slide_time(v_0, w_0, R, u_s, g)
+
+    if t > tau_slide:
+        r_sl, v_sl, w_sl = evolve_slide_state(r_0, v_0, w_0, R, m, u_s, u_sp, g, tau_slide)
+        t -= tau_slide
+    else:
+        # The ball ends in sliding state
+        return (*evolve_slide_state(r_0, v_0, w_0, R, m, u_s, u_sp, g, t), psim.sliding)
+
+    tau_roll = get_roll_time(v_sl, u_r, g)
+
+    if t > tau_roll:
+        r_ro, v_ro, w_ro = evolve_roll_state(r_sl, v_sl, w_sl, R, u_r, u_sp, g, tau_roll)
+        t -= tau_roll
+    else:
+        # The ball ends in rolling state
+        return (*evolve_roll_state(r_sl, v_sl, w_sl, R, u_r, u_sp, g, t), psim.rolling)
+
+    tau_spin = get_spin_time(w_ro, R, u_sp, g)
+
+    if t > tau_spin:
+        w_st = evolve_perpendicular_spin_state(w_sl, R, u_sp, g, tau_spin)
+        return r_ro, v_ro, w_st, psim.stationary
+    else:
+        w_sp = evolve_perpendicular_spin_state(w_sl, R, u_sp, g, t)
+        return r_ro, v_ro, w_sp, psim.spinning
+
+
 def evolve_slide_state(r_0, v_0, w_0, R, m, u_s, u_sp, g, t):
     # Angle of initial velocity in table frame
     phi = utils.angle(v_0)
@@ -54,7 +85,7 @@ def evolve_roll_state(r_0, v_0, w_0, R, u_r, u_sp, g, t):
 
     r_T = r_0 + v_0 * t - 1/2*u_r*g*t**2 * v_0_hat
     v_T = v_0 - u_r*g*t * v_0_hat
-    w_T[:2] = utils.coordinate_rotation(v_T[:2]/R, np.pi/2)
+    w_T = utils.coordinate_rotation(v_T/R, np.pi/2)
 
     # This transformation governs the z evolution of angular velocity
     w_T[2] = evolve_perpendicular_spin_state(w_0, R, u_sp, g, t)[2]
@@ -63,8 +94,7 @@ def evolve_roll_state(r_0, v_0, w_0, R, u_r, u_sp, g, t):
 
 
 def evolve_perpendicular_spin_state(w_0, R, u_sp, g, t):
-    w_T = w_0
-    w_0[2] -= min([np.abs(w_0[2]), 5/2/R*u_sp*g*t])
+    w_0[2] -= (1 if w_0[2] > 0 else -1) * min([np.abs(w_0[2]), 5/2/R*u_sp*g*t])
 
     return w_0
 

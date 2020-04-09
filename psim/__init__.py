@@ -17,4 +17,10 @@ u_sp = 10 * 2/5*R/9 # spinning friction
 table_length = 2.7432 # 9-foot table
 table_width = 2.7432/2 # 9-foot table
 
+# Ball states
+stationary=0
+spinning=1
+sliding=2
+rolling=3
+
 from psim.engine import *
