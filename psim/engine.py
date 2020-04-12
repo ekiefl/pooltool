@@ -168,9 +168,9 @@ class ShotSimulation(object):
             ball = self.balls['cue'],
             V0 = 0.8,
             phi = 90,
-            theta = 40,
-            a = 0.0,
-            b = -0.9,
+            theta = 50,
+            a = -0.1,
+            b = -0.5,
         )
 
         q = self.balls['cue']

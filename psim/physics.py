@@ -67,7 +67,7 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     # angular velocity is done in the next block
 
     rvw_B = np.array([
-        np.abs(u_0) * np.array([rvw_B[1,0]*t - 1/2*u_s*g*t**2, -1/2*u_s*g*t**2, 0]),
+        np.array([rvw_B[1,0]*t - 1/2*u_s*g*t**2 * u_0[0], -1/2*u_s*g*t**2 * u_0[1], 0]),
         rvw_B[1] - u_s*g*t*u_0,
         rvw_B[2] - 5/2/R*u_s*g*t * np.cross(u_0, np.array([0,0,1]))
     ])
