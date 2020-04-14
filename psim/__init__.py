@@ -1,6 +1,6 @@
 import numpy as np
 
-np.set_printoptions(precision=3)
+np.set_printoptions(precision=10)
 np.set_printoptions(suppress=True)
 
 __version__ = '0.1'
@@ -22,5 +22,12 @@ stationary=0
 spinning=1
 sliding=2
 rolling=3
+
+state_dict = {
+    0: 'stationary',
+    1: 'spinning',
+    2: 'sliding',
+    3: 'rolling',
+}
 
 from psim.engine import *
