@@ -9,7 +9,7 @@ import numpy as np
 import argparse
 
 ap = argparse.ArgumentParser()
-ap.add_argument('--choice', choices=['evolve', 'collision'])
+ap.add_argument('--choice', required=True, choices=['evolve', 'collision', 'ani'])
 args = ap.parse_args()
 
 if __name__ == '__main__':
@@ -34,9 +34,9 @@ if __name__ == '__main__':
                     t=t,
                 )
                 ball.store(t, rvw, s)
+            sim.append(t)
 
-    print(sim.balls['1'].history)
-    sim.plot_history(ball_states=True)
+        sim.plot_history(ball_states=True)
 
     # -----------------------------------------------------------------
 
@@ -44,7 +44,7 @@ if __name__ == '__main__':
         cueball = sim.balls['cue']
         oneball = sim.balls['1']
 
-        times = physics.get_ball_ball_collision_time(
+        time = physics.get_ball_ball_collision_time(
             rvw1=cueball.rvw,
             rvw2=oneball.rvw,
             s1=cueball.s,
@@ -56,4 +56,38 @@ if __name__ == '__main__':
             g=psim.g,
             R=cueball.R
         )
+
+        print(f"Collision time: {time}")
+
+    # -----------------------------------------------------------------
+
+    if args.choice == 'ani':
+        import psim.ani.animate as animate
+
+        cueball = sim.balls['cue']
+        oneball = sim.balls['1']
+
+        for t in np.arange(0, 3.3477846015, 0.033):
+            for ball_id, ball in sim.balls.items():
+                ball = sim.balls[ball_id]
+                rvw, s = physics.evolve_ball_motion(
+                    state=ball.s,
+                    rvw=ball.rvw,
+                    R=ball.R,
+                    m=ball.m,
+                    u_s=sim.table.u_s,
+                    u_sp=sim.table.u_sp,
+                    u_r=sim.table.u_r,
+                    g=psim.g,
+                    t=t,
+                )
+                ball.store(t, rvw, s)
+            sim.t.append(t)
+
+        ani = animate.AnimateShot(sim)
+        ani.start()
+
+
+
+
 

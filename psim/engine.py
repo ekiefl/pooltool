@@ -9,7 +9,7 @@ import numpy as np
 
 class ShotSimulation(object):
     def __init__(self):
-        self.t = 0
+        self.t = []
 
 
     def setup_test(self):
@@ -35,6 +35,10 @@ class ShotSimulation(object):
             a = 0.2,
             b = 0.0,
         )
+
+
+    def get_time_array(self):
+        return np.array(self.t)
 
 
     def plot_history(self, ball_states=False):
