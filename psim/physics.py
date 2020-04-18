@@ -79,6 +79,7 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g, R):
 
     roots = np.real_if_close(np.roots([a,b,c,d,e]))
     roots = roots[np.isreal(roots)]
+    # FIXME
     roots = roots[roots > 0.000000001]
 
     return roots.min().real if len(roots) else np.inf

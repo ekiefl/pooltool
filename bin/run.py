@@ -30,12 +30,10 @@ if __name__ == '__main__':
             print(event)
 
             sim.evolve(event.tau)
-            sim.resolve(event)
+            #sim.resolve(event)
 
             print()
 
-        print(sim.balls['cue'].s)
-        
         ani = animate.AnimateShot(sim, size=2000)
         ani.start()
 
@@ -45,6 +43,8 @@ if __name__ == '__main__':
     if args.choice == 'ani':
         for t in np.arange(0, 1, 0.0033):
             sim.evolve(t)
+
+        print(sim.balls['cue'].plot_history(full=True))
 
         ani = animate.AnimateShot(sim, size=500)
         ani.start()
