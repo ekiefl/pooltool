@@ -11,6 +11,27 @@ def get_rel_velocity(rvw, R):
     return v + R * np.cross(np.array([0,0,1]), w)
 
 
+def resolve_ball_ball_collision(rvw1, rvw2):
+    """Instantaneous, elastic, equal mass collision"""
+
+    r1, r2 = rvw1[0], rvw2[0]
+    v1, v2 = rvw1[1], rvw2[1]
+
+    v_rel = v1 - v2
+    v_mag = np.linalg.norm(v_rel)
+
+    n = utils.unit_vector(r2 - r1)
+    t = utils.coordinate_rotation(n, np.pi/2)
+
+    alpha = utils.angle(n)
+    beta = utils.angle(v_rel, n)
+
+    rvw1[1] = t * v_mag*np.sin(beta) + v2
+    rvw2[1] = n * v_mag*np.cos(beta) + v2
+
+    return rvw1, rvw2
+
+
 def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g, R):
     """Get the time until collision between 2 balls"""
     c1x, c1y = rvw1[0, 0], rvw1[0, 1]
@@ -57,9 +78,10 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g, R):
     e = Cx**2 + Cy**2 - 4*R**2
 
     roots = np.real_if_close(np.roots([a,b,c,d,e]))
-    real_roots = roots[np.isreal(roots)]
+    roots = roots[np.isreal(roots)]
+    roots = roots[roots > 0.000000001]
 
-    return real_roots.min().real if len(real_roots) else np.nan
+    return roots.min().real if len(roots) else np.inf
 
 
 def get_slide_time(rvw, R, u_s, g):
@@ -83,32 +105,30 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
     if state == psim.sliding:
         tau_slide = get_slide_time(rvw, R, u_s, g)
 
-        if t > tau_slide:
-            rvw_sl = evolve_slide_state(rvw, R, m, u_s, u_sp, g, tau_slide)
+        if t >= tau_slide:
+            rvw = evolve_slide_state(rvw, R, m, u_s, u_sp, g, tau_slide)
             state = psim.rolling
             t -= tau_slide
         else:
-            # The ball ends in sliding state
             return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), psim.sliding
 
     if state == psim.rolling:
-        tau_roll = get_roll_time(rvw_sl, u_r, g)
+        tau_roll = get_roll_time(rvw, u_r, g)
 
-        if t > tau_roll:
-            rvw_ro = evolve_roll_state(rvw_sl, R, u_r, u_sp, g, tau_roll)
+        if t >= tau_roll:
+            rvw = evolve_roll_state(rvw, R, u_r, u_sp, g, tau_roll)
             state = psim.spinning
             t -= tau_roll
         else:
-            # The ball ends in rolling state unless the velocity is 0
-            return evolve_roll_state(rvw_sl, R, u_r, u_sp, g, t), psim.rolling
+            return evolve_roll_state(rvw, R, u_r, u_sp, g, t), psim.rolling
 
     if state == psim.spinning:
-        tau_spin = get_spin_time(rvw_ro, R, u_sp, g)
+        tau_spin = get_spin_time(rvw, R, u_sp, g)
 
         if t >= tau_spin:
-            return evolve_perpendicular_spin_state(rvw_ro, R, u_sp, g, tau_spin), psim.stationary
+            return evolve_perpendicular_spin_state(rvw, R, u_sp, g, tau_spin), psim.stationary
         else:
-            return evolve_perpendicular_spin_state(rvw_ro, R, u_sp, g, t), psim.spinning
+            return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), psim.spinning
 
 
 def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):

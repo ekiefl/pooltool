@@ -30,4 +30,3 @@ state_dict = {
     3: 'rolling',
 }
 
-from psim.engine import *

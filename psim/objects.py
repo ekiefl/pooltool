@@ -25,11 +25,10 @@ class Ball(object):
         self.s = 0
 
         # state history
-        self.history = {'t': [], 'rvw': [], 's': []}
+        self.history = {'rvw': [], 's': []}
 
 
-    def store(self, t, rvw, s):
-        self.history['t'].append(t)
+    def store(self, rvw, s):
         self.history['rvw'].append(rvw)
         self.history['s'].append(s)
 
@@ -40,17 +39,17 @@ class Ball(object):
 
 
     def as_dataframe(self):
-        t = np.array(self.history['t'])
         s = np.array(self.history['s'])
         rvw = np.array(self.history['rvw'])
+        t = np.arange(len(s))
 
         return pd.DataFrame({
             'rx': rvw[:, 0, 0], 'ry': rvw[:, 0, 1], 'rz': rvw[:, 0, 2],
             'vx': rvw[:, 1, 0], 'vy': rvw[:, 1, 1], 'vz': rvw[:, 1, 2],
             'wx': rvw[:, 2, 0], 'wy': rvw[:, 2, 1], 'wz': rvw[:, 2, 2],
-            '|v|': np.sqrt(rvw[:, 1, 1]**2 + rvw[:, 1, 0]**2),
+            '|v|': np.sqrt(rvw[:, 1, 2]**2 + rvw[:, 1, 1]**2 + rvw[:, 1, 0]**2),
             '|w|': np.sqrt(rvw[:, 2, 2]**2 + rvw[:, 2, 1]**2 + rvw[:, 2, 0]**2),
-            'time': t,
+            'event_order': t,
             'state': s,
         })
 
@@ -77,27 +76,27 @@ class Ball(object):
 
         fig = plt.figure(figsize=(10, 10))
         plt.title(f"ball ID: {self.id}")
-        add_plot(fig, 331, 'time', 'rx')
-        add_plot(fig, 332, 'time', 'ry')
-        add_plot(fig, 333, 'time', 'rz')
-        add_plot(fig, 334, 'time', 'vx')
-        add_plot(fig, 335, 'time', 'vy')
-        add_plot(fig, 336, 'time', 'vz')
-        add_plot(fig, 337, 'time', 'wx')
-        add_plot(fig, 338, 'time', 'wy')
-        add_plot(fig, 339, 'time', 'wz')
+        add_plot(fig, 331, 'event_order', 'rx')
+        add_plot(fig, 332, 'event_order', 'ry')
+        add_plot(fig, 333, 'event_order', 'rz')
+        add_plot(fig, 334, 'event_order', 'vx')
+        add_plot(fig, 335, 'event_order', 'vy')
+        add_plot(fig, 336, 'event_order', 'vz')
+        add_plot(fig, 337, 'event_order', 'wx')
+        add_plot(fig, 338, 'event_order', 'wy')
+        add_plot(fig, 339, 'event_order', 'wz')
         plt.tight_layout()
         plt.show()
 
         if full:
             fig = plt.figure(figsize=(6, 5))
-            add_plot(fig, 111, 'time', '|v|')
+            add_plot(fig, 111, 'event_order', '|v|')
             plt.title(f"ball ID: {self.id}")
             plt.tight_layout()
             plt.show()
 
             fig = plt.figure(figsize=(6, 5))
-            add_plot(fig, 111, 'time', '|w|')
+            add_plot(fig, 111, 'event_order', '|w|')
             plt.title(f"ball ID: {self.id}")
             plt.tight_layout()
             plt.show()

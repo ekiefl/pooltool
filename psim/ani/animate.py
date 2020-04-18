@@ -1,10 +1,17 @@
 #! /usr/bin/env python
 
 import psim.ani
+
+from psim.ani import (
+    px_to_d,
+    d_to_px,
+    CLOTH_RGB,
+    BALL_RGB,
+    MAX_SCREEN,
+)
+
 import pygame
 import pygame.gfxdraw
-
-from psim.ani import px_to_d, d_to_px
 
 # Import pygame.locals for easier access to key coordinates
 from pygame.locals import (
@@ -29,16 +36,24 @@ class Ball(pygame.sprite.Sprite):
         ball : psim.objects.Ball
         """
         self.scale = scale
+        self.id = ball.id
         self._ball = ball
         self.radius = d_to_px(ball.R, self.scale)
         self.df = ball.as_dataframe()
 
         super(Ball, self).__init__()
 
+        color = BALL_RGB.get(self.id, (255,255,255))
+
         # See https://www.reddit.com/r/pygame/comments/6v9os5/how_to_draw_a_sprite_with_a_circular_shape/
         # for anti-aliased version if you don't like this later
-        self.surf = pygame.Surface((self.radius*2, self.radius*2), pygame.SRCALPHA)
-        pygame.draw.circle(self.surf, (255,255,255), (self.radius, self.radius), self.radius)
+        self.surf = pygame.Surface((2*self.radius, 2*self.radius), pygame.SRCALPHA)
+        pygame.draw.circle(
+            self.surf,
+            color,
+            (self.radius, self.radius),
+            self.radius
+        )
         self.rect = self.surf.get_rect()
 
         self.update(frame=0)
@@ -52,7 +67,7 @@ class Ball(pygame.sprite.Sprite):
 
 
 class AnimateShot(object):
-    def __init__(self, shot, size=psim.ani.MAX_SCREEN):
+    def __init__(self, shot, size=None, cloth_color=None):
         """Animate a shot in pygame
 
         Parameters
@@ -63,6 +78,9 @@ class AnimateShot(object):
             size in pixels of largest dimension of screen
         """
 
+        self.size = size or MAX_SCREEN
+        self.cloth_color = cloth_color or CLOTH_RGB
+
         self.shot = shot
         self.table = shot.table
         self.balls = shot.balls
@@ -70,7 +88,7 @@ class AnimateShot(object):
         self.num_frames = len(self.times)
 
         # Ratio of pixel to table dimensions
-        self.scale = size / max([self.table.w, self.table.l])
+        self.scale = self.size / max([self.table.w, self.table.l])
 
         pygame.init()
 
@@ -88,7 +106,10 @@ class AnimateShot(object):
 
 
     def get_fps(self):
-        return 1/(self.times[-1] - self.times[-2])
+        try:
+            return 1/(self.times[-1] - self.times[-2])
+        except:
+            return 30
 
 
     def display(self):
@@ -98,7 +119,6 @@ class AnimateShot(object):
 
         # Update the display
         pygame.display.flip()
-
 
 
     def start(self):
@@ -111,8 +131,6 @@ class AnimateShot(object):
         counter = 0
 
         while running:
-            self.screen.fill((100, 255, 100))
-
             # for loop through the event queue
             for event in pygame.event.get():
                 # Check for KEYDOWN event
@@ -143,6 +161,8 @@ class AnimateShot(object):
                 elif event.type == QUIT:
                     running = False
 
+            self.screen.fill(self.cloth_color)
+
             # Draw the balls on the screen
             for ball in self.ball_sprites:
                 self.screen.blit(ball.surf, ball.rect)
@@ -156,14 +176,14 @@ class AnimateShot(object):
                 counter += 1
 
             elif frame_backward:
+                counter -= 1
                 for ball in self.ball_sprites:
                     ball.update(frame=counter)
-                counter -= 1
 
             elif frame_forward:
+                counter += 1
                 for ball in self.ball_sprites:
                     ball.update(frame=counter)
-                counter += 1
 
             if counter == self.num_frames:
                 # Restart animation
