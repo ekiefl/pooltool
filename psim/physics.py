@@ -77,12 +77,14 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g, R):
     d = 2*Bx*Cx + 2*By*Cy
     e = Cx**2 + Cy**2 - 4*R**2
 
-    roots = np.real_if_close(np.roots([a,b,c,d,e]))
-    roots = roots[np.isreal(roots)]
-    # FIXME
-    roots = roots[roots > 0.000000001]
+    roots = np.roots([a,b,c,d,e])
 
-    return roots.min().real if len(roots) else np.inf
+    roots = roots[
+        (abs(roots.imag) <= psim.tol) & \
+        (roots.real > psim.tol)
+    ].real
+
+    return roots.min() if len(roots) else np.inf
 
 
 def get_slide_time(rvw, R, u_s, g):

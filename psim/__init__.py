@@ -30,3 +30,4 @@ state_dict = {
     3: 'rolling',
 }
 
+tol = np.finfo(np.float).eps * 100

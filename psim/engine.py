@@ -11,19 +11,23 @@ import pandas as pd
 
 
 class Event(object):
-    def __init__(self, event_type, ids, tau):
-        self.event_type = event_type
-        self.ids = ids
+    def __init__(self, event_type, agents, time, tau):
+        self.agents = agents
         self.tau = tau
+        self.time = time
+        self.event_type = event_type
 
     def __repr__(self):
-        return f"type: {self.event_type}; involved: {self.ids}; tau: {self.tau}"
+        return f"type: {self.event_type}; involved: {self.agents}; time: {self.tau}"
 
 
 class ShotSimulation(object):
     def __init__(self, g=None):
         self.g = g or psim.g
-        self.t = []
+
+        self.time = 0
+        self.time_history = []
+        self.event_history = []
 
 
     def evolve(self, t):
@@ -40,16 +44,15 @@ class ShotSimulation(object):
                 g=self.g,
                 t=t,
             )
-            ball.s = s
-            ball.rvw = rvw
-            ball.store(rvw, s)
+            ball.set(rvw, s)
 
-        self.t.append(t)
+        self.time += t
+        self.time_history.append(self.time)
 
 
     def resolve(self, event):
         if event.event_type == 'ball-ball':
-            ball_id1, ball_id2 = event.ids
+            ball_id1, ball_id2 = event.agents
 
             rvw1 = self.balls[ball_id1].rvw
             rvw2 = self.balls[ball_id2].rvw
@@ -57,33 +60,30 @@ class ShotSimulation(object):
             rvw1, rvw2 = physics.resolve_ball_ball_collision(rvw1, rvw2)
             s1, s2 = psim.sliding, psim.sliding
 
-            self.balls[ball_id1].rvw = rvw1
-            self.balls[ball_id2].rvw = rvw2
-            self.balls[ball_id1].s = s1
-            self.balls[ball_id2].s = s2
+            self.balls[ball_id1].set(rvw1, s1)
+            self.balls[ball_id2].set(rvw2, s2)
 
-            self.balls[ball_id1].store(rvw1, s1)
-            self.balls[ball_id2].store(rvw2, s2)
+        self.event_history.append(event)
 
 
     def get_next_event(self):
         tau_min = np.inf
-        ids_min = tuple()
+        agents = tuple()
         event_type = None
 
         tau, ids = self.get_min_motion_event_time()
         if tau < tau_min:
             tau_min = tau
             event_type = 'motion'
-            ids_min = ids
+            agents = ids
 
         tau, ids = self.get_min_ball_ball_event_time()
         if tau < tau_min:
             tau_min = tau
             event_type = 'ball-ball'
-            ids_min = ids
+            agents = ids
 
-        return Event(event_type, ids_min, tau_min)
+        return Event(event_type, agents, self.time, tau_min)
 
 
     def get_min_motion_event_time(self):
@@ -144,7 +144,7 @@ class ShotSimulation(object):
 
 
     def get_time_array(self):
-        return np.array(self.t)
+        return np.array(list(self.time_history))
 
 
     def print_ball_states(self):

@@ -28,14 +28,12 @@ class Ball(object):
         self.history = {'rvw': [], 's': []}
 
 
-    def store(self, rvw, s):
-        self.history['rvw'].append(rvw)
-        self.history['s'].append(s)
-
-
-    def update(self, rvw, s):
-        self.rvw = rvw
+    def set(self, rvw, s):
         self.s = s
+        self.rvw = rvw
+
+        self.history['s'].append(s)
+        self.history['rvw'].append(rvw)
 
 
     def as_dataframe(self):
