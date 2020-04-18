@@ -34,6 +34,8 @@ if __name__ == '__main__':
 
             print()
 
+        print(sim.balls['cue'].s)
+        
         ani = animate.AnimateShot(sim, size=2000)
         ani.start()
 
@@ -44,7 +46,7 @@ if __name__ == '__main__':
         for t in np.arange(0, 1, 0.0033):
             sim.evolve(t)
 
-        ani = animate.AnimateShot(sim, size=2800)
+        ani = animate.AnimateShot(sim, size=500)
         ani.start()
 
 

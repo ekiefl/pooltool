@@ -23,7 +23,6 @@ class Event(object):
 class ShotSimulation(object):
     def __init__(self, g=None):
         self.g = g or psim.g
-
         self.t = []
 
 
