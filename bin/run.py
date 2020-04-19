@@ -28,19 +28,22 @@ if __name__ == '__main__':
             sim.evolve(event.tau)
             sim.resolve(event)
 
-        cts = sim.continuize(dt=0.001)
-        #cts.balls['cue'].plot_history()
-        #ani = animate.AnimateShot(cts, size=300)
-        #ani.start()
+        for e in sim.event_history:
+            print(e)
+
+        cts = sim.continuize(dt=0.02)
+        ani = animate.AnimateShot(cts, size=2800)
+        ani.start()
+        #ani = animate.AnimateShot(cts, size=2800)
 
 
     # -----------------------------------------------------------------
 
     if args.choice == 'ani':
-        for t in np.diff(np.arange(0, 1, 0.33)):
+        for t in np.diff(np.arange(0, 5, 0.033)):
             sim.evolve(t)
 
-        ani = animate.AnimateShot(sim, size=500)
+        ani = animate.AnimateShot(sim, size=2800)
         ani.start()
 
 

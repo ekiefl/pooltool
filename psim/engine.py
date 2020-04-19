@@ -163,6 +163,40 @@ class ShotSimulation(object):
         return tau_min, ball_ids
 
 
+    def get_min_ball_rail_event_time(self):
+        """Returns minimum time until next ball-rail collision"""
+
+        tau_min = np.inf
+        ball_ids = (None, None)
+
+        for i, ball in enumerate(self.balls.values()):
+            for j, rail in enumerate(self.table.rails):
+                if i >= j:
+                    continue
+
+                if ball.s == psim.stationary and rail.s == psim.stationary:
+                    continue
+
+                tau = physics.get_ball_ball_collision_time(
+                    rvw1=ball.rvw,
+                    rvw2=rail.rvw,
+                    s1=ball.s,
+                    s2=rail.s,
+                    mu1=(self.table.u_s if ball.s == psim.sliding else self.table.u_r),
+                    mu2=(self.table.u_s if rail.s == psim.sliding else self.table.u_r),
+                    m1=ball.m,
+                    m2=rail.m,
+                    g=self.g,
+                    R=ball.R
+                )
+
+                if tau < tau_min:
+                    ball_ids = (ball.id, rail.id)
+                    tau_min = tau
+
+        return tau_min, ball_ids
+
+
     def get_time_array(self):
         return np.array(list(self.time_history))
 
@@ -170,45 +204,6 @@ class ShotSimulation(object):
     def print_ball_states(self):
         for ball in self.balls:
             print(f"ball: {ball}; state: {self.balls[ball].s}")
-
-
-    def setup_test(self, setup='masse'):
-        # Make a table, cue, and balls
-        self.table = Table()
-        self.cue = Cue(brand='Predator')
-        self.balls = {}
-
-        self.balls['cue'] = Ball('cue')
-        self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
-
-        self.balls['8'] = Ball('8')
-        self.balls['8'].rvw[0] = [self.table.center[0], 1.6, 0]
-
-        if setup == 'masse':
-            self.cue.strike(
-                ball = self.balls['cue'],
-                V0 = 2.8,
-                phi = 80.746,
-                theta = 80,
-                a = 0.2,
-                b = 0.0,
-            )
-        elif setup == 'slight_masse':
-            self.cue.strike(
-                ball = self.balls['cue'],
-                V0 = 0.5,
-                phi = 100,
-                theta = 20,
-                a = -0.4,
-                b = 0.0,
-            )
-        elif setup == 'straight_shot':
-            self.cue.strike(
-                ball = self.balls['cue'],
-                V0 = 1,
-                phi = 89,
-                sweet_spot=True
-            )
 
 
     def continuize(self, dt=0.001, in_place=True):
@@ -219,6 +214,8 @@ class ShotSimulation(object):
         dt : float, 0.001 (seconds)
             Log ball states at this time interval
         """
+
+        print("=============")
 
         def interpolated_times(tau, dt):
             times = np.arange(0, tau, dt)
@@ -239,14 +236,12 @@ class ShotSimulation(object):
 
         sim.set_balls(balls)
 
-        print(sim.balls['cue'].history['rvw'])
-        print(sim.balls['cue'].rvw)
-        print(sim.balls['cue'].history['s'])
-        print(sim.balls['cue'].s)
-
         for idx, event in enumerate(self.event_history):
             if event.tau == np.inf:
                 break
+
+            if event.tau == 0:
+                continue
 
             # Evolve until the event occurrence
             times = interpolated_times(event.tau, dt)
@@ -255,8 +250,72 @@ class ShotSimulation(object):
                 sim.evolve(step)
 
             for ball_id, ball in sim.balls.items():
-                ball.set(self.balls[ball_id].rvw, self.balls[ball_id].s)
+                ball.set(
+                    rvw=self.balls[ball_id].history['rvw'][idx+1],
+                    s=self.balls[ball_id].history['s'][idx+1]
+                )
+
+            self.time += event.tau - times[-1]
+            self.time_history.append(self.time)
+            sim.event_history.append(event)
 
         return sim
+
+
+    def setup_test(self, setup='masse'):
+        # Make a table, cue, and balls
+        self.table = Table()
+        self.cue = Cue(brand='Predator')
+        self.balls = {}
+
+        if setup == 'masse':
+            self.balls['cue'] = Ball('cue')
+            self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
+
+            self.balls['8'] = Ball('8')
+            self.balls['8'].rvw[0] = [self.table.center[0], 1.6, 0]
+
+            self.cue.strike(
+                ball = self.balls['cue'],
+                V0 = 2.8,
+                phi = 80.746,
+                theta = 80,
+                a = 0.2,
+                b = 0.0,
+            )
+        elif setup == 'slight_masse':
+            self.balls['cue'] = Ball('cue')
+            self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
+
+            self.balls['8'] = Ball('8')
+            self.balls['8'].rvw[0] = [self.table.center[0], 1.6, 0]
+
+            self.cue.strike(
+                ball = self.balls['cue'],
+                V0 = 0.5,
+                phi = 100,
+                theta = 20,
+                a = -0.4,
+                b = 0.0,
+            )
+        elif setup == 'straight_shot':
+            self.balls['cue'] = Ball('cue')
+            self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
+
+            self.balls['8'] = Ball('8')
+            self.balls['8'].rvw[0] = [self.table.center[0], self.table.B+0.66, 0]
+
+            self.cue.strike(
+                ball = self.balls['cue'],
+                V0 = 0.35,
+                phi = 99,
+                sweet_spot=True,
+            )
+
+        for ball_id, ball in self.balls.items():
+            if ball_id == 'cue':
+                continue
+
+            ball.set(ball.rvw, ball.s)
 
 
