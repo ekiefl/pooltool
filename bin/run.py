@@ -29,10 +29,9 @@ if __name__ == '__main__':
             sim.resolve(event)
 
         cts = sim.continuize(dt=0.001)
-        cts.balls['cue'].plot_history()
-
-        ani = animate.AnimateShot(cts, size=2000)
-        ani.start()
+        #cts.balls['cue'].plot_history()
+        #ani = animate.AnimateShot(cts, size=300)
+        #ani.start()
 
 
     # -----------------------------------------------------------------

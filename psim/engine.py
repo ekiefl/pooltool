@@ -52,8 +52,7 @@ class ShotSimulation(object):
 
 
     def evolve(self, t):
-        for ball_id in self.balls:
-            ball = self.balls[ball_id]
+        for ball_id, ball in self.balls.items():
             rvw, s = physics.evolve_ball_motion(
                 state=ball.s,
                 rvw=ball.rvw,
@@ -239,6 +238,11 @@ class ShotSimulation(object):
             balls[ball_id] = ball_copy
 
         sim.set_balls(balls)
+
+        print(sim.balls['cue'].history['rvw'])
+        print(sim.balls['cue'].rvw)
+        print(sim.balls['cue'].history['s'])
+        print(sim.balls['cue'].s)
 
         for idx, event in enumerate(self.event_history):
             if event.tau == np.inf:
