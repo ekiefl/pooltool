@@ -6,6 +6,7 @@ import psim.physics as physics
 
 from psim.objects import Ball, Table, Cue
 
+import copy
 import numpy as np
 import pandas as pd
 
@@ -25,9 +26,29 @@ class ShotSimulation(object):
     def __init__(self, g=None):
         self.g = g or psim.g
 
+        self.cue = None
+        self.table = None
+        self.balls = {}
+
+        self.reset_history()
+
+
+    def reset_history(self):
         self.time = 0
-        self.time_history = []
-        self.event_history = []
+        self.time_history = [0]
+        self.event_history = [Event(event_type='start', agents=None, time=0, tau=0)]
+
+
+    def set_cue(self, cue):
+        self.cue = cue
+
+
+    def set_table(self, table):
+        self.table = table
+
+
+    def set_balls(self, balls):
+        self.balls = balls
 
 
     def evolve(self, t):
@@ -189,5 +210,49 @@ class ShotSimulation(object):
                 phi = 89,
                 sweet_spot=True
             )
+
+
+    def continuize(self, dt=0.001, in_place=True):
+        """Re-create shot with specified time step
+
+        Parameters
+        ==========
+        dt : float, 0.001 (seconds)
+            Log ball states at this time interval
+        """
+
+        def interpolated_times(tau, dt):
+            times = np.arange(0, tau, dt)
+            return times
+
+        # Make new ShotSimulation object
+        sim = ShotSimulation()
+        sim.set_cue(self.cue)
+        sim.set_table(self.table)
+
+        # Reset histories of balls
+        balls = {}
+        for ball_id, ball in self.balls.items():
+            ball_copy = copy.deepcopy(ball)
+
+            ball_copy.reset(ball_copy.history['rvw'][0], ball_copy.history['s'][0])
+            balls[ball_id] = ball_copy
+
+        sim.set_balls(balls)
+
+        for idx, event in enumerate(self.event_history):
+            if event.tau == np.inf:
+                break
+
+            # Evolve until the event occurrence
+            times = interpolated_times(event.tau, dt)
+
+            for step in np.diff(times):
+                sim.evolve(step)
+
+            for ball_id, ball in sim.balls.items():
+                ball.set(self.balls[ball_id].rvw, self.balls[ball_id].s)
+
+        return sim
 
 

@@ -36,6 +36,15 @@ class Ball(object):
         self.history['rvw'].append(rvw)
 
 
+    def reset(self, rvw, s):
+        """Delete history and replace where first entry are rvw and s"""
+        self.s = s
+        self.rvw = rvw
+
+        self.history['rvw'] = [rvw]
+        self.history['s'] = [s]
+
+
     def as_dataframe(self):
         s = np.array(self.history['s'])
         rvw = np.array(self.history['rvw'])
@@ -136,14 +145,11 @@ class Cue(object):
             if any([theta is None, a is None, b is None]):
                 raise ValueError("Cue.strike :: Must choose theta, a, and b")
 
-        v_T, w_T = physics.cue_strike(ball.m, self.M, ball.R, V0, phi, theta, a, b)
+        v, w = physics.cue_strike(ball.m, self.M, ball.R, V0, phi, theta, a, b)
+        rvw = np.array([ball.rvw[0], v, w,])
 
-        ball.rvw[1] = v_T
-        ball.rvw[2] = w_T
+        s = (psim.rolling
+             if abs(np.sum(physics.get_rel_velocity(rvw, ball.R))) <= psim.tol
+             else psim.sliding)
 
-        if np.allclose(physics.get_rel_velocity(ball.rvw, ball.R), 0):
-            ball.s = psim.rolling
-        else:
-            ball.s = psim.sliding
-
-
+        ball.set(rvw, s)

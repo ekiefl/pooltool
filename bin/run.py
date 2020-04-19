@@ -24,19 +24,14 @@ if __name__ == '__main__':
         event = engine.Event(None, None, 0, 0)
 
         while event.tau < np.inf:
-            sim.print_ball_states()
-
             event = sim.get_next_event()
-            print(event)
-
             sim.evolve(event.tau)
             sim.resolve(event)
 
-            print()
+        cts = sim.continuize(dt=0.001)
+        cts.balls['cue'].plot_history()
 
-        print(sim.event_history)
-        print(sim.time_history)
-        ani = animate.AnimateShot(sim, size=2000)
+        ani = animate.AnimateShot(cts, size=2000)
         ani.start()
 
 
