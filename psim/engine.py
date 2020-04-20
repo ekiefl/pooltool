@@ -19,7 +19,15 @@ class Event(object):
         self.event_type = event_type
 
     def __repr__(self):
-        return f"type: {self.event_type}; involved: {self.agents}; time: {self.tau}"
+        lines = [
+            f'<{self.__class__.__module__}.{self.__class__.__name__} object at {hex(id(self))}>',
+            f' ├── event_type : {self.event_type}',
+            f' ├── time       : {self.time}',
+            f' ├── tau        : {self.tau}',
+            f' └── agents     : {self.agents}',
+        ]
+
+        return '\n'.join(lines)
 
 
 class ShotSimulation(object):
