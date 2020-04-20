@@ -30,14 +30,6 @@ class ShotSimulation(object):
         self.table = None
         self.balls = {}
 
-        self.reset_history()
-
-
-    def reset_history(self):
-        self.time = 0
-        self.time_history = [0]
-        self.event_history = [Event(event_type='start', agents=None, time=0, tau=0)]
-
 
     def set_cue(self, cue):
         self.cue = cue
@@ -163,47 +155,9 @@ class ShotSimulation(object):
         return tau_min, ball_ids
 
 
-    def get_min_ball_rail_event_time(self):
-        """Returns minimum time until next ball-rail collision"""
-
-        tau_min = np.inf
-        ball_ids = (None, None)
-
-        for i, ball in enumerate(self.balls.values()):
-            for j, rail in enumerate(self.table.rails):
-                if i >= j:
-                    continue
-
-                if ball.s == psim.stationary and rail.s == psim.stationary:
-                    continue
-
-                tau = physics.get_ball_ball_collision_time(
-                    rvw1=ball.rvw,
-                    rvw2=rail.rvw,
-                    s1=ball.s,
-                    s2=rail.s,
-                    mu1=(self.table.u_s if ball.s == psim.sliding else self.table.u_r),
-                    mu2=(self.table.u_s if rail.s == psim.sliding else self.table.u_r),
-                    m1=ball.m,
-                    m2=rail.m,
-                    g=self.g,
-                    R=ball.R
-                )
-
-                if tau < tau_min:
-                    ball_ids = (ball.id, rail.id)
-                    tau_min = tau
-
-        return tau_min, ball_ids
-
-
-    def get_time_array(self):
-        return np.array(list(self.time_history))
-
-
     def print_ball_states(self):
-        for ball in self.balls:
-            print(f"ball: {ball}; state: {self.balls[ball].s}")
+        for ball in self.balls.values():
+            print(ball)
 
 
     def continuize(self, dt=0.001, in_place=True):
