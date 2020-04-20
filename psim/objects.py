@@ -24,8 +24,6 @@ class Ball(object):
         # stationary=0, spinning=1, sliding=2, rolling=3
         self.s = 0
 
-        # state history
-        self.history = {'rvw': [], 's': []}
 
     def __repr__(self):
         lines = [
@@ -37,24 +35,16 @@ class Ball(object):
             f' └── angular  : {self.rvw[2]}',
         ]
 
+        return '\n'.join(lines)
+
+
     def set(self, rvw, s):
         self.s = s
         self.rvw = rvw
 
-        self.history['s'].append(s)
-        self.history['rvw'].append(rvw)
-
-
-    def reset(self, rvw, s):
-        """Delete history and replace where first entry are rvw and s"""
-        self.s = s
-        self.rvw = rvw
-
-        self.history['rvw'] = [rvw]
-        self.history['s'] = [s]
-
 
     def as_dataframe(self):
+        # FIXME exists only before history attribute was removed
         s = np.array(self.history['s'])
         rvw = np.array(self.history['rvw'])
         t = np.arange(len(s))
@@ -72,6 +62,7 @@ class Ball(object):
 
     def plot_history(self, full=False):
         """Primitive plotting for use during development"""
+        # FIXME exists only before history attribute was removed
         import pandas as pd
         import matplotlib.pyplot as plt
 
