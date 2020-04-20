@@ -51,7 +51,7 @@ class ShotSimulation(object):
         self.balls = balls
 
 
-    def evolve(self, t):
+    def evolve(self, dt):
         for ball_id, ball in self.balls.items():
             rvw, s = physics.evolve_ball_motion(
                 state=ball.s,
@@ -62,7 +62,7 @@ class ShotSimulation(object):
                 u_sp=self.table.u_sp,
                 u_r=self.table.u_r,
                 g=self.g,
-                t=t,
+                t=dt,
             )
             ball.set(rvw, s)
 
