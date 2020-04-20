@@ -173,62 +173,6 @@ class ShotSimulation(object):
             print(ball)
 
 
-    def continuize(self, dt=0.001, in_place=True):
-        """Re-create shot with specified time step
-
-        Parameters
-        ==========
-        dt : float, 0.001 (seconds)
-            Log ball states at this time interval
-        """
-
-        print("=============")
-
-        def interpolated_times(tau, dt):
-            times = np.arange(0, tau, dt)
-            return times
-
-        # Make new ShotSimulation object
-        sim = ShotSimulation()
-        sim.set_cue(self.cue)
-        sim.set_table(self.table)
-
-        # Reset histories of balls
-        balls = {}
-        for ball_id, ball in self.balls.items():
-            ball_copy = copy.deepcopy(ball)
-
-            ball_copy.reset(ball_copy.history['rvw'][0], ball_copy.history['s'][0])
-            balls[ball_id] = ball_copy
-
-        sim.set_balls(balls)
-
-        for idx, event in enumerate(self.event_history):
-            if event.tau == np.inf:
-                break
-
-            if event.tau == 0:
-                continue
-
-            # Evolve until the event occurrence
-            times = interpolated_times(event.tau, dt)
-
-            for step in np.diff(times):
-                sim.evolve(step)
-
-            for ball_id, ball in sim.balls.items():
-                ball.set(
-                    rvw=self.balls[ball_id].history['rvw'][idx+1],
-                    s=self.balls[ball_id].history['s'][idx+1]
-                )
-
-            self.time += event.tau - times[-1]
-            self.time_history.append(self.time)
-            sim.event_history.append(event)
-
-        return sim
-
-
     def setup_test(self, setup='masse'):
         # Make a table, cue, and balls
         self.table = Table()
