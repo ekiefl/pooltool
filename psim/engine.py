@@ -91,10 +91,10 @@ class ShotSimulation(object):
         agents = tuple()
         event_type = None
 
-        tau, ids = self.get_min_motion_event_time()
+        tau, ids, e = self.get_min_motion_event_time()
         if tau < tau_min:
             tau_min = tau
-            event_type = 'motion'
+            event_type = e
             agents = ids
 
         tau, ids = self.get_min_ball_ball_event_time()
@@ -111,22 +111,27 @@ class ShotSimulation(object):
 
         tau_min = np.inf
         ball_id = None
+        event_type_min = None
 
         for ball in self.balls.values():
             if ball.s == psim.stationary:
                 continue
             elif ball.s == psim.rolling:
                 tau = physics.get_roll_time(ball.rvw, self.table.u_r, self.g)
+                event_type = 'end-roll'
             elif ball.s == psim.sliding:
                 tau = physics.get_slide_time(ball.rvw, ball.R, self.table.u_s, self.g)
+                event_type = 'end-slide'
             elif ball.s == psim.spinning:
                 tau = physics.get_spin_time(ball.rvw, ball.R, self.table.u_sp, self.g)
+                event_type = 'end-spin'
 
             if tau < tau_min:
                 tau_min = tau
                 ball_id = ball.id
+                event_type_min = event_type
 
-        return tau_min, ball_id
+        return tau_min, ball_id, event_type_min
 
 
     def get_min_ball_ball_event_time(self):
