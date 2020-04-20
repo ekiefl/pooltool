@@ -139,7 +139,8 @@ def get_ball_rail_collision_time(rvw, rail, s, mu, m, g, R):
 
         u = utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw, R)), -phi)
 
-        A = 
+        #FIXME
+        A = 0
 
         a2x = -1/2*mu2*g*(u2[0]*np.cos(phi2) - u2[1]*np.sin(phi2))
         a2y = -1/2*mu2*g*(u2[0]*np.sin(phi2) + u2[1]*np.cos(phi2))
