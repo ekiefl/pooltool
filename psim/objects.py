@@ -27,6 +27,15 @@ class Ball(object):
         # state history
         self.history = {'rvw': [], 's': []}
 
+    def __repr__(self):
+        lines = [
+            f'<{self.__class__.__module__}.{self.__class__.__name__} object at {hex(id(self))}>',
+            f' ├── id       : {self.id}',
+            f' ├── state    : {self.s}',
+            f' ├── position : {self.rvw[0]}',
+            f' ├── velocity : {self.rvw[1]}',
+            f' └── angular  : {self.rvw[2]}',
+        ]
 
     def set(self, rvw, s):
         self.s = s
