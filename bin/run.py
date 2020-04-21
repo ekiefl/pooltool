@@ -21,20 +21,14 @@ if __name__ == '__main__':
 
     if args.choice == 'col':
 
-        event = engine.Event(None, None, 0, 0)
+        event = engine.Event(None, None, 0)
 
         while event.tau < np.inf:
             event = sim.get_next_event()
-            sim.evolve(event.tau)
-            sim.resolve(event)
+            sim.evolve(dt=event.tau, event=event)
 
-        for e in sim.event_history:
-            print(e)
-
-        cts = sim.continuize(dt=0.02)
-        ani = animate.AnimateShot(cts, size=2800)
+        ani = animate.AnimateShot(sim, size=350)
         ani.start()
-        #ani = animate.AnimateShot(cts, size=2800)
 
 
     # -----------------------------------------------------------------
