@@ -28,13 +28,69 @@ class Event(object):
         return '\n'.join(lines)
 
 
-class ShotSimulation(object):
+class ShotHistory(object):
+    """Track the states of balls over time"""
+
+    def __init__(self):
+        self.balls = {}
+
+        self.history = {
+            'balls': {},
+            'index': [],
+            'time': [],
+            'event': [],
+        }
+
+        self.n =  0
+        self.time = 0
+
+
+    def touch_history(self):
+        """Initializes ball trajectories if they haven't been initialized"""
+
+        for ball_id in self.balls:
+            if ball_id not in self.history['balls']:
+                self.init_ball_history(ball_id)
+
+
+    def init_ball_history(self, ball_id):
+        """Adds a new ball to the trajectory. Adds nans if self.n > 0"""
+
+        if ball_id not in self.balls:
+            raise ValueError(f"ShotHistory.init_ball_history :: {ball_id} not in self.balls")
+
+        self.history['balls'][ball_id] = {
+            's': [np.nan] * self.n,
+            'rvw': [np.nan * np.ones((3,3))] * self.n,
+        }
+
+
+    def timestamp(self, dt, event=None):
+        # update time
+        self.n += 1
+        self.time += dt
+
+        # log time
+        self.history['time'].append(self.time)
+        self.history['index'].append(self.n)
+
+        # log event
+        self.history['event'].append(event)
+
+        # log ball states
+        for ball_id, ball in self.balls.items():
+            self.history['balls'][ball_id]['s'].append(ball.s)
+            self.history['balls'][ball_id]['rvw'].append(ball.rvw)
+
+
+class ShotSimulation(ShotHistory):
     def __init__(self, g=None):
         self.g = g or psim.g
 
         self.cue = None
         self.table = None
-        self.balls = {}
+
+        ShotHistory.__init__(self)
 
 
     def set_cue(self, cue):
@@ -49,7 +105,7 @@ class ShotSimulation(object):
         self.balls = balls
 
 
-    def evolve(self, dt):
+    def evolve(self, dt, event=None):
         for ball_id, ball in self.balls.items():
             rvw, s = physics.evolve_ball_motion(
                 state=ball.s,
@@ -64,8 +120,10 @@ class ShotSimulation(object):
             )
             ball.set(rvw, s)
 
-        self.time += t
-        self.time_history.append(self.time)
+        if event is not None:
+            self.resolve(event)
+
+        self.timestamp(dt, event=event)
 
 
     def resolve(self, event):
@@ -80,8 +138,6 @@ class ShotSimulation(object):
 
             self.balls[ball_id1].set(rvw1, s1)
             self.balls[ball_id2].set(rvw2, s2)
-
-        self.event_history.append(event)
 
 
     def get_next_event(self):
@@ -101,7 +157,7 @@ class ShotSimulation(object):
             event_type = 'ball-ball'
             agents = ids
 
-        return Event(event_type, agents, self.time, tau_min)
+        return Event(event_type, agents, tau_min)
 
 
     def get_min_motion_event_time(self):
@@ -221,10 +277,5 @@ class ShotSimulation(object):
                 sweet_spot=True,
             )
 
-        for ball_id, ball in self.balls.items():
-            if ball_id == 'cue':
-                continue
-
-            ball.set(ball.rvw, ball.s)
-
+        self.touch_history()
 
