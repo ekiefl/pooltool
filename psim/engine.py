@@ -12,17 +12,15 @@ import pandas as pd
 
 
 class Event(object):
-    def __init__(self, event_type, agents, time, tau):
+    def __init__(self, event_type, agents, tau):
         self.agents = agents
         self.tau = tau
-        self.time = time
         self.event_type = event_type
 
     def __repr__(self):
         lines = [
             f'<{self.__class__.__module__}.{self.__class__.__name__} object at {hex(id(self))}>',
             f' ├── event_type : {self.event_type}',
-            f' ├── time       : {self.time}',
             f' ├── tau        : {self.tau}',
             f' └── agents     : {self.agents}',
         ]
