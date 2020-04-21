@@ -45,6 +45,18 @@ class ShotHistory(object):
         self.time = 0
 
 
+    def get_time_array(self):
+        return np.array(self.history['time'])
+
+
+    def get_ball_state_history(self, ball_id):
+        return np.array(self.history['balls'][ball_id]['s'])
+
+
+    def get_ball_rvw_history(self, ball_id):
+        return np.array(self.history['balls'][ball_id]['rvw'])
+
+
     def touch_history(self):
         """Initializes ball trajectories if they haven't been initialized"""
 
@@ -273,7 +285,7 @@ class ShotSimulation(ShotHistory):
             self.cue.strike(
                 ball = self.balls['cue'],
                 V0 = 0.35,
-                phi = 99,
+                phi = 97,
                 sweet_spot=True,
             )
 

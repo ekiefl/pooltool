@@ -23,11 +23,12 @@ if __name__ == '__main__':
 
         event = engine.Event(None, None, 0)
 
+        sim.timestamp(0)
         while event.tau < np.inf:
             event = sim.get_next_event()
             sim.evolve(dt=event.tau, event=event)
 
-        ani = animate.AnimateShot(sim, size=350)
+        ani = animate.AnimateShot(sim, size=1200)
         ani.start()
 
 

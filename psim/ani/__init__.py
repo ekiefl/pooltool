@@ -12,7 +12,10 @@ BALL_RGB = {
 
 def d_to_px(scale, d):
     """scale is ratio of d to px"""
-    return int(d * scale)
+    if hasattr(d, '__len__'):
+        return (d * scale).astype(int)
+    else:
+        return int(d * scale)
 
 
 def px_to_d(scale, px):

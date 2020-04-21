@@ -28,7 +28,7 @@ from pygame.locals import (
 
 
 class Ball(pygame.sprite.Sprite):
-    def __init__(self, ball, scale):
+    def __init__(self, ball, rvw_history, scale):
         """A ball sprite
 
         Parameters
@@ -39,7 +39,10 @@ class Ball(pygame.sprite.Sprite):
         self.id = ball.id
         self._ball = ball
         self.radius = d_to_px(ball.R, self.scale)
-        self.df = ball.as_dataframe()
+
+        self.rvw_history = rvw_history
+        self.xs = d_to_px(scale, self.rvw_history[:,0,0])
+        self.ys = d_to_px(scale, self.rvw_history[:,0,1])
 
         super(Ball, self).__init__()
 
@@ -61,8 +64,8 @@ class Ball(pygame.sprite.Sprite):
 
     def update(self, frame):
         self.rect.center = (
-            d_to_px(self.df['rx'].iloc[frame], self.scale),
-            d_to_px(self.df['ry'].iloc[frame], self.scale),
+            self.xs[frame],
+            self.ys[frame],
         )
 
 
@@ -85,7 +88,7 @@ class AnimateShot(object):
         self.table = shot.table
         self.balls = shot.balls
         self.times = shot.get_time_array()
-        self.num_frames = len(self.times)
+        self.num_frames = shot.n
 
         # Ratio of pixel to table dimensions
         self.scale = self.size / max([self.table.w, self.table.l])
@@ -99,7 +102,11 @@ class AnimateShot(object):
         # Create ball sprites
         self.ball_sprites = pygame.sprite.Group()
         for ball_id, ball in self.balls.items():
-            self.ball_sprites.add(Ball(ball, self.scale))
+            self.ball_sprites.add(Ball(
+                ball,
+                self.shot.get_ball_rvw_history(ball_id),
+                self.scale
+            ))
 
         self.clock = pygame.time.Clock()
         self.fps = self.get_fps()
