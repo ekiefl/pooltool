@@ -104,68 +104,29 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g, R):
     return roots.min() if len(roots) else np.inf
 
 
-def get_ball_rail_collision_time(rvw, rail, s, mu, m, g, R):
-    """Get the time until collision between ball and collision
-
-    Parameters
-    ==========
-    rail : 2x2 array
-        Line of the rail, ((x1,y1),(x2,y2))
-    """
+def get_ball_rail_collision_time(rvw, s, lx, ly, l0, mu, m, g, R):
+    """Get the time until collision between ball and collision"""
     if s == psim.stationary or s == psim.spinning:
         return np.inf
 
-    r, v, w = rvw
+    phi = utils.angle(rvw[1])
+    v = np.linalg.norm(rvw[1])
 
-    if rail[0,0] == 0 and rail[1,0] == 0:
-        # left rail
-        trig1, trig2 = np.cos, np.sin
-        C = r[0] - R
+    u = (np.array([1,0,0]
+         if s == psim.rolling
+         else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw, R)), -phi)))
 
-    elif rail[0,0] != 0 and rail[1,0] != 0:
-        # right rail
-        trig1, trig2 = np.cos, np.sin
-        w = rail[0, 0]
-        C = r[0] - w - R
+    ax = -1/2*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
+    ay = -1/2*mu*g*(u[0]*np.sin(phi) + u[1]*np.cos(phi))
+    bx, by = v*np.cos(phi), v*np.sin(phi)
+    cx, cy = rvw[0, 0], rvw[0, 1]
 
-    elif rail[0,1] == 0 and rail[1,1] == 0:
-        # bottom rail
-        trig1, trig2 = np.sin, np.cos
-        C = r[1] - R
+    A = lx*ax + ly*ay
+    B = lx*bx + ly*by
+    C1 = l0 + lx*cx + ly*cy + R*np.sqrt(lx**2 + ly**2)
+    C2 = l0 + lx*cx + ly*cy - R*np.sqrt(lx**2 + ly**2)
 
-    elif rail[0,1] != 0 and rail[1,1] != 0:
-        # top rail
-        trig1, trig2 = np.sin, np.cos
-        l = rail[0, 1]
-        C = r[1] - l - R
-
-    else:
-        raise ValueError("Only coded rails along principal axes")
-
-    if s == psim.rolling:
-
-        phi = utils.angle(v)
-        vmag = np.linalg.norm(v)
-
-        A = -1/2*mu*g*trig1(phi)
-        B = vmag*trig1(phi)
-
-    if s == psim.sliding:
-        phi = utils.angle(v)
-        v = np.linalg.norm(v)
-
-        u = utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw, R)), -phi)
-
-        #FIXME
-        A = 0
-
-        a2x = -1/2*mu2*g*(u2[0]*np.cos(phi2) - u2[1]*np.sin(phi2))
-        a2y = -1/2*mu2*g*(u2[0]*np.sin(phi2) + u2[1]*np.cos(phi2))
-        b2x = v2*np.cos(phi2)
-        b2y = v2*np.sin(phi2)
-
-
-    roots = np.roots([A,B,C])
+    roots = np.append(np.roots([A,B,C1]), np.roots([A,B,C2]))
 
     roots = roots[
         (abs(roots.imag) <= psim.tol) & \
