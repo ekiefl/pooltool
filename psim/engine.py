@@ -4,11 +4,13 @@ import psim
 import psim.utils as utils
 import psim.physics as physics
 
-from psim.objects import Ball, Table, Cue
+from psim.objects import (
+    Ball,
+    Table,
+    Cue,
+)
 
-import copy
 import numpy as np
-import pandas as pd
 
 
 class Event(object):
@@ -136,6 +138,67 @@ class ShotHistory(object):
             )
 
 
+    def plot_history(self, ball_id, full=False):
+        """Primitive plotting for use during development"""
+        import pandas as pd
+        import matplotlib.pyplot as plt
+
+        def add_plot(fig, num, x, y):
+            if np.max(np.abs(df[y])) < 0.000000001:
+                df[y] = 0
+
+            ax = fig.add_subplot(num)
+            for name, group in groups:
+                ax.plot(group[x], group[y], marker="o", linestyle="", label=name, ms=1.4)
+            ax.set_ylabel(y)
+            ax.set_xlabel(x)
+            ax.legend()
+
+        s = np.array(self.history['balls'][ball_id]['s'])
+        rvw = np.array(self.history['balls'][ball_id]['rvw'])
+        t = np.array(self.history['time'])
+
+        df = pd.DataFrame({
+            'rx': rvw[:, 0, 0], 'ry': rvw[:, 0, 1], 'rz': rvw[:, 0, 2],
+            'vx': rvw[:, 1, 0], 'vy': rvw[:, 1, 1], 'vz': rvw[:, 1, 2],
+            'wx': rvw[:, 2, 0], 'wy': rvw[:, 2, 1], 'wz': rvw[:, 2, 2],
+            '|v|': np.sqrt(rvw[:, 1, 2]**2 + rvw[:, 1, 1]**2 + rvw[:, 1, 0]**2),
+            '|w|': np.sqrt(rvw[:, 2, 2]**2 + rvw[:, 2, 1]**2 + rvw[:, 2, 0]**2),
+            'time': t,
+            'state': s,
+        })
+        df['time'] = df['time'].astype(float)
+
+        groups = df.groupby('state')
+
+        fig = plt.figure(figsize=(10, 10))
+        plt.title(f"ball ID: {ball_id}")
+        add_plot(fig, 331, 'time', 'rx')
+        add_plot(fig, 332, 'time', 'ry')
+        add_plot(fig, 333, 'time', 'rz')
+        add_plot(fig, 334, 'time', 'vx')
+        add_plot(fig, 335, 'time', 'vy')
+        add_plot(fig, 336, 'time', 'vz')
+        add_plot(fig, 337, 'time', 'wx')
+        add_plot(fig, 338, 'time', 'wy')
+        add_plot(fig, 339, 'time', 'wz')
+        plt.tight_layout()
+        plt.show()
+
+        if full:
+            fig = plt.figure(figsize=(6, 5))
+            add_plot(fig, 111, 'time', '|v|')
+            plt.title(f"ball ID: {ball_id}")
+            plt.tight_layout()
+            plt.show()
+
+            fig = plt.figure(figsize=(6, 5))
+            add_plot(fig, 111, 'time', '|w|')
+            plt.title(f"ball ID: {ball_id}")
+            plt.tight_layout()
+            plt.show()
+
+
 class ShotSimulation(ShotHistory):
     def __init__(self, g=None):
         self.g = g or psim.g
@@ -193,6 +256,17 @@ class ShotSimulation(ShotHistory):
             self.balls[ball_id1].set(rvw1, s1)
             self.balls[ball_id2].set(rvw2, s2)
 
+        elif event.event_type == 'ball-rail':
+            ball_id, rail_id = event.agents
+
+            rvw = self.balls[ball_id].rvw
+            normal = self.table.rails[rail_id].normal
+
+            rvw = physics.resolve_ball_rail_collision(rvw, normal)
+            s = psim.sliding
+
+            self.balls[ball_id].set(rvw, s)
+
 
     def get_next_event(self):
         tau_min = np.inf
@@ -209,6 +283,12 @@ class ShotSimulation(ShotHistory):
         if tau < tau_min:
             tau_min = tau
             event_type = 'ball-ball'
+            agents = ids
+
+        tau, ids = self.get_min_ball_rail_event_time()
+        if tau < tau_min:
+            tau_min = tau
+            event_type = 'ball-rail'
             agents = ids
 
         return Event(event_type, agents, tau_min)
@@ -276,6 +356,36 @@ class ShotSimulation(ShotHistory):
         return tau_min, ball_ids
 
 
+    def get_min_ball_rail_event_time(self):
+        """Returns minimum time until next ball-rail collision"""
+
+        tau_min = np.inf
+        agent_ids = (None, None)
+
+        for ball in self.balls.values():
+            if ball.s == psim.stationary:
+                continue
+
+            for rail in self.table.rails.values():
+                tau = physics.get_ball_rail_collision_time(
+                    rvw=ball.rvw,
+                    s=ball.s,
+                    lx=rail.lx,
+                    ly=rail.ly,
+                    l0=rail.l0,
+                    mu=(self.table.u_s if ball.s == psim.sliding else self.table.u_r),
+                    m=ball.m,
+                    g=self.g,
+                    R=ball.R
+                )
+
+                if tau < tau_min:
+                    agent_ids = (ball.id, rail.id)
+                    tau_min = tau
+
+        return tau_min, agent_ids
+
+
     def print_ball_states(self):
         for ball in self.balls.values():
             print(ball)
@@ -294,9 +404,12 @@ class ShotSimulation(ShotHistory):
             self.balls['8'] = Ball('8')
             self.balls['8'].rvw[0] = [self.table.center[0], 1.6, 0]
 
+            self.balls['3'] = Ball('3')
+            self.balls['3'].rvw[0] = [self.table.center[0]*0.70, 1.6, 0]
+
             self.cue.strike(
                 ball = self.balls['cue'],
-                V0 = 2.8,
+                V0 = 2.9,
                 phi = 80.746,
                 theta = 80,
                 a = 0.2,
