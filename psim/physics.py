@@ -43,9 +43,9 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g, R):
         phi1 = utils.angle(rvw1[1])
         v1 = np.linalg.norm(rvw1[1])
 
-        u1 = (np.array([1,0,0]
+        u1 = (np.array([1,0,0])
               if s1 == psim.rolling
-              else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw1, R)), -phi1)))
+              else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw1, R)), -phi1))
 
         a1x = -1/2*mu1*g*(u1[0]*np.cos(phi1) - u1[1]*np.sin(phi1))
         a1y = -1/2*mu1*g*(u1[0]*np.sin(phi1) + u1[1]*np.cos(phi1))
@@ -58,9 +58,9 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g, R):
         phi2 = utils.angle(rvw2[1])
         v2 = np.linalg.norm(rvw2[1])
 
-        u2 = (np.array([1,0,0]
+        u2 = (np.array([1,0,0])
               if s2 == psim.rolling
-              else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw2, R)), -phi2)))
+              else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw2, R)), -phi2))
 
         a2x = -1/2*mu2*g*(u2[0]*np.cos(phi2) - u2[1]*np.sin(phi2))
         a2y = -1/2*mu2*g*(u2[0]*np.sin(phi2) + u2[1]*np.cos(phi2))
