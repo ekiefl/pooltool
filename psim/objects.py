@@ -111,7 +111,6 @@ class Ball(object):
 
 class Table(object):
     def __init__(self, w=None, l=None, u_s=None, u_r=None, u_sp=None):
-
         self.w = w or psim.table_width
         self.l = l or psim.table_length
 
@@ -122,13 +121,28 @@ class Table(object):
 
         self.center = (self.w/2, self.l/2)
 
-        # rail properties
-        pass
-
         # felt properties
         self.u_s = u_s or psim.u_s
         self.u_r = u_r or psim.u_r
         self.u_sp = u_sp or psim.u_sp
+
+        self.rails = [
+            Rail(lx=1, ly=0, l0=-self.L),
+            Rail(lx=1, ly=0, l0=-self.R),
+            Rail(lx=0, ly=1, l0=-self.B),
+            Rail(lx=0, ly=1, l0=-self.T),
+        ]
+
+
+class Rail(object):
+    """A rail is defined by a line lx*x + ly*y + l0 = 0"""
+    def __init__(self, lx, ly, l0):
+        self.lx = lx
+        self.ly = ly
+        self.l0 = l0
+
+        # rail properties
+        pass
 
 
 class Cue(object):
