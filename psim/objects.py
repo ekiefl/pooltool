@@ -126,20 +126,25 @@ class Table(object):
         self.u_r = u_r or psim.u_r
         self.u_sp = u_sp or psim.u_sp
 
-        self.rails = [
-            Rail(lx=1, ly=0, l0=-self.L),
-            Rail(lx=1, ly=0, l0=-self.R),
-            Rail(lx=0, ly=1, l0=-self.B),
-            Rail(lx=0, ly=1, l0=-self.T),
-        ]
+        self.rails = {
+            'L': Rail('L', lx=1, ly=0, l0=-self.L),
+            'R': Rail('R', lx=1, ly=0, l0=-self.R),
+            'B': Rail('B', lx=0, ly=1, l0=-self.B),
+            'T': Rail('T', lx=0, ly=1, l0=-self.T),
+        }
 
 
 class Rail(object):
     """A rail is defined by a line lx*x + ly*y + l0 = 0"""
-    def __init__(self, lx, ly, l0):
+    def __init__(self, rail_id, lx, ly, l0):
+        self.id = rail_id
+
         self.lx = lx
         self.ly = ly
         self.l0 = l0
+
+        # Defines the normal vector of the rail surface
+        self.normal = np.array([self.lx, self.ly])
 
         # rail properties
         pass
