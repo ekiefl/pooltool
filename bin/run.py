@@ -17,6 +17,8 @@ if __name__ == '__main__':
     sim = engine.ShotSimulation()
     sim.setup_test('straight_shot')
 
+    size = 800
+
     # -----------------------------------------------------------------
 
     if args.choice == 'col':
@@ -28,7 +30,9 @@ if __name__ == '__main__':
             event = sim.get_next_event()
             sim.evolve(dt=event.tau, event=event)
 
-        ani = animate.AnimateShot(sim, size=1200)
+        sim.continuize(0.05)
+
+        ani = animate.AnimateShot(sim, size=size)
         ani.start()
 
 
@@ -38,7 +42,7 @@ if __name__ == '__main__':
         for t in np.diff(np.arange(0, 5, 0.033)):
             sim.evolve(t)
 
-        ani = animate.AnimateShot(sim, size=2800)
+        ani = animate.AnimateShot(sim, size=size)
         ani.start()
 
 

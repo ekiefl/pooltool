@@ -35,7 +35,7 @@ class Ball(object):
             f' └── angular  : {self.rvw[2]}',
         ]
 
-        return '\n'.join(lines)
+        return '\n'.join(lines) + '\n'
 
 
     def set(self, rvw, s):

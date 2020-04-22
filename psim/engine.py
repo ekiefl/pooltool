@@ -25,7 +25,7 @@ class Event(object):
             f' └── agents     : {self.agents}',
         ]
 
-        return '\n'.join(lines)
+        return '\n' + '\n'.join(lines)
 
 
 class ShotHistory(object):
@@ -33,7 +33,10 @@ class ShotHistory(object):
 
     def __init__(self):
         self.balls = {}
+        self.reset_history()
 
+
+    def reset_history(self):
         self.history = {
             'balls': {},
             'index': [],
@@ -41,8 +44,10 @@ class ShotHistory(object):
             'event': [],
         }
 
-        self.n =  0
+        self.n = -1
         self.time = 0
+
+        self.touch_history()
 
 
     def get_time_array(self):
@@ -95,6 +100,42 @@ class ShotHistory(object):
             self.history['balls'][ball_id]['rvw'].append(ball.rvw)
 
 
+    def continuize(self, dt=0.05):
+        old_history = self.history
+        self.reset_history()
+
+        # Set and log balls to the initial state
+        self.set_ball_state_from_history(index=0, history=old_history)
+        self.timestamp(0)
+
+        for index, event in zip(old_history['index'], old_history['event']):
+            if not isinstance(event, Event):
+                continue
+
+            if event.tau == np.inf:
+                break
+
+            # Evolve in steps of dt up to the event
+            event_time = 0
+            while event_time < event.tau:
+                self.evolve(dt)
+                event_time += dt
+
+            # Set and log balls to the resolved state of the event
+            self.set_ball_state_from_history(index=index, history=old_history)
+
+
+    def set_ball_state_from_history(self, index, history=None):
+        if history is None:
+            history = self.history
+
+        for ball_id, ball in self.balls.items():
+            ball.set(
+                history['balls'][ball_id]['rvw'][index],
+                history['balls'][ball_id]['s'][index],
+            )
+
+
 class ShotSimulation(ShotHistory):
     def __init__(self, g=None):
         self.g = g or psim.g
@@ -117,7 +158,7 @@ class ShotSimulation(ShotHistory):
         self.balls = balls
 
 
-    def evolve(self, dt, event=None):
+    def evolve(self, dt, log=True, event=None):
         for ball_id, ball in self.balls.items():
             rvw, s = physics.evolve_ball_motion(
                 state=ball.s,
@@ -135,7 +176,8 @@ class ShotSimulation(ShotHistory):
         if event is not None:
             self.resolve(event)
 
-        self.timestamp(dt, event=event)
+        if log:
+            self.timestamp(dt, event=event)
 
 
     def resolve(self, event):
@@ -279,14 +321,22 @@ class ShotSimulation(ShotHistory):
             self.balls['cue'] = Ball('cue')
             self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
 
+            self.balls['7'] = Ball('7')
+            self.balls['7'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.B+0.89, 0]
+
+            self.balls['3'] = Ball('3')
+            self.balls['3'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+0.89, 0]
+
             self.balls['8'] = Ball('8')
             self.balls['8'].rvw[0] = [self.table.center[0], self.table.B+0.66, 0]
 
             self.cue.strike(
                 ball = self.balls['cue'],
-                V0 = 0.35,
+                V0 = 1.35,
                 phi = 97,
-                sweet_spot=True,
+                a = 0.0,
+                b = 0.4,
+                theta = 0,
             )
 
         self.touch_history()
