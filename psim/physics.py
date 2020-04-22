@@ -32,6 +32,23 @@ def resolve_ball_ball_collision(rvw1, rvw2):
     return rvw1, rvw2
 
 
+def resolve_ball_rail_collision(rvw, normal):
+    """FIXME Instantaneous, elastic collision"""
+
+    before = rvw
+    psi = utils.angle(normal)
+
+    # rvw in rail reference frame (normal is in <1,0,0> direction)
+    rvw_R = utils.coordinate_rotation(rvw.T, -psi).T
+
+    # reverse velocity component lying in normal direction
+    rvw_R[1, 0] *= -1
+
+    rvw = utils.coordinate_rotation(rvw_R.T, psi).T
+
+    return rvw
+
+
 def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g, R):
     """Get the time until collision between 2 balls"""
     c1x, c1y = rvw1[0, 0], rvw1[0, 1]
