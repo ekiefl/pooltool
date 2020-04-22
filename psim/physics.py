@@ -12,7 +12,7 @@ def get_rel_velocity(rvw, R):
 
 
 def resolve_ball_ball_collision(rvw1, rvw2):
-    """Instantaneous, elastic, equal mass collision"""
+    """FIXME Instantaneous, elastic, equal mass collision"""
 
     r1, r2 = rvw1[0], rvw2[0]
     v1, v2 = rvw1[1], rvw2[1]
