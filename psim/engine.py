@@ -110,6 +110,7 @@ class ShotHistory(object):
         self.set_ball_state_from_history(index=0, history=old_history)
         self.timestamp(0)
 
+        dt_prime = dt
         for index, event in zip(old_history['index'], old_history['event']):
             if not isinstance(event, Event):
                 continue
@@ -119,10 +120,13 @@ class ShotHistory(object):
 
             # Evolve in steps of dt up to the event
             event_time = 0
-            while event_time < event.tau:
-                self.evolve(dt)
-                event_time += dt
+            while event_time < (event.tau - dt_prime):
+                self.evolve(dt_prime)
+                event_time += dt_prime
 
+                dt_prime = dt
+
+            dt_prime = dt - (event.tau - event_time)
             # Set and log balls to the resolved state of the event
             self.set_ball_state_from_history(index=index, history=old_history)
 

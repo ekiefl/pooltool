@@ -7,7 +7,9 @@ from psim.ani import (
     d_to_px,
     CLOTH_RGB,
     BALL_RGB,
+    RAIL_RGB,
     MAX_SCREEN,
+    TRACE_LENGTH,
 )
 
 import pygame
@@ -26,9 +28,11 @@ from pygame.locals import (
     QUIT,
 )
 
+import numpy as np
+
 
 class Ball(pygame.sprite.Sprite):
-    def __init__(self, ball, rvw_history, scale):
+    def __init__(self, ball, rvw_history, scale, trace=True):
         """A ball sprite
 
         Parameters
@@ -46,14 +50,17 @@ class Ball(pygame.sprite.Sprite):
 
         super(Ball, self).__init__()
 
-        color = BALL_RGB.get(self.id, (255,255,255))
+        self.color = BALL_RGB.get(self.id, (255,255,255))
+
+        self.trace = trace
+        self.trace_length = TRACE_LENGTH
 
         # See https://www.reddit.com/r/pygame/comments/6v9os5/how_to_draw_a_sprite_with_a_circular_shape/
         # for anti-aliased version if you don't like this later
         self.surf = pygame.Surface((2*self.radius, 2*self.radius), pygame.SRCALPHA)
         pygame.draw.circle(
             self.surf,
-            color,
+            self.color,
             (self.radius, self.radius),
             self.radius
         )
@@ -69,8 +76,36 @@ class Ball(pygame.sprite.Sprite):
         )
 
 
+class State(object):
+    def __init__(self):
+        self.running = True
+        self.paused = False
+        self.frame_forward = False
+        self.frame_backward = False
+        self.increase_speed = False
+        self.decrease_speed = False
+
+
+    def update(self):
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE: self.running = False
+                elif event.key == K_SPACE: self.paused = not self.paused
+                elif event.key == K_DOWN: self.decrease_speed = True
+                elif event.key == K_UP: self.increase_speed = True
+                elif event.key == K_RIGHT: self.paused = True; self.frame_forward = True
+                elif event.key == K_LEFT: self.paused = True; self.frame_backward = True
+            elif event.type == KEYUP:
+                if event.key == K_DOWN: self.decrease_speed = False
+                elif event.key == K_UP: self.increase_speed = False
+                elif event.key == K_RIGHT: self.frame_forward = False
+                elif event.key == K_LEFT: self.frame_backward = False
+            elif event.type == QUIT:
+                self.running = False
+
+
 class AnimateShot(object):
-    def __init__(self, shot, size=None, cloth_color=None):
+    def __init__(self, shot, size=None, cloth_color=None, rail_color=None):
         """Animate a shot in pygame
 
         Parameters
@@ -83,6 +118,7 @@ class AnimateShot(object):
 
         self.size = size or MAX_SCREEN
         self.cloth_color = cloth_color or CLOTH_RGB
+        self.rail_color = rail_color or RAIL_RGB
 
         self.shot = shot
         self.table = shot.table
@@ -93,13 +129,23 @@ class AnimateShot(object):
         # Ratio of pixel to table dimensions
         self.scale = self.size / max([self.table.w, self.table.l])
 
+        self.rail_thickness = d_to_px(0.01, self.scale)
         pygame.init()
 
         screen_width = d_to_px(self.scale, self.table.w)
         screen_height = d_to_px(self.scale, self.table.l)
         self.screen = pygame.display.set_mode((screen_width, screen_height))
 
-        # Create ball sprites
+        self.init_ball_sprites()
+
+        self.clock = pygame.time.Clock()
+        self.fps = self.get_fps()
+        self.frame = 0
+
+        self.state = State()
+
+
+    def init_ball_sprites(self):
         self.ball_sprites = pygame.sprite.Group()
         for ball_id, ball in self.balls.items():
             self.ball_sprites.add(Ball(
@@ -108,15 +154,34 @@ class AnimateShot(object):
                 self.scale
             ))
 
-        self.clock = pygame.time.Clock()
-        self.fps = self.get_fps()
-
 
     def get_fps(self):
-        try:
-            return 1/(self.times[-1] - self.times[-2])
-        except:
-            return 30
+        return 1/(self.times[-1] - self.times[-2])
+
+
+    def trace_ball_lines(self):
+        if self.frame < 2:
+            return
+
+        for ball in self.ball_sprites.sprites():
+            if not ball.trace:
+                continue
+
+            trace_length = self.frame if self.frame < ball.trace_length else ball.trace_length
+
+            for n in range(trace_length - 1):
+                pygame.gfxdraw.line(
+                    self.screen,
+                    ball.xs[self.frame - trace_length + n],
+                    ball.ys[self.frame - trace_length + n],
+                    ball.xs[self.frame - trace_length + n + 1],
+                    ball.ys[self.frame - trace_length + n + 1],
+                    (*ball.color, 255 * (1 - np.exp(-n/trace_length))),
+                )
+
+
+    def render_table(self):
+        self.screen.fill(self.cloth_color)
 
 
     def display(self):
@@ -128,78 +193,45 @@ class AnimateShot(object):
         pygame.display.flip()
 
 
+    def draw_balls(self):
+        # Draw the balls on the screen
+        for ball in self.ball_sprites:
+            self.screen.blit(ball.surf, ball.rect)
+
+
+    def update_balls(self, frame):
+        for ball in self.ball_sprites:
+            ball.update(frame=frame)
+
+
     def start(self):
-        running = True
-        paused = False
-        frame_forward = False
-        frame_backward = False
-        increase_speed = False
-        decrease_speed = False
-        counter = 0
-
-        while running:
-            # for loop through the event queue
-            for event in pygame.event.get():
-                # Check for KEYDOWN event
-                if event.type == KEYDOWN:
-                    if event.key == K_ESCAPE:
-                        running = False
-                    elif event.key == K_SPACE:
-                        paused = not paused
-                    elif event.key == K_DOWN:
-                        decrease_speed = True
-                    elif event.key == K_UP:
-                        increase_speed = True
-                    elif event.key == K_RIGHT:
-                        paused = True
-                        frame_forward = True
-                    elif event.key == K_LEFT:
-                        paused = True
-                        frame_backward = True
-                elif event.type == KEYUP:
-                    if event.key == K_DOWN:
-                        decrease_speed = False
-                    elif event.key == K_UP:
-                        increase_speed = False
-                    if event.key == K_RIGHT:
-                        frame_forward = False
-                    elif event.key == K_LEFT:
-                        frame_backward = False
-                elif event.type == QUIT:
-                    running = False
-
-            self.screen.fill(self.cloth_color)
-
-            # Draw the balls on the screen
-            for ball in self.ball_sprites:
-                self.screen.blit(ball.surf, ball.rect)
-
+        while self.state.running:
+            self.state.update()
+            self.render_table()
+            self.trace_ball_lines()
+            self.draw_balls()
             self.display()
 
-            if not paused:
-                # Draw the balls on the screen
-                for ball in self.ball_sprites:
-                    ball.update(frame=counter)
-                counter += 1
+            if not self.state.paused:
+                self.update_balls(self.frame)
+                self.frame += 1
 
-            elif frame_backward:
-                counter -= 1
-                for ball in self.ball_sprites:
-                    ball.update(frame=counter)
+            elif self.state.frame_backward:
+                self.frame -= 1
+                self.update_balls(self.frame)
 
-            elif frame_forward:
-                counter += 1
-                for ball in self.ball_sprites:
-                    ball.update(frame=counter)
+            elif self.state.frame_forward:
+                self.frame += 1
+                self.update_balls(self.frame)
 
-            if counter == self.num_frames:
+            if self.frame >= self.num_frames:
                 # Restart animation
-                counter = 0
+                self.frame = 0
 
-            if decrease_speed:
+            if self.state.decrease_speed:
                 self.fps = max([1, self.fps*0.96])
-            elif increase_speed:
-                self.fps = min([100, self.fps*1.04])
+            elif self.state.increase_speed:
+                self.fps = min([30, self.fps*1.04])
 
             self.clock.tick(self.fps)
 
