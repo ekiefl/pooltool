@@ -43,9 +43,11 @@ class Ball(object):
 
 
 class Table(object):
-    def __init__(self, w=None, l=None, u_s=None, u_r=None, u_sp=None):
+    def __init__(self, w=None, l=None, u_s=None, u_r=None, u_sp=None, edge_width=None, rail_width=None):
         self.w = w or psim.table_width
         self.l = l or psim.table_length
+        self.edge_width = edge_width or psim.table_edge_width
+        self.rail_width = rail_width or psim.rail_width
 
         self.L = 0
         self.R = self.w

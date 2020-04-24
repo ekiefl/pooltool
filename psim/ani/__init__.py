@@ -5,6 +5,9 @@ TRACE_LENGTH = 20
 # num of pixels of largest dimension
 MAX_SCREEN = 800
 
+DIAMOND_COLOR = (255,255,255)
+EDGE_RGB = (130,87,77)
+RAIL_CLOTH_RGB = (47,120,160)
 CLOTH_RGB = (60,155,206)
 RAIL_RGB = (71,38,27)
 BALL_RGB = {

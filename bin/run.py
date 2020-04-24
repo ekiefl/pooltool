@@ -15,7 +15,7 @@ args = ap.parse_args()
 
 if __name__ == '__main__':
     sim = engine.ShotSimulation()
-    sim.setup_test('masse')
+    sim.setup_test('straight_shot')
 
     size = 800
 
