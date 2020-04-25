@@ -24,7 +24,7 @@ import numpy as np
 
 
 class Ball(pygame.sprite.Sprite):
-    def __init__(self, ball, rvw_history, scale, trace=True):
+    def __init__(self, ball, rvw_history, scale, offset_x=0, offset_y=0, trace=True):
         """A ball sprite
 
         Parameters
@@ -37,8 +37,8 @@ class Ball(pygame.sprite.Sprite):
         self.radius = d_to_px(ball.R, self.scale)
 
         self.rvw_history = rvw_history
-        self.xs = d_to_px(scale, self.rvw_history[:,0,0])
-        self.ys = d_to_px(scale, self.rvw_history[:,0,1])
+        self.xs = d_to_px(scale, self.rvw_history[:,0,0], offset_x)
+        self.ys = d_to_px(scale, self.rvw_history[:,0,1], offset_y)
 
         super(Ball, self).__init__()
 
@@ -145,9 +145,11 @@ class AnimateShot(object):
         self.ball_sprites = pygame.sprite.Group()
         for ball_id, ball in self.balls.items():
             self.ball_sprites.add(Ball(
-                ball,
-                self.shot.get_ball_rvw_history(ball_id),
-                self.scale
+                ball=ball,
+                rvw_history=self.shot.get_ball_rvw_history(ball_id),
+                scale=self.scale,
+                offset_x=(self.px['rail'] + self.px['edge']),
+                offset_y=(self.px['rail'] + self.px['edge']),
             ))
 
 
@@ -191,8 +193,23 @@ class AnimateShot(object):
 
 
     def draw_table(self):
+        self.draw_cloth()
+        self.draw_rails_and_edges()
+
+
+    def draw_cloth(self):
         self.screen.fill(self.cloth_color)
 
+        # Headstring
+        pygame.draw.line(
+            self.screen,
+            (200,200,200),
+            (self.px['edge']+self.px['rail'], int(1/4*self.px['table_y'])),
+            (self.px['table_x']-self.px['edge'], int(1/4*self.px['table_y'])),
+        )
+
+
+    def draw_rails_and_edges(self):
         edge = self.px['edge']
         rail = self.px['rail']
         tx = self.px['table_x']
@@ -220,35 +237,18 @@ class AnimateShot(object):
         self.draw_arc(tx-edge, ty-edge, edge, 0, 90, self.edge_color)
         self.draw_arc(tx-edge, edge, edge, 270, 360, self.edge_color)
 
-        # Left/right diamonds
-        for i in range(9):
-            pygame.draw.circle(
-                self.screen,
-                DIAMOND_COLOR,
-                (int(edge/2), int(edge/2 + (ty - edge)*i/8)),
-                self.px['diamond']
-            )
-            pygame.draw.circle(
-                self.screen,
-                DIAMOND_COLOR,
-                (tx-int(edge/2), int(edge/2 + (ty - edge)*i/8)),
-                self.px['diamond']
-            )
+        # Diamonds
+        D = lambda coords: pygame.draw.circle(self.screen, DIAMOND_COLOR, coords, self.px['diamond'])
 
-        # Bottom/top diamonds
+        for i in range(9):
+            y_val = int(edge/2 + (ty - edge)*i/8)
+            D((int(edge/2), y_val))
+            D((tx - int(edge/2), y_val))
+
         for i in range(5):
-            pygame.draw.circle(
-                self.screen,
-                DIAMOND_COLOR,
-                (int(edge/2 + (tx - edge)*i/4), int(edge/2)),
-                self.px['diamond'],
-            )
-            pygame.draw.circle(
-                self.screen,
-                DIAMOND_COLOR,
-                (int(edge/2 + (tx - edge)*i/4), int(ty - edge/2)),
-                self.px['diamond'],
-            )
+            x_val = int(edge/2 + (tx - edge)*i/4)
+            D((x_val, int(edge/2)))
+            D((x_val, int(ty - edge/2)))
 
 
     def display(self):

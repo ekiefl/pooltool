@@ -4,48 +4,42 @@ import psim
 import psim.utils as utils
 import psim.engine as engine
 import psim.physics as physics
-import psim.ani.animate as animate
 
 import numpy as np
 import argparse
 
 ap = argparse.ArgumentParser()
-ap.add_argument('--choice', required=True, choices=['col', 'ani'])
+ap.add_argument('--setup', required=True)
+ap.add_argument('-s', '--skip-continuize', action='store_true')
+ap.add_argument('-d', '--dimensions', type=int, choices=[2,3], default=2)
 args = ap.parse_args()
 
 if __name__ == '__main__':
     sim = engine.ShotSimulation()
-    sim.setup_test('straight_shot')
+    sim.setup_test(args.setup)
 
-    size = 800
+    event = engine.Event(None, None, 0)
 
-    # -----------------------------------------------------------------
+    sim.timestamp(0)
+    while event.tau < np.inf:
+        event = sim.get_next_event()
+        sim.evolve(dt=event.tau, event=event)
 
-    if args.choice == 'col':
-
-        event = engine.Event(None, None, 0)
-
-        sim.timestamp(0)
-        while event.tau < np.inf:
-            event = sim.get_next_event()
-            sim.evolve(dt=event.tau, event=event)
-
+    if not args.skip_continuize:
         sim.continuize(0.05)
 
-        ani = animate.AnimateShot(sim, size=size)
-        ani.start()
+    if args.dimensions == 2:
+        from psim.ani.animate2d import AnimateShot
 
+        kwargs = {
+            'size': 800
+        }
 
-    # -----------------------------------------------------------------
+    elif args.dimensions == 3:
+        from psim.ani.animate3d import AnimateShot
 
-    if args.choice == 'ani':
-        for t in np.diff(np.arange(0, 5, 0.033)):
-            sim.evolve(t)
+        kwargs = {
+        }
 
-        ani = animate.AnimateShot(sim, size=size)
-        ani.start()
-
-
-
-
-
+    ani = AnimateShot(sim, **kwargs)
+    ani.start()

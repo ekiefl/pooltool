@@ -1,6 +1,15 @@
 #! /usr/bin/env python
+import psim
 
-TRACE_LENGTH = 20
+from pathlib import Path
+from panda3d.core import Filename
+
+import os
+
+model_paths = (path for path in (Path(psim.__file__).parent.parent / 'models').glob('*') if path.is_file())
+model_paths = {str(path.stem): Filename.fromOsSpecific(str(path.absolute())) for path in model_paths}
+
+TRACE_LENGTH = 80
 
 # num of pixels of largest dimension
 MAX_SCREEN = 800
@@ -23,14 +32,16 @@ BALL_RGB = {
     '9': (244,200,22),
 }
 
-def d_to_px(scale, d):
+def d_to_px(scale, d, offset=0):
     """scale is ratio of d to px"""
     if hasattr(d, '__len__'):
-        return (d * scale).astype(int)
+        return (d * scale + offset).astype(int)
     else:
-        return int(d * scale)
+        return int(d * scale + offset)
 
 
 def px_to_d(scale, px):
     """scale is ratio of d to px"""
     return d / scale
+
+

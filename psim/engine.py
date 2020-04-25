@@ -397,11 +397,11 @@ class ShotSimulation(ShotHistory):
 
     def setup_test(self, setup='masse'):
         # Make a table, cue, and balls
-        self.table = Table()
         self.cue = Cue(brand='Predator')
         self.balls = {}
 
         if setup == 'masse':
+            self.table = Table()
             self.balls['cue'] = Ball('cue')
             self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
 
@@ -419,41 +419,41 @@ class ShotSimulation(ShotHistory):
                 a = 0.2,
                 b = 0.0,
             )
-        elif setup == 'slight_masse':
-            self.balls['cue'] = Ball('cue')
-            self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
-
-            self.balls['8'] = Ball('8')
-            self.balls['8'].rvw[0] = [self.table.center[0], 1.6, 0]
+        elif setup == 'stat_mech':
+            self.table = Table(l=20, w=20)
+            for i in range(20):
+                self.balls[i] = Ball(i)
+                self.balls[i].rvw[0] = [self.table.w*np.random.rand(), self.table.l*np.random.rand(), 0]
 
             self.cue.strike(
-                ball = self.balls['cue'],
-                V0 = 0.5,
+                ball = self.balls[0],
+                V0 = 40.5,
                 phi = 100,
                 theta = 20,
                 a = -0.4,
                 b = 0.0,
             )
         elif setup == 'straight_shot':
+            self.table = Table()
             self.balls['cue'] = Ball('cue')
             self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
 
             self.balls['7'] = Ball('7')
-            self.balls['7'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.B+0.89, 0]
+            self.balls['7'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.B+1.89, 0]
 
             self.balls['3'] = Ball('3')
-            self.balls['3'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+0.89, 0]
+            self.balls['3'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+1.89, 0]
 
             self.balls['8'] = Ball('8')
-            self.balls['8'].rvw[0] = [self.table.center[0], self.table.B+0.66, 0]
+            self.balls['8'].rvw[0] = [self.table.center[0], self.table.B+1.66, 0]
 
             self.cue.strike(
                 ball = self.balls['cue'],
-                V0 = 1.35,
-                phi = 97,
+                V0 = 1.50001,
+                phi = 91.999999157,
                 a = 0.0,
                 b = 0.4,
-                theta = 0,
+                theta = 20,
             )
 
         self.touch_history()
