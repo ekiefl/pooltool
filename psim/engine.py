@@ -213,6 +213,15 @@ class ShotSimulation(ShotHistory):
         ShotHistory.__init__(self)
 
 
+    def simulate(self, name='NA'):
+        event = Event(None, None, 0)
+
+        self.timestamp(0)
+        while event.tau < np.inf:
+            event = self.get_next_event()
+            self.evolve(dt=event.tau, event=event)
+
+
     def set_cue(self, cue):
         self.cue = cue
 

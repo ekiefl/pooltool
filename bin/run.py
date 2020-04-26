@@ -18,15 +18,9 @@ if __name__ == '__main__':
     sim = engine.ShotSimulation()
     sim.setup_test(args.setup)
 
-    event = engine.Event(None, None, 0)
-
-    sim.timestamp(0)
-    while event.tau < np.inf:
-        event = sim.get_next_event()
-        sim.evolve(dt=event.tau, event=event)
-
+    sim.simulate(name=args.setup)
     if not args.skip_continuize:
-        sim.continuize(0.05)
+        sim.continuize(0.01)
 
     if args.dimensions == 2:
         from psim.ani.animate2d import AnimateShot
