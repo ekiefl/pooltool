@@ -4,6 +4,11 @@ import psim
 import psim.utils as utils
 
 import numpy as np
+from scipy.spatial.transform import Rotation
+
+
+def as_euler_angle(a):
+    return Rotation.from_rotvec(a).as_euler('zyx', degrees=True)
 
 
 def get_rel_velocity(rvw, R):
@@ -191,7 +196,7 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     # Angle of initial velocity in table frame
     phi = utils.angle(rvw[1])
 
-    rvw_B = utils.coordinate_rotation(rvw.T, -phi).T
+    rvw_B0 = utils.coordinate_rotation(rvw.T, -phi).T
 
     # Relative velocity unit vector in ball frame
     u_0 = utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw, R)), -phi)
@@ -201,18 +206,21 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     # angular velocity is done in the next block
 
     rvw_B = np.array([
-        np.array([rvw_B[1,0]*t - 1/2*u_s*g*t**2 * u_0[0], -1/2*u_s*g*t**2 * u_0[1], 0]),
-        rvw_B[1] - u_s*g*t*u_0,
-        rvw_B[2] - 5/2/R*u_s*g*t * np.cross(u_0, np.array([0,0,1])),
-        rvw_B[3],
+        np.array([rvw_B0[1,0]*t - 1/2*u_s*g*t**2 * u_0[0], -1/2*u_s*g*t**2 * u_0[1], 0]),
+        rvw_B0[1] - u_s*g*t*u_0,
+        rvw_B0[2] - 5/2/R*u_s*g*t * np.cross(u_0, np.array([0,0,1])),
+        rvw_B0[2]*t - 1/2 * 5/2/R*u_s*g*t**2 * np.cross(u_0, np.array([0,0,1])),
     ])
 
     # This transformation governs the z evolution of angular velocity
+    rvw_B[2, 2] = rvw_B0[2, 2]
+    rvw_B[3, 2] = rvw_B0[3, 2]
     rvw_B = evolve_perpendicular_spin_state(rvw_B, R, u_sp, g, t)
 
     # Rotate to table reference
     rvw_T = utils.coordinate_rotation(rvw_B.T, phi).T
-    rvw_T[0] += rvw[0]
+    rvw_T[0] += rvw[0] # Add initial ball position
+    rvw_T[3] += rvw[3] # Add initial ball orientation
 
     return rvw_T
 
@@ -225,23 +233,34 @@ def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
     r = r_0 + v_0 * t - 1/2*u_r*g*t**2 * v_0_hat
     v = v_0 - u_r*g*t * v_0_hat
     w = utils.coordinate_rotation(v/R, np.pi/2)
+    e = utils.coordinate_rotation((v_0*t - 1/2*u_r*g*t**2 * v_0_hat)/R, np.pi/2)
 
     # Independently evolve the z spin
-    w[2] = evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)[2,2]
+    temp = evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)
+    w[2] = temp[2, 2]
+    e[2] = temp[3, 2]
 
-    return np.array([r, v, w, e_0])
+    return np.array([r, v, w, e])
 
 
 def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
-    w_0 = rvw[2]
+    _, _, w_0, e_0 = rvw
+
+    if w_0[2] < psim.tol:
+        return rvw
+
+    alpha = 5/2*R*u_sp*g
+
+    if t > abs(w_0[2])/alpha:
+        # You can't decay past 0 angular velocity
+        t = w_0[2]/alpha
 
     # Always decay towards 0, whether spin is +ve or -ve
     sign = 1 if w_0[2] > 0 else -1
 
-    # Decay to 0, but not past
-    decay = min([np.abs(w_0[2]), 5/2/R*u_sp*g*t])
+    rvw[2, 2] = w_0[2] - sign*alpha*t
+    rvw[3, 2] = e_0[2] + w_0[2]*t - sign*1/2*alpha*t**2
 
-    rvw[2,2] -= sign * decay
     return rvw
 
 

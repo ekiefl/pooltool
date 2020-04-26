@@ -164,6 +164,7 @@ class ShotHistory(object):
 
     def plot_history(self, ball_id, full=False):
         """Primitive plotting for use during development"""
+
         import pandas as pd
         import matplotlib.pyplot as plt
 
@@ -554,9 +555,9 @@ class ShotSimulation(ShotHistory):
                 ball = self.balls['cue'],
                 V0 = 2.50001,
                 phi = 91.999999157,
-                a = 0.0,
+                a = -0.3,
                 b = 0.4,
-                theta = 20,
+                theta = 0,
             )
 
         self.touch_history()
