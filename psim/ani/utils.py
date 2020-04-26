@@ -14,7 +14,7 @@ def normalize(*args):
     return myVec
 
 
-def make_square(render, x1, y1, z1, x2, y2, z2, name='square'):
+def make_square(x1, y1, z1, x2, y2, z2, name='square'):
     fmt = GeomVertexFormat.getV3n3cpt2()
     vdata = GeomVertexData('square', fmt, Geom.UHDynamic)
 
