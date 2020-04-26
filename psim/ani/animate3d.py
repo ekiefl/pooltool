@@ -50,6 +50,9 @@ class AnimateShot(ShowBase):
         self.times = shot.get_time_array()
         self.num_frames = shot.n
 
+        self.accept('escape', sys.exit)
+        self.accept('r', self.restart_shot)
+
         self.title = OnscreenText(text='psim',
                                   style=1, fg=(1, 1, 0, 1), shadow=(0, 0, 0, 0.5),
                                   pos=(0.87, -0.95), scale = .07)
@@ -87,6 +90,8 @@ class AnimateShot(ShowBase):
             self.render, 0, 0, 0, self.shot.table.w, self.shot.table.l, 0, 'square'
         ))
         self.table.setTexture(self.loader.loadTexture(model_paths['blue_cloth']))
+    def restart_shot(self):
+        self.frame = 0
 
 
     def init_scene(self):
