@@ -109,8 +109,11 @@ class ShotHistory(object):
 
 
     def continuize(self, dt=0.05):
+        old_n = self.n
         old_history = self.history
         self.reset_history()
+
+        self.progress.new("Continuizing shot history", progress_total_items=old_n)
 
         # Set and log balls to the initial state
         self.set_ball_state_from_history(index=0, history=old_history)
@@ -118,6 +121,9 @@ class ShotHistory(object):
 
         dt_prime = dt
         for index, event in zip(old_history['index'], old_history['event']):
+            self.progress.update(f"Done event {index} / {old_n}")
+            self.progress.increment()
+
             if not isinstance(event, Event):
                 continue
 
@@ -135,6 +141,8 @@ class ShotHistory(object):
             dt_prime = dt - (event.tau - event_time)
             # Set and log balls to the resolved state of the event
             self.set_ball_state_from_history(index=index, history=old_history)
+
+        self.progress.end()
 
 
     def set_ball_state_from_history(self, index, history=None):
