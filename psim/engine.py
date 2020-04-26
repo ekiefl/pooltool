@@ -248,12 +248,22 @@ class ShotSimulation(ShotHistory):
 
 
     def simulate(self, name='NA'):
+        energy_start = self.get_system_energy()
+
+        self.progress.new(f"Running '{name}'", progress_total_items=int(energy_start))
         event = Event(None, None, 0)
 
         self.timestamp(0)
         while event.tau < np.inf:
             event = self.get_next_event()
             self.evolve(dt=event.tau, event=event)
+
+            if (self.n % 25) == 0:
+                energy = self.get_system_energy()
+                self.progress.update(f"Remaining energy: {np.round(energy, 0)}J")
+                self.progress.increment(increment_to=int(energy_start - energy))
+
+        self.progress.end()
 
 
     def set_cue(self, cue):
