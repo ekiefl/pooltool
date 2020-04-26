@@ -57,14 +57,14 @@ class AnimateShot(ShowBase):
                                   style=1, fg=(1, 1, 0, 1), shadow=(0, 0, 0, 0.5),
                                   pos=(0.87, -0.95), scale = .07)
 
+        self.table = None
+        self.init_table()
+
         self.balls = {}
         self.init_balls()
 
         self.scene = None
         self.init_scene()
-
-        self.table = None
-        self.init_table()
 
         self.init_camera()
 
@@ -86,11 +86,6 @@ class AnimateShot(ShowBase):
         return Task.cont
 
 
-    def init_table(self):
-        self.table = self.render.attachNewNode(autils.make_square(
-            self.render, 0, 0, 0, self.shot.table.w, self.shot.table.l, 0, 'square'
-        ))
-        self.table.setTexture(self.loader.loadTexture(model_paths['blue_cloth']))
     def restart_shot(self):
         self.frame = 0
 
@@ -108,6 +103,22 @@ class AnimateShot(ShowBase):
         self.camera.setHpr(-45, -30, 0)
 
 
+    def init_table(self):
+        w, l = self.shot.table.w, self.shot.table.l
+
+        self.table = self.render.attachNewNode(autils.make_square(
+            x1=0, y1=0, z1=0, x2=w, y2=l, z2=0, name='playing_surface'
+        ))
+
+        self.table.setPos(0, 0, 0.4)
+        self.table.setTexture(self.loader.loadTexture(model_paths['blue_cloth']))
+
+        # Makes viewable from below
+        self.table.setTwoSided(True)
+
+        self.table.reparentTo(self.render)
+
+
     def init_balls(self):
         for ball in self.shot.balls.values():
             self.balls[ball.id] = self.init_ball(ball)
@@ -116,7 +127,7 @@ class AnimateShot(ShowBase):
     def init_ball(self, ball):
         rvw_history = self.shot.get_ball_rvw_history(ball.id)
         ball_node = self.loader.loadModel("models/smiley")
-        ball_node.reparentTo(self.render)
+        ball_node.reparentTo(self.table)
 
         return Ball(ball, rvw_history, ball_node)
 
