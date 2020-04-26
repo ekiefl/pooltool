@@ -4,6 +4,12 @@ import cmath
 import numpy as np
 
 from numba import njit
+from scipy.spatial.transform import Rotation
+
+
+def as_euler_angle(w):
+    return Rotation.from_rotvec(w).as_euler('zyx', degrees=True)
+
 
 def unit_vector(vector):
     """Returns the unit vector of the vector."""
