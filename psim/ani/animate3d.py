@@ -3,11 +3,13 @@ import psim.ani.utils as autils
 
 from psim.ani import model_paths
 
+import sys
 import numpy as np
 
 from direct.task import Task
 from panda3d.core import Point3
 from direct.actor.Actor import Actor
+from direct.gui.OnscreenText import OnscreenText
 from direct.showbase.ShowBase import ShowBase
 from direct.interval.IntervalGlobal import Sequence
 
@@ -47,6 +49,10 @@ class AnimateShot(ShowBase):
         self.shot = shot
         self.times = shot.get_time_array()
         self.num_frames = shot.n
+
+        self.title = OnscreenText(text='psim',
+                                  style=1, fg=(1, 1, 0, 1), shadow=(0, 0, 0, 0.5),
+                                  pos=(0.87, -0.95), scale = .07)
 
         self.balls = {}
         self.init_balls()

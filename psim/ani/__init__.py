@@ -9,7 +9,7 @@ import os
 model_paths = (path for path in (Path(psim.__file__).parent.parent / 'models').glob('*') if path.is_file())
 model_paths = {str(path.stem): Filename.fromOsSpecific(str(path.absolute())) for path in model_paths}
 
-TRACE_LENGTH = 80
+TRACE_LENGTH = 50
 
 # num of pixels of largest dimension
 MAX_SCREEN = 800
