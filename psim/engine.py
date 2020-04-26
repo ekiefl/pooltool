@@ -63,17 +63,17 @@ class ShotHistory(object):
 
 
     def get_ball_state_history(self, ball_id):
-        return np.array(self.history['balls'][ball_id]['s'])
+        return self.history['balls'][ball_id]['s']
+
+
+    def get_ball_rvw_history(self, ball_id):
+        return self.history['balls'][ball_id]['rvw']
 
 
     def get_event_history_for_ball(self, ball_id):
         return [event
                 for event in self.history['event']
                 if ball_id in event.agents]
-
-
-    def get_ball_rvw_history(self, ball_id):
-        return np.array(self.history['balls'][ball_id]['rvw'])
 
 
     def touch_history(self):
@@ -122,7 +122,7 @@ class ShotHistory(object):
         self.progress.new("Continuizing shot history", progress_total_items=old_n)
 
         # Set and log balls to the initial state
-        self.set_ball_state_from_history(index=0, history=old_history)
+        self.set_table_state_via_history(index=0, history=old_history)
         self.timestamp(0)
 
         dt_prime = dt
@@ -146,12 +146,13 @@ class ShotHistory(object):
 
             dt_prime = dt - (event.tau - event_time)
             # Set and log balls to the resolved state of the event
-            self.set_ball_state_from_history(index=index, history=old_history)
+            self.set_table_state_via_history(index=index, history=old_history)
 
+        self.vectorize_history()
         self.progress.end()
 
 
-    def set_ball_state_from_history(self, index, history=None):
+    def set_table_state_via_history(self, index, history=None):
         if history is None:
             history = self.history
 
@@ -160,6 +161,28 @@ class ShotHistory(object):
                 history['balls'][ball_id]['rvw'][index],
                 history['balls'][ball_id]['s'][index],
             )
+
+
+    def vectorize_history(self):
+        """Convert all list objects in self.history to array objects
+
+        Notes
+        =====
+        - Should be done once the history has been already built and
+          will not be further appended to.
+        - self.history['event'] cannot be vectorized because its
+          elements are Event objects
+        """
+
+        self.history['index'] = np.array(self.history['index'])
+        self.history['time'] = np.array(self.history['time'])
+        for ball in self.history['balls']:
+            self.history['balls'][ball]['s'] = np.array(self.history['balls'][ball]['s'])
+            self.history['balls'][ball]['rvw'] = np.array(self.history['balls'][ball]['rvw'])
+
+
+    def convert_to_euler_angles(self, inplace=False):
+        pass
 
 
     def plot_history(self, ball_id, full=False):
@@ -282,6 +305,8 @@ class ShotSimulation(ShotHistory):
 
             if (self.n % 5) == 0:
                 progress_update()
+
+        self.vectorize_history()
 
         self.progress.end()
 
