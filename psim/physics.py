@@ -315,3 +315,6 @@ def cue_strike(m, M, R, V0, phi, theta, a, b):
 
     return v_T, w_T
 
+
+def is_overlapping(rvw1, rvw2, R1, R2):
+    return np.linalg.norm(rvw1[0] - rvw2[0]) < (R1 + R2)

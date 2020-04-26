@@ -227,6 +227,18 @@ class ShotSimulation(ShotHistory):
         ShotHistory.__init__(self)
 
 
+    def is_balls_overlapping(self):
+        for ball1 in self.balls.values():
+            for ball2 in self.balls.values():
+                if ball1 is ball2:
+                    continue
+
+                if physics.is_overlapping(ball1.rvw, ball2.rvw, ball1.R, ball2.R):
+                    return True
+
+        return False
+
+
     def simulate(self, name='NA'):
         event = Event(None, None, 0)
 
