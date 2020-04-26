@@ -73,9 +73,10 @@ class AnimateShot(ShowBase):
 
 
     def master_task(self, task):
-        print(task.time)
         for ball in self.balls.values():
             ball.update(self.frame)
+
+        self.camera.lookAt(self.balls['cue'].node)
 
         if self.frame >= self.num_frames:
             self.frame = 0
