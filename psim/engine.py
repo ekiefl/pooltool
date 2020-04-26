@@ -92,7 +92,7 @@ class ShotHistory(object):
 
         self.history['balls'][ball_id] = {
             's': [np.nan] * self.n,
-            'rvw': [np.nan * np.ones((3,3))] * self.n,
+            'rvw': [np.nan * np.ones((4,3))] * self.n,
         }
 
 
@@ -266,7 +266,7 @@ class ShotSimulation(ShotHistory):
 
             if (self.n % 25) == 0:
                 energy = self.get_system_energy()
-                self.progress.update(f"Remaining energy: {np.round(energy, 0)}J")
+                self.progress.update(f"Remaining energy: {np.round(energy, 2)}J")
                 self.progress.increment(increment_to=int(energy_start - energy))
 
         self.progress.end()
@@ -511,7 +511,7 @@ class ShotSimulation(ShotHistory):
                 V0 = 10.9,
                 phi = 81,
                 theta = 20,
-                a = -0.4,
+                a = 0.01,
                 b = 0.0,
             )
         elif setup == 'straight_shot':

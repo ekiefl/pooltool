@@ -7,7 +7,7 @@ import numpy as np
 
 
 def get_rel_velocity(rvw, R):
-    _, v, w = rvw
+    _, v, w, _ = rvw
     return v + R * np.cross(np.array([0,0,1]), w)
 
 
@@ -35,7 +35,6 @@ def resolve_ball_ball_collision(rvw1, rvw2):
 def resolve_ball_rail_collision(rvw, normal):
     """FIXME Instantaneous, elastic collision"""
 
-    before = rvw
     psi = utils.angle(normal)
 
     # rvw in rail reference frame (normal is in <1,0,0> direction)
@@ -141,12 +140,12 @@ def get_slide_time(rvw, R, u_s, g):
 
 
 def get_roll_time(rvw, u_r, g):
-    _, v, _ = rvw
+    _, v, _, _ = rvw
     return np.linalg.norm(v) / (u_r*g)
 
 
 def get_spin_time(rvw, R, u_sp, g):
-    _, _, w = rvw
+    _, _, w, _ = rvw
     return np.abs(w[2]) * 2/5*R/u_sp/g
 
 
@@ -204,7 +203,8 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     rvw_B = np.array([
         np.array([rvw_B[1,0]*t - 1/2*u_s*g*t**2 * u_0[0], -1/2*u_s*g*t**2 * u_0[1], 0]),
         rvw_B[1] - u_s*g*t*u_0,
-        rvw_B[2] - 5/2/R*u_s*g*t * np.cross(u_0, np.array([0,0,1]))
+        rvw_B[2] - 5/2/R*u_s*g*t * np.cross(u_0, np.array([0,0,1])),
+        rvw_B[3],
     ])
 
     # This transformation governs the z evolution of angular velocity
@@ -218,19 +218,18 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
 
 
 def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
-    r_0, v_0, w_0 = rvw
+    r_0, v_0, w_0, e_0 = rvw
 
     v_0_hat = utils.unit_vector(v_0)
 
-    r_T = r_0 + v_0 * t - 1/2*u_r*g*t**2 * v_0_hat
-    v_T = v_0 - u_r*g*t * v_0_hat
-    w_T = utils.coordinate_rotation(v_T/R, np.pi/2)
+    r = r_0 + v_0 * t - 1/2*u_r*g*t**2 * v_0_hat
+    v = v_0 - u_r*g*t * v_0_hat
+    w = utils.coordinate_rotation(v/R, np.pi/2)
 
     # Independently evolve the z spin
-    w_T[2] = evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)[2,2]
+    w[2] = evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)[2,2]
 
-    # This transformation governs the z evolution of angular velocity
-    return np.array([r_T, v_T, w_T])
+    return np.array([r, v, w, e_0])
 
 
 def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
