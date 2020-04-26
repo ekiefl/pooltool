@@ -47,7 +47,7 @@ class AnimateShot(ShowBase):
         self.frame = 0
 
         self.shot = shot
-        self.times = shot.get_time_array()
+        self.times = shot.get_time_history()
         self.num_frames = shot.n
 
         self.accept('escape', sys.exit)

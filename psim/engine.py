@@ -45,6 +45,7 @@ class ShotHistory(object):
 
 
     def reset_history(self):
+        self.vectorized = False
         self.history = {
             'balls': {},
             'index': [],
@@ -58,15 +59,18 @@ class ShotHistory(object):
         self.touch_history()
 
 
-    def get_time_array(self):
-        return np.array(self.history['time'])
+    def get_time_history(self):
+        """Returns 1D array if self.vectorized, otherwise a list"""
+        return self.history['time']
 
 
     def get_ball_state_history(self, ball_id):
+        """Returns 1D array if self.vectorized, otherwise a list"""
         return self.history['balls'][ball_id]['s']
 
 
     def get_ball_rvw_history(self, ball_id):
+        """Returns 3D array if self.vectorized, otherwise a list of 2D arrays"""
         return self.history['balls'][ball_id]['rvw']
 
 
@@ -179,6 +183,8 @@ class ShotHistory(object):
         for ball in self.history['balls']:
             self.history['balls'][ball]['s'] = np.array(self.history['balls'][ball]['s'])
             self.history['balls'][ball]['rvw'] = np.array(self.history['balls'][ball]['rvw'])
+
+        self.vectorized = True
 
 
     def convert_to_euler_angles(self, inplace=False):

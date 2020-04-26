@@ -89,7 +89,7 @@ class AnimateShot(object):
         self.shot = shot
         self.table = shot.table
         self.balls = shot.balls
-        self.times = shot.get_time_array()
+        self.times = shot.get_time_history()
         self.num_frames = shot.n
 
         self.table_x, self.table_y = self.calculate_table_size()
