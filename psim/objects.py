@@ -18,7 +18,8 @@ class Ball(object):
 
         self.rvw = np.array([[np.nan, np.nan, np.nan],  # positions (r)
                              [0,      0,      0     ],  # velocities (v)
-                             [0,      0,      0     ]]) # angular velocities (w)
+                             [0,      0,      0     ],  # angular velocities (w)
+                             [0,      0,      0     ]]) # euler angles (e)
 
         # stationary=0, spinning=1, sliding=2, rolling=3
         self.s = 0
@@ -31,7 +32,8 @@ class Ball(object):
             f' ├── state    : {self.s}',
             f' ├── position : {self.rvw[0]}',
             f' ├── velocity : {self.rvw[1]}',
-            f' └── angular  : {self.rvw[2]}',
+            f' ├── angular  : {self.rvw[2]}',
+            f' └── euler    : {self.rvw[3]}',
         ]
 
         return '\n'.join(lines) + '\n'
@@ -100,7 +102,7 @@ class Cue(object):
                 raise ValueError("Cue.strike :: Must choose theta, a, and b")
 
         v, w = physics.cue_strike(ball.m, self.M, ball.R, V0, phi, theta, a, b)
-        rvw = np.array([ball.rvw[0], v, w,])
+        rvw = np.array([ball.rvw[0], v, w, ball.rvw[3]])
 
         s = (psim.rolling
              if abs(np.sum(physics.get_rel_velocity(rvw, ball.R))) <= psim.tol
