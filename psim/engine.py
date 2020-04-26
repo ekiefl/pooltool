@@ -227,6 +227,14 @@ class ShotSimulation(ShotHistory):
         ShotHistory.__init__(self)
 
 
+    def get_system_energy(self):
+        energy = 0
+        for ball in self.balls.values():
+            energy += physics.get_ball_energy(ball.rvw, ball.R, ball.m)
+
+        return energy
+
+
     def is_balls_overlapping(self):
         for ball1 in self.balls.values():
             for ball2 in self.balls.values():
