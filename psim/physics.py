@@ -11,6 +11,131 @@ def get_rel_velocity(rvw, R):
     return v + R * np.cross(np.array([0,0,1]), w)
 
 
+def resolve_ball_ball_collision(rvw1, rvw2):
+    """FIXME Instantaneous, elastic, equal mass collision"""
+
+    r1, r2 = rvw1[0], rvw2[0]
+    v1, v2 = rvw1[1], rvw2[1]
+
+    v_rel = v1 - v2
+    v_mag = np.linalg.norm(v_rel)
+
+    n = utils.unit_vector(r2 - r1)
+    t = utils.coordinate_rotation(n, np.pi/2)
+
+    alpha = utils.angle(n)
+    beta = utils.angle(v_rel, n)
+
+    rvw1[1] = t * v_mag*np.sin(beta) + v2
+    rvw2[1] = n * v_mag*np.cos(beta) + v2
+
+    return rvw1, rvw2
+
+
+def resolve_ball_rail_collision(rvw, normal):
+    """FIXME Instantaneous, elastic collision"""
+
+    before = rvw
+    psi = utils.angle(normal)
+
+    # rvw in rail reference frame (normal is in <1,0,0> direction)
+    rvw_R = utils.coordinate_rotation(rvw.T, -psi).T
+
+    # reverse velocity component lying in normal direction
+    rvw_R[1, 0] *= -1
+
+    rvw = utils.coordinate_rotation(rvw_R.T, psi).T
+
+    return rvw
+
+
+def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g, R):
+    """Get the time until collision between 2 balls"""
+    c1x, c1y = rvw1[0, 0], rvw1[0, 1]
+    c2x, c2y = rvw2[0, 0], rvw2[0, 1]
+
+    if s1 == psim.stationary or s1 == psim.spinning:
+        a1x, a1y, b1x, b1y = 0, 0, 0, 0
+    else:
+        phi1 = utils.angle(rvw1[1])
+        v1 = np.linalg.norm(rvw1[1])
+
+        u1 = (np.array([1,0,0])
+              if s1 == psim.rolling
+              else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw1, R)), -phi1))
+
+        a1x = -1/2*mu1*g*(u1[0]*np.cos(phi1) - u1[1]*np.sin(phi1))
+        a1y = -1/2*mu1*g*(u1[0]*np.sin(phi1) + u1[1]*np.cos(phi1))
+        b1x = v1*np.cos(phi1)
+        b1y = v1*np.sin(phi1)
+
+    if s2 == psim.stationary or s2 == psim.spinning:
+        a2x, a2y, b2x, b2y = 0, 0, 0, 0
+    else:
+        phi2 = utils.angle(rvw2[1])
+        v2 = np.linalg.norm(rvw2[1])
+
+        u2 = (np.array([1,0,0])
+              if s2 == psim.rolling
+              else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw2, R)), -phi2))
+
+        a2x = -1/2*mu2*g*(u2[0]*np.cos(phi2) - u2[1]*np.sin(phi2))
+        a2y = -1/2*mu2*g*(u2[0]*np.sin(phi2) + u2[1]*np.cos(phi2))
+        b2x = v2*np.cos(phi2)
+        b2y = v2*np.sin(phi2)
+
+    Ax, Ay = a2x-a1x, a2y-a1y
+    Bx, By = b2x-b1x, b2y-b1y
+    Cx, Cy = c2x-c1x, c2y-c1y
+
+    a = Ax**2 + Ay**2
+    b = 2*Ax*Bx + 2*Ay*By
+    c = Bx**2 + 2*Ax*Cx + 2*Ay*Cy + By**2
+    d = 2*Bx*Cx + 2*By*Cy
+    e = Cx**2 + Cy**2 - 4*R**2
+
+    roots = np.roots([a,b,c,d,e])
+
+    roots = roots[
+        (abs(roots.imag) <= psim.tol) & \
+        (roots.real > psim.tol)
+    ].real
+
+    return roots.min() if len(roots) else np.inf
+
+
+def get_ball_rail_collision_time(rvw, s, lx, ly, l0, mu, m, g, R):
+    """Get the time until collision between ball and collision"""
+    if s == psim.stationary or s == psim.spinning:
+        return np.inf
+
+    phi = utils.angle(rvw[1])
+    v = np.linalg.norm(rvw[1])
+
+    u = (np.array([1,0,0]
+         if s == psim.rolling
+         else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw, R)), -phi)))
+
+    ax = -1/2*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
+    ay = -1/2*mu*g*(u[0]*np.sin(phi) + u[1]*np.cos(phi))
+    bx, by = v*np.cos(phi), v*np.sin(phi)
+    cx, cy = rvw[0, 0], rvw[0, 1]
+
+    A = lx*ax + ly*ay
+    B = lx*bx + ly*by
+    C1 = l0 + lx*cx + ly*cy + R*np.sqrt(lx**2 + ly**2)
+    C2 = l0 + lx*cx + ly*cy - R*np.sqrt(lx**2 + ly**2)
+
+    roots = np.append(np.roots([A,B,C1]), np.roots([A,B,C2]))
+
+    roots = roots[
+        (abs(roots.imag) <= psim.tol) & \
+        (roots.real > psim.tol)
+    ].real
+
+    return roots.min() if len(roots) else np.inf
+
+
 def get_slide_time(rvw, R, u_s, g):
     return 2*np.linalg.norm(get_rel_velocity(rvw, R)) / (7*u_s*g)
 
@@ -25,32 +150,42 @@ def get_spin_time(rvw, R, u_sp, g):
     return np.abs(w[2]) * 2/5*R/u_sp/g
 
 
-def evolve_ball_motion(rvw, R, m, u_s, u_sp, u_r, g, t):
-    # The timers for spinning and sliding start immediately
-    tau_slide = get_slide_time(rvw, R, u_s, g)
+def get_ball_energy(rvw, R, m):
+    """Rotation and kinetic energy (FIXME potential if z axis is freed)"""
+    return (m*np.linalg.norm(rvw[1])**2 + (2/5*m*R**2)*np.linalg.norm(rvw[2])**2)/2
 
-    if t > tau_slide:
-        rvw_sl = evolve_slide_state(rvw, R, m, u_s, u_sp, g, tau_slide)
-        t -= tau_slide
-    else:
-        # The ball ends in sliding state
-        return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), psim.sliding
 
-    tau_roll = get_roll_time(rvw_sl, u_r, g)
+def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
+    if state == psim.stationary:
+        return rvw, state
 
-    if t > tau_roll:
-        rvw_ro = evolve_roll_state(rvw_sl, R, u_r, u_sp, g, tau_roll)
-        t -= tau_roll
-    else:
-        # The ball ends in rolling state
-        return evolve_roll_state(rvw_sl, R, u_r, u_sp, g, t), psim.rolling
+    if state == psim.sliding:
+        tau_slide = get_slide_time(rvw, R, u_s, g)
 
-    tau_spin = get_spin_time(rvw_ro, R, u_sp, g)
+        if t >= tau_slide:
+            rvw = evolve_slide_state(rvw, R, m, u_s, u_sp, g, tau_slide)
+            state = psim.rolling
+            t -= tau_slide
+        else:
+            return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), psim.sliding
 
-    if t >= tau_spin:
-        return evolve_perpendicular_spin_state(rvw_ro, R, u_sp, g, tau_spin), psim.stationary
-    else:
-        return evolve_perpendicular_spin_state(rvw_ro, R, u_sp, g, t), psim.spinning
+    if state == psim.rolling:
+        tau_roll = get_roll_time(rvw, u_r, g)
+
+        if t >= tau_roll:
+            rvw = evolve_roll_state(rvw, R, u_r, u_sp, g, tau_roll)
+            state = psim.spinning
+            t -= tau_roll
+        else:
+            return evolve_roll_state(rvw, R, u_r, u_sp, g, t), psim.rolling
+
+    if state == psim.spinning:
+        tau_spin = get_spin_time(rvw, R, u_sp, g)
+
+        if t >= tau_spin:
+            return evolve_perpendicular_spin_state(rvw, R, u_sp, g, tau_spin), psim.stationary
+        else:
+            return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), psim.spinning
 
 
 def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
@@ -67,7 +202,7 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     # angular velocity is done in the next block
 
     rvw_B = np.array([
-        np.abs(u_0) * np.array([rvw_B[1,0]*t - 1/2*u_s*g*t**2, -1/2*u_s*g*t**2, 0]),
+        np.array([rvw_B[1,0]*t - 1/2*u_s*g*t**2 * u_0[0], -1/2*u_s*g*t**2 * u_0[1], 0]),
         rvw_B[1] - u_s*g*t*u_0,
         rvw_B[2] - 5/2/R*u_s*g*t * np.cross(u_0, np.array([0,0,1]))
     ])
@@ -178,14 +313,13 @@ def cue_strike(m, M, R, V0, phi, theta, a, b):
     v_B = -F/m * np.array([0, np.cos(theta), 0])
     w_B = F/I * np.array([-c*np.sin(theta) + b*np.cos(theta), a*np.sin(theta), -a*np.cos(theta)])
 
-    print(w_B)
-
     # Rotate to table reference
     rot_angle = phi + np.pi/2
     v_T = utils.coordinate_rotation(v_B, rot_angle)
     w_T = utils.coordinate_rotation(w_B, rot_angle)
 
-    print(w_T)
-
     return v_T, w_T
 
+
+def is_overlapping(rvw1, rvw2, R1, R2):
+    return np.linalg.norm(rvw1[0] - rvw2[0]) < (R1 + R2)
