@@ -256,7 +256,22 @@ class ShotSimulation(ShotHistory):
     def simulate(self, name='NA'):
         energy_start = self.get_system_energy()
 
-        self.progress.new(f"Running '{name}'", progress_total_items=int(energy_start))
+        def progress_update():
+            """Convenience function for updating progress"""
+            energy = self.get_system_energy()
+            num_stationary = len([_ for _ in self.balls.values() if _.s == 0])
+            msg = f"ENERGY {np.round(energy, 2)}J | STATIONARY {num_stationary} | EVENTS {self.n}"
+            self.progress.update(msg)
+            self.progress.increment(increment_to=int(energy_start - energy))
+
+        self.run.warning('', header='Pre-run info', lc='green')
+        self.run.info('name', name)
+        self.run.info('num balls', len(self.balls))
+        self.run.info('table dimensions', f"{self.table.l}m x {self.table.w}m")
+        self.run.info('starting energy', f"{np.round(energy_start, 2)}J")
+        self.run.info('float precision', psim.tol, nl_after=1)
+
+        self.progress.new(f"Running", progress_total_items=int(energy_start))
         event = Event(event_type=None, agents=tuple(), tau=0)
 
         self.timestamp(0, event)
@@ -264,12 +279,13 @@ class ShotSimulation(ShotHistory):
             event = self.get_next_event()
             self.evolve(dt=event.tau, event=event)
 
-            if (self.n % 25) == 0:
-                energy = self.get_system_energy()
-                self.progress.update(f"Remaining energy: {np.round(energy, 2)}J")
-                self.progress.increment(increment_to=int(energy_start - energy))
+            if (self.n % 5) == 0:
+                progress_update()
 
         self.progress.end()
+
+        self.run.warning('', header='Post-run info', lc='green')
+        self.run.info('Finished after', self.progress.t.time_elapsed(), nl_after=1)
 
 
     def set_cue(self, cue):
