@@ -3,6 +3,7 @@
 import psim
 import psim.utils as utils
 import psim.physics as physics
+import psim.terminal as terminal
 
 from psim.objects import (
     Ball,
@@ -11,6 +12,8 @@ from psim.objects import (
 )
 
 import numpy as np
+
+np.random.seed(100)
 
 
 class Event(object):
@@ -33,7 +36,10 @@ class Event(object):
 class ShotHistory(object):
     """Track the states of balls over time"""
 
-    def __init__(self):
+    def __init__(self, progress=terminal.Progress(), run=terminal.Run()):
+        self.run = run
+        self.progress = progress
+
         self.balls = {}
         self.reset_history()
 
