@@ -473,15 +473,37 @@ class ShotSimulation(ShotHistory):
                 b = 0.0,
             )
         elif setup == 'stat_mech':
-            self.table = Table(l=20, w=20)
-            for i in range(20):
+            self.table = Table(l=2.5, w=2.5)
+
+            self.balls['cue'] = Ball('cue')
+            self.balls['cue'].rvw[0] = [
+                self.table.w - 0.2,
+                0.2,
+                0
+            ]
+
+            for i in range(1,40):
                 self.balls[i] = Ball(i)
-                self.balls[i].rvw[0] = [self.table.w*np.random.rand(), self.table.l*np.random.rand(), 0]
+                R = self.balls[i].R
+
+                self.balls[i].rvw[0] = [
+                    (self.table.w/2)*np.random.rand() + R,
+                    (self.table.l - 2*R)*np.random.rand() + R,
+                    0
+                ]
+
+                while self.is_balls_overlapping():
+                    self.balls[i] = Ball(i)
+                    self.balls[i].rvw[0] = [
+                        (self.table.w/2)*np.random.rand() + R,
+                        (self.table.l - 2*R)*np.random.rand() + R,
+                        0
+                    ]
 
             self.cue.strike(
-                ball = self.balls[0],
-                V0 = 40.5,
-                phi = 100,
+                ball = self.balls['cue'],
+                V0 = 10.9,
+                phi = 81,
                 theta = 20,
                 a = -0.4,
                 b = 0.0,
@@ -494,6 +516,12 @@ class ShotSimulation(ShotHistory):
             self.balls['7'] = Ball('7')
             self.balls['7'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.B+1.89, 0]
 
+            self.balls['9'] = Ball('9')
+            self.balls['9'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.T-0.1, 0]
+
+            self.balls['2'] = Ball('2')
+            self.balls['2'].rvw[0] = [self.table.center[0], self.table.T-0.3, 0]
+
             self.balls['3'] = Ball('3')
             self.balls['3'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+1.89, 0]
 
@@ -502,7 +530,7 @@ class ShotSimulation(ShotHistory):
 
             self.cue.strike(
                 ball = self.balls['cue'],
-                V0 = 1.50001,
+                V0 = 2.50001,
                 phi = 91.999999157,
                 a = 0.0,
                 b = 0.4,
