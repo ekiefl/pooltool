@@ -150,6 +150,11 @@ def get_spin_time(rvw, R, u_sp, g):
     return np.abs(w[2]) * 2/5*R/u_sp/g
 
 
+def get_ball_energy(rvw, R, m):
+    """Rotation and kinetic energy (FIXME potential if z axis is freed)"""
+    return (m*np.linalg.norm(rvw[1])**2 + (2/5*m*R**2)*np.linalg.norm(rvw[2])**2)/2
+
+
 def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
     if state == psim.stationary:
         return rvw, state
