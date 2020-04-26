@@ -66,6 +66,12 @@ class ShotHistory(object):
         return np.array(self.history['balls'][ball_id]['s'])
 
 
+    def get_event_history_for_ball(self, ball_id):
+        return [event
+                for event in self.history['event']
+                if ball_id in event.agents]
+
+
     def get_ball_rvw_history(self, ball_id):
         return np.array(self.history['balls'][ball_id]['rvw'])
 
@@ -251,9 +257,9 @@ class ShotSimulation(ShotHistory):
         energy_start = self.get_system_energy()
 
         self.progress.new(f"Running '{name}'", progress_total_items=int(energy_start))
-        event = Event(None, None, 0)
+        event = Event(event_type=None, agents=tuple(), tau=0)
 
-        self.timestamp(0)
+        self.timestamp(0, event)
         while event.tau < np.inf:
             event = self.get_next_event()
             self.evolve(dt=event.tau, event=event)
@@ -376,14 +382,14 @@ class ShotSimulation(ShotHistory):
                 ball_id = ball.id
                 event_type_min = event_type
 
-        return tau_min, ball_id, event_type_min
+        return tau_min, (ball_id, ), event_type_min
 
 
     def get_min_ball_ball_event_time(self):
         """Returns minimum time until next ball-ball collision"""
 
         tau_min = np.inf
-        ball_ids = (None, None)
+        ball_ids = tuple()
 
         for i, ball1 in enumerate(self.balls.values()):
             for j, ball2 in enumerate(self.balls.values()):
