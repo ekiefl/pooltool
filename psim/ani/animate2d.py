@@ -15,6 +15,7 @@ from pygame.locals import (
     K_UP,
     K_RIGHT,
     K_LEFT,
+    K_r,
     KEYDOWN,
     KEYUP,
     QUIT,
@@ -288,6 +289,10 @@ class AnimateShot(object):
             # Restart animation
             self.frame = 0
 
+        if self.state.restart:
+            # Restart animation
+            self.frame = 0
+
         if self.state.decrease_speed:
             self.fps = max([1, self.fps*0.96])
         elif self.state.increase_speed:
@@ -313,6 +318,7 @@ class State(object):
         self.frame_backward = False
         self.increase_speed = False
         self.decrease_speed = False
+        self.restart = False
 
 
     def update(self):
@@ -324,11 +330,13 @@ class State(object):
                 elif event.key == K_UP: self.increase_speed = True
                 elif event.key == K_RIGHT: self.paused = True; self.frame_forward = True
                 elif event.key == K_LEFT: self.paused = True; self.frame_backward = True
+                elif event.key == K_r: self.restart = True
             elif event.type == KEYUP:
                 if event.key == K_DOWN: self.decrease_speed = False
                 elif event.key == K_UP: self.increase_speed = False
                 elif event.key == K_RIGHT: self.frame_forward = False
                 elif event.key == K_LEFT: self.frame_backward = False
+                elif event.key == K_r: self.restart = False
             elif event.type == QUIT:
                 self.running = False
 
