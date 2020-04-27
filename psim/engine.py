@@ -610,10 +610,10 @@ class ShotSimulation(ShotHistory):
 
             self.cue.strike(
                 ball = self.balls['cue'],
-                V0 = 1.50001,
+                V0 = 1.30001,
                 phi = 90,
-                a = -0.4,
-                b = +0.0,
+                a = -0.6,
+                b = +0.45,
                 theta = 0,
             )
 

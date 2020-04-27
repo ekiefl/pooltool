@@ -243,6 +243,7 @@ def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
 
     # Independently evolve the z spin
     temp = evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)
+
     w[2] = temp[2, 2]
     e[2] = temp[3, 2]
 
@@ -252,6 +253,9 @@ def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
 def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
     if t == 0:
         return rvw
+
+    # Otherwise ball.rvw will be modified and corresponding entry in self.history
+    rvw = rvw.copy()
 
     _, _, w_0, e_0 = rvw
 

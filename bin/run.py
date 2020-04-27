@@ -17,10 +17,11 @@ if __name__ == '__main__':
     sim.setup_test(args.setup)
 
     sim.simulate(name=args.setup)
+
     if not args.skip_continuize:
         sim.continuize(args.dt)
 
-    sim.plot_history('cue', full=True)
+    sim.plot_history('cue', full=False)
 
     if args.dimensions == 2:
         from psim.ani.animate2d import AnimateShot
