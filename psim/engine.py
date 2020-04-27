@@ -206,7 +206,7 @@ class ShotHistory(object):
             if np.max(np.abs(df[y])) < 0.000000001:
                 df[y] = 0
 
-            ax = fig.add_subplot(num)
+            ax = fig.add_subplot(*num)
             for name, group in groups:
                 ax.plot(group[x], group[y], marker="o", linestyle="", label=name, ms=1.4)
             ax.set_ylabel(y)
@@ -221,6 +221,7 @@ class ShotHistory(object):
             'rx': rvw[:, 0, 0], 'ry': rvw[:, 0, 1], 'rz': rvw[:, 0, 2],
             'vx': rvw[:, 1, 0], 'vy': rvw[:, 1, 1], 'vz': rvw[:, 1, 2],
             'wx': rvw[:, 2, 0], 'wy': rvw[:, 2, 1], 'wz': rvw[:, 2, 2],
+            'ex': rvw[:, 3, 0], 'ey': rvw[:, 3, 1], 'ez': rvw[:, 3, 2],
             '|v|': np.sqrt(rvw[:, 1, 2]**2 + rvw[:, 1, 1]**2 + rvw[:, 1, 0]**2),
             '|w|': np.sqrt(rvw[:, 2, 2]**2 + rvw[:, 2, 1]**2 + rvw[:, 2, 0]**2),
             'time': t,
@@ -232,15 +233,18 @@ class ShotHistory(object):
 
         fig = plt.figure(figsize=(10, 10))
         plt.title(f"ball ID: {ball_id}")
-        add_plot(fig, 331, 'time', 'rx')
-        add_plot(fig, 332, 'time', 'ry')
-        add_plot(fig, 333, 'time', 'rz')
-        add_plot(fig, 334, 'time', 'vx')
-        add_plot(fig, 335, 'time', 'vy')
-        add_plot(fig, 336, 'time', 'vz')
-        add_plot(fig, 337, 'time', 'wx')
-        add_plot(fig, 338, 'time', 'wy')
-        add_plot(fig, 339, 'time', 'wz')
+        add_plot(fig, (4,3,1), 'time', 'rx')
+        add_plot(fig, (4,3,2), 'time', 'ry')
+        add_plot(fig, (4,3,3), 'time', 'rz')
+        add_plot(fig, (4,3,4), 'time', 'vx')
+        add_plot(fig, (4,3,5), 'time', 'vy')
+        add_plot(fig, (4,3,6), 'time', 'vz')
+        add_plot(fig, (4,3,7), 'time', 'wx')
+        add_plot(fig, (4,3,8), 'time', 'wy')
+        add_plot(fig, (4,3,9), 'time', 'wz')
+        add_plot(fig, (4,3,10), 'time', 'ex')
+        add_plot(fig, (4,3,11), 'time', 'ey')
+        add_plot(fig, (4,3,12), 'time', 'ez')
         plt.tight_layout()
         plt.show()
 
@@ -596,9 +600,9 @@ class ShotSimulation(ShotHistory):
                 ball = self.balls['cue'],
                 V0 = 1.50001,
                 phi = 91.999999157,
-                a = -0.0,
+                a = -0.2,
                 b = +0.4,
-                theta = 0,
+                theta = 20,
             )
         elif setup == 'straight_shot':
             self.table = Table()
@@ -610,10 +614,10 @@ class ShotSimulation(ShotHistory):
 
             self.cue.strike(
                 ball = self.balls['cue'],
-                V0 = 1.30001,
+                V0 = 0.50001,
                 phi = 90,
-                a = -0.6,
-                b = +0.45,
+                a = -0.2,
+                b = +0.4,
                 theta = 0,
             )
 
