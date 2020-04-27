@@ -193,6 +193,9 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
 
 
 def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
+    if t == 0:
+        return rvw
+
     # Angle of initial velocity in table frame
     phi = utils.angle(rvw[1])
 
@@ -226,6 +229,9 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
 
 
 def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
+    if t == 0:
+        return rvw
+
     r_0, v_0, w_0, e_0 = rvw
 
     v_0_hat = utils.unit_vector(v_0)
@@ -244,6 +250,9 @@ def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
 
 
 def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
+    if t == 0:
+        return rvw
+
     _, _, w_0, e_0 = rvw
 
     if w_0[2] < psim.tol:
