@@ -249,7 +249,7 @@ def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
     if w_0[2] < psim.tol:
         return rvw
 
-    alpha = 5/2*R*u_sp*g
+    alpha = 5*u_sp*g/(2*R)
 
     if t > abs(w_0[2])/alpha:
         # You can't decay past 0 angular velocity
