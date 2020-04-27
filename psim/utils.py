@@ -8,7 +8,7 @@ from scipy.spatial.transform import Rotation
 
 
 def as_euler_angle(w):
-    return Rotation.from_rotvec(w).as_euler('zyx', degrees=True)
+    return Rotation.from_rotvec(w).as_euler('zxy', degrees=True)
 
 
 def unit_vector(vector):

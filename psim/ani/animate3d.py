@@ -23,6 +23,14 @@ class Ball(object):
         self.ys = rvw_history[:,0,1]
         self.zs = rvw_history[:,0,2]
 
+        self.hs = -rvw_history[:,3,0]
+        self.ps = rvw_history[:,3,1]
+        self.rs = rvw_history[:,3,2]
+
+        self.wxs = rvw_history[:,2,0]
+        self.wys = rvw_history[:,2,1]
+        self.wzs = rvw_history[:,2,2]
+
         self.node.setScale(self.get_scale_factor())
         self.update(0)
 
@@ -38,6 +46,7 @@ class Ball(object):
 
     def update(self, frame):
         self.node.setPos(self.xs[frame], self.ys[frame], self.zs[frame] + self._ball.R)
+        self.node.setHpr(self.hs[frame], self.ps[frame], self.rs[frame])
 
 
 class AnimateShot(ShowBase):
@@ -47,6 +56,7 @@ class AnimateShot(ShowBase):
         self.frame = 0
 
         self.shot = shot
+        self.shot.convert_to_euler_angles()
         self.times = shot.get_time_history()
         self.num_frames = shot.n
 
@@ -76,12 +86,19 @@ class AnimateShot(ShowBase):
         for ball in self.balls.values():
             ball.update(self.frame)
 
+        self.camera.setPos(
+            self.balls['cue'].node.getX(),
+            self.balls['cue'].node.getY()-1,
+            self.balls['cue'].node.getZ()+0.5
+        )
         self.camera.lookAt(self.balls['cue'].node)
 
         if self.frame >= self.num_frames:
             self.frame = 0
         else:
             self.frame += 1
+
+        import time; time.sleep(0.001)
 
         return Task.cont
 
@@ -99,7 +116,8 @@ class AnimateShot(ShowBase):
 
     def init_camera(self):
         self.disableMouse()
-        self.camera.setPos(-3, -3, 3)
+        self.camLens.setNear(0.2)
+        self.camera.setPos(-1, -1, 1)
         self.camera.setHpr(-45, -30, 0)
 
 

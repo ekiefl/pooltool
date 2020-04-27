@@ -46,6 +46,7 @@ class ShotHistory(object):
 
     def reset_history(self):
         self.vectorized = False
+
         self.history = {
             'balls': {},
             'index': [],
@@ -187,8 +188,12 @@ class ShotHistory(object):
         self.vectorized = True
 
 
-    def convert_to_euler_angles(self, inplace=False):
-        pass
+    def convert_to_euler_angles(self):
+        for ball_id in self.balls:
+            angle_integrations = self.history['balls'][ball_id]['rvw'][:, 3, :]
+            #angle_integrations %= 2*np.pi
+            euler_angles = utils.as_euler_angle(angle_integrations)
+            self.history['balls'][ball_id]['rvw'][:, 3, :] = euler_angles
 
 
     def plot_history(self, ball_id, full=False):
@@ -284,6 +289,8 @@ class ShotSimulation(ShotHistory):
 
 
     def simulate(self, time=None, name='NA'):
+        self.touch_history()
+
         energy_start = self.get_system_energy()
 
         def progress_update():
@@ -565,7 +572,7 @@ class ShotSimulation(ShotHistory):
                 a = 0.01,
                 b = 0.0,
             )
-        elif setup == 'straight_shot':
+        elif setup == '6_balls':
             self.table = Table()
             self.balls['cue'] = Ball('cue')
             self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
@@ -587,12 +594,27 @@ class ShotSimulation(ShotHistory):
 
             self.cue.strike(
                 ball = self.balls['cue'],
-                V0 = 2.50001,
+                V0 = 1.50001,
                 phi = 91.999999157,
-                a = -0.3,
-                b = 0.4,
+                a = -0.0,
+                b = +0.4,
+                theta = 0,
+            )
+        elif setup == 'straight_shot':
+            self.table = Table()
+            self.balls['cue'] = Ball('cue')
+            self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
+
+            self.balls['8'] = Ball('8')
+            self.balls['8'].rvw[0] = [self.table.center[0], self.table.B+1.0, 0]
+
+            self.cue.strike(
+                ball = self.balls['cue'],
+                V0 = 1.50001,
+                phi = +45,
+                a = -0.0,
+                b = +0.4,
                 theta = 0,
             )
 
-        self.touch_history()
 

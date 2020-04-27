@@ -39,4 +39,4 @@ state_dict = {
 }
 
 #tol = np.finfo(np.float).eps * 100
-tol = 1e-10
+tol = 1e-12
