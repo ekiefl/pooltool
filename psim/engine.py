@@ -283,7 +283,7 @@ class ShotSimulation(ShotHistory):
         return False
 
 
-    def simulate(self, name='NA'):
+    def simulate(self, time=None, name='NA'):
         energy_start = self.get_system_energy()
 
         def progress_update():
@@ -311,6 +311,9 @@ class ShotSimulation(ShotHistory):
 
             if (self.n % 5) == 0:
                 progress_update()
+
+            if time is not None and self.time >= time:
+                break
 
         self.vectorize_history()
 
