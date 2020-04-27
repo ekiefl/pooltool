@@ -233,7 +233,7 @@ def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
     r = r_0 + v_0 * t - 1/2*u_r*g*t**2 * v_0_hat
     v = v_0 - u_r*g*t * v_0_hat
     w = utils.coordinate_rotation(v/R, np.pi/2)
-    e = utils.coordinate_rotation((v_0*t - 1/2*u_r*g*t**2 * v_0_hat)/R, np.pi/2) + e_0
+    e = e_0 + utils.coordinate_rotation((v_0*t - 1/2*u_r*g*t**2 * v_0_hat)/R, np.pi/2)
 
     # Independently evolve the z spin
     temp = evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)

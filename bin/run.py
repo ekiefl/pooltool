@@ -20,6 +20,8 @@ if __name__ == '__main__':
     if not args.skip_continuize:
         sim.continuize(args.dt)
 
+    sim.plot_history('cue', full=True)
+
     if args.dimensions == 2:
         from psim.ani.animate2d import AnimateShot
 
