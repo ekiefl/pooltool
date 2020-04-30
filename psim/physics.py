@@ -212,7 +212,7 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
         np.array([rvw_B0[1,0]*t - 1/2*u_s*g*t**2 * u_0[0], -1/2*u_s*g*t**2 * u_0[1], 0]),
         rvw_B0[1] - u_s*g*t*u_0,
         rvw_B0[2] - 5/2/R*u_s*g*t * np.cross(u_0, np.array([0,0,1])),
-        rvw_B0[2]*t - 1/2 * 5/2/R*u_s*g*t**2 * np.cross(u_0, np.array([0,0,1])),
+        rvw_B0[3] + rvw_B0[2]*t - 1/2 * 5/2/R*u_s*g*t**2 * np.cross(u_0, np.array([0,0,1])),
     ])
 
     # This transformation governs the z evolution of angular velocity
@@ -223,7 +223,6 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     # Rotate to table reference
     rvw_T = utils.coordinate_rotation(rvw_B.T, phi).T
     rvw_T[0] += rvw[0] # Add initial ball position
-    rvw_T[3] += rvw[3] # Add initial ball orientation
 
     return rvw_T
 
@@ -258,21 +257,22 @@ def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
     rvw = rvw.copy()
 
     _, _, w_0, e_0 = rvw
+    w_0z = w_0[2]
 
-    if w_0[2] < psim.tol:
+    if w_0z < psim.tol:
         return rvw
 
     alpha = 5*u_sp*g/(2*R)
 
-    if t > abs(w_0[2])/alpha:
+    if t > abs(w_0z)/alpha:
         # You can't decay past 0 angular velocity
-        t = w_0[2]/alpha
+        t = w_0z/alpha
 
     # Always decay towards 0, whether spin is +ve or -ve
-    sign = 1 if w_0[2] > 0 else -1
+    sign = 1 if w_0z > 0 else -1
 
-    rvw[2, 2] = w_0[2] - sign*alpha*t
-    rvw[3, 2] = e_0[2] + w_0[2]*t - sign*1/2*alpha*t**2
+    rvw[2, 2] = w_0z - sign*alpha*t
+    rvw[3, 2] = e_0[2] + w_0z*t - sign*1/2*alpha*t**2
 
     return rvw
 
