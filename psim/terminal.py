@@ -74,9 +74,9 @@ class Progress:
     def get_terminal_width(self):
         # FIXME Program flow here is not clear. When does try fail?
         try:
-            self.terminal_width = max(get_terminal_size()[0], 120)
+            self.terminal_width = max(get_terminal_size()[0], 100)
         except:
-            self.terminal_width = 120
+            self.terminal_width = 100
 
 
     def new(self, pid, discard_previous_if_exists=False, progress_total_items=None):
