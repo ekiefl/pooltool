@@ -384,10 +384,19 @@ class ShotSimulation(ShotHistory):
         elif event.event_type == 'ball-rail':
             ball_id, rail_id = event.agents
 
+            ball = self.balls[ball_id]
+            rail = self.table.rails[rail_id]
+
             rvw = self.balls[ball_id].rvw
             normal = self.table.rails[rail_id].normal
 
-            rvw = physics.resolve_ball_rail_collision(rvw, normal)
+            rvw = physics.resolve_ball_rail_collision(
+                rvw=ball.rvw,
+                normal=rail.normal,
+                R=ball.R,
+                m=ball.m,
+                h=rail.height,
+            )
             s = psim.sliding
 
             self.balls[ball_id].set(rvw, s)
@@ -610,14 +619,14 @@ class ShotSimulation(ShotHistory):
             self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
 
             self.balls['8'] = Ball('8')
-            self.balls['8'].rvw[0] = [self.table.center[0], self.table.B+1.0, 0]
+            self.balls['8'].rvw[0] = [self.table.center[0]-self.balls['cue'].R*3, self.table.B+1.0, 0]
 
             self.cue.strike(
                 ball = self.balls['cue'],
-                V0 = 0.50001,
-                phi = 90,
-                a = -0.2,
-                b = +0.4,
+                V0 = 1.2,
+                phi = 0,
+                a = -0.0,
+                b = -0.0,
                 theta = 0,
             )
 

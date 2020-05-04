@@ -6,6 +6,8 @@ import psim.physics as physics
 
 import numpy as np
 
+from functools import partial
+
 
 class Ball(object):
     def __init__(self, ball_id, m=None, R=None):
@@ -45,11 +47,13 @@ class Ball(object):
 
 
 class Table(object):
-    def __init__(self, w=None, l=None, u_s=None, u_r=None, u_sp=None, edge_width=None, rail_width=None):
+    def __init__(self, w=None, l=None, u_s=None, u_r=None, u_sp=None,
+                 edge_width=None, rail_width=None, rail_height=None):
+
         self.w = w or psim.table_width
         self.l = l or psim.table_length
         self.edge_width = edge_width or psim.table_edge_width
-        self.rail_width = rail_width or psim.rail_width
+        self.rail_width = rail_width or psim.rail_width # only for visualization
 
         self.L = 0
         self.R = self.w
@@ -73,7 +77,7 @@ class Table(object):
 
 class Rail(object):
     """A rail is defined by a line lx*x + ly*y + l0 = 0"""
-    def __init__(self, rail_id, lx, ly, l0):
+    def __init__(self, rail_id, lx, ly, l0, height=None):
         self.id = rail_id
 
         self.lx = lx
@@ -81,10 +85,10 @@ class Rail(object):
         self.l0 = l0
 
         # Defines the normal vector of the rail surface
-        self.normal = np.array([self.lx, self.ly])
+        self.normal = np.array([self.lx, self.ly, 0])
 
         # rail properties
-        pass
+        self.height = height or psim.rail_height
 
 
 class Cue(object):

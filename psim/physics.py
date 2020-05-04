@@ -37,20 +37,118 @@ def resolve_ball_ball_collision(rvw1, rvw2):
     return rvw1, rvw2
 
 
-def resolve_ball_rail_collision(rvw, normal):
-    """FIXME Instantaneous, elastic collision"""
+def resolve_ball_rail_collision(rvw, normal, R, m, h):
+    """Inhwan Han (2005) 'Dynamics in Carom and Three Cushion Billiards'"""
 
+    print(f"initial vel: \n{rvw[1]}")
+
+    # orient the normal so it points away from playing surface
+    normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
+
+    # Change from the table frame to the rail frame. The rail frame is defined by
+    # the normal vector is parallel with <1,0,0>.
     psi = utils.angle(normal)
-
-    # rvw in rail reference frame (normal is in <1,0,0> direction)
     rvw_R = utils.coordinate_rotation(rvw.T, -psi).T
 
-    # reverse velocity component lying in normal direction
-    rvw_R[1, 0] *= -1
+    print(f"rotate to rail reference: \n{rvw_R[1]}")
 
+    # The incidence angle--called theta_0 in paper
+    phi = utils.angle(rvw_R[1]) % (2*np.pi)
+
+    print(f"Incident angle: {phi} rads, {phi*180/np.pi} degrees")
+
+    # Get mu and e
+    e = get_bail_rail_restitution(rvw_R)
+    mu = get_bail_rail_friction(rvw_R)
+
+    print(f"restitution coeffecient: {e}")
+    print(f"friction coeffecient: {mu}")
+
+    # Depends on height of cushion relative to ball
+    theta_a = np.arcsin(h/R - 1)
+
+    # Eqs 14
+    sx = rvw_R[1,0]*np.sin(theta_a) - rvw_R[1,2]*np.cos(theta_a) + R*rvw_R[2,1]
+    sy = -rvw_R[1,1] - R*rvw_R[2,2]*np.cos(theta_a) + R*rvw_R[2,0]*np.sin(theta_a)
+    c = rvw_R[1,0]*np.cos(theta_a)
+
+    # Eqs 16
+    I = 2/5*m*R**2
+    A = 7/2/m
+    B = 1/m
+
+    # Eqs 17 & 20
+    PzE = (1 + e)*c/B
+    PzS = np.sqrt(sx**2 + sy**2)/A
+
+    if PzS <= PzE:
+        # Sliding and sticking case
+        print("Chose stick and sliding case")
+        PX = -sx/A*np.sin(theta_a) - (1+e)*c/B*np.cos(theta_a)
+        PY = sy/A
+        PZ = sx/A*np.cos(theta_a) - (1+e)*c/B*np.sin(theta_a)
+    else:
+        # Forward sliding case
+        print("Chose forward sliding case")
+        PX = -mu*(1+e)*c/B*np.cos(phi)*np.sin(theta_a) - (1+e)*c/B*np.cos(theta_a)
+        PY = mu*(1+e)*c/B*np.sin(phi)
+        PZ = mu*(1+e)*c/B*np.cos(phi)*np.cos(theta_a) - (1+e)*c/B*np.sin(theta_a)
+
+    print(f"PX: {PX}")
+    print(f"PY: {PY}")
+    print(f"PZ: {PZ}")
+
+    # Update velocity
+    rvw_R[1,0] += PX/m
+    rvw_R[1,1] += PY/m
+    #rvw_R[1,2] += PZ/m
+
+    print(f"solved vel in rail frame: \n{rvw_R[1]}")
+
+    # Update angular velocity
+    rvw_R[2,0] += -R/I*PY*np.sin(theta_a)
+    rvw_R[2,1] += R/I*(PX*np.sin(theta_a) - PZ*np.cos(theta_a))
+    rvw_R[2,2] += R/I*PY*np.cos(theta_a)
+
+    # Change back to table reference frame
     rvw = utils.coordinate_rotation(rvw_R.T, psi).T
 
+    print(f"solved vel in table frame: \n{rvw[1]}")
+
+    #import sys; sys.exit()
+
     return rvw
+
+
+def get_bail_rail_restitution(rvw):
+    """Get restitution coefficient dependent on ball state
+
+    Parameters
+    ==========
+    rvw: np.array
+        Assumed to be in reference frame such that <1,0,0> points
+        perpendicular to the rail, and in the direction away from the table
+    """
+
+    return 0.39 + 0.257*rvw[1,0] - 0.044*rvw[1,0]**2
+
+
+def get_bail_rail_friction(rvw):
+    """Get friction coeffecient depend on ball state
+
+    Parameters
+    ==========
+    rvw: np.array
+        Assumed to be in reference frame such that <1,0,0> points
+        perpendicular to the rail, and in the direction away from the table
+    """
+
+    ang = utils.angle(rvw[1])
+
+    if ang > np.pi:
+        ang = np.abs(2*np.pi - ang)
+
+    return 0.471 - 0.241*ang
 
 
 def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g, R):

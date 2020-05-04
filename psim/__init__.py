@@ -22,6 +22,7 @@ table_length = 2.7432 # 9-foot table
 table_width = 2.7432/2 # 9-foot table
 
 rail_width = 0.0635
+rail_height = 0.64*2*R
 table_edge_width = 0.10
 diamond_size = 0.01
 
