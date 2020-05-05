@@ -7,10 +7,6 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 
-def as_euler_angle(a):
-    return Rotation.from_rotvec(a).as_euler('zyx', degrees=True)
-
-
 def get_rel_velocity(rvw, R):
     _, v, w, _ = rvw
     return v + R * np.cross(np.array([0,0,1]), w)
