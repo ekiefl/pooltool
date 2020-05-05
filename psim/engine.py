@@ -221,7 +221,7 @@ class ShotHistory(object):
             'rx': rvw[:, 0, 0], 'ry': rvw[:, 0, 1], 'rz': rvw[:, 0, 2],
             'vx': rvw[:, 1, 0], 'vy': rvw[:, 1, 1], 'vz': rvw[:, 1, 2],
             'wx': rvw[:, 2, 0], 'wy': rvw[:, 2, 1], 'wz': rvw[:, 2, 2],
-            'ex': rvw[:, 3, 0], 'ey': rvw[:, 3, 1], 'ez': rvw[:, 3, 2],
+            'thx': rvw[:, 3, 0], 'thy': rvw[:, 3, 1], 'thz': rvw[:, 3, 2],
             '|v|': np.sqrt(rvw[:, 1, 2]**2 + rvw[:, 1, 1]**2 + rvw[:, 1, 0]**2),
             '|w|': np.sqrt(rvw[:, 2, 2]**2 + rvw[:, 2, 1]**2 + rvw[:, 2, 0]**2),
             'time': t,
@@ -233,6 +233,11 @@ class ShotHistory(object):
 
         fig = plt.figure(figsize=(10, 10))
         plt.title(f"ball ID: {ball_id}")
+        frame1 = plt.gca()
+        frame1.axes.xaxis.set_ticklabels([])
+        frame1.axes.yaxis.set_ticklabels([])
+        frame1.axes.xaxis.set_ticks([])
+        frame1.axes.yaxis.set_ticks([])
         add_plot(fig, (4,3,1), 'time', 'rx')
         add_plot(fig, (4,3,2), 'time', 'ry')
         add_plot(fig, (4,3,3), 'time', 'rz')
@@ -242,9 +247,9 @@ class ShotHistory(object):
         add_plot(fig, (4,3,7), 'time', 'wx')
         add_plot(fig, (4,3,8), 'time', 'wy')
         add_plot(fig, (4,3,9), 'time', 'wz')
-        add_plot(fig, (4,3,10), 'time', 'ex')
-        add_plot(fig, (4,3,11), 'time', 'ey')
-        add_plot(fig, (4,3,12), 'time', 'ez')
+        add_plot(fig, (4,3,10), 'time', 'thx')
+        add_plot(fig, (4,3,11), 'time', 'thy')
+        add_plot(fig, (4,3,12), 'time', 'thz')
         plt.tight_layout()
         plt.show()
 
