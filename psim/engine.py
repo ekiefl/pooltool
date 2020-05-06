@@ -192,7 +192,6 @@ class ShotHistory(object):
     def convert_to_euler_angles(self):
         for ball_id in self.balls:
             angle_integrations = self.history['balls'][ball_id]['rvw'][:, 3, :]
-            #angle_integrations %= 2*np.pi
             euler_angles = utils.as_euler_angle(angle_integrations)
             self.history['balls'][ball_id]['rvw'][:, 3, :] = euler_angles
 
@@ -262,13 +261,13 @@ class ShotHistory(object):
 
         if full:
             fig = plt.figure(figsize=(6, 5))
-            add_plot(fig, 111, 'time', '|v|')
+            add_plot(fig, (1,1,1), 'time', '|v|')
             plt.title(f"ball ID: {ball_id}")
             plt.tight_layout()
             plt.show()
 
             fig = plt.figure(figsize=(6, 5))
-            add_plot(fig, 111, 'time', '|w|')
+            add_plot(fig, (1,1,1), 'time', '|w|')
             plt.title(f"ball ID: {ball_id}")
             plt.tight_layout()
             plt.show()
@@ -390,6 +389,9 @@ class ShotSimulation(ShotHistory):
             rvw1, rvw2 = physics.resolve_ball_ball_collision(rvw1, rvw2)
             s1, s2 = psim.sliding, psim.sliding
 
+            # FIXME
+            rvw1[3], rvw2[3] = np.zeros(3), np.zeros(3)
+
             self.balls[ball_id1].set(rvw1, s1)
             self.balls[ball_id2].set(rvw2, s2)
 
@@ -410,6 +412,9 @@ class ShotSimulation(ShotHistory):
                 h=rail.height,
             )
             s = psim.sliding
+
+            # FIXME
+            rvw[3] = np.zeros(3)
 
             self.balls[ball_id].set(rvw, s)
 
@@ -620,7 +625,7 @@ class ShotSimulation(ShotHistory):
             self.cue.strike(
                 ball = self.balls['cue'],
                 V0 = 1.50001,
-                phi = 91.999999157,
+                phi = 94.005,
                 a = -0.2,
                 b = +0.4,
                 theta = 20,
@@ -631,15 +636,43 @@ class ShotSimulation(ShotHistory):
             self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
 
             self.balls['8'] = Ball('8')
+            self.balls['8'].rvw[0] = [self.table.center[0]-self.balls['cue'].R*0.01, self.table.B+1.0, 0]
+
+            self.cue.strike(
+                ball = self.balls['cue'],
+                V0 = 1.0,
+                phi = 90,
+                a = -0.0,
+                b = 0.4,
+                theta = 0,
+            )
+        elif setup == 'spin':
+            self.table = Table(u_s=5)
+            self.balls['cue'] = Ball('cue')
+            self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
+
+            self.balls['8'] = Ball('8')
             self.balls['8'].rvw[0] = [self.table.center[0]-self.balls['cue'].R*3, self.table.B+1.0, 0]
 
             self.cue.strike(
                 ball = self.balls['cue'],
-                V0 = 1.2,
-                phi = 0,
+                V0 = 0.3,
+                phi = 135,
                 a = -0.0,
-                b = -0.0,
+                b = 0.4,
                 theta = 0,
             )
+        elif setup == 'trouble':
+            self.table = Table(u_s=5)
+            self.balls['cue'] = Ball('cue')
+
+            self.balls['cue'].s = 2
+            self.balls['cue'].rvw = np.array([[  1.343025,       0.987225,       0.          ],
+                                              1.5*np.array([ -0.2059209579,   0.138126821,    0.          ]),
+                                              [ -5.6699572293,   0.653220879,    0.          ],
+                                              [-1,            -2,             -6.          ]])
+
+
+
 
 
