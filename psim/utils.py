@@ -5,6 +5,26 @@ import numpy as np
 
 from numba import njit
 from scipy.spatial.transform import Rotation
+from pyquaternion import Quaternion
+
+
+def as_quaternion(w):
+    N, D = w.shape
+    quats = np.zeros((N, 4))
+
+    for n in range(N):
+        quat = Quaternion(axis=[1,0,0], angle=0)
+
+        for d in range(D):
+            if w[n,d] == 0:
+                continue
+
+            axis = np.zeros(D); axis[d] = 1
+            quat *= Quaternion(axis=axis, angle=w[n,d])
+
+        quats[n, :] = quat.normalised.elements
+
+    return quats
 
 
 def as_euler_angle(w):

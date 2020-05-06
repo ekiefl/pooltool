@@ -65,14 +65,28 @@ class ShotHistory(object):
         return self.history['time']
 
 
+    def _get_ball_var_history(self, ball_id, key):
+        return self.history['balls'][ball_id][key]
+
+
     def get_ball_state_history(self, ball_id):
         """Returns 1D array if self.vectorized, otherwise a list"""
-        return self.history['balls'][ball_id]['s']
+        return self._get_ball_var_history(ball_id, 's')
 
 
     def get_ball_rvw_history(self, ball_id):
         """Returns 3D array if self.vectorized, otherwise a list of 2D arrays"""
-        return self.history['balls'][ball_id]['rvw']
+        return self._get_ball_var_history(ball_id, 'rvw')
+
+
+    def get_ball_euler_history(self, ball_id):
+        """Returns 3D array if self.vectorized, otherwise a list of 2D arrays"""
+        return self._get_ball_var_history(ball_id, 'euler')
+
+
+    def get_ball_quat_history(self, ball_id):
+        """Returns 3D array if self.vectorized, otherwise a list of 2D arrays"""
+        return self._get_ball_var_history(ball_id, 'quat')
 
 
     def get_event_history_for_ball(self, ball_id):
@@ -98,6 +112,8 @@ class ShotHistory(object):
         self.history['balls'][ball_id] = {
             's': [np.nan] * self.n,
             'rvw': [np.nan * np.ones((4,3))] * self.n,
+            'euler': [np.nan * np.ones((4,3))] * self.n,
+            'quat': [np.nan * np.ones((4,4))] * self.n,
         }
 
 
@@ -185,15 +201,24 @@ class ShotHistory(object):
         for ball in self.history['balls']:
             self.history['balls'][ball]['s'] = np.array(self.history['balls'][ball]['s'])
             self.history['balls'][ball]['rvw'] = np.array(self.history['balls'][ball]['rvw'])
+            self.history['balls'][ball]['euler'] = np.array(self.history['balls'][ball]['euler'])
+            self.history['balls'][ball]['quat'] = np.array(self.history['balls'][ball]['quat'])
 
         self.vectorized = True
 
 
-    #def convert_to_euler_angles(self):
-    #    for ball_id in self.balls:
-    #        angle_integrations = self.history['balls'][ball_id]['rvw'][:, 3, :]
-    #        euler_angles = utils.as_euler_angle(angle_integrations)
-    #        self.history['balls'][ball_id]['rvw'][:, 3, :] = euler_angles
+    def calculate_euler_angles(self):
+        for ball_id in self.balls:
+            angle_integrations = self.history['balls'][ball_id]['rvw'][:, 3, :]
+            euler_angles = utils.as_euler_angle(angle_integrations)
+            self.history['balls'][ball_id]['euler'] = euler_angles
+
+
+    def calculate_quaternions(self):
+        for ball_id in self.balls:
+            angle_integrations = self.history['balls'][ball_id]['rvw'][:, 3, :]
+            quaternions = utils.as_quaternion(angle_integrations)
+            self.history['balls'][ball_id]['quat'] = quaternions
 
 
     def plot_history(self, ball_id, full=False):
@@ -217,14 +242,14 @@ class ShotHistory(object):
         rvw = np.array(self.history['balls'][ball_id]['rvw'])
         t = np.array(self.history['time'])
 
-        #hpr = utils.as_euler_angle(rvw[:,3,:])
+        hpr = utils.as_euler_angle(rvw[:,3,:])
 
         df = pd.DataFrame({
             'rx': rvw[:, 0, 0], 'ry': rvw[:, 0, 1], 'rz': rvw[:, 0, 2],
             'vx': rvw[:, 1, 0], 'vy': rvw[:, 1, 1], 'vz': rvw[:, 1, 2],
             'wx': rvw[:, 2, 0], 'wy': rvw[:, 2, 1], 'wz': rvw[:, 2, 2],
             'thx': rvw[:, 3, 0], 'thy': rvw[:, 3, 1], 'thz': rvw[:, 3, 2],
-            #'H': hpr[:,0], 'P': hpr[:,1], 'R': hpr[:,2],
+            'H': hpr[:,0], 'P': hpr[:,1], 'R': hpr[:,2],
             '|v|': np.sqrt(rvw[:, 1, 2]**2 + rvw[:, 1, 1]**2 + rvw[:, 1, 0]**2),
             '|w|': np.sqrt(rvw[:, 2, 2]**2 + rvw[:, 2, 1]**2 + rvw[:, 2, 0]**2),
             'time': t,
@@ -241,21 +266,21 @@ class ShotHistory(object):
         frame1.axes.yaxis.set_ticklabels([])
         frame1.axes.xaxis.set_ticks([])
         frame1.axes.yaxis.set_ticks([])
-        add_plot(fig, (4,3,1), 'time', 'rx')
-        add_plot(fig, (4,3,2), 'time', 'ry')
-        add_plot(fig, (4,3,3), 'time', 'rz')
-        add_plot(fig, (4,3,4), 'time', 'vx')
-        add_plot(fig, (4,3,5), 'time', 'vy')
-        add_plot(fig, (4,3,6), 'time', 'vz')
-        add_plot(fig, (4,3,7), 'time', 'wx')
-        add_plot(fig, (4,3,8), 'time', 'wy')
-        add_plot(fig, (4,3,9), 'time', 'wz')
-        add_plot(fig, (4,3,10), 'time', 'thx')
-        add_plot(fig, (4,3,11), 'time', 'thy')
-        add_plot(fig, (4,3,12), 'time', 'thz')
-        #add_plot(fig, (5,3,13), 'time', 'H')
-        #add_plot(fig, (5,3,14), 'time', 'P')
-        #add_plot(fig, (5,3,15), 'time', 'R')
+        add_plot(fig, (5,3,1), 'time', 'rx')
+        add_plot(fig, (5,3,2), 'time', 'ry')
+        add_plot(fig, (5,3,3), 'time', 'rz')
+        add_plot(fig, (5,3,4), 'time', 'vx')
+        add_plot(fig, (5,3,5), 'time', 'vy')
+        add_plot(fig, (5,3,6), 'time', 'vz')
+        add_plot(fig, (5,3,7), 'time', 'wx')
+        add_plot(fig, (5,3,8), 'time', 'wy')
+        add_plot(fig, (5,3,9), 'time', 'wz')
+        add_plot(fig, (5,3,10), 'time', 'thx')
+        add_plot(fig, (5,3,11), 'time', 'thy')
+        add_plot(fig, (5,3,12), 'time', 'thz')
+        add_plot(fig, (5,3,13), 'time', 'H')
+        add_plot(fig, (5,3,14), 'time', 'P')
+        add_plot(fig, (5,3,15), 'time', 'R')
         plt.tight_layout()
         plt.show()
 
@@ -647,7 +672,7 @@ class ShotSimulation(ShotHistory):
                 theta = 0,
             )
         elif setup == 'spin':
-            self.table = Table(u_s=5)
+            self.table = Table(u_s=5, w=psim.table_width*1.04)
             self.balls['cue'] = Ball('cue')
             self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
 
@@ -656,8 +681,8 @@ class ShotSimulation(ShotHistory):
 
             self.cue.strike(
                 ball = self.balls['cue'],
-                V0 = 0.3,
-                phi = 135,
+                V0 = 0.5,
+                phi = 45,
                 a = -0.0,
                 b = 0.4,
                 theta = 0,

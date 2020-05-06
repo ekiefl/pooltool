@@ -1,11 +1,31 @@
 #! /usr/bin/env python
 """File for animating utilities in 3D (panda3d) and 2D (pygame)"""
 
-from panda3d.core import lookAt
-from panda3d.core import GeomVertexFormat, GeomVertexData
-from panda3d.core import Geom, GeomTriangles, GeomVertexWriter
-from panda3d.core import GeomNode
-from panda3d.core import LVector3
+from panda3d.core import (
+    Quat,
+    lookAt,
+    GeomVertexFormat,
+    GeomVertexData,
+    Geom,
+    GeomTriangles,
+    GeomVertexWriter,
+    GeomNode,
+    LVector3,
+)
+
+
+def get_quat_from_vector(v, normalize=True):
+    """Get Quat object from 4-d vector"""
+    quat = Quat()
+    quat.setR(v[0])
+    quat.setI(v[1])
+    quat.setJ(v[2])
+    quat.setK(v[3])
+
+    if normalize:
+        quat.normalize()
+
+    return quat
 
 
 def normalize(*args):

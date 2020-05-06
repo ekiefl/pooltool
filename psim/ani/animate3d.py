@@ -15,21 +15,25 @@ from direct.interval.IntervalGlobal import Sequence
 
 
 class Ball(object):
-    def __init__(self, ball, rvw_history, node):
+    def __init__(self, ball, rvw_history, euler_history, quat_history, node, use_euler=False):
         self.node = node
         self._ball = ball
+
+        self.use_euler = use_euler
 
         self.xs = rvw_history[:,0,0]
         self.ys = rvw_history[:,0,1]
         self.zs = rvw_history[:,0,2]
 
-        self.hs = rvw_history[:,3,0]
-        self.ps = rvw_history[:,3,1]
-        self.rs = rvw_history[:,3,2]
+        self.hs = euler_history[:,0]
+        self.ps = euler_history[:,1]
+        self.rs = euler_history[:,2]
 
         self.wxs = rvw_history[:,2,0]
         self.wys = rvw_history[:,2,1]
         self.wzs = rvw_history[:,2,2]
+
+        self.quats = quat_history
 
         self.node.setScale(self.get_scale_factor())
         self.update(0)
@@ -45,7 +49,11 @@ class Ball(object):
 
 
     def update(self, frame):
-        self.node.setHpr(self.hs[frame], self.ps[frame], self.rs[frame])
+        if self.use_euler:
+            self.node.setHpr(self.hs[frame], self.ps[frame], self.rs[frame])
+        else:
+            self.node.setQuat(autils.get_quat_from_vector(self.quats[frame]))
+
         self.node.setPos(self.xs[frame], self.ys[frame], self.zs[frame] + self._ball.R)
 
 
@@ -56,7 +64,8 @@ class AnimateShot(ShowBase):
         self.frame = 0
 
         self.shot = shot
-        #self.shot.convert_to_euler_angles()
+        self.shot.calculate_euler_angles()
+        self.shot.calculate_quaternions()
         self.times = shot.get_time_history()
         self.num_frames = shot.n
 
@@ -95,7 +104,7 @@ class AnimateShot(ShowBase):
 
             self.camera.setPos(
                 self.balls['cue'].node.getX(),
-                self.balls['cue'].node.getY()-2.2,
+                self.balls['cue'].node.getY()-1.2,
                 self.balls['cue'].node.getZ()+0.8
             )
             self.camera.lookAt(self.balls['cue'].node)
@@ -149,10 +158,13 @@ class AnimateShot(ShowBase):
 
     def init_ball(self, ball):
         rvw_history = self.shot.get_ball_rvw_history(ball.id)
+        euler_history = self.shot.get_ball_euler_history(ball.id)
+        quat_history = self.shot.get_ball_quat_history(ball.id)
+
         ball_node = self.loader.loadModel("models/smiley")
         ball_node.reparentTo(self.table)
 
-        return Ball(ball, rvw_history, ball_node)
+        return Ball(ball, rvw_history, euler_history, quat_history, ball_node)
 
 
     def translate_ball_task(self, task):
