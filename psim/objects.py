@@ -21,7 +21,7 @@ class Ball(object):
         self.rvw = np.array([[np.nan, np.nan, np.nan],  # positions (r)
                              [0,      0,      0     ],  # velocities (v)
                              [0,      0,      0     ],  # angular velocities (w)
-                             [0,      0,      0     ]]) # euler angles (e)
+                             [0,      0,      0     ]]) # angular integratinos (e)
 
         # stationary=0, spinning=1, sliding=2, rolling=3
         self.s = 0

@@ -62,6 +62,8 @@ class AnimateShot(ShowBase):
 
         self.accept('escape', sys.exit)
         self.accept('r', self.restart_shot)
+        self.accept('space', self.pause_shot)
+        self.pause = False
 
         self.title = OnscreenText(text='psim',
                                   style=1, fg=(1, 1, 0, 1), shadow=(0, 0, 0, 0.5),
@@ -82,23 +84,26 @@ class AnimateShot(ShowBase):
         #self.taskMgr.add(self.translate_ball_task, "TranslateBallTask")
 
 
+    def pause_shot(self):
+        self.pause = not self.pause
+
+
     def master_task(self, task):
-        for ball in self.balls.values():
-            ball.update(self.frame)
+        if not self.pause:
+            for ball in self.balls.values():
+                ball.update(self.frame)
 
-        self.camera.setPos(
-            self.balls['cue'].node.getX(),
-            self.balls['cue'].node.getY()-1,
-            self.balls['cue'].node.getZ()+0.5
-        )
-        self.camera.lookAt(self.balls['cue'].node)
+            self.camera.setPos(
+                self.balls['cue'].node.getX(),
+                self.balls['cue'].node.getY()-2.2,
+                self.balls['cue'].node.getZ()+0.8
+            )
+            self.camera.lookAt(self.balls['cue'].node)
 
-        if self.frame >= self.num_frames:
-            self.frame = 0
-        else:
-            self.frame += 1
-
-        import time; time.sleep(0.001)
+            if self.frame >= self.num_frames:
+                self.frame = 0
+            else:
+                self.frame += 1
 
         return Task.cont
 
