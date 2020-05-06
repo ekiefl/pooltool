@@ -36,8 +36,6 @@ def resolve_ball_ball_collision(rvw1, rvw2):
 def resolve_ball_rail_collision(rvw, normal, R, m, h):
     """Inhwan Han (2005) 'Dynamics in Carom and Three Cushion Billiards'"""
 
-    print(f"initial vel: \n{rvw[1]}")
-
     # orient the normal so it points away from playing surface
     normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
 
@@ -46,19 +44,12 @@ def resolve_ball_rail_collision(rvw, normal, R, m, h):
     psi = utils.angle(normal)
     rvw_R = utils.coordinate_rotation(rvw.T, -psi).T
 
-    print(f"rotate to rail reference: \n{rvw_R[1]}")
-
     # The incidence angle--called theta_0 in paper
     phi = utils.angle(rvw_R[1]) % (2*np.pi)
-
-    print(f"Incident angle: {phi} rads, {phi*180/np.pi} degrees")
 
     # Get mu and e
     e = get_bail_rail_restitution(rvw_R)
     mu = get_bail_rail_friction(rvw_R)
-
-    print(f"restitution coeffecient: {e}")
-    print(f"friction coeffecient: {mu}")
 
     # Depends on height of cushion relative to ball
     theta_a = np.arcsin(h/R - 1)
@@ -79,27 +70,19 @@ def resolve_ball_rail_collision(rvw, normal, R, m, h):
 
     if PzS <= PzE:
         # Sliding and sticking case
-        print("Chose stick and sliding case")
         PX = -sx/A*np.sin(theta_a) - (1+e)*c/B*np.cos(theta_a)
         PY = sy/A
         PZ = sx/A*np.cos(theta_a) - (1+e)*c/B*np.sin(theta_a)
     else:
         # Forward sliding case
-        print("Chose forward sliding case")
         PX = -mu*(1+e)*c/B*np.cos(phi)*np.sin(theta_a) - (1+e)*c/B*np.cos(theta_a)
         PY = mu*(1+e)*c/B*np.sin(phi)
         PZ = mu*(1+e)*c/B*np.cos(phi)*np.cos(theta_a) - (1+e)*c/B*np.sin(theta_a)
-
-    print(f"PX: {PX}")
-    print(f"PY: {PY}")
-    print(f"PZ: {PZ}")
 
     # Update velocity
     rvw_R[1,0] += PX/m
     rvw_R[1,1] += PY/m
     #rvw_R[1,2] += PZ/m
-
-    print(f"solved vel in rail frame: \n{rvw_R[1]}")
 
     # Update angular velocity
     rvw_R[2,0] += -R/I*PY*np.sin(theta_a)
@@ -108,10 +91,6 @@ def resolve_ball_rail_collision(rvw, normal, R, m, h):
 
     # Change back to table reference frame
     rvw = utils.coordinate_rotation(rvw_R.T, psi).T
-
-    print(f"solved vel in table frame: \n{rvw[1]}")
-
-    #import sys; sys.exit()
 
     return rvw
 
