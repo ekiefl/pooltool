@@ -132,6 +132,7 @@ class ShotHistory(object):
 
         dt_prime = dt
         for index, event in zip(old_history['index'], old_history['event']):
+
             self.progress.update(f"Done event {index} / {old_n}")
             self.progress.increment()
 

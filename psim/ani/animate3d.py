@@ -23,7 +23,7 @@ class Ball(object):
         self.ys = rvw_history[:,0,1]
         self.zs = rvw_history[:,0,2]
 
-        self.hs = -rvw_history[:,3,0]
+        self.hs = rvw_history[:,3,0]
         self.ps = rvw_history[:,3,1]
         self.rs = rvw_history[:,3,2]
 
@@ -45,8 +45,8 @@ class Ball(object):
 
 
     def update(self, frame):
-        self.node.setPos(self.xs[frame], self.ys[frame], self.zs[frame] + self._ball.R)
         self.node.setHpr(self.hs[frame], self.ps[frame], self.rs[frame])
+        self.node.setPos(self.xs[frame], self.ys[frame], self.zs[frame] + self._ball.R)
 
 
 class AnimateShot(ShowBase):
