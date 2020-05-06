@@ -56,7 +56,7 @@ class AnimateShot(ShowBase):
         self.frame = 0
 
         self.shot = shot
-        self.shot.convert_to_euler_angles()
+        #self.shot.convert_to_euler_angles()
         self.times = shot.get_time_history()
         self.num_frames = shot.n
 

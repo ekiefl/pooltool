@@ -189,11 +189,11 @@ class ShotHistory(object):
         self.vectorized = True
 
 
-    def convert_to_euler_angles(self):
-        for ball_id in self.balls:
-            angle_integrations = self.history['balls'][ball_id]['rvw'][:, 3, :]
-            euler_angles = utils.as_euler_angle(angle_integrations)
-            self.history['balls'][ball_id]['rvw'][:, 3, :] = euler_angles
+    #def convert_to_euler_angles(self):
+    #    for ball_id in self.balls:
+    #        angle_integrations = self.history['balls'][ball_id]['rvw'][:, 3, :]
+    #        euler_angles = utils.as_euler_angle(angle_integrations)
+    #        self.history['balls'][ball_id]['rvw'][:, 3, :] = euler_angles
 
 
     def plot_history(self, ball_id, full=False):
@@ -217,14 +217,14 @@ class ShotHistory(object):
         rvw = np.array(self.history['balls'][ball_id]['rvw'])
         t = np.array(self.history['time'])
 
-        hpr = utils.as_euler_angle(rvw[:,3,:])
+        #hpr = utils.as_euler_angle(rvw[:,3,:])
 
         df = pd.DataFrame({
             'rx': rvw[:, 0, 0], 'ry': rvw[:, 0, 1], 'rz': rvw[:, 0, 2],
             'vx': rvw[:, 1, 0], 'vy': rvw[:, 1, 1], 'vz': rvw[:, 1, 2],
             'wx': rvw[:, 2, 0], 'wy': rvw[:, 2, 1], 'wz': rvw[:, 2, 2],
             'thx': rvw[:, 3, 0], 'thy': rvw[:, 3, 1], 'thz': rvw[:, 3, 2],
-            'H': hpr[:,0], 'P': hpr[:,1], 'R': hpr[:,2],
+            #'H': hpr[:,0], 'P': hpr[:,1], 'R': hpr[:,2],
             '|v|': np.sqrt(rvw[:, 1, 2]**2 + rvw[:, 1, 1]**2 + rvw[:, 1, 0]**2),
             '|w|': np.sqrt(rvw[:, 2, 2]**2 + rvw[:, 2, 1]**2 + rvw[:, 2, 0]**2),
             'time': t,
@@ -241,21 +241,21 @@ class ShotHistory(object):
         frame1.axes.yaxis.set_ticklabels([])
         frame1.axes.xaxis.set_ticks([])
         frame1.axes.yaxis.set_ticks([])
-        add_plot(fig, (5,3,1), 'time', 'rx')
-        add_plot(fig, (5,3,2), 'time', 'ry')
-        add_plot(fig, (5,3,3), 'time', 'rz')
-        add_plot(fig, (5,3,4), 'time', 'vx')
-        add_plot(fig, (5,3,5), 'time', 'vy')
-        add_plot(fig, (5,3,6), 'time', 'vz')
-        add_plot(fig, (5,3,7), 'time', 'wx')
-        add_plot(fig, (5,3,8), 'time', 'wy')
-        add_plot(fig, (5,3,9), 'time', 'wz')
-        add_plot(fig, (5,3,10), 'time', 'thx')
-        add_plot(fig, (5,3,11), 'time', 'thy')
-        add_plot(fig, (5,3,12), 'time', 'thz')
-        add_plot(fig, (5,3,13), 'time', 'H')
-        add_plot(fig, (5,3,14), 'time', 'P')
-        add_plot(fig, (5,3,15), 'time', 'R')
+        add_plot(fig, (4,3,1), 'time', 'rx')
+        add_plot(fig, (4,3,2), 'time', 'ry')
+        add_plot(fig, (4,3,3), 'time', 'rz')
+        add_plot(fig, (4,3,4), 'time', 'vx')
+        add_plot(fig, (4,3,5), 'time', 'vy')
+        add_plot(fig, (4,3,6), 'time', 'vz')
+        add_plot(fig, (4,3,7), 'time', 'wx')
+        add_plot(fig, (4,3,8), 'time', 'wy')
+        add_plot(fig, (4,3,9), 'time', 'wz')
+        add_plot(fig, (4,3,10), 'time', 'thx')
+        add_plot(fig, (4,3,11), 'time', 'thy')
+        add_plot(fig, (4,3,12), 'time', 'thz')
+        #add_plot(fig, (5,3,13), 'time', 'H')
+        #add_plot(fig, (5,3,14), 'time', 'P')
+        #add_plot(fig, (5,3,15), 'time', 'R')
         plt.tight_layout()
         plt.show()
 
@@ -390,7 +390,7 @@ class ShotSimulation(ShotHistory):
             s1, s2 = psim.sliding, psim.sliding
 
             # FIXME
-            rvw1[3], rvw2[3] = np.zeros(3), np.zeros(3)
+            #rvw1[3], rvw2[3] = np.zeros(3), np.zeros(3)
 
             self.balls[ball_id1].set(rvw1, s1)
             self.balls[ball_id2].set(rvw2, s2)
@@ -414,7 +414,7 @@ class ShotSimulation(ShotHistory):
             s = psim.sliding
 
             # FIXME
-            rvw[3] = np.zeros(3)
+            #rvw[3] = np.zeros(3)
 
             self.balls[ball_id].set(rvw, s)
 
