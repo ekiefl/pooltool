@@ -24,6 +24,15 @@ def as_quaternion(w):
 
         quats[n, :] = quat.normalised.elements
 
+def as_quaternion(w):
+    n = w.shape[0]
+    quats = np.zeros((n, 4))
+    for i in range(n):
+        norm = np.linalg.norm(w[i,:])
+        if norm == 0:
+            quats[i, :] = np.array([1,0,0,0])
+            continue
+        quats[i, :] = Quaternion(axis=unit_vector(w[i,:]), angle=norm).normalised.elements
     return quats
 
 
