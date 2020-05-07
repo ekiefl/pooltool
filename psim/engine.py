@@ -405,6 +405,9 @@ class ShotSimulation(ShotHistory):
 
 
     def resolve(self, event):
+        if not event.event_type:
+            return
+
         if event.event_type == 'ball-ball':
             ball_id1, ball_id2 = event.agents
 
@@ -413,9 +416,6 @@ class ShotSimulation(ShotHistory):
 
             rvw1, rvw2 = physics.resolve_ball_ball_collision(rvw1, rvw2)
             s1, s2 = psim.sliding, psim.sliding
-
-            # FIXME
-            #rvw1[3], rvw2[3] = np.zeros(3), np.zeros(3)
 
             self.balls[ball_id1].set(rvw1, s1)
             self.balls[ball_id2].set(rvw2, s2)
@@ -437,9 +437,6 @@ class ShotSimulation(ShotHistory):
                 h=rail.height,
             )
             s = psim.sliding
-
-            # FIXME
-            #rvw[3] = np.zeros(3)
 
             self.balls[ball_id].set(rvw, s)
 
@@ -621,8 +618,8 @@ class ShotSimulation(ShotHistory):
 
             self.cue.strike(
                 ball = self.balls['cue'],
-                V0 = 10.9,
-                phi = 81,
+                V0 = 5.9,
+                phi = 135,
                 theta = 20,
                 a = 0.01,
                 b = 0.0,
@@ -650,7 +647,7 @@ class ShotSimulation(ShotHistory):
             self.cue.strike(
                 ball = self.balls['cue'],
                 V0 = 1.50001,
-                phi = 94.005,
+                phi = 94.003,
                 a = -0.2,
                 b = +0.4,
                 theta = 20,
@@ -681,8 +678,8 @@ class ShotSimulation(ShotHistory):
 
             self.cue.strike(
                 ball = self.balls['cue'],
-                V0 = 0.5,
-                phi = 45,
+                V0 = 0.7,
+                phi = 20,
                 a = -0.0,
                 b = 0.4,
                 theta = 0,
