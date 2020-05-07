@@ -104,8 +104,8 @@ class AnimateShot(ShowBase):
 
             self.camera.setPos(
                 self.balls['cue'].node.getX(),
-                self.balls['cue'].node.getY()-1.2,
-                self.balls['cue'].node.getZ()+0.8
+                self.balls['cue'].node.getY()-1.7,
+                self.balls['cue'].node.getZ()+1.2
             )
             self.camera.lookAt(self.balls['cue'].node)
 
