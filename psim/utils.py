@@ -10,8 +10,7 @@ from pyquaternion import Quaternion
 
 def normalize_rotation_vector(v):
     """Reduce a rotation vector to it's minimum magnitude equivalent"""
-    euler = Rotation.from_rotvec(v).as_euler('ZXY', degrees=False)
-    return Rotation.from_euler('ZXY', euler, degrees=False).as_rotvec()
+    return Rotation.from_rotvec(v).as_rotvec()
 
 
 def as_quaternion(w):
