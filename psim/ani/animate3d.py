@@ -90,7 +90,6 @@ class AnimateShot(ShowBase):
         self.init_camera()
 
         self.taskMgr.add(self.master_task, "Master")
-        #self.taskMgr.add(self.translate_ball_task, "TranslateBallTask")
 
 
     def pause_shot(self):
@@ -104,8 +103,8 @@ class AnimateShot(ShowBase):
 
             self.camera.setPos(
                 self.balls['cue'].node.getX(),
-                self.balls['cue'].node.getY()-1.7,
-                self.balls['cue'].node.getZ()+1.2
+                self.balls['cue'].node.getY()-1.4,
+                self.balls['cue'].node.getZ()+0.8
             )
             self.camera.lookAt(self.balls['cue'].node)
 
@@ -144,6 +143,9 @@ class AnimateShot(ShowBase):
 
         self.table.setPos(0, 0, 0.4)
         self.table.setTexture(self.loader.loadTexture(model_paths['blue_cloth']))
+        #from panda3d.core import TextureStage
+        #ts = TextureStage('ts')
+        #self.table.setTexScale(ts, 1e-6, 1e-6)
 
         # Makes viewable from below
         self.table.setTwoSided(True)
@@ -161,22 +163,10 @@ class AnimateShot(ShowBase):
         euler_history = self.shot.get_ball_euler_history(ball.id)
         quat_history = self.shot.get_ball_quat_history(ball.id)
 
-        ball_node = self.loader.loadModel("models/smiley")
+        ball_node = self.loader.loadModel(model_paths['sphere'])
         ball_node.reparentTo(self.table)
 
         return Ball(ball, rvw_history, euler_history, quat_history, ball_node)
-
-
-    def translate_ball_task(self, task):
-        self.ball.setPos(self.ball.getX() + 0.02, 0, 0)
-        return Task.cont
-
-
-    def spin_ball_task(self, task):
-        angleDegrees = task.time * 200.0
-        angleRadians = angleDegrees * (np.pi / 180.0)
-        self.ball.setHpr(angleDegrees, angleDegrees, 0)
-        return Task.cont
 
 
     def start(self):
