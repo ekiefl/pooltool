@@ -48,12 +48,14 @@ class Ball(object):
 
 class Table(object):
     def __init__(self, w=None, l=None, u_s=None, u_r=None, u_sp=None,
-                 edge_width=None, rail_width=None, rail_height=None):
+                 edge_width=None, rail_width=None, rail_height=None,
+                 table_height=None):
 
         self.w = w or psim.table_width
         self.l = l or psim.table_length
         self.edge_width = edge_width or psim.table_edge_width
         self.rail_width = rail_width or psim.rail_width # only for visualization
+        self.height = table_height or psim.table_height # only for visualization
 
         self.L = 0
         self.R = self.w
@@ -68,10 +70,10 @@ class Table(object):
         self.u_sp = u_sp or psim.u_sp
 
         self.rails = {
-            'L': Rail('L', lx=1, ly=0, l0=-self.L),
-            'R': Rail('R', lx=1, ly=0, l0=-self.R),
-            'B': Rail('B', lx=0, ly=1, l0=-self.B),
-            'T': Rail('T', lx=0, ly=1, l0=-self.T),
+            'L': Rail('L', lx=1, ly=0, l0=-self.L, height=rail_height),
+            'R': Rail('R', lx=1, ly=0, l0=-self.R, height=rail_height),
+            'B': Rail('B', lx=0, ly=1, l0=-self.B, height=rail_height),
+            'T': Rail('T', lx=0, ly=1, l0=-self.T, height=rail_height),
         }
 
 
