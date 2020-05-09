@@ -137,22 +137,14 @@ class AnimateShot(ShowBase):
 
 
     def init_table(self):
-        w, l = self.shot.table.w, self.shot.table.l
+        w, l, h = self.shot.table.w, self.shot.table.l, self.shot.table.height
 
         self.table = self.render.attachNewNode(autils.make_square(
             x1=0, y1=0, z1=0, x2=w, y2=l, z2=0, name='playing_surface'
         ))
 
-        self.table.setPos(0, 0, 0.4)
+        self.table.setPos(0, 0, h)
         self.table.setTexture(self.loader.loadTexture(model_paths['blue_cloth']))
-        #from panda3d.core import TextureStage
-        #ts = TextureStage('ts')
-        #self.table.setTexScale(ts, 1e-6, 1e-6)
-
-        # Makes viewable from below
-        self.table.setTwoSided(True)
-
-        self.table.reparentTo(self.render)
 
 
     def init_balls(self):
