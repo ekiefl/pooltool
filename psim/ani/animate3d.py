@@ -87,6 +87,9 @@ class AnimateShot(ShowBase):
         self.scene = None
         self.init_scene()
 
+        self.lights = None
+        self.init_lights()
+
         self.init_camera()
 
         self.taskMgr.add(self.master_task, "Master")
@@ -104,7 +107,7 @@ class AnimateShot(ShowBase):
             self.camera.setPos(
                 self.balls['cue'].node.getX(),
                 self.balls['cue'].node.getY()-1.4,
-                self.balls['cue'].node.getZ()+0.8
+                self.balls['cue'].node.getZ()+1.2
             )
             self.camera.lookAt(self.balls['cue'].node)
 
@@ -167,6 +170,25 @@ class AnimateShot(ShowBase):
         ball_node.reparentTo(self.table)
 
         return Ball(ball, rvw_history, euler_history, quat_history, ball_node)
+
+
+    def init_lights(self):
+        height_above_table = 3
+
+        plight = PointLight('plight')
+        plight.setColor((1, 1, 1, 1))
+        plnp = self.render.attachNewNode(plight)
+        plnp.setPos(self.shot.table.w*0.5, self.shot.table.l*0.5, height_above_table)
+        self.render.setLight(plnp)
+
+        intensity = 0.9
+        alight = AmbientLight('alight')
+        alight.setColor((intensity, intensity, intensity, 1))
+        alnp = self.render.attachNewNode(alight)
+        self.render.setLight(alnp)
+
+        plight.setShadowCaster(True, 1024, 1024)
+        self.render.setShaderAuto()
 
 
     def start(self):
