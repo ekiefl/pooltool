@@ -166,8 +166,13 @@ class AnimateShot(ShowBase):
         euler_history = self.shot.get_ball_euler_history(ball.id)
         quat_history = self.shot.get_ball_quat_history(ball.id)
 
-        ball_node = self.loader.loadModel(model_paths['sphere'])
+        ball_node = self.loader.loadModel('models/smiley')
         ball_node.reparentTo(self.table)
+
+        try:
+            ball_node.setTexture(self.loader.loadTexture(model_paths[f"{ball.id.split('_')[0]}_ball"]), 1)
+        except:
+            pass
 
         return Ball(ball, rvw_history, euler_history, quat_history, ball_node)
 
