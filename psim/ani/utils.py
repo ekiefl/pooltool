@@ -48,10 +48,10 @@ def make_square(x1, y1, z1, x2, y2, z2, name='square'):
         vertex.addData3(x2, y2, z2)
         vertex.addData3(x1, y2, z2)
 
-        normal.addData3(normalize(2 * x1 - 1, 2 * y1 - 1, 2 * z1 - 1))
-        normal.addData3(normalize(2 * x2 - 1, 2 * y1 - 1, 2 * z1 - 1))
-        normal.addData3(normalize(2 * x2 - 1, 2 * y2 - 1, 2 * z2 - 1))
-        normal.addData3(normalize(2 * x1 - 1, 2 * y2 - 1, 2 * z2 - 1))
+        normal.addData3(normalize(0,0,1))
+        normal.addData3(normalize(0,0,1))
+        normal.addData3(normalize(0,0,1))
+        normal.addData3(normalize(0,0,1))
 
     else:
         vertex.addData3(x1, y1, z1)
@@ -59,10 +59,10 @@ def make_square(x1, y1, z1, x2, y2, z2, name='square'):
         vertex.addData3(x2, y2, z2)
         vertex.addData3(x1, y1, z2)
 
-        normal.addData3(normalize(2 * x1 - 1, 2 * y1 - 1, 2 * z1 - 1))
-        normal.addData3(normalize(2 * x2 - 1, 2 * y2 - 1, 2 * z1 - 1))
-        normal.addData3(normalize(2 * x2 - 1, 2 * y2 - 1, 2 * z2 - 1))
-        normal.addData3(normalize(2 * x1 - 1, 2 * y1 - 1, 2 * z2 - 1))
+        normal.addData3(normalize(0,0,1))
+        normal.addData3(normalize(0,0,1))
+        normal.addData3(normalize(0,0,1))
+        normal.addData3(normalize(0,0,1))
 
     tris = GeomTriangles(Geom.UHDynamic)
     tris.addVertices(0, 1, 3)

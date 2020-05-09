@@ -162,7 +162,8 @@ class AnimateShot(ShowBase):
 
         try:
             ball_node.setTexture(self.loader.loadTexture(model_paths[f"{ball.id.split('_')[0]}_ball"]), 1)
-        except:
+        except KeyError:
+            # No ball texture is found for the given ball.id. Keeping smiley
             pass
 
         return Ball(ball, rvw_history, euler_history, quat_history, ball_node)
