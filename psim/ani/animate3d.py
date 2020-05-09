@@ -188,27 +188,29 @@ class AnimateShot(ShowBase, Handler):
     def init_lights(self):
         w, l, h = self.shot.table.w, self.shot.table.l, self.shot.table.lights_height
 
-        overhead_intensity = 0.3
+        self.lights['ambient'] = {}
         self.lights['overhead'] = {}
+
+        overhead_intensity = 0.3
 
         def add_overhead(x, y, z, name='plight'):
             plight = PointLight(name)
             plight.setColor((overhead_intensity, overhead_intensity, overhead_intensity, 1))
-            plight.setShadowCaster(True, 512, 512)
+            plight.setShadowCaster(True, 1024, 1024)
 
             self.lights['overhead'][name] = self.render.attachNewNode(plight)
             self.lights['overhead'][name].setPos(self.table, x, y, z)
             self.render.setLight(self.lights['overhead'][name])
 
-        add_overhead(0.5*w, 1.0*l, h, name='bottom')
+        add_overhead(0.5*w, 1.0*l, h, name='top')
         add_overhead(0.5*w, 0.5*l, h, name='middle')
-        add_overhead(0.5*w, 0.0*l, h, name='top')
+        add_overhead(0.5*w, 0.0*l, h, name='bottom')
 
         ambient_intensity = 0.6
         alight = AmbientLight('alight')
         alight.setColor((ambient_intensity, ambient_intensity, ambient_intensity, 1))
-        alnp = self.render.attachNewNode(alight)
-        self.render.setLight(alnp)
+        self.lights['ambient']['ambient1'] = self.render.attachNewNode(alight)
+        self.render.setLight(self.lights['ambient']['ambient1'])
 
         self.render.setShaderAuto()
 
