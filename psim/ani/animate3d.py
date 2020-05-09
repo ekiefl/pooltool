@@ -10,6 +10,7 @@ from panda3d.core import *
 from direct.task import Task
 from direct.actor.Actor import Actor
 from direct.gui.OnscreenText import OnscreenText
+from direct.showbase import DirectObject
 from direct.showbase.ShowBase import ShowBase
 from direct.interval.IntervalGlobal import Sequence
 
@@ -57,9 +58,33 @@ class Ball(object):
         self.node.setPos(self.xs[frame], self.ys[frame], self.zs[frame] + self._ball.R)
 
 
-class AnimateShot(ShowBase):
+class Handler(DirectObject.DirectObject):
+    def __init__(self):
+        self.accept('escape', sys.exit)
+        self.accept('r', self.restart_shot)
+        self.accept('space', self.pause_shot)
+        self.accept('x', self.press_x)
+
+        self.x_pressed = False
+
+        # Game states
+        self.pause = False
+        self.birds_eye = False
+
+    def restart_shot(self):
+        self.frame = 0
+
+    def pause_shot(self):
+        self.pause = not self.pause
+
+    def press_x(self):
+        self.x_pressed = not self.x_pressed
+
+
+class AnimateShot(ShowBase, Handler):
     def __init__(self, shot):
         ShowBase.__init__(self)
+        Handler.__init__(self)
         self.taskMgr.add(self.master_task, "Master")
 
         self.frame = 0
@@ -69,11 +94,6 @@ class AnimateShot(ShowBase):
         self.shot.calculate_quaternions()
         self.times = shot.get_time_history()
         self.num_frames = shot.n
-
-        self.accept('escape', sys.exit)
-        self.accept('r', self.restart_shot)
-        self.accept('space', self.pause_shot)
-        self.pause = False
 
         self.title = OnscreenText(text='psim',
                                   style=1, fg=(1, 1, 0, 1), shadow=(0, 0, 0, 0.5),
@@ -92,10 +112,6 @@ class AnimateShot(ShowBase):
         self.init_lights()
 
         self.init_camera()
-
-
-    def pause_shot(self):
-        self.pause = not self.pause
 
 
     def master_task(self, task):
@@ -161,7 +177,7 @@ class AnimateShot(ShowBase):
         ball_node.reparentTo(self.table)
 
         try:
-            ball_node.setTexture(self.loader.loadTexture(model_paths[f"{ball.id.split('_')[0]}_ball"]), 1)
+            ball_node.setTexture(self.loader.loadTexture(model_paths[f"{str(ball.id).split('_')[0]}_ball"]), 1)
         except KeyError:
             # No ball texture is found for the given ball.id. Keeping smiley
             pass
