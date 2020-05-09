@@ -6,8 +6,8 @@ from psim.ani import model_paths
 import sys
 import numpy as np
 
+from panda3d.core import *
 from direct.task import Task
-from panda3d.core import Point3
 from direct.actor.Actor import Actor
 from direct.gui.OnscreenText import OnscreenText
 from direct.showbase.ShowBase import ShowBase
