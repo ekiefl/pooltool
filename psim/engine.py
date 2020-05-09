@@ -594,7 +594,7 @@ class ShotSimulation(ShotHistory):
             self.balls['cue'] = Ball('cue')
             self.balls['cue'].rvw[0] = [
                 self.table.w - 0.2,
-                0.2,
+                0.4,
                 0
             ]
 
@@ -618,11 +618,11 @@ class ShotSimulation(ShotHistory):
 
             self.cue.strike(
                 ball = self.balls['cue'],
-                V0 = 5.9,
-                phi = 135,
-                theta = 20,
+                V0 = 6.8,
+                phi = 174,
+                theta = 0,
                 a = 0.01,
-                b = 0.0,
+                b = -0.1,
             )
         elif setup == '6_balls':
             self.table = Table()
@@ -632,8 +632,8 @@ class ShotSimulation(ShotHistory):
             self.balls['7'] = Ball('7')
             self.balls['7'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.B+1.89, 0]
 
-            self.balls['9'] = Ball('9')
-            self.balls['9'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.T-0.1, 0]
+            self.balls['10'] = Ball('10')
+            self.balls['10'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.T-0.1, 0]
 
             self.balls['2'] = Ball('2')
             self.balls['2'].rvw[0] = [self.table.center[0], self.table.T-0.3, 0]

@@ -60,6 +60,7 @@ class Ball(object):
 class AnimateShot(ShowBase):
     def __init__(self, shot):
         ShowBase.__init__(self)
+        self.taskMgr.add(self.master_task, "Master")
 
         self.frame = 0
 
@@ -91,8 +92,6 @@ class AnimateShot(ShowBase):
         self.init_lights()
 
         self.init_camera()
-
-        self.taskMgr.add(self.master_task, "Master")
 
 
     def pause_shot(self):
