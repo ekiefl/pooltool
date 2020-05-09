@@ -662,39 +662,9 @@ class ShotSimulation(ShotHistory):
 
             self.cue.strike(
                 ball = self.balls['cue'],
-                V0 = 1.0,
+                V0 = 2.63,
                 phi = 90,
-                a = -0.0,
-                b = 0.4,
+                a = -0.05,
+                b = 0.1,
                 theta = 0,
             )
-        elif setup == 'spin':
-            self.table = Table(u_s=5, w=psim.table_width*1.04)
-            self.balls['cue'] = Ball('cue')
-            self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
-
-            self.balls['8'] = Ball('8')
-            self.balls['8'].rvw[0] = [self.table.center[0]-self.balls['cue'].R*3, self.table.B+1.0, 0]
-
-            self.cue.strike(
-                ball = self.balls['cue'],
-                V0 = 0.7,
-                phi = 20,
-                a = -0.0,
-                b = 0.4,
-                theta = 0,
-            )
-        elif setup == 'trouble':
-            self.table = Table(u_s=5)
-            self.balls['cue'] = Ball('cue')
-
-            self.balls['cue'].s = 2
-            self.balls['cue'].rvw = np.array([[  1.343025,       0.987225,       0.          ],
-                                              1.5*np.array([ -0.2059209579,   0.138126821,    0.          ]),
-                                              [ -5.6699572293,   0.653220879,    0.          ],
-                                              [-1,            -2,             -6.          ]])
-
-
-
-
-
