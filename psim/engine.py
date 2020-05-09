@@ -618,11 +618,11 @@ class ShotSimulation(ShotHistory):
 
             self.cue.strike(
                 ball = self.balls['cue'],
-                V0 = 6.8,
-                phi = 174,
+                V0 = 7.8,
+                phi = 160.9,
                 theta = 0,
                 a = 0.01,
-                b = -0.1,
+                b = 0.1,
             )
         elif setup == '6_balls':
             self.table = Table()

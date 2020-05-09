@@ -119,23 +119,35 @@ class AnimateShot(ShowBase, Handler):
             for ball in self.balls.values():
                 ball.update(self.frame)
 
-            self.camera.setPos(
-                self.balls['cue'].node.getX(),
-                self.balls['cue'].node.getY()-1.4,
-                self.balls['cue'].node.getZ()+1.2
-            )
-            self.camera.lookAt(self.balls['cue'].node)
-
             if self.frame >= self.num_frames:
                 self.frame = 0
             else:
                 self.frame += 1
 
+        if self.x_pressed:
+            self.toggle_birds_eye()
+
         return Task.cont
 
 
-    def restart_shot(self):
-        self.frame = 0
+    def toggle_birds_eye(self):
+        fov = self.camLens.getFov()
+        long_dim_is_y = True if self.shot.table.l >= self.shot.table.w else False
+        buffer_factor = 1.1
+
+        if long_dim_is_y and fov[0] >= fov[1]:
+            rotate = True
+        elif not long_dim_is_y and fov[1] >= fov[0]:
+            rotate = True
+        else:
+            rotate = False
+
+        zs = [
+            (self.shot.table.l if long_dim_is_y else self.shot.table.w)/2*buffer_factor / np.tan(max(fov)/2 * np.pi/180),
+            (self.shot.table.w if long_dim_is_y else self.shot.table.l)/2*buffer_factor / np.tan(min(fov)/2 * np.pi/180),
+        ]
+        self.camera.setPos(self.table, self.shot.table.w/2, self.shot.table.l/2, max(zs))
+        self.camera.setHpr(0, -90, 0) if not rotate else self.camera.setHpr(90, -90, 0)
 
 
     def init_scene(self):
