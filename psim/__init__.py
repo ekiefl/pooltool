@@ -25,7 +25,7 @@ rail_width = 0.0635
 rail_height = 0.64*2*R
 table_edge_width = 0.10
 table_height = 0.75
-lights_height = 1 # relative to playing surface
+lights_height = 1.1 # relative to playing surface
 diamond_size = 0.01
 
 # Ball states
