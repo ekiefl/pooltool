@@ -17,7 +17,7 @@ if __name__ == '__main__':
     sim = engine.ShotSimulation()
     sim.setup_test(args.setup)
 
-    sim.simulate(name=args.setup)
+    sim.simulate(name=args.setup, time=None)
 
     if not args.skip_continuize:
         sim.continuize(args.dt)
