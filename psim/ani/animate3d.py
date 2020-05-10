@@ -126,8 +126,20 @@ class AnimateShot(ShowBase, Handler):
 
         if self.x_pressed:
             self.toggle_birds_eye()
+        else:
+            self.toggle_cue_ball_view()
 
         return Task.cont
+
+
+    def toggle_cue_ball_view(self):
+        self.camera.setPos(
+            self.balls['cue'].xs[self.frame],
+            self.balls['cue'].ys[self.frame] - 1.2,
+            self.balls['cue'].zs[self.frame] + 1.2
+        )
+
+        self.camera.lookAt(self.balls['cue'].node)
 
 
     def toggle_birds_eye(self):
