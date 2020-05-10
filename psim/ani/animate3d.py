@@ -151,10 +151,12 @@ class AnimateShot(ShowBase, Handler):
 
 
     def init_scene(self):
-        self.scene = self.loader.loadModel("models/environment")
+        self.scene = loader.loadModel(model_paths['env.egg'])
         self.scene.reparentTo(self.render)
-        self.scene.setScale(0.030, 0.030, 0.030)
-        self.scene.setPos(0, 6.5, -0.7)
+        self.scene.setScale(20)
+        self.scene.setPos(0, 6.5, -10)
+
+        #self.scene = self.loader.loadModel("models/environment")
 
 
     def init_camera(self):
