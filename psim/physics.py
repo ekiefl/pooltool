@@ -114,7 +114,7 @@ def get_bail_rail_restitution(rvw):
         perpendicular to the rail, and in the direction away from the table
     """
 
-    return 0.39 + 0.257*rvw[1,0] - 0.044*rvw[1,0]**2
+    return 0.50 + 0.257*rvw[1,0] - 0.044*rvw[1,0]**2
 
 
 def get_bail_rail_friction(rvw):
