@@ -4,6 +4,7 @@ import psim
 import psim.utils as utils
 import psim.physics as physics
 import psim.terminal as terminal
+import psim.configurations as configurations
 
 from psim.objects import (
     Ball,
@@ -624,16 +625,13 @@ class ShotSimulation(ShotHistory):
                 a = 0.01,
                 b = 0.1,
             )
-        elif setup == '6_balls':
+        elif setup == '10_balls':
             self.table = Table()
             self.balls['cue'] = Ball('cue')
             self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
 
-            self.balls['7'] = Ball('7')
-            self.balls['7'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.B+1.89, 0]
-
-            self.balls['10'] = Ball('10')
-            self.balls['10'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.T-0.1, 0]
+            self.balls['1'] = Ball('1')
+            self.balls['1'].rvw[0] = [self.table.center[0], self.table.B+1.66, 0]
 
             self.balls['2'] = Ball('2')
             self.balls['2'].rvw[0] = [self.table.center[0], self.table.T-0.3, 0]
@@ -641,8 +639,23 @@ class ShotSimulation(ShotHistory):
             self.balls['3'] = Ball('3')
             self.balls['3'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+1.89, 0]
 
+            self.balls['4'] = Ball('4')
+            self.balls['4'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+0.2, 0]
+
+            self.balls['5'] = Ball('5')
+            self.balls['5'].rvw[0] = [self.table.center[0] - self.table.w/6, self.table.B+0.2, 0]
+
+            self.balls['6'] = Ball('6')
+            self.balls['6'].rvw[0] = [self.table.center[0], self.table.T-0.03, 0]
+
+            self.balls['7'] = Ball('7')
+            self.balls['7'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.B+1.89, 0]
+
             self.balls['8'] = Ball('8')
-            self.balls['8'].rvw[0] = [self.table.center[0], self.table.B+1.66, 0]
+            self.balls['8'].rvw[0] = [self.table.center[0]+0.3, self.table.T-0.03, 0]
+
+            self.balls['10'] = Ball('10')
+            self.balls['10'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.T-0.1, 0]
 
             self.cue.strike(
                 ball = self.balls['cue'],
@@ -666,5 +679,41 @@ class ShotSimulation(ShotHistory):
                 phi = 90,
                 a = -0.05,
                 b = 0.1,
+                theta = 0,
+            )
+        elif setup == '9_break':
+            self.table = Table()
+
+            self.balls['1'] = Ball('1')
+            self.balls['2'] = Ball('2')
+            self.balls['3'] = Ball('3')
+            self.balls['4'] = Ball('4')
+            self.balls['5'] = Ball('5')
+            self.balls['6'] = Ball('6')
+            self.balls['7'] = Ball('7')
+            self.balls['8'] = Ball('8')
+            self.balls['10'] = Ball('10')
+
+            c = configurations.NineBallRack(
+                list(self.balls.values()),
+                spacing_factor=1e-2,
+                ordered=True
+            )
+
+            c.arrange()
+            c.center_by_table(self.table)
+
+            print(f"Balls are overlapping: {self.is_balls_overlapping()}")
+
+            self.balls['cue'] = Ball('cue')
+            self.balls['cue'].rvw[0] = [self.table.L+0.18, self.table.T*2/8, 0]
+
+            self.cue.strike_object(
+                ball = self.balls['cue'],
+                obj = self.balls['1'],
+                offset = -0.064,
+                V0 = 6.50001,
+                a = -0.0,
+                b = +0.018,
                 theta = 0,
             )

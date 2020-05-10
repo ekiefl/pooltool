@@ -116,3 +116,25 @@ class Cue(object):
              else psim.sliding)
 
         ball.set(rvw, s)
+
+
+    def strike_object(self, ball, V0, obj, offset=0, theta=None, a=None, b=None, sweet_spot=False):
+        """Strike a ball to another object that has an rvw. FIXME"""
+
+        if sweet_spot:
+            # b = 2/5 is the sweet spot to go directly from stationary to rolling (no sliding)
+            theta, a, b = 0, 0, 2/5
+        else:
+            if any([theta is None, a is None, b is None]):
+                raise ValueError("Cue.strike :: Must choose theta, a, and b")
+
+        phi = utils.angle(obj.rvw[0] - ball.rvw[0]) * 180/np.pi + offset
+
+        v, w = physics.cue_strike(ball.m, self.M, ball.R, V0, phi, theta, a, b)
+        rvw = np.array([ball.rvw[0], v, w, ball.rvw[3]])
+
+        s = (psim.rolling
+             if abs(np.sum(physics.get_rel_velocity(rvw, ball.R))) <= psim.tol
+             else psim.sliding)
+
+        ball.set(rvw, s)
