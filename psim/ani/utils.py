@@ -34,12 +34,13 @@ def normalize(*args):
     return myVec
 
 
-def make_square(x1, y1, z1, x2, y2, z2, name='square'):
+def make_rectangle(x1, y1, z1, x2, y2, z2, name='rectangle'):
     fmt = GeomVertexFormat.getV3n3cpt2()
-    vdata = GeomVertexData('square', fmt, Geom.UHDynamic)
+    vdata = GeomVertexData('rectangle', fmt, Geom.UHDynamic)
 
     vertex = GeomVertexWriter(vdata, 'vertex')
     normal = GeomVertexWriter(vdata, 'normal')
+    #texcoord = GeomVertexWriter(vdata, 'texcoord')
 
     # make sure we draw the sqaure in the right plane
     if x1 != x2:
@@ -48,7 +49,7 @@ def make_square(x1, y1, z1, x2, y2, z2, name='square'):
         vertex.addData3(x2, y2, z2)
         vertex.addData3(x1, y2, z2)
 
-        # FIXME
+        # FIXME calculate the norm
         normal.addData3(normalize(0,0,1))
         normal.addData3(normalize(0,0,1))
         normal.addData3(normalize(0,0,1))
@@ -60,20 +61,27 @@ def make_square(x1, y1, z1, x2, y2, z2, name='square'):
         vertex.addData3(x2, y2, z2)
         vertex.addData3(x1, y1, z2)
 
-        # FIXME
+        # FIXME calculate the norm
         normal.addData3(normalize(0,0,1))
         normal.addData3(normalize(0,0,1))
         normal.addData3(normalize(0,0,1))
         normal.addData3(normalize(0,0,1))
+
+    # FIXME calculate with a scale or something
+    #scale = 1
+    #texcoord.addData2f(0.0, scale)
+    #texcoord.addData2f(0.0, 0.0)
+    #texcoord.addData2f(scale, 0.0)
+    #texcoord.addData2f(scale, scale)
 
     tris = GeomTriangles(Geom.UHDynamic)
     tris.addVertices(0, 1, 3)
     tris.addVertices(1, 2, 3)
 
-    square = Geom(vdata)
-    square.addPrimitive(tris)
-    square_node = GeomNode(name)
-    square_node.addGeom(square)
+    rectangle = Geom(vdata)
+    rectangle.addPrimitive(tris)
+    rectangle_node = GeomNode(name)
+    rectangle_node.addGeom(rectangle)
 
-    return square_node
+    return rectangle_node
 
