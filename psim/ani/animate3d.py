@@ -17,12 +17,17 @@ from direct.interval.IntervalGlobal import Sequence
 
 class Trail(object):
     def __init__(self, ball, ghost_array=None, line_array=None):
-        self.ghost_array = ghost_array or np.array([3, 6, 9])
-        self.line_array = line_array or np.arange(0,100,1)
+        self.ghost_array = ghost_array or np.array([2, 4, 6])
+        self.line_array = line_array or np.arange(1,100,1)
 
         self.n = len(self.ghost_array)
         self.ball = ball
         self.ball_node = self.ball.node
+
+        self.tau_ghost = self.ghost_array[-1]/2
+        self.tau_trails = self.line_array[-1]/4
+
+        self.trail_transparencies = self.get_transparency(self.line_array, self.tau_trails)
 
         self.ghosts = {}
         self.ghosts_node = NodePath('ghosts')
@@ -31,21 +36,22 @@ class Trail(object):
 
         self.line_node = NodePath('line')
         self.ls = LineSegs()
-        self.ls.setThickness(1.5)
-        self.ls.setColor(1, 1, 1, 1)
+        self.ls.setThickness(2)
 
 
-    def get_ghost_transparency(self, shift):
-        tau = self.ghost_array[-1]/2
+    def get_transparency(self, shift, tau):
         return np.exp(-shift/tau)
 
 
     def populate_ghosts(self):
-        for shift in self.ghost_array:
+        transparencies = self.get_transparency(self.ghost_array, self.tau_ghost)
+
+        for transparency, shift in zip(transparencies, self.ghost_array):
             self.ghosts[shift] = self.ghosts_node.attachNewNode(f"ghost_{shift}")
             self.ball_node.copyTo(self.ghosts[shift])
             self.ghosts[shift].setTransparency(TransparencyAttrib.MAlpha)
-            self.ghosts[shift].setAlphaScale(self.get_ghost_transparency(shift))
+            self.ghosts[shift].setAlphaScale(transparency)
+            self.ghosts[shift].setScale(self.ball.get_scale_factor())
 
 
     def remove_ghosts(self):
@@ -56,18 +62,23 @@ class Trail(object):
     def draw_line(self, frame, xs, ys, zs):
         self.ls.reset()
 
-        for shift in self.line_array:
-            shifted_frame = frame - shift
+        self.line_node.removeNode()
+        self.line_node = NodePath('trail')
+        self.line_node.setTransparency(TransparencyAttrib.MAlpha)
 
+        for idx, shift in enumerate(self.line_array):
+            shifted_frame = frame - shift
             if shifted_frame < 0:
                 break
 
             self.ls.drawTo(xs[shifted_frame], ys[shifted_frame], zs[shifted_frame] + self.ball._ball.R)
 
-        self.line_node.removeNode()
-        self.line_node = NodePath(self.ls.create())
-        self.line_node.attachNewNode(self.ls.create(dynamic=True))
+        self.line_node.attachNewNode(self.ls.create())
         self.line_node.reparentTo(render.find('trails'))
+
+        for n in range(self.ls.getNumVertices()):
+            self.ls.setVertexColor(n, LColor(1, 1, 1, self.trail_transparencies[n]))
+
 
 
 class Ball(object):
@@ -124,11 +135,12 @@ class Ball(object):
 
 
     def _update(self, node, frame):
+        parent = self.node.getParent()
         if self.use_euler:
-            node.setHpr(self.node.getParent(), self.hs[frame], self.ps[frame], self.rs[frame])
+            node.setHpr(parent, self.hs[frame], self.ps[frame], self.rs[frame])
         else:
-            node.setQuat(self.node.getParent(), autils.get_quat_from_vector(self.quats[frame]))
-        node.setPos(self.node.getParent(), self.xs[frame], self.ys[frame], self.zs[frame] + self._ball.R)
+            node.setQuat(parent, autils.get_quat_from_vector(self.quats[frame]))
+        node.setPos(parent, self.xs[frame], self.ys[frame], self.zs[frame] + self._ball.R)
 
 
     def update(self, frame):
@@ -304,7 +316,8 @@ class AnimateShot(ShowBase, Handler):
     def init_trails(self):
         self.trails = NodePath('trails')
         self.trails.reparentTo(render)
-        self.trails.setPos(self.table, 0, 0, 0)
+        self.trails.setPos(0, 0, self.shot.table.height)
+        self.trails.hide(0b0001)
 
 
     def init_balls(self):
@@ -326,26 +339,34 @@ class AnimateShot(ShowBase, Handler):
         self.lights['ambient'] = {}
         self.lights['overhead'] = {}
 
-        overhead_intensity = 0.4
+        overhead_intensity = 0.6
 
         def add_overhead(x, y, z, name='plight'):
             plight = PointLight(name)
             plight.setColor((overhead_intensity, overhead_intensity, overhead_intensity, 1))
             plight.setShadowCaster(True, 1024, 1024)
+            plight.setAttenuation((1, 0, 1)) # inverse square attenutation
+            plight.setCameraMask(0b0001)
 
-            self.lights['overhead'][name] = render.attachNewNode(plight)
+            self.lights['overhead'][name] = self.table.attachNewNode(plight)
             self.lights['overhead'][name].setPos(self.table, x, y, z)
-            render.setLight(self.lights['overhead'][name])
+            self.table.setLight(self.lights['overhead'][name])
 
-        add_overhead(0.5*w, 1.0*l, h, name='top')
-        add_overhead(0.5*w, 0.5*l, h, name='middle')
-        add_overhead(0.5*w, 0.0*l, h, name='bottom')
+        plight = PointLight('test')
+        plight.setColor((1,1,0,0))
+        plight.setShadowCaster(False, 1024, 1024)
+        self.lights['overhead']['test'] = self.table.attachNewNode(plight)
+        self.lights['overhead']['test'].setPos(self.table, 0.5*w, 1.0*l, h)
 
-        ambient_intensity = 0.5
+        add_overhead(0.5*w, 1.0*l, h, name='overhead_top')
+        add_overhead(0.5*w, 0.5*l, h, name='overhead_middle')
+        add_overhead(0.5*w, 0.0*l, h, name='overhead_bottom')
+
+        ambient_intensity = 0.6
         alight = AmbientLight('alight')
         alight.setColor((ambient_intensity, ambient_intensity, ambient_intensity, 1))
         self.lights['ambient']['ambient1'] = render.attachNewNode(alight)
-        render.setLight(self.lights['ambient']['ambient1'])
+        self.table.setLight(self.lights['ambient']['ambient1'])
 
         self.table.setShaderAuto()
 
