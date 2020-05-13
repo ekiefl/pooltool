@@ -16,31 +16,31 @@ from direct.interval.IntervalGlobal import Sequence
 
 
 class Trail(object):
-    def __init__(self, ball_node, trail_array=None, trail_type=None):
-        self.trail_array = trail_array or np.array([3, 6, 9])
-        self.trail_type = trail_type or 'ball'
+    def __init__(self, ball_node, ghost_array=None, line_array=None):
+        self.ghost_array = ghost_array or np.array([3, 6, 9])
+        self.line_array = line_array or np.array([3, 6, 9])
 
-        self.n = len(self.trail_array)
+        self.n = len(self.ghost_array)
         self.ball_node = ball_node
 
-        self.nodes = {}
-        self.populate_nodes()
+        self.ghosts = {}
+        self.ghosts_node = NodePath('ghosts')
+        self.populate_ghosts()
 
 
     def get_transparency(self, shift):
-        tau = self.trail_array[-1]/2
+        tau = self.ghost_array[-1]/2
         return np.exp(-shift/tau)
 
 
-    def populate_nodes(self):
-        for shift in self.trail_array:
-            if self.trail_type == 'ball':
-                self.nodes[shift] = self.ball_node.attachNewNode(f"trail_{shift}")
-                self.ball_node.copyTo(self.nodes[shift])
-                self.nodes[shift].setTransparency(TransparencyAttrib.MAlpha)
-                self.nodes[shift].setAlphaScale(self.get_transparency(shift))
-            else:
-                raise ValueError("Only balls")
+    def populate_ghosts(self):
+        for shift in self.ghost_array:
+            self.ghosts[shift] = self.ghosts_node.attachNewNode(f"trail_{shift}")
+            self.ball_node.copyTo(self.ghosts[shift])
+            self.ghosts[shift].setTransparency(TransparencyAttrib.MAlpha)
+            self.ghosts[shift].setAlphaScale(self.get_transparency(shift))
+
+        self.ghosts_node.reparentTo(self.ball_node)
 
 
 class Ball(object):
@@ -96,7 +96,7 @@ class Ball(object):
         if self.trail_on:
             get_trail_frame = lambda shift, frame: max([0, frame - shift])
 
-            for shift, trail_node in self.trail.nodes.items():
+            for shift, trail_node in self.trail.ghosts.items():
                 trail_frame = get_trail_frame(shift, frame)
 
                 if self.use_euler:
