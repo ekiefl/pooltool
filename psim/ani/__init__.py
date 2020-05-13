@@ -1,16 +1,21 @@
 #! /usr/bin/env python
 import psim
 
-from pathlib import Path
-from panda3d.core import Filename
-
 import os
+import numpy as np
+
+from pathlib import Path
+from panda3d.core import *
 
 model_paths = (path for path in (Path(psim.__file__).parent.parent / 'models').glob('*') if path.is_file())
 model_paths = {str(path.stem): Filename.fromOsSpecific(str(path.absolute())) for path in model_paths}
 
-
-
+ghost_trail_array = np.array([2, 4, 6])
+line_trail_array = np.arange(1, 100, 1)
+line_trail_thickness = 2
+line_trail_color = LColor(1, 1, 1, 1)
+ghost_decay = 4
+line_decay = 2
 
 
 # -----------------------------------------------------------------------------

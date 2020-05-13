@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import psim.ani as ani
 import psim.ani.utils as autils
 
 from psim.ani import model_paths
@@ -16,27 +17,35 @@ from direct.interval.IntervalGlobal import Sequence
 
 
 class Trail(object):
-    def __init__(self, ball, ghost_array=None, line_array=None):
-        self.ghost_array = ghost_array or np.array([2, 4, 6])
-        self.line_array = line_array or np.arange(1,100,1)
+    def __init__(self, ball, ghost_array=None, line_array=None, ghost_decay=None, line_decay=None,
+                 line_thickness=None):
+
+        self.show_line = True
+        self.show_ghosts = True
+
+        self.ghost_array = ghost_array or ani.ghost_trail_array
+        self.line_array = line_array or ani.line_trail_array
+        self.ghost_decay = ghost_decay or ani.ghost_decay
+        self.line_decay = line_decay or ani.line_decay
+        self.line_thickness = line_thickness or ani.line_trail_thickness
 
         self.n = len(self.ghost_array)
         self.ball = ball
         self.ball_node = self.ball.node
 
-        self.tau_ghost = self.ghost_array[-1]/2
-        self.tau_trails = self.line_array[-1]/4
+        self.tau_ghost = self.ghost_array[-1]/self.ghost_decay
+        self.tau_trails = self.line_array[-1]/self.line_decay
 
         self.trail_transparencies = self.get_transparency(self.line_array, self.tau_trails)
 
         self.ghosts = {}
         self.ghosts_node = NodePath('ghosts')
         self.ghosts_node.reparentTo(render.find('trails'))
-        #self.populate_ghosts()
+        self.populate_ghosts()
 
         self.line_node = NodePath('line')
         self.ls = LineSegs()
-        self.ls.setThickness(2)
+        self.ls.setThickness(self.line_thickness)
 
 
     def get_transparency(self, shift, tau):
@@ -77,8 +86,19 @@ class Trail(object):
         self.line_node.reparentTo(render.find('trails'))
 
         for n in range(self.ls.getNumVertices()):
+            # Must be modified after self.ls.create()
             self.ls.setVertexColor(n, LColor(1, 1, 1, self.trail_transparencies[n]))
 
+
+    def update(self, frame):
+        get_trail_frame = lambda shift, frame: max([0, frame - shift])
+
+        if self.show_ghosts:
+            for shift, ghost_node in self.ghosts.items():
+                self.ball._update(ghost_node, get_trail_frame(shift, frame))
+
+        if self.show_line:
+            self.draw_line(frame, self.ball.xs, self.ball.ys, self.ball.zs)
 
 
 class Ball(object):
@@ -147,12 +167,7 @@ class Ball(object):
         self._update(self.node, frame)
 
         if self.trail_on:
-            get_trail_frame = lambda shift, frame: max([0, frame - shift])
-
-            for shift, ghost_node in self.trail.ghosts.items():
-                self._update(ghost_node, get_trail_frame(shift, frame))
-
-            self.trail.draw_line(frame, self.xs, self.ys, self.zs)
+            self.trail.update(frame)
 
 
     def add_trail(self):
