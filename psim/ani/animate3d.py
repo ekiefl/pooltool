@@ -27,8 +27,10 @@ class Trail(object):
         self.ghosts_node = NodePath('ghosts')
         self.populate_ghosts()
 
+        self.line_node = NodePath('line')
 
-    def get_transparency(self, shift):
+
+    def get_ghost_transparency(self, shift):
         tau = self.ghost_array[-1]/2
         return np.exp(-shift/tau)
 
@@ -38,7 +40,7 @@ class Trail(object):
             self.ghosts[shift] = self.ghosts_node.attachNewNode(f"trail_{shift}")
             self.ball_node.copyTo(self.ghosts[shift])
             self.ghosts[shift].setTransparency(TransparencyAttrib.MAlpha)
-            self.ghosts[shift].setAlphaScale(self.get_transparency(shift))
+            self.ghosts[shift].setAlphaScale(self.get_ghost_transparency(shift))
 
         self.ghosts_node.reparentTo(self.ball_node)
 
@@ -46,6 +48,11 @@ class Trail(object):
     def remove_ghosts(self):
         self.ghosts = {}
         self.ghosts_node.removeNode()
+
+
+    def draw_line(self):
+        
+        self.draw_line()
 
 
 class Ball(object):
@@ -89,26 +96,23 @@ class Ball(object):
         return self._ball.R / current_R
 
 
-    def update(self, frame):
-        # Updates self.node
+    def _update(self, node, frame):
         if self.use_euler:
-            self.node.setHpr(self.hs[frame], self.ps[frame], self.rs[frame])
+            node.setHpr(self.node.getParent(), self.hs[frame], self.ps[frame], self.rs[frame])
         else:
-            self.node.setQuat(autils.get_quat_from_vector(self.quats[frame]))
-        self.node.setPos(self.xs[frame], self.ys[frame], self.zs[frame] + self._ball.R)
+            node.setQuat(self.node.getParent(), autils.get_quat_from_vector(self.quats[frame]))
+        node.setPos(self.node.getParent(), self.xs[frame], self.ys[frame], self.zs[frame] + self._ball.R)
 
-        # Update trails
+
+    def update(self, frame):
+        self._update(self.node, frame)
+
         if self.trail_on:
             get_trail_frame = lambda shift, frame: max([0, frame - shift])
 
-            for shift, trail_node in self.trail.ghosts.items():
-                trail_frame = get_trail_frame(shift, frame)
+            for shift, ghost_node in self.trail.ghosts.items():
+                self._update(ghost_node, get_trail_frame(shift, frame))
 
-                if self.use_euler:
-                    trail_node.setHpr(self.node.getParent(), self.hs[trail_frame], self.ps[trail_frame], self.rs[trail_frame])
-                else:
-                    trail_node.setQuat(self.node.getParent(), autils.get_quat_from_vector(self.quats[trail_frame]))
-                trail_node.setPos(self.node.getParent(), self.xs[trail_frame], self.ys[trail_frame], self.zs[trail_frame] + self._ball.R)
 
 
     def add_trail(self):
