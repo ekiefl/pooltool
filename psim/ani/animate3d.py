@@ -15,6 +15,34 @@ from direct.showbase.ShowBase import ShowBase
 from direct.interval.IntervalGlobal import Sequence
 
 
+class Trail(object):
+    def __init__(self, ball_node, trail_array=None, trail_type=None):
+        self.trail_array = trail_array or np.array([3, 6, 9])
+        self.trail_type = trail_type or 'ball'
+
+        self.n = len(self.trail_array)
+        self.ball_node = ball_node
+
+        self.nodes = {}
+        self.populate_nodes()
+
+
+    def get_transparency(self, shift):
+        tau = self.trail_array[-1]/2
+        return np.exp(-shift/tau)
+
+
+    def populate_nodes(self):
+        for shift in self.trail_array:
+            if self.trail_type == 'ball':
+                self.nodes[shift] = self.ball_node.attachNewNode(f"trail_{shift}")
+                self.ball_node.copyTo(self.nodes[shift])
+                self.nodes[shift].setTransparency(TransparencyAttrib.MAlpha)
+                self.nodes[shift].setAlphaScale(self.get_transparency(shift))
+            else:
+                raise ValueError("Only balls")
+
+
 class Ball(object):
     def __init__(self, ball, rvw_history, euler_history, quat_history, node, use_euler=False):
         self.node = node
@@ -36,12 +64,19 @@ class Ball(object):
 
         self.quats = quat_history
 
+        self.trail_on = False
+        self.trail = {}
+
+        # FIXME
+        self.add_trail()
+
         self.node.setScale(self.get_scale_factor())
         self.update(0)
 
 
     def get_scale_factor(self):
         """Find scale factor to match model size to ball's SI radius"""
+
 
         m, M = self.node.getTightBounds()
         current_R = (M - m)[0]/2
@@ -50,22 +85,44 @@ class Ball(object):
 
 
     def update(self, frame):
+        # Updates self.node
         if self.use_euler:
             self.node.setHpr(self.hs[frame], self.ps[frame], self.rs[frame])
         else:
             self.node.setQuat(autils.get_quat_from_vector(self.quats[frame]))
-
         self.node.setPos(self.xs[frame], self.ys[frame], self.zs[frame] + self._ball.R)
+
+        # Update trails
+        if self.trail_on:
+            get_trail_frame = lambda shift, frame: max([0, frame - shift])
+
+            for shift, trail_node in self.trail.nodes.items():
+                trail_frame = get_trail_frame(shift, frame)
+
+                if self.use_euler:
+                    trail_node.setHpr(self.node.getParent(), self.hs[trail_frame], self.ps[trail_frame], self.rs[trail_frame])
+                else:
+                    trail_node.setQuat(self.node.getParent(), autils.get_quat_from_vector(self.quats[trail_frame]))
+                trail_node.setPos(self.node.getParent(), self.xs[trail_frame], self.ys[trail_frame], self.zs[trail_frame] + self._ball.R)
+
+
+    def add_trail(self):
+        self.trail_on = True
+        self.trail = Trail(self.node)
 
 
 class Handler(DirectObject.DirectObject):
     def __init__(self):
         self.accept('escape', sys.exit)
-        self.accept('r', self.restart_shot)
         self.accept('space', self.pause_shot)
+        self.accept('r', self.restart_shot)
         self.accept('x', self.press_x)
+        self.accept('l', self.press_l)
+
+        self.state = {}
 
         self.x_pressed = False
+        self.l_pressed = False
 
         # Game states
         self.pause = False
@@ -79,6 +136,9 @@ class Handler(DirectObject.DirectObject):
 
     def press_x(self):
         self.x_pressed = not self.x_pressed
+
+    def press_l(self):
+        self.l_pressed = not self.l_pressed
 
 
 class AnimateShot(ShowBase, Handler):
@@ -129,7 +189,14 @@ class AnimateShot(ShowBase, Handler):
         else:
             self.toggle_cue_ball_view()
 
+        if self.l_pressed:
+            self.toggle_lights()
+
         return Task.cont
+
+
+    def toggle_lights(self):
+        self.render.setLightOff()
 
 
     def toggle_cue_ball_view(self):
@@ -168,8 +235,6 @@ class AnimateShot(ShowBase, Handler):
         self.scene.setScale(20)
         self.scene.setPos(0, 6.5, -10)
 
-        #self.scene = self.loader.loadModel("models/environment")
-
 
     def init_camera(self):
         self.disableMouse()
@@ -181,12 +246,19 @@ class AnimateShot(ShowBase, Handler):
     def init_table(self):
         w, l, h = self.shot.table.w, self.shot.table.l, self.shot.table.height
 
-        self.table = self.render.attachNewNode(autils.make_square(
+        self.table = self.render.attachNewNode(autils.make_rectangle(
             x1=0, y1=0, z1=0, x2=w, y2=l, z2=0, name='playing_surface'
         ))
 
         self.table.setPos(0, 0, h)
-        self.table.setTexture(self.loader.loadTexture(model_paths['blue_cloth']))
+
+        # Currently there are no texture coordinates for make_rectangle, so this just picks a single
+        # color
+        table_tex = self.loader.loadTexture(model_paths['blue_cloth'])
+        table_tex.setWrapU(Texture.WM_repeat)
+        table_tex.setWrapV(Texture.WM_repeat)
+
+        self.table.setTexture(table_tex)
 
 
     def init_balls(self):
@@ -200,13 +272,14 @@ class AnimateShot(ShowBase, Handler):
         quat_history = self.shot.get_ball_quat_history(ball.id)
 
         ball_node = self.loader.loadModel('models/smiley')
-        ball_node.reparentTo(self.table)
 
         try:
             ball_node.setTexture(self.loader.loadTexture(model_paths[f"{str(ball.id).split('_')[0]}_ball"]), 1)
         except KeyError:
             # No ball texture is found for the given ball.id. Keeping smiley
             pass
+
+        ball_node.reparentTo(self.table)
 
         return Ball(ball, rvw_history, euler_history, quat_history, ball_node)
 
@@ -217,7 +290,7 @@ class AnimateShot(ShowBase, Handler):
         self.lights['ambient'] = {}
         self.lights['overhead'] = {}
 
-        overhead_intensity = 0.3
+        overhead_intensity = 0.4
 
         def add_overhead(x, y, z, name='plight'):
             plight = PointLight(name)
@@ -232,7 +305,7 @@ class AnimateShot(ShowBase, Handler):
         add_overhead(0.5*w, 0.5*l, h, name='middle')
         add_overhead(0.5*w, 0.0*l, h, name='bottom')
 
-        ambient_intensity = 0.6
+        ambient_intensity = 0.5
         alight = AmbientLight('alight')
         alight.setColor((ambient_intensity, ambient_intensity, ambient_intensity, 1))
         self.lights['ambient']['ambient1'] = self.render.attachNewNode(alight)
