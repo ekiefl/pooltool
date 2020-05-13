@@ -43,6 +43,11 @@ class Trail(object):
         self.ghosts_node.reparentTo(self.ball_node)
 
 
+    def remove_ghosts(self):
+        self.ghosts = {}
+        self.ghosts_node.removeNode()
+
+
 class Ball(object):
     def __init__(self, ball, rvw_history, euler_history, quat_history, node, use_euler=False):
         self.node = node
