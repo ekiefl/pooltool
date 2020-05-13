@@ -9,17 +9,25 @@ import os
 model_paths = (path for path in (Path(psim.__file__).parent.parent / 'models').glob('*') if path.is_file())
 model_paths = {str(path.stem): Filename.fromOsSpecific(str(path.absolute())) for path in model_paths}
 
-TRACE_LENGTH = 50
+
+
+
+
+# -----------------------------------------------------------------------------
+# Below is for 2D visualization via pygame. All legacy code since porting to panda3d
+# -----------------------------------------------------------------------------
+
+PYGAME_TRACE_LENGTH = 50
 
 # num of pixels of largest dimension
-MAX_SCREEN = 800
+PYGAME_MAX_SCREEN = 800
 
-DIAMOND_COLOR = (255,255,255)
-EDGE_RGB = (130,87,77)
-RAIL_CLOTH_RGB = (47,120,160)
-CLOTH_RGB = (60,155,206)
-RAIL_RGB = (71,38,27)
-BALL_RGB = {
+PYGAME_DIAMOND_COLOR = (255,255,255)
+PYGAME_EDGE_RGB = (130,87,77)
+PYGAME_RAIL_CLOTH_RGB = (47,120,160)
+PYGAME_CLOTH_RGB = (60,155,206)
+PYGAME_RAIL_RGB = (71,38,27)
+PYGAME_BALL_RGB = {
     'cue': (244,242,238),
     '1': (244,200,22),
     '2': (4,93,184),
@@ -43,5 +51,4 @@ def d_to_px(scale, d, offset=0):
 def px_to_d(scale, px):
     """scale is ratio of d to px"""
     return d / scale
-
 

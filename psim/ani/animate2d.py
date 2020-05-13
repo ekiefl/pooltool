@@ -43,10 +43,10 @@ class Ball(pygame.sprite.Sprite):
 
         super(Ball, self).__init__()
 
-        self.color = BALL_RGB.get(self.id, (255,255,255))
+        self.color = PYGAME_BALL_RGB.get(self.id, (255,255,255))
 
         self.trace = trace
-        self.trace_length = TRACE_LENGTH
+        self.trace_length = PYGAME_TRACE_LENGTH
 
         # See https://www.reddit.com/r/pygame/comments/6v9os5/how_to_draw_a_sprite_with_a_circular_shape/
         # for anti-aliased version if you don't like this later
@@ -81,10 +81,10 @@ class AnimateShot(object):
             size in pixels of largest dimension of screen
         """
 
-        self.size = size or MAX_SCREEN
-        self.cloth_color = cloth_color or CLOTH_RGB
-        self.rail_color = rail_color or RAIL_CLOTH_RGB
-        self.edge_color = edge_color or EDGE_RGB
+        self.size = size or PYGAME_MAX_SCREEN
+        self.cloth_color = cloth_color or PYGAME_CLOTH_RGB
+        self.rail_color = rail_color or PYGAME_RAIL_CLOTH_RGB
+        self.edge_color = edge_color or PYGAME_EDGE_RGB
 
         self.shot = shot
         self.table = shot.table
@@ -239,7 +239,7 @@ class AnimateShot(object):
         self.draw_arc(tx-edge, edge, edge, 270, 360, self.edge_color)
 
         # Diamonds
-        D = lambda coords: pygame.draw.circle(self.screen, DIAMOND_COLOR, coords, self.px['diamond'])
+        D = lambda coords: pygame.draw.circle(self.screen, PYGAME_DIAMOND_COLOR, coords, self.px['diamond'])
 
         for i in range(9):
             y_val = int(edge/2 + (ty - edge)*i/8)
