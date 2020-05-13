@@ -14,7 +14,7 @@ from psim.objects import (
 
 import numpy as np
 
-np.random.seed(100)
+#np.random.seed(100)
 
 
 class Event(object):
@@ -696,7 +696,7 @@ class ShotSimulation(ShotHistory):
 
             c = configurations.NineBallRack(
                 list(self.balls.values()),
-                spacing_factor=1e-2,
+                spacing_factor=1e-6,
                 ordered=True
             )
 
@@ -706,14 +706,14 @@ class ShotSimulation(ShotHistory):
             print(f"Balls are overlapping: {self.is_balls_overlapping()}")
 
             self.balls['cue'] = Ball('cue')
-            self.balls['cue'].rvw[0] = [self.table.L+0.18, self.table.T*2/8, 0]
+            self.balls['cue'].rvw[0] = [self.table.center[0], self.table.T*2/8, 0]
 
             self.cue.strike_object(
                 ball = self.balls['cue'],
                 obj = self.balls['1'],
-                offset = -0.064,
-                V0 = 6.50001,
-                a = -0.0,
-                b = +0.018,
+                offset = utils.wiggle(0, val=1.),
+                V0 = utils.wiggle(5.50001, val=2),
+                a = utils.wiggle(0.0, val=0.05),
+                b = utils.wiggle(0.05, val=0.1),
                 theta = 0,
             )
