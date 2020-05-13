@@ -14,20 +14,39 @@ from direct.showbase import DirectObject
 from direct.showbase.ShowBase import ShowBase
 from direct.interval.IntervalGlobal import Sequence
 
+from direct.showbase.ShowBase import ShowBase
+from panda3d.core import CollisionTraverser, CollisionNode
+from panda3d.core import CollisionHandlerQueue, CollisionRay
+from panda3d.core import Material, LRotationf, NodePath
+from panda3d.core import AmbientLight, DirectionalLight
+from panda3d.core import TextNode
+from panda3d.core import LVector3, BitMask32
+from direct.gui.OnscreenText import OnscreenText
+from direct.interval.MetaInterval import Sequence, Parallel
+from direct.interval.LerpInterval import LerpFunc
+from direct.interval.FunctionInterval import Func, Wait
+from direct.task.Task import Task
+import sys
+
 
 class Trail(object):
-    def __init__(self, ball_node, ghost_array=None, line_array=None):
+    def __init__(self, ball, ghost_array=None, line_array=None):
         self.ghost_array = ghost_array or np.array([3, 6, 9])
-        self.line_array = line_array or np.array([3, 6, 9])
+        self.line_array = line_array or np.arange(0,100,1)
 
         self.n = len(self.ghost_array)
-        self.ball_node = ball_node
+        self.ball = ball
+        self.ball_node = self.ball.node
 
         self.ghosts = {}
         self.ghosts_node = NodePath('ghosts')
+        self.ghosts_node.reparentTo(self.ball_node)
         self.populate_ghosts()
 
         self.line_node = NodePath('line')
+        self.ls = LineSegs()
+        self.ls.setThickness(1.5)
+        self.ls.setColor(1, 1, 1, 0.4)
 
 
     def get_ghost_transparency(self, shift):
@@ -42,18 +61,27 @@ class Trail(object):
             self.ghosts[shift].setTransparency(TransparencyAttrib.MAlpha)
             self.ghosts[shift].setAlphaScale(self.get_ghost_transparency(shift))
 
-        self.ghosts_node.reparentTo(self.ball_node)
-
 
     def remove_ghosts(self):
         self.ghosts = {}
         self.ghosts_node.removeNode()
 
 
-    def draw_line(self):
-        
-        self.draw_line()
+    def draw_line(self, frame, xs, ys, zs):
+        self.ls.reset()
 
+        for shift in self.line_array:
+            shifted_frame = frame - shift
+
+            if shifted_frame < 0:
+                break
+
+            self.ls.drawTo(xs[shifted_frame], ys[shifted_frame], zs[shifted_frame] + self.ball._ball.R)
+
+        self.line_node.removeNode()
+        self.line_node = NodePath(self.ls.create())
+        self.line_node.attachNewNode(self.ls.create(dynamic=True))
+        self.line_node.reparentTo(self.ball_node.getParent())
 
 class Ball(object):
     def __init__(self, ball, rvw_history, euler_history, quat_history, node, use_euler=False):
@@ -113,11 +141,12 @@ class Ball(object):
             for shift, ghost_node in self.trail.ghosts.items():
                 self._update(ghost_node, get_trail_frame(shift, frame))
 
+            self.trail.draw_line(frame, self.xs, self.ys, self.zs)
 
 
     def add_trail(self):
         self.trail_on = True
-        self.trail = Trail(self.node)
+        self.trail = Trail(self)
 
 
 class Handler(DirectObject.DirectObject):
@@ -156,6 +185,7 @@ class AnimateShot(ShowBase, Handler):
         Handler.__init__(self)
         self.taskMgr.add(self.master_task, "Master")
 
+        render
         self.frame = 0
 
         self.shot = shot
