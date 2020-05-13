@@ -8,6 +8,10 @@ from scipy.spatial.transform import Rotation
 from pyquaternion import Quaternion
 
 
+def wiggle(x, val):
+    return x + val*(2*np.random.rand() - 1)
+
+
 def normalize_rotation_vector(v):
     """Reduce a rotation vector to it's minimum magnitude equivalent"""
     return Rotation.from_rotvec(v).as_rotvec()
