@@ -14,20 +14,6 @@ from direct.showbase import DirectObject
 from direct.showbase.ShowBase import ShowBase
 from direct.interval.IntervalGlobal import Sequence
 
-from direct.showbase.ShowBase import ShowBase
-from panda3d.core import CollisionTraverser, CollisionNode
-from panda3d.core import CollisionHandlerQueue, CollisionRay
-from panda3d.core import Material, LRotationf, NodePath
-from panda3d.core import AmbientLight, DirectionalLight
-from panda3d.core import TextNode
-from panda3d.core import LVector3, BitMask32
-from direct.gui.OnscreenText import OnscreenText
-from direct.interval.MetaInterval import Sequence, Parallel
-from direct.interval.LerpInterval import LerpFunc
-from direct.interval.FunctionInterval import Func, Wait
-from direct.task.Task import Task
-import sys
-
 
 class Trail(object):
     def __init__(self, ball, ghost_array=None, line_array=None):
@@ -40,13 +26,13 @@ class Trail(object):
 
         self.ghosts = {}
         self.ghosts_node = NodePath('ghosts')
-        self.ghosts_node.reparentTo(self.ball_node)
-        self.populate_ghosts()
+        self.ghosts_node.reparentTo(render.find('trails'))
+        #self.populate_ghosts()
 
         self.line_node = NodePath('line')
         self.ls = LineSegs()
         self.ls.setThickness(1.5)
-        self.ls.setColor(1, 1, 1, 0.4)
+        self.ls.setColor(1, 1, 1, 1)
 
 
     def get_ghost_transparency(self, shift):
@@ -56,7 +42,7 @@ class Trail(object):
 
     def populate_ghosts(self):
         for shift in self.ghost_array:
-            self.ghosts[shift] = self.ghosts_node.attachNewNode(f"trail_{shift}")
+            self.ghosts[shift] = self.ghosts_node.attachNewNode(f"ghost_{shift}")
             self.ball_node.copyTo(self.ghosts[shift])
             self.ghosts[shift].setTransparency(TransparencyAttrib.MAlpha)
             self.ghosts[shift].setAlphaScale(self.get_ghost_transparency(shift))
@@ -81,13 +67,13 @@ class Trail(object):
         self.line_node.removeNode()
         self.line_node = NodePath(self.ls.create())
         self.line_node.attachNewNode(self.ls.create(dynamic=True))
-        self.line_node.reparentTo(self.ball_node.getParent())
+        self.line_node.reparentTo(render.find('trails'))
+
 
 class Ball(object):
-    def __init__(self, ball, rvw_history, euler_history, quat_history, node, use_euler=False):
-        self.node = node
+    def __init__(self, ball, rvw_history, euler_history, quat_history, use_euler=False):
         self._ball = ball
-
+        self.node = self.init_node()
         self.use_euler = use_euler
 
         self.xs = rvw_history[:,0,0]
@@ -114,10 +100,23 @@ class Ball(object):
         self.update(0)
 
 
+    def init_node(self):
+        ball_node = loader.loadModel('models/smiley')
+        expected_texture_name = f"{str(self._ball.id).split('_')[0]}_ball"
+
+        try:
+            ball_node.setTexture(loader.loadTexture(model_paths[expected_texture_name]), 1)
+        except KeyError:
+            # No ball texture is found for the given ball.id. Keeping smiley
+            pass
+
+        ball_node.reparentTo(render.find('table'))
+
+        return ball_node
+
+
     def get_scale_factor(self):
         """Find scale factor to match model size to ball's SI radius"""
-
-
         m, M = self.node.getTightBounds()
         current_R = (M - m)[0]/2
 
@@ -185,7 +184,6 @@ class AnimateShot(ShowBase, Handler):
         Handler.__init__(self)
         self.taskMgr.add(self.master_task, "Master")
 
-        render
         self.frame = 0
 
         self.shot = shot
@@ -200,6 +198,9 @@ class AnimateShot(ShowBase, Handler):
 
         self.table = None
         self.init_table()
+
+        self.trails = None
+        self.init_trails()
 
         self.balls = {}
         self.init_balls()
@@ -235,7 +236,7 @@ class AnimateShot(ShowBase, Handler):
 
 
     def toggle_lights(self):
-        self.render.setLightOff()
+        render.setLightOff()
 
 
     def toggle_cue_ball_view(self):
@@ -270,7 +271,7 @@ class AnimateShot(ShowBase, Handler):
 
     def init_scene(self):
         self.scene = loader.loadModel(model_paths['env.egg'])
-        self.scene.reparentTo(self.render)
+        self.scene.reparentTo(render)
         self.scene.setScale(20)
         self.scene.setPos(0, 6.5, -10)
 
@@ -285,19 +286,25 @@ class AnimateShot(ShowBase, Handler):
     def init_table(self):
         w, l, h = self.shot.table.w, self.shot.table.l, self.shot.table.height
 
-        self.table = self.render.attachNewNode(autils.make_rectangle(
-            x1=0, y1=0, z1=0, x2=w, y2=l, z2=0, name='playing_surface'
+        self.table = render.attachNewNode(autils.make_rectangle(
+            x1=0, y1=0, z1=0, x2=w, y2=l, z2=0, name='table'
         ))
 
         self.table.setPos(0, 0, h)
 
         # Currently there are no texture coordinates for make_rectangle, so this just picks a single
         # color
-        table_tex = self.loader.loadTexture(model_paths['blue_cloth'])
+        table_tex = loader.loadTexture(model_paths['blue_cloth'])
         table_tex.setWrapU(Texture.WM_repeat)
         table_tex.setWrapV(Texture.WM_repeat)
 
         self.table.setTexture(table_tex)
+
+
+    def init_trails(self):
+        self.trails = NodePath('trails')
+        self.trails.reparentTo(render)
+        self.trails.setPos(self.table, 0, 0, 0)
 
 
     def init_balls(self):
@@ -310,17 +317,7 @@ class AnimateShot(ShowBase, Handler):
         euler_history = self.shot.get_ball_euler_history(ball.id)
         quat_history = self.shot.get_ball_quat_history(ball.id)
 
-        ball_node = self.loader.loadModel('models/smiley')
-
-        try:
-            ball_node.setTexture(self.loader.loadTexture(model_paths[f"{str(ball.id).split('_')[0]}_ball"]), 1)
-        except KeyError:
-            # No ball texture is found for the given ball.id. Keeping smiley
-            pass
-
-        ball_node.reparentTo(self.table)
-
-        return Ball(ball, rvw_history, euler_history, quat_history, ball_node)
+        return Ball(ball, rvw_history, euler_history, quat_history)
 
 
     def init_lights(self):
@@ -336,9 +333,9 @@ class AnimateShot(ShowBase, Handler):
             plight.setColor((overhead_intensity, overhead_intensity, overhead_intensity, 1))
             plight.setShadowCaster(True, 1024, 1024)
 
-            self.lights['overhead'][name] = self.render.attachNewNode(plight)
+            self.lights['overhead'][name] = render.attachNewNode(plight)
             self.lights['overhead'][name].setPos(self.table, x, y, z)
-            self.render.setLight(self.lights['overhead'][name])
+            render.setLight(self.lights['overhead'][name])
 
         add_overhead(0.5*w, 1.0*l, h, name='top')
         add_overhead(0.5*w, 0.5*l, h, name='middle')
@@ -347,10 +344,10 @@ class AnimateShot(ShowBase, Handler):
         ambient_intensity = 0.5
         alight = AmbientLight('alight')
         alight.setColor((ambient_intensity, ambient_intensity, ambient_intensity, 1))
-        self.lights['ambient']['ambient1'] = self.render.attachNewNode(alight)
-        self.render.setLight(self.lights['ambient']['ambient1'])
+        self.lights['ambient']['ambient1'] = render.attachNewNode(alight)
+        render.setLight(self.lights['ambient']['ambient1'])
 
-        self.render.setShaderAuto()
+        self.table.setShaderAuto()
 
 
     def start(self):
