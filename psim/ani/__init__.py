@@ -15,7 +15,7 @@ line_trail_array = np.arange(1, 100, 1)
 line_trail_thickness = 2
 line_trail_color = LColor(1, 1, 1, 1)
 ghost_decay = 4
-line_decay = 2
+line_decay = 3
 
 
 # -----------------------------------------------------------------------------

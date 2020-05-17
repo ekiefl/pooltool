@@ -114,7 +114,11 @@ def get_bail_rail_restitution(rvw):
         perpendicular to the rail, and in the direction away from the table
     """
 
-    return 0.50 + 0.257*rvw[1,0] - 0.044*rvw[1,0]**2
+    #return 1
+    return max([
+        0.40,
+        0.50 + 0.257*rvw[1,0] - 0.044*rvw[1,0]**2
+    ])
 
 
 def get_bail_rail_friction(rvw):
@@ -133,6 +137,8 @@ def get_bail_rail_friction(rvw):
         ang = np.abs(2*np.pi - ang)
 
     return 0.471 - 0.241*ang
+    return 0.38 - 0.241*ang
+    return 0
 
 
 def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g, R):

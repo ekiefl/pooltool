@@ -33,6 +33,9 @@ class Trail(object):
         self.ball = ball
         self.ball_node = self.ball.node
 
+        # Make slightly less than 1 so ghosts don't render over the ball
+        self.radius_offset = 0.99
+
         self.tau_ghost = self.ghost_array[-1]/self.ghost_decay
         self.tau_trails = self.line_array[-1]/self.line_decay
 
@@ -41,7 +44,7 @@ class Trail(object):
         self.ghosts = {}
         self.ghosts_node = NodePath('ghosts')
         self.ghosts_node.reparentTo(render.find('trails'))
-        self.populate_ghosts()
+        #self.populate_ghosts()
 
         self.line_node = NodePath('line')
         self.ls = LineSegs()
@@ -60,7 +63,7 @@ class Trail(object):
             self.ball_node.copyTo(self.ghosts[shift])
             self.ghosts[shift].setTransparency(TransparencyAttrib.MAlpha)
             self.ghosts[shift].setAlphaScale(transparency)
-            self.ghosts[shift].setScale(self.ball.get_scale_factor())
+            self.ghosts[shift].setScale(self.ball.get_scale_factor()*self.radius_offset)
 
 
     def remove_ghosts(self):
@@ -132,11 +135,13 @@ class Ball(object):
 
 
     def init_node(self):
+        #ball_node = loader.loadModel(model_paths['sphere2'])
         ball_node = loader.loadModel('models/smiley')
         expected_texture_name = f"{str(self._ball.id).split('_')[0]}_ball"
 
         try:
-            ball_node.setTexture(loader.loadTexture(model_paths[expected_texture_name]), 1)
+            tex = loader.loadTexture(model_paths[expected_texture_name])
+            ball_node.setTexture(tex, 1)
         except KeyError:
             # No ball texture is found for the given ball.id. Keeping smiley
             pass

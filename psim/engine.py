@@ -619,8 +619,8 @@ class ShotSimulation(ShotHistory):
 
             self.cue.strike(
                 ball = self.balls['cue'],
-                V0 = 7.8,
-                phi = 160.9,
+                V0 = 30.8,
+                phi = 135,
                 theta = 0,
                 a = 0.01,
                 b = 0.1,
@@ -681,6 +681,19 @@ class ShotSimulation(ShotHistory):
                 b = 0.1,
                 theta = 0,
             )
+        elif setup == 'bank':
+            self.table = Table()
+            self.balls['cue'] = Ball('cue')
+            self.balls['cue'].rvw[0] = [self.table.center[0], self.table.T-0.6, 0]
+
+            self.cue.strike(
+                ball = self.balls['cue'],
+                V0 = 0.6,
+                phi = 90,
+                a = -0.9,
+                b = 0.4,
+                theta = 0,
+            )
         elif setup == '9_break':
             self.table = Table()
 
@@ -688,11 +701,11 @@ class ShotSimulation(ShotHistory):
             self.balls['2'] = Ball('2')
             self.balls['3'] = Ball('3')
             self.balls['4'] = Ball('4')
+            self.balls['10'] = Ball('10')
             self.balls['5'] = Ball('5')
             self.balls['6'] = Ball('6')
             self.balls['7'] = Ball('7')
             self.balls['8'] = Ball('8')
-            self.balls['10'] = Ball('10')
 
             c = configurations.NineBallRack(
                 list(self.balls.values()),
@@ -706,13 +719,45 @@ class ShotSimulation(ShotHistory):
             print(f"Balls are overlapping: {self.is_balls_overlapping()}")
 
             self.balls['cue'] = Ball('cue')
-            self.balls['cue'].rvw[0] = [self.table.center[0], self.table.T*2/8, 0]
+            self.balls['cue'].rvw[0] = [utils.wiggle(self.table.center[0], val=self.table.w/2), self.table.T*2/8, 0]
 
             self.cue.strike_object(
                 ball = self.balls['cue'],
                 obj = self.balls['1'],
                 offset = utils.wiggle(0, val=1.),
                 V0 = utils.wiggle(5.50001, val=2),
+                a = utils.wiggle(0.0, val=0.05),
+                b = utils.wiggle(0.05, val=0.1),
+                theta = 0,
+            )
+        elif setup == 'curling':
+            self.table = Table(l=200, w=0.6)
+
+            self.balls['cue'] = Ball('cue')
+            self.balls['cue'].rvw[0] = [utils.wiggle(self.table.center[0], val=self.table.w/2), self.table.T*2/8, 0]
+
+            for i in range(1,40):
+                self.balls[i] = Ball(i)
+                R = self.balls[i].R
+
+                self.balls[i].rvw[0] = [
+                    (self.table.w)*np.random.rand() + R,
+                    (self.table.l - 2*R)*np.random.rand() + R,
+                    0
+                ]
+
+                while self.is_balls_overlapping():
+                    self.balls[i] = Ball(i)
+                    self.balls[i].rvw[0] = [
+                        (self.table.w)*np.random.rand() + R,
+                        (self.table.l - 2*R)*np.random.rand() + R,
+                        0
+                    ]
+
+            self.cue.strike(
+                ball = self.balls['cue'],
+                phi = 90,
+                V0 = utils.wiggle(100, val=2),
                 a = utils.wiggle(0.0, val=0.05),
                 b = utils.wiggle(0.05, val=0.1),
                 theta = 0,
