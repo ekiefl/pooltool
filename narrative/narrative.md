@@ -33,7 +33,12 @@ is in order:
 
 <img src="media/2013_project.gif" width="450" />
 
-It leaves much to be desired.
+Not exactly what you would call realistic, or pretty. Even the GIF has a shitty black bar on the
+bottom, which I find deserving. The [quality of the code](media/2013_project.py) is even worse than
+the animation.
+
+Needless to say it leaves much to be desired. In that sense, basically everything could be improved
+upon, yet here are some things I specifically wanted to target.
 
 1. It doesn't look real
 2. Physics is oversimplified
