@@ -31,7 +31,7 @@ We applied conservation of momentum and energy, and voila, that was our physics.
 implementation standpoint, things were also lackluster. I think showing the product of our efforts
 is in order:
 
-<img src="narrative/media/2013_project.gif" width="450" />
+<img src="media/2013_project.gif" width="450" />
 
 It leaves much to be desired.
 
