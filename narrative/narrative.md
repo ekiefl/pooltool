@@ -45,3 +45,8 @@ league. Concurrently, I started a PhD at the University of Chicago doing computa
 developed considerably as a programmer due to my line of research. Then the COVID-19 pandemic
 struck and I realized I needed something other than work to keep me stimulated during quarantine.
 That's when I decided to undertake this project.
+
+## Goal
+
+Initially, the goal of this project was not to study chaos like in 2013, but instead make as realistic
+a pool physics engine as possible. Since then, as I write this, I have realized that much more is possible.
