@@ -28,8 +28,10 @@ It kind of sounds like I'm chalking us up to having accomplished something amazi
 like to assure you our accomplishments were far from impressive. From a physics standpoint, our model was very
 skeletal. Every collision was instantaneous and elastic, and the trajectories were restricted to 2D.
 We applied conservation of momentum and energy, and voila, that was our physics. From an
-implementation standpoint, things were also lackluster. I think showing the product of our efforts
-is in order:
+implementation standpoint, we used a time integration approach with a constant time step, which is
+computationally very ineffecient. Algorithm aside, the program exhibits zero respect for the art of programming
+and is so poorly implemented with hardcoded variables and spaghetti logic that no one in their right
+mind should lay eyes on it. I think showing the product of our efforts is in order:
 
 <img src="media/2013_project.gif" width="450" />
 
