@@ -10,8 +10,8 @@ inevitably arise.
 
 ## Motivation
 
-Seven years ago (2013) I was an in undergraduate math class called "Non-linear Dynamical Systems and
-Chaos" taught by Dr. Anthony Quas at the Univerity of Victoria. Our final project was to investigate
+Seven years ago (2013) I was an in undergraduate math class called "_Non-linear Dynamical Systems and
+Chaos_" taught by Dr. Anthony Quas at the Univerity of Victoria. Our final project was to investigate
 a chaotic system. Adam Paul, a good friend of mine, and I decided we would work on the same project.
 Since we would regularly ditch working on class assignments to instead play pool at the on-campus
 pub, it seemed natural to pick pool as our chaotic system.
@@ -37,20 +37,9 @@ Not exactly what you would call realistic, or pretty. Even the GIF has a shitty 
 bottom, which I find deserving. The [quality of the code](media/2013_project.py) is even worse than
 the animation.
 
-Needless to say it leaves much to be desired. In that sense, basically everything could be improved
-upon, yet here are some things I specifically wanted to target.
-
-1. It doesn't look real
-2. Physics is oversimplified
-3. The code is hot garbage
-4. Visualization capabilities are bad
-5. 2D
-
-Because of these shortcomings, this project kind of sat in the back of my head for years as
+Because of the drastic potential for improvement, this project kind of sat in the back of my head for years as
 unfinished business. Time passed, I got more invested in pool, bought my own table, joined a pool
 league. Concurrently, I started a PhD at the University of Chicago doing computational biology, and
-developed considerably as a programmer due to my line of research and contributions to the open
-source software platform [anvi'o](https://github.com/merenlab/anvio). Then the COVID-19 pandemic
+developed considerably as a programmer due to my line of research. Then the COVID-19 pandemic
 struck and I realized I needed something other than work to keep me stimulated during quarantine.
-That's when I decided to undertake this project which very loosely has the _modus operandi_ of: "_Do
-something better than your show-and-tell project from 7 years ago._"
+That's when I decided to undertake this project.
