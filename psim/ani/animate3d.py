@@ -136,15 +136,12 @@ class Ball(object):
 
         effective_dt = dt/playback_speed
         fps = 1/effective_dt
-        if fps > ani.fps_target:
-            step_by = fps // ani.fps_target
-        else:
-            step_by = 1
+        step_by = int(fps // ani.fps_target) if fps > ani.fps_target else 1
 
-        for i in range(frame_start, frame_stop):
+        for i in range(frame_start, frame_stop, step_by):
             ball_sequence.append(LerpPosQuatInterval(
                 self.node,
-                effective_dt,
+                effective_dt*step_by,
                 self.xyzs[i],
                 self.quats[i],
             ))
@@ -259,7 +256,7 @@ class AnimateShot(ShowBase, Handler):
                                   style=1, fg=(1, 1, 0, 1), shadow=(0, 0, 0, 0.5),
                                   pos=(0.87, -0.95), scale = .07)
 
-        self.set_ball_playback_sequences()
+        self.set_ball_playback_sequences(playback_speed=1)
         self.go()
 
 
