@@ -117,7 +117,7 @@ class Ball(object):
         self.xyzs = autils.get_list_of_Vec3s_from_array(rvw_history[:, 0, :])
         self.quats = autils.get_quaternion_list_from_array(quat_history)
 
-        self.num_times = len(self.xyzs)
+        self.num_frames = len(self.xyzs)
 
         self.playback_sequence = Parallel()
 
@@ -130,7 +130,7 @@ class Ball(object):
         self.set_pos_by_frame(0)
 
 
-    def set_playback_sequence(self, dt, playback_speed):
+    def set_playback_sequence(self, dt, playback_speed, frame_start, frame_stop):
         """Creates the sequence motions of the ball for a given playback speed"""
         ball_sequence = Sequence()
 
@@ -141,7 +141,7 @@ class Ball(object):
         else:
             step_by = 1
 
-        for i in range(self.num_times):
+        for i in range(frame_start, frame_stop):
             ball_sequence.append(LerpPosQuatInterval(
                 self.node,
                 effective_dt,
@@ -284,9 +284,17 @@ class AnimateShot(ShowBase, Handler):
         self.init_camera()
 
 
-    def set_ball_playback_sequences(self):
+    def set_ball_playback_sequences(self, playback_speed=1, frame_start=None, frame_stop=None):
+        if frame_start is None: frame_start = 0
+        if frame_stop is None: frame_stop = self.num_frames
+
         for ball in self.balls.values():
-            ball.set_playback_sequence(playback_speed=1, dt=self.dt)
+            ball.set_playback_sequence(
+                playback_speed=playback_speed,
+                dt=self.dt,
+                frame_start=frame_start,
+                frame_stop=frame_stop
+            )
 
 
     def go(self):
