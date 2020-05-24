@@ -107,7 +107,7 @@ class Trail(object):
 
 
 class Ball(object):
-    def __init__(self, ball, rvw_history, euler_history, quat_history, use_euler=False):
+    def __init__(self, ball, rvw_history, euler_history, quat_history, times, use_euler=False):
         self._ball = ball
         self.use_euler = use_euler
 
@@ -117,9 +117,11 @@ class Ball(object):
         self.xs, self.ys, self.zs = rvw_history[:,0,0], rvw_history[:,0,1], rvw_history[:,0,2] + self._ball.R
         self.hs, self.ps, self.rs = euler_history[:,0], euler_history[:,1], euler_history[:,2]
         self.quats = quat_history
+        self.times = times
+        self.num_times = len(self.times)
 
-        self.sequence = Sequence(name=f"{self._ball.id}")
-        self.populate_sequence(0.016)
+        self.parallel = Parallel()
+        self.populate_parallel(playback_speed=1)
 
         self.trail_on = False
         self.trail = {}
@@ -130,23 +132,22 @@ class Ball(object):
         self.update(0)
 
 
-    def populate_sequence(self, dt):
-        if self.use_euler:
-            for i in range(len(self.xs)):
-                self.sequence.append(LerpPosHprInterval(
-                    self.node,
-                    dt,
-                    Vec3(self.xs[i], self.ys[i], self.zs[i]),
-                    Vec3(self.hs[i], self.ps[i], self.rs[i])
-                ))
-        else:
-            for i in range(len(self.xs)):
-                self.sequence.append(LerpPosQuatInterval(
-                    self.node,
-                    dt,
-                    Vec3(self.xs[i], self.ys[i], self.zs[i]),
-                    autils.get_quat_from_vector(self.quats[i])
-                ))
+    def populate_parallel(self, playback_speed):
+        """FIXME currently broken with self.user_euler == True"""
+
+        ball_sequence = Sequence()
+
+        for i in range(1, self.num_times):
+            ball_sequence.append(LerpPosQuatInterval(
+                self.node,
+                (self.times[i] - self.times[i-1])/playback_speed,
+                Vec3(self.xs[i], self.ys[i], self.zs[i]),
+                autils.get_quat_from_vector(self.quats[i])
+            ))
+
+        self.parallel = Sequence(
+            ball_sequence,
+        )
 
 
     def init_node(self):
@@ -261,13 +262,13 @@ class AnimateShot(ShowBase, Handler):
         self.init_camera()
 
         #self.taskMgr.doMethodLater(0, self.master_task, "Master")
-        self.start_animation()
+        self.start_balls()
 
 
-    def start_animation(self):
+    def start_balls(self):
         ball_parallel = Parallel()
         for ball in self.balls:
-            ball_parallel.append(self.balls[ball].sequence)
+            ball_parallel.append(self.balls[ball].parallel)
 
         ball_parallel.loop()
 
@@ -375,7 +376,7 @@ class AnimateShot(ShowBase, Handler):
         euler_history = self.shot.get_ball_euler_history(ball.id)
         quat_history = self.shot.get_ball_quat_history(ball.id)
 
-        return Ball(ball, rvw_history, euler_history, quat_history)
+        return Ball(ball, rvw_history, euler_history, quat_history, self.times)
 
 
     def init_lights(self):
