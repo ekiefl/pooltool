@@ -162,7 +162,8 @@ class ShotHistory(object):
             # Evolve in steps of dt up to the event
             event_time = 0
             while event_time < (event.tau - dt_prime):
-                self.evolve(dt_prime)
+                self.evolve(dt_prime, log=False)
+                self.timestamp(dt, event=None)
                 event_time += dt_prime
 
                 dt_prime = dt
