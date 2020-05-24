@@ -107,18 +107,23 @@ class Trail(object):
 
 
 class Ball(object):
-    def __init__(self, ball, rvw_history, euler_history, quat_history, times, use_euler=False):
+    def __init__(self, ball, rvw_history, euler_history, quat_history, dts, use_euler=False):
         self._ball = ball
         self.use_euler = use_euler
 
         self.node = self.init_node()
         self.node.setScale(self.get_scale_factor())
 
-        self.xs, self.ys, self.zs = rvw_history[:,0,0], rvw_history[:,0,1], rvw_history[:,0,2] + self._ball.R
+        rvw_history[:, 0, 2] += self._ball.R
+        self.xyzs = autils.get_list_of_Vec3s_from_array(rvw_history[:, 0, :])
+        self.quats = autils.get_quaternion_list_from_array(quat_history)
+
+        # FIXME these are deprecated
+        self.xs, self.ys, self.zs = rvw_history[:,0,0], rvw_history[:,0,1], rvw_history[:,0,2]
         self.hs, self.ps, self.rs = euler_history[:,0], euler_history[:,1], euler_history[:,2]
-        self.quats = quat_history
-        self.times = times
-        self.num_times = len(self.times)
+
+        # FIXME are an array of dts required, or can a single integer float suffice?
+        self.dts = dts
 
         self.parallel = Parallel()
         self.populate_parallel(playback_speed=1)
@@ -137,19 +142,13 @@ class Ball(object):
 
         ball_sequence = Sequence()
 
-        for i in range(1, self.num_times):
+        for i, dt in enumerate(self.dts):
             ball_sequence.append(LerpPosQuatInterval(
                 self.node,
-                (self.times[i] - self.times[i-1])/playback_speed,
-                Vec3(self.xs[i], self.ys[i], self.zs[i]),
-                autils.get_quat_from_vector(self.quats[i])
+                dt/playback_speed,
+                self.xyzs[i+1],
+                self.quats[i+1],
             ))
-            #ball_sequence.append(LerpFunctionInterval(
-            #    self.update_by_time,
-            #    fromData = i-1,
-            #    toData = i,
-            #    duration = 1,
-            #))
 
         self.parallel = Sequence(
             ball_sequence,
@@ -186,7 +185,7 @@ class Ball(object):
         if self.use_euler:
             node.setHpr(parent, self.hs[frame], self.ps[frame], self.rs[frame])
         else:
-            node.setQuat(parent, autils.get_quat_from_vector(self.quats[frame]))
+            node.setQuat(parent, self.quats[frame])
         node.setPos(parent, self.xs[frame], self.ys[frame], self.zs[frame])
 
 
@@ -388,7 +387,7 @@ class AnimateShot(ShowBase, Handler):
         euler_history = self.shot.get_ball_euler_history(ball.id)
         quat_history = self.shot.get_ball_quat_history(ball.id)
 
-        return Ball(ball, rvw_history, euler_history, quat_history, self.times)
+        return Ball(ball, rvw_history, euler_history, quat_history, self.dts)
 
 
     def init_lights(self):

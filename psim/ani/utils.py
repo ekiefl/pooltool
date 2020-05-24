@@ -1,17 +1,25 @@
 #! /usr/bin/env python
 """File for animating utilities in 3D (panda3d) and 2D (pygame)"""
 
-from panda3d.core import (
-    Quat,
-    lookAt,
-    GeomVertexFormat,
-    GeomVertexData,
-    Geom,
-    GeomTriangles,
-    GeomVertexWriter,
-    GeomNode,
-    LVector3,
-)
+from panda3d.core import *
+
+
+def get_list_of_Vec3s_from_array(array):
+    """array is shape (N, 3)"""
+    vec3s = []
+    for i in range(array.shape[0]):
+        vec3s.append(Vec3(*array[i,:]))
+
+    return vec3s
+
+
+def get_quaternion_list_from_array(array):
+    """array is shape (N, 4)"""
+    quats = []
+    for i in range(array.shape[0]):
+        quats.append(get_quat_from_vector(array[i,:]))
+
+    return quats
 
 
 def get_quat_from_vector(v, normalize=True):
