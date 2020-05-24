@@ -14,7 +14,7 @@ model_paths = {str(path.stem): Filename.fromOsSpecific(str(path.absolute())) for
 
 fps_target = 60
 
-ghost_trail_array = np.array([2, 4, 6])
+ghost_trail_array = np.arange(0,20,2)
 line_trail_array = np.arange(1, 100, 1)
 line_trail_thickness = 2
 line_trail_color = LColor(1, 1, 1, 1)

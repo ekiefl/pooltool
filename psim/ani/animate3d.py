@@ -21,6 +21,7 @@ from direct.interval.IntervalGlobal import *
 class Trail(object):
     def __init__(self, ball, ghost_array=None, line_array=None, ghost_decay=None, line_decay=None,
                  line_thickness=None):
+        """FIXME I do not know how I am going to integrate this class into the new Sequence and Interval structure"""
 
         self.show_line = True
         self.show_ghosts = True
@@ -119,7 +120,7 @@ class Ball(object):
 
         self.num_frames = len(self.xyzs)
 
-        self.playback_sequence = Parallel()
+        self.playback_sequence = None
 
         self.trail_on = False
         self.trail = {}
@@ -130,30 +131,54 @@ class Ball(object):
         self.set_pos_by_frame(0)
 
 
-    def set_playback_sequence(self, dt, playback_speed, frame_start, frame_stop):
+    def set_playback_sequence(self, shot_dt, playback_speed, frame_start, frame_stop):
         """Creates the sequence motions of the ball for a given playback speed"""
+        # Init the sequences
         ball_sequence = Sequence()
+        if self.trail_on and self.trail.show_ghosts:
+            ghost_sequences = {shift: Sequence() for shift in self.trail.ghosts}
+        else:
+            ghost_sequences = {}
 
-        effective_dt = dt/playback_speed
-        fps = 1/effective_dt
-        step_by = int(fps // ani.fps_target) if fps > ani.fps_target else 1
+        playback_dt = shot_dt/playback_speed
+        playback_fps = 1/playback_dt
+        step_by = int(playback_fps // ani.fps_target) if playback_fps > ani.fps_target else 1
+        duration = step_by*playback_dt
+
+        # for ghosts
+        get_trail_frame = lambda shift, frame: max([0, frame - shift])
 
         for i in range(frame_start, frame_stop, step_by):
-            ball_sequence.append(LerpPosQuatInterval(
-                self.node,
-                effective_dt*step_by,
-                self.xyzs[i],
-                self.quats[i],
-            ))
+            # Append to ball sequence
+            ball_sequence.append(self.get_playback_interval(i, duration))
 
-        self.playback_sequence = Sequence(
-            ball_sequence,
+            # Append to all ghost sequences
+            if self.trail_on and self.trail.show_ghosts:
+                for shift, ghost_node in self.trail.ghosts.items():
+                    shifted_frame = get_trail_frame(shift*step_by, i)
+                    ghost_sequences[shift].append(self._get_playback_interval(ghost_node, shifted_frame, duration))
+
+        self.playback_sequence = Parallel()
+        self.playback_sequence.append(ball_sequence)
+        for ghost_sequence in ghost_sequences.values():
+            self.playback_sequence.append(ghost_sequence)
+
+
+    def _get_playback_interval(self, node, frame, duration):
+        return LerpPosQuatInterval(
+            node,
+            duration,
+            self.xyzs[frame],
+            self.quats[frame],
         )
+
+
+    def get_playback_interval(self, frame, duration):
+        return self._get_playback_interval(self.node, frame, duration)
 
 
     def init_node(self):
         """Loads ball model and reparents to table"""
-        #ball_node = loader.loadModel(model_paths['sphere_yabee'])
         ball_node = loader.loadModel('models/smiley')
         expected_texture_name = f"{str(self._ball.id).split('_')[0]}_ball"
 
@@ -165,7 +190,6 @@ class Ball(object):
             pass
 
         ball_node.reparentTo(render.find('table'))
-
         return ball_node
 
 
@@ -282,13 +306,15 @@ class AnimateShot(ShowBase, Handler):
 
 
     def set_ball_playback_sequences(self, playback_speed=1, frame_start=None, frame_stop=None):
-        if frame_start is None: frame_start = 0
-        if frame_stop is None: frame_stop = self.num_frames
+        if frame_start is None:
+            frame_start = 0
+        if frame_stop is None:
+            frame_stop = self.num_frames
 
         for ball in self.balls.values():
             ball.set_playback_sequence(
                 playback_speed=playback_speed,
-                dt=self.dt,
+                shot_dt=self.dt,
                 frame_start=frame_start,
                 frame_stop=frame_stop
             )
