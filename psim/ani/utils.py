@@ -24,11 +24,7 @@ def get_quaternion_list_from_array(array):
 
 def get_quat_from_vector(v, normalize=True):
     """Get Quat object from 4-d vector"""
-    quat = Quat()
-    quat.setR(v[0])
-    quat.setI(v[1])
-    quat.setJ(v[2])
-    quat.setK(v[3])
+    quat = Quat(Vec4(*v))
 
     if normalize:
         quat.normalize()
