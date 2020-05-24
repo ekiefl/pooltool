@@ -7,6 +7,8 @@ import numpy as np
 from pathlib import Path
 from panda3d.core import *
 
+loadPrcFile(str(Path(psim.__file__).parent / 'Config.prc'))
+
 model_paths = (path for path in (Path(psim.__file__).parent.parent / 'models').glob('*') if path.is_file())
 model_paths = {str(path.stem): Filename.fromOsSpecific(str(path.absolute())) for path in model_paths}
 
