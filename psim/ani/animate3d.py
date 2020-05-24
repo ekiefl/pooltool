@@ -107,7 +107,7 @@ class Trail(object):
 
 
 class Ball(object):
-    def __init__(self, ball, rvw_history, quat_history, dts):
+    def __init__(self, ball, rvw_history, quat_history):
         self._ball = ball
 
         self.node = self.init_node()
@@ -117,12 +117,9 @@ class Ball(object):
         self.xyzs = autils.get_list_of_Vec3s_from_array(rvw_history[:, 0, :])
         self.quats = autils.get_quaternion_list_from_array(quat_history)
 
-        # FIXME are an array of dts required, or can a single integer float suffice?
-        self.dts = dts
         self.num_times = len(self.xyzs)
 
         self.playback_sequence = Parallel()
-        self.set_playback_sequence(playback_speed=1)
 
         self.trail_on = False
         self.trail = {}
@@ -133,16 +130,23 @@ class Ball(object):
         self.set_pos_by_frame(0)
 
 
-    def set_playback_sequence(self, playback_speed):
+    def set_playback_sequence(self, dt, playback_speed):
         """Creates the sequence motions of the ball for a given playback speed"""
         ball_sequence = Sequence()
 
-        for i, dt in enumerate(self.dts):
+        effective_dt = dt/playback_speed
+        fps = 1/effective_dt
+        if fps > ani.fps_target:
+            step_by = fps // ani.fps_target
+        else:
+            step_by = 1
+
+        for i in range(self.num_times):
             ball_sequence.append(LerpPosQuatInterval(
                 self.node,
-                dt/playback_speed,
-                self.xyzs[i+1],
-                self.quats[i+1],
+                effective_dt,
+                self.xyzs[i],
+                self.quats[i],
             ))
 
         self.playback_sequence = Sequence(
@@ -231,11 +235,12 @@ class AnimateShot(ShowBase, Handler):
     def __init__(self, shot):
         ShowBase.__init__(self)
         Handler.__init__(self)
+        self.taskMgr.add(self.master_task, "Master")
 
         self.shot = shot
 
         # Class assumes these shot variables
-        self.dts = None
+        self.dt = None
         self.times = None
         self.timestamp = 0
         self.num_frames = None
@@ -254,14 +259,19 @@ class AnimateShot(ShowBase, Handler):
                                   style=1, fg=(1, 1, 0, 1), shadow=(0, 0, 0, 0.5),
                                   pos=(0.87, -0.95), scale = .07)
 
-        self.taskMgr.add(self.master_task, "Master")
+        self.set_ball_playback_sequences()
         self.go()
 
 
     def init_shot_info(self):
         self.shot.calculate_quaternions()
         self.times = self.shot.get_time_history()
-        self.dts = np.diff(self.times)
+
+        # only accept a shot with uniform timestamps
+        dts = np.diff(self.times)
+        self.dt = dts[0]
+        assert (np.round(dts, 6) == self.dt).all()
+
         self.num_frames = self.shot.n
 
 
@@ -272,6 +282,11 @@ class AnimateShot(ShowBase, Handler):
         self.init_scene()
         self.init_lights()
         self.init_camera()
+
+
+    def set_ball_playback_sequences(self):
+        for ball in self.balls.values():
+            ball.set_playback_sequence(playback_speed=1, dt=self.dt)
 
 
     def go(self):
@@ -380,7 +395,7 @@ class AnimateShot(ShowBase, Handler):
         rvw_history = self.shot.get_ball_rvw_history(ball.id)
         quat_history = self.shot.get_ball_quat_history(ball.id)
 
-        return Ball(ball, rvw_history, quat_history, self.dts)
+        return Ball(ball, rvw_history, quat_history)
 
 
     def init_lights(self):

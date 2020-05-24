@@ -12,6 +12,8 @@ loadPrcFile(str(Path(psim.__file__).parent / 'Config.prc'))
 model_paths = (path for path in (Path(psim.__file__).parent.parent / 'models').glob('*') if path.is_file())
 model_paths = {str(path.stem): Filename.fromOsSpecific(str(path.absolute())) for path in model_paths}
 
+fps_target = 60
+
 ghost_trail_array = np.array([2, 4, 6])
 line_trail_array = np.arange(1, 100, 1)
 line_trail_thickness = 2
