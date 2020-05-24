@@ -95,7 +95,7 @@ class Trail(object):
             self.ls.setVertexColor(n, LColor(1, 1, 1, self.trail_transparencies[n]))
 
 
-    def update(self, frame):
+    def update_by_frame(self, frame):
         get_trail_frame = lambda shift, frame: max([0, frame - shift])
 
         if self.show_ghosts:
@@ -129,7 +129,7 @@ class Ball(object):
         # FIXME
         self.add_trail()
 
-        self.update(0)
+        self.update_by_frame(0)
 
 
     def populate_parallel(self, playback_speed):
@@ -138,11 +138,17 @@ class Ball(object):
         ball_sequence = Sequence()
 
         for i in range(1, self.num_times):
-            ball_sequence.append(LerpPosQuatInterval(
-                self.node,
-                (self.times[i] - self.times[i-1])/playback_speed,
-                Vec3(self.xs[i], self.ys[i], self.zs[i]),
-                autils.get_quat_from_vector(self.quats[i])
+            #ball_sequence.append(LerpPosQuatInterval(
+            #    self.node,
+            #    (self.times[i] - self.times[i-1])/playback_speed,
+            #    Vec3(self.xs[i], self.ys[i], self.zs[i]),
+            #    autils.get_quat_from_vector(self.quats[i])
+            #))
+            ball_sequence.append(LerpFunctionInterval(
+                self.update_by_time,
+                fromData = (i - 1),
+                toData = i,
+                duration = 1,
             ))
 
         self.parallel = Sequence(
@@ -176,6 +182,7 @@ class Ball(object):
 
 
     def _update(self, node, frame):
+        """Updates by frame"""
         parent = self.node.getParent()
         if self.use_euler:
             node.setHpr(parent, self.hs[frame], self.ps[frame], self.rs[frame])
@@ -184,11 +191,17 @@ class Ball(object):
         node.setPos(parent, self.xs[frame], self.ys[frame], self.zs[frame])
 
 
-    def update(self, frame):
+    def update_by_frame(self, frame):
         self._update(self.node, frame)
 
         if self.trail_on:
-            self.trail.update(frame)
+            self.trail.update_by_frame(frame)
+
+
+    def update_by_time(self, time):
+        """Finds frame closest to given time, then calls update_by_frame"""
+        frame = (np.abs(self.times - time)).argmin()
+        self.update_by_frame(frame)
 
 
     def add_trail(self):
@@ -208,13 +221,14 @@ class Handler(DirectObject.DirectObject):
 
         self.x_pressed = False
         self.l_pressed = False
+        self.r_pressed = False
 
         # Game states
         self.pause = False
         self.birds_eye = False
 
-    def restart_shot(self):
-        self.timestamp = 0
+    def press_r(self):
+        self.r_pressed = True
 
     def pause_shot(self):
         self.pause = not self.pause
@@ -261,36 +275,36 @@ class AnimateShot(ShowBase, Handler):
 
         self.init_camera()
 
-        #self.taskMgr.doMethodLater(0, self.master_task, "Master")
         self.start_balls()
+
+        self.taskMgr.add(self.master_task, "Master")
 
 
     def start_balls(self):
-        ball_parallel = Parallel()
+        self.ball_parallel = Parallel()
         for ball in self.balls:
-            ball_parallel.append(self.balls[ball].parallel)
+            self.ball_parallel.append(self.balls[ball].parallel)
 
-        ball_parallel.loop()
+        self.ball_parallel.loop()
 
 
     def master_task(self, task):
-        if not self.pause:
-            for ball in self.balls.values():
-                ball.update(self.timestamp)
-
-            if self.timestamp >= self.num_frames - 1:
-                self.timestamp = 0
-            else:
-                self.timestamp += 1
+        if self.r_pressed:
+            self.restart_shot()
 
         if self.x_pressed:
             self.toggle_birds_eye()
         else:
             self.toggle_cue_ball_view()
 
-        task.delayTime = self.dts[self.timestamp]
+        if self.l_pressed:
+            self.toggle_lights()
 
-        return task.again
+        return Task.cont
+
+
+    def restart_shot(self):
+        self.ball_parallel.loop()
 
 
     def toggle_lights(self):
