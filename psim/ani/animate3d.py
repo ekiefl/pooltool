@@ -46,7 +46,7 @@ class Trail(object):
         self.ghosts = {}
         self.ghosts_node = NodePath('ghosts')
         self.ghosts_node.reparentTo(render.find('trails'))
-        #self.populate_ghosts()
+        self.populate_ghosts()
 
         self.line_node = NodePath('line')
         self.ls = LineSegs()
@@ -95,12 +95,12 @@ class Trail(object):
             self.ls.setVertexColor(n, LColor(1, 1, 1, self.trail_transparencies[n]))
 
 
-    def update_by_frame(self, frame):
+    def set_pos_by_frame(self, frame):
         get_trail_frame = lambda shift, frame: max([0, frame - shift])
 
         if self.show_ghosts:
             for shift, ghost_node in self.ghosts.items():
-                self.ball._update(ghost_node, get_trail_frame(shift, frame))
+                self.ball._set_pos_by_frame(ghost_node, get_trail_frame(shift, frame))
 
         if self.show_line:
             self.draw_line(frame, self.ball.xs, self.ball.ys, self.ball.zs)
@@ -121,7 +121,7 @@ class Ball(object):
         self.num_times = len(self.times)
 
         self.parallel = Parallel()
-        self.populate_parallel(playback_speed=1.)
+        self.populate_parallel(playback_speed=1)
 
         self.trail_on = False
         self.trail = {}
@@ -129,7 +129,7 @@ class Ball(object):
         # FIXME
         self.add_trail()
 
-        self.update_by_frame(0)
+        self.set_pos_by_frame(0)
 
 
     def populate_parallel(self, playback_speed):
@@ -146,9 +146,9 @@ class Ball(object):
             ))
             #ball_sequence.append(LerpFunctionInterval(
             #    self.update_by_time,
-            #    fromData = (np.abs(self.times - (i-1))).argmin(),
-            #    toData = (np.abs(self.times - i)).argmin(),
-            #    duration = 0,
+            #    fromData = i-1,
+            #    toData = i,
+            #    duration = 1,
             #))
 
         self.parallel = Sequence(
@@ -181,8 +181,7 @@ class Ball(object):
         return self._ball.R / current_R
 
 
-    def _update(self, node, frame):
-        """Updates by frame"""
+    def _set_pos_by_frame(self, node, frame):
         parent = self.node.getParent()
         if self.use_euler:
             node.setHpr(parent, self.hs[frame], self.ps[frame], self.rs[frame])
@@ -191,17 +190,11 @@ class Ball(object):
         node.setPos(parent, self.xs[frame], self.ys[frame], self.zs[frame])
 
 
-    def update_by_frame(self, frame):
-        self._update(self.node, frame)
+    def set_pos_by_frame(self, frame):
+        self._set_pos_by_frame(self.node, frame)
 
         if self.trail_on:
-            self.trail.update_by_frame(frame)
-
-
-    def update_by_time(self, time):
-        """Finds frame closest to given time, then calls update_by_frame"""
-        frame = (np.abs(self.times - time)).argmin()
-        self.update_by_frame(frame)
+            self.trail.set_pos_by_frame(frame)
 
 
     def add_trail(self):
@@ -267,9 +260,8 @@ class AnimateShot(ShowBase, Handler):
                                   style=1, fg=(1, 1, 0, 1), shadow=(0, 0, 0, 0.5),
                                   pos=(0.87, -0.95), scale = .07)
 
-
         self.taskMgr.add(self.master_task, "Master")
-        self.start_animation()
+        self.go()
 
 
     def init_shot_info(self):
@@ -289,7 +281,7 @@ class AnimateShot(ShowBase, Handler):
         self.init_camera()
 
 
-    def start_animation(self):
+    def go(self):
         self.ball_parallel = Parallel()
         for ball in self.balls:
             self.ball_parallel.append(self.balls[ball].parallel)
