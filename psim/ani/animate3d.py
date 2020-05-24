@@ -13,7 +13,8 @@ from direct.actor.Actor import Actor
 from direct.gui.OnscreenText import OnscreenText
 from direct.showbase import DirectObject
 from direct.showbase.ShowBase import ShowBase
-from direct.interval.IntervalGlobal import Sequence
+
+from direct.interval.IntervalGlobal import *
 
 
 class Trail(object):
@@ -34,7 +35,7 @@ class Trail(object):
         self.ball_node = self.ball.node
 
         # Make slightly less than 1 so ghosts don't render over the ball
-        self.radius_offset = 0.99
+        self.radius_multiplier = 0.99
 
         self.tau_ghost = self.ghost_array[-1]/self.ghost_decay
         self.tau_trails = self.line_array[-1]/self.line_decay
@@ -63,7 +64,7 @@ class Trail(object):
             self.ball_node.copyTo(self.ghosts[shift])
             self.ghosts[shift].setTransparency(TransparencyAttrib.MAlpha)
             self.ghosts[shift].setAlphaScale(transparency)
-            self.ghosts[shift].setScale(self.ball.get_scale_factor()*self.radius_offset)
+            self.ghosts[shift].setScale(self.ball.get_scale_factor()*self.radius_multiplier)
 
 
     def remove_ghosts(self):
@@ -110,17 +111,11 @@ class Ball(object):
         self.node = self.init_node()
         self.use_euler = use_euler
 
-        self.xs = rvw_history[:,0,0]
-        self.ys = rvw_history[:,0,1]
-        self.zs = rvw_history[:,0,2]
+        self.xs, self.ys, self.zs = rvw_history[:,0,0], rvw_history[:,0,1], rvw_history[:,0,2]
+        self.hs, self.ps, self.rs = euler_history[:,0], euler_history[:,1], euler_history[:,2]
+        self.wxs, self.wys, self.wzs = rvw_history[:,2,0], rvw_history[:,2,1], rvw_history[:,2,2]
 
-        self.hs = euler_history[:,0]
-        self.ps = euler_history[:,1]
-        self.rs = euler_history[:,2]
-
-        self.wxs = rvw_history[:,2,0]
-        self.wys = rvw_history[:,2,1]
-        self.wzs = rvw_history[:,2,2]
+        self.sequence = Sequence(name=f"{self._ball.id}")
 
         self.quats = quat_history
 
@@ -147,7 +142,6 @@ class Ball(object):
             pass
 
         ball_node.reparentTo(render.find('table'))
-        #ball_node.reparentTo(render)
 
         return ball_node
 
