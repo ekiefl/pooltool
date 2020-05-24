@@ -135,7 +135,7 @@ class Ball(object):
 
 
     def init_node(self):
-        #ball_node = loader.loadModel(model_paths['sphere2'])
+        #ball_node = loader.loadModel(model_paths['sphere_yabee'])
         ball_node = loader.loadModel('models/smiley')
         expected_texture_name = f"{str(self._ball.id).split('_')[0]}_ball"
 
@@ -147,6 +147,7 @@ class Ball(object):
             pass
 
         ball_node.reparentTo(render.find('table'))
+        #ball_node.reparentTo(render)
 
         return ball_node
 
@@ -198,7 +199,7 @@ class Handler(DirectObject.DirectObject):
         self.birds_eye = False
 
     def restart_shot(self):
-        self.frame = 0
+        self.timestamp = 0
 
     def pause_shot(self):
         self.pause = not self.pause
@@ -214,14 +215,14 @@ class AnimateShot(ShowBase, Handler):
     def __init__(self, shot):
         ShowBase.__init__(self)
         Handler.__init__(self)
-        self.taskMgr.add(self.master_task, "Master")
 
-        self.frame = 0
+        self.timestamp = 0
 
         self.shot = shot
         self.shot.calculate_euler_angles()
         self.shot.calculate_quaternions()
         self.times = shot.get_time_history()
+        self.dts = np.diff(self.times)
         self.num_frames = shot.n
 
         self.title = OnscreenText(text='psim',
@@ -245,26 +246,27 @@ class AnimateShot(ShowBase, Handler):
 
         self.init_camera()
 
+        self.taskMgr.doMethodLater(0, self.master_task, "Master")
+
 
     def master_task(self, task):
         if not self.pause:
             for ball in self.balls.values():
-                ball.update(self.frame)
+                ball.update(self.timestamp)
 
-            if self.frame >= self.num_frames:
-                self.frame = 0
+            if self.timestamp >= self.num_frames - 1:
+                self.timestamp = 0
             else:
-                self.frame += 1
+                self.timestamp += 1
 
         if self.x_pressed:
             self.toggle_birds_eye()
         else:
             self.toggle_cue_ball_view()
 
-        if self.l_pressed:
-            self.toggle_lights()
+        task.delayTime = self.dts[self.timestamp]
 
-        return Task.cont
+        return task.again
 
 
     def toggle_lights(self):
@@ -273,9 +275,9 @@ class AnimateShot(ShowBase, Handler):
 
     def toggle_cue_ball_view(self):
         self.camera.setPos(
-            self.balls['cue'].xs[self.frame],
-            self.balls['cue'].ys[self.frame] - 1.2,
-            self.balls['cue'].zs[self.frame] + 1.2
+            self.balls['cue'].xs[self.timestamp],
+            self.balls['cue'].ys[self.timestamp] - 1.2,
+            self.balls['cue'].zs[self.timestamp] + 1.2
         )
 
         self.camera.lookAt(self.balls['cue'].node)
@@ -311,8 +313,8 @@ class AnimateShot(ShowBase, Handler):
     def init_camera(self):
         self.disableMouse()
         self.camLens.setNear(0.2)
-        self.camera.setPos(-1, -1, 1)
-        self.camera.setHpr(-45, -30, 0)
+
+        self.toggle_cue_ball_view()
 
 
     def init_table(self):
@@ -326,11 +328,11 @@ class AnimateShot(ShowBase, Handler):
 
         # Currently there are no texture coordinates for make_rectangle, so this just picks a single
         # color
-        #table_tex = loader.loadTexture(model_paths['blue_cloth'])
-        #table_tex.setWrapU(Texture.WM_repeat)
-        #table_tex.setWrapV(Texture.WM_repeat)
+        table_tex = loader.loadTexture(model_paths['blue_cloth'])
+        table_tex.setWrapU(Texture.WM_repeat)
+        table_tex.setWrapV(Texture.WM_repeat)
 
-        #self.table.setTexture(table_tex)
+        self.table.setTexture(table_tex)
 
 
     def init_trails(self):
