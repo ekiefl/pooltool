@@ -326,11 +326,11 @@ class AnimateShot(ShowBase, Handler):
 
         # Currently there are no texture coordinates for make_rectangle, so this just picks a single
         # color
-        table_tex = loader.loadTexture(model_paths['blue_cloth'])
-        table_tex.setWrapU(Texture.WM_repeat)
-        table_tex.setWrapV(Texture.WM_repeat)
+        #table_tex = loader.loadTexture(model_paths['blue_cloth'])
+        #table_tex.setWrapU(Texture.WM_repeat)
+        #table_tex.setWrapV(Texture.WM_repeat)
 
-        self.table.setTexture(table_tex)
+        #self.table.setTexture(table_tex)
 
 
     def init_trails(self):
