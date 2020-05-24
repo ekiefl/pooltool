@@ -72,6 +72,7 @@ for no other reason than it representing the first historical depiction of billi
 1674.
 
 <img src="media/1674.png" width="450" />
+By Charles Cotton - Appearing in introductory history chapter (p.iv) of Joseph Bennett's 1894 book, Billiards (publisher T. de la Rue), as taken from Charles Cotton's 1674 book, The Compleat Gamester., Public Domain, https://commons.wikimedia.org/w/index.php?curid=6903484
 
 Coincidentally, at exactly this point in history Isaac Newton would have been busy inventing
 calculus, his self-titled Newtonian physics, and a universal theory of gravitation that wholly
@@ -137,7 +138,7 @@ publication is available
 [here](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.89.4627&rep=rep1&type=pdf). This is
 a pretty groundbreaking paper, because they develop a method to solve the trajectories of pool balls
 that avoid discrete time integration, the most common way to evolve many-body systems through time.
-To contextualize their algorithm, I should first talk more about discrete time integration.
+To contextualize their algorithm, I should first talk about what they avoid doing: time integration.
 
 ### Discrete Time Integration
 
@@ -175,13 +176,13 @@ based on velocities (if they are moving fast, decrease the time step). I'm not e
 there because the possibilities are endless, although I am convinced that if Virtual Pool 4 or
 ShootersPool are using discrete time integration, they are using adaptive time stepping.
 
-## Event-based Simulation
+### Event-based Simulation
 
 Even with adaptive time stepping, there is going to be wasted computation when viewed
 retrospectively. So ideally, you'd want to avoid it altogether. In the example of the colliding
 balls, what if we could predict when the collision happens by using knowledge of their positions and
 velocities? After all, it looks plainly obvious that they are going to collide, so why waste our time
-advancing with so many time steps? Let's add some variables to the picture:
+advancing with so many time steps? Let's add some variables to the picture and solve for $t$!
 
 FIXME
 
@@ -203,7 +204,9 @@ another has no analytical mathematical formula for the positions as a function o
 complex the solution becomes:
 
 FIXME (embed and hyperlink goes to wiki)
-https://en.wikipedia.org/wiki/Three-body_problem#/media/File:Three-body_Problem_Animation_with_COM.gif
+
+<img src="media/3_body_problem.gif" width="450" />
+By Dnttllthmmnm - Own work, CC BY-SA 4.0, https://commons.wikimedia.org/w/index.php?curid=59538221
 
 In this case, discrete numerical integration is a necessity. So is numerical integration a necessity
 for pool physics? As with all physics, it depends how realistic you want to be, but mathematical
