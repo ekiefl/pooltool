@@ -121,7 +121,7 @@ class Ball(object):
         self.num_times = len(self.times)
 
         self.parallel = Parallel()
-        self.populate_parallel(playback_speed=1)
+        self.populate_parallel(playback_speed=1.)
 
         self.trail_on = False
         self.trail = {}
@@ -138,18 +138,18 @@ class Ball(object):
         ball_sequence = Sequence()
 
         for i in range(1, self.num_times):
-            #ball_sequence.append(LerpPosQuatInterval(
-            #    self.node,
-            #    (self.times[i] - self.times[i-1])/playback_speed,
-            #    Vec3(self.xs[i], self.ys[i], self.zs[i]),
-            #    autils.get_quat_from_vector(self.quats[i])
-            #))
-            ball_sequence.append(LerpFunctionInterval(
-                self.update_by_time,
-                fromData = (i - 1),
-                toData = i,
-                duration = 1,
+            ball_sequence.append(LerpPosQuatInterval(
+                self.node,
+                (self.times[i] - self.times[i-1])/playback_speed,
+                Vec3(self.xs[i], self.ys[i], self.zs[i]),
+                autils.get_quat_from_vector(self.quats[i])
             ))
+            #ball_sequence.append(LerpFunctionInterval(
+            #    self.update_by_time,
+            #    fromData = (np.abs(self.times - (i-1))).argmin(),
+            #    toData = (np.abs(self.times - i)).argmin(),
+            #    duration = 0,
+            #))
 
         self.parallel = Sequence(
             ball_sequence,
@@ -245,42 +245,51 @@ class AnimateShot(ShowBase, Handler):
         ShowBase.__init__(self)
         Handler.__init__(self)
 
-        self.timestamp = 0
-
         self.shot = shot
-        self.shot.calculate_euler_angles()
-        self.shot.calculate_quaternions()
-        self.times = shot.get_time_history()
-        self.dts = np.diff(self.times)
-        self.num_frames = shot.n
+
+        # Class assumes these shot variables
+        self.dts = None
+        self.times = None
+        self.timestamp = 0
+        self.num_frames = None
+
+        # Class assumes these node variables
+        self.scene = None
+        self.table = None
+        self.trails = None
+        self.balls = {}
+        self.lights = {}
+
+        self.init_shot_info()
+        self.init_nodes()
 
         self.title = OnscreenText(text='psim',
                                   style=1, fg=(1, 1, 0, 1), shadow=(0, 0, 0, 0.5),
                                   pos=(0.87, -0.95), scale = .07)
 
-        self.table = None
-        self.init_table()
-
-        self.trails = None
-        self.init_trails()
-
-        self.balls = {}
-        self.init_balls()
-
-        self.scene = None
-        self.init_scene()
-
-        self.lights = {}
-        self.init_lights()
-
-        self.init_camera()
-
-        self.start_balls()
 
         self.taskMgr.add(self.master_task, "Master")
+        self.start_animation()
 
 
-    def start_balls(self):
+    def init_shot_info(self):
+        self.shot.calculate_euler_angles()
+        self.shot.calculate_quaternions()
+        self.times = self.shot.get_time_history()
+        self.dts = np.diff(self.times)
+        self.num_frames = self.shot.n
+
+
+    def init_nodes(self):
+        self.init_table()
+        self.init_trails()
+        self.init_balls()
+        self.init_scene()
+        self.init_lights()
+        self.init_camera()
+
+
+    def start_animation(self):
         self.ball_parallel = Parallel()
         for ball in self.balls:
             self.ball_parallel.append(self.balls[ball].parallel)
@@ -295,7 +304,7 @@ class AnimateShot(ShowBase, Handler):
         if self.x_pressed:
             self.toggle_birds_eye()
         else:
-            self.toggle_cue_ball_view()
+            self.toggle_player_view()
 
         if self.l_pressed:
             self.toggle_lights()
@@ -311,14 +320,11 @@ class AnimateShot(ShowBase, Handler):
         render.setLightOff()
 
 
-    def toggle_cue_ball_view(self):
-        self.camera.setPos(
-            self.balls['cue'].xs[self.timestamp],
-            self.balls['cue'].ys[self.timestamp] - 1.2,
-            self.balls['cue'].zs[self.timestamp] + 1.2
-        )
+    def toggle_player_view(self):
+        w, l, h = self.shot.table.w, self.shot.table.l, self.shot.table.height
 
-        self.camera.lookAt(self.balls['cue'].node)
+        self.camera.setPos(self.table, 3/4*w, -1/2*l, h)
+        self.camera.lookAt(self.table, w/2, l/2, 0)
 
 
     def toggle_birds_eye(self):
@@ -352,7 +358,7 @@ class AnimateShot(ShowBase, Handler):
         self.disableMouse()
         self.camLens.setNear(0.2)
 
-        self.toggle_cue_ball_view()
+        self.toggle_player_view()
 
 
     def init_table(self):
