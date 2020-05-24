@@ -73,7 +73,7 @@ class Trail(object):
         self.ghosts_node.removeNode()
 
 
-    def draw_line(self, frame, xs, ys, zs):
+    def draw_line(self, frame, xyzs):
         self.ls.reset()
 
         self.line_node.removeNode()
@@ -85,7 +85,7 @@ class Trail(object):
             if shifted_frame < 0:
                 break
 
-            self.ls.drawTo(xs[shifted_frame], ys[shifted_frame], zs[shifted_frame])
+            self.ls.drawTo(xyzs[shifted_frame])
 
         self.line_node.attachNewNode(self.ls.create())
         self.line_node.reparentTo(render.find('trails'))
@@ -103,13 +103,12 @@ class Trail(object):
                 self.ball._set_pos_by_frame(ghost_node, get_trail_frame(shift, frame))
 
         if self.show_line:
-            self.draw_line(frame, self.ball.xs, self.ball.ys, self.ball.zs)
+            self.draw_line(frame, self.ball.xyzs)
 
 
 class Ball(object):
-    def __init__(self, ball, rvw_history, euler_history, quat_history, dts, use_euler=False):
+    def __init__(self, ball, rvw_history, quat_history, dts):
         self._ball = ball
-        self.use_euler = use_euler
 
         self.node = self.init_node()
         self.node.setScale(self.get_scale_factor())
@@ -118,15 +117,12 @@ class Ball(object):
         self.xyzs = autils.get_list_of_Vec3s_from_array(rvw_history[:, 0, :])
         self.quats = autils.get_quaternion_list_from_array(quat_history)
 
-        # FIXME these are deprecated
-        self.xs, self.ys, self.zs = rvw_history[:,0,0], rvw_history[:,0,1], rvw_history[:,0,2]
-        self.hs, self.ps, self.rs = euler_history[:,0], euler_history[:,1], euler_history[:,2]
-
         # FIXME are an array of dts required, or can a single integer float suffice?
         self.dts = dts
+        self.num_times = len(self.xyzs)
 
-        self.parallel = Parallel()
-        self.populate_parallel(playback_speed=1)
+        self.playback_sequence = Parallel()
+        self.set_playback_sequence(playback_speed=1)
 
         self.trail_on = False
         self.trail = {}
@@ -137,9 +133,8 @@ class Ball(object):
         self.set_pos_by_frame(0)
 
 
-    def populate_parallel(self, playback_speed):
-        """FIXME currently broken with self.user_euler == True"""
-
+    def set_playback_sequence(self, playback_speed):
+        """Creates the sequence motions of the ball for a given playback speed"""
         ball_sequence = Sequence()
 
         for i, dt in enumerate(self.dts):
@@ -150,12 +145,13 @@ class Ball(object):
                 self.quats[i+1],
             ))
 
-        self.parallel = Sequence(
+        self.playback_sequence = Sequence(
             ball_sequence,
         )
 
 
     def init_node(self):
+        """Loads ball model and reparents to table"""
         #ball_node = loader.loadModel(model_paths['sphere_yabee'])
         ball_node = loader.loadModel('models/smiley')
         expected_texture_name = f"{str(self._ball.id).split('_')[0]}_ball"
@@ -182,14 +178,12 @@ class Ball(object):
 
     def _set_pos_by_frame(self, node, frame):
         parent = self.node.getParent()
-        if self.use_euler:
-            node.setHpr(parent, self.hs[frame], self.ps[frame], self.rs[frame])
-        else:
-            node.setQuat(parent, self.quats[frame])
-        node.setPos(parent, self.xs[frame], self.ys[frame], self.zs[frame])
+        node.setQuat(parent, self.quats[frame])
+        node.setPos(parent, self.xyzs[frame])
 
 
     def set_pos_by_frame(self, frame):
+        """Update the position of the ball and trail nodes via a frame number"""
         self._set_pos_by_frame(self.node, frame)
 
         if self.trail_on:
@@ -197,6 +191,7 @@ class Ball(object):
 
 
     def add_trail(self):
+        """Turn on line trails and/or ghost trails"""
         self.trail_on = True
         self.trail = Trail(self)
 
@@ -264,7 +259,6 @@ class AnimateShot(ShowBase, Handler):
 
 
     def init_shot_info(self):
-        self.shot.calculate_euler_angles()
         self.shot.calculate_quaternions()
         self.times = self.shot.get_time_history()
         self.dts = np.diff(self.times)
@@ -283,7 +277,7 @@ class AnimateShot(ShowBase, Handler):
     def go(self):
         self.ball_parallel = Parallel()
         for ball in self.balls:
-            self.ball_parallel.append(self.balls[ball].parallel)
+            self.ball_parallel.append(self.balls[ball].playback_sequence)
 
         self.ball_parallel.loop()
 
@@ -384,10 +378,9 @@ class AnimateShot(ShowBase, Handler):
 
     def init_ball(self, ball):
         rvw_history = self.shot.get_ball_rvw_history(ball.id)
-        euler_history = self.shot.get_ball_euler_history(ball.id)
         quat_history = self.shot.get_ball_quat_history(ball.id)
 
-        return Ball(ball, rvw_history, euler_history, quat_history, self.dts)
+        return Ball(ball, rvw_history, quat_history, self.dts)
 
 
     def init_lights(self):
