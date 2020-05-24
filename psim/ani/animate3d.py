@@ -14,6 +14,7 @@ from direct.gui.OnscreenText import OnscreenText
 from direct.showbase import DirectObject
 from direct.showbase.ShowBase import ShowBase
 
+from direct.interval.LerpInterval import *
 from direct.interval.IntervalGlobal import *
 
 
@@ -84,7 +85,7 @@ class Trail(object):
             if shifted_frame < 0:
                 break
 
-            self.ls.drawTo(xs[shifted_frame], ys[shifted_frame], zs[shifted_frame] + self.ball._ball.R)
+            self.ls.drawTo(xs[shifted_frame], ys[shifted_frame], zs[shifted_frame])
 
         self.line_node.attachNewNode(self.ls.create())
         self.line_node.reparentTo(render.find('trails'))
@@ -108,16 +109,17 @@ class Trail(object):
 class Ball(object):
     def __init__(self, ball, rvw_history, euler_history, quat_history, use_euler=False):
         self._ball = ball
-        self.node = self.init_node()
         self.use_euler = use_euler
 
-        self.xs, self.ys, self.zs = rvw_history[:,0,0], rvw_history[:,0,1], rvw_history[:,0,2]
+        self.node = self.init_node()
+        self.node.setScale(self.get_scale_factor())
+
+        self.xs, self.ys, self.zs = rvw_history[:,0,0], rvw_history[:,0,1], rvw_history[:,0,2] + self._ball.R
         self.hs, self.ps, self.rs = euler_history[:,0], euler_history[:,1], euler_history[:,2]
-        self.wxs, self.wys, self.wzs = rvw_history[:,2,0], rvw_history[:,2,1], rvw_history[:,2,2]
+        self.quats = quat_history
 
         self.sequence = Sequence(name=f"{self._ball.id}")
-
-        self.quats = quat_history
+        self.populate_sequence(0.016)
 
         self.trail_on = False
         self.trail = {}
@@ -125,8 +127,26 @@ class Ball(object):
         # FIXME
         self.add_trail()
 
-        self.node.setScale(self.get_scale_factor())
         self.update(0)
+
+
+    def populate_sequence(self, dt):
+        if self.use_euler:
+            for i in range(len(self.xs)):
+                self.sequence.append(LerpPosHprInterval(
+                    self.node,
+                    dt,
+                    Vec3(self.xs[i], self.ys[i], self.zs[i]),
+                    Vec3(self.hs[i], self.ps[i], self.rs[i])
+                ))
+        else:
+            for i in range(len(self.xs)):
+                self.sequence.append(LerpPosQuatInterval(
+                    self.node,
+                    dt,
+                    Vec3(self.xs[i], self.ys[i], self.zs[i]),
+                    autils.get_quat_from_vector(self.quats[i])
+                ))
 
 
     def init_node(self):
@@ -160,7 +180,7 @@ class Ball(object):
             node.setHpr(parent, self.hs[frame], self.ps[frame], self.rs[frame])
         else:
             node.setQuat(parent, autils.get_quat_from_vector(self.quats[frame]))
-        node.setPos(parent, self.xs[frame], self.ys[frame], self.zs[frame] + self._ball.R)
+        node.setPos(parent, self.xs[frame], self.ys[frame], self.zs[frame])
 
 
     def update(self, frame):
@@ -240,7 +260,16 @@ class AnimateShot(ShowBase, Handler):
 
         self.init_camera()
 
-        self.taskMgr.doMethodLater(0, self.master_task, "Master")
+        #self.taskMgr.doMethodLater(0, self.master_task, "Master")
+        self.start_animation()
+
+
+    def start_animation(self):
+        ball_parallel = Parallel()
+        for ball in self.balls:
+            ball_parallel.append(self.balls[ball].sequence)
+
+        ball_parallel.loop()
 
 
     def master_task(self, task):
