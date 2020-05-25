@@ -125,9 +125,6 @@ class Ball(object):
         self.trail_on = False
         self.trail = {}
 
-        # FIXME
-        self.add_trail()
-
         self.set_pos_by_frame(0)
 
 
@@ -221,35 +218,99 @@ class Ball(object):
         self.trail = Trail(self)
 
 
+
 class Handler(DirectObject.DirectObject):
     def __init__(self):
         self.accept('escape', sys.exit)
-        self.accept('space', self.pause_shot)
+        self.accept('space', self.toggle_pause)
         self.accept('r', self.restart_shot)
-        self.accept('x', self.press_x)
-        self.accept('l', self.press_l)
+        self.accept('x', self.change_camera)
+        self.accept('t', self.toggle_trail)
 
-        self.state = {}
+        self.state_change = True
 
-        self.x_pressed = False
-        self.l_pressed = False
-        self.r_pressed = False
+        self.state = {
+            'paused': False,
+            'camera': 'default',
+            'trails': False,
+        }
 
-        # Game states
-        self.pause = False
-        self.birds_eye = False
 
-    def press_r(self):
-        self.r_pressed = True
+    def change_camera(self):
+        if self.state['camera'] == 'default':
+            self.state['camera'] = 'bird'
+        elif self.state['camera'] == 'bird':
+            self.state['camera'] = 'default'
+        else:
+            raise ValueError("Unknown camera")
 
-    def pause_shot(self):
-        self.pause = not self.pause
+        self.state_change = True
 
-    def press_x(self):
-        self.x_pressed = not self.x_pressed
 
-    def press_l(self):
-        self.l_pressed = not self.l_pressed
+    def toggle_pause(self):
+        self.state['paused'] = not self.state['paused']
+        self.state_change = True
+
+
+    def toggle_trail(self):
+        self.state['trails'] = not self.state['trails']
+        self.state_change = True
+
+
+    def restart_shot(self):
+        self.ball_parallel.set_t(0)
+
+
+    def toggle_player_view(self):
+        w, l, h = self.shot.table.w, self.shot.table.l, self.shot.table.height
+
+        self.camera.setPos(self.table, 3/4*w, -1/2*l, h)
+        self.camera.lookAt(self.table, w/2, l/2, 0)
+
+
+    def toggle_birds_eye(self):
+        fov = self.camLens.getFov()
+        long_dim_is_y = True if self.shot.table.l >= self.shot.table.w else False
+        buffer_factor = 1.1
+
+        if long_dim_is_y and fov[0] >= fov[1]:
+            rotate = True
+        elif not long_dim_is_y and fov[1] >= fov[0]:
+            rotate = True
+        else:
+            rotate = False
+
+        zs = [
+            (self.shot.table.l if long_dim_is_y else self.shot.table.w)/2*buffer_factor / np.tan(max(fov)/2 * np.pi/180),
+            (self.shot.table.w if long_dim_is_y else self.shot.table.l)/2*buffer_factor / np.tan(min(fov)/2 * np.pi/180),
+        ]
+        self.camera.setPos(self.table, self.shot.table.w/2, self.shot.table.l/2, max(zs))
+        self.camera.setHpr(0, -90, 0) if not rotate else self.camera.setHpr(90, -90, 0)
+
+
+    def master_task(self, task):
+        """Called each frame"""
+        if self.state_change:
+
+            if self.state['paused']:
+                self.ball_parallel.pause()
+            else:
+                self.ball_parallel.resume()
+
+            if self.state['camera'] == 'default':
+                self.toggle_player_view()
+            elif self.state['camera'] == 'bird':
+                self.toggle_birds_eye()
+
+            if self.state['trails']:
+                for ball in self.balls.values():
+                    ball.add_trail()
+                self.set_ball_playback_sequences()
+                self.go()
+
+        self.state_change = False
+
+        return Task.cont
 
 
 class AnimateShot(ShowBase, Handler):
@@ -280,6 +341,7 @@ class AnimateShot(ShowBase, Handler):
                                   style=1, fg=(1, 1, 0, 1), shadow=(0, 0, 0, 0.5),
                                   pos=(0.87, -0.95), scale = .07)
 
+        self.ball_parallel = None
         self.set_ball_playback_sequences(playback_speed=1)
         self.go()
 
@@ -326,56 +388,6 @@ class AnimateShot(ShowBase, Handler):
             self.ball_parallel.append(self.balls[ball].playback_sequence)
 
         self.ball_parallel.loop()
-
-
-    def master_task(self, task):
-        if self.r_pressed:
-            self.restart_shot()
-
-        if self.x_pressed:
-            self.toggle_birds_eye()
-        else:
-            self.toggle_player_view()
-
-        if self.l_pressed:
-            self.toggle_lights()
-
-        return Task.cont
-
-
-    def restart_shot(self):
-        self.ball_parallel.loop()
-
-
-    def toggle_lights(self):
-        render.setLightOff()
-
-
-    def toggle_player_view(self):
-        w, l, h = self.shot.table.w, self.shot.table.l, self.shot.table.height
-
-        self.camera.setPos(self.table, 3/4*w, -1/2*l, h)
-        self.camera.lookAt(self.table, w/2, l/2, 0)
-
-
-    def toggle_birds_eye(self):
-        fov = self.camLens.getFov()
-        long_dim_is_y = True if self.shot.table.l >= self.shot.table.w else False
-        buffer_factor = 1.1
-
-        if long_dim_is_y and fov[0] >= fov[1]:
-            rotate = True
-        elif not long_dim_is_y and fov[1] >= fov[0]:
-            rotate = True
-        else:
-            rotate = False
-
-        zs = [
-            (self.shot.table.l if long_dim_is_y else self.shot.table.w)/2*buffer_factor / np.tan(max(fov)/2 * np.pi/180),
-            (self.shot.table.w if long_dim_is_y else self.shot.table.l)/2*buffer_factor / np.tan(min(fov)/2 * np.pi/180),
-        ]
-        self.camera.setPos(self.table, self.shot.table.w/2, self.shot.table.l/2, max(zs))
-        self.camera.setHpr(0, -90, 0) if not rotate else self.camera.setHpr(90, -90, 0)
 
 
     def init_scene(self):
