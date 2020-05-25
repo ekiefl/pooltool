@@ -137,10 +137,13 @@ class Ball(object):
         else:
             ghost_sequences = {}
 
+        # FIXME Can save an untested amount of time, but screws up dynamical speed changing because it
+        # gets rid of intervals that may be useful for slower dynamically-chosen playback speeds
         playback_dt = shot_dt/playback_speed
-        playback_fps = 1/playback_dt
-        step_by = int(playback_fps // ani.fps_target) if playback_fps > ani.fps_target else 1
-        duration = step_by*playback_dt
+        #playback_fps = 1/playback_dt
+        #step_by = int(playback_fps // ani.fps_target) if playback_fps > ani.fps_target else 1
+        #duration = step_by*playback_dt
+        duration, step_by = playback_dt, 1
 
         # for ghosts
         get_trail_frame = lambda shift, frame: max([0, frame - shift])
@@ -223,6 +226,8 @@ class Handler(DirectObject.DirectObject):
     def __init__(self):
         self.accept('escape', sys.exit)
         self.accept('space', self.toggle_pause)
+        self.accept('arrow_left', self.slow_down)
+        self.accept('arrow_right', self.speed_up)
         self.accept('r', self.restart_shot)
         self.accept('x', self.change_camera)
 
@@ -254,11 +259,21 @@ class Handler(DirectObject.DirectObject):
         self.ball_parallel.set_t(0)
 
 
+    def slow_down(self):
+        self.playback_speed *= 0.5
+        self.ball_parallel.setPlayRate(0.5*self.ball_parallel.getPlayRate())
+
+
+    def speed_up(self):
+        self.playback_speed *= 2.0
+        self.ball_parallel.setPlayRate(2.0*self.ball_parallel.getPlayRate())
+
+
     def toggle_player_view(self):
         w, l, h = self.shot.table.w, self.shot.table.l, self.shot.table.height
 
-        self.camera.setPos(self.table, 3/4*w, -0.40*l, 1.4*h)
-        self.camera.lookAt(self.table, w/2, l/4, 0)
+        self.camera.setPos(self.table, 3/4*w, 1.40*l, 1.4*h)
+        self.camera.lookAt(self.table, w/2, 3*l/4, 0)
 
 
     def toggle_birds_eye(self):
@@ -307,6 +322,7 @@ class AnimateShot(ShowBase, Handler):
         self.taskMgr.add(self.master_task, "Master")
 
         self.shot = shot
+        self.playback_speed = playback_speed
 
         # Class assumes these shot variables
         self.dt = None
@@ -329,7 +345,7 @@ class AnimateShot(ShowBase, Handler):
                                   pos=(0.87, -0.95), scale = .07)
 
         self.ball_parallel = None
-        self.set_ball_playback_sequences(playback_speed=playback_speed)
+        self.set_ball_playback_sequences(playback_speed=self.playback_speed)
         self.go()
 
 
@@ -393,6 +409,8 @@ class AnimateShot(ShowBase, Handler):
 
     def init_table(self):
         w, l, h = self.shot.table.w, self.shot.table.l, self.shot.table.height
+
+        self.table = NodePath()
 
         self.table = render.attachNewNode(autils.make_rectangle(
             x1=0, y1=0, z1=0, x2=w, y2=l, z2=0, name='table'
