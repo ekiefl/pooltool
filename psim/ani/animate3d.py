@@ -257,8 +257,8 @@ class Handler(DirectObject.DirectObject):
     def toggle_player_view(self):
         w, l, h = self.shot.table.w, self.shot.table.l, self.shot.table.height
 
-        self.camera.setPos(self.table, 3/4*w, -1/2*l, h)
-        self.camera.lookAt(self.table, w/2, l/2, 0)
+        self.camera.setPos(self.table, 3/4*w, -0.40*l, 1.4*h)
+        self.camera.lookAt(self.table, w/2, l/4, 0)
 
 
     def toggle_birds_eye(self):
