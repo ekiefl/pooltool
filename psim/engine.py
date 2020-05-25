@@ -14,9 +14,6 @@ from psim.objects import (
 
 import numpy as np
 
-#np.random.seed(100)
-
-
 class Event(object):
     def __init__(self, event_type, agents, tau):
         self.agents = agents

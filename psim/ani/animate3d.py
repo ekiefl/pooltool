@@ -225,14 +225,12 @@ class Handler(DirectObject.DirectObject):
         self.accept('space', self.toggle_pause)
         self.accept('r', self.restart_shot)
         self.accept('x', self.change_camera)
-        self.accept('t', self.toggle_trail)
 
         self.state_change = True
 
         self.state = {
             'paused': False,
             'camera': 'default',
-            'trails': False,
         }
 
 
@@ -249,11 +247,6 @@ class Handler(DirectObject.DirectObject):
 
     def toggle_pause(self):
         self.state['paused'] = not self.state['paused']
-        self.state_change = True
-
-
-    def toggle_trail(self):
-        self.state['trails'] = not self.state['trails']
         self.state_change = True
 
 
@@ -302,19 +295,13 @@ class Handler(DirectObject.DirectObject):
             elif self.state['camera'] == 'bird':
                 self.toggle_birds_eye()
 
-            if self.state['trails']:
-                for ball in self.balls.values():
-                    ball.add_trail()
-                self.set_ball_playback_sequences()
-                self.go()
-
         self.state_change = False
 
         return Task.cont
 
 
 class AnimateShot(ShowBase, Handler):
-    def __init__(self, shot):
+    def __init__(self, shot, playback_speed=1):
         ShowBase.__init__(self)
         Handler.__init__(self)
         self.taskMgr.add(self.master_task, "Master")
@@ -342,7 +329,7 @@ class AnimateShot(ShowBase, Handler):
                                   pos=(0.87, -0.95), scale = .07)
 
         self.ball_parallel = None
-        self.set_ball_playback_sequences(playback_speed=1)
+        self.set_ball_playback_sequences(playback_speed=playback_speed)
         self.go()
 
 

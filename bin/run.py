@@ -11,6 +11,7 @@ ap.add_argument('-s', '--skip-continuize', action='store_true')
 ap.add_argument('-d', '--dimensions', type=int, choices=[2,3], default=2)
 ap.add_argument('-p', '--plot', action='store_true')
 ap.add_argument('-dt', '--dt', type=float, default=0.01)
+ap.add_argument('--speed', type=float, default=1)
 args = ap.parse_args()
 
 if __name__ == '__main__':
@@ -36,6 +37,7 @@ if __name__ == '__main__':
         from psim.ani.animate3d import AnimateShot
 
         kwargs = {
+            'playback_speed': args.speed
         }
 
     ani = AnimateShot(sim, **kwargs)
