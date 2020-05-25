@@ -337,31 +337,33 @@ def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
     return np.array([r, v, w, e])
 
 
-def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
+def evolve_perpendicular_spin_component(wz, ez, R, u_sp, g, t):
     if t == 0:
-        return rvw
+        return wz, ez
 
-    # Otherwise ball.rvw will be modified and corresponding entry in self.history
-    rvw = rvw.copy()
-
-    _, _, w_0, e_0 = rvw
-    w_0z = w_0[2]
-
-    if w_0z < psim.tol:
-        return rvw
+    if abs(wz) < psim.tol:
+        return wz, ez
 
     alpha = 5*u_sp*g/(2*R)
 
-    if t > abs(w_0z)/alpha:
+    if t > abs(wz)/alpha:
         # You can't decay past 0 angular velocity
-        t = w_0z/alpha
+        t = abs(wz)/alpha
 
     # Always decay towards 0, whether spin is +ve or -ve
-    sign = 1 if w_0z > 0 else -1
+    sign = 1 if wz > 0 else -1
 
-    rvw[2, 2] = w_0z - sign*alpha*t
-    rvw[3, 2] = e_0[2] + w_0z*t - sign*1/2*alpha*t**2
+    wz_final = wz - sign*alpha*t
+    ez_final = ez + wz*t - sign*1/2*alpha*t**2
 
+    return wz_final, ez_final
+
+
+def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
+    # Otherwise ball.rvw will be modified and corresponding entry in self.history
+    rvw = rvw.copy()
+
+    rvw[2, 2], rvw[3, 2] = evolve_perpendicular_spin_component(rvw[2, 2], rvw[3, 2], R, u_sp, g, t)
     return rvw
 
 
