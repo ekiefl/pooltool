@@ -78,7 +78,7 @@ Coincidentally, at exactly this point in history Isaac Newton would have been bu
 calculus, his self-titled Newtonian physics, and a universal theory of gravitation that wholly
 explained the previously disparate phenomena of tides, why things fall, and the motions of celestial
 bodies. His contributions to science would spark a revolution in the physical sciences more
-illustrious than anyone before him, and arguably since him. But most importantly by far, Newton's
+illustrious than anyone before him, and arguably ever since him. But most importantly by far, Newton's
 work would enable the theoretical treatment of the game of billiards, and as such, the game has been
 studied for at least 200 years.
 
@@ -120,7 +120,7 @@ have reason to keep their algorithms to themselves.
 
 So the bottom line is that I have no idea what's going on under the hood in these games, but by
 doing some research I think all pool simulators are going to fall under these two umbrellas:
-discrete time integration, or event-based integration. So let's talk about these.
+discrete time integration, or continuous event-based integration. So let's talk about these.
 
 ## Pool simulator research
 
@@ -176,13 +176,13 @@ based on velocities (if they are moving fast, decrease the time step). I'm not e
 there because the possibilities are endless, although I am convinced that if Virtual Pool 4 or
 ShootersPool are using discrete time integration, they are using adaptive time stepping.
 
-### Event-based Simulation
+### Continuous Event-based Simulation
 
-Even with adaptive time stepping, there is going to be wasted computation when viewed
-retrospectively. So ideally, you'd want to avoid it altogether. In the example of the colliding
-balls, what if we could predict when the collision happens by using knowledge of their positions and
-velocities? After all, it looks plainly obvious that they are going to collide, so why waste our time
-advancing with so many time steps? Let's add some variables to the picture and solve for $t$!
+Even with adaptive time stepping, there is going to be wasted computation. So ideally, you'd want to
+avoid it altogether. In the example of the colliding balls, what if we could predict when the
+collision happens by using knowledge of their positions and velocities? After all, it looks plainly
+obvious that they are going to collide, so why waste our time advancing with so many time steps?
+Let's add some variables to the picture and solve for $t$!
 
 FIXME
 
@@ -208,7 +208,69 @@ FIXME (embed and hyperlink goes to wiki)
 <img src="media/3_body_problem.gif" width="450" />
 By Dnttllthmmnm - Own work, CC BY-SA 4.0, https://commons.wikimedia.org/w/index.php?curid=59538221
 
-In this case, discrete numerical integration is a necessity. So is numerical integration a necessity
-for pool physics? As with all physics, it depends how realistic you want to be, but mathematical
-functions exist to describe ball trajectories under assumptions that are pretty much physically
-accurate. They are much more complex than the toy example above, but they exist.
+#### The algorithm is essentially this
+
+In the above case, discrete numerical integration is a necessity. So is a necessity for pool physics
+too? Well, unlike the 3-body gravitational problem which exhibit forces on each other even at a
+distance, balls only interact with each other during extremely brief collisions (OK fine, pool balls
+also exhibit gravitational forces on each other at a distance, but you're just being pedantic).
+Other than during these brief moments, the trajectories of the balls have closed-form equations that
+describe their positions, velocities, and spins. So this doesn't solve the problem entirely, but I
+can at least accurately simulate the evolution of a pool shot from $t=0$ up to the first collision
+without any time integration because I have analytical forms of the trajectories as a function of
+time! Then I could apply some well-trodden physics to resolve the
+collision, and then evolve the state of all balls until the _next_ collision. Essentially, if you
+can solve when a collision happens, you can evolve all balls up to that point in time, solve the
+collision's physics by updating the states of the ball(s) involved in the collision, and then
+advance time to the next collision. Rinse and repeat.
+
+That's pretty good news, but it is still unknown how to calculate when the first collision occurs.
+The solution employed by Leckie and Greenspan is to calculate all possible collision times and take
+the one that occurs in the minimal amount of time. When I say all, I mean all.  Since the
+trajectories of each ball are known as a function of time (they are quadratic with respect to time
+because of the deceleration from the cloth), the collision time between each pair of balls can be
+calculated from a fourth order polynomial with respect to time. The roots of this polynomial are the
+time needed for the balls to collide. As we know, most balls will not collide--a typical shot will
+have maybe 1 or 5 collisions.  The absence of a collision manifests mathematically as negative or
+imaginary values to the roots of the fourth order polynomial. So if you have $15$ balls, that means
+you have $105$ collision pairs to check, and most of these will not collide (yielding negative or
+imaginary values). Yet a subset of these ball-pairs _will_ yield positive real values.  If a
+ball-pair yields a non-negative real value, it means that if no other balls or cushions were to "get
+in the way" of the collision, the balls would collide in a finite amount
+of time. By picking the
+one with a smallest postive and real-valued solution to the quartic polynomial, we ensure by
+definition that this is the first collision that occurs.
+
+With this time value in hand, we advance the trajectories of _all_ balls up to that point in time,
+at which point a collision is occuring, i.e. 2 balls or a ball and a rail are touching. Then, we
+apply well-trodden physics that explains the outgoing states of the balls as a result of the
+collision (which we assume is instantaneous). After updating the states of the involved balls, we
+rinse and repeat: We find the next event, advance the states of all balls up to that time by using
+the analytical expressions we have, resolve the physics of the collision, and so on and so forth.
+
+Here is my sketch of the algorithm:
+
+FIXME
+
+## Continuous Event-based simulation is da way man
+
+After doing my resarch, I realized I have _got_ to do a continuous event-based approach. Leckie and
+Greenspan give a very rough complexity analysis as to why this is far superior to discrete numerical integration. For discrete
+numerical integration, the number of operations is on the order of 
+
+$N (61 n - n^2) / 2$
+
+where $n$ is the number of balls, and $N$ is the number of time steps. OK well writing this down
+now, I see this is clearly quite a garbage expression because the number of operations grows
+negative with large values of $n$. But the important part is this: time complexity scales linearly
+with the number of time steps, i.e. accuracy. But assuming it works for small values of $n$, simulating 3 balls
+for 1 second using a very coarse time step of 1 millisecond yields $87,000$ required computations.
+In contrast, their derived time complexity expression for their continuous event-based approach is
+
+$(645 n - 19 n^2) / 2$
+
+Which yields only 882 operations. More critically, the complexity depends _only_ on the number of
+balls.
+
+The bottomline is this: after reading this paper, I decided this project was going to offer
+continuous event-based simulations or it wasn't going to offer anything.
