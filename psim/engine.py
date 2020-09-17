@@ -722,10 +722,10 @@ class ShotSimulation(ShotHistory):
             self.cue.strike_object(
                 ball = self.balls['cue'],
                 obj = self.balls['1'],
-                offset = utils.wiggle(0, val=1.),
+                offset = utils.wiggle(0, val=0.3),
                 V0 = utils.wiggle(8.50001, val=0),
-                a = utils.wiggle(0.0, val=0.05),
-                b = utils.wiggle(0.05, val=0.1),
+                a = utils.wiggle(0.0, val=0.08),
+                b = utils.wiggle(-0.1, val=0.1),
                 theta = 0,
             )
         elif setup == 'curling':
