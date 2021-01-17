@@ -38,6 +38,10 @@ def normalize(*args):
     return myVec
 
 
+def multiply_cw(v, c):
+    return LVector3(v[0]*c, v[1]*c, v[2]*c)
+
+
 def make_rectangle(x1, y1, z1, x2, y2, z2, name='rectangle'):
     fmt = GeomVertexFormat.getV3n3cpt2()
     vdata = GeomVertexData('rectangle', fmt, Geom.UHDynamic)
