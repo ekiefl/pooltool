@@ -24,7 +24,6 @@ def resolve_ball_ball_collision(rvw1, rvw2):
     n = utils.unit_vector(r2 - r1)
     t = utils.coordinate_rotation(n, np.pi/2)
 
-    alpha = utils.angle(n)
     beta = utils.angle(v_rel, n)
 
     rvw1[1] = t * v_mag*np.sin(beta) + v2
@@ -62,7 +61,7 @@ def resolve_ball_rail_collision(rvw, normal, R, m, h):
     # Eqs 14
     sx = rvw_R[1,0]*np.sin(theta_a) - rvw_R[1,2]*np.cos(theta_a) + R*rvw_R[2,1]
     sy = -rvw_R[1,1] - R*rvw_R[2,2]*np.cos(theta_a) + R*rvw_R[2,0]*np.sin(theta_a)
-    c = rvw_R[1,0]*np.cos(theta_a)
+    c = rvw_R[1,0]*np.cos(theta_a) # 2D assumption
 
     # Eqs 16
     I = 2/5*m*R**2

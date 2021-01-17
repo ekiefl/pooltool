@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+
 import psim.ani as ani
 import psim.ani.utils as autils
 
@@ -14,97 +15,8 @@ from direct.gui.OnscreenText import OnscreenText
 from direct.showbase import DirectObject
 from direct.showbase.ShowBase import ShowBase
 
-from direct.interval.LerpInterval import *
+from direct.gui.DirectGui import *
 from direct.interval.IntervalGlobal import *
-
-
-class Trail(object):
-    def __init__(self, ball, ghost_array=None, line_array=None, ghost_decay=None, line_decay=None,
-                 line_thickness=None):
-        """FIXME I do not know how I am going to integrate this class into the new Sequence and Interval structure"""
-
-        self.show_line = True
-        self.show_ghosts = True
-
-        self.ghost_array = ghost_array or ani.ghost_trail_array
-        self.line_array = line_array or ani.line_trail_array
-        self.ghost_decay = ghost_decay or ani.ghost_decay
-        self.line_decay = line_decay or ani.line_decay
-        self.line_thickness = line_thickness or ani.line_trail_thickness
-
-        self.n = len(self.ghost_array)
-        self.ball = ball
-        self.ball_node = self.ball.node
-
-        # Make slightly less than 1 so ghosts don't render over the ball
-        self.radius_multiplier = 0.99
-
-        self.tau_ghost = self.ghost_array[-1]/self.ghost_decay
-        self.tau_trails = self.line_array[-1]/self.line_decay
-
-        self.trail_transparencies = self.get_transparency(self.line_array, self.tau_trails)
-
-        self.ghosts = {}
-        self.ghosts_node = NodePath('ghosts')
-        self.ghosts_node.reparentTo(render.find('trails'))
-        self.populate_ghosts()
-
-        self.line_node = NodePath('line')
-        self.ls = LineSegs()
-        self.ls.setThickness(self.line_thickness)
-
-
-    def get_transparency(self, shift, tau):
-        return np.exp(-shift/tau)
-
-
-    def populate_ghosts(self):
-        transparencies = self.get_transparency(self.ghost_array, self.tau_ghost)
-
-        for transparency, shift in zip(transparencies, self.ghost_array):
-            self.ghosts[shift] = self.ghosts_node.attachNewNode(f"ghost_{shift}")
-            self.ball_node.copyTo(self.ghosts[shift])
-            self.ghosts[shift].setTransparency(TransparencyAttrib.MAlpha)
-            self.ghosts[shift].setAlphaScale(transparency)
-            self.ghosts[shift].setScale(self.ball.get_scale_factor()*self.radius_multiplier)
-
-
-    def remove_ghosts(self):
-        self.ghosts = {}
-        self.ghosts_node.removeNode()
-
-
-    def draw_line(self, frame, xyzs):
-        self.ls.reset()
-
-        self.line_node.removeNode()
-        self.line_node = NodePath('trail')
-        self.line_node.setTransparency(TransparencyAttrib.MAlpha)
-
-        for idx, shift in enumerate(self.line_array):
-            shifted_frame = frame - shift
-            if shifted_frame < 0:
-                break
-
-            self.ls.drawTo(xyzs[shifted_frame])
-
-        self.line_node.attachNewNode(self.ls.create())
-        self.line_node.reparentTo(render.find('trails'))
-
-        for n in range(self.ls.getNumVertices()):
-            # Must be modified after self.ls.create()
-            self.ls.setVertexColor(n, LColor(1, 1, 1, self.trail_transparencies[n]))
-
-
-    def set_pos_by_frame(self, frame):
-        get_trail_frame = lambda shift, frame: max([0, frame - shift])
-
-        if self.show_ghosts:
-            for shift, ghost_node in self.ghosts.items():
-                self.ball._set_pos_by_frame(ghost_node, get_trail_frame(shift, frame))
-
-        if self.show_line:
-            self.draw_line(frame, self.ball.xyzs)
 
 
 class Ball(object):
@@ -122,9 +34,6 @@ class Ball(object):
 
         self.playback_sequence = None
 
-        self.trail_on = False
-        self.trail = {}
-
         self.set_pos_by_frame(0)
 
 
@@ -132,36 +41,16 @@ class Ball(object):
         """Creates the sequence motions of the ball for a given playback speed"""
         # Init the sequences
         ball_sequence = Sequence()
-        if self.trail_on and self.trail.show_ghosts:
-            ghost_sequences = {shift: Sequence() for shift in self.trail.ghosts}
-        else:
-            ghost_sequences = {}
 
-        # FIXME Can save an untested amount of time, but screws up dynamical speed changing because it
-        # gets rid of intervals that may be useful for slower dynamically-chosen playback speeds
         playback_dt = shot_dt/playback_speed
-        #playback_fps = 1/playback_dt
-        #step_by = int(playback_fps // ani.fps_target) if playback_fps > ani.fps_target else 1
-        #duration = step_by*playback_dt
         duration, step_by = playback_dt, 1
-
-        # for ghosts
-        get_trail_frame = lambda shift, frame: max([0, frame - shift])
 
         for i in range(frame_start, frame_stop, step_by):
             # Append to ball sequence
             ball_sequence.append(self.get_playback_interval(i, duration))
 
-            # Append to all ghost sequences
-            if self.trail_on and self.trail.show_ghosts:
-                for shift, ghost_node in self.trail.ghosts.items():
-                    shifted_frame = get_trail_frame(shift*step_by, i)
-                    ghost_sequences[shift].append(self._get_playback_interval(ghost_node, shifted_frame, duration))
-
         self.playback_sequence = Parallel()
         self.playback_sequence.append(ball_sequence)
-        for ghost_sequence in ghost_sequences.values():
-            self.playback_sequence.append(ghost_sequence)
 
 
     def _get_playback_interval(self, node, frame, duration):
@@ -208,18 +97,8 @@ class Ball(object):
 
 
     def set_pos_by_frame(self, frame):
-        """Update the position of the ball and trail nodes via a frame number"""
+        """Update the position of the ball via a frame number"""
         self._set_pos_by_frame(self.node, frame)
-
-        if self.trail_on:
-            self.trail.set_pos_by_frame(frame)
-
-
-    def add_trail(self):
-        """Turn on line trails and/or ghost trails"""
-        self.trail_on = True
-        self.trail = Trail(self)
-
 
 
 class Handler(DirectObject.DirectObject):
@@ -319,7 +198,6 @@ class AnimateShot(ShowBase, Handler):
     def __init__(self, shot, playback_speed=1):
         ShowBase.__init__(self)
         Handler.__init__(self)
-        self.taskMgr.add(self.master_task, "Master")
 
         self.shot = shot
         self.playback_speed = playback_speed
@@ -333,7 +211,6 @@ class AnimateShot(ShowBase, Handler):
         # Class assumes these node variables
         self.scene = None
         self.table = None
-        self.trails = None
         self.balls = {}
         self.lights = {}
 
@@ -346,7 +223,47 @@ class AnimateShot(ShowBase, Handler):
 
         self.ball_parallel = None
         self.set_ball_playback_sequences(playback_speed=self.playback_speed)
-        self.go()
+
+        self.init_menu()
+
+
+    def init_menu(self):
+        self.gameOverScreen = DirectDialog(
+            frameSize = (-2, 1, -1, 1),
+            fadeScreen = 0.4,
+            relief = DGG.FLAT
+        )
+
+        label = DirectLabel(text = "Game Over!",
+                    parent = self.gameOverScreen,
+                    scale = 0.1,
+                    pos = (0, 0, 0.2))
+
+        # Similarly, but with no text--for now!
+        self.finalScoreLabel = DirectLabel(text = "",
+                                           parent = self.gameOverScreen,
+                                           scale = 0.07,
+                                           pos = (0, 0, 0))
+
+        # Make a button.
+        #
+        # Parameters used (that are new):
+        # "command" is the method to run when
+        #   the button is pressed
+        btn = DirectButton(text = "Restart",
+                           command = self.go,
+                           pos = (-0.3, 0, -0.2),
+                           parent = self.gameOverScreen,
+                           scale = 0.07)
+
+
+        btn = DirectButton(text = "Quit",
+                           command = sys.exit,
+                           pos = (0.3, 0, -0.2),
+                           parent = self.gameOverScreen,
+                           scale = 0.07)
+
+
 
 
     def init_shot_info(self):
@@ -363,7 +280,6 @@ class AnimateShot(ShowBase, Handler):
 
     def init_nodes(self):
         self.init_table()
-        self.init_trails()
         self.init_balls()
         self.init_scene()
         self.init_lights()
@@ -386,6 +302,8 @@ class AnimateShot(ShowBase, Handler):
 
 
     def go(self):
+        self.taskMgr.add(self.master_task, "Master")
+
         self.ball_parallel = Parallel()
         for ball in self.balls:
             self.ball_parallel.append(self.balls[ball].playback_sequence)
@@ -425,13 +343,6 @@ class AnimateShot(ShowBase, Handler):
         table_tex.setWrapV(Texture.WM_repeat)
 
         self.table.setTexture(table_tex)
-
-
-    def init_trails(self):
-        self.trails = NodePath('trails')
-        self.trails.reparentTo(render)
-        self.trails.setPos(0, 0, self.shot.table.height)
-        self.trails.hide(0b0001)
 
 
     def init_balls(self):

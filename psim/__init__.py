@@ -18,8 +18,8 @@ R = 0.028575 # ball radius
 u_s = 0.2 # sliding friction
 u_r = 0.01 # rolling friction
 u_sp = 10 * 2/5*R/9 # spinning friction
-table_length = 2.7432 # 9-foot table
-table_width = 2.7432/2 # 9-foot table
+table_length = 1.98 # 9-foot table (100 in x 50 in)
+table_width = 1.98/2 # 9-foot table (100 in x 50 in)
 
 rail_width = 0.0635
 rail_height = 0.64*2*R

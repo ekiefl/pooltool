@@ -15,6 +15,12 @@ ap.add_argument('--speed', type=float, default=1)
 args = ap.parse_args()
 
 if __name__ == '__main__':
+    #FIXME
+    from psim.ani.animate3d2 import AnimateShot
+    ani = AnimateShot()
+    ani.start()
+    #FIXME
+
     sim = engine.ShotSimulation()
     sim.setup_test(args.setup)
 
@@ -34,7 +40,7 @@ if __name__ == '__main__':
         }
 
     elif args.dimensions == 3:
-        from psim.ani.animate3d import AnimateShot
+        from psim.ani.animate3d2 import AnimateShot
 
         kwargs = {
             'playback_speed': args.speed
