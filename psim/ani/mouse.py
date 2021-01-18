@@ -46,7 +46,7 @@ class Mouse(ClockObject):
     def track(self):
         if not self.tracking and self.mouse.hasMouse():
             self.last_x, self.last_y = self.get_xy()
-            self.last_t = self.getFrameTime()
+            self.last_t = self.getRealTime() - self.getDt()
             self.tracking = True
 
 
@@ -55,7 +55,7 @@ class Mouse(ClockObject):
 
         if update:
             self.last_x = x
-            self.last_t = self.getFrameTime()
+            self.last_t = self.getRealTime() - self.getDt()
 
         return x
 
@@ -65,7 +65,7 @@ class Mouse(ClockObject):
 
         if update:
             self.last_y = y
-            self.last_t = self.getFrameTime()
+            self.last_t = self.getRealTime() - self.getDt()
 
         return y
 
@@ -76,7 +76,7 @@ class Mouse(ClockObject):
         if update:
             self.last_x = x
             self.last_y = y
-            self.last_t = self.getFrameTime()
+            self.last_t = self.getRealTime() - self.getDt()
 
         return x, y
 
@@ -92,7 +92,7 @@ class Mouse(ClockObject):
 
 
     def get_vel_x(self, update=True):
-        dt = self.getFrameTime() - self.last_t
+        dt = self.getRealTime() - self.last_t
 
         if not dt:
             return np.inf
@@ -101,7 +101,7 @@ class Mouse(ClockObject):
 
 
     def get_vel_y(self, update=True):
-        dt = self.getFrameTime() - self.last_t
+        dt = self.getRealTime() - self.last_t
 
         if not dt:
             return np.inf

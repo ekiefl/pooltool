@@ -8,6 +8,7 @@ from psim.ani import model_paths
 from psim.ani.menu import MenuHandler
 from psim.ani.tasks import Tasks
 from psim.ani.mouse import Mouse
+from psim.ani.camera import CustomCamera
 
 import gc
 
@@ -44,12 +45,19 @@ class Handler(DirectObject.DirectObject):
                 'keymap': {
                     action.aim: False,
                     action.fine_control: False,
-                    action.move: False,
+                    action.move: True,
                     action.quit: False,
                     action.zoom: False,
                 },
             },
         }
+
+        # Store the above as default states
+        self.action_state_defaults = {}
+        for mode in self.modes:
+            self.action_state_defaults[mode] = {}
+            for a, default_state in self.modes[mode]['keymap'].items():
+                self.action_state_defaults[mode][a] = default_state
 
         self.mode = None
         self.keymap = None
@@ -77,7 +85,7 @@ class Handler(DirectObject.DirectObject):
         self.modes[mode]['enter']()
 
         if self.mode is not None:
-            self.clear_action_states()
+            self.reset_action_states()
 
         self.mode = mode
         self.keymap = self.modes[mode]['keymap']
@@ -104,6 +112,8 @@ class Handler(DirectObject.DirectObject):
         self.mouse.relative()
         self.mouse.track()
 
+        self.cam.load_state('aim', ok_if_not_exists=True)
+
         self.watch_action('escape', action.quit, True)
         self.watch_action('f', action.fine_control, True)
         self.watch_action('f-up', action.fine_control, False)
@@ -120,6 +130,8 @@ class Handler(DirectObject.DirectObject):
     def aim_exit(self):
         self.remove_task('aim_task')
         self.remove_task('quit_task')
+
+        self.cam.store_state('aim', overwrite=True)
 
 
     def view_enter(self):
@@ -143,9 +155,9 @@ class Handler(DirectObject.DirectObject):
         self.remove_task('quit_task')
 
 
-    def clear_action_states(self):
+    def reset_action_states(self):
         for key in self.keymap:
-            self.keymap[key] = False
+            self.keymap[key] = self.action_state_defaults[self.mode][key]
 
 
 class AnimateShot(ShowBase, MenuHandler, Handler, Tasks):
@@ -158,6 +170,7 @@ class AnimateShot(ShowBase, MenuHandler, Handler, Tasks):
         self.tasks = {}
         self.disableMouse()
         self.mouse = Mouse()
+        self.cam = CustomCamera()
 
         self.change_mode('menu')
 
@@ -247,15 +260,10 @@ class AnimateShot(ShowBase, MenuHandler, Handler, Tasks):
         self.ball2.setPos(30,70,0.9)
         self.ball2.setScale(1)
 
-        self.camera_focus = self.scene.attachNewNode("camera_focus")
-        self.camera_focus.setPos(self.ball1.getPos())
+        self.cam.create_focus(pos=self.ball1.getPos())
 
         self.cue_stick_focus = self.scene.attachNewNode("cue_stick_focus")
         self.cue_stick_focus.setPos(self.ball1.getPos())
-
-        self.camera.reparentTo(self.camera_focus)
-        self.camera.setPos(50, 0, 0)
-        self.camera.lookAt(self.ball1)
 
 
     def start(self):
