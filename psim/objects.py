@@ -344,7 +344,7 @@ class CueRender(Render):
 
         cue_stick = self.get_node('cue_stick_focus')
 
-        phi = ((cue_stick.getH() + 180) % 360) * np.pi/180
+        phi = ((cue_stick.getH() + 180) % 360)
         # FIXME
         theta = 0
         a = 0

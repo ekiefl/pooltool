@@ -114,8 +114,7 @@ class Handler(DirectObject.DirectObject):
         self.mouse.track()
 
         self.cue_stick.show_nodes()
-
-        self.cam.load_state('aim', ok_if_not_exists=True)
+        self.cam.update_focus(self.balls['cue'].get_node('sphere').getPos())
 
         self.watch_action('escape', action.quit, True)
         self.watch_action('f', action.fine_control, True)

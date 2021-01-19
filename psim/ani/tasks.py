@@ -75,8 +75,7 @@ class Tasks(object):
                 ball.set_node_state_as_state()
 
             self.cue_stick.set_node_state_as_state()
-            self.cam.update_focus(self.balls['cue'].get_node('sphere').getPos())
-            self.change_mode('aim')
+            self.change_mode('view')
 
 
     def take_shot(self, V0):
