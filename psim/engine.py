@@ -34,11 +34,13 @@ class Event(object):
 class ShotHistory(object):
     """Track the states of balls over time"""
 
-    def __init__(self, progress=terminal.Progress(), run=terminal.Run()):
+    def __init__(self, balls=None, progress=terminal.Progress(), run=terminal.Run()):
         self.run = run
         self.progress = progress
 
-        self.balls = {}
+        if balls is None:
+            self.balls = {}
+
         self.reset_history()
 
 
@@ -298,18 +300,19 @@ class ShotHistory(object):
 
 
 class ShotSimulation(ShotHistory):
-    def __init__(self, g=None):
-        self.g = g or psim.g
+    def __init__(self, cue=None, table=None, balls=None):
+        self.g = psim.g
 
-        self.cue = None
-        self.table = None
+        self.cue = cue
+        self.table = table
+        self.balls = balls
 
-        ShotHistory.__init__(self)
+        ShotHistory.__init__(self, balls=self.balls)
 
 
     def get_system_energy(self):
         energy = 0
-        for ball in self.balls.values():
+        for name, ball in self.balls.items():
             energy += physics.get_ball_energy(ball.rvw, ball.R, ball.m)
 
         return energy

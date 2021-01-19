@@ -284,8 +284,8 @@ class CueRender(Render):
         """Return phi, theta, a, and b as determined by the cue_stick node"""
 
         cue_stick = self.get_node('cue_stick_focus')
-        phi = ((cue_stick.getH() + 180) % 360) * np.pi/180
 
+        phi = ((cue_stick.getH() + 180) % 360) * np.pi/180
         # FIXME
         theta = 0
         a = 0

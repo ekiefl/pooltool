@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import psim.utils as utils
+import psim.engine as engine
 import psim.ani.utils as autils
 import psim.ani.action as action
 
@@ -49,9 +50,6 @@ class Tasks(object):
         else:
             self.rotate_camera(cue_stick_too=True)
 
-        # FIXME
-        self.cue_stick.get_node_state()
-
         return task.cont
 
 
@@ -70,13 +68,24 @@ class Tasks(object):
         self.mouse.get_dx()
 
         if newX < 0:
-            # Collision
-            cue_stick_node.setX(0)
+            self.take_shot(V0=dx/dt)
+            self.simulate_shot()
 
-            self.cue_stick.set_state_as_node_state()
-            self.cue_stick.set_state(V0=dx/dt)
-            self.cue_stick.strike(self.balls['cue'])
 
+    def take_shot(self, V0):
+        self.cue_stick.get_node('cue_stick').setX(0)
+        self.cue_stick.hide_node('cue_stick')
+
+        self.cue_stick.set_state(V0=V0)
+        self.cue_stick.set_state_as_node_state()
+
+        self.cue_stick.strike(self.balls['cue'])
+
+
+    def simulate_shot(self):
+        sim = engine.ShotSimulation(cue=self.cue_stick, table=self.table, balls=self.balls)
+        sim.simulate()
+        sim.continuize(dt=0.01)
 
 
     def zoom_camera(self):
