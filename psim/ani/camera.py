@@ -3,21 +3,33 @@
 class CustomCamera(object):
     def __init__(self):
         self.node = base.camera
+        self.lens = base.camLens
+        self.lens.setNear(0.02)
 
         self.states = {}
         self.last_state = None
         self.has_focus = False
 
 
-    def create_focus(self, pos=None):
-        self.focus = render.attachNewNode("camera_focus")
-        self.focus.setHpr(90,0,0)
+    def create_focus(self, parent=None, pos=None):
+        if parent is None:
+            parent = render
+
+        self.focus = parent.attachNewNode("camera_focus")
+        self.focus.setH(-90)
+
+        # create visible object
+        self.focus_object = loader.loadModel('smiley.egg')
+        self.focus_object.setScale(0.005)
+        self.focus_object.setH(-90) # Smiley faces away from camera ways
+        self.focus_object.setColor(1,0,0,1)
+        self.focus_object.reparentTo(self.focus)
 
         if pos is not None:
             self.focus.setPos(*pos)
 
         self.node.reparentTo(self.focus)
-        self.node.setPos(50, 0, 0)
+        self.node.setPos(2, 0, 0)
         self.node.lookAt(self.focus)
 
         self.has_focus = True

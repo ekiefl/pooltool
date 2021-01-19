@@ -224,45 +224,7 @@ class AnimateShot(ShowBase, Handler):
         self.ball_parallel = None
         self.set_ball_playback_sequences(playback_speed=self.playback_speed)
 
-        self.init_menu()
-
-
-    def init_menu(self):
-        self.gameOverScreen = DirectDialog(
-            frameSize = (-2, 1, -1, 1),
-            fadeScreen = 0.4,
-            relief = DGG.FLAT
-        )
-
-        label = DirectLabel(text = "Game Over!",
-                    parent = self.gameOverScreen,
-                    scale = 0.1,
-                    pos = (0, 0, 0.2))
-
-        # Similarly, but with no text--for now!
-        self.finalScoreLabel = DirectLabel(text = "",
-                                           parent = self.gameOverScreen,
-                                           scale = 0.07,
-                                           pos = (0, 0, 0))
-
-        # Make a button.
-        #
-        # Parameters used (that are new):
-        # "command" is the method to run when
-        #   the button is pressed
-        btn = DirectButton(text = "Restart",
-                           command = self.go,
-                           pos = (-0.3, 0, -0.2),
-                           parent = self.gameOverScreen,
-                           scale = 0.07)
-
-
-        btn = DirectButton(text = "Quit",
-                           command = sys.exit,
-                           pos = (0.3, 0, -0.2),
-                           parent = self.gameOverScreen,
-                           scale = 0.07)
-
+        self.go()
 
 
 

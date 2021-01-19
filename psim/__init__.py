@@ -13,6 +13,9 @@ __version__ = '0.1'
 # Taken from https://billiards.colostate.edu/faq/physics/physical-properties/
 g = 9.8 # gravitational constant
 M = 0.567 # cue mass
+cue_length = 1.4732 # 58 inches
+cue_tip_radius = 0.0254/4 # Fake
+cue_butt_radius = 0.0254/4 # Fake
 m = 0.170097 # ball mass
 R = 0.028575 # ball radius
 u_s = 0.2 # sliding friction

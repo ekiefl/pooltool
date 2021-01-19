@@ -18,8 +18,8 @@ class Tasks(object):
     def quit_task(self, task):
         if self.keymap[action.quit]:
             self.keymap[action.quit] = False
-            self.close_scene()
             self.change_mode('menu')
+            self.close_scene()
 
         return task.cont
 
@@ -49,25 +49,34 @@ class Tasks(object):
         else:
             self.rotate_camera(cue_stick_too=True)
 
+        # FIXME
+        self.cue_stick.get_node_state()
+
         return task.cont
 
 
     def stroke_cue_stick(self):
         # Store this in case the cue strikes the ball
-        velocity = self.mouse.get_vel_y(update=False)
+        dt = self.mouse.get_dt()
+        dx = self.mouse.get_dy()*0.1
 
-        s = self.mouse.get_dy()*8
-        pos = max(-20, self.cue_stick.getX() - s)
-        self.cue_stick.setX(pos)
+        cue_stick_node = self.cue_stick.get_node('cue_stick')
+
+        newX = max(-0.5, cue_stick_node.getX() - dx)
+        cue_stick_node.setX(newX)
 
         # get_dx() is called so that self.last_x is updated. Failing to do this will create a
         # potentially very large return value of get_dx() the next time it is called.
         self.mouse.get_dx()
 
-        if pos < 0:
+        if newX < 0:
             # Collision
-            self.cue_stick.setX(0)
-            print(velocity)
+            cue_stick_node.setX(0)
+
+            self.cue_stick.set_state_as_node_state()
+            self.cue_stick.set_state(V0=dx/dt)
+            self.cue_stick.strike(self.balls['cue'])
+
 
 
     def zoom_camera(self):
@@ -87,20 +96,20 @@ class Tasks(object):
         dx = dxp * np.cos(h) - dyp * np.sin(h)
         dy = dxp * np.sin(h) + dyp * np.cos(h)
 
-        f = 3
+        f = 0.6
         self.cam.focus.setX(self.cam.focus.getX() + dx*f)
         self.cam.focus.setY(self.cam.focus.getY() + dy*f)
 
 
     def fix_cue_stick_to_camera(self):
-        self.cue_stick_focus.setH(self.cam.focus.getH())
+        self.cue_stick.get_node('cue_stick_focus').setH(self.cam.focus.getH())
 
 
     def rotate_camera(self, cue_stick_too=False):
         if self.keymap[action.fine_control]:
             fx, fy = 2, 0
         else:
-            fx, fy = 10, 3
+            fx, fy = 13, 3
 
         alpha_x = self.cam.focus.getH() - fx * self.mouse.get_dx()
         alpha_y = max(min(0, self.cam.focus.getR() + fy * self.mouse.get_dy()), -70)
@@ -113,11 +122,11 @@ class Tasks(object):
 
 
     def monitor(self, task):
-        print(f"Mode: {self.mode}")
-        print(f"Tasks: {list(self.tasks.keys())}")
-        print(f"Memory: {utils.get_total_memory_usage()}")
-        print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
-        print()
+        #print(f"Mode: {self.mode}")
+        #print(f"Tasks: {list(self.tasks.keys())}")
+        #print(f"Memory: {utils.get_total_memory_usage()}")
+        #print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
+        #print()
 
         return task.cont
 

@@ -109,4 +109,8 @@ class Mouse(ClockObject):
         return self.get_dy(update=update)/dt
 
 
+    def get_dt(self):
+        return self.getRealTime() - self.last_t
+
+
 

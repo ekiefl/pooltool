@@ -16,8 +16,8 @@ args = ap.parse_args()
 
 if __name__ == '__main__':
     #FIXME
-    from psim.ani.animate3d2 import AnimateShot
-    ani = AnimateShot()
+    from psim.ani.animate3d2 import InteractiveVisualization
+    ani = InteractiveVisualization()
     ani.start()
     #FIXME
 
@@ -40,7 +40,7 @@ if __name__ == '__main__':
         }
 
     elif args.dimensions == 3:
-        from psim.ani.animate3d2 import AnimateShot
+        from psim.ani.animate3d import AnimateShot
 
         kwargs = {
             'playback_speed': args.speed

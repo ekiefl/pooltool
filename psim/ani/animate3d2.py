@@ -5,6 +5,7 @@ import psim.ani.utils as autils
 import psim.ani.action as action
 
 from psim.ani import model_paths
+from psim.objects import Ball, Table, Cue
 from psim.ani.menu import MenuHandler
 from psim.ani.tasks import Tasks
 from psim.ani.mouse import Mouse
@@ -112,6 +113,8 @@ class Handler(DirectObject.DirectObject):
         self.mouse.relative()
         self.mouse.track()
 
+        self.cue_stick.show_nodes()
+
         self.cam.load_state('aim', ok_if_not_exists=True)
 
         self.watch_action('escape', action.quit, True)
@@ -130,6 +133,8 @@ class Handler(DirectObject.DirectObject):
     def aim_exit(self):
         self.remove_task('aim_task')
         self.remove_task('quit_task')
+
+        self.cue_stick.hide_nodes()
 
         self.cam.store_state('aim', overwrite=True)
 
@@ -160,7 +165,7 @@ class Handler(DirectObject.DirectObject):
             self.keymap[key] = self.action_state_defaults[self.mode][key]
 
 
-class AnimateShot(ShowBase, MenuHandler, Handler, Tasks):
+class InteractiveVisualization(ShowBase, MenuHandler, Handler, Tasks):
     def __init__(self, *args, **kwargs):
         ShowBase.__init__(self)
         MenuHandler.__init__(self)
@@ -168,9 +173,12 @@ class AnimateShot(ShowBase, MenuHandler, Handler, Tasks):
         Tasks.__init__(self)
 
         self.tasks = {}
+        self.balls = {}
         self.disableMouse()
         self.mouse = Mouse()
         self.cam = CustomCamera()
+        self.table = Table()
+        self.cue_stick = Cue()
 
         self.change_mode('menu')
 
@@ -190,80 +198,78 @@ class AnimateShot(ShowBase, MenuHandler, Handler, Tasks):
 
 
     def close_scene(self):
-        self.cue_stick.removeNode()
-        self.ball1.removeNode()
-        self.ball2.removeNode()
-        self.table.removeNode()
+        self.cue_stick.remove_nodes()
+        for ball in self.balls.values():
+            ball.remove_nodes()
+        self.table.remove_nodes()
         self.scene.removeNode()
         del self.scene
         gc.collect()
 
 
     def go(self):
-        self.change_mode('aim')
         self.init_game_nodes()
+        self.change_mode('aim')
 
 
     def init_game_nodes(self):
         self.init_scene()
         self.init_table()
+        self.init_balls()
         self.init_cue_stick()
+
+        self.cam.create_focus(
+            parent = self.table.get_node('cloth'),
+            pos = self.balls['cue'].get_node('sphere').getPos()
+        )
 
 
     def init_table(self):
-        w, l, h = 40, 80, 0
-
-        self.table = NodePath()
-
-        self.table = self.scene.attachNewNode(autils.make_rectangle(
-            x1=0, y1=0, z1=0, x2=w, y2=l, z2=0, name='table'
-        ))
-
-        self.table.setPos(0, 0, 0)
-        table_tex = loader.loadTexture(model_paths['blue_cloth'])
-
-        self.table.setTexture(table_tex)
+        self.table.render()
 
 
     def init_cue_stick(self):
-        cue_stick_model = loader.loadModel(model_paths['cylinder'])
-        cue_stick_tex = loader.loadTexture(model_paths['red_cloth'])
-        cue_stick_model.setTexture(cue_stick_tex)
-        cue_stick_model.setTexScale(TextureStage.getDefault(), 0.01, 0.01)
-
-        cue_stick_model.setScale(0.02)
-        cue_stick_model.setSz(0.8)
-
-        bounds = cue_stick_model.getTightBounds()
-        h = abs(bounds[0][2] - bounds[1][2])
-
-        self.cue_stick = self.scene.attachNewNode('cue_stick')
-        cue_stick_model.reparentTo(self.cue_stick)
-        cue_stick_model.setPos(0, 0, h/2 + 1 + 0.2)
-
-        self.cue_stick.setP(90)
-        self.cue_stick.setH(90)
-
-        self.cue_stick.reparentTo(self.cue_stick_focus)
+        self.cue_stick.render()
+        self.cue_stick.init_focus(self.balls['cue'])
 
 
     def init_scene(self):
         self.scene = render.attachNewNode('scene')
 
-        self.ball1 = loader.loadModel('smiley.egg')
-        self.ball1.reparentTo(self.scene)
-        self.ball1.setPos(12,12,0.9)
-        self.ball1.setScale(1)
 
-        self.ball2 = loader.loadModel('smiley.egg')
-        self.ball2.reparentTo(self.scene)
-        self.ball2.setPos(30,70,0.9)
-        self.ball2.setScale(1)
+    def init_balls(self):
+        self.balls['cue'] = Ball('cue')
+        self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, self.balls['cue'].R]
 
-        self.cam.create_focus(pos=self.ball1.getPos())
+        self.balls['1'] = Ball('1')
+        self.balls['1'].rvw[0] = [self.table.center[0], self.table.B+1.66, self.balls['cue'].R]
 
-        self.cue_stick_focus = self.scene.attachNewNode("cue_stick_focus")
-        self.cue_stick_focus.setPos(self.ball1.getPos())
+        self.balls['2'] = Ball('2')
+        self.balls['2'].rvw[0] = [self.table.center[0], self.table.T-0.3, self.balls['cue'].R]
+
+        self.balls['3'] = Ball('3')
+        self.balls['3'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+1.89, self.balls['cue'].R]
+
+        self.balls['4'] = Ball('4')
+        self.balls['4'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+0.2, self.balls['cue'].R]
+
+        self.balls['5'] = Ball('5')
+        self.balls['5'].rvw[0] = [self.table.center[0] - self.table.w/6, self.table.B+0.2, self.balls['cue'].R]
+
+        self.balls['6'] = Ball('6')
+        self.balls['6'].rvw[0] = [self.table.center[0], self.table.T-0.03, self.balls['cue'].R]
+
+        self.balls['7'] = Ball('7')
+        self.balls['7'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.B+1.89, self.balls['cue'].R]
+
+        self.balls['8'] = Ball('8')
+        self.balls['8'].rvw[0] = [self.table.center[0]+0.3, self.table.T-0.03, self.balls['cue'].R]
+
+        self.balls['10'] = Ball('10')
+        self.balls['10'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.T-0.1, self.balls['cue'].R]
+
+        for ball in self.balls.values():
+            ball.render()
 
 
     def start(self):
