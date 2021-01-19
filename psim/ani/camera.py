@@ -35,6 +35,10 @@ class CustomCamera(object):
         self.has_focus = True
 
 
+    def update_focus(self, pos):
+        self.focus.setPos(pos)
+
+
     def store_state(self, name, overwrite=False):
         if name in self.states:
             if overwrite:

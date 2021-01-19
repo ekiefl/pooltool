@@ -71,10 +71,16 @@ class Tasks(object):
             self.take_shot(V0=dx/dt)
             self.simulate_shot()
 
+            for ball in self.balls.values():
+                ball.set_node_state_as_state()
+
+            self.cue_stick.set_node_state_as_state()
+            self.cam.update_focus(self.balls['cue'].get_node('sphere').getPos())
+            self.change_mode('aim')
+
 
     def take_shot(self, V0):
         self.cue_stick.get_node('cue_stick').setX(0)
-        self.cue_stick.hide_node('cue_stick')
 
         self.cue_stick.set_state(V0=V0)
         self.cue_stick.set_state_as_node_state()

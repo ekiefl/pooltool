@@ -9,11 +9,12 @@ from psim.ani import model_paths
 
 import numpy as np
 
+from abc import ABC, abstractmethod
 from functools import partial
 from panda3d.core import *
 
 
-class Render(object):
+class Render(ABC):
     def __init__(self):
         """A base class for rendering physical pool objects
 
@@ -22,8 +23,9 @@ class Render(object):
 
         Notes
         =====
-        - All nodes are stored in self.nodes.
-        - Child classes should have a self.render method that populates self.nodes
+        - All nodes for a given object (e.g. table) are stored in self.nodes.
+        - Each method decorated with 'abstractmethod' must be defined by the child class. The
+          decorator _ensures_ this happens.
         """
 
         self.nodes = {}
@@ -64,6 +66,30 @@ class Render(object):
         return self.nodes[name]
 
 
+    @abstractmethod
+    def get_node_state(self):
+        pass
+
+
+    @abstractmethod
+    def set_state_as_node_state(self):
+        pass
+
+
+    @abstractmethod
+    def set_node_state_as_state(self):
+        pass
+
+
+    @abstractmethod
+    def render(self):
+        if self.rendered:
+            self.remove_nodes()
+
+        self.rendered = True
+
+
+
 # -------------------------------------------------------------------------------------------------
 # TABLE {{{
 # -------------------------------------------------------------------------------------------------
@@ -100,8 +126,20 @@ class TableRender(Render):
 
 
     def render(self):
-        self.rendered = True
+        super().render()
         self.init_cloth()
+
+
+    def get_node_state(self):
+        raise NotImplementedError("Can't call get_node_state for class 'TableRender'")
+
+
+    def set_state_as_node_state(self):
+        raise NotImplementedError("Can't call set_state_as_node_state for class 'TableRender'")
+
+
+    def set_node_state_as_state(self):
+        raise NotImplementedError("Can't call set_state_as_node_state for class 'TableRender'. Call render instead")
 
 
 class Table(TableRender):
@@ -190,9 +228,22 @@ class BallRender(Render):
         return self.R / model_R
 
 
+    def get_node_state(self):
+        x, y, z = self.nodes['sphere'].getPos()
+        return x, y, z
+
+
+    def set_state_as_node_state(self):
+        self.rvw[0,0], self.rvw[0,1], self.rvw[0,2] = self.get_node_state()
+
+
+    def set_node_state_as_state(self):
+        self.nodes['sphere'].setPos(*self.rvw[0,:])
+
+
     def render(self):
+        super().render()
         self.init_sphere()
-        self.rendered = True
 
 
 class Ball(BallRender):
@@ -243,6 +294,8 @@ class CueRender(Render):
     def __init__(self):
         Render.__init__(self)
 
+        self.follow = None
+
 
     def init_model(self, R=psim.R):
         cue_stick_model = loader.loadModel(model_paths['cylinder'])
@@ -267,6 +320,8 @@ class CueRender(Render):
 
 
     def init_focus(self, ball):
+        self.follow = ball
+
         cue_stick = self.get_node('cue_stick')
 
         cue_stick.find('cue_stick_model').setPos(0, 0, self.length/2 + 1.2*ball.R)
@@ -274,10 +329,14 @@ class CueRender(Render):
         cue_stick.setH(90)
 
         cue_stick_focus = render.find('scene').find('cloth').attachNewNode("cue_stick_focus")
-        cue_stick_focus.setPos(ball.get_node('sphere').getPos())
+        self.nodes['cue_stick_focus'] = cue_stick_focus
+
+        self.update_focus()
         cue_stick.reparentTo(cue_stick_focus)
 
-        self.nodes['cue_stick_focus'] = cue_stick_focus
+
+    def update_focus(self):
+        self.nodes['cue_stick_focus'].setPos(self.follow.get_node('sphere').getPos())
 
 
     def get_node_state(self):
@@ -298,9 +357,14 @@ class CueRender(Render):
         self.phi, self.theta, self.a, self.b = self.get_node_state()
 
 
+    def set_node_state_as_state(self):
+        # FIXME implement phi, theta, a, and b
+        self.update_focus()
+
+
     def render(self):
+        super().render()
         self.init_model()
-        self.rendered = True
 
 
 class Cue(CueRender):
