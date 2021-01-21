@@ -6,32 +6,13 @@ import psim.physics as physics
 import psim.terminal as terminal
 import psim.configurations as configurations
 
-from psim.objects import (
-    Ball,
-    Table,
-    Cue,
-)
+from psim.events import *
 
+import copy
 import numpy as np
 
-class Event(object):
-    def __init__(self, event_type, agents, tau):
-        self.agents = agents
-        self.tau = tau
-        self.event_type = event_type
 
-    def __repr__(self):
-        lines = [
-            f'<{self.__class__.__module__}.{self.__class__.__name__} object at {hex(id(self))}>',
-            f' ├── event_type : {self.event_type}',
-            f' ├── tau        : {self.tau}',
-            f' └── agents     : {self.agents}',
-        ]
-
-        return '\n' + '\n'.join(lines)
-
-
-class ShotHistory(object):
+class ShotHistory(utils.Garbage):
     """Track the states of balls over time"""
 
     def __init__(self, balls=None, progress=terminal.Progress(), run=terminal.Run()):
@@ -117,7 +98,7 @@ class ShotHistory(object):
         }
 
 
-    def timestamp(self, dt, event=None):
+    def timestamp(self, dt):
         # update time
         self.n += 1
         self.time += dt
@@ -127,7 +108,7 @@ class ShotHistory(object):
         self.history['index'].append(self.n)
 
         # log event
-        self.history['event'].append(event)
+        self.history['event'].append(None)
 
         # log ball states
         for ball_id, ball in self.balls.items():
@@ -155,19 +136,19 @@ class ShotHistory(object):
             if not isinstance(event, Event):
                 continue
 
-            if event.tau == np.inf:
+            if event.dtau_E == np.inf:
                 break
 
             # Evolve in steps of dt up to the event
             event_time = 0
-            while event_time < (event.tau - dt_prime):
+            while event_time < (event.dtau_E - dt_prime):
                 self.evolve(dt_prime, log=False)
-                self.timestamp(dt, event=None)
+                self.timestamp(dt)
                 event_time += dt_prime
 
                 dt_prime = dt
 
-            dt_prime = dt - (event.tau - event_time)
+            dt_prime = dt - (event.dtau_E - event_time)
             # Set and log balls to the resolved state of the event
             self.set_table_state_via_history(index=index, history=old_history)
 
@@ -222,92 +203,23 @@ class ShotHistory(object):
             self.history['balls'][ball_id]['quat'] = quaternions
 
 
-    def plot_history(self, ball_id, full=False):
-        """Primitive plotting for use during development"""
-
-        import pandas as pd
-        import matplotlib.pyplot as plt
-
-        def add_plot(fig, num, x, y):
-            if np.max(np.abs(df[y])) < 0.000000001:
-                df[y] = 0
-
-            ax = fig.add_subplot(*num)
-            for name, group in groups:
-                ax.plot(group[x], group[y], marker="o", linestyle="", label=name, ms=1.4)
-            ax.set_ylabel(y)
-            ax.set_xlabel(x)
-            ax.legend()
-
-        s = np.array(self.history['balls'][ball_id]['s'])
-        rvw = np.array(self.history['balls'][ball_id]['rvw'])
-        t = np.array(self.history['time'])
-
-        hpr = utils.as_euler_angle(rvw[:,3,:])
-
-        df = pd.DataFrame({
-            'rx': rvw[:, 0, 0], 'ry': rvw[:, 0, 1], 'rz': rvw[:, 0, 2],
-            'vx': rvw[:, 1, 0], 'vy': rvw[:, 1, 1], 'vz': rvw[:, 1, 2],
-            'wx': rvw[:, 2, 0], 'wy': rvw[:, 2, 1], 'wz': rvw[:, 2, 2],
-            'thx': rvw[:, 3, 0], 'thy': rvw[:, 3, 1], 'thz': rvw[:, 3, 2],
-            'H': hpr[:,0], 'P': hpr[:,1], 'R': hpr[:,2],
-            '|v|': np.sqrt(rvw[:, 1, 2]**2 + rvw[:, 1, 1]**2 + rvw[:, 1, 0]**2),
-            '|w|': np.sqrt(rvw[:, 2, 2]**2 + rvw[:, 2, 1]**2 + rvw[:, 2, 0]**2),
-            'time': t,
-            'state': s,
-        })
-        df['time'] = df['time'].astype(float)
-
-        groups = df.groupby('state')
-
-        fig = plt.figure(figsize=(10, 10))
-        plt.title(f"ball ID: {ball_id}")
-        frame1 = plt.gca()
-        frame1.axes.xaxis.set_ticklabels([])
-        frame1.axes.yaxis.set_ticklabels([])
-        frame1.axes.xaxis.set_ticks([])
-        frame1.axes.yaxis.set_ticks([])
-        add_plot(fig, (5,3,1), 'time', 'rx')
-        add_plot(fig, (5,3,2), 'time', 'ry')
-        add_plot(fig, (5,3,3), 'time', 'rz')
-        add_plot(fig, (5,3,4), 'time', 'vx')
-        add_plot(fig, (5,3,5), 'time', 'vy')
-        add_plot(fig, (5,3,6), 'time', 'vz')
-        add_plot(fig, (5,3,7), 'time', 'wx')
-        add_plot(fig, (5,3,8), 'time', 'wy')
-        add_plot(fig, (5,3,9), 'time', 'wz')
-        add_plot(fig, (5,3,10), 'time', 'thx')
-        add_plot(fig, (5,3,11), 'time', 'thy')
-        add_plot(fig, (5,3,12), 'time', 'thz')
-        add_plot(fig, (5,3,13), 'time', 'H')
-        add_plot(fig, (5,3,14), 'time', 'P')
-        add_plot(fig, (5,3,15), 'time', 'R')
-        plt.tight_layout()
-        plt.show()
-
-        if full:
-            fig = plt.figure(figsize=(6, 5))
-            add_plot(fig, (1,1,1), 'time', '|v|')
-            plt.title(f"ball ID: {ball_id}")
-            plt.tight_layout()
-            plt.show()
-
-            fig = plt.figure(figsize=(6, 5))
-            add_plot(fig, (1,1,1), 'time', '|w|')
-            plt.title(f"ball ID: {ball_id}")
-            plt.tight_layout()
-            plt.show()
-
-
-class ShotSimulation(ShotHistory):
+class Shot(object):
     def __init__(self, cue=None, table=None, balls=None):
-        self.g = psim.g
-
         self.cue = cue
         self.table = table
         self.balls = balls
 
-        ShotHistory.__init__(self, balls=self.balls)
+
+    def set_cue(self, cue):
+        self.cue = cue
+
+
+    def set_table(self, table):
+        self.table = table
+
+
+    def set_balls(self, balls):
+        self.balls = balls
 
 
     def get_system_energy(self):
@@ -328,6 +240,19 @@ class ShotSimulation(ShotHistory):
                     return True
 
         return False
+
+
+    def set_system_state(self):
+        raise NotImplementedError("set_system_state FIXME. What should this take as input?")
+
+
+class SimulateShot(Shot, ShotHistory):
+    def __init__(self, cue=None, table=None, balls=None):
+
+        Shot.__init__(self, cue=cue, table=table, balls=balls)
+        ShotHistory.__init__(self, balls=self.balls)
+
+        self.events = Events()
 
 
     def simulate(self, time=None, name='NA'):
@@ -351,12 +276,18 @@ class ShotSimulation(ShotHistory):
         self.run.info('float precision', psim.tol, nl_after=1)
 
         self.progress.new(f"Running", progress_total_items=int(energy_start))
-        event = Event(event_type=None, agents=tuple(), tau=0)
 
-        self.timestamp(0, event)
-        while event.tau < np.inf:
+        event = NonEvent(t=0)
+        self.events.add(event)
+
+        self.timestamp(0)
+
+        while event.time < np.inf:
             event = self.get_next_event()
-            self.evolve(dt=event.tau, event=event)
+            self.events.add(event)
+
+            self.evolve(dt=(event.time - self.time))
+            event.resolve()
 
             if (self.n % 5) == 0:
                 progress_update()
@@ -364,144 +295,70 @@ class ShotSimulation(ShotHistory):
             if time is not None and self.time >= time:
                 break
 
-        self.vectorize_history()
-
         self.progress.end()
 
         self.run.warning('', header='Post-run info', lc='green')
-        self.run.info('Finished after', self.progress.t.time_elapsed(), nl_after=1)
+        self.run.info('Finished after', self.progress.t.time_elapsed())
+        self.run.info('Number of events', len(self.events.events), nl_after=1)
+
+        print(self.events)
 
 
-    def set_cue(self, cue):
-        self.cue = cue
-
-
-    def set_table(self, table):
-        self.table = table
-
-
-    def set_balls(self, balls):
-        self.balls = balls
-
-
-    def evolve(self, dt, log=True, event=None):
+    def evolve(self, dt, log=True):
         for ball_id, ball in self.balls.items():
             rvw, s = physics.evolve_ball_motion(
                 state=ball.s,
                 rvw=ball.rvw,
                 R=ball.R,
                 m=ball.m,
-                u_s=self.table.u_s,
-                u_sp=self.table.u_sp,
-                u_r=self.table.u_r,
-                g=self.g,
+                u_s=ball.u_s,
+                u_sp=ball.u_sp,
+                u_r=ball.u_r,
+                g=ball.g,
                 t=dt,
             )
-            ball.set(rvw, s)
-
-        if event is not None:
-            self.resolve(event)
+            ball.set(rvw, s, t=(self.time + dt))
 
         if log:
-            self.timestamp(dt, event=event)
-
-
-    def resolve(self, event):
-        if not event.event_type:
-            return
-
-        if event.event_type == 'ball-ball':
-            ball_id1, ball_id2 = event.agents
-
-            rvw1 = self.balls[ball_id1].rvw
-            rvw2 = self.balls[ball_id2].rvw
-
-            rvw1, rvw2 = physics.resolve_ball_ball_collision(rvw1, rvw2)
-            s1, s2 = psim.sliding, psim.sliding
-
-            self.balls[ball_id1].set(rvw1, s1)
-            self.balls[ball_id2].set(rvw2, s2)
-
-        elif event.event_type == 'ball-rail':
-            ball_id, rail_id = event.agents
-
-            ball = self.balls[ball_id]
-            rail = self.table.rails[rail_id]
-
-            rvw = self.balls[ball_id].rvw
-            normal = self.table.rails[rail_id].normal
-
-            rvw = physics.resolve_ball_rail_collision(
-                rvw=ball.rvw,
-                normal=rail.normal,
-                R=ball.R,
-                m=ball.m,
-                h=rail.height,
-            )
-            s = psim.sliding
-
-            self.balls[ball_id].set(rvw, s)
+            self.timestamp(dt)
 
 
     def get_next_event(self):
-        tau_min = np.inf
-        agents = tuple()
-        event_type = None
+        # Start by assuming next event doesn't happen
+        event = NonEvent(t = np.inf)
 
-        tau, ids, e = self.get_min_motion_event_time()
-        if tau < tau_min:
-            tau_min = tau
-            event_type = e
-            agents = ids
+        transition_event = self.get_min_transition_event_time()
+        if transition_event.time < event.time:
+            event = transition_event
 
-        tau, ids = self.get_min_ball_ball_event_time()
-        if tau < tau_min:
-            tau_min = tau
-            event_type = 'ball-ball'
-            agents = ids
+        ball_ball_event = self.get_min_ball_ball_event_time()
+        if ball_ball_event.time < event.time:
+            event = ball_ball_event
 
-        tau, ids = self.get_min_ball_rail_event_time()
-        if tau < tau_min:
-            tau_min = tau
-            event_type = 'ball-rail'
-            agents = ids
+        ball_cushion_event = self.get_min_ball_rail_event_time()
+        if ball_cushion_event.time < event.time:
+            event = ball_cushion_event
 
-        return Event(event_type, agents, tau_min)
+        return event
 
 
-    def get_min_motion_event_time(self):
-        """Returns minimum until next ball motion transition"""
+    def get_min_transition_event_time(self):
+        """Returns minimum time until next ball transition event"""
 
-        tau_min = np.inf
-        ball_id = None
-        event_type_min = None
+        event = NonEvent(t = np.inf)
 
         for ball in self.balls.values():
-            if ball.s == psim.stationary:
-                continue
-            elif ball.s == psim.rolling:
-                tau = physics.get_roll_time(ball.rvw, self.table.u_r, self.g)
-                event_type = 'end-roll'
-            elif ball.s == psim.sliding:
-                tau = physics.get_slide_time(ball.rvw, ball.R, self.table.u_s, self.g)
-                event_type = 'end-slide'
-            elif ball.s == psim.spinning:
-                tau = physics.get_spin_time(ball.rvw, ball.R, self.table.u_sp, self.g)
-                event_type = 'end-spin'
+            if ball.next_transition_event.time <= event.time:
+                event = ball.next_transition_event
 
-            if tau < tau_min:
-                tau_min = tau
-                ball_id = ball.id
-                event_type_min = event_type
-
-        return tau_min, (ball_id, ), event_type_min
+        return event
 
 
     def get_min_ball_ball_event_time(self):
         """Returns minimum time until next ball-ball collision"""
 
-        tau_min = np.inf
-        ball_ids = tuple()
+        dtau_E_min = np.inf
+        involved_balls = tuple([None, None])
 
         for i, ball1 in enumerate(self.balls.values()):
             for j, ball2 in enumerate(self.balls.values()):
@@ -511,255 +368,60 @@ class ShotSimulation(ShotHistory):
                 if ball1.s == psim.stationary and ball2.s == psim.stationary:
                     continue
 
-                tau = physics.get_ball_ball_collision_time(
+                dtau_E = physics.get_ball_ball_collision_time(
                     rvw1=ball1.rvw,
                     rvw2=ball2.rvw,
                     s1=ball1.s,
                     s2=ball2.s,
-                    mu1=(self.table.u_s if ball1.s == psim.sliding else self.table.u_r),
-                    mu2=(self.table.u_s if ball2.s == psim.sliding else self.table.u_r),
+                    mu1=(ball1.u_s if ball1.s == psim.sliding else ball1.u_r),
+                    mu2=(ball2.u_s if ball2.s == psim.sliding else ball2.u_r),
                     m1=ball1.m,
                     m2=ball2.m,
-                    g=self.g,
+                    g1=ball1.g,
+                    g2=ball2.g,
                     R=ball1.R
                 )
 
-                if tau < tau_min:
-                    ball_ids = (ball1.id, ball2.id)
-                    tau_min = tau
+                if dtau_E < dtau_E_min:
+                    involved_balls = (ball1, ball2)
+                    dtau_E_min = dtau_E
 
-        return tau_min, ball_ids
+        dtau_E = dtau_E_min
+
+        return BallBallCollision(*involved_balls, t=(self.time + dtau_E))
 
 
     def get_min_ball_rail_event_time(self):
         """Returns minimum time until next ball-rail collision"""
 
-        tau_min = np.inf
-        agent_ids = (None, None)
+        dtau_E_min = np.inf
+        involved_agents = ([None, None])
 
         for ball in self.balls.values():
             if ball.s == psim.stationary:
                 continue
 
             for rail in self.table.rails.values():
-                tau = physics.get_ball_rail_collision_time(
+                dtau_E = physics.get_ball_rail_collision_time(
                     rvw=ball.rvw,
                     s=ball.s,
                     lx=rail.lx,
                     ly=rail.ly,
                     l0=rail.l0,
-                    mu=(self.table.u_s if ball.s == psim.sliding else self.table.u_r),
+                    mu=(ball.u_s if ball.s == psim.sliding else ball.u_r),
                     m=ball.m,
-                    g=self.g,
+                    g=ball.g,
                     R=ball.R
                 )
 
-                if tau < tau_min:
-                    agent_ids = (ball.id, rail.id)
-                    tau_min = tau
+                if dtau_E < dtau_E_min:
+                    involved_agents = (ball, rail)
+                    dtau_E_min = dtau_E
 
-        return tau_min, agent_ids
+        dtau_E = dtau_E_min
 
-
-    def print_ball_states(self):
-        for ball in self.balls.values():
-            print(ball)
+        return BallCushionCollision(*involved_agents, t=(self.time + dtau_E))
 
 
-    def setup_test(self, setup='masse'):
-        # Make a table, cue, and balls
-        self.cue = Cue(brand='Predator')
-        self.balls = {}
 
-        if setup == 'masse':
-            self.table = Table()
-            self.balls['cue'] = Ball('cue')
-            self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
 
-            self.balls['8'] = Ball('8')
-            self.balls['8'].rvw[0] = [self.table.center[0], 1.6, 0]
-
-            self.balls['3'] = Ball('3')
-            self.balls['3'].rvw[0] = [self.table.center[0]*0.70, 1.6, 0]
-
-            self.cue.strike(
-                ball = self.balls['cue'],
-                V0 = 2.9,
-                phi = 80.746,
-                theta = 80,
-                a = 0.2,
-                b = 0.0,
-            )
-        elif setup == 'stat_mech':
-            self.table = Table(l=2.5, w=2.5)
-
-            self.balls['cue'] = Ball('cue')
-            self.balls['cue'].rvw[0] = [
-                self.table.w - 0.2,
-                0.4,
-                0
-            ]
-
-            for i in range(1,40):
-                self.balls[i] = Ball(i)
-                R = self.balls[i].R
-
-                self.balls[i].rvw[0] = [
-                    (self.table.w/2)*np.random.rand() + R,
-                    (self.table.l - 2*R)*np.random.rand() + R,
-                    0
-                ]
-
-                while self.is_balls_overlapping():
-                    self.balls[i] = Ball(i)
-                    self.balls[i].rvw[0] = [
-                        (self.table.w/2)*np.random.rand() + R,
-                        (self.table.l - 2*R)*np.random.rand() + R,
-                        0
-                    ]
-
-            self.cue.strike(
-                ball = self.balls['cue'],
-                V0 = 30.8,
-                phi = 135,
-                theta = 0,
-                a = 0.01,
-                b = 0.1,
-            )
-        elif setup == '10_balls':
-            self.table = Table()
-            self.balls['cue'] = Ball('cue')
-            self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
-
-            self.balls['1'] = Ball('1')
-            self.balls['1'].rvw[0] = [self.table.center[0], self.table.B+1.66, 0]
-
-            self.balls['2'] = Ball('2')
-            self.balls['2'].rvw[0] = [self.table.center[0], self.table.T-0.3, 0]
-
-            self.balls['3'] = Ball('3')
-            self.balls['3'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+1.89, 0]
-
-            self.balls['4'] = Ball('4')
-            self.balls['4'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+0.2, 0]
-
-            self.balls['5'] = Ball('5')
-            self.balls['5'].rvw[0] = [self.table.center[0] - self.table.w/6, self.table.B+0.2, 0]
-
-            self.balls['6'] = Ball('6')
-            self.balls['6'].rvw[0] = [self.table.center[0], self.table.T-0.03, 0]
-
-            self.balls['7'] = Ball('7')
-            self.balls['7'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.B+1.89, 0]
-
-            self.balls['8'] = Ball('8')
-            self.balls['8'].rvw[0] = [self.table.center[0]+0.3, self.table.T-0.03, 0]
-
-            self.balls['10'] = Ball('10')
-            self.balls['10'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.T-0.1, 0]
-
-            self.cue.strike(
-                ball = self.balls['cue'],
-                V0 = 1.50001,
-                phi = 94.003,
-                a = -0.2,
-                b = +0.4,
-                theta = 20,
-            )
-        elif setup == 'straight_shot':
-            self.table = Table()
-            self.balls['cue'] = Ball('cue')
-            self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
-
-            self.balls['8'] = Ball('8')
-            self.balls['8'].rvw[0] = [self.table.center[0]-self.balls['cue'].R*0.01, self.table.B+1.0, 0]
-
-            self.cue.strike(
-                ball = self.balls['cue'],
-                V0 = 2.63,
-                phi = 90,
-                a = -0.05,
-                b = 0.1,
-                theta = 0,
-            )
-        elif setup == 'bank':
-            self.table = Table()
-            self.balls['cue'] = Ball('cue')
-            self.balls['cue'].rvw[0] = [self.table.center[0], self.table.T-0.6, 0]
-
-            self.cue.strike(
-                ball = self.balls['cue'],
-                V0 = 0.6,
-                phi = 90,
-                a = -0.9,
-                b = 0.4,
-                theta = 0,
-            )
-        elif setup == '9_break':
-            self.table = Table()
-
-            self.balls['1'] = Ball('1')
-            self.balls['2'] = Ball('2')
-            self.balls['3'] = Ball('3')
-            self.balls['4'] = Ball('4')
-            self.balls['10'] = Ball('10')
-            self.balls['5'] = Ball('5')
-            self.balls['6'] = Ball('6')
-            self.balls['7'] = Ball('7')
-            self.balls['8'] = Ball('8')
-
-            c = configurations.NineBallRack(
-                list(self.balls.values()),
-                spacing_factor=1e-6,
-                ordered=True
-            )
-
-            c.arrange()
-            c.center_by_table(self.table)
-
-            print(f"Balls are overlapping: {self.is_balls_overlapping()}")
-
-            self.balls['cue'] = Ball('cue')
-            self.balls['cue'].rvw[0] = [utils.wiggle(self.table.center[0], val=self.table.w/2), self.table.T*2/8, 0]
-
-            self.cue.strike_object(
-                ball = self.balls['cue'],
-                obj = self.balls['1'],
-                offset = utils.wiggle(0, val=0.3),
-                V0 = utils.wiggle(8.50001, val=0),
-                a = utils.wiggle(0.0, val=0.08),
-                b = utils.wiggle(-0.1, val=0.1),
-                theta = 0,
-            )
-        elif setup == 'curling':
-            self.table = Table(l=200, w=0.6)
-
-            self.balls['cue'] = Ball('cue')
-            self.balls['cue'].rvw[0] = [utils.wiggle(self.table.center[0], val=self.table.w/2), self.table.T*2/8, 0]
-
-            for i in range(1,40):
-                self.balls[i] = Ball(i)
-                R = self.balls[i].R
-
-                self.balls[i].rvw[0] = [
-                    (self.table.w)*np.random.rand() + R,
-                    (self.table.l - 2*R)*np.random.rand() + R,
-                    0
-                ]
-
-                while self.is_balls_overlapping():
-                    self.balls[i] = Ball(i)
-                    self.balls[i].rvw[0] = [
-                        (self.table.w)*np.random.rand() + R,
-                        (self.table.l - 2*R)*np.random.rand() + R,
-                        0
-                    ]
-
-            self.cue.strike(
-                ball = self.balls['cue'],
-                phi = 90,
-                V0 = utils.wiggle(100, val=2),
-                a = utils.wiggle(0.0, val=0.05),
-                b = utils.wiggle(0.05, val=0.1),
-                theta = 0,
-            )

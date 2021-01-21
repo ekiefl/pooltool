@@ -1,16 +1,15 @@
 #! /usr/bin/env python
 
 import psim
-import psim.utils as utils
 import psim.ani.utils as autils
 import psim.physics as physics
 
 from psim.ani import model_paths
+from psim.events import *
 
 import numpy as np
 
 from abc import ABC, abstractmethod
-from functools import partial
 from panda3d.core import *
 
 
@@ -143,7 +142,7 @@ class TableRender(Render):
 
 
 class Table(TableRender):
-    def __init__(self, w=None, l=None, u_s=None, u_r=None, u_sp=None,
+    def __init__(self, w=None, l=None,
                  edge_width=None, rail_width=None, rail_height=None,
                  table_height=None, lights_height=None):
 
@@ -160,11 +159,6 @@ class Table(TableRender):
         self.T = self.l
 
         self.center = (self.w/2, self.l/2)
-
-        # felt properties
-        self.u_s = u_s or psim.u_s
-        self.u_r = u_r or psim.u_r
-        self.u_sp = u_sp or psim.u_sp
 
         self.rails = {
             'L': Rail('L', lx=1, ly=0, l0=-self.L, height=rail_height),
@@ -247,23 +241,55 @@ class BallRender(Render):
 
 
 class Ball(BallRender):
-    def __init__(self, ball_id, m=None, R=None):
+    def __init__(self, ball_id, m=None, R=None, u_s=None, u_r=None, u_sp=None, g=None):
         self.id = ball_id
 
         # physical properties
         self.m = m or psim.m
         self.R = R or psim.R
         self.I = 2/5 * self.m * self.R**2
+        self.g = g or psim.g
 
+        # felt properties
+        self.u_s = u_s or psim.u_s
+        self.u_r = u_r or psim.u_r
+        self.u_sp = u_sp or psim.u_sp
+
+        self.time = 0
+        self.s = psim.stationary
         self.rvw = np.array([[np.nan, np.nan, np.nan],  # positions (r)
                              [0,      0,      0     ],  # velocities (v)
                              [0,      0,      0     ],  # angular velocities (w)
                              [0,      0,      0     ]]) # angular integrations (e)
 
-        # stationary=0, spinning=1, sliding=2, rolling=3
-        self.s = 0
+        self.update_next_transition_event()
 
         BallRender.__init__(self)
+
+
+    def update_next_transition_event(self):
+        if self.s == psim.stationary:
+            self.next_transition_event = NonEvent(t = np.inf)
+
+        elif self.s == psim.spinning:
+            dtau_E = physics.get_spin_time(self.rvw, self.R, self.u_sp, self.g)
+            self.next_transition_event = SpinningStationaryTransition(self, t=(self.time + dtau_E))
+
+        elif self.s == psim.rolling:
+            dtau_E_spin = physics.get_spin_time(self.rvw, self.R, self.u_sp, self.g)
+            dtau_E_roll = physics.get_roll_time(self.rvw, self.u_r, self.g)
+
+            if dtau_E_spin > dtau_E_roll:
+                self.next_transition_event = RollingSpinningTransition(self, t=(self.time + dtau_E_roll))
+            else:
+                self.next_transition_event = RollingStationaryTransition(self, t=(self.time + dtau_E_roll))
+
+        elif self.s == psim.sliding:
+            dtau_E = physics.get_slide_time(self.rvw, self.R, self.u_s, self.g)
+            self.next_transition_event = SlidingRollingTransition(self, t=(self.time + dtau_E))
+
+        else:
+            raise NotImplementedError(f"State '{self.s}' not implemented for object Ball")
 
 
     def __repr__(self):
@@ -280,9 +306,11 @@ class Ball(BallRender):
         return '\n'.join(lines) + '\n'
 
 
-    def set(self, rvw, s):
+    def set(self, rvw, s, t=None):
         self.s = s
         self.rvw = rvw
+        if t is not None:
+            self.time = t
 
 
 # -------------------------------------------------------------------------------------------------
@@ -320,6 +348,7 @@ class CueRender(Render):
 
 
     def init_focus(self, ball):
+        # FIXME this is a potentially memory-leaky reference to an object
         self.follow = ball
 
         cue_stick = self.get_node('cue_stick')

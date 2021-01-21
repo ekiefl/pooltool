@@ -187,3 +187,83 @@ def solve_quartic(a, b, c, d, e):
         X + S - 0.5*cmath.sqrt(Y - Z),
     )
 
+
+class Garbage(object):
+    # FIXME Delete when no one is looking
+    def plot_history(self, ball_id, full=False):
+        """Primitive plotting for use during development"""
+
+        import pandas as pd
+        import matplotlib.pyplot as plt
+
+        def add_plot(fig, num, x, y):
+            if np.max(np.abs(df[y])) < 0.000000001:
+                df[y] = 0
+
+            ax = fig.add_subplot(*num)
+            for name, group in groups:
+                ax.plot(group[x], group[y], marker="o", linestyle="", label=name, ms=1.4)
+            ax.set_ylabel(y)
+            ax.set_xlabel(x)
+            ax.legend()
+
+        s = np.array(self.history['balls'][ball_id]['s'])
+        rvw = np.array(self.history['balls'][ball_id]['rvw'])
+        t = np.array(self.history['time'])
+
+        hpr = utils.as_euler_angle(rvw[:,3,:])
+
+        df = pd.DataFrame({
+            'rx': rvw[:, 0, 0], 'ry': rvw[:, 0, 1], 'rz': rvw[:, 0, 2],
+            'vx': rvw[:, 1, 0], 'vy': rvw[:, 1, 1], 'vz': rvw[:, 1, 2],
+            'wx': rvw[:, 2, 0], 'wy': rvw[:, 2, 1], 'wz': rvw[:, 2, 2],
+            'thx': rvw[:, 3, 0], 'thy': rvw[:, 3, 1], 'thz': rvw[:, 3, 2],
+            'H': hpr[:,0], 'P': hpr[:,1], 'R': hpr[:,2],
+            '|v|': np.sqrt(rvw[:, 1, 2]**2 + rvw[:, 1, 1]**2 + rvw[:, 1, 0]**2),
+            '|w|': np.sqrt(rvw[:, 2, 2]**2 + rvw[:, 2, 1]**2 + rvw[:, 2, 0]**2),
+            'time': t,
+            'state': s,
+        })
+        df['time'] = df['time'].astype(float)
+
+        groups = df.groupby('state')
+
+        fig = plt.figure(figsize=(10, 10))
+        plt.title(f"ball ID: {ball_id}")
+        frame1 = plt.gca()
+        frame1.axes.xaxis.set_ticklabels([])
+        frame1.axes.yaxis.set_ticklabels([])
+        frame1.axes.xaxis.set_ticks([])
+        frame1.axes.yaxis.set_ticks([])
+        add_plot(fig, (5,3,1), 'time', 'rx')
+        add_plot(fig, (5,3,2), 'time', 'ry')
+        add_plot(fig, (5,3,3), 'time', 'rz')
+        add_plot(fig, (5,3,4), 'time', 'vx')
+        add_plot(fig, (5,3,5), 'time', 'vy')
+        add_plot(fig, (5,3,6), 'time', 'vz')
+        add_plot(fig, (5,3,7), 'time', 'wx')
+        add_plot(fig, (5,3,8), 'time', 'wy')
+        add_plot(fig, (5,3,9), 'time', 'wz')
+        add_plot(fig, (5,3,10), 'time', 'thx')
+        add_plot(fig, (5,3,11), 'time', 'thy')
+        add_plot(fig, (5,3,12), 'time', 'thz')
+        add_plot(fig, (5,3,13), 'time', 'H')
+        add_plot(fig, (5,3,14), 'time', 'P')
+        add_plot(fig, (5,3,15), 'time', 'R')
+        plt.tight_layout()
+        plt.show()
+
+        if full:
+            fig = plt.figure(figsize=(6, 5))
+            add_plot(fig, (1,1,1), 'time', '|v|')
+            plt.title(f"ball ID: {ball_id}")
+            plt.tight_layout()
+            plt.show()
+
+            fig = plt.figure(figsize=(6, 5))
+            add_plot(fig, (1,1,1), 'time', '|w|')
+            plt.title(f"ball ID: {ball_id}")
+            plt.tight_layout()
+            plt.show()
+
+

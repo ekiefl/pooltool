@@ -13,6 +13,9 @@ class Tasks(object):
         if self.keymap[action.exit]:
             sys.exit()
 
+        if self.keymap[action.new_game]:
+            self.go()
+
         return task.cont
 
 
@@ -63,11 +66,8 @@ class Tasks(object):
         newX = max(-0.5, cue_stick_node.getX() - dx)
         cue_stick_node.setX(newX)
 
-        # get_dx() is called so that self.last_x is updated. Failing to do this will create a
-        # potentially very large return value of get_dx() the next time it is called.
-        self.mouse.get_dx()
-
         if newX < 0:
+            # FIXME calculate dx/dt over several frames
             self.take_shot(V0=dx/dt)
             self.simulate_shot()
 
@@ -75,22 +75,28 @@ class Tasks(object):
                 ball.set_node_state_as_state()
 
             self.cue_stick.set_node_state_as_state()
+
             self.change_mode('view')
+
+        # get_dx() is called so that self.last_x is updated. Failing to do this will create a
+        # potentially very large return value of get_dx() the next time it is called.
+        self.mouse.get_dx()
 
 
     def take_shot(self, V0):
         self.cue_stick.get_node('cue_stick').setX(0)
 
+        #FIXME
         self.cue_stick.set_state(V0=V0)
         self.cue_stick.set_state_as_node_state()
 
         self.cue_stick.strike(self.balls['cue'])
+        self.balls['cue'].update_next_transition_event()
 
 
     def simulate_shot(self):
-        sim = engine.ShotSimulation(cue=self.cue_stick, table=self.table, balls=self.balls)
+        sim = engine.SimulateShot(cue=self.cue_stick, table=self.table, balls=self.balls)
         sim.simulate()
-        sim.continuize(dt=0.01)
 
 
     def zoom_camera(self):

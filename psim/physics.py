@@ -140,7 +140,7 @@ def get_bail_rail_friction(rvw):
     return 0
 
 
-def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g, R):
+def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
     """Get the time until collision between 2 balls"""
     c1x, c1y = rvw1[0, 0], rvw1[0, 1]
     c2x, c2y = rvw2[0, 0], rvw2[0, 1]
@@ -155,8 +155,8 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g, R):
               if s1 == psim.rolling
               else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw1, R)), -phi1))
 
-        a1x = -1/2*mu1*g*(u1[0]*np.cos(phi1) - u1[1]*np.sin(phi1))
-        a1y = -1/2*mu1*g*(u1[0]*np.sin(phi1) + u1[1]*np.cos(phi1))
+        a1x = -1/2*mu1*g1*(u1[0]*np.cos(phi1) - u1[1]*np.sin(phi1))
+        a1y = -1/2*mu1*g1*(u1[0]*np.sin(phi1) + u1[1]*np.cos(phi1))
         b1x = v1*np.cos(phi1)
         b1y = v1*np.sin(phi1)
 
@@ -170,8 +170,8 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g, R):
               if s2 == psim.rolling
               else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw2, R)), -phi2))
 
-        a2x = -1/2*mu2*g*(u2[0]*np.cos(phi2) - u2[1]*np.sin(phi2))
-        a2y = -1/2*mu2*g*(u2[0]*np.sin(phi2) + u2[1]*np.cos(phi2))
+        a2x = -1/2*mu2*g2*(u2[0]*np.cos(phi2) - u2[1]*np.sin(phi2))
+        a2y = -1/2*mu2*g2*(u2[0]*np.sin(phi2) + u2[1]*np.cos(phi2))
         b2x = v2*np.cos(phi2)
         b2y = v2*np.sin(phi2)
 
@@ -251,30 +251,30 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
         return rvw, state
 
     if state == psim.sliding:
-        tau_slide = get_slide_time(rvw, R, u_s, g)
+        dtau_E_slide = get_slide_time(rvw, R, u_s, g)
 
-        if t >= tau_slide:
-            rvw = evolve_slide_state(rvw, R, m, u_s, u_sp, g, tau_slide)
+        if t >= dtau_E_slide:
+            rvw = evolve_slide_state(rvw, R, m, u_s, u_sp, g, dtau_E_slide)
             state = psim.rolling
-            t -= tau_slide
+            t -= dtau_E_slide
         else:
             return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), psim.sliding
 
     if state == psim.rolling:
-        tau_roll = get_roll_time(rvw, u_r, g)
+        dtau_E_roll = get_roll_time(rvw, u_r, g)
 
-        if t >= tau_roll:
-            rvw = evolve_roll_state(rvw, R, u_r, u_sp, g, tau_roll)
+        if t >= dtau_E_roll:
+            rvw = evolve_roll_state(rvw, R, u_r, u_sp, g, dtau_E_roll)
             state = psim.spinning
-            t -= tau_roll
+            t -= dtau_E_roll
         else:
             return evolve_roll_state(rvw, R, u_r, u_sp, g, t), psim.rolling
 
     if state == psim.spinning:
-        tau_spin = get_spin_time(rvw, R, u_sp, g)
+        dtau_E_spin = get_spin_time(rvw, R, u_sp, g)
 
-        if t >= tau_spin:
-            return evolve_perpendicular_spin_state(rvw, R, u_sp, g, tau_spin), psim.stationary
+        if t >= dtau_E_spin:
+            return evolve_perpendicular_spin_state(rvw, R, u_sp, g, dtau_E_spin), psim.stationary
         else:
             return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), psim.spinning
 

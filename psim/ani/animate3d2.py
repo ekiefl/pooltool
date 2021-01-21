@@ -27,6 +27,7 @@ class Handler(DirectObject.DirectObject):
                 'exit': self.menu_exit,
                 'keymap': {
                     action.exit: False,
+                    action.new_game: False,
                 }
             },
             'aim': {
@@ -99,6 +100,8 @@ class Handler(DirectObject.DirectObject):
 
         self.watch_action('escape', action.exit, True)
         self.watch_action('escape-up', action.exit, False)
+        self.watch_action('n', action.new_game, True)
+        self.watch_action('n-up', action.new_game, False)
 
         self.add_task(self.menu_task, 'menu_task')
 
@@ -176,7 +179,7 @@ class InteractiveVisualization(ShowBase, MenuHandler, Handler, Tasks):
         self.disableMouse()
         self.mouse = Mouse()
         self.cam = CustomCamera()
-        self.table = Table()
+        self.table = Table(l=100,w=100)
         self.cue_stick = Cue()
 
         self.change_mode('menu')
