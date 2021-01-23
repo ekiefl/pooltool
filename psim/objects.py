@@ -2,6 +2,7 @@
 
 import psim
 import psim.ani.utils as autils
+import psim.utils as utils
 import psim.physics as physics
 
 from psim.ani import model_paths
@@ -11,6 +12,8 @@ import numpy as np
 
 from abc import ABC, abstractmethod
 from panda3d.core import *
+from direct.interval.IntervalGlobal import *
+
 
 
 class Object(object):
@@ -213,6 +216,8 @@ class Rail(Object):
 
 class BallRender(Render):
     def __init__(self):
+        self.xyzs = None
+        self.playback_sequence = None
         Render.__init__(self)
 
 
@@ -253,6 +258,31 @@ class BallRender(Render):
 
     def set_node_state_as_state(self):
         self.nodes['sphere'].setPos(*self.rvw[0,:])
+
+
+    def set_playback_sequence(self, playback_speed=1):
+        """Creates the sequence motions of the ball for a given playback speed"""
+        # Get the trajectories
+        xyzs = autils.get_list_of_Vec3s_from_array(self.history.rvw[:, 0, :])
+        quats = autils.get_quaternion_list_from_array(utils.as_quaternion(self.history.rvw[:, 3, :]))
+
+        dts = np.diff(self.history.t)
+        playback_dts = dts/playback_speed
+
+        # Init the sequences
+        ball_sequence = Sequence()
+
+        for i in range(len(playback_dts)):
+            # Append to ball sequence
+            ball_sequence.append(LerpPosQuatInterval(
+                nodePath = self.nodes['sphere'],
+                duration = playback_dts[i],
+                pos = xyzs[i+1],
+                quat = quats[i+1]
+            ))
+
+        self.playback_sequence = Parallel()
+        self.playback_sequence.append(ball_sequence)
 
 
     def render(self):

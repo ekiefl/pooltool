@@ -18,7 +18,6 @@ from panda3d.core import *
 from direct.showbase import DirectObject
 from direct.showbase.ShowBase import ShowBase
 
-
 class Handler(DirectObject.DirectObject):
     def __init__(self):
 
@@ -181,8 +180,10 @@ class Handler(DirectObject.DirectObject):
 
         self.cue_stick.get_node('cue_stick').setX(0)
         self.cue_stick.set_state_as_node_state()
-        shot = engine.SimulateShot(cue=self.cue_stick, table=self.table, balls=self.balls)
-        shot.simulate()
+
+        self.shot = engine.SimulateShot(cue=self.cue_stick, table=self.table, balls=self.balls)
+        self.shot.simulate()
+        self.shot.init_ball_animations()
 
         # FIXME this is just some temporary thing to update to the final state
         for ball in self.balls.values():
@@ -198,13 +199,17 @@ class Handler(DirectObject.DirectObject):
         self.watch_action('r', action.restart_shot, False)
         self.watch_action('r-up', action.restart_shot, False)
 
-        self.add_task(self.shot_task, 'shot_task')
+        self.add_task(self.shot_view_task, 'shot_view_task')
+        self.add_task(self.shot_animation_task, 'shot_animation_task')
         self.add_task(self.quit_task, 'quit_task')
 
+        self.shot.loop_animation()
 
     def shot_exit(self):
-        self.remove_task('shot_task')
+        self.remove_task('shot_view_task')
+        self.remove_task('shot_animation_task')
         self.remove_task('quit_task')
+        self.shot = None
 
 
     def reset_action_states(self):

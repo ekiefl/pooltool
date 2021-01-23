@@ -57,7 +57,7 @@ class Tasks(object):
         return task.cont
 
 
-    def shot_task(self, task):
+    def shot_view_task(self, task):
         if self.keymap[action.aim]:
             self.change_mode('aim')
             return
@@ -73,6 +73,10 @@ class Tasks(object):
                 # Update mouse positions so there is not a big jump
                 self.mouse.get_xy()
 
+        return task.cont
+
+
+    def shot_animation_task(self, task):
         return task.cont
 
 

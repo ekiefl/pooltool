@@ -9,64 +9,10 @@ import psim.configurations as configurations
 from psim.events import *
 from psim.objects import NonObject, DummyBall, BallHistory
 
+from direct.interval.IntervalGlobal import *
+
 import copy
 import numpy as np
-
-
-class FIXME(utils.Garbage):
-    """Track the states of balls over time"""
-    def continuize(self, dt=0.05):
-        old_n = self.n
-        old_history = self.history
-        self.reset_history()
-
-        self.progress.new("Continuizing shot history", progress_total_items=old_n)
-
-        # Set and log balls to the initial state
-        self.set_table_state_via_history(index=0, history=old_history)
-        self.timestamp(0)
-
-        dt_prime = dt
-        for index, event in zip(old_history['index'], old_history['event']):
-
-            self.progress.update(f"Done event {index} / {old_n}")
-            self.progress.increment()
-
-            if not isinstance(event, Event):
-                continue
-
-            if event.dtau_E == np.inf:
-                break
-
-            # Evolve in steps of dt up to the event
-            event_time = 0
-            while event_time < (event.dtau_E - dt_prime):
-                self.evolve(dt_prime, log=False)
-                self.timestamp(dt)
-                event_time += dt_prime
-
-                dt_prime = dt
-
-            dt_prime = dt - (event.dtau_E - event_time)
-            # Set and log balls to the resolved state of the event
-            self.set_table_state_via_history(index=index, history=old_history)
-
-        self.vectorize_history()
-        self.progress.end()
-
-
-    def calculate_euler_angles(self):
-        for ball_id in self.balls:
-            angle_integrations = self.history['balls'][ball_id]['rvw'][:, 3, :]
-            euler_angles = utils.as_euler_angle(angle_integrations)
-            self.history['balls'][ball_id]['euler'] = euler_angles
-
-
-    def calculate_quaternions(self):
-        for ball_id in self.balls:
-            angle_integrations = self.history['balls'][ball_id]['rvw'][:, 3, :]
-            quaternions = utils.as_quaternion(angle_integrations)
-            self.history['balls'][ball_id]['quat'] = quaternions
 
 
 class System(object):
@@ -180,8 +126,21 @@ class SystemHistory(Events):
             ball.history.vectorize()
 
 
-    def continuize(self, dt=0.05):
+    def continuize(self, dt=0.02):
+        """Create BallHistory for each ball with timepoints _inbetween_ events--attach to respective ball
+
+        Notes
+        =====
+        - This does not create uniform time spacings between shots. For example, all events are
+          sandwiched between two time points, one immediately before the event, and one immediately after.
+          This ensures that during lerp (linear interpolation) operations, the event is never interpolated
+          over with any significant amount of time.
+        - FIXME This is a very inefficient function that could be radically speeded up if
+          physics.evolve_ball_motion and/or its functions had vectorized operations for arrays of time values.
+        """
+
         for ball in self.balls.values():
+            # Create a new history
             cts_history = BallHistory()
 
             for n in range(ball.num_events - 1):
@@ -210,12 +169,75 @@ class SystemHistory(Events):
                     cts_history.add(rvw, s, curr_event.time + step)
                     step += dt
 
+                # By this point the history has been populated with equally spaced timesteps `dt`
+                # starting from curr_event.time up until--but not including--next_event.time.
+                # There still exists a `remainder` of time that is strictly less than `dt`. I evolve
+                # the state this additional amount which gives us the state of the system at the
+                # time of the next event, yet _before_ the event has been resolved. Then, I add the
+                # next event, _after_ the event has been resolved.
+                remainder = dtau_E - step
+                rvw, s = physics.evolve_ball_motion(
+                    state=s,
+                    rvw=rvw,
+                    R=ball.R,
+                    m=ball.m,
+                    u_s=ball.u_s,
+                    u_sp=ball.u_sp,
+                    u_r=ball.u_r,
+                    g=ball.g,
+                    t=remainder,
+                )
+
+                cts_history.add(rvw, s, next_event.time - psim.tol)
                 cts_history.add(ball.history.rvw[n+1], ball.history.s[n+1], next_event.time)
 
+            # Attach the newly created history to the ball, overwriting the existing history
             ball.attach_history(cts_history)
 
 
-class SimulateShot(System, SystemHistory):
+class ShotRender(object):
+    def __init__(self):
+        self.ball_animations = None
+
+
+    def init_ball_animations(self):
+        self.ball_animations = Parallel()
+        for ball in self.balls.values():
+            ball.set_playback_sequence(playback_speed=1)
+            self.ball_animations.append(ball.playback_sequence)
+
+
+    def loop_animation(self):
+        if self.ball_animations is None:
+            raise Exception("First call ShotRender.init_ball_animations()")
+
+        self.ball_animations.loop()
+
+
+    def restart_animation(self):
+        self.ball_animations.set_t(0)
+
+
+    def pause_animation(self):
+        self.ball_animations.pause()
+
+
+    def resume_animation(self):
+        self.ball_animations.resume()
+
+
+    def slow_down(self):
+        self.playback_speed *= 0.5
+        self.ball_animations.setPlayRate(0.5*self.ball_animations.getPlayRate())
+
+
+    def speed_up(self):
+        self.playback_speed *= 2.0
+        self.ball_animations.setPlayRate(2.0*self.ball_animations.getPlayRate())
+
+
+
+class SimulateShot(System, SystemHistory, ShotRender):
     def __init__(self, cue=None, table=None, balls=None, progress=terminal.Progress(), run=terminal.Run()):
         self.run = run
         self.progress = progress
@@ -288,9 +310,9 @@ class SimulateShot(System, SystemHistory):
         self.run.info('Finished after', self.progress.t.time_elapsed_precise())
         self.run.info('Number of events', len(self.events), nl_after=1)
 
-        import ipdb; ipdb.set_trace() 
         self.continuize()
-        #self.vectorize_trajectories()
+        self.vectorize_trajectories()
+        self.balls['cue'].set_playback_sequence()
 
 
 
