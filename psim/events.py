@@ -3,11 +3,25 @@
 import psim
 import psim.physics as physics
 
+import numpy as np
+
 from abc import ABC, abstractmethod
+
+class_none = 'none'
+class_collision = 'collision'
+class_transition = 'transition'
+type_none = 'none'
+type_ball_ball = 'ball-ball'
+type_ball_cushion = 'ball-cushion'
+type_stick_ball = 'stick-ball'
+type_spinning_stationary = 'spinning-stationary'
+type_rolling_stationary = 'rolling-stationary'
+type_rolling_spinning = 'rolling-spinning'
+type_sliding_rolling = 'sliding-rolling'
 
 
 class Event(ABC):
-    event_class = None
+    event_class = class_none
 
     def __init__(self, *agents, t=None):
         self.time = t
@@ -37,16 +51,22 @@ class Event(ABC):
 
 
 class Collision(Event):
-    event_class = 'collision'
+    event_class = class_collision
 
     def __init__(self, body1, body2, t=None):
         Event.__init__(self, body1, body2, t=t)
 
 
 class BallBallCollision(Collision):
-    event_type = 'ball-ball'
+    event_type = type_ball_ball
 
     def __init__(self, ball1, ball2, t=None):
+        self.ball1_state_start = ball1.s
+        self.ball1_state_end = psim.sliding
+
+        self.ball2_state_start = ball2.s
+        self.ball2_state_end = psim.sliding
+
         Collision.__init__(self, body1=ball1, body2=ball2, t=t)
 
 
@@ -64,9 +84,12 @@ class BallBallCollision(Collision):
 
 
 class BallCushionCollision(Collision):
-    event_type = 'ball-cushion'
+    event_type = type_ball_cushion
 
     def __init__(self, ball, cushion, t=None):
+        self.state_start = ball.s
+        self.state_end = psim.sliding
+
         Collision.__init__(self, body1=ball, body2=cushion, t=t)
 
 
@@ -86,8 +109,32 @@ class BallCushionCollision(Collision):
         ball.update_next_transition_event()
 
 
+class StickBallCollision(Collision):
+    event_type = type_stick_ball
+
+    def __init__(self, cue_stick, ball, t=None):
+        self.state_start = ball.s
+        self.state_end = psim.sliding
+
+        Collision.__init__(self, body1=cue_stick, body2=ball, t=t)
+
+
+    def resolve(self):
+        cue_stick, ball = self.agents
+
+        v, w = physics.cue_strike(ball.m, cue_stick.M, ball.R, cue_stick.V0, cue_stick.phi, cue_stick.theta, cue_stick.a, cue_stick.b)
+        rvw = np.array([ball.rvw[0], v, w, ball.rvw[3]])
+
+        s = (psim.rolling
+             if abs(np.sum(physics.get_rel_velocity(rvw, ball.R))) <= psim.tol
+             else psim.sliding)
+
+        ball.set(rvw, s)
+        ball.update_next_transition_event()
+
+
 class Transition(Event):
-    event_class = 'transition'
+    event_class = class_transition
 
     def __init__(self, ball, t=None):
         Event.__init__(self, ball, t=t)
@@ -95,44 +142,44 @@ class Transition(Event):
 
 
     def resolve(self):
-        self.ball.s = self.end_state
+        self.ball.s = self.state_end
         self.ball.update_next_transition_event()
 
 
 class SpinningStationaryTransition(Transition):
-    event_type = 'spinning-stationary'
+    event_type = type_spinning_stationary
 
     def __init__(self, ball, t=None):
         Transition.__init__(self, ball, t=t)
-        self.start_start, self.end_state = psim.spinning, psim.stationary
+        self.state_start, self.state_end = psim.spinning, psim.stationary
 
 
 class RollingStationaryTransition(Transition):
-    event_type = 'rolling-stationary'
+    event_type = type_rolling_stationary
 
     def __init__(self, ball, t=None):
         Transition.__init__(self, ball, t=t)
-        self.start_start, self.end_state = psim.rolling, psim.stationary
+        self.state_start, self.state_end = psim.rolling, psim.stationary
 
 
 class RollingSpinningTransition(Transition):
-    event_class = 'rolling-spinning'
+    event_type = type_rolling_spinning
 
     def __init__(self, ball, t=None):
         Transition.__init__(self, ball, t=t)
-        self.start_start, self.end_state = psim.rolling, psim.spinning
+        self.state_start, self.state_end = psim.rolling, psim.spinning
 
 
 class SlidingRollingTransition(Transition):
-    event_class = 'sliding-rolling'
+    event_type = type_sliding_rolling
 
     def __init__(self, ball, t=None):
         Transition.__init__(self, ball, t=t)
-        self.start_start, self.end_state = psim.sliding, psim.rolling
+        self.state_start, self.state_end = psim.sliding, psim.rolling
 
 
 class NonEvent(Event):
-    event_class, event_type = 'none', 'none'
+    event_class, event_type = class_none, type_none
 
     def __init__(self, t=None):
         Event.__init__(self, t=t)
@@ -149,10 +196,41 @@ class Events(object):
         else:
             self.events = []
 
+        self.num_events = 0
 
-    def add(self, event):
+
+    def add_event(self, event):
         self.events.append(event)
+        self.num_events += 1
+
+
+    def reset_events(self):
+        self.events = []
+        self.num_events = 0
 
 
     def __repr__(self):
-        return '\n\n'.join([event.__repr__() for event in self.events])
+        return '\n'.join([event.__repr__() for event in self.events])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

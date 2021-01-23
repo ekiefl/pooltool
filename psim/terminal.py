@@ -491,6 +491,10 @@ class Timer:
         return self.format_time(self.timedelta_to_checkpoint(self.timestamp(), checkpoint_key = 0), fmt=fmt)
 
 
+    def time_elapsed_precise(self):
+        return self.timedelta_to_checkpoint(self.timestamp(), checkpoint_key = 0)
+
+
     def format_time(self, timedelta, fmt = '{hours}:{minutes}:{seconds}', zero_padding = 2):
         """Formats time
 

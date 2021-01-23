@@ -6,7 +6,7 @@ import psim.engine as engine
 import argparse
 
 ap = argparse.ArgumentParser()
-ap.add_argument('--setup', required=True)
+ap.add_argument('--setup', required=False)
 ap.add_argument('-s', '--skip-continuize', action='store_true')
 ap.add_argument('-d', '--dimensions', type=int, choices=[2,3], default=2)
 ap.add_argument('-p', '--plot', action='store_true')

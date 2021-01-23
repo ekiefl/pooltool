@@ -7,115 +7,14 @@ import psim.terminal as terminal
 import psim.configurations as configurations
 
 from psim.events import *
+from psim.objects import NonObject, DummyBall, BallHistory
 
 import copy
 import numpy as np
 
 
-class ShotHistory(utils.Garbage):
+class FIXME(utils.Garbage):
     """Track the states of balls over time"""
-
-    def __init__(self, balls=None, progress=terminal.Progress(), run=terminal.Run()):
-        self.run = run
-        self.progress = progress
-
-        if balls is None:
-            self.balls = {}
-
-        self.reset_history()
-
-
-    def reset_history(self):
-        self.vectorized = False
-
-        self.history = {
-            'balls': {},
-            'index': [],
-            'time': [],
-            'event': [],
-        }
-
-        self.n = -1
-        self.time = 0
-
-        self.touch_history()
-
-
-    def get_time_history(self):
-        """Returns 1D array if self.vectorized, otherwise a list"""
-        return self.history['time']
-
-
-    def _get_ball_var_history(self, ball_id, key):
-        return self.history['balls'][ball_id][key]
-
-
-    def get_ball_state_history(self, ball_id):
-        """Returns 1D array if self.vectorized, otherwise a list"""
-        return self._get_ball_var_history(ball_id, 's')
-
-
-    def get_ball_rvw_history(self, ball_id):
-        """Returns 3D array if self.vectorized, otherwise a list of 2D arrays"""
-        return self._get_ball_var_history(ball_id, 'rvw')
-
-
-    def get_ball_euler_history(self, ball_id):
-        """Returns 3D array if self.vectorized, otherwise a list of 2D arrays"""
-        return self._get_ball_var_history(ball_id, 'euler')
-
-
-    def get_ball_quat_history(self, ball_id):
-        """Returns 3D array if self.vectorized, otherwise a list of 2D arrays"""
-        return self._get_ball_var_history(ball_id, 'quat')
-
-
-    def get_event_history_for_ball(self, ball_id):
-        return [event
-                for event in self.history['event']
-                if ball_id in event.agents]
-
-
-    def touch_history(self):
-        """Initializes ball trajectories if they haven't been initialized"""
-
-        for ball_id in self.balls:
-            if ball_id not in self.history['balls']:
-                self.init_ball_history(ball_id)
-
-
-    def init_ball_history(self, ball_id):
-        """Adds a new ball to the trajectory. Adds nans if self.n > 0"""
-
-        if ball_id not in self.balls:
-            raise ValueError(f"ShotHistory.init_ball_history :: {ball_id} not in self.balls")
-
-        self.history['balls'][ball_id] = {
-            's': [np.nan] * self.n,
-            'rvw': [np.nan * np.ones((4,3))] * self.n,
-            'euler': [np.nan * np.ones((4,3))] * self.n,
-            'quat': [np.nan * np.ones((4,4))] * self.n,
-        }
-
-
-    def timestamp(self, dt):
-        # update time
-        self.n += 1
-        self.time += dt
-
-        # log time
-        self.history['time'].append(self.time)
-        self.history['index'].append(self.n)
-
-        # log event
-        self.history['event'].append(None)
-
-        # log ball states
-        for ball_id, ball in self.balls.items():
-            self.history['balls'][ball_id]['s'].append(ball.s)
-            self.history['balls'][ball_id]['rvw'].append(ball.rvw)
-
-
     def continuize(self, dt=0.05):
         old_n = self.n
         old_history = self.history
@@ -156,39 +55,6 @@ class ShotHistory(utils.Garbage):
         self.progress.end()
 
 
-    def set_table_state_via_history(self, index, history=None):
-        if history is None:
-            history = self.history
-
-        for ball_id, ball in self.balls.items():
-            ball.set(
-                history['balls'][ball_id]['rvw'][index],
-                history['balls'][ball_id]['s'][index],
-            )
-
-
-    def vectorize_history(self):
-        """Convert all list objects in self.history to array objects
-
-        Notes
-        =====
-        - Should be done once the history has been already built and
-          will not be further appended to.
-        - self.history['event'] cannot be vectorized because its
-          elements are Event objects
-        """
-
-        self.history['index'] = np.array(self.history['index'])
-        self.history['time'] = np.array(self.history['time'])
-        for ball in self.history['balls']:
-            self.history['balls'][ball]['s'] = np.array(self.history['balls'][ball]['s'])
-            self.history['balls'][ball]['rvw'] = np.array(self.history['balls'][ball]['rvw'])
-            self.history['balls'][ball]['euler'] = np.array(self.history['balls'][ball]['euler'])
-            self.history['balls'][ball]['quat'] = np.array(self.history['balls'][ball]['quat'])
-
-        self.vectorized = True
-
-
     def calculate_euler_angles(self):
         for ball_id in self.balls:
             angle_integrations = self.history['balls'][ball_id]['rvw'][:, 3, :]
@@ -203,11 +69,13 @@ class ShotHistory(utils.Garbage):
             self.history['balls'][ball_id]['quat'] = quaternions
 
 
-class Shot(object):
+class System(object):
     def __init__(self, cue=None, table=None, balls=None):
         self.cue = cue
         self.table = table
         self.balls = balls
+
+        self.t = None
 
 
     def set_cue(self, cue):
@@ -224,7 +92,7 @@ class Shot(object):
 
     def get_system_energy(self):
         energy = 0
-        for name, ball in self.balls.items():
+        for ball in self.balls.values():
             energy += physics.get_ball_energy(ball.rvw, ball.R, ball.m)
 
         return energy
@@ -246,17 +114,136 @@ class Shot(object):
         raise NotImplementedError("set_system_state FIXME. What should this take as input?")
 
 
-class SimulateShot(Shot, ShotHistory):
-    def __init__(self, cue=None, table=None, balls=None):
 
-        Shot.__init__(self, cue=cue, table=table, balls=balls)
-        ShotHistory.__init__(self, balls=self.balls)
+class SystemHistory(Events):
+    balls = None
 
-        self.events = Events()
+    def __init__(self):
+        self.t = None
+        self.num_events = 0
+
+        if self.balls is None:
+            raise NotImplementedError("Child classes of SystemHistory must have self.balls defined")
+
+        Events.__init__(self)
 
 
-    def simulate(self, time=None, name='NA'):
-        self.touch_history()
+    def init_history(self):
+        """Add an initializing NonEvent"""
+
+        self.num_events += 1
+
+        event = NonEvent(t=0)
+        for ball in self.balls.values():
+            ball.update_history(event)
+
+        self.add_event(event)
+
+
+    def end_history(self):
+        """Add a final NonEvent that timestamps the final state of each ball"""
+
+        self.num_events += 1
+
+        event = NonEvent(t=self.t)
+        for ball in self.balls.values():
+            ball.update_history(event)
+
+        self.add_event(event)
+
+
+    def reset_history(self):
+        """Remove all events, histories, and reset timer"""
+
+        self.t = 0
+        for ball in self.balls.values():
+            ball.history.reset_history()
+            ball.reset_events()
+            ball.set_time(0)
+
+        self.reset_events()
+
+
+    def update_history(self, event):
+        self.t = event.time
+        self.num_events += 1
+
+        for agent in event.agents:
+            if agent.object_type == 'ball':
+                agent.update_history(event)
+
+        self.add_event(event)
+
+
+    def vectorize_trajectories(self):
+        for ball in self.balls.values():
+            ball.history.vectorize()
+
+
+    def continuize(self, dt=0.05):
+        for ball in self.balls.values():
+            cts_history = BallHistory()
+
+            for n in range(ball.num_events - 1):
+                curr_event = ball.events[n]
+                next_event = ball.events[n+1]
+
+                dtau_E = next_event.time - curr_event.time
+                if not dtau_E:
+                    continue
+
+                step = 0
+                rvw, s = ball.history.rvw[n], ball.history.s[n]
+                while step < dtau_E:
+                    rvw, s = physics.evolve_ball_motion(
+                        state=s,
+                        rvw=rvw,
+                        R=ball.R,
+                        m=ball.m,
+                        u_s=ball.u_s,
+                        u_sp=ball.u_sp,
+                        u_r=ball.u_r,
+                        g=ball.g,
+                        t=dt,
+                    )
+
+                    cts_history.add(rvw, s, curr_event.time + step)
+                    step += dt
+
+                cts_history.add(ball.history.rvw[n+1], ball.history.s[n+1], next_event.time)
+
+            ball.attach_history(cts_history)
+
+
+class SimulateShot(System, SystemHistory):
+    def __init__(self, cue=None, table=None, balls=None, progress=terminal.Progress(), run=terminal.Run()):
+        self.run = run
+        self.progress = progress
+
+        System.__init__(self, cue=cue, table=table, balls=balls)
+        SystemHistory.__init__(self)
+
+
+    def simulate(self, t_final=None, strike=True, name='NA'):
+        """Run a simulation
+
+        Parameters
+        ==========
+        t_final : float
+            The simulation will run until the time is greater than this value. If None, simulation
+            is ran until the next even occurs at np.inf
+
+        strike : bool, True
+            If True, the cue stick will strike a ball at the start of the simulation. If you already
+            struck the cue ball, you should set this to False.
+        """
+
+        self.reset_history()
+        self.init_history()
+
+        if strike:
+            event = self.cue.strike(t = self.t)
+            self.update_history(event)
 
         energy_start = self.get_system_energy()
 
@@ -264,7 +251,7 @@ class SimulateShot(Shot, ShotHistory):
             """Convenience function for updating progress"""
             energy = self.get_system_energy()
             num_stationary = len([_ for _ in self.balls.values() if _.s == 0])
-            msg = f"ENERGY {np.round(energy, 2)}J | STATIONARY {num_stationary} | EVENTS {self.n}"
+            msg = f"ENERGY {np.round(energy, 2)}J | STATIONARY {num_stationary} | EVENTS {self.num_events}"
             self.progress.update(msg)
             self.progress.increment(increment_to=int(energy_start - energy))
 
@@ -277,34 +264,44 @@ class SimulateShot(Shot, ShotHistory):
 
         self.progress.new(f"Running", progress_total_items=int(energy_start))
 
-        event = NonEvent(t=0)
-        self.events.add(event)
-
-        self.timestamp(0)
-
-        while event.time < np.inf:
+        while True:
             event = self.get_next_event()
-            self.events.add(event)
 
-            self.evolve(dt=(event.time - self.time))
+            if event.time == np.inf:
+                self.end_history()
+                break
+
+            self.evolve(event.time - self.t)
             event.resolve()
 
-            if (self.n % 5) == 0:
+            self.update_history(event)
+
+            if (self.num_events % 10) == 0:
                 progress_update()
 
-            if time is not None and self.time >= time:
+            if t_final is not None and self.t >= t_final:
                 break
 
         self.progress.end()
 
         self.run.warning('', header='Post-run info', lc='green')
-        self.run.info('Finished after', self.progress.t.time_elapsed())
-        self.run.info('Number of events', len(self.events.events), nl_after=1)
+        self.run.info('Finished after', self.progress.t.time_elapsed_precise())
+        self.run.info('Number of events', len(self.events), nl_after=1)
 
-        print(self.events)
+        import ipdb; ipdb.set_trace() 
+        self.continuize()
+        #self.vectorize_trajectories()
 
 
-    def evolve(self, dt, log=True):
+
+    def evolve(self, dt):
+        """Evolves current ball an amount of time dt
+
+        FIXME This is very inefficent. each ball should store its natural trajectory thereby avoid a
+        call to the clunky evolve_ball_motion. It could even be a partial function so parameters don't
+        continuously need to be passed
+        """
+
         for ball_id, ball in self.balls.items():
             rvw, s = physics.evolve_ball_motion(
                 state=ball.s,
@@ -317,10 +314,7 @@ class SimulateShot(Shot, ShotHistory):
                 g=ball.g,
                 t=dt,
             )
-            ball.set(rvw, s, t=(self.time + dt))
-
-        if log:
-            self.timestamp(dt)
+            ball.set(rvw, s, t=(self.t + dt))
 
 
     def get_next_event(self):
@@ -358,7 +352,7 @@ class SimulateShot(Shot, ShotHistory):
         """Returns minimum time until next ball-ball collision"""
 
         dtau_E_min = np.inf
-        involved_balls = tuple([None, None])
+        involved_balls = tuple([DummyBall(), DummyBall()])
 
         for i, ball1 in enumerate(self.balls.values()):
             for j, ball2 in enumerate(self.balls.values()):
@@ -388,14 +382,14 @@ class SimulateShot(Shot, ShotHistory):
 
         dtau_E = dtau_E_min
 
-        return BallBallCollision(*involved_balls, t=(self.time + dtau_E))
+        return BallBallCollision(*involved_balls, t=(self.t + dtau_E))
 
 
     def get_min_ball_rail_event_time(self):
         """Returns minimum time until next ball-rail collision"""
 
         dtau_E_min = np.inf
-        involved_agents = ([None, None])
+        involved_agents = tuple([DummyBall(), NonObject()])
 
         for ball in self.balls.values():
             if ball.s == psim.stationary:
@@ -420,8 +414,6 @@ class SimulateShot(Shot, ShotHistory):
 
         dtau_E = dtau_E_min
 
-        return BallCushionCollision(*involved_agents, t=(self.time + dtau_E))
-
-
+        return BallCushionCollision(*involved_agents, t=(self.t + dtau_E))
 
 

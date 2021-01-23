@@ -13,6 +13,22 @@ from abc import ABC, abstractmethod
 from panda3d.core import *
 
 
+class Object(object):
+    object_type = None
+
+    def __init__(self):
+        if self.object_type is None:
+            raise NotImplementedError("Child classes of Object must have 'object_type' attribute")
+
+
+class NonObject(Object):
+    object_type = 'none'
+
+
+class DummyBall(NonObject):
+    s = psim.stationary
+
+
 class Render(ABC):
     def __init__(self):
         """A base class for rendering physical pool objects
@@ -141,7 +157,9 @@ class TableRender(Render):
         raise NotImplementedError("Can't call set_state_as_node_state for class 'TableRender'. Call render instead")
 
 
-class Table(TableRender):
+class Table(Object, TableRender):
+    object_type = 'table'
+
     def __init__(self, w=None, l=None,
                  edge_width=None, rail_width=None, rail_height=None,
                  table_height=None, lights_height=None):
@@ -170,7 +188,9 @@ class Table(TableRender):
         TableRender.__init__(self)
 
 
-class Rail(object):
+class Rail(Object):
+    object_type = 'cushion'
+
     def __init__(self, rail_id, lx, ly, l0, height=None):
         """A rail is defined by a line lx*x + ly*y + l0 = 0"""
 
@@ -240,7 +260,43 @@ class BallRender(Render):
         self.init_sphere()
 
 
-class Ball(BallRender):
+class BallHistory(object):
+    def __init__(self):
+        self.vectorized = False
+        self.reset_history()
+
+
+    def reset_history(self):
+        n = 0
+        self.rvw = [np.nan * np.ones((4,3))] * n
+        self.s = [np.nan] * n
+        self.t = [np.nan] * n
+
+
+    def add(self, rvw, s, t):
+        self.rvw.append(rvw)
+        self.s.append(s)
+        self.t.append(t)
+
+
+    def vectorize(self):
+        """Convert all list objects in self.history to array objects
+
+        Notes
+        =====
+        - Append operations will cease to work
+        """
+
+        self.rvw = np.array(self.rvw)
+        self.s = np.array(self.s)
+        self.t = np.array(self.t)
+
+        self.vectorized = True
+
+
+class Ball(Object, BallRender, Events):
+    object_type = 'ball'
+
     def __init__(self, ball_id, m=None, R=None, u_s=None, u_r=None, u_sp=None, g=None):
         self.id = ball_id
 
@@ -255,16 +311,32 @@ class Ball(BallRender):
         self.u_r = u_r or psim.u_r
         self.u_sp = u_sp or psim.u_sp
 
-        self.time = 0
+        self.t = 0
         self.s = psim.stationary
         self.rvw = np.array([[np.nan, np.nan, np.nan],  # positions (r)
                              [0,      0,      0     ],  # velocities (v)
                              [0,      0,      0     ],  # angular velocities (w)
                              [0,      0,      0     ]]) # angular integrations (e)
-
         self.update_next_transition_event()
 
+        self.history = BallHistory()
+
         BallRender.__init__(self)
+        Events.__init__(self)
+
+
+    def attach_history(self, history):
+        """Sets self.history to an existing BallHistory object"""
+        self.history = history
+
+
+    def update_history(self, event):
+        self.history.add(self.rvw, self.s, event.time)
+        self.add_event(event)
+
+
+    def init_history(self):
+        self.update_history(NonEvent(t=0))
 
 
     def update_next_transition_event(self):
@@ -273,20 +345,20 @@ class Ball(BallRender):
 
         elif self.s == psim.spinning:
             dtau_E = physics.get_spin_time(self.rvw, self.R, self.u_sp, self.g)
-            self.next_transition_event = SpinningStationaryTransition(self, t=(self.time + dtau_E))
+            self.next_transition_event = SpinningStationaryTransition(self, t=(self.t + dtau_E))
 
         elif self.s == psim.rolling:
             dtau_E_spin = physics.get_spin_time(self.rvw, self.R, self.u_sp, self.g)
             dtau_E_roll = physics.get_roll_time(self.rvw, self.u_r, self.g)
 
             if dtau_E_spin > dtau_E_roll:
-                self.next_transition_event = RollingSpinningTransition(self, t=(self.time + dtau_E_roll))
+                self.next_transition_event = RollingSpinningTransition(self, t=(self.t + dtau_E_roll))
             else:
-                self.next_transition_event = RollingStationaryTransition(self, t=(self.time + dtau_E_roll))
+                self.next_transition_event = RollingStationaryTransition(self, t=(self.t + dtau_E_roll))
 
         elif self.s == psim.sliding:
             dtau_E = physics.get_slide_time(self.rvw, self.R, self.u_s, self.g)
-            self.next_transition_event = SlidingRollingTransition(self, t=(self.time + dtau_E))
+            self.next_transition_event = SlidingRollingTransition(self, t=(self.t + dtau_E))
 
         else:
             raise NotImplementedError(f"State '{self.s}' not implemented for object Ball")
@@ -310,7 +382,11 @@ class Ball(BallRender):
         self.s = s
         self.rvw = rvw
         if t is not None:
-            self.time = t
+            self.t = t
+
+
+    def set_time(self, t):
+        self.t = t
 
 
 # -------------------------------------------------------------------------------------------------
@@ -374,16 +450,18 @@ class CueRender(Render):
         cue_stick = self.get_node('cue_stick_focus')
 
         phi = ((cue_stick.getH() + 180) % 360)
+        V0 = self.V0
+        cueing_ball = self.follow
         # FIXME
         theta = 0
         a = 0
         b = 0
 
-        return phi, theta, a, b
+        return V0, phi, theta, a, b, cueing_ball
 
 
     def set_state_as_node_state(self):
-        self.phi, self.theta, self.a, self.b = self.get_node_state()
+        self.V0, self.phi, self.theta, self.a, self.b, self.cueing_ball = self.get_node_state()
 
 
     def set_node_state_as_state(self):
@@ -396,10 +474,13 @@ class CueRender(Render):
         self.init_model()
 
 
-class Cue(CueRender):
-    def __init__(self, M=psim.M, length=psim.cue_length, tip_radius=psim.cue_tip_radius,
-                 butt_radius=psim.cue_butt_radius, brand=None):
+class Cue(Object, CueRender):
+    object_type = 'cue_stick'
 
+    def __init__(self, M=psim.M, length=psim.cue_length, tip_radius=psim.cue_tip_radius,
+                 butt_radius=psim.cue_butt_radius, cue_id='cue_stick', brand=None):
+
+        self.id = cue_id
         self.M = M
         self.length = length
         self.tip_radius = tip_radius
@@ -412,10 +493,12 @@ class Cue(CueRender):
         self.a = None
         self.b = None
 
+        self.cueing_ball = None
+
         CueRender.__init__(self)
 
 
-    def set_state(self, V0=None, phi=None, theta=None, a=None, b=None):
+    def set_state(self, V0=None, phi=None, theta=None, a=None, b=None, cueing_ball=None):
         """Set the cueing parameters
 
         Notes
@@ -428,20 +511,17 @@ class Cue(CueRender):
         if theta is not None: self.theta = theta
         if a is not None: self.a = a
         if b is not None: self.b = b
+        if cueing_ball is not None: self.cueing_ball = cueing_ball
 
 
-    def strike(self, ball):
+    def strike(self, t=None):
         if (self.V0 is None or self.phi is None or self.theta is None or self.a is None or self.b is None):
             raise ValueError("Cue.strike :: Must set V0, phi, theta, a, and b")
 
-        v, w = physics.cue_strike(ball.m, self.M, ball.R, self.V0, self.phi, self.theta, self.a, self.b)
-        rvw = np.array([ball.rvw[0], v, w, ball.rvw[3]])
+        event = StickBallCollision(self, self.cueing_ball, t=t)
+        event.resolve()
 
-        s = (psim.rolling
-             if abs(np.sum(physics.get_rel_velocity(rvw, ball.R))) <= psim.tol
-             else psim.sliding)
-
-        ball.set(rvw, s)
+        return event
 
 
     def aim_at(self, pos):

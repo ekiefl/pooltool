@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import psim.ani as ani
+import psim.engine as engine
 import psim.ani.utils as autils
 import psim.ani.action as action
 
@@ -48,6 +49,17 @@ class Handler(DirectObject.DirectObject):
                     action.aim: False,
                     action.fine_control: False,
                     action.move: True,
+                    action.quit: False,
+                    action.zoom: False,
+                },
+            },
+            'shot': {
+                'enter': self.shot_enter,
+                'exit': self.shot_exit,
+                'keymap': {
+                    action.aim: False,
+                    action.fine_control: False,
+                    action.move: False,
                     action.quit: False,
                     action.zoom: False,
                 },
@@ -162,6 +174,39 @@ class Handler(DirectObject.DirectObject):
         self.remove_task('quit_task')
 
 
+    def shot_enter(self):
+        self.mouse.hide()
+        self.mouse.relative()
+        self.mouse.track()
+
+        self.cue_stick.get_node('cue_stick').setX(0)
+        self.cue_stick.set_state_as_node_state()
+        shot = engine.SimulateShot(cue=self.cue_stick, table=self.table, balls=self.balls)
+        shot.simulate()
+
+        # FIXME this is just some temporary thing to update to the final state
+        for ball in self.balls.values():
+            ball.set_node_state_as_state()
+        self.cue_stick.set_node_state_as_state()
+
+        self.watch_action('escape', action.quit, True)
+        self.watch_action('mouse1', action.zoom, True)
+        self.watch_action('mouse1-up', action.zoom, False)
+        self.watch_action('a', action.aim, True)
+        self.watch_action('v', action.move, True)
+        self.watch_action('v-up', action.move, False)
+        self.watch_action('r', action.restart_shot, False)
+        self.watch_action('r-up', action.restart_shot, False)
+
+        self.add_task(self.shot_task, 'shot_task')
+        self.add_task(self.quit_task, 'quit_task')
+
+
+    def shot_exit(self):
+        self.remove_task('shot_task')
+        self.remove_task('quit_task')
+
+
     def reset_action_states(self):
         for key in self.keymap:
             self.keymap[key] = self.action_state_defaults[self.mode][key]
@@ -179,7 +224,7 @@ class InteractiveVisualization(ShowBase, MenuHandler, Handler, Tasks):
         self.disableMouse()
         self.mouse = Mouse()
         self.cam = CustomCamera()
-        self.table = Table(l=100,w=100)
+        self.table = Table(l=2,w=1)
         self.cue_stick = Cue()
 
         self.change_mode('menu')

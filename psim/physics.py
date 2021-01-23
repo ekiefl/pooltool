@@ -360,9 +360,14 @@ def evolve_perpendicular_spin_component(wz, ez, R, u_sp, g, t):
 
 def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
     # Otherwise ball.rvw will be modified and corresponding entry in self.history
+    # FIXME framework has changed, this may not be true
     rvw = rvw.copy()
 
     rvw[2, 2], rvw[3, 2] = evolve_perpendicular_spin_component(rvw[2, 2], rvw[3, 2], R, u_sp, g, t)
+    return rvw
+
+
+def evolve_stationary_state(rvw, t):
     return rvw
 
 

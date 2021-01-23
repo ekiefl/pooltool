@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
 import psim.utils as utils
-import psim.engine as engine
 import psim.ani.utils as autils
 import psim.ani.action as action
 
@@ -47,7 +46,9 @@ class Tasks(object):
             self.change_mode('view')
             return
         elif self.keymap[action.shoot]:
-            self.stroke_cue_stick()
+            if self.stroke_cue_stick():
+                self.change_mode('shot')
+                return
         elif self.keymap[action.zoom]:
             self.zoom_camera()
         else:
@@ -56,47 +57,41 @@ class Tasks(object):
         return task.cont
 
 
+    def shot_task(self, task):
+        if self.keymap[action.aim]:
+            self.change_mode('aim')
+            return
+        elif self.keymap[action.zoom]:
+            self.zoom_camera()
+        elif self.keymap[action.move]:
+            self.move_camera()
+        else:
+            if task.time > 1.0:
+                # Prevents shot follow through from moving camera
+                self.rotate_camera(cue_stick_too=False)
+            else:
+                # Update mouse positions so there is not a big jump
+                self.mouse.get_xy()
+
+        return task.cont
+
+
     def stroke_cue_stick(self):
-        # Store this in case the cue strikes the ball
+        # FIXME calculate dx/dt over several frames
         dt = self.mouse.get_dt()
         dx = self.mouse.get_dy()*0.1
+        self.cue_stick.set_state(V0 = dx/dt)
 
         cue_stick_node = self.cue_stick.get_node('cue_stick')
 
         newX = max(-0.5, cue_stick_node.getX() - dx)
         cue_stick_node.setX(newX)
 
-        if newX < 0:
-            # FIXME calculate dx/dt over several frames
-            self.take_shot(V0=dx/dt)
-            self.simulate_shot()
-
-            for ball in self.balls.values():
-                ball.set_node_state_as_state()
-
-            self.cue_stick.set_node_state_as_state()
-
-            self.change_mode('view')
-
         # get_dx() is called so that self.last_x is updated. Failing to do this will create a
         # potentially very large return value of get_dx() the next time it is called.
         self.mouse.get_dx()
 
-
-    def take_shot(self, V0):
-        self.cue_stick.get_node('cue_stick').setX(0)
-
-        #FIXME
-        self.cue_stick.set_state(V0=V0)
-        self.cue_stick.set_state_as_node_state()
-
-        self.cue_stick.strike(self.balls['cue'])
-        self.balls['cue'].update_next_transition_event()
-
-
-    def simulate_shot(self):
-        sim = engine.SimulateShot(cue=self.cue_stick, table=self.table, balls=self.balls)
-        sim.simulate()
+        return True if newX < 0 else False
 
 
     def zoom_camera(self):
@@ -146,6 +141,7 @@ class Tasks(object):
         #print(f"Tasks: {list(self.tasks.keys())}")
         #print(f"Memory: {utils.get_total_memory_usage()}")
         #print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
+        #print(f"Keymap: {self.keymap}")
         #print()
 
         return task.cont
