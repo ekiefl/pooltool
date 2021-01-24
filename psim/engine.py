@@ -198,12 +198,13 @@ class SystemHistory(Events):
 class ShotRender(object):
     def __init__(self):
         self.ball_animations = None
+        self.playback_speed = 1
 
 
     def init_ball_animations(self):
         self.ball_animations = Parallel()
         for ball in self.balls.values():
-            ball.set_playback_sequence(playback_speed=1)
+            ball.set_playback_sequence(playback_speed=self.playback_speed)
             self.ball_animations.append(ball.playback_sequence)
 
 
@@ -218,12 +219,29 @@ class ShotRender(object):
         self.ball_animations.set_t(0)
 
 
+    def toggle_pause(self):
+        if self.ball_animations.isPlaying():
+            self.pause_animation()
+        else:
+            self.resume_animation()
+
+
+    def offset_time(self, dt):
+        old_t = self.ball_animations.get_t()
+        new_t = max(0, min(old_t + dt, self.ball_animations.duration))
+        self.ball_animations.set_t(new_t)
+
+
     def pause_animation(self):
         self.ball_animations.pause()
 
 
     def resume_animation(self):
         self.ball_animations.resume()
+
+
+    def finish_animation(self):
+        self.ball_animations.finish()
 
 
     def slow_down(self):
@@ -244,6 +262,7 @@ class SimulateShot(System, SystemHistory, ShotRender):
 
         System.__init__(self, cue=cue, table=table, balls=balls)
         SystemHistory.__init__(self)
+        ShotRender.__init__(self)
 
 
     def simulate(self, t_final=None, strike=True, name='NA'):

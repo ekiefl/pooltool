@@ -8,6 +8,8 @@ import sys
 import numpy as np
 
 class Tasks(object):
+    frame = 0
+
     def menu_task(self, task):
         if self.keymap[action.exit]:
             sys.exit()
@@ -30,7 +32,6 @@ class Tasks(object):
     def view_task(self, task):
         if self.keymap[action.aim]:
             self.change_mode('aim')
-            return
         elif self.keymap[action.zoom]:
             self.zoom_camera()
         elif self.keymap[action.move]:
@@ -44,11 +45,9 @@ class Tasks(object):
     def aim_task(self, task):
         if self.keymap[action.view]:
             self.change_mode('view')
-            return
         elif self.keymap[action.shoot]:
             if self.stroke_cue_stick():
                 self.change_mode('shot')
-                return
         elif self.keymap[action.zoom]:
             self.zoom_camera()
         else:
@@ -60,13 +59,12 @@ class Tasks(object):
     def shot_view_task(self, task):
         if self.keymap[action.aim]:
             self.change_mode('aim')
-            return
         elif self.keymap[action.zoom]:
             self.zoom_camera()
         elif self.keymap[action.move]:
             self.move_camera()
         else:
-            if task.time > 1.0:
+            if task.time > 0.1:
                 # Prevents shot follow through from moving camera
                 self.rotate_camera(cue_stick_too=False)
             else:
@@ -77,6 +75,17 @@ class Tasks(object):
 
 
     def shot_animation_task(self, task):
+        if self.keymap[action.restart_shot]:
+            self.shot.restart_animation()
+
+        if self.keymap[action.rewind]:
+            rate = 0.02 if not self.keymap[action.fine_control] else 0.002
+            self.shot.offset_time(-rate)
+
+        if self.keymap[action.fast_forward]:
+            rate = 0.02 if not self.keymap[action.fine_control] else 0.002
+            self.shot.offset_time(rate)
+
         return task.cont
 
 
@@ -146,7 +155,8 @@ class Tasks(object):
         #print(f"Memory: {utils.get_total_memory_usage()}")
         #print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
         #print(f"Keymap: {self.keymap}")
-        #print()
+        #print(f"Frame: {self.frame}")
+        self.frame += 1
 
         return task.cont
 

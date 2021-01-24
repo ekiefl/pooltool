@@ -1,360 +1,360 @@
 #! /usr/bin/env python
 
 import psim.ani as ani
+import psim.engine as engine
 import psim.ani.utils as autils
+import psim.ani.action as action
 
 from psim.ani import model_paths
+from psim.objects import Ball, Table, Cue
+from psim.ani.menu import MenuHandler
+from psim.ani.tasks import Tasks
+from psim.ani.mouse import Mouse
+from psim.ani.camera import CustomCamera
 
-import sys
-import numpy as np
+import gc
 
 from panda3d.core import *
-from direct.task import Task
-from direct.actor.Actor import Actor
-from direct.gui.OnscreenText import OnscreenText
 from direct.showbase import DirectObject
 from direct.showbase.ShowBase import ShowBase
 
-from direct.gui.DirectGui import *
-from direct.interval.IntervalGlobal import *
-
-
-class Ball(object):
-    def __init__(self, ball, rvw_history, quat_history):
-        self._ball = ball
-
-        self.node = self.init_node()
-        self.node.setScale(self.get_scale_factor())
-
-        rvw_history[:, 0, 2] += self._ball.R
-        self.xyzs = autils.get_list_of_Vec3s_from_array(rvw_history[:, 0, :])
-        self.quats = autils.get_quaternion_list_from_array(quat_history)
-
-        self.num_frames = len(self.xyzs)
-
-        self.playback_sequence = None
-
-        self.set_pos_by_frame(0)
-
-
-    def set_playback_sequence(self, shot_dt, playback_speed, frame_start, frame_stop):
-        """Creates the sequence motions of the ball for a given playback speed"""
-        # Init the sequences
-        ball_sequence = Sequence()
-
-        playback_dt = shot_dt/playback_speed
-        duration, step_by = playback_dt, 1
-
-        for i in range(frame_start, frame_stop, step_by):
-            # Append to ball sequence
-            ball_sequence.append(self.get_playback_interval(i, duration))
-
-        self.playback_sequence = Parallel()
-        self.playback_sequence.append(ball_sequence)
-
-
-    def _get_playback_interval(self, node, frame, duration):
-        return LerpPosQuatInterval(
-            node,
-            duration,
-            self.xyzs[frame],
-            self.quats[frame],
-        )
-
-
-    def get_playback_interval(self, frame, duration):
-        return self._get_playback_interval(self.node, frame, duration)
-
-
-    def init_node(self):
-        """Loads ball model and reparents to table"""
-        ball_node = loader.loadModel('models/smiley')
-        expected_texture_name = f"{str(self._ball.id).split('_')[0]}_ball"
-
-        try:
-            tex = loader.loadTexture(model_paths[expected_texture_name])
-            ball_node.setTexture(tex, 1)
-        except KeyError:
-            # No ball texture is found for the given ball.id. Keeping smiley
-            pass
-
-        ball_node.reparentTo(render.find('table'))
-        return ball_node
-
-
-    def get_scale_factor(self):
-        """Find scale factor to match model size to ball's SI radius"""
-        m, M = self.node.getTightBounds()
-        current_R = (M - m)[0]/2
-
-        return self._ball.R / current_R
-
-
-    def _set_pos_by_frame(self, node, frame):
-        parent = self.node.getParent()
-        node.setQuat(parent, self.quats[frame])
-        node.setPos(parent, self.xyzs[frame])
-
-
-    def set_pos_by_frame(self, frame):
-        """Update the position of the ball via a frame number"""
-        self._set_pos_by_frame(self.node, frame)
-
-
 class Handler(DirectObject.DirectObject):
     def __init__(self):
-        self.accept('escape', sys.exit)
-        self.accept('space', self.toggle_pause)
-        self.accept('arrow_left', self.slow_down)
-        self.accept('arrow_right', self.speed_up)
-        self.accept('r', self.restart_shot)
-        self.accept('x', self.change_camera)
 
-        self.state_change = True
-
-        self.state = {
-            'paused': False,
-            'camera': 'default',
+        self.modes = {
+            'menu': {
+                'enter': self.menu_enter,
+                'exit': self.menu_exit,
+                'keymap': {
+                    action.exit: False,
+                    action.new_game: False,
+                }
+            },
+            'aim': {
+                'enter': self.aim_enter,
+                'exit': self.aim_exit,
+                'keymap': {
+                    action.fine_control: False,
+                    action.quit: False,
+                    action.shoot: False,
+                    action.view: False,
+                    action.zoom: False,
+                },
+            },
+            'view': {
+                'enter': self.view_enter,
+                'exit': self.view_exit,
+                'keymap': {
+                    action.aim: False,
+                    action.fine_control: False,
+                    action.move: True,
+                    action.quit: False,
+                    action.zoom: False,
+                },
+            },
+            'shot': {
+                'enter': self.shot_enter,
+                'exit': self.shot_exit,
+                'keymap': {
+                    action.aim: False,
+                    action.fine_control: False,
+                    action.move: False,
+                    action.toggle_pause: False,
+                    action.restart_shot: False,
+                    action.quit: False,
+                    action.zoom: False,
+                    action.rewind: False,
+                    action.fast_forward: False,
+                },
+            },
         }
 
+        # Store the above as default states
+        self.action_state_defaults = {}
+        for mode in self.modes:
+            self.action_state_defaults[mode] = {}
+            for a, default_state in self.modes[mode]['keymap'].items():
+                self.action_state_defaults[mode][a] = default_state
 
-    def change_camera(self):
-        if self.state['camera'] == 'default':
-            self.state['camera'] = 'bird'
-        elif self.state['camera'] == 'bird':
-            self.state['camera'] = 'default'
-        else:
-            raise ValueError("Unknown camera")
-
-        self.state_change = True
-
-
-    def toggle_pause(self):
-        self.state['paused'] = not self.state['paused']
-        self.state_change = True
+        self.mode = None
+        self.keymap = None
 
 
-    def restart_shot(self):
-        self.ball_parallel.set_t(0)
+    def update_key_map(self, action_name, action_state):
+        self.keymap[action_name] = action_state
 
 
-    def slow_down(self):
-        self.playback_speed *= 0.5
-        self.ball_parallel.setPlayRate(0.5*self.ball_parallel.getPlayRate())
+    def task_action(self, keystroke, action_name, action_state):
+        """Add action to keymap to be handled by tasks"""
+
+        self.accept(keystroke, self.update_key_map, [action_name, action_state])
 
 
-    def speed_up(self):
-        self.playback_speed *= 2.0
-        self.ball_parallel.setPlayRate(2.0*self.ball_parallel.getPlayRate())
+    def change_mode(self, mode):
+        assert mode in self.modes
+
+        self.end_mode()
+
+        # Build up operations for the new mode
+        self.mode = mode
+        self.keymap = self.modes[mode]['keymap']
+        self.modes[mode]['enter']()
 
 
-    def toggle_player_view(self):
-        w, l, h = self.shot.table.w, self.shot.table.l, self.shot.table.height
+    def end_mode(self):
+        # Stop watching actions related to mode
+        self.ignoreAll()
 
-        self.camera.setPos(self.table, 3/4*w, 1.40*l, 1.4*h)
-        self.camera.lookAt(self.table, w/2, 3*l/4, 0)
-
-
-    def toggle_birds_eye(self):
-        fov = self.camLens.getFov()
-        long_dim_is_y = True if self.shot.table.l >= self.shot.table.w else False
-        buffer_factor = 1.1
-
-        if long_dim_is_y and fov[0] >= fov[1]:
-            rotate = True
-        elif not long_dim_is_y and fov[1] >= fov[0]:
-            rotate = True
-        else:
-            rotate = False
-
-        zs = [
-            (self.shot.table.l if long_dim_is_y else self.shot.table.w)/2*buffer_factor / np.tan(max(fov)/2 * np.pi/180),
-            (self.shot.table.w if long_dim_is_y else self.shot.table.l)/2*buffer_factor / np.tan(min(fov)/2 * np.pi/180),
-        ]
-        self.camera.setPos(self.table, self.shot.table.w/2, self.shot.table.l/2, max(zs))
-        self.camera.setHpr(0, -90, 0) if not rotate else self.camera.setHpr(90, -90, 0)
+        # Tear down operations for the current mode
+        if self.mode is not None:
+            self.modes[self.mode]['exit']()
+            self.reset_action_states()
 
 
-    def master_task(self, task):
-        """Called each frame"""
-        if self.state_change:
+    def menu_enter(self):
+        self.mouse.show()
+        self.mouse.absolute()
+        self.show_menu('main')
 
-            if self.state['paused']:
-                self.ball_parallel.pause()
-            else:
-                self.ball_parallel.resume()
+        self.task_action('escape', action.exit, True)
+        self.task_action('escape-up', action.exit, False)
+        self.task_action('n', action.new_game, True)
+        self.task_action('n-up', action.new_game, False)
 
-            if self.state['camera'] == 'default':
-                self.toggle_player_view()
-            elif self.state['camera'] == 'bird':
-                self.toggle_birds_eye()
-
-        self.state_change = False
-
-        return Task.cont
+        self.add_task(self.menu_task, 'menu_task')
 
 
-class AnimateShot(ShowBase, Handler):
-    def __init__(self, shot, playback_speed=1):
+    def menu_exit(self):
+        self.hide_menus()
+        self.remove_task('menu_task')
+
+
+    def aim_enter(self):
+        self.mouse.hide()
+        self.mouse.relative()
+        self.mouse.track()
+
+        self.cue_stick.show_nodes()
+        self.cam.update_focus(self.balls['cue'].get_node('sphere').getPos())
+
+        self.task_action('escape', action.quit, True)
+        self.task_action('f', action.fine_control, True)
+        self.task_action('f-up', action.fine_control, False)
+        self.task_action('mouse1', action.zoom, True)
+        self.task_action('mouse1-up', action.zoom, False)
+        self.task_action('s', action.shoot, True)
+        self.task_action('s-up', action.shoot, False)
+        self.task_action('v', action.view, True)
+
+        self.add_task(self.aim_task, 'aim_task')
+        self.add_task(self.quit_task, 'quit_task')
+
+
+    def aim_exit(self):
+        self.remove_task('aim_task')
+        self.remove_task('quit_task')
+
+        self.cue_stick.hide_nodes()
+
+        self.cam.store_state('aim', overwrite=True)
+
+
+    def view_enter(self):
+        self.mouse.hide()
+        self.mouse.relative()
+        self.mouse.track()
+
+        self.task_action('escape', action.quit, True)
+        self.task_action('mouse1', action.zoom, True)
+        self.task_action('mouse1-up', action.zoom, False)
+        self.task_action('a', action.aim, True)
+        self.task_action('v', action.move, True)
+        self.task_action('v-up', action.move, False)
+
+        self.add_task(self.view_task, 'view_task')
+        self.add_task(self.quit_task, 'quit_task')
+
+
+    def view_exit(self):
+        self.remove_task('view_task')
+        self.remove_task('quit_task')
+
+
+    def run_simulation(self, task):
+        self.shot = engine.SimulateShot(cue=self.cue_stick, table=self.table, balls=self.balls)
+        self.shot.simulate()
+        self.shot.init_ball_animations()
+        self.shot.loop_animation()
+
+        self.accept('space', self.shot.toggle_pause)
+        self.accept('arrow_up', self.shot.speed_up)
+        self.accept('arrow_down', self.shot.slow_down)
+
+        self.add_task(self.shot_view_task, 'shot_view_task')
+        self.add_task(self.shot_animation_task, 'shot_animation_task')
+
+        return task.done
+
+
+    def shot_enter(self):
+        self.mouse.hide()
+        self.mouse.relative()
+        self.mouse.track()
+
+        self.cue_stick.get_node('cue_stick').setX(0)
+        self.cue_stick.set_state_as_node_state()
+
+        self.add_task(self.run_simulation, 'run_simulation', taskChain = 'simulation')
+
+        self.task_action('escape', action.quit, True)
+        self.task_action('mouse1', action.zoom, True)
+        self.task_action('mouse1-up', action.zoom, False)
+        self.task_action('a', action.aim, True)
+        self.task_action('v', action.move, True)
+        self.task_action('v-up', action.move, False)
+        self.task_action('r', action.restart_shot, True)
+        self.task_action('r-up', action.restart_shot, False)
+        self.task_action('f', action.fine_control, True)
+        self.task_action('f-up', action.fine_control, False)
+        self.task_action('arrow_left', action.rewind, True)
+        self.task_action('arrow_left-up', action.rewind, False)
+        self.task_action('arrow_right', action.fast_forward, True)
+        self.task_action('arrow_right-up', action.fast_forward, False)
+
+        self.add_task(self.quit_task, 'quit_task')
+
+
+    def shot_exit(self):
+        self.shot.finish_animation()
+        self.cue_stick.update_focus()
+
+        self.remove_task('shot_view_task')
+        self.remove_task('shot_animation_task')
+        self.remove_task('quit_task')
+        self.shot = None
+
+
+    def reset_action_states(self):
+        for key in self.keymap:
+            self.keymap[key] = self.action_state_defaults[self.mode][key]
+
+
+class Interface(ShowBase, MenuHandler, Handler, Tasks):
+    def __init__(self, *args, **kwargs):
         ShowBase.__init__(self)
+        MenuHandler.__init__(self)
         Handler.__init__(self)
+        Tasks.__init__(self)
 
-        self.shot = shot
-        self.playback_speed = playback_speed
-
-        # Class assumes these shot variables
-        self.dt = None
-        self.times = None
-        self.timestamp = 0
-        self.num_frames = None
-
-        # Class assumes these node variables
-        self.scene = None
-        self.table = None
+        self.tasks = {}
         self.balls = {}
-        self.lights = {}
+        self.disableMouse()
+        self.mouse = Mouse()
+        self.cam = CustomCamera()
+        self.table = Table(l=2,w=1)
+        self.cue_stick = Cue()
 
-        self.init_shot_info()
-        self.init_nodes()
+        self.change_mode('menu')
 
-        self.title = OnscreenText(text='psim',
-                                  style=1, fg=(1, 1, 0, 1), shadow=(0, 0, 0, 0.5),
-                                  pos=(0.87, -0.95), scale = .07)
+        self.scene = None
+        self.add_task(self.monitor, 'monitor')
 
-        self.ball_parallel = None
-        self.set_ball_playback_sequences(playback_speed=self.playback_speed)
-
-        self.go()
-
-
-
-    def init_shot_info(self):
-        self.shot.calculate_quaternions()
-        self.times = self.shot.get_time_history()
-
-        # only accept a shot with uniform timestamps
-        dts = np.diff(self.times)
-        self.dt = dts[0]
-        assert (np.round(dts, 6) == self.dt).all()
-
-        self.num_frames = self.shot.n
+        taskMgr.setupTaskChain('simulation', numThreads = 1, tickClock = None,
+                               threadPriority = None, frameBudget = None,
+                               frameSync = None, timeslicePriority = None)
 
 
-    def init_nodes(self):
-        self.init_table()
-        self.init_balls()
-        self.init_scene()
-        self.init_lights()
-        self.init_camera()
+    def add_task(self, *args, **kwargs):
+        task = taskMgr.add(*args, **kwargs)
+        self.tasks[task.name] = task
 
 
-    def set_ball_playback_sequences(self, playback_speed=1, frame_start=None, frame_stop=None):
-        if frame_start is None:
-            frame_start = 0
-        if frame_stop is None:
-            frame_stop = self.num_frames
+    def add_task_later(self, *args, **kwargs):
+        task = taskMgr.doMethodLater(*args, **kwargs)
+        self.tasks[task.name] = task
 
+
+    def remove_task(self, name):
+        taskMgr.remove(name)
+        del self.tasks[name]
+        pass
+
+
+    def close_scene(self):
+        self.cue_stick.remove_nodes()
         for ball in self.balls.values():
-            ball.set_playback_sequence(
-                playback_speed=playback_speed,
-                shot_dt=self.dt,
-                frame_start=frame_start,
-                frame_stop=frame_stop
-            )
+            ball.remove_nodes()
+        self.table.remove_nodes()
+        self.scene.removeNode()
+        del self.scene
+        gc.collect()
 
 
     def go(self):
-        self.taskMgr.add(self.master_task, "Master")
-
-        self.ball_parallel = Parallel()
-        for ball in self.balls:
-            self.ball_parallel.append(self.balls[ball].playback_sequence)
-
-        self.ball_parallel.loop()
+        self.init_game_nodes()
+        self.change_mode('aim')
 
 
-    def init_scene(self):
-        self.scene = loader.loadModel(model_paths['env.egg'])
-        self.scene.reparentTo(render)
-        self.scene.setScale(20)
-        self.scene.setPos(0, 6.5, -10)
+    def init_game_nodes(self):
+        self.init_scene()
+        self.init_table()
+        self.init_balls()
+        self.init_cue_stick()
 
-
-    def init_camera(self):
-        self.disableMouse()
-        self.camLens.setNear(0.2)
-
-        self.toggle_player_view()
+        self.cam.create_focus(
+            parent = self.table.get_node('cloth'),
+            pos = self.balls['cue'].get_node('sphere').getPos()
+        )
 
 
     def init_table(self):
-        w, l, h = self.shot.table.w, self.shot.table.l, self.shot.table.height
+        self.table.render()
 
-        self.table = NodePath()
 
-        self.table = render.attachNewNode(autils.make_rectangle(
-            x1=0, y1=0, z1=0, x2=w, y2=l, z2=0, name='table'
-        ))
+    def init_cue_stick(self):
+        self.cue_stick.render()
+        self.cue_stick.init_focus(self.balls['cue'])
 
-        self.table.setPos(0, 0, h)
 
-        # Currently there are no texture coordinates for make_rectangle, so this just picks a single
-        # color
-        table_tex = loader.loadTexture(model_paths['blue_cloth'])
-        table_tex.setWrapU(Texture.WM_repeat)
-        table_tex.setWrapV(Texture.WM_repeat)
-
-        self.table.setTexture(table_tex)
+    def init_scene(self):
+        self.scene = render.attachNewNode('scene')
 
 
     def init_balls(self):
-        for ball in self.shot.balls.values():
-            self.balls[ball.id] = self.init_ball(ball)
 
+        self.balls['cue'] = Ball('cue')
+        R = self.balls['cue'].R
+        self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, R]
 
-    def init_ball(self, ball):
-        rvw_history = self.shot.get_ball_rvw_history(ball.id)
-        quat_history = self.shot.get_ball_quat_history(ball.id)
+        self.balls['1'] = Ball('1')
+        self.balls['1'].rvw[0] = [self.table.center[0], self.table.B+1.4, R]
 
-        return Ball(ball, rvw_history, quat_history)
+        self.balls['2'] = Ball('2')
+        self.balls['2'].rvw[0] = [self.table.center[0], self.table.T-0.3, R]
 
+        self.balls['3'] = Ball('3')
+        self.balls['3'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+1.89, R]
 
-    def init_lights(self):
-        w, l, h = self.shot.table.w, self.shot.table.l, self.shot.table.lights_height
+        self.balls['4'] = Ball('4')
+        self.balls['4'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+0.2, R]
 
-        self.lights['ambient'] = {}
-        self.lights['overhead'] = {}
+        self.balls['5'] = Ball('5')
+        self.balls['5'].rvw[0] = [self.table.center[0] - self.table.w/6, self.table.B+0.2, R]
 
-        overhead_intensity = 0.6
+        self.balls['6'] = Ball('6')
+        self.balls['6'].rvw[0] = [self.table.center[0], self.table.T-0.03, R]
 
-        def add_overhead(x, y, z, name='plight'):
-            plight = PointLight(name)
-            plight.setColor((overhead_intensity, overhead_intensity, overhead_intensity, 1))
-            plight.setShadowCaster(True, 1024, 1024)
-            plight.setAttenuation((1, 0, 1)) # inverse square attenutation
-            plight.setCameraMask(0b0001)
+        self.balls['7'] = Ball('7')
+        self.balls['7'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.B+1.89, R]
 
-            self.lights['overhead'][name] = self.table.attachNewNode(plight)
-            self.lights['overhead'][name].setPos(self.table, x, y, z)
-            self.table.setLight(self.lights['overhead'][name])
+        self.balls['8'] = Ball('8')
+        self.balls['8'].rvw[0] = [self.table.center[0]+0.3, self.table.T-0.03, R]
 
-        plight = PointLight('test')
-        plight.setColor((1,1,0,0))
-        plight.setShadowCaster(False, 1024, 1024)
-        self.lights['overhead']['test'] = self.table.attachNewNode(plight)
-        self.lights['overhead']['test'].setPos(self.table, 0.5*w, 1.0*l, h)
+        self.balls['10'] = Ball('10')
+        self.balls['10'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.T-0.2, R]
 
-        add_overhead(0.5*w, 1.0*l, h, name='overhead_top')
-        add_overhead(0.5*w, 0.5*l, h, name='overhead_middle')
-        add_overhead(0.5*w, 0.0*l, h, name='overhead_bottom')
-
-        ambient_intensity = 0.6
-        alight = AmbientLight('alight')
-        alight.setColor((ambient_intensity, ambient_intensity, ambient_intensity, 1))
-        self.lights['ambient']['ambient1'] = render.attachNewNode(alight)
-        self.table.setLight(self.lights['ambient']['ambient1'])
-
-        self.table.setShaderAuto()
+        for ball in self.balls.values():
+            ball.render()
 
 
     def start(self):
