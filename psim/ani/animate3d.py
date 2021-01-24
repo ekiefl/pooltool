@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
 import psim.ani as ani
-import psim.engine as engine
 import psim.ani.utils as autils
 import psim.ani.action as action
 
@@ -135,7 +134,7 @@ class Handler(DirectObject.DirectObject):
         self.mouse.track()
 
         self.cue_stick.show_nodes()
-        self.cam.update_focus(self.balls['cue'].get_node('sphere').getPos())
+        self.cam.update_focus(self.balls['cue'].get_node('ball').getPos())
 
         self.task_action('escape', action.quit, True)
         self.task_action('f', action.fine_control, True)
@@ -178,22 +177,6 @@ class Handler(DirectObject.DirectObject):
     def view_exit(self):
         self.remove_task('view_task')
         self.remove_task('quit_task')
-
-
-    def run_simulation(self, task):
-        self.shot = engine.SimulateShot(cue=self.cue_stick, table=self.table, balls=self.balls)
-        self.shot.simulate()
-        self.shot.init_ball_animations()
-        self.shot.loop_animation()
-
-        self.accept('space', self.shot.toggle_pause)
-        self.accept('arrow_up', self.shot.speed_up)
-        self.accept('arrow_down', self.shot.slow_down)
-
-        self.add_task(self.shot_view_task, 'shot_view_task')
-        self.add_task(self.shot_animation_task, 'shot_animation_task')
-
-        return task.done
 
 
     def shot_enter(self):
@@ -303,7 +286,7 @@ class Interface(ShowBase, MenuHandler, Handler, Tasks):
 
         self.cam.create_focus(
             parent = self.table.get_node('cloth'),
-            pos = self.balls['cue'].get_node('sphere').getPos()
+            pos = self.balls['cue'].get_node('ball').getPos()
         )
 
 

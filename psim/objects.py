@@ -222,21 +222,51 @@ class BallRender(Render):
 
 
     def init_sphere(self):
-        node = loader.loadModel('models/smiley')
-        expected_texture_name = f"{str(self.id).split('_')[0]}_ball"
+        node = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}")
+
+        sphere_node = loader.loadModel('models/smiley')
+        if self.id == 'cue':
+            expected_texture_name = 'asdfasdf'
+        else:
+            expected_texture_name = f"{str(self.id).split('_')[0]}_ball"
 
         try:
             tex = loader.loadTexture(model_paths[expected_texture_name])
-            node.setTexture(tex, 1)
+            sphere_node.setTexture(tex, 1)
         except KeyError:
             # No ball texture is found for the given ball.id. Keeping smiley
             pass
 
-        node.reparentTo(render.find('scene').find('cloth'))
-        node.setScale(self.get_scale_factor(node))
+        sphere_node.reparentTo(node)
+        sphere_node.setScale(self.get_scale_factor(sphere_node))
+
         node.setPos(*self.rvw[0,:])
 
-        self.nodes['sphere'] = node
+        self.nodes['sphere'] = sphere_node
+        self.nodes['ball'] = node
+
+        self.randomize_orientation()
+
+
+    def init_arrow(self):
+        """Good for spin diagnostics"""
+        arrow = loader.loadModel(model_paths['cylinder'])
+
+        m, M = arrow.getTightBounds()
+        model_R, model_l = (M-m)[0]/2, (M-m)[2]
+
+        arrow.setSx(self.R / 7 / model_R)
+        arrow.setSy(self.R / 7 / model_R)
+        arrow.setSz(self.R*3 / model_l)
+
+        arrow.setColor(0, 0, 1, 1)
+        m, M = arrow.getTightBounds()
+        model_R, model_l = (M-m)[0]/2, (M-m)[2]
+
+        arrow.reparentTo(self.nodes['ball'])
+        arrow.setZ(arrow.getZ() + model_l/2)
+
+        self.nodes['arrow'] = arrow
 
 
     def get_scale_factor(self, node):
@@ -248,7 +278,7 @@ class BallRender(Render):
 
 
     def get_node_state(self):
-        x, y, z = self.nodes['sphere'].getPos()
+        x, y, z = self.nodes['ball'].getPos()
         return x, y, z
 
 
@@ -257,7 +287,7 @@ class BallRender(Render):
 
 
     def set_node_state_as_state(self):
-        self.nodes['sphere'].setPos(*self.rvw[0,:])
+        self.nodes['ball'].setPos(*self.rvw[0,:])
 
 
     def set_playback_sequence(self, playback_speed=1):
@@ -275,7 +305,7 @@ class BallRender(Render):
         for i in range(len(playback_dts)):
             # Append to ball sequence
             ball_sequence.append(LerpPosQuatInterval(
-                nodePath = self.nodes['sphere'],
+                nodePath = self.nodes['ball'],
                 duration = playback_dts[i],
                 pos = xyzs[i+1],
                 quat = quats[i+1]
@@ -285,9 +315,22 @@ class BallRender(Render):
         self.playback_sequence.append(ball_sequence)
 
 
+    def randomize_orientation(self):
+        self.get_node('sphere').setHpr(*np.random.uniform(-180, 180, size=3))
+
+
+    def reset_angular_integration(self):
+        ball, sphere = self.get_node('ball'), self.get_node('sphere')
+        sphere.setQuat(sphere.getQuat() * ball.getQuat())
+
+        ball.setHpr(0, 0, 0)
+        self.rvw[3] = np.zeros(3)
+
+
     def render(self):
         super().render()
         self.init_sphere()
+        #self.init_arrow()
 
 
 class BallHistory(object):
@@ -471,7 +514,7 @@ class CueRender(Render):
 
 
     def update_focus(self):
-        self.nodes['cue_stick_focus'].setPos(self.follow.get_node('sphere').getPos())
+        self.nodes['cue_stick_focus'].setPos(self.follow.get_node('ball').getPos())
 
 
     def get_node_state(self):

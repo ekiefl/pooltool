@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import psim.utils as utils
+import psim.engine as engine
 import psim.ani.utils as autils
 import psim.ani.action as action
 
@@ -87,6 +88,23 @@ class Tasks(object):
             self.shot.offset_time(rate)
 
         return task.cont
+
+
+    def run_simulation(self, task):
+        """Run a pool simulation"""
+        self.shot = engine.SimulateShot(cue=self.cue_stick, table=self.table, balls=self.balls)
+        self.shot.simulate()
+        self.shot.init_ball_animations()
+        self.shot.loop_animation()
+
+        self.accept('space', self.shot.toggle_pause)
+        self.accept('arrow_up', self.shot.speed_up)
+        self.accept('arrow_down', self.shot.slow_down)
+
+        self.add_task(self.shot_view_task, 'shot_view_task')
+        self.add_task(self.shot_animation_task, 'shot_animation_task')
+
+        return task.done
 
 
     def stroke_cue_stick(self):

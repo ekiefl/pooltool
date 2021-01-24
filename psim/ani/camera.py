@@ -20,7 +20,7 @@ class CustomCamera(object):
 
         # create visible object
         self.focus_object = loader.loadModel('smiley.egg')
-        self.focus_object.setScale(0.005)
+        self.focus_object.setScale(0.002)
         self.focus_object.setH(-90) # Smiley faces away from camera ways
         self.focus_object.setColor(1,0,0,1)
         self.focus_object.reparentTo(self.focus)

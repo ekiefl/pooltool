@@ -106,6 +106,7 @@ class SystemHistory(Events):
             ball.history.reset_history()
             ball.reset_events()
             ball.set_time(0)
+            ball.reset_angular_integration()
 
         self.reset_events()
 
