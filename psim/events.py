@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import psim
+import psim.utils as utils
 import psim.physics as physics
 
 import numpy as np
@@ -82,6 +83,13 @@ class BallBallCollision(Collision):
         ball2.set(rvw2, s2, t=self.time)
         ball2.update_next_transition_event()
 
+        # We find the minimum required representation of the angular velocity integration vector.
+        # Comment this out and see what happens if you don't do this. FIXME the solutioin is to get
+        # rid of angular velocity integration vector and calculate the quaternions directly from
+        # angular velocity
+        ball1.rvw[3] = utils.normalize_rotation_vector(ball1.rvw[3])
+        ball2.rvw[3] = utils.normalize_rotation_vector(ball2.rvw[3])
+
 
 class BallCushionCollision(Collision):
     event_type = type_ball_cushion
@@ -107,6 +115,12 @@ class BallCushionCollision(Collision):
 
         ball.set(rvw, s, t=self.time)
         ball.update_next_transition_event()
+
+        # We find the minimum required representation of the angular velocity integration vector.
+        # Comment this out and see what happens if you don't do this. FIXME the solutioin is to get
+        # rid of angular velocity integration vector and calculate the quaternions directly from
+        # angular velocity
+        ball.rvw[3] = utils.normalize_rotation_vector(ball.rvw[3])
 
 
 class StickBallCollision(Collision):
@@ -144,6 +158,12 @@ class Transition(Event):
     def resolve(self):
         self.ball.s = self.state_end
         self.ball.update_next_transition_event()
+
+        # We find the minimum required representation of the angular velocity integration vector.
+        # Comment this out and see what happens if you don't do this. FIXME the solutioin is to get
+        # rid of angular velocity integration vector and calculate the quaternions directly from
+        # angular velocity
+        self.ball.rvw[3] = utils.normalize_rotation_vector(self.ball.rvw[3])
 
 
 class SpinningStationaryTransition(Transition):

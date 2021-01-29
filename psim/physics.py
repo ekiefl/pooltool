@@ -29,11 +29,6 @@ def resolve_ball_ball_collision(rvw1, rvw2):
     rvw1[1] = t * v_mag*np.sin(beta) + v2
     rvw2[1] = n * v_mag*np.cos(beta) + v2
 
-    # We find the minimum required representation of the angular vector to avoid issues later on. We
-    # do this whenever there is a collision
-    rvw1[3] = utils.normalize_rotation_vector(rvw1[3])
-    rvw2[3] = utils.normalize_rotation_vector(rvw2[3])
-
     return rvw1, rvw2
 
 
@@ -95,10 +90,6 @@ def resolve_ball_rail_collision(rvw, normal, R, m, h):
 
     # Change back to table reference frame
     rvw = utils.coordinate_rotation(rvw_R.T, psi).T
-
-    # We find the minimum required representation of the angular vector to avoid issues later on. We
-    # do this whenever there is a collision
-    rvw[3] = utils.normalize_rotation_vector(rvw[3])
 
     return rvw
 
