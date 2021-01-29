@@ -9,6 +9,7 @@ import psim.configurations as configurations
 from psim.events import *
 from psim.objects import NonObject, DummyBall, BallHistory
 
+from panda3d.direct import HideInterval, ShowInterval
 from direct.interval.IntervalGlobal import *
 
 import copy
@@ -106,7 +107,6 @@ class SystemHistory(Events):
             ball.history.reset_history()
             ball.reset_events()
             ball.set_time(0)
-            ball.reset_angular_integration()
 
         self.reset_events()
 
@@ -127,7 +127,7 @@ class SystemHistory(Events):
             ball.history.vectorize()
 
 
-    def continuize(self, dt=0.02):
+    def continuize(self, dt=0.01):
         """Create BallHistory for each ball with timepoints _inbetween_ events--attach to respective ball
 
         Notes
@@ -198,61 +198,95 @@ class SystemHistory(Events):
 
 class ShotRender(object):
     def __init__(self):
+        self.shot_animation = None
         self.ball_animations = None
+        self.stroke_animation = None
         self.playback_speed = 1
 
 
-    def init_ball_animations(self):
+    def init_shot_animation(self):
+
         self.ball_animations = Parallel()
         for ball in self.balls.values():
             ball.set_playback_sequence(playback_speed=self.playback_speed)
             self.ball_animations.append(ball.playback_sequence)
 
+        self.cue.set_stroke_sequence()
+
+        self.stroke_animation = Sequence(
+            ShowInterval(self.cue.get_node('cue_stick')),
+            self.cue.stroke_sequence,
+            HideInterval(self.cue.get_node('cue_stick')),
+        )
+
+        self.shot_animation = Sequence(
+            self.stroke_animation,
+            self.ball_animations,
+            Func(self.restart_ball_animations)
+        )
+
 
     def loop_animation(self):
-        if self.ball_animations is None:
-            raise Exception("First call ShotRender.init_ball_animations()")
+        if self.shot_animation is None:
+            raise Exception("First call ShotRender.init_shot_animation()")
 
-        self.ball_animations.loop()
+        self.shot_animation.loop()
 
 
     def restart_animation(self):
+        self.shot_animation.set_t(0)
+
+
+    def restart_ball_animations(self):
         self.ball_animations.set_t(0)
 
 
     def toggle_pause(self):
-        if self.ball_animations.isPlaying():
+        if self.shot_animation.isPlaying():
             self.pause_animation()
         else:
             self.resume_animation()
 
 
     def offset_time(self, dt):
-        old_t = self.ball_animations.get_t()
-        new_t = max(0, min(old_t + dt, self.ball_animations.duration))
-        self.ball_animations.set_t(new_t)
+        old_t = self.shot_animation.get_t()
+        new_t = max(0, min(old_t + dt, self.shot_animation.duration))
+        self.shot_animation.set_t(new_t)
 
 
     def pause_animation(self):
-        self.ball_animations.pause()
+        self.shot_animation.pause()
 
 
     def resume_animation(self):
-        self.ball_animations.resume()
+        self.shot_animation.resume()
 
 
     def finish_animation(self):
-        self.ball_animations.finish()
+        self.shot_animation.finish()
 
 
     def slow_down(self):
         self.playback_speed *= 0.5
-        self.ball_animations.setPlayRate(0.5*self.ball_animations.getPlayRate())
+        self.shot_animation.setPlayRate(0.5*self.shot_animation.getPlayRate())
 
 
     def speed_up(self):
         self.playback_speed *= 2.0
-        self.ball_animations.setPlayRate(2.0*self.ball_animations.getPlayRate())
+        self.shot_animation.setPlayRate(2.0*self.shot_animation.getPlayRate())
+
+
+    def exit_ops(self):
+        self.finish_animation()
+        self.ball_animations.finish()
+
+        self.cue.reset_state()
+        self.cue.set_render_state_as_object_state()
+        self.cue.update_focus()
+
+        for ball in self.balls.values():
+            ball.reset_angular_integration()
+
 
 
 
@@ -297,12 +331,8 @@ class SimulateShot(System, SystemHistory, ShotRender):
             self.progress.update(msg)
             self.progress.increment(increment_to=int(energy_start - energy))
 
-        self.run.warning('', header='Pre-run info', lc='green')
-        self.run.info('name', name)
-        self.run.info('num balls', len(self.balls))
-        self.run.info('table dimensions', f"{self.table.l}m x {self.table.w}m")
+        self.run.warning('', header=name, lc='green')
         self.run.info('starting energy', f"{np.round(energy_start, 2)}J")
-        self.run.info('float precision', psim.tol, nl_after=1)
 
         self.progress.new(f"Running", progress_total_items=int(energy_start))
 
@@ -326,7 +356,6 @@ class SimulateShot(System, SystemHistory, ShotRender):
 
         self.progress.end()
 
-        self.run.warning('', header='Post-run info', lc='green')
         self.run.info('Finished after', self.progress.t.time_elapsed_precise())
         self.run.info('Number of events', len(self.events), nl_after=1)
 

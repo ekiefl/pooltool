@@ -6,10 +6,11 @@ import psim.ani.action as action
 
 from psim.ani import model_paths
 from psim.objects import Ball, Table, Cue
-from psim.ani.menu import MenuHandler
+from psim.ani.menu import MenuHandler, GenericMenu
 from psim.ani.tasks import Tasks
 from psim.ani.mouse import Mouse
 from psim.ani.camera import CustomCamera
+from psim.configurations import NineBallRack
 
 import gc
 
@@ -17,7 +18,7 @@ from panda3d.core import *
 from direct.showbase import DirectObject
 from direct.showbase.ShowBase import ShowBase
 
-class Handler(DirectObject.DirectObject):
+class Handler(object):
     def __init__(self):
 
         self.modes = {
@@ -35,9 +36,19 @@ class Handler(DirectObject.DirectObject):
                 'keymap': {
                     action.fine_control: False,
                     action.quit: False,
-                    action.shoot: False,
+                    action.stroke: False,
                     action.view: False,
                     action.zoom: False,
+                    action.elevation: False,
+                    action.english: False,
+                },
+            },
+            'stroke': {
+                'enter': self.stroke_enter,
+                'exit': self.stroke_exit,
+                'keymap': {
+                    action.fine_control: False,
+                    action.stroke: True,
                 },
             },
             'view': {
@@ -134,6 +145,7 @@ class Handler(DirectObject.DirectObject):
         self.mouse.track()
 
         self.cue_stick.show_nodes()
+        self.cue_stick.get_node('cue_stick').setX(0)
         self.cam.update_focus(self.balls['cue'].get_node('ball').getPos())
 
         self.task_action('escape', action.quit, True)
@@ -141,9 +153,12 @@ class Handler(DirectObject.DirectObject):
         self.task_action('f-up', action.fine_control, False)
         self.task_action('mouse1', action.zoom, True)
         self.task_action('mouse1-up', action.zoom, False)
-        self.task_action('s', action.shoot, True)
-        self.task_action('s-up', action.shoot, False)
+        self.task_action('s', action.stroke, True)
         self.task_action('v', action.view, True)
+        self.task_action('b', action.elevation, True)
+        self.task_action('b-up', action.elevation, False)
+        self.task_action('e', action.english, True)
+        self.task_action('e-up', action.english, False)
 
         self.add_task(self.aim_task, 'aim_task')
         self.add_task(self.quit_task, 'quit_task')
@@ -156,6 +171,27 @@ class Handler(DirectObject.DirectObject):
         self.cue_stick.hide_nodes()
 
         self.cam.store_state('aim', overwrite=True)
+
+
+    def stroke_enter(self):
+        self.mouse.hide()
+        self.mouse.relative()
+        self.mouse.track()
+
+        self.cue_stick.track_stroke()
+        self.cue_stick.show_nodes()
+
+        self.task_action('f', action.fine_control, True)
+        self.task_action('f-up', action.fine_control, False)
+        self.task_action('s', action.stroke, True)
+        self.task_action('s-up', action.stroke, False)
+
+        self.add_task(self.stroke_task, 'stroke_task')
+
+
+    def stroke_exit(self):
+        self.remove_task('stroke_task')
+        self.cam.load_state('aim')
 
 
     def view_enter(self):
@@ -184,8 +220,14 @@ class Handler(DirectObject.DirectObject):
         self.mouse.relative()
         self.mouse.track()
 
-        self.cue_stick.get_node('cue_stick').setX(0)
-        self.cue_stick.set_state_as_node_state()
+        self.shot_sim_overlay = GenericMenu(
+            title = 'Calculating shot...',
+            frame_color = (0,0,0,0.4),
+            title_pos = (0,0,-0.2),
+        )
+        self.shot_sim_overlay.show()
+
+        self.cue_stick.set_object_state_as_render_state()
 
         self.add_task(self.run_simulation, 'run_simulation', taskChain = 'simulation')
 
@@ -208,8 +250,7 @@ class Handler(DirectObject.DirectObject):
 
 
     def shot_exit(self):
-        self.shot.finish_animation()
-        self.cue_stick.update_focus()
+        self.shot.exit_ops()
 
         self.remove_task('shot_view_task')
         self.remove_task('shot_animation_task')
@@ -234,7 +275,7 @@ class Interface(ShowBase, MenuHandler, Handler, Tasks):
         self.disableMouse()
         self.mouse = Mouse()
         self.cam = CustomCamera()
-        self.table = Table(l=2,w=1)
+        self.table = Table(l=2.0,w=1)
         self.cue_stick = Cue()
 
         self.change_mode('menu')
@@ -304,37 +345,56 @@ class Interface(ShowBase, MenuHandler, Handler, Tasks):
 
 
     def init_balls(self):
+        self.balls['1'] = Ball('1')
+        self.balls['2'] = Ball('2')
+        self.balls['3'] = Ball('3')
+        self.balls['4'] = Ball('4')
+        self.balls['5'] = Ball('5')
+        self.balls['6'] = Ball('6')
+        self.balls['7'] = Ball('7')
+        self.balls['8'] = Ball('8')
+        self.balls['10'] = Ball('10')
+        c = NineBallRack(list(self.balls.values()), spacing_factor=1e-2)
+        c.arrange()
+        c.center_by_table(self.table)
 
         self.balls['cue'] = Ball('cue')
-        R = self.balls['cue'].R
-        self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, R]
+        self.balls['cue'].rvw[0] = [self.table.center[0] - 0.2, self.table.B+0.33, 0]
 
-        self.balls['1'] = Ball('1')
-        self.balls['1'].rvw[0] = [self.table.center[0], self.table.B+1.4, R]
+        for ball in self.balls.values():
+            ball.rvw[0,2] = ball.R
 
-        self.balls['2'] = Ball('2')
-        self.balls['2'].rvw[0] = [self.table.center[0], self.table.T-0.3, R]
 
-        self.balls['3'] = Ball('3')
-        self.balls['3'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+1.89, R]
+        #self.balls['cue'] = Ball('cue')
+        #R = self.balls['cue'].R
+        #self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, R]
 
-        self.balls['4'] = Ball('4')
-        self.balls['4'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+0.2, R]
+        #self.balls['1'] = Ball('1')
+        #self.balls['1'].rvw[0] = [self.table.center[0], self.table.B+1.4, R]
 
-        self.balls['5'] = Ball('5')
-        self.balls['5'].rvw[0] = [self.table.center[0] - self.table.w/6, self.table.B+0.2, R]
+        #self.balls['2'] = Ball('2')
+        #self.balls['2'].rvw[0] = [self.table.center[0], self.table.T-0.3, R]
 
-        self.balls['6'] = Ball('6')
-        self.balls['6'].rvw[0] = [self.table.center[0], self.table.T-0.03, R]
+        #self.balls['3'] = Ball('3')
+        #self.balls['3'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+1.89, R]
 
-        self.balls['7'] = Ball('7')
-        self.balls['7'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.B+1.89, R]
+        #self.balls['4'] = Ball('4')
+        #self.balls['4'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+0.2, R]
 
-        self.balls['8'] = Ball('8')
-        self.balls['8'].rvw[0] = [self.table.center[0]+0.3, self.table.T-0.03, R]
+        #self.balls['5'] = Ball('5')
+        #self.balls['5'].rvw[0] = [self.table.center[0] - self.table.w/6, self.table.B+0.2, R]
 
-        self.balls['10'] = Ball('10')
-        self.balls['10'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.T-0.2, R]
+        #self.balls['6'] = Ball('6')
+        #self.balls['6'].rvw[0] = [self.table.center[0], self.table.T-0.03, R]
+
+        #self.balls['7'] = Ball('7')
+        #self.balls['7'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.B+1.89, R]
+
+        #self.balls['8'] = Ball('8')
+        #self.balls['8'].rvw[0] = [self.table.center[0]+0.3, self.table.T-0.03, R]
+
+        #self.balls['10'] = Ball('10')
+        #self.balls['10'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.T-0.2, R]
 
         for ball in self.balls.values():
             ball.render()

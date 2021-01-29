@@ -51,9 +51,9 @@ class MenuHandler(object):
 
 
 class GenericMenu(object):
-    def __init__(self, title=''):
+    def __init__(self, title='', frame_color=(0,0,0,1), title_pos=(0,0,0.8)):
         self.titleMenuBackdrop = DirectFrame(
-            frameColor = (0,0,0,1),
+            frameColor = frame_color,
             frameSize = (-1,1,-1,1),
             parent = render2d,
         )
@@ -75,7 +75,7 @@ class GenericMenu(object):
         self.title = DirectLabel(
             text = title,
             scale = self.text_scale * 1.5,
-            pos = (0, 0, 0.8),
+            pos = title_pos,
             parent = self.titleMenu,
             relief = None,
             text_fg = (1,1,1,1),
