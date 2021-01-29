@@ -16,6 +16,16 @@ class Mouse(ClockObject):
         self.tracking = False
 
 
+    def __enter__(self):
+        if not self.tracking:
+            raise Exception("Mouse :: self.tracking is False")
+        return self
+
+
+    def __exit__(self, *args):
+        self.touch()
+
+
     @staticmethod
     def hide():
         props = WindowProperties()
@@ -43,74 +53,56 @@ class Mouse(ClockObject):
         base.win.requestProperties(props)
 
 
+    def touch(self):
+        self.last_x, self.last_y = self.get_xy()
+        self.last_t = self.getRealTime() - self.getDt()
+
+
     def track(self):
         if not self.tracking and self.mouse.hasMouse():
-            self.last_x, self.last_y = self.get_xy()
-            self.last_t = self.getRealTime() - self.getDt()
             self.tracking = True
+            self.touch()
 
 
-    def get_x(self, update=True):
-        x = self.mouse.getMouseX()
-
-        if update:
-            self.last_x = x
-            self.last_t = self.getRealTime() - self.getDt()
-
-        return x
+    def get_x(self):
+        return self.mouse.getMouseX()
 
 
-    def get_y(self, update=True):
-        y = self.mouse.getMouseY()
-
-        if update:
-            self.last_y = y
-            self.last_t = self.getRealTime() - self.getDt()
-
-        return y
+    def get_y(self):
+        return self.mouse.getMouseY()
 
 
-    def get_xy(self, update=True):
-        x, y = self.get_x(update=False), self.get_y(update=False)
-
-        if update:
-            self.last_x = x
-            self.last_y = y
-            self.last_t = self.getRealTime() - self.getDt()
-
-        return x, y
+    def get_xy(self):
+        return self.get_x(), self.get_y()
 
 
-    def get_dx(self, update=True):
-        last_x  = self.last_x
-        return self.get_x(update=update) - last_x
+    def get_dx(self):
+        return self.get_x() - self.last_x
 
 
-    def get_dy(self, update=True):
-        last_y  = self.last_y
-        return self.get_y(update=update) - last_y
+    def get_dy(self):
+        return self.get_y() - self.last_y
 
 
-    def get_vel_x(self, update=True):
-        dt = self.getRealTime() - self.last_t
+    def get_vel_x(self):
+        dt = self.get_dt()
 
         if not dt:
             return np.inf
 
-        return self.get_dx(update=update)/dt
+        return self.get_dx()/dt
 
 
-    def get_vel_y(self, update=True):
-        dt = self.getRealTime() - self.last_t
+    def get_vel_y(self):
+        dt = self.get_dt()
 
         if not dt:
             return np.inf
 
-        return self.get_dy(update=update)/dt
+        return self.get_dy()/dt
 
 
     def get_dt(self):
         return self.getRealTime() - self.last_t
-
 
 
