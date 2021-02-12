@@ -534,7 +534,7 @@ class CueRender(Render):
         self.stroke_sequence = Sequence()
 
         # If the stroke is longer than max_time seconds, truncate to max_time
-        max_time = 1.5
+        max_time = 1.0
         backstroke_time, apex_time, strike_time = self.get_stroke_times()
         if strike_time > max_time:
             idx = min(range(len(self.stroke_pos)), key=lambda i: abs(self.stroke_pos[i] - (strike_time - max_time)))
