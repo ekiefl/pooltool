@@ -1,3 +1,13 @@
+
+# FIXME eventually models should be distributed
+models/
+
+theory/Dynamics_in_Carom_and_Three_Cushion_Billiards.pdf
+theory/ball_cushion_inhwan_han.pdf
+
+.DS_Store
+default.profraw
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
