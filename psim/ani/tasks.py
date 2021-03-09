@@ -81,13 +81,18 @@ class Tasks(object):
         f = 0.1
         delta_y, delta_z = dx*f, dy*f
 
-        # This correspons to side spin
         max_english = 2/5
-        new_y = max(-max_english*R, min(max_english*R, cue.getY() + delta_y))
-        cue.setY(new_y)
 
-        # This corresponds to top/bottom spin
-        new_z = max(-max_english*R, min(max_english*R, cue.getZ() + delta_z))
+        # y corresponds to side spin, z to top/bottom spin
+        new_y = cue.getY() + delta_y
+        new_z = cue.getZ() + delta_z
+
+        norm = np.sqrt(new_y**2 + new_z**2)
+        if norm > max_english*R:
+            new_y *= max_english*R/norm
+            new_z *= max_english*R/norm
+
+        cue.setY(new_y)
         cue.setZ(new_z)
 
 
