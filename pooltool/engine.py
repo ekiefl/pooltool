@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 
-import psim
-import psim.utils as utils
-import psim.physics as physics
-import psim.terminal as terminal
-import psim.configurations as configurations
+import pooltool
+import pooltool.utils as utils
+import pooltool.physics as physics
+import pooltool.terminal as terminal
+import pooltool.configurations as configurations
 
-from psim.events import *
-from psim.objects import NonObject, DummyBall, BallHistory
+from pooltool.events import *
+from pooltool.objects import NonObject, DummyBall, BallHistory
 
 from panda3d.direct import HideInterval, ShowInterval
 from direct.interval.IntervalGlobal import *
@@ -189,7 +189,7 @@ class SystemHistory(Events):
                     t=remainder,
                 )
 
-                cts_history.add(rvw, s, next_event.time - psim.tol)
+                cts_history.add(rvw, s, next_event.time - pooltool.tol)
                 cts_history.add(ball.history.rvw[n+1], ball.history.s[n+1], next_event.time)
 
             # Attach the newly created history to the ball, overwriting the existing history
@@ -430,7 +430,7 @@ class SimulateShot(System, SystemHistory, ShotRender):
                 if i >= j:
                     continue
 
-                if ball1.s == psim.stationary and ball2.s == psim.stationary:
+                if ball1.s == pooltool.stationary and ball2.s == pooltool.stationary:
                     continue
 
                 dtau_E = physics.get_ball_ball_collision_time(
@@ -438,8 +438,8 @@ class SimulateShot(System, SystemHistory, ShotRender):
                     rvw2=ball2.rvw,
                     s1=ball1.s,
                     s2=ball2.s,
-                    mu1=(ball1.u_s if ball1.s == psim.sliding else ball1.u_r),
-                    mu2=(ball2.u_s if ball2.s == psim.sliding else ball2.u_r),
+                    mu1=(ball1.u_s if ball1.s == pooltool.sliding else ball1.u_r),
+                    mu2=(ball2.u_s if ball2.s == pooltool.sliding else ball2.u_r),
                     m1=ball1.m,
                     m2=ball2.m,
                     g1=ball1.g,
@@ -463,7 +463,7 @@ class SimulateShot(System, SystemHistory, ShotRender):
         involved_agents = tuple([DummyBall(), NonObject()])
 
         for ball in self.balls.values():
-            if ball.s == psim.stationary:
+            if ball.s == pooltool.stationary:
                 continue
 
             for rail in self.table.rails.values():
@@ -473,7 +473,7 @@ class SimulateShot(System, SystemHistory, ShotRender):
                     lx=rail.lx,
                     ly=rail.ly,
                     l0=rail.l0,
-                    mu=(ball.u_s if ball.s == psim.sliding else ball.u_r),
+                    mu=(ball.u_s if ball.s == pooltool.sliding else ball.u_r),
                     m=ball.m,
                     g=ball.g,
                     R=ball.R

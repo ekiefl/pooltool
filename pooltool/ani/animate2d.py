@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 
-import psim.ani
+import pooltool.ani
 
-from psim.ani import *
+from pooltool.ani import *
 
 import pygame
 import pygame.gfxdraw
@@ -30,7 +30,7 @@ class Ball(pygame.sprite.Sprite):
 
         Parameters
         ==========
-        ball : psim.objects.Ball
+        ball : pooltool.objects.Ball
         """
         self.scale = scale
         self.id = ball.id
@@ -75,7 +75,7 @@ class AnimateShot(object):
 
         Parameters
         ==========
-        shot : psim.engine.ShotSimulation
+        shot : pooltool.engine.ShotSimulation
 
         size : int
             size in pixels of largest dimension of screen
@@ -103,7 +103,7 @@ class AnimateShot(object):
             'table_y': d_to_px(self.scale, self.table_y),
             'surface_x': d_to_px(self.scale, self.surface_x),
             'surface_y': d_to_px(self.scale, self.surface_y),
-            'diamond': d_to_px(self.scale, psim.diamond_size),
+            'diamond': d_to_px(self.scale, pooltool.diamond_size),
         }
         self.px['offset_x'] = (self.px['table_x'] - self.px['surface_x'])/2
         self.px['offset_y'] = (self.px['table_y'] - self.px['surface_y'])/2

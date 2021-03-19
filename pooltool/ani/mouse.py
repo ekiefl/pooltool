@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import psim.ani.utils as autils
+import pooltool.ani.utils as autils
 
 import numpy as np
 

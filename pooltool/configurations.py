@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 
-import psim
+import pooltool
 
-from psim.objects import Ball
+from pooltool.objects import Ball
 
 import numpy as np
 
@@ -13,7 +13,7 @@ class NineBallRack(object):
         self.balls = balls
         self.radius = max([ball.R for ball in self.balls])
         self.spacer = spacing_factor * self.radius
-        self.eff_radius = self.radius + self.spacer + psim.tol
+        self.eff_radius = self.radius + self.spacer + pooltool.tol
 
         if len(self.balls) != 9:
             raise ValueError("NineBallRack :: must pass exactly 9 balls")

@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 
-import psim
-import psim.ani.utils as autils
-import psim.utils as utils
-import psim.physics as physics
+import pooltool
+import pooltool.ani.utils as autils
+import pooltool.utils as utils
+import pooltool.physics as physics
 
-from psim.ani import model_paths
-from psim.events import *
+from pooltool.ani import model_paths
+from pooltool.events import *
 
 import numpy as np
 
@@ -29,7 +29,7 @@ class NonObject(Object):
 
 
 class DummyBall(NonObject):
-    s = psim.stationary
+    s = pooltool.stationary
 
 
 class Render(ABC):
@@ -167,12 +167,12 @@ class Table(Object, TableRender):
                  edge_width=None, rail_width=None, rail_height=None,
                  table_height=None, lights_height=None):
 
-        self.w = w or psim.table_width
-        self.l = l or psim.table_length
-        self.edge_width = edge_width or psim.table_edge_width
-        self.rail_width = rail_width or psim.rail_width # for visualization
-        self.height = table_height or psim.table_height # for visualization
-        self.lights_height = lights_height or psim.lights_height # for visualization
+        self.w = w or pooltool.table_width
+        self.l = l or pooltool.table_length
+        self.edge_width = edge_width or pooltool.table_edge_width
+        self.rail_width = rail_width or pooltool.rail_width # for visualization
+        self.height = table_height or pooltool.table_height # for visualization
+        self.lights_height = lights_height or pooltool.lights_height # for visualization
 
         self.L = 0
         self.R = self.w
@@ -207,7 +207,7 @@ class Rail(Object):
         self.normal = np.array([self.lx, self.ly, 0])
 
         # rail properties
-        self.height = height or psim.rail_height
+        self.height = height or pooltool.rail_height
 
 
 # -------------------------------------------------------------------------------------------------
@@ -371,18 +371,18 @@ class Ball(Object, BallRender, Events):
         self.id = ball_id
 
         # physical properties
-        self.m = m or psim.m
-        self.R = R or psim.R
+        self.m = m or pooltool.m
+        self.R = R or pooltool.R
         self.I = 2/5 * self.m * self.R**2
-        self.g = g or psim.g
+        self.g = g or pooltool.g
 
         # felt properties
-        self.u_s = u_s or psim.u_s
-        self.u_r = u_r or psim.u_r
-        self.u_sp = u_sp or psim.u_sp
+        self.u_s = u_s or pooltool.u_s
+        self.u_r = u_r or pooltool.u_r
+        self.u_sp = u_sp or pooltool.u_sp
 
         self.t = 0
-        self.s = psim.stationary
+        self.s = pooltool.stationary
         self.rvw = np.array([[np.nan, np.nan, np.nan],  # positions (r)
                              [0,      0,      0     ],  # velocities (v)
                              [0,      0,      0     ],  # angular velocities (w)
@@ -410,14 +410,14 @@ class Ball(Object, BallRender, Events):
 
 
     def update_next_transition_event(self):
-        if self.s == psim.stationary:
+        if self.s == pooltool.stationary:
             self.next_transition_event = NonEvent(t = np.inf)
 
-        elif self.s == psim.spinning:
+        elif self.s == pooltool.spinning:
             dtau_E = physics.get_spin_time(self.rvw, self.R, self.u_sp, self.g)
             self.next_transition_event = SpinningStationaryTransition(self, t=(self.t + dtau_E))
 
-        elif self.s == psim.rolling:
+        elif self.s == pooltool.rolling:
             dtau_E_spin = physics.get_spin_time(self.rvw, self.R, self.u_sp, self.g)
             dtau_E_roll = physics.get_roll_time(self.rvw, self.u_r, self.g)
 
@@ -426,7 +426,7 @@ class Ball(Object, BallRender, Events):
             else:
                 self.next_transition_event = RollingStationaryTransition(self, t=(self.t + dtau_E_roll))
 
-        elif self.s == psim.sliding:
+        elif self.s == pooltool.sliding:
             dtau_E = physics.get_slide_time(self.rvw, self.R, self.u_s, self.g)
             self.next_transition_event = SlidingRollingTransition(self, t=(self.t + dtau_E))
 
@@ -473,7 +473,7 @@ class CueRender(Render):
         self.stroke_clock = ClockObject()
 
 
-    def init_model(self, R=psim.R):
+    def init_model(self, R=pooltool.R):
         cue_stick_model = loader.loadModel(model_paths['cylinder'])
         cue_stick_model.setName('cue_stick_model')
 
@@ -685,8 +685,8 @@ class CueRender(Render):
 class Cue(Object, CueRender):
     object_type = 'cue_stick'
 
-    def __init__(self, M=psim.M, length=psim.cue_length, tip_radius=psim.cue_tip_radius,
-                 butt_radius=psim.cue_butt_radius, cue_id='cue_stick', brand=None):
+    def __init__(self, M=pooltool.M, length=pooltool.cue_length, tip_radius=pooltool.cue_tip_radius,
+                 butt_radius=pooltool.cue_butt_radius, cue_id='cue_stick', brand=None):
 
         self.id = cue_id
         self.M = M

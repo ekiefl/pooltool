@@ -345,7 +345,7 @@ class Timer:
     Examples
     ========
 
-    >>> from psim.terminal import Timer
+    >>> from pooltool.terminal import Timer
     >>> import time
     >>> t = Timer(); time.sleep(1)
     >>> t.make_checkpoint('checkpoint_name'); time.sleep(1)

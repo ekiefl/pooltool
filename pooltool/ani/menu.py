@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import psim.ani as ani
+import pooltool.ani as ani
 
 import sys
 
@@ -59,7 +59,7 @@ class GenericMenu(object):
         )
 
         self.logo = OnscreenText(
-            text='psim',
+            text='pooltool',
             style=1,
             fg=(1, 1, 0, 1),
             shadow=(0, 0, 0, 0.5),

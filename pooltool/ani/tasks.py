@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 
-import psim.utils as utils
-import psim.engine as engine
-import psim.ani.utils as autils
-import psim.ani.action as action
+import pooltool.utils as utils
+import pooltool.engine as engine
+import pooltool.ani.utils as autils
+import pooltool.ani.action as action
 
 import sys
 import numpy as np

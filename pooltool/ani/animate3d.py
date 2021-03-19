@@ -1,16 +1,16 @@
 #! /usr/bin/env python
 
-import psim.ani as ani
-import psim.ani.utils as autils
-import psim.ani.action as action
+import pooltool.ani as ani
+import pooltool.ani.utils as autils
+import pooltool.ani.action as action
 
-from psim.ani import model_paths
-from psim.objects import Ball, Table, Cue
-from psim.ani.menu import MenuHandler, GenericMenu
-from psim.ani.tasks import Tasks
-from psim.ani.mouse import Mouse
-from psim.ani.camera import CustomCamera
-from psim.configurations import NineBallRack
+from pooltool.ani import model_paths
+from pooltool.objects import Ball, Table, Cue
+from pooltool.ani.menu import MenuHandler, GenericMenu
+from pooltool.ani.tasks import Tasks
+from pooltool.ani.mouse import Mouse
+from pooltool.ani.camera import CustomCamera
+from pooltool.configurations import NineBallRack
 
 import gc
 
