@@ -1,4 +1,4 @@
-<img src="logo/logo.png" width="450" />
+<img src="logo/logo.png" width="300" />
 
 # Intro
 
