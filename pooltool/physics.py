@@ -1,4 +1,35 @@
 #! /usr/bin/env python
+"""Compilation of physics equations implemented as functions.
+
+A convention is upheld for the input and output variable names that is consistent across functions.
+All units are SI (https://en.wikipedia.org/wiki/International_System_of_Units)
+
+`rvw` : numpy.array
+    The ball state (https://ekiefl.github.io/2020/12/20/pooltool-alg/#what-is-the-system-state).  It
+    is a 3x3 numpy array where rvw[0, :] is the displacement vector (r), rvw[1, :] is the velocity
+    vector (v), and rvw[2, :] is the angular velocity vector (w). For example, rvw[1, 1] refers to
+    the y-component of the velocity vector.
+`R` : float
+    The radius of the ball.
+`m` : float
+    The radius of the ball.
+`h` : float
+    The height of the cushion.
+`s` : int
+    The motion state of the ball. Definitions are found in pooltool.state_dict
+`mu` : float
+    The coefficient of friction. If ball motion state is sliding, assume coefficient of sliding
+    friction. If rolling, assume coefficient of rolling friction. If spinning, assume coefficient of
+    spinning friction
+`u_s` : float
+    The sliding coefficient of friction.
+`u_sp` : float
+    The spinning coefficient of friction.
+`u_r` : float
+    The rolling coefficient of friction.
+`g` : float
+    The acceleration due to gravity felt by a ball.
+"""
 
 import pooltool
 import pooltool.utils as utils
