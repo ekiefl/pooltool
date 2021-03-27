@@ -3,6 +3,10 @@ import numpy as np
 np.set_printoptions(precision=3)
 np.set_printoptions(suppress=True)
 
+import matplotlib
+matplotlib.rcParams['font.family'] = "Courier New"
+matplotlib.rcParams['font.size'] = "16"
+
 __version__ = '0.1'
 
 # all units are SI. Taken from https://billiards.colostate.edu/faq/physics/physical-properties/

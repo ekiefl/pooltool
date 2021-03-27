@@ -133,7 +133,6 @@ class ShotSimulation(object):
         q = self.balls['cue']
 
         for t in np.arange(0, 10, 0.05):
-
             r, v, w, s = physics.evolve_ball_motion(
                 *q.rvw,
                 R=q.R,
@@ -144,16 +143,18 @@ class ShotSimulation(object):
                 g=psim.g,
                 t=t,
             )
-
             q.store(t, r, v, w, s)
 
         import pandas as pd
         import matplotlib.pyplot as plt
 
-        fig = plt.figure(figsize=(5, 10))
+        fig = plt.figure(figsize=(8, 4))
         ax = fig.add_subplot(111)
-        ax.set_xlim(self.table.L, self.table.R)
-        ax.set_ylim(self.table.B, self.table.T)
+        ax.set_facecolor("#C7E0CE")
+        ax.set_xlim(self.table.B, self.table.T)
+        ax.set_ylim(self.table.L, self.table.R)
+        ax.set_ylabel('x [m]')
+        ax.set_xlabel('y [m]')
 
         rvw = np.array(q.history['rvw'])
         x = rvw[:, 0, 0]
@@ -163,9 +164,9 @@ class ShotSimulation(object):
 
         groups = df.groupby('state')
         for name, group in groups:
-            ax.plot(group['x'], group['y'], marker="o", linestyle="", label=name, ms=2.)
-
-        ax.legend()
+            ax.plot(group['y'], group['x'], marker="o", linestyle="", label=name, ms=2.)
+        ax.legend(loc='best', fontsize='small')
+        plt.tight_layout()
         plt.show()
 
 
