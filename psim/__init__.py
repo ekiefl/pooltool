@@ -18,6 +18,13 @@ table_length = 2.7432 # 9-foot table
 table_width = 2.7432/2 # 9-foot table
 
 # Ball states
+state_dict = {
+    0: 'stationary',
+    1: 'spinning',
+    2: 'sliding',
+    3: 'rolling',
+}
+
 stationary=0
 spinning=1
 sliding=2

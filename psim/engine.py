@@ -66,6 +66,39 @@ class Cue(object):
 
 
     def strike(self, ball, V0, phi, theta, a, b):
+        """Strike a ball
+
+                                  , - ~  ,
+        ◎───────────◎         , '          ' ,
+        │           │       ,             ◎    ,
+        │      /    │      ,              │     ,
+        │     /     │     ,               │ b    ,
+        ◎    / phi  ◎     ,           ────┘      ,
+        │   /___    │     ,            -a        ,
+        │           │      ,                    ,
+        │           │       ,                  ,
+        ◎───────────◎         ,               '
+          bottom rail           ' - , _ , - 
+                         ______________________________
+                                  playing surface
+        Parameters
+        ==========
+        ball : engine.Ball
+            A ball object
+        V0 : positive float
+            What initial velocity does the cue strike the ball?
+        phi : float (degrees)
+            The direction you strike the ball in relation to the bottom rail
+        theta : float (degrees)
+            How elevated is the cue from the playing surface, in degrees?
+        a : float
+            How much side english should be put on? -1 being rightmost side of ball, +1 being
+            leftmost side of ball
+        b : float
+            How much vertical english should be put on? -1 being bottom-most side of ball, +1 being
+            topmost side of ball
+        """
+
         v_T, w_T = physics.cue_strike(ball.m, self.M, ball.R, V0, phi, theta, a, b)
 
         ball.rvw[1] = v_T
@@ -92,20 +125,12 @@ class ShotSimulation(object):
         self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
 
 
+    def strike_cue_ball(self, **kwargs):
+        self.cue.strike(ball=self.balls['cue'], **kwargs)
+
+
     def start(self):
-        self.cue.strike(
-            ball = self.balls['cue'],
-            V0 = 0.6,
-            phi = 90,
-            theta = 20,
-            a = -0.5,
-            b = 0.0,
-        )
-
         q = self.balls['cue']
-
-        print(f"time of slide state: {physics.get_slide_time(q.rvw[1], q.rvw[2], R=q.R, u_s=self.table.u_s, g=psim.g)}")
-        print(f"time of spin state: {physics.get_spin_time(q.rvw[2], R=q.R, u_sp=self.table.u_sp, g=psim.g)}")
 
         for t in np.arange(0, 10, 0.05):
 
@@ -133,7 +158,7 @@ class ShotSimulation(object):
         rvw = np.array(q.history['rvw'])
         x = rvw[:, 0, 0]
         y = rvw[:, 0, 1]
-        s = np.array(q.history['s'])
+        s = [psim.state_dict[x] for x in np.array(q.history['s'])]
         df = pd.DataFrame({'x':x, 'y':y, 'state':s})
 
         groups = df.groupby('state')
@@ -142,20 +167,5 @@ class ShotSimulation(object):
 
         ax.legend()
         plt.show()
-
-        print(f"position after strike: {q.rvw[0]}")
-        print(f"position after evolve: {r_T}")
-        print()
-
-        print(f"velocity after strike: {q.rvw[1]}")
-        print(f"velocity after evolve: {v_T}")
-        print()
-
-        print(f"ang vel after strike: {q.rvw[2]}")
-        print(f"ang vel after evolve: {w_T}")
-        print()
-
-
-
 
 
