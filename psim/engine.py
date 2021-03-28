@@ -4,6 +4,8 @@ import psim
 import psim.utils as utils
 import psim.physics as physics
 
+from psim.ani.animate import AnimateShot
+
 import numpy as np
 
 class Table(object):
@@ -132,7 +134,7 @@ class ShotSimulation(object):
         self.cue.strike(ball=self.balls['cue'], **kwargs)
 
 
-    def start(self):
+    def start(self, plot=True):
         for ball in self.balls.values():
             ball.reset_history()
 
@@ -151,12 +153,15 @@ class ShotSimulation(object):
             )
             q.store(t, *rvw, s)
 
+        if not plot:
+            return
+
         import pandas as pd
         import matplotlib.pyplot as plt
 
         fig = plt.figure(figsize=(8, 4))
         ax = fig.add_subplot(111)
-        ax.set_facecolor("#C7E0CE")
+        ax.set_facecolor([x/255 for x in (60,155,206)])
         ax.set_xlim(self.table.B, self.table.T)
         ax.set_ylim(self.table.L, self.table.R)
         ax.set_ylabel('x [m]')
@@ -166,14 +171,28 @@ class ShotSimulation(object):
         x = rvw[:, 0, 0]
         y = rvw[:, 0, 1]
         s = [psim.state_dict[x] for x in np.array(q.history['s'])]
+        s_lookup = {v: k for k, v in psim.state_dict.items()}
         df = pd.DataFrame({'x':x, 'y':y, 'state':s})
 
         groups = df.groupby('state')
         for name, group in groups:
-            ax.plot(group['y'], group['x'], marker="o", linestyle="", label=name, ms=2.)
+            ax.plot(
+                group['y'],
+                group['x'],
+                marker="o",
+                linestyle="",
+                label=name,
+                c=tuple([x/255 for x in psim.STATE_RGB[s_lookup[group['state'].iloc[0]]]]),
+                ms=2.
+            )
         ax.legend(loc='best', fontsize='small')
         plt.gca().invert_yaxis()
         plt.tight_layout()
         plt.show()
+
+
+    def animate(self, flip=False):
+        animation = AnimateShot(self, flip=flip)
+        animation.start()
 
 

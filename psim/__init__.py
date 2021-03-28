@@ -29,6 +29,13 @@ state_dict = {
     3: 'rolling',
 }
 
+STATE_RGB = {
+    0 : (255, 255, 255),
+    1 : (35, 139, 193),
+    2 : (255, 0, 0),
+    3 : (1, 246, 7),
+}
+
 stationary=0
 spinning=1
 sliding=2
