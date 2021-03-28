@@ -105,7 +105,7 @@ class State(object):
 
 
 class AnimateShot(object):
-    def __init__(self, shot, size=None, cloth_color=None, rail_color=None):
+    def __init__(self, shot, size=800, cloth_color=None, rail_color=None):
         """Animate a shot in pygame
 
         Parameters

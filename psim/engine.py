@@ -3,6 +3,7 @@
 import psim
 import psim.utils as utils
 import psim.physics as physics
+import psim.ani.animate as animate
 
 from psim.objects import (
     Ball,
@@ -12,6 +13,11 @@ from psim.objects import (
 
 import numpy as np
 
+include = {
+    'motion': True,
+    'ball_ball': True,
+    'ball_cushion': True,
+}
 
 class Event(object):
     def __init__(self, event_type, agents, tau):
@@ -277,23 +283,26 @@ class ShotSimulation(ShotHistory):
         agents = tuple()
         event_type = None
 
-        tau, ids, e = self.get_min_motion_event_time()
-        if tau < tau_min:
-            tau_min = tau
-            event_type = e
-            agents = ids
+        if include['motion']:
+            tau, ids, e = self.get_min_motion_event_time()
+            if tau < tau_min:
+                tau_min = tau
+                event_type = e
+                agents = ids
 
-        tau, ids = self.get_min_ball_ball_event_time()
-        if tau < tau_min:
-            tau_min = tau
-            event_type = 'ball-ball'
-            agents = ids
+        if include['ball_ball']:
+            tau, ids = self.get_min_ball_ball_event_time()
+            if tau < tau_min:
+                tau_min = tau
+                event_type = 'ball-ball'
+                agents = ids
 
-        tau, ids = self.get_min_ball_rail_event_time()
-        if tau < tau_min:
-            tau_min = tau
-            event_type = 'ball-rail'
-            agents = ids
+        if include['ball_cushion']:
+            tau, ids = self.get_min_ball_rail_event_time()
+            if tau < tau_min:
+                tau_min = tau
+                event_type = 'ball-rail'
+                agents = ids
 
         return Event(event_type, agents, tau_min)
 
@@ -395,6 +404,28 @@ class ShotSimulation(ShotHistory):
             print(ball)
 
 
+    def simulate_event_based(self, continuize=False):
+        event = Event(None, None, 0)
+
+        self.timestamp(0)
+        while event.tau < np.inf:
+            event = self.get_next_event()
+            self.evolve(dt=event.tau, event=event)
+
+        if continuize:
+            self.continuize(0.05)
+
+
+    def simulate_discrete_time(self):
+        for t in np.diff(np.arange(0, 5, 0.033)):
+            self.evolve(t)
+
+
+    def animate(self):
+        ani = animate.AnimateShot(self)
+        ani.start()
+
+
     def setup_test(self, setup='masse'):
         # Make a table, cue, and balls
         self.table = Table()
@@ -442,7 +473,7 @@ class ShotSimulation(ShotHistory):
             self.balls['7'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.B+0.89, 0]
 
             self.balls['3'] = Ball('3')
-            self.balls['3'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+0.89, 0]
+            self.balls['3'].rvw[0] = [self.table.center[0] + self.table.w/6+0.2, self.table.B+1.2, 0]
 
             self.balls['8'] = Ball('8')
             self.balls['8'].rvw[0] = [self.table.center[0], self.table.B+0.66, 0]
