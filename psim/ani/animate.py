@@ -45,8 +45,8 @@ class Ball(pygame.sprite.Sprite):
         self.radius = d_to_px(ball.R, self.scale)
 
         self.rvw_history = rvw_history
-        self.xs = d_to_px(scale, self.rvw_history[:,0,0])
-        self.ys = d_to_px(scale, self.rvw_history[:,0,1])
+        self.ys = d_to_px(scale, self.rvw_history[:,0,0])
+        self.xs = d_to_px(scale, self.rvw_history[:,0,1])
 
         super(Ball, self).__init__()
 
@@ -132,8 +132,8 @@ class AnimateShot(object):
         self.rail_thickness = d_to_px(0.01, self.scale)
         pygame.init()
 
-        screen_width = d_to_px(self.scale, self.table.w)
-        screen_height = d_to_px(self.scale, self.table.l)
+        screen_width = d_to_px(self.scale, self.table.l)
+        screen_height = d_to_px(self.scale, self.table.w)
         self.screen = pygame.display.set_mode((screen_width, screen_height))
 
         self.init_ball_sprites()
@@ -186,8 +186,8 @@ class AnimateShot(object):
 
     def display(self):
         # Flip vertical axis so origin is bottom left
-        display_surface = pygame.display.get_surface()
-        display_surface.blit(pygame.transform.flip(display_surface, False, True), dest=(0, 0))
+        #display_surface = pygame.display.get_surface()
+        #display_surface.blit(pygame.transform.flip(display_surface, False, True), dest=(0, 0))
 
         # Update the display
         pygame.display.flip()
