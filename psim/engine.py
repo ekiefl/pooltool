@@ -44,7 +44,10 @@ class Ball(object):
         # stationary=0, spinning=1, sliding=2, rolling=3
         self.s = 0
 
-        # state history
+        self.reset_history()
+
+
+    def reset_history(self):
         self.history = {'t': [], 'rvw': [], 's': []}
 
 
@@ -130,11 +133,14 @@ class ShotSimulation(object):
 
 
     def start(self):
+        for ball in self.balls.values():
+            ball.reset_history()
+
         q = self.balls['cue']
 
         for t in np.arange(0, 10, 0.05):
-            r, v, w, s = physics.evolve_ball_motion(
-                *q.rvw,
+            rvw, s = physics.evolve_ball_motion(
+                rvw=q.rvw,
                 R=q.R,
                 m=q.m,
                 u_s=self.table.u_s,
@@ -143,7 +149,7 @@ class ShotSimulation(object):
                 g=psim.g,
                 t=t,
             )
-            q.store(t, r, v, w, s)
+            q.store(t, *rvw, s)
 
         import pandas as pd
         import matplotlib.pyplot as plt
@@ -166,6 +172,7 @@ class ShotSimulation(object):
         for name, group in groups:
             ax.plot(group['y'], group['x'], marker="o", linestyle="", label=name, ms=2.)
         ax.legend(loc='best', fontsize='small')
+        plt.gca().invert_yaxis()
         plt.tight_layout()
         plt.show()
 
