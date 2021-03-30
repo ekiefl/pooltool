@@ -161,7 +161,7 @@ class ShotSimulation(object):
 
         fig = plt.figure(figsize=(8, 4))
         ax = fig.add_subplot(111)
-        ax.set_facecolor([x/255 for x in (60,155,206)])
+        ax.set_facecolor([x/255 for x in (202,222,235)])
         ax.set_xlim(self.table.B, self.table.T)
         ax.set_ylim(self.table.L, self.table.R)
         ax.set_ylabel('x [m]')
@@ -191,8 +191,8 @@ class ShotSimulation(object):
         plt.show()
 
 
-    def animate(self, flip=False):
-        animation = AnimateShot(self, flip=flip)
+    def animate(self, *args, **kwargs):
+        animation = AnimateShot(self, *args, **kwargs)
         animation.start()
 
 

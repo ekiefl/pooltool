@@ -172,13 +172,20 @@ class AnimateShot(object):
             trace_length = self.frame if self.frame < ball.trace_length else ball.trace_length
 
             for n in range(trace_length - 1):
-                pygame.gfxdraw.line(
+                #pygame.gfxdraw.line(
+                #    self.screen,
+                #    ball.xs[self.frame - trace_length + n],
+                #    ball.ys[self.frame - trace_length + n],
+                #    ball.xs[self.frame - trace_length + n + 1],
+                #    ball.ys[self.frame - trace_length + n + 1],
+                #    (*psim.STATE_RGB[ball.ss[self.frame - trace_length + n + 1]], 255 * (1 - np.exp(-n/trace_length))),
+                #)
+                pygame.draw.line(
                     self.screen,
-                    ball.xs[self.frame - trace_length + n],
-                    ball.ys[self.frame - trace_length + n],
-                    ball.xs[self.frame - trace_length + n + 1],
-                    ball.ys[self.frame - trace_length + n + 1],
-                    (*psim.STATE_RGB[ball.ss[self.frame - trace_length + n + 1]], 255 * (1 - np.exp(-n/trace_length))),
+                    (*psim.STATE_RGB[ball.ss[self.frame - trace_length + n + 1]], 255),
+                    (ball.xs[self.frame - trace_length + n], ball.ys[self.frame - trace_length + n]),
+                    (ball.xs[self.frame - trace_length + n + 1], ball.ys[self.frame - trace_length + n + 1]),
+                    2,
                 )
 
 
