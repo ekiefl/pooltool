@@ -32,7 +32,7 @@ import numpy as np
 
 
 class Ball(pygame.sprite.Sprite):
-    def __init__(self, ball, rvw_history, scale, trace=True):
+    def __init__(self, ball, flip, rvw_history, state_history, scale, trace=True):
         """A ball sprite
 
         Parameters
@@ -45,8 +45,9 @@ class Ball(pygame.sprite.Sprite):
         self.radius = d_to_px(ball.R, self.scale)
 
         self.rvw_history = rvw_history
-        self.ys = d_to_px(scale, self.rvw_history[:,0,0])
-        self.xs = d_to_px(scale, self.rvw_history[:,0,1])
+        self.ss = state_history
+        self.ys = d_to_px(scale, self.rvw_history[:,0,0] if flip else self.rvw_history[:,0,1])
+        self.xs = d_to_px(scale, self.rvw_history[:,0,1] if flip else self.rvw_history[:,0,0])
 
         super(Ball, self).__init__()
 
@@ -105,7 +106,7 @@ class State(object):
 
 
 class AnimateShot(object):
-    def __init__(self, shot, size=800, cloth_color=None, rail_color=None):
+    def __init__(self, shot, flip=False, size=800, cloth_color=None, rail_color=None):
         """Animate a shot in pygame
 
         Parameters
@@ -116,6 +117,7 @@ class AnimateShot(object):
             size in pixels of largest dimension of screen
         """
 
+        self.flip = flip
         self.size = size or MAX_SCREEN
         self.cloth_color = cloth_color or CLOTH_RGB
         self.rail_color = rail_color or RAIL_RGB
@@ -132,15 +134,18 @@ class AnimateShot(object):
         self.rail_thickness = d_to_px(0.01, self.scale)
         pygame.init()
 
-        screen_width = d_to_px(self.scale, self.table.l)
-        screen_height = d_to_px(self.scale, self.table.w)
-        self.screen = pygame.display.set_mode((screen_width, screen_height))
+        self.screen_width = d_to_px(self.scale, self.table.l if self.flip else self.table.w)
+        self.screen_height = d_to_px(self.scale, self.table.w if self.flip else self.table.l)
+        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
 
         self.init_ball_sprites()
 
         self.clock = pygame.time.Clock()
         self.fps = self.get_fps()
         self.frame = 0
+
+        self.font = pygame.font.Font('freesansbold.ttf', 20)
+        self.update_free_text('test')
 
         self.state = State()
 
@@ -150,7 +155,9 @@ class AnimateShot(object):
         for ball_id, ball in self.balls.items():
             self.ball_sprites.add(Ball(
                 ball,
+                self.flip,
                 self.shot.get_ball_rvw_history(ball_id),
+                self.shot.get_ball_state_history(ball_id),
                 self.scale
             ))
 
@@ -170,13 +177,20 @@ class AnimateShot(object):
             trace_length = self.frame if self.frame < ball.trace_length else ball.trace_length
 
             for n in range(trace_length - 1):
-                pygame.gfxdraw.line(
+                #pygame.gfxdraw.line(
+                #    self.screen,
+                #    ball.xs[self.frame - trace_length + n],
+                #    ball.ys[self.frame - trace_length + n],
+                #    ball.xs[self.frame - trace_length + n + 1],
+                #    ball.ys[self.frame - trace_length + n + 1],
+                #    (*ball.color, 255 * (1 - np.exp(-n/trace_length))),
+                #)
+                pygame.draw.line(
                     self.screen,
-                    ball.xs[self.frame - trace_length + n],
-                    ball.ys[self.frame - trace_length + n],
-                    ball.xs[self.frame - trace_length + n + 1],
-                    ball.ys[self.frame - trace_length + n + 1],
-                    (*ball.color, 255 * (1 - np.exp(-n/trace_length))),
+                    (*psim.STATE_RGB[ball.ss[self.frame - trace_length + n]], 255),
+                    (ball.xs[self.frame - trace_length + n], ball.ys[self.frame - trace_length + n]),
+                    (ball.xs[self.frame - trace_length + n + 1], ball.ys[self.frame - trace_length + n + 1]),
+                    2,
                 )
 
 
@@ -186,8 +200,9 @@ class AnimateShot(object):
 
     def display(self):
         # Flip vertical axis so origin is bottom left
-        #display_surface = pygame.display.get_surface()
-        #display_surface.blit(pygame.transform.flip(display_surface, False, True), dest=(0, 0))
+        if not self.flip:
+            display_surface = pygame.display.get_surface()
+            display_surface.blit(pygame.transform.flip(display_surface, False, True), dest=(0, 0))
 
         # Update the display
         pygame.display.flip()
@@ -199,9 +214,36 @@ class AnimateShot(object):
             self.screen.blit(ball.surf, ball.rect)
 
 
+    def draw_text(self):
+        rect = self.text.get_rect()
+        rect.center = (rect.width/2, self.screen_height - rect.height/2)
+        self.screen.blit(self.text, rect)
+
+
     def update_balls(self, frame):
         for ball in self.ball_sprites:
             ball.update(frame=frame)
+
+
+    def update_text(self, frame):
+        fg = (0, 0, 0)
+        bg = (255, 255, 255)
+        event = self.shot.history['event'][frame]
+        if event is None:
+            string = 'None'
+        else:
+            string = (f"event: {frame} || "
+                      f"agents: {event.agents} || "
+                      f"type: {event.event_type}")
+        self.text = self.font.render(string, True, fg, bg)
+        self.text.set_alpha(127)
+
+
+    def update_free_text(self, text):
+        fg = (0, 0, 0)
+        bg = (255, 255, 255)
+        self.text = self.font.render(text, True, fg, bg)
+        self.text.set_alpha(127)
 
 
     def start(self):
@@ -210,18 +252,22 @@ class AnimateShot(object):
             self.render_table()
             self.trace_ball_lines()
             self.draw_balls()
+            self.draw_text()
             self.display()
 
             if not self.state.paused:
                 self.update_balls(self.frame)
+                self.update_text(self.frame)
                 self.frame += 1
 
             elif self.state.frame_backward:
                 self.frame -= 1
+                self.update_text(self.frame)
                 self.update_balls(self.frame)
 
             elif self.state.frame_forward:
                 self.frame += 1
+                self.update_text(self.frame)
                 self.update_balls(self.frame)
 
             if self.frame >= self.num_frames:

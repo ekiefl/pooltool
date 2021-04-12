@@ -15,8 +15,8 @@ import numpy as np
 
 include = {
     'motion': True,
-    'ball_ball': True,
-    'ball_cushion': True,
+    'ball_ball': False,
+    'ball_cushion': False,
 }
 
 class Event(object):
@@ -128,6 +128,7 @@ class ShotHistory(object):
             event_time = 0
             while event_time < (event.tau - dt_prime):
                 self.evolve(dt_prime)
+                self.timestamp(dt_prime)
                 event_time += dt_prime
 
                 dt_prime = dt
@@ -231,7 +232,7 @@ class ShotSimulation(ShotHistory):
         self.balls = balls
 
 
-    def evolve(self, dt, log=True, event=None):
+    def evolve(self, dt):
         for ball_id, ball in self.balls.items():
             rvw, s = physics.evolve_ball_motion(
                 state=ball.s,
@@ -245,13 +246,6 @@ class ShotSimulation(ShotHistory):
                 t=dt,
             )
             ball.set(rvw, s)
-
-        if event is not None:
-            self.resolve(event)
-
-        if log:
-            self.timestamp(dt, event=event)
-
 
     def resolve(self, event):
         if event.event_type == 'ball-ball':
@@ -319,13 +313,14 @@ class ShotSimulation(ShotHistory):
                 continue
             elif ball.s == psim.rolling:
                 tau = physics.get_roll_time(ball.rvw, self.table.u_r, self.g)
-                event_type = 'end-roll'
+                tau_spin = physics.get_spin_time(ball.rvw, ball.R, self.table.u_sp, self.g)
+                event_type = 'rolling-spinning' if tau_spin > tau else 'rolling-stationary'
             elif ball.s == psim.sliding:
                 tau = physics.get_slide_time(ball.rvw, ball.R, self.table.u_s, self.g)
-                event_type = 'end-slide'
+                event_type = 'sliding-rolling'
             elif ball.s == psim.spinning:
                 tau = physics.get_spin_time(ball.rvw, ball.R, self.table.u_sp, self.g)
-                event_type = 'end-spin'
+                event_type = 'spinning-stationary'
 
             if tau < tau_min:
                 tau_min = tau
@@ -410,19 +405,60 @@ class ShotSimulation(ShotHistory):
         self.timestamp(0)
         while event.tau < np.inf:
             event = self.get_next_event()
-            self.evolve(dt=event.tau, event=event)
+            self.evolve(dt=event.tau)
+
+            self.resolve(event)
+            self.timestamp(event.tau, event=event)
 
         if continuize:
             self.continuize(0.05)
 
 
-    def simulate_discrete_time(self):
-        for t in np.diff(np.arange(0, 5, 0.033)):
+    def simulate_discrete_time(self, dt=0.033):
+        for t in np.diff(np.arange(0, 5, dt)):
             self.evolve(t)
+            self.timestamp(dt)
+
+            events = self.detect_events()
+            for event in events:
+                self.resolve(event)
+                self.timestamp(0, event)
 
 
-    def animate(self):
-        ani = animate.AnimateShot(self)
+
+
+    def detect_events(self):
+        events = []
+
+        if include['ball_ball']:
+            for i, ball1 in enumerate(self.balls.values()):
+                for j, ball2 in enumerate(self.balls.values()):
+                    if i >= j:
+                        continue
+
+                    if ball1.s == psim.stationary and ball2.s == psim.stationary:
+                        continue
+
+                    if np.linalg.norm(ball1.rvw[0] - ball2.rvw[0]) <= (ball1.R + ball2.R):
+                        events.append(Event('ball-ball', (ball1.id, ball2.id), 0))
+
+        if include['ball_ball']:
+            for ball in self.balls.values():
+                ball_x, ball_y = ball.rvw[0,:2]
+                if ball_x <= self.table.L + ball.R:
+                    events.append(Event('ball-rail', (ball.id, 'L'), 0))
+                elif ball_x >= self.table.R - ball.R:
+                    events.append(Event('ball-rail', (ball.id, 'R'), 0))
+                elif ball_y <= self.table.B + ball.R:
+                    events.append(Event('ball-rail', (ball.id, 'B'), 0))
+                elif ball_y >= self.table.T - ball.R:
+                    events.append(Event('ball-rail', (ball.id, 'T'), 0))
+
+        return events
+
+
+    def animate(self, flip=False):
+        ani = animate.AnimateShot(self, flip=flip)
         ani.start()
 
 
@@ -465,27 +501,43 @@ class ShotSimulation(ShotHistory):
                 a = -0.4,
                 b = 0.0,
             )
+        elif setup == 'stat_mech':
+            self.table = Table()
+            for i in range(30):
+                new_ball = Ball(i)
+                while True:
+                    pos = [self.table.w*np.random.rand(), self.table.l*np.random.rand(), 0]
+                    for ball in self.balls.values():
+                        if np.linalg.norm(pos - ball.rvw[0]) > 2*ball.R:
+                            continue
+                        else:
+                            break
+                    else:
+                        break
+
+                self.balls[i] = new_ball
+                self.balls[i].rvw[0] = pos
+
+            self.cue.strike(
+                ball = self.balls[0],
+                V0 = 10.0,
+                phi = 100,
+                theta = 20,
+                a = -0.4,
+                b = 0.0,
+            )
         elif setup == 'straight_shot':
             self.balls['cue'] = Ball('cue')
             self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, 0]
 
             self.balls['7'] = Ball('7')
-            self.balls['7'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.B+0.89, 0]
+            self.balls['7'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.B+0.91, 0]
 
             self.balls['3'] = Ball('3')
             self.balls['3'].rvw[0] = [self.table.center[0] + self.table.w/6+0.2, self.table.B+1.2, 0]
 
             self.balls['8'] = Ball('8')
             self.balls['8'].rvw[0] = [self.table.center[0], self.table.B+0.66, 0]
-
-            self.cue.strike(
-                ball = self.balls['cue'],
-                V0 = 1.35,
-                phi = 97,
-                a = 0.0,
-                b = 0.4,
-                theta = 0,
-            )
 
         self.touch_history()
 

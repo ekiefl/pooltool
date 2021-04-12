@@ -3,6 +3,10 @@ import numpy as np
 np.set_printoptions(precision=10)
 np.set_printoptions(suppress=True)
 
+import matplotlib
+matplotlib.rcParams['font.family'] = "Courier New"
+matplotlib.rcParams['font.size'] = "16"
+
 __version__ = '0.1'
 
 # all units are SI. Taken from https://billiards.colostate.edu/faq/physics/physical-properties/
@@ -28,6 +32,13 @@ state_dict = {
     1: 'spinning',
     2: 'sliding',
     3: 'rolling',
+}
+
+STATE_RGB = {
+    0 : (255, 0, 0),
+    1 : (35, 139, 193),
+    2 : (255, 0, 0),
+    3 : (1, 246, 7),
 }
 
 #tol = np.finfo(np.float).eps * 100

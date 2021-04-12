@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 
-TRACE_LENGTH = 20
+TRACE_LENGTH = 10000
 
 # num of pixels of largest dimension
 MAX_SCREEN = 800
 
-CLOTH_RGB = (60,155,206)
+CLOTH_RGB = (202,222,235)
 RAIL_RGB = (71,38,27)
 BALL_RGB = {
     'cue': (244,242,238),

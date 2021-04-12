@@ -51,6 +51,7 @@ def resolve_ball_rail_collision(rvw, normal):
 
 def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g, R):
     """Get the time until collision between 2 balls"""
+
     c1x, c1y = rvw1[0, 0], rvw1[0, 1]
     c2x, c2y = rvw2[0, 0], rvw2[0, 1]
 
