@@ -229,7 +229,7 @@ class Tasks(object):
 
         with self.mouse:
             alpha_x = self.cam.focus.getH() - fx * self.mouse.get_dx()
-            alpha_y = max(min(0, self.cam.focus.getR() + fy * self.mouse.get_dy()), -70)
+            alpha_y = max(min(0, self.cam.focus.getR() + fy * self.mouse.get_dy()), -90)
 
         self.cam.focus.setH(alpha_x) # Move view laterally
         self.cam.focus.setR(alpha_y) # Move view vertically
