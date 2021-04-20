@@ -283,6 +283,7 @@ class Handler(object):
                         t = 0,
                     )
                 ball.set_render_state_as_object_state()
+                ball.history.reset_history()
 
         self.shot.cue.update_focus()
 
