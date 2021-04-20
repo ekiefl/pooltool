@@ -5,8 +5,7 @@ All units are SI unless otherwise stated.
 
 import numpy as np
 
-np.set_printoptions(precision=10)
-np.set_printoptions(suppress=True)
+np.set_printoptions(precision=10, suppress=True)
 
 __version__ = '0.1'
 
