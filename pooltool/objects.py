@@ -338,9 +338,15 @@ class BallHistory(object):
 
     def reset_history(self):
         n = 0
+        self.vectorized = False
         self.rvw = [np.nan * np.ones((4,3))] * n
         self.s = [np.nan] * n
         self.t = [np.nan] * n
+
+
+    def is_populated(self):
+        """Returns True if rvw has non-zero length"""
+        return True if len(self.rvw) else False
 
 
     def add(self, rvw, s, t):
