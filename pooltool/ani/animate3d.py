@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import pooltool
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 import pooltool.ani.action as action
@@ -308,7 +309,7 @@ class Interface(ShowBase, MenuHandler, Handler, Tasks):
         self.disableMouse()
         self.mouse = Mouse()
         self.cam = CustomCamera()
-        self.table = Table(l=2.0,w=1)
+        self.table = None
         self.cue_stick = Cue()
 
         self.change_mode('menu')
@@ -365,6 +366,7 @@ class Interface(ShowBase, MenuHandler, Handler, Tasks):
 
 
     def init_table(self):
+        self.table = Table(l=2.840*2/3, w=1.420*2/3)
         self.table.render()
 
 
@@ -378,25 +380,18 @@ class Interface(ShowBase, MenuHandler, Handler, Tasks):
 
 
     def init_balls(self):
-        self.balls['1'] = Ball('1')
-        self.balls['2'] = Ball('2')
-        self.balls['3'] = Ball('3')
-        self.balls['4'] = Ball('4')
-        self.balls['5'] = Ball('5')
-        self.balls['6'] = Ball('6')
-        self.balls['7'] = Ball('7')
-        self.balls['8'] = Ball('8')
-        self.balls['10'] = Ball('10')
-        c = NineBallRack(list(self.balls.values()), spacing_factor=1e-2)
-        c.arrange()
-        c.center_by_table(self.table)
+        ball_kwargs = dict(
+            u_s=0.14,
+            u_r=0.007,
+            u_sp=0.022,
+        )
+        self.balls['r'] = Ball('r', **ball_kwargs)
+        self.balls['y'] = Ball('y', **ball_kwargs)
+        self.balls['cue'] = Ball('cue', **ball_kwargs)
 
-        self.balls['cue'] = Ball('cue')
-        self.balls['cue'].rvw[0] = [self.table.center[0] - 0.2, self.table.B+0.33, 0]
-
-        for ball in self.balls.values():
-            ball.rvw[0,2] = ball.R
-
+        self.balls['cue'].rvw[0] = [self.table.center[0] + 0.2, self.table.l/4, pooltool.R]
+        self.balls['r'].rvw[0] = [self.table.center[0], self.table.l*3/4, pooltool.R]
+        self.balls['y'].rvw[0] = [self.table.center[0], self.table.l/4, pooltool.R]
 
         #self.balls['cue'] = Ball('cue')
         #R = self.balls['cue'].R
