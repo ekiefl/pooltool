@@ -133,9 +133,13 @@ def get_bail_rail_restitution(rvw):
     rvw: np.array
         Assumed to be in reference frame such that <1,0,0> points
         perpendicular to the rail, and in the direction away from the table
+
+    Notes
+    =====
+    - https://essay.utwente.nl/59134/1/scriptie_J_van_Balen.pdf suggests a constant value of 0.85
     """
 
-    #return 1
+    return 0.85
     return max([
         0.40,
         0.50 + 0.257*rvw[1,0] - 0.044*rvw[1,0]**2
@@ -157,9 +161,8 @@ def get_bail_rail_friction(rvw):
     if ang > np.pi:
         ang = np.abs(2*np.pi - ang)
 
-    return 0.471 - 0.241*ang
-    return 0.38 - 0.241*ang
-    return 0
+    ans = 0.2
+    return ans
 
 
 def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
