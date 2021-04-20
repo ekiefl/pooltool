@@ -100,15 +100,15 @@ class Handler(object):
         self.accept(keystroke, self.update_key_map, [action_name, action_state])
 
 
-    def change_mode(self, mode, end_kwargs={}, start_kwargs={}):
+    def change_mode(self, mode, exit_kwargs={}, enter_kwargs={}):
         assert mode in self.modes
 
-        self.end_mode(**end_kwargs)
+        self.end_mode(**exit_kwargs)
 
         # Build up operations for the new mode
         self.mode = mode
         self.keymap = self.modes[mode]['keymap']
-        self.modes[mode]['enter'](**start_kwargs)
+        self.modes[mode]['enter'](**enter_kwargs)
 
 
     def end_mode(self, **kwargs):
