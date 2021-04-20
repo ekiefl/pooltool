@@ -127,7 +127,7 @@ class Tasks(object):
 
 
     def shot_animation_task(self, task):
-        if self.keymap[action.restart_shot]:
+        if self.keymap[action.restart_ani]:
             self.shot.restart_animation()
 
         if self.keymap[action.rewind]:
@@ -137,6 +137,13 @@ class Tasks(object):
         if self.keymap[action.fast_forward]:
             rate = 0.02 if not self.keymap[action.fine_control] else 0.002
             self.shot.offset_time(rate*self.shot.playback_speed)
+
+        if self.keymap[action.undo_shot]:
+            exit_kwargs = dict(
+                keep = False,
+            )
+            self.change_mode('aim', exit_kwargs=exit_kwargs)
+            return
 
         return task.cont
 

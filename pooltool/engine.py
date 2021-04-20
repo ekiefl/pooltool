@@ -276,20 +276,6 @@ class ShotRender(object):
         self.shot_animation.setPlayRate(2.0*self.shot_animation.getPlayRate())
 
 
-    def exit_ops(self):
-        self.finish_animation()
-        self.ball_animations.finish()
-
-        self.cue.reset_state()
-        self.cue.set_render_state_as_object_state()
-        self.cue.update_focus()
-
-        for ball in self.balls.values():
-            ball.reset_angular_integration()
-
-
-
-
 class SimulateShot(System, SystemHistory, ShotRender):
     def __init__(self, cue=None, table=None, balls=None, progress=terminal.Progress(), run=terminal.Run()):
         self.run = run
