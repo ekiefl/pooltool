@@ -136,7 +136,7 @@ class SystemHistory(Events):
           sandwiched between two time points, one immediately before the event, and one immediately after.
           This ensures that during lerp (linear interpolation) operations, the event is never interpolated
           over with any significant amount of time.
-        - FIXME This is a very inefficient function that could be radically speeded up if
+        - FIXME This is a very inefficient function that could be radically sped up if
           physics.evolve_ball_motion and/or its functions had vectorized operations for arrays of time values.
         """
 
@@ -293,7 +293,7 @@ class SimulateShot(System, SystemHistory, ShotRender):
         ==========
         t_final : float
             The simulation will run until the time is greater than this value. If None, simulation
-            is ran until the next even occurs at np.inf
+            is ran until the next event occurs at np.inf
 
         strike : bool, True
             If True, the cue stick will strike a ball at the start of the simulation. If you already

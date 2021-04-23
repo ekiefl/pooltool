@@ -407,7 +407,7 @@ class Ball(Object, BallRender, Events):
 
 
     def update_history(self, event):
-        self.history.add(self.rvw, self.s, event.time)
+        self.history.add(np.copy(self.rvw), self.s, event.time)
         self.add_event(event)
 
 
