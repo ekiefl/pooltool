@@ -81,7 +81,7 @@ class Tasks(object):
         f = 0.1
         delta_y, delta_z = dx*f, dy*f
 
-        max_english = 2/5
+        max_english = 5/10
 
         # y corresponds to side spin, z to top/bottom spin
         new_y = cue.getY() + delta_y
