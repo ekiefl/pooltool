@@ -5,7 +5,8 @@ import pooltool.physics as physics
 import pooltool.terminal as terminal
 
 from pooltool.events import *
-from pooltool.objects import NonObject, DummyBall, BallHistory
+from pooltool.objects import NonObject, DummyBall
+from pooltool.objects.ball import BallHistory
 
 from panda3d.direct import HideInterval, ShowInterval
 from direct.interval.IntervalGlobal import *

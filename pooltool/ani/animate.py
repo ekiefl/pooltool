@@ -3,7 +3,10 @@
 import pooltool
 import pooltool.ani.action as action
 
-from pooltool.objects import Ball, Table, Cue
+from pooltool.objects.cue import Cue
+from pooltool.objects.ball import Ball
+from pooltool.objects.table import Table
+
 from pooltool.ani.menu import MenuHandler, GenericMenu
 from pooltool.ani.tasks import Tasks
 from pooltool.ani.mouse import Mouse
