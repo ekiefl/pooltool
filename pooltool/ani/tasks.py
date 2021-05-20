@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-import pooltool.utils as utils
 import pooltool.engine as engine
 import pooltool.ani.utils as autils
 import pooltool.ani.action as action

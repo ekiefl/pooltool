@@ -1,7 +1,5 @@
 #! /usr/bin/env python
 
-import pooltool.ani.utils as autils
-
 import numpy as np
 
 from panda3d.core import ClockObject

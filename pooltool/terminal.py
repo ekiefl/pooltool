@@ -8,7 +8,6 @@ import re
 import sys
 import time
 import fcntl
-import numpy as np
 import struct
 import pandas as pd
 import termios

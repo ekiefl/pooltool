@@ -1,10 +1,8 @@
 #! /usr/bin/env python
 
 import pooltool
-import pooltool.utils as utils
 import pooltool.physics as physics
 import pooltool.terminal as terminal
-import pooltool.configurations as configurations
 
 from pooltool.events import *
 from pooltool.objects import NonObject, DummyBall, BallHistory
@@ -12,7 +10,6 @@ from pooltool.objects import NonObject, DummyBall, BallHistory
 from panda3d.direct import HideInterval, ShowInterval
 from direct.interval.IntervalGlobal import *
 
-import copy
 import numpy as np
 
 
@@ -320,7 +317,7 @@ class SimulateShot(System, SystemHistory, ShotRender):
         self.run.warning('', header=name, lc='green')
         self.run.info('starting energy', f"{np.round(energy_start, 2)}J")
 
-        self.progress.new(f"Running", progress_total_items=int(energy_start))
+        self.progress.new("Running", progress_total_items=int(energy_start))
 
         while True:
             event = self.get_next_event()

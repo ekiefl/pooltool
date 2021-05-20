@@ -35,7 +35,6 @@ import pooltool
 import pooltool.utils as utils
 
 import numpy as np
-from scipy.spatial.transform import Rotation
 
 
 def get_rel_velocity(rvw, R):
