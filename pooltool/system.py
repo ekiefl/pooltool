@@ -104,13 +104,27 @@ class SystemHistory(Events):
         self.reset_events()
 
 
-    def update_history(self, event):
+    def update_history(self, event, update_all=False):
+        """Updates the history for agents of an event
+
+        Parameters
+        ==========
+        event : class with base events.Event
+            An event
+        update_all : bool, False
+            By default, this method updates only the histories of balls that are agents of the
+            event. However, if update_all is True, each ball's history will be updated.
+        """
         self.t = event.time
         self.num_events += 1
 
-        for agent in event.agents:
-            if agent.object_type == 'ball':
-                agent.update_history(event)
+        if update_all:
+            for ball in self.balls.values():
+                ball.update_history(event)
+        else:
+            for agent in event.agents:
+                if agent.object_type == 'ball':
+                    agent.update_history(event)
 
         self.add_event(event)
 
