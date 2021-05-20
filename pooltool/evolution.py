@@ -12,14 +12,6 @@ from abc import ABC
 
 
 class EvolveShot(ABC, System, SystemHistory, ShotRender):
-    def __new__(cls, cue=None, table=None, balls=None, progress=terminal.Progress(), run=terminal.Run(), algorithm='event-based'):
-        if algorithm not in avail_algorithms:
-            raise ValueError(f"You are expecting to evolve the system with algorithm '{algorithm}', which is not one of the "
-                             f"possible db_types. Choose from: {list(avail_algorithms.keys())}")
-
-        return super().__new__(avail_algorithms[algorithm])
-
-
     def __init__(self, cue=None, table=None, balls=None, run=terminal.Run(), progress=terminal.Progress()):
         self.run = run
         self.progress = progress
@@ -29,7 +21,7 @@ class EvolveShot(ABC, System, SystemHistory, ShotRender):
         ShotRender.__init__(self)
 
 
-    def simulate(self, t_final=None, strike=True, name="NA"):
+    def simulate(self, strike=True, name="NA", **kwargs):
         """Run a simulation
 
         Parameters
@@ -69,47 +61,13 @@ class EvolveShot(ABC, System, SystemHistory, ShotRender):
         self.run.info('starting energy', f"{np.round(energy_start, 2)}J")
 
         self.progress.new("Running", progress_total_items=int(energy_start))
-        self.evolution_algorithm(t_final=t_final)
+        self.evolution_algorithm(**kwargs)
         self.progress.end()
 
         self.run.info('Finished after', self.progress.t.time_elapsed_precise())
-        self.run.info('Number of events', len(self.events), nl_after=1)
 
-        self.continuize()
         self.vectorize_trajectories()
         self.balls['cue'].set_playback_sequence()
-
-
-    @abstractmethod
-    def evolution_algorithm(self):
-        pass
-
-
-class EvolveShotEventBased(EvolveShot):
-    def __init__(self, *args, **kwargs):
-        EvolveShot.__init__(self, *args, **kwargs)
-
-
-    def evolution_algorithm(self, t_final=None):
-        """The event-based evolution algorithm"""
-
-        while True:
-            event = self.get_next_event()
-
-            if event.time == np.inf:
-                self.end_history()
-                break
-
-            self.evolve(event.time - self.t)
-            event.resolve()
-
-            self.update_history(event)
-
-            if (self.num_events % 10) == 0:
-                self.progress_update()
-
-            if t_final is not None and self.t >= t_final:
-                break
 
 
     def evolve(self, dt):
@@ -133,6 +91,41 @@ class EvolveShotEventBased(EvolveShot):
                 t=dt,
             )
             ball.set(rvw, s, t=(self.t + dt))
+
+
+    @abstractmethod
+    def evolution_algorithm(self):
+        pass
+
+
+class EvolveShotEventBased(EvolveShot):
+    def __init__(self, *args, **kwargs):
+        EvolveShot.__init__(self, *args, **kwargs)
+
+
+    def evolution_algorithm(self, t_final=None, continuize=True):
+        """The event-based evolution algorithm"""
+
+        while True:
+            event = self.get_next_event()
+
+            if event.time == np.inf:
+                self.end_history()
+                break
+
+            self.evolve(event.time - self.t)
+            event.resolve()
+
+            self.update_history(event)
+
+            if (self.num_events % 10) == 0:
+                self.progress_update()
+
+            if t_final is not None and self.t >= t_final:
+                break
+
+        if continuize:
+            self.continuize()
 
 
     def get_next_event(self):
@@ -237,5 +230,16 @@ class EvolveShotEventBased(EvolveShot):
 
 avail_algorithms = {
     'event-based': EvolveShotEventBased,
+shot_evolver = {
+    'event': EvolveShotEventBased,
 }
+
+def get_shot_evolver(algorithm):
+    evolver = shot_evolver.get(algorithm)
+
+    if evolver is None:
+        raise ValueError(f"'{algorithm}' is not a valid shot evolution algorithm. Please choose from: {list(shot_evolver.keys())}")
+
+    return evolver
+
 
