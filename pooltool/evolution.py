@@ -1,14 +1,26 @@
 #! /usr/bin/env python
 
-import numpy as np
 import pooltool.terminal as terminal
 
 from pooltool.events import *
 from pooltool.system import System, SystemHistory, ShotRender
 from pooltool.objects import NonObject, DummyBall
 
-class EvolveShot(System, SystemHistory, ShotRender):
-    def __init__(self, cue=None, table=None, balls=None, progress=terminal.Progress(), run=terminal.Run()):
+import numpy as np
+
+from abc import ABC
+
+
+class EvolveShot(ABC, System, SystemHistory, ShotRender):
+    def __new__(cls, cue=None, table=None, balls=None, progress=terminal.Progress(), run=terminal.Run(), algorithm='event-based'):
+        if algorithm not in avail_algorithms:
+            raise ValueError(f"You are expecting to evolve the system with algorithm '{algorithm}', which is not one of the "
+                             f"possible db_types. Choose from: {list(avail_algorithms.keys())}")
+
+        return super().__new__(avail_algorithms[algorithm])
+
+
+    def __init__(self, cue=None, table=None, balls=None, run=terminal.Run(), progress=terminal.Progress()):
         self.run = run
         self.progress = progress
 
@@ -17,18 +29,21 @@ class EvolveShot(System, SystemHistory, ShotRender):
         ShotRender.__init__(self)
 
 
-    def simulate(self, t_final=None, strike=True, name='NA'):
+    def simulate(self, t_final=None, strike=True, name="NA"):
         """Run a simulation
 
         Parameters
         ==========
-        t_final : float
+        t_final : float, None
             The simulation will run until the time is greater than this value. If None, simulation
             is ran until the next event occurs at np.inf
 
         strike : bool, True
             If True, the cue stick will strike a ball at the start of the simulation. If you already
             struck the cue ball, you should set this to False.
+
+        name : str, 'NA'
+            A name for the simulated shot
         """
 
         self.reset_history()
@@ -48,10 +63,35 @@ class EvolveShot(System, SystemHistory, ShotRender):
             self.progress.update(msg)
             self.progress.increment(increment_to=int(energy_start - energy))
 
+        self.progress_update = progress_update
+
         self.run.warning('', header=name, lc='green')
         self.run.info('starting energy', f"{np.round(energy_start, 2)}J")
 
         self.progress.new("Running", progress_total_items=int(energy_start))
+        self.evolution_algorithm(t_final=t_final)
+        self.progress.end()
+
+        self.run.info('Finished after', self.progress.t.time_elapsed_precise())
+        self.run.info('Number of events', len(self.events), nl_after=1)
+
+        self.continuize()
+        self.vectorize_trajectories()
+        self.balls['cue'].set_playback_sequence()
+
+
+    @abstractmethod
+    def evolution_algorithm(self):
+        pass
+
+
+class EvolveShotEventBased(EvolveShot):
+    def __init__(self, *args, **kwargs):
+        EvolveShot.__init__(self, *args, **kwargs)
+
+
+    def evolution_algorithm(self, t_final=None):
+        """The event-based evolution algorithm"""
 
         while True:
             event = self.get_next_event()
@@ -66,20 +106,10 @@ class EvolveShot(System, SystemHistory, ShotRender):
             self.update_history(event)
 
             if (self.num_events % 10) == 0:
-                progress_update()
+                self.progress_update()
 
             if t_final is not None and self.t >= t_final:
                 break
-
-        self.progress.end()
-
-        self.run.info('Finished after', self.progress.t.time_elapsed_precise())
-        self.run.info('Number of events', len(self.events), nl_after=1)
-
-        self.continuize()
-        self.vectorize_trajectories()
-        self.balls['cue'].set_playback_sequence()
-
 
 
     def evolve(self, dt):
@@ -204,4 +234,8 @@ class EvolveShot(System, SystemHistory, ShotRender):
 
         return BallCushionCollision(*involved_agents, t=(self.t + dtau_E))
 
+
+avail_algorithms = {
+    'event-based': EvolveShotEventBased,
+}
 
