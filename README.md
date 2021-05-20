@@ -43,6 +43,7 @@ conda install -y numpy
 conda install -y -c anaconda psutil
 conda install -y scipy
 conda install -y pandas
+conda install -y -c conda-forge panda3d
 conda install -y -c conda-forge colored
 pip install pyquaternion
 ```
