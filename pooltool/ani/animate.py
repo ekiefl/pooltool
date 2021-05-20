@@ -1,22 +1,17 @@
 #! /usr/bin/env python
 
 import pooltool
-import pooltool.ani as ani
-import pooltool.ani.utils as autils
 import pooltool.ani.action as action
 
-from pooltool.ani import model_paths
 from pooltool.objects import Ball, Table, Cue
 from pooltool.ani.menu import MenuHandler, GenericMenu
 from pooltool.ani.tasks import Tasks
 from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import CustomCamera
-from pooltool.configurations import NineBallRack
 
 import gc
 
 from panda3d.core import *
-from direct.showbase import DirectObject
 from direct.showbase.ShowBase import ShowBase
 
 class Handler(object):
