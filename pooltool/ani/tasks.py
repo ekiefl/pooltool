@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import pooltool.engine as engine
+import pooltool.evolution as evolution
 import pooltool.ani.utils as autils
 import pooltool.ani.action as action
 
@@ -149,7 +149,7 @@ class Tasks(object):
 
     def run_simulation(self, task):
         """Run a pool simulation"""
-        self.shot = engine.SimulateShot(cue=self.cue_stick, table=self.table, balls=self.balls)
+        self.shot = evolution.EvolveShot(cue=self.cue_stick, table=self.table, balls=self.balls)
         self.shot.simulate()
         self.shot.init_shot_animation()
         self.shot.loop_animation()
