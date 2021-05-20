@@ -20,6 +20,12 @@ class EvolveShot(ABC, System, SystemHistory, ShotRender):
         SystemHistory.__init__(self)
         ShotRender.__init__(self)
 
+        # What kinds of events should be considered?
+        self.include = {
+            type_ball_ball: True,
+            type_ball_cushion: True,
+        }
+
 
     def simulate(self, strike=True, name="NA", **kwargs):
         """Run a simulation
@@ -114,7 +120,8 @@ class EvolveShotEventBased(EvolveShot):
                 break
 
             self.evolve(event.time - self.t)
-            event.resolve()
+            if self.include[event.event_type]:
+                event.resolve()
 
             self.update_history(event)
 
