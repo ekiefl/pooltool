@@ -228,10 +228,83 @@ class EvolveShotEventBased(EvolveShot):
         return BallCushionCollision(*involved_agents, t=(self.t + dtau_E))
 
 
-avail_algorithms = {
-    'event-based': EvolveShotEventBased,
+class EvolveShotDiscreteTime(EvolveShot):
+    def __init__(self, *args, **kwargs):
+        EvolveShot.__init__(self, *args, **kwargs)
+
+
+    def evolution_algorithm(self, t_final=None, dt=0.05):
+        """The discrete time algorithm"""
+
+        steps = 0
+        while True:
+            self.evolve(dt)
+            self.t += dt
+
+            events = self.detect_events()
+            for event in events:
+                event.resolve()
+                self.update_history(event, update_all=True)
+
+            if (steps % 1000) == 0:
+                self.progress_update()
+
+            if t_final is not None and self.t >= t_final:
+                break
+
+            if self.get_system_energy() < pooltool.tol:
+                break
+
+            steps += 1
+
+
+    def detect_events(self):
+        events = []
+        events.extend(self.detect_ball_ball_collisions())
+        events.extend(self.detect_ball_rail_collisions())
+
+        if not len(events):
+            events.append(NonEvent(t = self.t))
+
+        return events
+
+
+    def detect_ball_ball_collisions(self):
+        events = []
+        for i, ball1 in enumerate(self.balls.values()):
+            for j, ball2 in enumerate(self.balls.values()):
+                if i >= j:
+                    continue
+
+                if ball1.s == pooltool.stationary and ball2.s == pooltool.stationary:
+                    continue
+
+                if physics.is_overlapping(ball1.rvw, ball2.rvw, ball1.R, ball2.R):
+                    events.append(BallBallCollision(ball1, ball2, t=self.t))
+
+        return events
+
+
+    def detect_ball_rail_collisions(self):
+        events = []
+
+        for ball in self.balls.values():
+            ball_x, ball_y = ball.rvw[0,:2]
+            if ball_x <= self.table.L + ball.R:
+                events.append(BallCushionCollision(ball, self.table.rails['L'], t=self.t))
+            elif ball_x >= self.table.R - ball.R:
+                events.append(BallCushionCollision(ball, self.table.rails['R'], t=self.t))
+            elif ball_y <= self.table.B + ball.R:
+                events.append(BallCushionCollision(ball, self.table.rails['B'], t=self.t))
+            elif ball_y >= self.table.T - ball.R:
+                events.append(BallCushionCollision(ball, self.table.rails['T'], t=self.t))
+
+        return events
+
+
 shot_evolver = {
     'event': EvolveShotEventBased,
+    'discrete': EvolveShotDiscreteTime,
 }
 
 def get_shot_evolver(algorithm):
