@@ -11,3 +11,6 @@ model_paths = {str(path.stem): Filename.fromOsSpecific(str(path.absolute())) for
 
 menu_text_scale = 0.07
 
+logo_paths = {
+    'default': Path(pooltool.__file__).parent.parent / 'logo' / 'logo.png'
+}
