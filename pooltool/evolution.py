@@ -120,7 +120,7 @@ class EvolveShotEventBased(EvolveShot):
                 break
 
             self.evolve(event.time - self.t)
-            if self.include[event.event_type]:
+            if self.include.get(event.event_type, True):
                 event.resolve()
 
             self.update_history(event)
