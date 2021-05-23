@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 
 import pooltool
-import pooltool.ani.action as action
 
 from pooltool.objects.cue import Cue
 from pooltool.objects.ball import Ball
 from pooltool.objects.table import Table
 
-from pooltool.ani.menu import MenuManager, GenericMenu
+from pooltool.ani.menu import MenuManager
+from pooltool.ani.modes import *
 from pooltool.ani.tasks import Tasks
 from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import CustomCamera
@@ -18,8 +18,14 @@ from panda3d.core import *
 from direct.showbase.ShowBase import ShowBase
 
 
-class Handler(object):
+class Handler(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode):
     def __init__(self):
+        # Init every Mode class
+        MenuMode.__init__(self)
+        AimMode.__init__(self)
+        StrokeMode.__init__(self)
+        ViewMode.__init__(self)
+        ShotMode.__init__(self)
 
         self.modes = {
             'menu': MenuMode,
@@ -76,231 +82,9 @@ class Handler(object):
             self.keymap[key] = self.action_state_defaults[self.mode][key]
 
 
-class MenuMode(object):
-    keymap = {
-        action.exit: False,
-        action.new_game: False,
-    }
 
-    def enter(self):
-        self.mouse.show()
-        self.mouse.absolute()
-        self.show_menu('main')
-
-        self.task_action('escape', action.exit, True)
-        self.task_action('escape-up', action.exit, False)
-        self.task_action('n', action.new_game, True)
-        self.task_action('n-up', action.new_game, False)
-
-        self.add_task(self.menu_task, 'menu_task')
-
-    def exit(self):
-        self.hide_menus()
-        self.remove_task('menu_task')
-
-
-class AimMode(object):
-    keymap = {
-        action.fine_control: False,
-        action.quit: False,
-        action.stroke: False,
-        action.view: False,
-        action.zoom: False,
-        action.elevation: False,
-        action.english: False,
-    }
-
-    def enter(self):
-        self.mouse.hide()
-        self.mouse.relative()
-        self.mouse.track()
-
-        self.cue_stick.show_nodes()
-        self.cue_stick.get_node('cue_stick').setX(0)
-        self.cam.update_focus(self.balls['cue'].get_node('ball').getPos())
-
-        self.task_action('escape', action.quit, True)
-        self.task_action('f', action.fine_control, True)
-        self.task_action('f-up', action.fine_control, False)
-        self.task_action('mouse1', action.zoom, True)
-        self.task_action('mouse1-up', action.zoom, False)
-        self.task_action('s', action.stroke, True)
-        self.task_action('v', action.view, True)
-        self.task_action('b', action.elevation, True)
-        self.task_action('b-up', action.elevation, False)
-        self.task_action('e', action.english, True)
-        self.task_action('e-up', action.english, False)
-
-        self.add_task(self.aim_task, 'aim_task')
-        self.add_task(self.quit_task, 'quit_task')
-
-
-    def exit(self):
-        self.remove_task('aim_task')
-        self.remove_task('quit_task')
-
-        self.cue_stick.hide_nodes()
-
-        self.cam.store_state('aim', overwrite=True)
-
-
-class StrokeMode(object):
-    keymap = {
-        action.fine_control: False,
-        action.stroke: True,
-    }
-
-    def enter(self):
-        self.mouse.hide()
-        self.mouse.relative()
-        self.mouse.track()
-
-        self.cue_stick.track_stroke()
-        self.cue_stick.show_nodes()
-
-        self.task_action('f', action.fine_control, True)
-        self.task_action('f-up', action.fine_control, False)
-        self.task_action('s', action.stroke, True)
-        self.task_action('s-up', action.stroke, False)
-
-        self.add_task(self.stroke_task, 'stroke_task')
-
-
-    def exit(self):
-        self.remove_task('stroke_task')
-        self.cam.store_state('stroke', overwrite=True)
-        self.cam.load_state('aim')
-
-
-class ViewMode(object):
-    keymap ={
-        action.aim: False,
-        action.fine_control: False,
-        action.move: True,
-        action.quit: False,
-        action.zoom: False,
-    }
-
-    def enter(self):
-        self.mouse.hide()
-        self.mouse.relative()
-        self.mouse.track()
-
-        self.task_action('escape', action.quit, True)
-        self.task_action('mouse1', action.zoom, True)
-        self.task_action('mouse1-up', action.zoom, False)
-        self.task_action('a', action.aim, True)
-        self.task_action('v', action.move, True)
-        self.task_action('v-up', action.move, False)
-
-        self.add_task(self.view_task, 'view_task')
-        self.add_task(self.quit_task, 'quit_task')
-
-
-    def exit(self):
-        self.remove_task('view_task')
-        self.remove_task('quit_task')
-
-
-class ShotMode(object):
-    keymap = {
-        action.aim: False,
-        action.fine_control: False,
-        action.move: False,
-        action.toggle_pause: False,
-        action.undo_shot: False,
-        action.restart_ani: False,
-        action.quit: False,
-        action.zoom: False,
-        action.rewind: False,
-        action.fast_forward: False,
-    }
-
-    def enter(self):
-        self.mouse.hide()
-        self.mouse.relative()
-        self.mouse.track()
-
-        self.shot_sim_overlay = GenericMenu(
-            title = 'Calculating shot...',
-            frame_color = (0,0,0,0.4),
-            title_pos = (0,0,-0.2),
-        )
-        self.shot_sim_overlay.show()
-
-        self.cue_stick.set_object_state_as_render_state()
-
-        self.add_task(self.run_simulation, 'run_simulation', taskChain = 'simulation')
-
-        self.task_action('escape', action.quit, True)
-        self.task_action('mouse1', action.zoom, True)
-        self.task_action('mouse1-up', action.zoom, False)
-        self.task_action('a', action.aim, True)
-        self.task_action('v', action.move, True)
-        self.task_action('v-up', action.move, False)
-        self.task_action('r', action.restart_ani, True)
-        self.task_action('r-up', action.restart_ani, False)
-        self.task_action('z', action.undo_shot, True)
-        self.task_action('z-up', action.undo_shot, False)
-        self.task_action('f', action.fine_control, True)
-        self.task_action('f-up', action.fine_control, False)
-        self.task_action('arrow_left', action.rewind, True)
-        self.task_action('arrow_left-up', action.rewind, False)
-        self.task_action('arrow_right', action.fast_forward, True)
-        self.task_action('arrow_right-up', action.fast_forward, False)
-
-        self.add_task(self.quit_task, 'quit_task')
-
-
-    def exit(self, keep=True):
-        """Exit shot mode
-
-        Parameters
-        ==========
-        keep : bool, True
-            If True, the system state will be set to the end state of the shot. Otherwise,
-            the system state will be returned to the start state of the shot.
-        """
-
-        self.shot.finish_animation()
-        self.shot.ball_animations.finish()
-
-        if keep:
-            self.shot.cue.reset_state()
-            self.shot.cue.set_render_state_as_object_state()
-
-            for ball in self.shot.balls.values():
-                ball.reset_angular_integration()
-        else:
-            self.cam.load_state('stroke')
-            for ball in self.shot.balls.values():
-                if ball.history.is_populated():
-                    ball.set(
-                        rvw = ball.history.rvw[0],
-                        s = ball.history.s[0],
-                        t = 0,
-                    )
-                ball.set_render_state_as_object_state()
-                ball.history.reset_history()
-
-        self.shot.cue.update_focus()
-
-        self.remove_task('shot_view_task')
-        self.remove_task('shot_animation_task')
-        self.remove_task('quit_task')
-        self.shot = None
-
-
-
-class Interface(ShowBase, MenuManager, Handler, MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, Tasks):
+class Interface(ShowBase, MenuManager, Handler, Tasks):
     def __init__(self, *args, **kwargs):
-        # Init every Mode class
-        MenuMode.__init__(self)
-        AimMode.__init__(self)
-        StrokeMode.__init__(self)
-        ViewMode.__init__(self)
-        ShotMode.__init__(self)
-
         ShowBase.__init__(self)
         MenuManager.__init__(self)
         Handler.__init__(self)
