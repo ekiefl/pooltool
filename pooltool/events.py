@@ -102,14 +102,14 @@ class BallCushionCollision(Collision):
 
 
     def resolve(self):
-        ball, rail = self.agents
+        ball, cushion = self.agents
 
-        rvw = physics.resolve_ball_rail_collision(
+        rvw = physics.resolve_ball_cushion_collision(
             rvw=ball.rvw,
-            normal=rail.normal,
+            normal=cushion.normal,
             R=ball.R,
             m=ball.m,
-            h=rail.height,
+            h=cushion.height,
         )
         s = pooltool.sliding
 
