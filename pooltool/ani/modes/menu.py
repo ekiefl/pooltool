@@ -21,6 +21,19 @@ class MenuMode(Mode):
 
         self.add_task(self.menu_task, 'menu_task')
 
+
     def exit(self):
         self.hide_menus()
         self.remove_task('menu_task')
+
+
+    def menu_task(self, task):
+        if self.keymap[action.exit]:
+            sys.exit()
+
+        if self.keymap[action.new_game]:
+            self.go()
+
+        return task.cont
+
+
