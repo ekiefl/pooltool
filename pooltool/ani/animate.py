@@ -17,73 +17,23 @@ import gc
 from panda3d.core import *
 from direct.showbase.ShowBase import ShowBase
 
+
 class Handler(object):
     def __init__(self):
 
         self.modes = {
-            'menu': {
-                'enter': self.menu_enter,
-                'exit': self.menu_exit,
-                'keymap': {
-                    action.exit: False,
-                    action.new_game: False,
-                }
-            },
-            'aim': {
-                'enter': self.aim_enter,
-                'exit': self.aim_exit,
-                'keymap': {
-                    action.fine_control: False,
-                    action.quit: False,
-                    action.stroke: False,
-                    action.view: False,
-                    action.zoom: False,
-                    action.elevation: False,
-                    action.english: False,
-                },
-            },
-            'stroke': {
-                'enter': self.stroke_enter,
-                'exit': self.stroke_exit,
-                'keymap': {
-                    action.fine_control: False,
-                    action.stroke: True,
-                },
-            },
-            'view': {
-                'enter': self.view_enter,
-                'exit': self.view_exit,
-                'keymap': {
-                    action.aim: False,
-                    action.fine_control: False,
-                    action.move: True,
-                    action.quit: False,
-                    action.zoom: False,
-                },
-            },
-            'shot': {
-                'enter': self.shot_enter,
-                'exit': self.shot_exit,
-                'keymap': {
-                    action.aim: False,
-                    action.fine_control: False,
-                    action.move: False,
-                    action.toggle_pause: False,
-                    action.undo_shot: False,
-                    action.restart_ani: False,
-                    action.quit: False,
-                    action.zoom: False,
-                    action.rewind: False,
-                    action.fast_forward: False,
-                },
-            },
+            'menu': MenuMode,
+            'aim': AimMode,
+            'stroke': StrokeMode,
+            'view': ViewMode,
+            'shot': ShotMode,
         }
 
         # Store the above as default states
         self.action_state_defaults = {}
         for mode in self.modes:
             self.action_state_defaults[mode] = {}
-            for a, default_state in self.modes[mode]['keymap'].items():
+            for a, default_state in self.modes[mode].keymap.items():
                 self.action_state_defaults[mode][a] = default_state
 
         self.mode = None
@@ -107,8 +57,8 @@ class Handler(object):
 
         # Build up operations for the new mode
         self.mode = mode
-        self.keymap = self.modes[mode]['keymap']
-        self.modes[mode]['enter'](**enter_kwargs)
+        self.keymap = self.modes[mode].keymap
+        self.modes[mode].enter(self, **enter_kwargs)
 
 
     def end_mode(self, **kwargs):
@@ -117,11 +67,22 @@ class Handler(object):
 
         # Tear down operations for the current mode
         if self.mode is not None:
-            self.modes[self.mode]['exit'](**kwargs)
+            self.modes[self.mode].exit(self, **kwargs)
             self.reset_action_states()
 
 
-    def menu_enter(self):
+    def reset_action_states(self):
+        for key in self.keymap:
+            self.keymap[key] = self.action_state_defaults[self.mode][key]
+
+
+class MenuMode(object):
+    keymap = {
+        action.exit: False,
+        action.new_game: False,
+    }
+
+    def enter(self):
         self.mouse.show()
         self.mouse.absolute()
         self.show_menu('main')
@@ -133,13 +94,23 @@ class Handler(object):
 
         self.add_task(self.menu_task, 'menu_task')
 
-
-    def menu_exit(self):
+    def exit(self):
         self.hide_menus()
         self.remove_task('menu_task')
 
 
-    def aim_enter(self):
+class AimMode(object):
+    keymap = {
+        action.fine_control: False,
+        action.quit: False,
+        action.stroke: False,
+        action.view: False,
+        action.zoom: False,
+        action.elevation: False,
+        action.english: False,
+    }
+
+    def enter(self):
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()
@@ -164,7 +135,7 @@ class Handler(object):
         self.add_task(self.quit_task, 'quit_task')
 
 
-    def aim_exit(self):
+    def exit(self):
         self.remove_task('aim_task')
         self.remove_task('quit_task')
 
@@ -173,7 +144,13 @@ class Handler(object):
         self.cam.store_state('aim', overwrite=True)
 
 
-    def stroke_enter(self):
+class StrokeMode(object):
+    keymap = {
+        action.fine_control: False,
+        action.stroke: True,
+    }
+
+    def enter(self):
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()
@@ -189,13 +166,22 @@ class Handler(object):
         self.add_task(self.stroke_task, 'stroke_task')
 
 
-    def stroke_exit(self):
+    def exit(self):
         self.remove_task('stroke_task')
         self.cam.store_state('stroke', overwrite=True)
         self.cam.load_state('aim')
 
 
-    def view_enter(self):
+class ViewMode(object):
+    keymap ={
+        action.aim: False,
+        action.fine_control: False,
+        action.move: True,
+        action.quit: False,
+        action.zoom: False,
+    }
+
+    def enter(self):
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()
@@ -211,12 +197,26 @@ class Handler(object):
         self.add_task(self.quit_task, 'quit_task')
 
 
-    def view_exit(self):
+    def exit(self):
         self.remove_task('view_task')
         self.remove_task('quit_task')
 
 
-    def shot_enter(self):
+class ShotMode(object):
+    keymap = {
+        action.aim: False,
+        action.fine_control: False,
+        action.move: False,
+        action.toggle_pause: False,
+        action.undo_shot: False,
+        action.restart_ani: False,
+        action.quit: False,
+        action.zoom: False,
+        action.rewind: False,
+        action.fast_forward: False,
+    }
+
+    def enter(self):
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()
@@ -252,7 +252,7 @@ class Handler(object):
         self.add_task(self.quit_task, 'quit_task')
 
 
-    def shot_exit(self, keep=True):
+    def exit(self, keep=True):
         """Exit shot mode
 
         Parameters
@@ -291,15 +291,18 @@ class Handler(object):
         self.shot = None
 
 
-    def reset_action_states(self):
-        for key in self.keymap:
-            self.keymap[key] = self.action_state_defaults[self.mode][key]
 
-
-class Interface(ShowBase, MenuHandler, Handler, Tasks):
+class Interface(ShowBase, MenuManager, Handler, MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, Tasks):
     def __init__(self, *args, **kwargs):
+        # Init every Mode class
+        MenuMode.__init__(self)
+        AimMode.__init__(self)
+        StrokeMode.__init__(self)
+        ViewMode.__init__(self)
+        ShotMode.__init__(self)
+
         ShowBase.__init__(self)
-        MenuHandler.__init__(self)
+        MenuManager.__init__(self)
         Handler.__init__(self)
         Tasks.__init__(self)
 
