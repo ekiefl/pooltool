@@ -8,7 +8,7 @@ from panda3d.core import *
 from direct.gui.DirectGui import *
 
 
-class MenuHandler(object):
+class MenuManager(object):
     def __init__(self):
 
         self.menus = {}
