@@ -219,7 +219,7 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
     return roots.min() if len(roots) else np.inf
 
 
-def get_ball_cushion_collision_time(rvw, s, lx, ly, l0, mu, m, g, R):
+def get_ball_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g, R):
     """Get the time until collision between ball and collision"""
     if s == pooltool.stationary or s == pooltool.spinning:
         return np.inf
@@ -247,6 +247,14 @@ def get_ball_cushion_collision_time(rvw, s, lx, ly, l0, mu, m, g, R):
         (abs(roots.imag) <= pooltool.tol) & \
         (roots.real > pooltool.tol)
     ].real
+
+    # All roots beyond this point are real and positive
+
+    for i, root in enumerate(roots):
+        rvw_dtau, _ = evolve_state_motion(s, np.copy(rvw), R, m, mu, 1, mu, g, root)
+        s_score = - np.dot(p1 - rvw_dtau[0], p2 - p1) / np.dot(p2 - p1, p2 - p1)
+        if not (0 <= s_score <= 1):
+            roots[i] = np.inf
 
     return roots.min() if len(roots) else np.inf
 
