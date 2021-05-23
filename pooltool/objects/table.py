@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import pooltool.utils as utils
 import pooltool.ani.utils as autils
 
 from pooltool.ani import model_paths
@@ -60,49 +61,51 @@ class Table(Object, TableRender):
     object_type = 'table'
 
     def __init__(self, w=None, l=None,
-                 edge_width=None, rail_width=None, rail_height=None,
+                 edge_width=None, cushion_width=None, cushion_height=None,
                  table_height=None, lights_height=None):
 
         self.w = w or pooltool.table_width
         self.l = l or pooltool.table_length
         self.edge_width = edge_width or pooltool.table_edge_width
-        self.rail_width = rail_width or pooltool.rail_width # for visualization
+        self.cushion_height = cushion_height or pooltool.cushion_height
+        self.cushion_width = cushion_width or pooltool.cushion_width # for visualization
         self.height = table_height or pooltool.table_height # for visualization
         self.lights_height = lights_height or pooltool.lights_height # for visualization
 
-        self.L = 0
-        self.R = self.w
-        self.B = 0
-        self.T = self.l
-
         self.center = (self.w/2, self.l/2)
 
-        self.rails = {
-            'L': Rail('L', lx=1, ly=0, l0=-self.L, height=rail_height),
-            'R': Rail('R', lx=1, ly=0, l0=-self.R, height=rail_height),
-            'B': Rail('B', lx=0, ly=1, l0=-self.B, height=rail_height),
-            'T': Rail('T', lx=0, ly=1, l0=-self.T, height=rail_height),
+        self.cushions = {
+            'L': Cushion('L', p1 = (0, 0, self.cushion_height), p2 = (0, self.l, self.cushion_height)),
+            'R': Cushion('R', p1 = (self.w, 0, self.cushion_height), p2 = (self.w, self.l, self.cushion_height)),
+            'B': Cushion('B', p1 = (0, 0, self.cushion_height), p2 = (self.w, 0, self.cushion_height)),
+            'T': Cushion('T', p1 = (0, self.l, self.cushion_height), p2 = (self.w, self.l, self.cushion_height)),
         }
 
         TableRender.__init__(self)
 
 
-class Rail(Object):
+class Cushion(Object):
     object_type = 'cushion'
 
-    def __init__(self, rail_id, lx, ly, l0, height=None):
-        """A rail is defined by a line lx*x + ly*y + l0 = 0"""
+    def __init__(self, cushion_id, p1, p2):
+        self.id = cushion_id
 
-        self.id = rail_id
+        p1x, p1y, p1z = p1
+        p2x, p2y, p2z = p2
 
-        self.lx = lx
-        self.ly = ly
-        self.l0 = l0
+        if p1z != p2z:
+            raise ValueError(f"Cushion with id '{self.id}' has points p1 and p2 with different cushion heights (h)")
+        self.height = p1z
 
-        # Defines the normal vector of the rail surface
-        self.normal = np.array([self.lx, self.ly, 0])
+        if (p2x - p1x) == 0:
+            self.lx = 1
+            self.ly = 0
+            self.l0 = -p1x
+        else:
+            self.lx = - (p2y - p1y) / (p2x - p1x)
+            self.ly = 1
+            self.l0 = (p2y - p1y) / (p2x - p1x) * p1x - p1y
 
-        # rail properties
-        self.height = height or pooltool.rail_height
-
+        # Defines the normal vector of the cushion surface
+        self.normal = utils.unit_vector(np.array([self.lx, self.ly, 0]))
 

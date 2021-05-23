@@ -147,7 +147,7 @@ class EvolveShotEventBased(EvolveShot):
         if ball_ball_event.time < event.time:
             event = ball_ball_event
 
-        ball_cushion_event = self.get_min_ball_rail_event_time()
+        ball_cushion_event = self.get_min_ball_cushion_event_time()
         if ball_cushion_event.time < event.time:
             event = ball_cushion_event
 
@@ -203,8 +203,8 @@ class EvolveShotEventBased(EvolveShot):
         return BallBallCollision(*involved_balls, t=(self.t + dtau_E))
 
 
-    def get_min_ball_rail_event_time(self):
-        """Returns minimum time until next ball-rail collision"""
+    def get_min_ball_cushion_event_time(self):
+        """Returns minimum time until next ball-cushion collision"""
 
         dtau_E_min = np.inf
         involved_agents = tuple([DummyBall(), NonObject()])
@@ -213,13 +213,13 @@ class EvolveShotEventBased(EvolveShot):
             if ball.s == pooltool.stationary:
                 continue
 
-            for rail in self.table.rails.values():
-                dtau_E = physics.get_ball_rail_collision_time(
+            for cushion in self.table.cushions.values():
+                dtau_E = physics.get_ball_cushion_collision_time(
                     rvw=ball.rvw,
                     s=ball.s,
-                    lx=rail.lx,
-                    ly=rail.ly,
-                    l0=rail.l0,
+                    lx=cushion.lx,
+                    ly=cushion.ly,
+                    l0=cushion.l0,
                     mu=(ball.u_s if ball.s == pooltool.sliding else ball.u_r),
                     m=ball.m,
                     g=ball.g,
@@ -227,7 +227,7 @@ class EvolveShotEventBased(EvolveShot):
                 )
 
                 if dtau_E < dtau_E_min:
-                    involved_agents = (ball, rail)
+                    involved_agents = (ball, cushion)
                     dtau_E_min = dtau_E
 
         dtau_E = dtau_E_min
@@ -268,7 +268,7 @@ class EvolveShotDiscreteTime(EvolveShot):
     def detect_events(self):
         events = []
         events.extend(self.detect_ball_ball_collisions())
-        events.extend(self.detect_ball_rail_collisions())
+        events.extend(self.detect_ball_cushion_collisions())
 
         if not len(events):
             events.append(NonEvent(t = self.t))
@@ -292,19 +292,19 @@ class EvolveShotDiscreteTime(EvolveShot):
         return events
 
 
-    def detect_ball_rail_collisions(self):
+    def detect_ball_cushion_collisions(self):
         events = []
 
         for ball in self.balls.values():
             ball_x, ball_y = ball.rvw[0,:2]
             if ball_x <= self.table.L + ball.R:
-                events.append(BallCushionCollision(ball, self.table.rails['L'], t=self.t))
+                events.append(BallCushionCollision(ball, self.table.cushions['L'], t=self.t))
             elif ball_x >= self.table.R - ball.R:
-                events.append(BallCushionCollision(ball, self.table.rails['R'], t=self.t))
+                events.append(BallCushionCollision(ball, self.table.cushions['R'], t=self.t))
             elif ball_y <= self.table.B + ball.R:
-                events.append(BallCushionCollision(ball, self.table.rails['B'], t=self.t))
+                events.append(BallCushionCollision(ball, self.table.cushions['B'], t=self.t))
             elif ball_y >= self.table.T - ball.R:
-                events.append(BallCushionCollision(ball, self.table.rails['T'], t=self.t))
+                events.append(BallCushionCollision(ball, self.table.cushions['T'], t=self.t))
 
         return events
 
