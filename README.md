@@ -36,7 +36,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> exit()
 ```
 
-Install all of the dependencies:
+Install all of the dependencies (these installations are localized to your conda environment):
 
 ```
 conda install -y numpy
