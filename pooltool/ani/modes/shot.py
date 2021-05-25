@@ -1,10 +1,12 @@
 #! /usr/bin/env python
 
+import pooltool.evolution as evolution
+
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes import *
 
 
-class ShotMode(Mode):
+class ShotMode(CameraMode):
     keymap = {
         action.aim: False,
         action.fine_control: False,
@@ -91,5 +93,65 @@ class ShotMode(Mode):
         self.remove_task('shot_animation_task')
         self.remove_task('quit_task')
         self.shot = None
+
+
+    def shot_view_task(self, task):
+        if self.keymap[action.aim]:
+            self.change_mode('aim')
+        elif self.keymap[action.zoom]:
+            self.zoom_camera()
+        elif self.keymap[action.move]:
+            self.move_camera()
+        else:
+            if task.time > 0.1:
+                # Prevents shot follow through from moving camera
+                self.rotate_camera(cue_stick_too=False)
+            else:
+                # Update mouse positions so there is not a big jump
+                self.mouse.touch()
+
+        return task.cont
+
+
+    def shot_animation_task(self, task):
+        if self.keymap[action.restart_ani]:
+            self.shot.restart_animation()
+
+        if self.keymap[action.rewind]:
+            rate = 0.02 if not self.keymap[action.fine_control] else 0.002
+            self.shot.offset_time(-rate*self.shot.playback_speed)
+
+        if self.keymap[action.fast_forward]:
+            rate = 0.02 if not self.keymap[action.fine_control] else 0.002
+            self.shot.offset_time(rate*self.shot.playback_speed)
+
+        if self.keymap[action.undo_shot]:
+            exit_kwargs = dict(
+                keep = False,
+            )
+            self.change_mode('aim', exit_kwargs=exit_kwargs)
+            return
+
+        return task.cont
+
+
+    def run_simulation(self, task):
+        """Run a pool simulation"""
+        evolver = evolution.get_shot_evolver(algorithm='event')
+        self.shot = evolver(cue=self.cue_stick, table=self.table, balls=self.balls)
+        self.shot.simulate()
+        self.shot.init_shot_animation()
+        self.shot.loop_animation()
+
+        self.accept('space', self.shot.toggle_pause)
+        self.accept('arrow_up', self.shot.speed_up)
+        self.accept('arrow_down', self.shot.slow_down)
+
+        self.add_task(self.shot_view_task, 'shot_view_task')
+        self.add_task(self.shot_animation_task, 'shot_animation_task')
+
+        self.shot_sim_overlay.hide()
+
+        return task.done
 
 

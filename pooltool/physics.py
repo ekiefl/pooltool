@@ -62,13 +62,13 @@ def resolve_ball_ball_collision(rvw1, rvw2):
     return rvw1, rvw2
 
 
-def resolve_ball_rail_collision(rvw, normal, R, m, h):
+def resolve_ball_cushion_collision(rvw, normal, R, m, h):
     """Inhwan Han (2005) 'Dynamics in Carom and Three Cushion Billiards'"""
 
     # orient the normal so it points away from playing surface
     normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
 
-    # Change from the table frame to the rail frame. The rail frame is defined by
+    # Change from the table frame to the cushion frame. The cushion frame is defined by
     # the normal vector is parallel with <1,0,0>.
     psi = utils.angle(normal)
     rvw_R = utils.coordinate_rotation(rvw.T, -psi).T
@@ -77,8 +77,8 @@ def resolve_ball_rail_collision(rvw, normal, R, m, h):
     phi = utils.angle(rvw_R[1]) % (2*np.pi)
 
     # Get mu and e
-    e = get_bail_rail_restitution(rvw_R)
-    mu = get_bail_rail_friction(rvw_R)
+    e = get_bail_cushion_restitution(rvw_R)
+    mu = get_bail_cushion_friction(rvw_R)
 
     # Depends on height of cushion relative to ball
     theta_a = np.arcsin(h/R - 1)
@@ -124,14 +124,14 @@ def resolve_ball_rail_collision(rvw, normal, R, m, h):
     return rvw
 
 
-def get_bail_rail_restitution(rvw):
+def get_bail_cushion_restitution(rvw):
     """Get restitution coefficient dependent on ball state
 
     Parameters
     ==========
     rvw: np.array
         Assumed to be in reference frame such that <1,0,0> points
-        perpendicular to the rail, and in the direction away from the table
+        perpendicular to the cushion, and in the direction away from the table
 
     Notes
     =====
@@ -145,14 +145,14 @@ def get_bail_rail_restitution(rvw):
     ])
 
 
-def get_bail_rail_friction(rvw):
+def get_bail_cushion_friction(rvw):
     """Get friction coeffecient depend on ball state
 
     Parameters
     ==========
     rvw: np.array
         Assumed to be in reference frame such that <1,0,0> points
-        perpendicular to the rail, and in the direction away from the table
+        perpendicular to the cushion, and in the direction away from the table
     """
 
     ang = utils.angle(rvw[1])
@@ -219,7 +219,7 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
     return roots.min() if len(roots) else np.inf
 
 
-def get_ball_rail_collision_time(rvw, s, lx, ly, l0, mu, m, g, R):
+def get_ball_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g, R):
     """Get the time until collision between ball and collision"""
     if s == pooltool.stationary or s == pooltool.spinning:
         return np.inf
@@ -247,6 +247,14 @@ def get_ball_rail_collision_time(rvw, s, lx, ly, l0, mu, m, g, R):
         (abs(roots.imag) <= pooltool.tol) & \
         (roots.real > pooltool.tol)
     ].real
+
+    # All roots beyond this point are real and positive
+
+    for i, root in enumerate(roots):
+        rvw_dtau, _ = evolve_state_motion(s, np.copy(rvw), R, m, mu, 1, mu, g, root)
+        s_score = - np.dot(p1 - rvw_dtau[0], p2 - p1) / np.dot(p2 - p1, p2 - p1)
+        if not (0 <= s_score <= 1):
+            roots[i] = np.inf
 
     return roots.min() if len(roots) else np.inf
 
@@ -301,6 +309,18 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
             return evolve_perpendicular_spin_state(rvw, R, u_sp, g, dtau_E_spin), pooltool.stationary
         else:
             return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), pooltool.spinning
+
+
+def evolve_state_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
+    """Variant of evolve_ball_motion that does not respect motion transition events"""
+    if state == pooltool.stationary:
+        return rvw, state
+    elif state == pooltool.sliding:
+        return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), pooltool.sliding
+    elif state == pooltool.rolling:
+        return evolve_roll_state(rvw, R, u_r, u_sp, g, t), pooltool.rolling
+    elif state == pooltool.spinning:
+        return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), pooltool.spinning
 
 
 def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
@@ -407,7 +427,7 @@ def cue_strike(m, M, R, V0, phi, theta, a, b):
     │           │      ,                    ,
     │           │       ,                  ,
     ◎───────────◎         ,               '
-      bottom rail           ' - , _ , - 
+      bottom cushion           ' - , _ , - 
                      ______________________________
                               playing surface
     Parameters
@@ -426,7 +446,7 @@ def cue_strike(m, M, R, V0, phi, theta, a, b):
         What initial velocity does the cue strike the ball?
 
     phi : float (degrees)
-        The direction you strike the ball in relation to the bottom rail
+        The direction you strike the ball in relation to the bottom cushion
 
     theta : float (degrees)
         How elevated is the cue from the playing surface, in degrees?

@@ -46,14 +46,14 @@ class Handler(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode):
         self.keymap = None
 
 
-    def update_key_map(self, action_name, action_state):
+    def update_keymap(self, action_name, action_state):
         self.keymap[action_name] = action_state
 
 
     def task_action(self, keystroke, action_name, action_state):
         """Add action to keymap to be handled by tasks"""
 
-        self.accept(keystroke, self.update_key_map, [action_name, action_state])
+        self.accept(keystroke, self.update_keymap, [action_name, action_state])
 
 
     def change_mode(self, mode, exit_kwargs={}, enter_kwargs={}):

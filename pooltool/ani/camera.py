@@ -80,3 +80,7 @@ class CustomCamera(object):
         del self.states[name]
 
 
+    def has_state(self, name):
+        return True if name in self.states else False
+
+
