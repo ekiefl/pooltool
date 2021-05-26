@@ -105,7 +105,7 @@ class ShotMode(CameraMode):
         elif self.keymap[action.move]:
             self.move_camera()
         else:
-            if task.time > 0.1:
+            if task.time > 0.3:
                 # Prevents shot follow through from moving camera
                 self.rotate_camera(cue_stick_too=False)
             else:
