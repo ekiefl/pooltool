@@ -53,6 +53,8 @@ class ShotMode(CameraMode):
         self.task_action('arrow_right', action.fast_forward, True)
         self.task_action('arrow_right-up', action.fast_forward, False)
 
+        self.add_task(self.shot_view_task, 'shot_view_task')
+        self.add_task(self.shot_animation_task, 'shot_animation_task')
         self.add_task(self.quit_task, 'quit_task')
 
 
@@ -146,9 +148,6 @@ class ShotMode(CameraMode):
         self.accept('space', self.shot.toggle_pause)
         self.accept('arrow_up', self.shot.speed_up)
         self.accept('arrow_down', self.shot.slow_down)
-
-        self.add_task(self.shot_view_task, 'shot_view_task')
-        self.add_task(self.shot_animation_task, 'shot_animation_task')
 
         self.shot_sim_overlay.hide()
 

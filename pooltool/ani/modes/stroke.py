@@ -34,6 +34,7 @@ class StrokeMode(Mode):
     def stroke_task(self, task):
         if self.keymap[action.stroke]:
             if self.stroke_cue_stick():
+                # The cue stick has contacted the cue ball
                 self.change_mode('shot')
                 return
         else:
