@@ -3,7 +3,7 @@
 import pooltool.evolution as evolution
 
 from pooltool.ani.menu import GenericMenu
-from pooltool.ani.modes import *
+from pooltool.ani.modes import CameraMode, action
 
 
 class ShotMode(CameraMode):

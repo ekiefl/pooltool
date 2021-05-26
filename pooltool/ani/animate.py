@@ -6,8 +6,8 @@ from pooltool.objects.cue import Cue
 from pooltool.objects.ball import Ball
 from pooltool.objects.table import Table
 
-from pooltool.ani.menu import MenuManager
-from pooltool.ani.modes import *
+from pooltool.ani.menu import Menus
+from pooltool.ani.modes import AimMode, ShotMode, MenuMode, StrokeMode, ViewMode
 from pooltool.ani.tasks import Tasks
 from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import CustomCamera
@@ -18,7 +18,7 @@ from panda3d.core import *
 from direct.showbase.ShowBase import ShowBase
 
 
-class Handler(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode):
+class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode):
     def __init__(self):
         # Init every Mode class
         MenuMode.__init__(self)
@@ -83,11 +83,11 @@ class Handler(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode):
 
 
 
-class Interface(ShowBase, MenuManager, Handler, Tasks):
+class Interface(ShowBase, Menus, ModeManager, Tasks):
     def __init__(self, *args, **kwargs):
         ShowBase.__init__(self)
-        MenuManager.__init__(self)
-        Handler.__init__(self)
+        Menus.__init__(self)
+        ModeManager.__init__(self)
         Tasks.__init__(self)
 
         self.tasks = {}

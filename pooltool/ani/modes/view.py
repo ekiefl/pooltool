@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-from pooltool.ani.modes import *
+from pooltool.ani.modes import CameraMode, action
 
 
 class ViewMode(CameraMode):
