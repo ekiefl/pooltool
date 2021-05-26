@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import pooltool.ani.utils as autils
 import pooltool.ani.action as action
 
 import numpy as np

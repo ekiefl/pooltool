@@ -9,7 +9,6 @@ from pooltool.objects.table import Table
 
 from pooltool.ani.menu import Menus
 from pooltool.ani.modes import AimMode, ShotMode, MenuMode, StrokeMode, ViewMode
-from pooltool.ani.tasks import Tasks
 from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import CustomCamera
 
@@ -84,12 +83,11 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode):
 
 
 
-class Interface(ShowBase, Menus, ModeManager, Tasks):
+class Interface(ShowBase, Menus, ModeManager):
     def __init__(self, *args, **kwargs):
         ShowBase.__init__(self)
         Menus.__init__(self)
         ModeManager.__init__(self)
-        Tasks.__init__(self)
 
         self.tasks = {}
         self.balls = {}
@@ -107,6 +105,8 @@ class Interface(ShowBase, Menus, ModeManager, Tasks):
         taskMgr.setupTaskChain('simulation', numThreads = 1, tickClock = None,
                                threadPriority = None, frameBudget = None,
                                frameSync = None, timeslicePriority = None)
+
+        self.frame = 0
 
 
     def add_task(self, *args, **kwargs):
