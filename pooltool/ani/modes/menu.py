@@ -2,6 +2,8 @@
 
 from pooltool.ani.modes import Mode, action
 
+import sys
+
 
 class MenuMode(Mode):
     keymap = {

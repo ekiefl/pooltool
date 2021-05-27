@@ -40,9 +40,32 @@ class TableRender(Render):
         self.nodes['cloth'] = node
 
 
+    def init_edge(self, cushion_id):
+        cushion = self.cushions[cushion_id]
+
+        self.line_drawer.moveTo(cushion.p1[0], cushion.p1[1], cushion.p1[2] + self.height)
+        self.line_drawer.drawTo(cushion.p2[0], cushion.p2[1], cushion.p2[2] + self.height)
+        node = render.find('scene').attachNewNode(self.line_drawer.create())
+
+        self.nodes[cushion_id] = node
+
+
+    def init_edges(self):
+        for cushion_id in self.cushions:
+            self.init_edge(cushion_id)
+
+
     def render(self):
         super().render()
+
+        # draw table as rectangle
         self.init_cloth()
+
+        # draw cushions as edges
+        self.line_drawer = LineSegs()
+        self.line_drawer.setThickness(2)
+        self.line_drawer.setColor(0.3, 0.3, 0.3)
+        self.init_edges()
 
 
     def get_render_state(self):
