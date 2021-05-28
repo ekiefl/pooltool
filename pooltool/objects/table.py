@@ -47,7 +47,7 @@ class TableRender(Render):
         self.line_drawer.drawTo(cushion.p2[0], cushion.p2[1], cushion.p2[2] + self.height)
         node = render.find('scene').attachNewNode(self.line_drawer.create())
 
-        self.nodes[cushion_id] = node
+        self.nodes[f"cushion_{cushion_id}"] = node
 
 
     def init_edges(self):
@@ -97,11 +97,17 @@ class Table(Object, TableRender):
 
         self.center = (self.w/2, self.l/2)
 
+        s = 0.05
+        c = 0.062
+        # https://ekiefl.github.io/2020/12/20/pooltool-alg/#-ball-cushion-collision-times for diagram
         self.cushions = {
-            'L': Cushion('L', p1 = (0, 0, self.cushion_height), p2 = (0, self.l, self.cushion_height)),
-            'R': Cushion('R', p1 = (self.w, 0, self.cushion_height), p2 = (self.w, self.l, self.cushion_height)),
-            'B': Cushion('B', p1 = (0, 0, self.cushion_height), p2 = (self.w, 0, self.cushion_height)),
-            'T': Cushion('T', p1 = (0, self.l, self.cushion_height), p2 = (self.w, self.l, self.cushion_height)),
+            # long cushion segments
+            '3': Cushion('3', p1 = (0, c, self.cushion_height), p2 = (0, self.l/2-s, self.cushion_height)),
+            '6': Cushion('6', p1 = (0, self.l/2+s, self.cushion_height), p2 = (0, self.l-c, self.cushion_height)),
+            '9': Cushion('9', p1 = (c, self.l, self.cushion_height), p2 = (self.w-c, self.l, self.cushion_height)),
+            '12': Cushion('12', p1 = (self.w, self.l-c, self.cushion_height), p2 = (self.w, self.l/2+s, self.cushion_height)),
+            '15': Cushion('15', p1 = (self.w, self.l/2-s, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
+            '18': Cushion('18', p1 = (self.w-c, 0, self.cushion_height), p2 = (c, 0, self.cushion_height)),
         }
 
         TableRender.__init__(self)
