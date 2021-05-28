@@ -213,7 +213,7 @@ class EvolveShotEventBased(EvolveShot):
             if ball.s == pooltool.stationary:
                 continue
 
-            for cushion in self.table.cushion_segments['lines'].values():
+            for cushion in self.table.cushion_segments['linear'].values():
                 dtau_E = physics.get_ball_cushion_collision_time(
                     rvw=ball.rvw,
                     s=ball.s,
