@@ -63,7 +63,7 @@ class TableRender(Render):
 
         # draw cushions as edges
         self.line_drawer = LineSegs()
-        self.line_drawer.setThickness(2)
+        self.line_drawer.setThickness(5)
         self.line_drawer.setColor(0.3, 0.3, 0.3)
         self.init_edges()
 
@@ -99,6 +99,8 @@ class Table(Object, TableRender):
 
         s = 0.05
         c = 0.062
+        j = 0.1
+        js = 1/np.sqrt(2) * j
         # https://ekiefl.github.io/2020/12/20/pooltool-alg/#-ball-cushion-collision-times for diagram
         self.cushions = {
             # long cushion segments
@@ -108,6 +110,19 @@ class Table(Object, TableRender):
             '12': StraightCushionSegment('12', p1 = (self.w, self.l-c, self.cushion_height), p2 = (self.w, self.l/2+s, self.cushion_height)),
             '15': StraightCushionSegment('15', p1 = (self.w, self.l/2-s, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
             '18': StraightCushionSegment('18', p1 = (self.w-c, 0, self.cushion_height), p2 = (c, 0, self.cushion_height)),
+            # jaw cushion segments
+            '1': StraightCushionSegment('1', p1 = (c-js, -js, self.cushion_height), p2 = (c, 0, self.cushion_height)),
+            '2': StraightCushionSegment('2', p1 = (-js, c-js, self.cushion_height), p2 = (0, c, self.cushion_height)),
+            '4': StraightCushionSegment('4', p1 = (-j, self.l/2-s, self.cushion_height), p2 = (0, self.l/2-s, self.cushion_height)),
+            '5': StraightCushionSegment('5', p1 = (-j, self.l/2+s, self.cushion_height), p2 = (0, self.l/2+s, self.cushion_height)),
+            '7': StraightCushionSegment('7', p1 = (-js, self.l-c+js, self.cushion_height), p2 = (0, self.l-c, self.cushion_height)),
+            '8': StraightCushionSegment('8', p1 = (c-js, self.l+js, self.cushion_height), p2 = (c, self.l, self.cushion_height)),
+            '10': StraightCushionSegment('10', p1 = (self.w-c+js, self.l+js, self.cushion_height), p2 = (self.w-c, self.l, self.cushion_height)),
+            '11': StraightCushionSegment('11', p1 = (self.w+js, self.l-c+js, self.cushion_height), p2 = (self.w, self.l-c, self.cushion_height)),
+            '13': StraightCushionSegment('13', p1 = (self.w+j, self.l/2 + s, self.cushion_height), p2 = (self.w, self.l/2 + s, self.cushion_height)),
+            '14': StraightCushionSegment('14', p1 = (self.w+j, self.l/2 - s, self.cushion_height), p2 = (self.w, self.l/2 - s, self.cushion_height)),
+            '16': StraightCushionSegment('16', p1 = (self.w+js, c-js, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
+            '17': StraightCushionSegment('17', p1 = (self.w-c+js, -js, self.cushion_height), p2 = (self.w-c, 0, self.cushion_height)),
         }
 
         TableRender.__init__(self)
