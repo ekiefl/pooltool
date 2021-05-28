@@ -51,7 +51,7 @@ class TableRender(Render):
 
 
     def init_cushion_circle(self, cushion_id):
-        cushion = self.cushion_segments['circles'][cushion_id]
+        cushion = self.cushion_segments['circular'][cushion_id]
 
         radius = cushion.radius
         center_x, center_y, center_z = cushion.center
@@ -76,7 +76,7 @@ class TableRender(Render):
         for cushion_id in self.cushion_segments['linear']:
             self.init_cushion_line(cushion_id)
 
-        for cushion_id in self.cushion_segments['circles']:
+        for cushion_id in self.cushion_segments['circular']:
             self.init_cushion_circle(cushion_id)
 
 
@@ -150,7 +150,7 @@ class Table(Object, TableRender):
                 '16': LinearCushionSegment('16', p1 = (self.w+js, c-js, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
                 '17': LinearCushionSegment('17', p1 = (self.w-c+js, -js, self.cushion_height), p2 = (self.w-c, 0, self.cushion_height)),
             },
-            'circles': {
+            'circular': {
                 'test': CircularCushionSegment('test', (self.w/2, self.l/2, self.cushion_height), radius=0.2),
             }
         }
