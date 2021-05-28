@@ -40,8 +40,8 @@ class TableRender(Render):
         self.nodes['cloth'] = node
 
 
-    def init_edge(self, cushion_id):
-        cushion = self.cushions[cushion_id]
+    def init_cushion_line(self, cushion_id):
+        cushion = self.cushion_segments['lines'][cushion_id]
 
         self.line_drawer.moveTo(cushion.p1[0], cushion.p1[1], cushion.p1[2] + self.height)
         self.line_drawer.drawTo(cushion.p2[0], cushion.p2[1], cushion.p2[2] + self.height)
@@ -50,9 +50,10 @@ class TableRender(Render):
         self.nodes[f"cushion_{cushion_id}"] = node
 
 
-    def init_edges(self):
-        for cushion_id in self.cushions:
-            self.init_edge(cushion_id)
+    def init_cushion_edges(self):
+        for cushion_id in self.cushion_segments['lines']:
+            self.init_cushion_line(cushion_id)
+
 
 
     def render(self):
@@ -61,11 +62,11 @@ class TableRender(Render):
         # draw table as rectangle
         self.init_cloth()
 
-        # draw cushions as edges
+        # draw cushion_segments as edges
         self.line_drawer = LineSegs()
         self.line_drawer.setThickness(5)
         self.line_drawer.setColor(0.3, 0.3, 0.3)
-        self.init_edges()
+        self.init_cushion_edges()
 
 
     def get_render_state(self):
@@ -102,34 +103,36 @@ class Table(Object, TableRender):
         j = 0.1
         js = 1/np.sqrt(2) * j
         # https://ekiefl.github.io/2020/12/20/pooltool-alg/#-ball-cushion-collision-times for diagram
-        self.cushions = {
-            # long cushion segments
-            '3': StraightCushionSegment('3', p1 = (0, c, self.cushion_height), p2 = (0, self.l/2-s, self.cushion_height)),
-            '6': StraightCushionSegment('6', p1 = (0, self.l/2+s, self.cushion_height), p2 = (0, self.l-c, self.cushion_height)),
-            '9': StraightCushionSegment('9', p1 = (c, self.l, self.cushion_height), p2 = (self.w-c, self.l, self.cushion_height)),
-            '12': StraightCushionSegment('12', p1 = (self.w, self.l-c, self.cushion_height), p2 = (self.w, self.l/2+s, self.cushion_height)),
-            '15': StraightCushionSegment('15', p1 = (self.w, self.l/2-s, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
-            '18': StraightCushionSegment('18', p1 = (self.w-c, 0, self.cushion_height), p2 = (c, 0, self.cushion_height)),
-            # jaw cushion segments
-            '1': StraightCushionSegment('1', p1 = (c-js, -js, self.cushion_height), p2 = (c, 0, self.cushion_height)),
-            '2': StraightCushionSegment('2', p1 = (-js, c-js, self.cushion_height), p2 = (0, c, self.cushion_height)),
-            '4': StraightCushionSegment('4', p1 = (-j, self.l/2-s, self.cushion_height), p2 = (0, self.l/2-s, self.cushion_height)),
-            '5': StraightCushionSegment('5', p1 = (-j, self.l/2+s, self.cushion_height), p2 = (0, self.l/2+s, self.cushion_height)),
-            '7': StraightCushionSegment('7', p1 = (-js, self.l-c+js, self.cushion_height), p2 = (0, self.l-c, self.cushion_height)),
-            '8': StraightCushionSegment('8', p1 = (c-js, self.l+js, self.cushion_height), p2 = (c, self.l, self.cushion_height)),
-            '10': StraightCushionSegment('10', p1 = (self.w-c+js, self.l+js, self.cushion_height), p2 = (self.w-c, self.l, self.cushion_height)),
-            '11': StraightCushionSegment('11', p1 = (self.w+js, self.l-c+js, self.cushion_height), p2 = (self.w, self.l-c, self.cushion_height)),
-            '13': StraightCushionSegment('13', p1 = (self.w+j, self.l/2 + s, self.cushion_height), p2 = (self.w, self.l/2 + s, self.cushion_height)),
-            '14': StraightCushionSegment('14', p1 = (self.w+j, self.l/2 - s, self.cushion_height), p2 = (self.w, self.l/2 - s, self.cushion_height)),
-            '16': StraightCushionSegment('16', p1 = (self.w+js, c-js, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
-            '17': StraightCushionSegment('17', p1 = (self.w-c+js, -js, self.cushion_height), p2 = (self.w-c, 0, self.cushion_height)),
+        self.cushion_segments = {
+            'lines' : {
+                # long segments
+                '3': StraightCushionSegment('3', p1 = (0, c, self.cushion_height), p2 = (0, self.l/2-s, self.cushion_height)),
+                '6': StraightCushionSegment('6', p1 = (0, self.l/2+s, self.cushion_height), p2 = (0, self.l-c, self.cushion_height)),
+                '9': StraightCushionSegment('9', p1 = (c, self.l, self.cushion_height), p2 = (self.w-c, self.l, self.cushion_height)),
+                '12': StraightCushionSegment('12', p1 = (self.w, self.l-c, self.cushion_height), p2 = (self.w, self.l/2+s, self.cushion_height)),
+                '15': StraightCushionSegment('15', p1 = (self.w, self.l/2-s, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
+                '18': StraightCushionSegment('18', p1 = (self.w-c, 0, self.cushion_height), p2 = (c, 0, self.cushion_height)),
+                # jaw segments
+                '1': StraightCushionSegment('1', p1 = (c-js, -js, self.cushion_height), p2 = (c, 0, self.cushion_height)),
+                '2': StraightCushionSegment('2', p1 = (-js, c-js, self.cushion_height), p2 = (0, c, self.cushion_height)),
+                '4': StraightCushionSegment('4', p1 = (-j, self.l/2-s, self.cushion_height), p2 = (0, self.l/2-s, self.cushion_height)),
+                '5': StraightCushionSegment('5', p1 = (-j, self.l/2+s, self.cushion_height), p2 = (0, self.l/2+s, self.cushion_height)),
+                '7': StraightCushionSegment('7', p1 = (-js, self.l-c+js, self.cushion_height), p2 = (0, self.l-c, self.cushion_height)),
+                '8': StraightCushionSegment('8', p1 = (c-js, self.l+js, self.cushion_height), p2 = (c, self.l, self.cushion_height)),
+                '10': StraightCushionSegment('10', p1 = (self.w-c+js, self.l+js, self.cushion_height), p2 = (self.w-c, self.l, self.cushion_height)),
+                '11': StraightCushionSegment('11', p1 = (self.w+js, self.l-c+js, self.cushion_height), p2 = (self.w, self.l-c, self.cushion_height)),
+                '13': StraightCushionSegment('13', p1 = (self.w+j, self.l/2 + s, self.cushion_height), p2 = (self.w, self.l/2 + s, self.cushion_height)),
+                '14': StraightCushionSegment('14', p1 = (self.w+j, self.l/2 - s, self.cushion_height), p2 = (self.w, self.l/2 - s, self.cushion_height)),
+                '16': StraightCushionSegment('16', p1 = (self.w+js, c-js, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
+                '17': StraightCushionSegment('17', p1 = (self.w-c+js, -js, self.cushion_height), p2 = (self.w-c, 0, self.cushion_height)),
+            },
         }
 
         TableRender.__init__(self)
 
 
 class StraightCushionSegment(Object):
-    object_type = 'cushion'
+    object_type = 'straight_cushion_segment'
 
     def __init__(self, cushion_id, p1, p2):
         self.id = cushion_id
