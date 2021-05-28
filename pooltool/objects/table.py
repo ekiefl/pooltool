@@ -50,10 +50,34 @@ class TableRender(Render):
         self.nodes[f"cushion_{cushion_id}"] = node
 
 
+    def init_cushion_circle(self, cushion_id):
+        cushion = self.cushion_segments['circles'][cushion_id]
+
+        radius = cushion.radius
+        center_x, center_y, center_z = cushion.center
+
+        thetas = np.linspace(0, 2*np.pi, 30)
+        for i in range(1, len(thetas)):
+            curr_theta, prev_theta = thetas[i], thetas[i-1]
+
+            x_prev = center_x + radius * np.cos(prev_theta)
+            y_prev = center_y + radius * np.sin(prev_theta)
+            self.line_drawer.moveTo(x_prev, y_prev, center_z + self.height)
+
+            x_curr = center_x + radius * np.cos(curr_theta)
+            y_curr = center_y + radius * np.sin(curr_theta)
+            self.line_drawer.drawTo(x_curr, y_curr, center_z + self.height)
+
+        node = render.find('scene').attachNewNode(self.line_drawer.create())
+        self.nodes[f"cushion_{cushion_id}"] = node
+
+
     def init_cushion_edges(self):
         for cushion_id in self.cushion_segments['lines']:
             self.init_cushion_line(cushion_id)
 
+        for cushion_id in self.cushion_segments['circles']:
+            self.init_cushion_circle(cushion_id)
 
 
     def render(self):
@@ -126,6 +150,9 @@ class Table(Object, TableRender):
                 '16': StraightCushionSegment('16', p1 = (self.w+js, c-js, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
                 '17': StraightCushionSegment('17', p1 = (self.w-c+js, -js, self.cushion_height), p2 = (self.w-c, 0, self.cushion_height)),
             },
+            'circles': {
+                'test': CircularCushionSegment('test', (self.w/2, self.l/2, self.cushion_height), radius=0.2),
+            }
         }
 
         TableRender.__init__(self)
@@ -159,3 +186,12 @@ class StraightCushionSegment(Object):
         # Defines the normal vector of the cushion surface
         self.normal = utils.unit_vector(np.array([self.lx, self.ly, 0]))
 
+
+class CircularCushionSegment(Object):
+    object_type = 'circular_cushion_segment'
+
+    def __init__(self, cushion_id, center, radius):
+        self.id = cushion_id
+
+        self.center = np.array(center)
+        self.radius = radius
