@@ -214,7 +214,7 @@ class EvolveShotEventBased(EvolveShot):
                 continue
 
             for cushion in self.table.cushion_segments['linear'].values():
-                dtau_E = physics.get_ball_cushion_collision_time(
+                dtau_E = physics.get_ball_linear_cushion_collision_time(
                     rvw=ball.rvw,
                     s=ball.s,
                     lx=cushion.lx,
@@ -222,6 +222,23 @@ class EvolveShotEventBased(EvolveShot):
                     l0=cushion.l0,
                     p1=cushion.p1,
                     p2=cushion.p2,
+                    mu=(ball.u_s if ball.s == pooltool.sliding else ball.u_r),
+                    m=ball.m,
+                    g=ball.g,
+                    R=ball.R
+                )
+
+                if dtau_E < dtau_E_min:
+                    involved_agents = (ball, cushion)
+                    dtau_E_min = dtau_E
+
+            for cushion in self.table.cushion_segments['circular'].values():
+                dtau_E = physics.get_ball_circular_cushion_collision_time(
+                    rvw=ball.rvw,
+                    s=ball.s,
+                    a=cushion.a,
+                    b=cushion.b,
+                    r=cushion.radius,
                     mu=(ball.u_s if ball.s == pooltool.sliding else ball.u_r),
                     m=ball.m,
                     g=ball.g,

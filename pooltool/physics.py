@@ -219,8 +219,8 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
     return roots.min() if len(roots) else np.inf
 
 
-def get_ball_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g, R):
-    """Get the time until collision between ball and collision"""
+def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g, R):
+    """Get the time until collision between ball and linear cushion segment"""
     if s == pooltool.stationary or s == pooltool.spinning:
         return np.inf
 
@@ -255,6 +255,52 @@ def get_ball_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g, R):
         s_score = - np.dot(p1 - rvw_dtau[0], p2 - p1) / np.dot(p2 - p1, p2 - p1)
         if not (0 <= s_score <= 1):
             roots[i] = np.inf
+
+    return roots.min() if len(roots) else np.inf
+
+
+def get_ball_circular_cushion_collision_time(rvw, s, a, b, r, mu, m, g, R):
+    """Get the time until collision between ball and circular cushion segment
+
+    Parameters
+    ==========
+    a : float
+        The x-coordinate of the cushion segment's center
+    b : float
+        The y-coordinate of the cushion segment's center
+    r : float
+        The radius of the cushion segment's center
+    mu : float
+        The rolling or sliding coefficient of friction. Should match the value of s
+    """
+
+    if s == pooltool.stationary or s == pooltool.spinning:
+        return np.inf
+
+    phi = utils.angle(rvw[1])
+    v = np.linalg.norm(rvw[1])
+
+    u = (np.array([1,0,0]
+         if s == pooltool.rolling
+         else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw, R)), -phi)))
+
+    ax = -1/2*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
+    ay = -1/2*mu*g*(u[0]*np.sin(phi) + u[1]*np.cos(phi))
+    bx, by = v*np.cos(phi), v*np.sin(phi)
+    cx, cy = rvw[0, 0], rvw[0, 1]
+
+    A = 1/2 * (ax**2 + ay**2)
+    B = ax*bx + ay*by
+    C = ax*(cx-a) + ay*(cy-b) + 1/2*(bx**2 + by**2)
+    D = bx*(cx-a) + by*(cy-b)
+    E = 1/2*(a**2 + b**2 + cx**2 + cy**2 - (r + R)**2) - (cx*a + cy*b)
+
+    roots = np.roots([A,B,C,D,E])
+
+    roots = roots[
+        (abs(roots.imag) <= pooltool.tol) & \
+        (roots.real > pooltool.tol)
+    ].real
 
     return roots.min() if len(roots) else np.inf
 

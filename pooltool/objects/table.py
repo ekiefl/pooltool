@@ -158,7 +158,12 @@ class Table(Object, TableRender):
         TableRender.__init__(self)
 
 
-class LinearCushionSegment(Object):
+class CushionSegment(Object):
+    def get_normal(self, *args, **kwargs):
+        return self.normal if hasattr(self, 'normal') else None
+
+
+class LinearCushionSegment(CushionSegment):
     object_type = 'linear_cushion_segment'
 
     def __init__(self, cushion_id, p1, p2):
@@ -183,11 +188,10 @@ class LinearCushionSegment(Object):
             self.ly = 1
             self.l0 = (p2y - p1y) / (p2x - p1x) * p1x - p1y
 
-        # Defines the normal vector of the cushion surface
         self.normal = utils.unit_vector(np.array([self.lx, self.ly, 0]))
 
 
-class CircularCushionSegment(Object):
+class CircularCushionSegment(CushionSegment):
     object_type = 'circular_cushion_segment'
 
     def __init__(self, cushion_id, center, radius):
@@ -195,3 +199,12 @@ class CircularCushionSegment(Object):
 
         self.center = np.array(center)
         self.radius = radius
+        self.height = center[2]
+
+        self.a, self.b = self.center[:2]
+
+
+    def get_normal(self, rvw):
+        normal = utils.unit_vector(rvw[0,:] - self.center)
+        normal[2] = 0 # remove z-component
+        return normal
