@@ -126,6 +126,7 @@ class Table(Object, TableRender):
         c = 0.062
         j = 0.1
         js = 1/np.sqrt(2) * j
+        random_circle = lambda x: CircularCushionSegment(str(x), (self.w * np.random.rand(), self.l * np.random.rand(), self.cushion_height), radius=np.random.rand()*0.2)
         # https://ekiefl.github.io/2020/12/20/pooltool-alg/#-ball-cushion-collision-times for diagram
         self.cushion_segments = {
             'linear' : {
@@ -153,10 +154,6 @@ class Table(Object, TableRender):
             'circular': {
             }
         }
-
-        random_circle = lambda x: CircularCushionSegment(str(x), (self.w * np.random.rand(), self.l * np.random.rand(), self.cushion_height), radius=np.random.rand()*0.2)
-        for i in range(10):
-            self.cushion_segments['circular'][f"c{i}"] = random_circle(i)
 
         TableRender.__init__(self)
 
