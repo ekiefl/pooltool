@@ -151,9 +151,12 @@ class Table(Object, TableRender):
                 '17': LinearCushionSegment('17', p1 = (self.w-c+js, -js, self.cushion_height), p2 = (self.w-c, 0, self.cushion_height)),
             },
             'circular': {
-                'test': CircularCushionSegment('test', (self.w/2, self.l/2, self.cushion_height), radius=0.2),
             }
         }
+
+        random_circle = lambda x: CircularCushionSegment(str(x), (self.w * np.random.rand(), self.l * np.random.rand(), self.cushion_height), radius=np.random.rand()*0.2)
+        for i in range(10):
+            self.cushion_segments['circular'][f"c{i}"] = random_circle(i)
 
         TableRender.__init__(self)
 
