@@ -103,10 +103,11 @@ class BallCushionCollision(Collision):
 
     def resolve(self):
         ball, cushion = self.agents
+        normal = cushion.get_normal(ball.rvw)
 
         rvw = physics.resolve_ball_cushion_collision(
             rvw=ball.rvw,
-            normal=cushion.normal,
+            normal=normal,
             R=ball.R,
             m=ball.m,
             h=cushion.height,

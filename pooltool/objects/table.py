@@ -40,9 +40,57 @@ class TableRender(Render):
         self.nodes['cloth'] = node
 
 
+    def init_cushion_line(self, cushion_id):
+        cushion = self.cushion_segments['linear'][cushion_id]
+
+        self.line_drawer.moveTo(cushion.p1[0], cushion.p1[1], cushion.p1[2] + self.height)
+        self.line_drawer.drawTo(cushion.p2[0], cushion.p2[1], cushion.p2[2] + self.height)
+        node = render.find('scene').attachNewNode(self.line_drawer.create())
+
+        self.nodes[f"cushion_{cushion_id}"] = node
+
+
+    def init_cushion_circle(self, cushion_id):
+        cushion = self.cushion_segments['circular'][cushion_id]
+
+        radius = cushion.radius
+        center_x, center_y, center_z = cushion.center
+
+        thetas = np.linspace(0, 2*np.pi, 30)
+        for i in range(1, len(thetas)):
+            curr_theta, prev_theta = thetas[i], thetas[i-1]
+
+            x_prev = center_x + radius * np.cos(prev_theta)
+            y_prev = center_y + radius * np.sin(prev_theta)
+            self.line_drawer.moveTo(x_prev, y_prev, center_z + self.height)
+
+            x_curr = center_x + radius * np.cos(curr_theta)
+            y_curr = center_y + radius * np.sin(curr_theta)
+            self.line_drawer.drawTo(x_curr, y_curr, center_z + self.height)
+
+        node = render.find('scene').attachNewNode(self.line_drawer.create())
+        self.nodes[f"cushion_{cushion_id}"] = node
+
+
+    def init_cushion_edges(self):
+        for cushion_id in self.cushion_segments['linear']:
+            self.init_cushion_line(cushion_id)
+
+        for cushion_id in self.cushion_segments['circular']:
+            self.init_cushion_circle(cushion_id)
+
+
     def render(self):
         super().render()
+
+        # draw table as rectangle
         self.init_cloth()
+
+        # draw cushion_segments as edges
+        self.line_drawer = LineSegs()
+        self.line_drawer.setThickness(5)
+        self.line_drawer.setColor(0.3, 0.3, 0.3)
+        self.init_cushion_edges()
 
 
     def get_render_state(self):
@@ -74,18 +122,51 @@ class Table(Object, TableRender):
 
         self.center = (self.w/2, self.l/2)
 
-        self.cushions = {
-            'L': Cushion('L', p1 = (0, 0, self.cushion_height), p2 = (0, self.l, self.cushion_height)),
-            'R': Cushion('R', p1 = (self.w, 0, self.cushion_height), p2 = (self.w, self.l, self.cushion_height)),
-            'B': Cushion('B', p1 = (0, 0, self.cushion_height), p2 = (self.w, 0, self.cushion_height)),
-            'T': Cushion('T', p1 = (0, self.l, self.cushion_height), p2 = (self.w, self.l, self.cushion_height)),
+        s = 0.05
+        c = 0.062
+        j = 0.1
+        js = 1/np.sqrt(2) * j
+        # https://ekiefl.github.io/2020/12/20/pooltool-alg/#-ball-cushion-collision-times for diagram
+        self.cushion_segments = {
+            'linear' : {
+                # long segments
+                '3': LinearCushionSegment('3', p1 = (0, c, self.cushion_height), p2 = (0, self.l/2-s, self.cushion_height)),
+                '6': LinearCushionSegment('6', p1 = (0, self.l/2+s, self.cushion_height), p2 = (0, self.l-c, self.cushion_height)),
+                '9': LinearCushionSegment('9', p1 = (c, self.l, self.cushion_height), p2 = (self.w-c, self.l, self.cushion_height)),
+                '12': LinearCushionSegment('12', p1 = (self.w, self.l-c, self.cushion_height), p2 = (self.w, self.l/2+s, self.cushion_height)),
+                '15': LinearCushionSegment('15', p1 = (self.w, self.l/2-s, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
+                '18': LinearCushionSegment('18', p1 = (self.w-c, 0, self.cushion_height), p2 = (c, 0, self.cushion_height)),
+                # jaw segments
+                '1': LinearCushionSegment('1', p1 = (c-js, -js, self.cushion_height), p2 = (c, 0, self.cushion_height)),
+                '2': LinearCushionSegment('2', p1 = (-js, c-js, self.cushion_height), p2 = (0, c, self.cushion_height)),
+                '4': LinearCushionSegment('4', p1 = (-j, self.l/2-s, self.cushion_height), p2 = (0, self.l/2-s, self.cushion_height)),
+                '5': LinearCushionSegment('5', p1 = (-j, self.l/2+s, self.cushion_height), p2 = (0, self.l/2+s, self.cushion_height)),
+                '7': LinearCushionSegment('7', p1 = (-js, self.l-c+js, self.cushion_height), p2 = (0, self.l-c, self.cushion_height)),
+                '8': LinearCushionSegment('8', p1 = (c-js, self.l+js, self.cushion_height), p2 = (c, self.l, self.cushion_height)),
+                '10': LinearCushionSegment('10', p1 = (self.w-c+js, self.l+js, self.cushion_height), p2 = (self.w-c, self.l, self.cushion_height)),
+                '11': LinearCushionSegment('11', p1 = (self.w+js, self.l-c+js, self.cushion_height), p2 = (self.w, self.l-c, self.cushion_height)),
+                '13': LinearCushionSegment('13', p1 = (self.w+j, self.l/2 + s, self.cushion_height), p2 = (self.w, self.l/2 + s, self.cushion_height)),
+                '14': LinearCushionSegment('14', p1 = (self.w+j, self.l/2 - s, self.cushion_height), p2 = (self.w, self.l/2 - s, self.cushion_height)),
+                '16': LinearCushionSegment('16', p1 = (self.w+js, c-js, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
+                '17': LinearCushionSegment('17', p1 = (self.w-c+js, -js, self.cushion_height), p2 = (self.w-c, 0, self.cushion_height)),
+            },
+            'circular': {
+            }
         }
+        add_circle = lambda x: CircularCushionSegment(f'{x}t', center=self.cushion_segments['linear'][x].p2, radius=0)
+        for x in [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17]:
+            self.cushion_segments['circular'][f'{x}t'] = add_circle(str(x))
 
         TableRender.__init__(self)
 
 
-class Cushion(Object):
-    object_type = 'cushion'
+class CushionSegment(Object):
+    def get_normal(self, *args, **kwargs):
+        return self.normal if hasattr(self, 'normal') else None
+
+
+class LinearCushionSegment(CushionSegment):
+    object_type = 'linear_cushion_segment'
 
     def __init__(self, cushion_id, p1, p2):
         self.id = cushion_id
@@ -97,7 +178,7 @@ class Cushion(Object):
         p2x, p2y, p2z = self.p2
 
         if p1z != p2z:
-            raise ValueError(f"Cushion with id '{self.id}' has points p1 and p2 with different cushion heights (h)")
+            raise ValueError(f"LinearCushionSegment with id '{self.id}' has points p1 and p2 with different cushion heights (h)")
         self.height = p1z
 
         if (p2x - p1x) == 0:
@@ -109,6 +190,23 @@ class Cushion(Object):
             self.ly = 1
             self.l0 = (p2y - p1y) / (p2x - p1x) * p1x - p1y
 
-        # Defines the normal vector of the cushion surface
         self.normal = utils.unit_vector(np.array([self.lx, self.ly, 0]))
 
+
+class CircularCushionSegment(CushionSegment):
+    object_type = 'circular_cushion_segment'
+
+    def __init__(self, cushion_id, center, radius):
+        self.id = cushion_id
+
+        self.center = np.array(center)
+        self.radius = radius
+        self.height = center[2]
+
+        self.a, self.b = self.center[:2]
+
+
+    def get_normal(self, rvw):
+        normal = utils.unit_vector(rvw[0,:] - self.center)
+        normal[2] = 0 # remove z-component
+        return normal

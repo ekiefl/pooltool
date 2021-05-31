@@ -213,8 +213,8 @@ class EvolveShotEventBased(EvolveShot):
             if ball.s == pooltool.stationary:
                 continue
 
-            for cushion in self.table.cushions.values():
-                dtau_E = physics.get_ball_cushion_collision_time(
+            for cushion in self.table.cushion_segments['linear'].values():
+                dtau_E = physics.get_ball_linear_cushion_collision_time(
                     rvw=ball.rvw,
                     s=ball.s,
                     lx=cushion.lx,
@@ -222,6 +222,23 @@ class EvolveShotEventBased(EvolveShot):
                     l0=cushion.l0,
                     p1=cushion.p1,
                     p2=cushion.p2,
+                    mu=(ball.u_s if ball.s == pooltool.sliding else ball.u_r),
+                    m=ball.m,
+                    g=ball.g,
+                    R=ball.R
+                )
+
+                if dtau_E < dtau_E_min:
+                    involved_agents = (ball, cushion)
+                    dtau_E_min = dtau_E
+
+            for cushion in self.table.cushion_segments['circular'].values():
+                dtau_E = physics.get_ball_circular_cushion_collision_time(
+                    rvw=ball.rvw,
+                    s=ball.s,
+                    a=cushion.a,
+                    b=cushion.b,
+                    r=cushion.radius,
                     mu=(ball.u_s if ball.s == pooltool.sliding else ball.u_r),
                     m=ball.m,
                     g=ball.g,
@@ -295,18 +312,19 @@ class EvolveShotDiscreteTime(EvolveShot):
 
 
     def detect_ball_cushion_collisions(self):
+        """FIXME a complete hack that doesn't work for generalized tables"""
         events = []
 
         for ball in self.balls.values():
             ball_x, ball_y = ball.rvw[0,:2]
             if ball_x <= self.table.L + ball.R:
-                events.append(BallCushionCollision(ball, self.table.cushions['L'], t=self.t))
+                events.append(BallCushionCollision(ball, self.table.cushion_segments['L'], t=self.t))
             elif ball_x >= self.table.R - ball.R:
-                events.append(BallCushionCollision(ball, self.table.cushions['R'], t=self.t))
+                events.append(BallCushionCollision(ball, self.table.cushion_segments['R'], t=self.t))
             elif ball_y <= self.table.B + ball.R:
-                events.append(BallCushionCollision(ball, self.table.cushions['B'], t=self.t))
+                events.append(BallCushionCollision(ball, self.table.cushion_segments['B'], t=self.t))
             elif ball_y >= self.table.T - ball.R:
-                events.append(BallCushionCollision(ball, self.table.cushions['T'], t=self.t))
+                events.append(BallCushionCollision(ball, self.table.cushion_segments['T'], t=self.t))
 
         return events
 
