@@ -182,7 +182,7 @@ class EvolveShotEventBased(EvolveShot):
                 if i >= j:
                     continue
 
-                if ball1.s == pooltool.stationary and ball2.s == pooltool.stationary:
+                if ball1.s in pooltool.nontranslating and ball2.s in pooltool.nontranslating:
                     continue
 
                 dtau_E = physics.get_ball_ball_collision_time(
@@ -215,7 +215,7 @@ class EvolveShotEventBased(EvolveShot):
         involved_agents = tuple([DummyBall(), NonObject()])
 
         for ball in self.balls.values():
-            if ball.s == pooltool.stationary:
+            if ball.s in pooltool.nontranslating:
                 continue
 
             for cushion in self.table.cushion_segments['linear'].values():
@@ -339,7 +339,7 @@ class EvolveShotDiscreteTime(EvolveShot):
                 if i >= j:
                     continue
 
-                if ball1.s == pooltool.stationary and ball2.s == pooltool.stationary:
+                if ball1.s in pooltool.nontranslating and ball2.s in pooltool.nontranslating:
                     continue
 
                 if physics.is_overlapping(ball1.rvw, ball2.rvw, ball1.R, ball2.R):

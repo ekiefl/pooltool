@@ -169,7 +169,7 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
     c1x, c1y = rvw1[0, 0], rvw1[0, 1]
     c2x, c2y = rvw2[0, 0], rvw2[0, 1]
 
-    if s1 == pooltool.stationary or s1 == pooltool.spinning:
+    if s1 in pooltool.nontranslating:
         a1x, a1y, b1x, b1y = 0, 0, 0, 0
     else:
         phi1 = utils.angle(rvw1[1])
@@ -184,7 +184,7 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
         b1x = v1*np.cos(phi1)
         b1y = v1*np.sin(phi1)
 
-    if s2 == pooltool.stationary or s2 == pooltool.spinning:
+    if s2 in pooltool.nontranslating:
         a2x, a2y, b2x, b2y = 0, 0, 0, 0
     else:
         phi2 = utils.angle(rvw2[1])
@@ -221,7 +221,7 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
 
 def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g, R):
     """Get the time until collision between ball and linear cushion segment"""
-    if s == pooltool.stationary or s == pooltool.spinning:
+    if s in pooltool.nontranslating:
         return np.inf
 
     phi = utils.angle(rvw[1])
@@ -274,7 +274,7 @@ def get_ball_circular_cushion_collision_time(rvw, s, a, b, r, mu, m, g, R):
         The rolling or sliding coefficient of friction. Should match the value of s
     """
 
-    if s == pooltool.stationary or s == pooltool.spinning:
+    if s in pooltool.nontranslating:
         return np.inf
 
     phi = utils.angle(rvw[1])
@@ -371,7 +371,7 @@ def get_ball_energy(rvw, R, m):
 
 
 def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
-    if state == pooltool.stationary:
+    if state == pooltool.stationary or state == pooltool.pocketed:
         return rvw, state
 
     if state == pooltool.sliding:
@@ -405,7 +405,7 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
 
 def evolve_state_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
     """Variant of evolve_ball_motion that does not respect motion transition events"""
-    if state == pooltool.stationary:
+    if state == pooltool.stationary or state == pooltool.pocketed:
         return rvw, state
     elif state == pooltool.sliding:
         return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), pooltool.sliding
@@ -500,10 +500,6 @@ def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
     rvw = rvw.copy()
 
     rvw[2, 2], rvw[3, 2] = evolve_perpendicular_spin_component(rvw[2, 2], rvw[3, 2], R, u_sp, g, t)
-    return rvw
-
-
-def evolve_stationary_state(rvw, t):
     return rvw
 
 
