@@ -43,9 +43,9 @@ class TableRender(Render):
     def init_cushion_line(self, cushion_id):
         cushion = self.cushion_segments['linear'][cushion_id]
 
-        self.line_drawer.moveTo(cushion.p1[0], cushion.p1[1], cushion.p1[2] + self.height)
-        self.line_drawer.drawTo(cushion.p2[0], cushion.p2[1], cushion.p2[2] + self.height)
-        node = render.find('scene').attachNewNode(self.line_drawer.create())
+        self.cushion_drawer.moveTo(cushion.p1[0], cushion.p1[1], cushion.p1[2] + self.height)
+        self.cushion_drawer.drawTo(cushion.p2[0], cushion.p2[1], cushion.p2[2] + self.height)
+        node = render.find('scene').attachNewNode(self.cushion_drawer.create())
 
         self.nodes[f"cushion_{cushion_id}"] = node
 
@@ -55,20 +55,10 @@ class TableRender(Render):
 
         radius = cushion.radius
         center_x, center_y, center_z = cushion.center
+        height = center_z + self.height
 
-        thetas = np.linspace(0, 2*np.pi, 30)
-        for i in range(1, len(thetas)):
-            curr_theta, prev_theta = thetas[i], thetas[i-1]
-
-            x_prev = center_x + radius * np.cos(prev_theta)
-            y_prev = center_y + radius * np.sin(prev_theta)
-            self.line_drawer.moveTo(x_prev, y_prev, center_z + self.height)
-
-            x_curr = center_x + radius * np.cos(curr_theta)
-            y_curr = center_y + radius * np.sin(curr_theta)
-            self.line_drawer.drawTo(x_curr, y_curr, center_z + self.height)
-
-        node = render.find('scene').attachNewNode(self.line_drawer.create())
+        circle = self.draw_circle(self.cushion_drawer, (center_x, center_y, height), radius, 30)
+        node = render.find('scene').attachNewNode(circle)
         self.nodes[f"cushion_{cushion_id}"] = node
 
 
@@ -80,6 +70,19 @@ class TableRender(Render):
             self.init_cushion_circle(cushion_id)
 
 
+    def init_pocket(self, pocket_id):
+        pocket = self.pockets[pocket_id]
+        circle = self.draw_circle(self.pocket_drawer, pocket.center, pocket.radius, 30)
+        node = render.find('scene').attachNewNode(circle)
+        self.nodes[f"pocket_{pocket_id}"] = node
+
+
+
+    def init_pockets(self):
+        for pocket_id in self.pockets:
+            self.init_pocket(pocket_id)
+
+
     def render(self):
         super().render()
 
@@ -87,10 +90,34 @@ class TableRender(Render):
         self.init_cloth()
 
         # draw cushion_segments as edges
-        self.line_drawer = LineSegs()
-        self.line_drawer.setThickness(5)
-        self.line_drawer.setColor(0.3, 0.3, 0.3)
+        self.cushion_drawer = LineSegs()
+        self.cushion_drawer.setThickness(5)
+        self.cushion_drawer.setColor(0.3, 0.3, 0.3)
         self.init_cushion_edges()
+
+        # draw pockets as unfilled circles
+        self.pocket_drawer = LineSegs()
+        self.pocket_drawer.setThickness(5)
+        self.pocket_drawer.setColor(0, 0, 0)
+        self.init_pockets()
+
+
+    def draw_circle(self, drawer, center, radius, num_points):
+        center_x, center_y, height = center
+
+        thetas = np.linspace(0, 2*np.pi, num_points)
+        for i in range(1, len(thetas)):
+            curr_theta, prev_theta = thetas[i], thetas[i-1]
+
+            x_prev = center_x + radius * np.cos(prev_theta)
+            y_prev = center_y + radius * np.sin(prev_theta)
+            drawer.moveTo(x_prev, y_prev, height)
+
+            x_curr = center_x + radius * np.cos(curr_theta)
+            y_curr = center_y + radius * np.sin(curr_theta)
+            drawer.drawTo(x_curr, y_curr, height)
+
+        return drawer.create()
 
 
     def get_render_state(self):
@@ -157,6 +184,17 @@ class Table(Object, TableRender):
         for x in [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17]:
             self.cushion_segments['circular'][f'{x}t'] = add_circle(str(x))
 
+        height = self.height
+        radius = c*0.90
+        self.pockets = {
+            'lb': Pocket('lb', center=(-radius/np.sqrt(2), -radius/np.sqrt(2), height), radius=radius),
+            'lc': Pocket('lc', center=(-radius*np.sqrt(2), self.l/2, height), radius=radius),
+            'lt': Pocket('lt', center=(-radius/np.sqrt(2), self.l+radius/np.sqrt(2), height), radius=radius),
+            'rb': Pocket('rb', center=(self.w+radius/np.sqrt(2), -radius/np.sqrt(2), height), radius=radius),
+            'rc': Pocket('rc', center=(self.w+radius*np.sqrt(2), self.l/2, height), radius=radius),
+            'rt': Pocket('rt', center=(self.w+radius/np.sqrt(2), self.l+radius/np.sqrt(2), height), radius=radius),
+        }
+
         TableRender.__init__(self)
 
 
@@ -210,3 +248,17 @@ class CircularCushionSegment(CushionSegment):
         normal = utils.unit_vector(rvw[0,:] - self.center)
         normal[2] = 0 # remove z-component
         return normal
+
+
+class Pocket(object):
+    object_type = 'pocket'
+
+    def __init__(self, pocket_id, center, radius):
+        self.id = pocket_id
+
+        self.center = np.array(center)
+        self.radius = radius
+
+        self.a, self.b = self.center[:2]
+
+
