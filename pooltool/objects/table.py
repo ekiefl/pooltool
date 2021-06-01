@@ -253,12 +253,24 @@ class CircularCushionSegment(CushionSegment):
 class Pocket(object):
     object_type = 'pocket'
 
-    def __init__(self, pocket_id, center, radius):
+    def __init__(self, pocket_id, center, radius, depth=0.08):
         self.id = pocket_id
 
         self.center = np.array(center)
         self.radius = radius
+        self.depth = depth
 
         self.a, self.b = self.center[:2]
+
+        # hold ball ids of balls the pocket contains
+        self.contains = set()
+
+
+    def add(self, ball_id):
+        self.contains.add(ball_id)
+
+
+    def remove(self, ball_id):
+        self.contains.remove(ball_id)
 
 

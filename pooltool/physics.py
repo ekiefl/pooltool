@@ -305,6 +305,52 @@ def get_ball_circular_cushion_collision_time(rvw, s, a, b, r, mu, m, g, R):
     return roots.min() if len(roots) else np.inf
 
 
+def get_ball_pocket_collision_time(rvw, s, a, b, r, mu, m, g, R):
+    """Get the time until collision between ball and pocket
+
+    Parameters
+    ==========
+    a : float
+        The x-coordinate of the pocket's center
+    b : float
+        The y-coordinate of the pocket's center
+    r : float
+        The radius of the pocket's center
+    mu : float
+        The rolling or sliding coefficient of friction. Should match the value of s
+    """
+
+    if s in pooltool.nontranslating:
+        return np.inf
+
+    phi = utils.angle(rvw[1])
+    v = np.linalg.norm(rvw[1])
+
+    u = (np.array([1,0,0]
+         if s == pooltool.rolling
+         else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw, R)), -phi)))
+
+    ax = -1/2*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
+    ay = -1/2*mu*g*(u[0]*np.sin(phi) + u[1]*np.cos(phi))
+    bx, by = v*np.cos(phi), v*np.sin(phi)
+    cx, cy = rvw[0, 0], rvw[0, 1]
+
+    A = 1/2 * (ax**2 + ay**2)
+    B = ax*bx + ay*by
+    C = ax*(cx-a) + ay*(cy-b) + 1/2*(bx**2 + by**2)
+    D = bx*(cx-a) + by*(cy-b)
+    E = 1/2*(a**2 + b**2 + cx**2 + cy**2 - r**2) - (cx*a + cy*b)
+
+    roots = np.roots([A,B,C,D,E])
+
+    roots = roots[
+        (abs(roots.imag) <= pooltool.tol) & \
+        (roots.real > pooltool.tol)
+    ].real
+
+    return roots.min() if len(roots) else np.inf
+
+
 def get_slide_time(rvw, R, u_s, g):
     return 2*np.linalg.norm(get_rel_velocity(rvw, R)) / (7*u_s*g)
 

@@ -14,6 +14,7 @@ class_transition = 'transition'
 type_none = 'none'
 type_ball_ball = 'ball-ball'
 type_ball_cushion = 'ball-cushion'
+type_ball_pocket = 'ball-pocket'
 type_stick_ball = 'stick-ball'
 type_spinning_stationary = 'spinning-stationary'
 type_rolling_stationary = 'rolling-stationary'
@@ -146,6 +147,31 @@ class StickBallCollision(Collision):
 
         ball.set(rvw, s)
         ball.update_next_transition_event()
+
+
+class BallPocketCollision(Collision):
+    event_type = type_ball_pocket
+
+    def __init__(self, ball, pocket, t=None):
+        self.state_start = ball.s
+        self.state_end = pooltool.pocketed
+
+        Collision.__init__(self, body1=ball, body2=pocket, t=t)
+
+
+    def resolve(self):
+        ball, pocket = self.agents
+
+        # Ball is placed at the pocket center
+        rvw = np.array([[pocket.a, pocket.b, -pocket.depth],
+                        [0,        0,         0           ],
+                        [0,        0,         0           ],
+                        [0,        0,         0           ]])
+
+        ball.set(rvw, self.state_end)
+        ball.update_next_transition_event()
+
+        pocket.add(ball.id)
 
 
 class Transition(Event):

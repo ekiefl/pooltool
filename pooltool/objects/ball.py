@@ -213,7 +213,7 @@ class Ball(Object, BallRender, Events):
 
 
     def update_next_transition_event(self):
-        if self.s == pooltool.stationary:
+        if self.s == pooltool.stationary or self.s == pooltool.pocketed:
             self.next_transition_event = NonEvent(t = np.inf)
 
         elif self.s == pooltool.spinning:
