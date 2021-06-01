@@ -24,6 +24,7 @@ class EvolveShot(ABC, System, SystemHistory, ShotRender):
         self.include = {
             type_ball_ball: True,
             type_ball_cushion: True,
+            type_ball_pocket: True,
         }
 
 
@@ -151,6 +152,10 @@ class EvolveShotEventBased(EvolveShot):
         if ball_cushion_event.time < event.time:
             event = ball_cushion_event
 
+        ball_pocket_event = self.get_min_ball_pocket_event_time()
+        if ball_pocket_event.time < event.time:
+            event = ball_pocket_event
+
         return event
 
 
@@ -177,7 +182,7 @@ class EvolveShotEventBased(EvolveShot):
                 if i >= j:
                     continue
 
-                if ball1.s == pooltool.stationary and ball2.s == pooltool.stationary:
+                if ball1.s in pooltool.nontranslating and ball2.s in pooltool.nontranslating:
                     continue
 
                 dtau_E = physics.get_ball_ball_collision_time(
@@ -210,7 +215,7 @@ class EvolveShotEventBased(EvolveShot):
         involved_agents = tuple([DummyBall(), NonObject()])
 
         for ball in self.balls.values():
-            if ball.s == pooltool.stationary:
+            if ball.s in pooltool.nontranslating:
                 continue
 
             for cushion in self.table.cushion_segments['linear'].values():
@@ -252,6 +257,38 @@ class EvolveShotEventBased(EvolveShot):
         dtau_E = dtau_E_min
 
         return BallCushionCollision(*involved_agents, t=(self.t + dtau_E))
+
+
+    def get_min_ball_pocket_event_time(self):
+        """Returns minimum time until next ball-pocket collision"""
+
+        dtau_E_min = np.inf
+        involved_agents = tuple([DummyBall(), NonObject()])
+
+        for ball in self.balls.values():
+            if ball.s in pooltool.nontranslating:
+                continue
+
+            for pocket in self.table.pockets.values():
+                dtau_E = physics.get_ball_pocket_collision_time(
+                    rvw=ball.rvw,
+                    s=ball.s,
+                    a=pocket.a,
+                    b=pocket.b,
+                    r=pocket.radius,
+                    mu=(ball.u_s if ball.s == pooltool.sliding else ball.u_r),
+                    m=ball.m,
+                    g=ball.g,
+                    R=ball.R
+                )
+
+                if dtau_E < dtau_E_min:
+                    involved_agents = (ball, pocket)
+                    dtau_E_min = dtau_E
+
+        dtau_E = dtau_E_min
+
+        return BallPocketCollision(*involved_agents, t=(self.t + dtau_E))
 
 
 class EvolveShotDiscreteTime(EvolveShot):
@@ -302,7 +339,7 @@ class EvolveShotDiscreteTime(EvolveShot):
                 if i >= j:
                     continue
 
-                if ball1.s == pooltool.stationary and ball2.s == pooltool.stationary:
+                if ball1.s in pooltool.nontranslating and ball2.s in pooltool.nontranslating:
                     continue
 
                 if physics.is_overlapping(ball1.rvw, ball2.rvw, ball1.R, ball2.R):

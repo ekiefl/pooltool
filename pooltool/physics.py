@@ -169,7 +169,7 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
     c1x, c1y = rvw1[0, 0], rvw1[0, 1]
     c2x, c2y = rvw2[0, 0], rvw2[0, 1]
 
-    if s1 == pooltool.stationary or s1 == pooltool.spinning:
+    if s1 in pooltool.nontranslating:
         a1x, a1y, b1x, b1y = 0, 0, 0, 0
     else:
         phi1 = utils.angle(rvw1[1])
@@ -184,7 +184,7 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
         b1x = v1*np.cos(phi1)
         b1y = v1*np.sin(phi1)
 
-    if s2 == pooltool.stationary or s2 == pooltool.spinning:
+    if s2 in pooltool.nontranslating:
         a2x, a2y, b2x, b2y = 0, 0, 0, 0
     else:
         phi2 = utils.angle(rvw2[1])
@@ -221,7 +221,7 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
 
 def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g, R):
     """Get the time until collision between ball and linear cushion segment"""
-    if s == pooltool.stationary or s == pooltool.spinning:
+    if s in pooltool.nontranslating:
         return np.inf
 
     phi = utils.angle(rvw[1])
@@ -274,7 +274,7 @@ def get_ball_circular_cushion_collision_time(rvw, s, a, b, r, mu, m, g, R):
         The rolling or sliding coefficient of friction. Should match the value of s
     """
 
-    if s == pooltool.stationary or s == pooltool.spinning:
+    if s in pooltool.nontranslating:
         return np.inf
 
     phi = utils.angle(rvw[1])
@@ -294,6 +294,52 @@ def get_ball_circular_cushion_collision_time(rvw, s, a, b, r, mu, m, g, R):
     C = ax*(cx-a) + ay*(cy-b) + 1/2*(bx**2 + by**2)
     D = bx*(cx-a) + by*(cy-b)
     E = 1/2*(a**2 + b**2 + cx**2 + cy**2 - (r + R)**2) - (cx*a + cy*b)
+
+    roots = np.roots([A,B,C,D,E])
+
+    roots = roots[
+        (abs(roots.imag) <= pooltool.tol) & \
+        (roots.real > pooltool.tol)
+    ].real
+
+    return roots.min() if len(roots) else np.inf
+
+
+def get_ball_pocket_collision_time(rvw, s, a, b, r, mu, m, g, R):
+    """Get the time until collision between ball and pocket
+
+    Parameters
+    ==========
+    a : float
+        The x-coordinate of the pocket's center
+    b : float
+        The y-coordinate of the pocket's center
+    r : float
+        The radius of the pocket's center
+    mu : float
+        The rolling or sliding coefficient of friction. Should match the value of s
+    """
+
+    if s in pooltool.nontranslating:
+        return np.inf
+
+    phi = utils.angle(rvw[1])
+    v = np.linalg.norm(rvw[1])
+
+    u = (np.array([1,0,0]
+         if s == pooltool.rolling
+         else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw, R)), -phi)))
+
+    ax = -1/2*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
+    ay = -1/2*mu*g*(u[0]*np.sin(phi) + u[1]*np.cos(phi))
+    bx, by = v*np.cos(phi), v*np.sin(phi)
+    cx, cy = rvw[0, 0], rvw[0, 1]
+
+    A = 1/2 * (ax**2 + ay**2)
+    B = ax*bx + ay*by
+    C = ax*(cx-a) + ay*(cy-b) + 1/2*(bx**2 + by**2)
+    D = bx*(cx-a) + by*(cy-b)
+    E = 1/2*(a**2 + b**2 + cx**2 + cy**2 - r**2) - (cx*a + cy*b)
 
     roots = np.roots([A,B,C,D,E])
 
@@ -325,7 +371,7 @@ def get_ball_energy(rvw, R, m):
 
 
 def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
-    if state == pooltool.stationary:
+    if state == pooltool.stationary or state == pooltool.pocketed:
         return rvw, state
 
     if state == pooltool.sliding:
@@ -359,7 +405,7 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
 
 def evolve_state_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
     """Variant of evolve_ball_motion that does not respect motion transition events"""
-    if state == pooltool.stationary:
+    if state == pooltool.stationary or state == pooltool.pocketed:
         return rvw, state
     elif state == pooltool.sliding:
         return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), pooltool.sliding
@@ -454,10 +500,6 @@ def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
     rvw = rvw.copy()
 
     rvw[2, 2], rvw[3, 2] = evolve_perpendicular_spin_component(rvw[2, 2], rvw[3, 2], R, u_sp, g, t)
-    return rvw
-
-
-def evolve_stationary_state(rvw, t):
     return rvw
 
 
