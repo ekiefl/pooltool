@@ -15,10 +15,14 @@ class Object(object):
 
 class NonObject(Object):
     object_type = 'none'
+    def __init__(self):
+        self.id = 'NA'
 
 
 class DummyBall(NonObject):
     s = pooltool.stationary
+    def __init__(self):
+        self.id = 'NA'
 
 
 class Render(ABC):

@@ -187,7 +187,7 @@ class Transition(Event):
         self.ball.update_next_transition_event()
 
         # We find the minimum required representation of the angular velocity integration vector.
-        # Comment this out and see what happens if you don't do this. FIXME the solutioin is to get
+        # Comment this out and see what happens if you don't do this. FIXME the solution is to get
         # rid of angular velocity integration vector and calculate the quaternions directly from
         # angular velocity
         self.ball.rvw[3] = utils.normalize_rotation_vector(self.ball.rvw[3])
