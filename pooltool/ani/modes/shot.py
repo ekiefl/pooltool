@@ -140,7 +140,7 @@ class ShotMode(CameraMode):
         """Run a pool simulation"""
         evolver = evolution.get_shot_evolver(algorithm='event')
         self.shot = evolver(cue=self.cue_stick, table=self.table, balls=self.balls)
-        self.shot.simulate()
+        self.shot.simulate(continuize=True)
         self.shot.init_shot_animation()
         self.shot.loop_animation()
 
