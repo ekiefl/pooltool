@@ -2,6 +2,7 @@
 
 import pooltool
 import pooltool.utils as utils
+import pooltool.layouts as layouts
 
 from pooltool.objects.cue import Cue
 from pooltool.objects.ball import Ball
@@ -167,49 +168,13 @@ class Interface(ShowBase, Menus, ModeManager):
 
 
     def init_balls(self):
-        ball_kwargs = dict(
-            u_s=0.14,
-            u_r=0.007,
-            u_sp=0.022,
-        )
-        self.balls['r'] = Ball('r', **ball_kwargs)
-        self.balls['y'] = Ball('y', **ball_kwargs)
+        ball_kwargs = {}
+        diamond = layouts.NineBallRack(**ball_kwargs)
+        diamond.center_by_table(self.table)
+        self.balls = {x: y for x, y in enumerate(diamond.balls)}
+
         self.balls['cue'] = Ball('cue', **ball_kwargs)
-
         self.balls['cue'].rvw[0] = [self.table.center[0] + 0.2, self.table.l/4, pooltool.R]
-        self.balls['r'].rvw[0] = [self.table.center[0], self.table.l*3/4, pooltool.R]
-        self.balls['y'].rvw[0] = [self.table.center[0], self.table.l/4, pooltool.R]
-
-        #self.balls['cue'] = Ball('cue')
-        #R = self.balls['cue'].R
-        #self.balls['cue'].rvw[0] = [self.table.center[0], self.table.B+0.33, R]
-
-        #self.balls['1'] = Ball('1')
-        #self.balls['1'].rvw[0] = [self.table.center[0], self.table.B+1.4, R]
-
-        #self.balls['2'] = Ball('2')
-        #self.balls['2'].rvw[0] = [self.table.center[0], self.table.T-0.3, R]
-
-        #self.balls['3'] = Ball('3')
-        #self.balls['3'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+1.89, R]
-
-        #self.balls['4'] = Ball('4')
-        #self.balls['4'].rvw[0] = [self.table.center[0] + self.table.w/6, self.table.B+0.2, R]
-
-        #self.balls['5'] = Ball('5')
-        #self.balls['5'].rvw[0] = [self.table.center[0] - self.table.w/6, self.table.B+0.2, R]
-
-        #self.balls['6'] = Ball('6')
-        #self.balls['6'].rvw[0] = [self.table.center[0], self.table.T-0.03, R]
-
-        #self.balls['7'] = Ball('7')
-        #self.balls['7'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.B+1.89, R]
-
-        #self.balls['8'] = Ball('8')
-        #self.balls['8'].rvw[0] = [self.table.center[0]+0.3, self.table.T-0.03, R]
-
-        #self.balls['10'] = Ball('10')
-        #self.balls['10'].rvw[0] = [self.table.center[0] - self.table.w/5, self.table.T-0.2, R]
 
         for ball in self.balls.values():
             ball.render()
