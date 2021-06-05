@@ -182,6 +182,9 @@ class EvolveShotEventBased(EvolveShot):
                 if i >= j:
                     continue
 
+                if ball1.s == pooltool.pocketed or ball2.s == pooltool.pocketed:
+                    continue
+
                 if ball1.s in pooltool.nontranslating and ball2.s in pooltool.nontranslating:
                     continue
 
