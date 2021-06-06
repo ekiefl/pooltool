@@ -154,7 +154,7 @@ class Interface(ShowBase, Menus, ModeManager):
 
 
     def init_table(self):
-        self.table = Table(l=2.840*2/3, w=1.420*2/3)
+        self.table = Table()
         self.table.render()
 
 

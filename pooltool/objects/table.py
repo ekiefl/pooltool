@@ -150,7 +150,7 @@ class Table(Object, TableRender):
         self.center = (self.w/2, self.l/2)
 
         s = 0.05
-        c = 0.062
+        c = 0.082
         j = 0.1
         js = 1/np.sqrt(2) * j
         # https://ekiefl.github.io/2020/12/20/pooltool-alg/#-ball-cushion-collision-times for diagram
@@ -185,7 +185,7 @@ class Table(Object, TableRender):
             self.cushion_segments['circular'][f'{x}t'] = add_circle(str(x))
 
         height = self.height
-        radius = c*0.90
+        radius = c*0.70
         self.pockets = {
             'lb': Pocket('lb', center=(-radius/np.sqrt(2), -radius/np.sqrt(2), height), radius=radius),
             'lc': Pocket('lc', center=(-radius*np.sqrt(2), self.l/2, height), radius=radius),
