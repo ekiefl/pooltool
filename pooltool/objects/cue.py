@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+import pooltool.utils as utils
+
 from pooltool.ani import model_paths
 from pooltool.events import StickBallCollision
 from pooltool.objects import *
@@ -282,6 +284,17 @@ class Cue(Object, CueRender):
 
 
     def aim_at(self, pos):
-        # FIXME
-        pass
+        """Set phi to aim at a 3D position
+
+        Parameters
+        ==========
+        pos : array-like
+            A length-3 iterable specifying the x, y, z coordinates of the position to be aimed at
+        """
+
+        direction = utils.angle(utils.unit_vector(np.array(pos) - self.cueing_ball.rvw[0]))
+        self.set_state(phi = direction * 180/np.pi)
+
+
+
 
