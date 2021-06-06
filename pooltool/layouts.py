@@ -9,7 +9,7 @@ import numpy as np
 class NineBallRack(object):
     """Arrange a list of balls into 9-ball break configuration"""
     def __init__(self, spacing_factor=1e-3, ordered=False, **ball_kwargs):
-        self.balls = [Ball(i, **ball_kwargs) for i in range(1,10)]
+        self.balls = [Ball(str(i), **ball_kwargs) for i in range(1,10)]
         self.radius = max([ball.R for ball in self.balls])
         self.spacer = spacing_factor * self.radius
         self.eff_radius = self.radius + self.spacer + pooltool.tol
