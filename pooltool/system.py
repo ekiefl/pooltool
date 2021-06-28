@@ -151,6 +151,9 @@ class SystemHistory(Events):
             # Create a new history
             cts_history = BallHistory()
 
+            # Add t=0
+            cts_history.add(ball.history.rvw[0], ball.history.s[0], 0)
+
             for n in range(ball.num_events - 1):
                 curr_event = ball.events[n]
                 next_event = ball.events[n+1]
