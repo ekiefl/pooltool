@@ -111,7 +111,7 @@ class EvolveShotEventBased(EvolveShot):
         EvolveShot.__init__(self, *args, **kwargs)
 
 
-    def evolution_algorithm(self, t_final=None, continuize=True):
+    def evolution_algorithm(self, t_final=None, continuize=True, dt=0.01):
         """The event-based evolution algorithm"""
 
         while True:
@@ -134,7 +134,7 @@ class EvolveShotEventBased(EvolveShot):
                 break
 
         if continuize:
-            self.continuize()
+            self.continuize(dt=dt)
 
 
     def get_next_event(self):
