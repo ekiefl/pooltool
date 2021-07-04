@@ -28,7 +28,7 @@ class EvolveShot(ABC, System, SystemHistory, ShotRender):
         }
 
 
-    def simulate(self, strike=True, set_playback=False, name="NA", **kwargs):
+    def simulate(self, strike=True, name="NA", **kwargs):
         """Run a simulation
 
         Parameters
@@ -74,8 +74,6 @@ class EvolveShot(ABC, System, SystemHistory, ShotRender):
         self.run.info('Finished after', self.progress.t.time_elapsed_precise())
 
         self.vectorize_trajectories()
-        if set_playback:
-            self.balls['cue'].set_playback_sequence()
 
 
     def evolve(self, dt):
