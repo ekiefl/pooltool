@@ -11,6 +11,7 @@ import numpy as np
 class AimMode(Mode):
     keymap = {
         action.fine_control: False,
+        action.adjust_head: False,
         action.quit: False,
         action.stroke: False,
         action.view: False,
@@ -33,6 +34,8 @@ class AimMode(Mode):
         self.task_action('escape', action.quit, True)
         self.task_action('f', action.fine_control, True)
         self.task_action('f-up', action.fine_control, False)
+        self.task_action('t', action.adjust_head, True)
+        self.task_action('t-up', action.adjust_head, False)
         self.task_action('mouse1', action.zoom, True)
         self.task_action('mouse1-up', action.zoom, False)
         self.task_action('s', action.stroke, True)
@@ -64,6 +67,8 @@ class AimMode(Mode):
             self.zoom_camera_aim()
         elif self.keymap[action.elevation]:
             self.elevate_cue()
+        elif self.keymap[action.adjust_head]:
+            self.adjust_head_aim()
         elif self.keymap[action.english]:
             self.apply_english()
         else:
@@ -77,6 +82,13 @@ class AimMode(Mode):
             s = -self.mouse.get_dy()*ani.zoom_sensitivity
 
         self.cam.node.setPos(autils.multiply_cw(self.cam.node.getPos(), 1-s))
+
+
+    def adjust_head_aim(self):
+        with self.mouse:
+            alpha_y = max(min(0, self.cam.focus.getR() + ani.rotate_sensitivity_y * self.mouse.get_dy()), -90)
+
+        self.cam.focus.setR(alpha_y) # Move view vertically
 
 
     def rotate_camera_aim(self):
