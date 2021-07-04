@@ -21,13 +21,14 @@ class ShotMode(Mode):
         action.cam_save: False,
     }
 
-    def enter(self):
+    def enter(self, init_animations=False):
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()
 
-        self.shot.init_shot_animation()
-        self.shot.loop_animation()
+        if init_animations:
+            self.shot.init_shot_animation()
+            self.shot.loop_animation()
 
         self.accept('space', self.shot.toggle_pause)
         self.accept('arrow_up', self.shot.speed_up)
@@ -53,26 +54,33 @@ class ShotMode(Mode):
         self.add_task(self.shot_animation_task, 'shot_animation_task')
 
 
-    def exit(self, keep=True):
+    def exit(self, key='soft'):
         """Exit shot mode
 
         Parameters
         ==========
-        keep : bool, True
-            If True, the system state will be set to the end state of the shot. Otherwise,
-            the system state will be returned to the start state of the shot.
+        key : str, 'soft'
+            Specifies how shot mode should be exited. Can be any of {'end', 'reset', 'soft'}. 'end'
+            and 'reset' end the animation, whereas 'soft' exits shot mode with the animations still
+            playing. 'end' sets the system state to the end state of the shot, whereas 'reset' returns
+            the system state to the start state of the shot.
         """
+        assert key in {'end', 'reset', 'soft'}
 
-        self.shot.finish_animation()
-        self.shot.ball_animations.finish()
+        if key != 'soft':
+            self.shot.finish_animation()
+            self.shot.ball_animations.finish()
 
-        if keep:
+        if key == 'end':
             self.shot.cue.reset_state()
             self.shot.cue.set_render_state_as_object_state()
 
             for ball in self.shot.balls.values():
                 ball.reset_angular_integration()
-        else:
+
+            self.shot.cue.update_focus()
+
+        elif key == 'reset':
             self.cam.load_state('stroke')
             for ball in self.shot.balls.values():
                 if ball.history.is_populated():
@@ -84,16 +92,15 @@ class ShotMode(Mode):
                 ball.set_render_state_as_object_state()
                 ball.history.reset_history()
 
-        self.shot.cue.update_focus()
+            self.shot.cue.update_focus()
 
         self.remove_task('shot_view_task')
         self.remove_task('shot_animation_task')
-        self.shot = None
 
 
     def shot_view_task(self, task):
         if self.keymap[action.aim]:
-            self.change_mode('aim')
+            self.change_mode('aim', exit_kwargs=dict(key='end'))
         elif self.keymap[action.zoom]:
             self.zoom_camera_shot()
         elif self.keymap[action.move]:
@@ -120,11 +127,7 @@ class ShotMode(Mode):
             self.shot.offset_time(ani.rewind_dt*self.shot.playback_speed)
 
         if self.keymap[action.undo_shot]:
-            exit_kwargs = dict(
-                keep = False,
-            )
-            self.change_mode('aim', exit_kwargs=exit_kwargs)
-            return
+            self.change_mode('aim', exit_kwargs=dict(key='reset'))
 
         return task.cont
 
