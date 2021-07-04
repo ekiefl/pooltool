@@ -9,7 +9,6 @@ from pooltool.ani.modes import CameraMode, action
 class ShotMode(CameraMode):
     keymap = {
         action.aim: False,
-        action.fine_control: False,
         action.move: False,
         action.toggle_pause: False,
         action.undo_shot: False,
@@ -46,8 +45,6 @@ class ShotMode(CameraMode):
         self.task_action('r-up', action.restart_ani, False)
         self.task_action('z', action.undo_shot, True)
         self.task_action('z-up', action.undo_shot, False)
-        self.task_action('f', action.fine_control, True)
-        self.task_action('f-up', action.fine_control, False)
         self.task_action('arrow_left', action.rewind, True)
         self.task_action('arrow_left-up', action.rewind, False)
         self.task_action('arrow_right', action.fast_forward, True)
