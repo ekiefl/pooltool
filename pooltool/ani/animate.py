@@ -76,10 +76,11 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
     def change_mode(self, mode, exit_kwargs={}, enter_kwargs={}):
         assert mode in self.modes
 
+        # Build up operations for the new mode
+        self.last_mode = self.mode
         self.end_mode(**exit_kwargs)
 
         # Build up operations for the new mode
-        self.last_mode = self.mode
         self.mode = mode
         self.keymap = self.modes[mode].keymap
         self.modes[mode].enter(self, **enter_kwargs)
@@ -93,6 +94,8 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
         if self.mode is not None:
             self.modes[self.mode].exit(self, **kwargs)
             self.reset_action_states()
+
+        self.mode = None
 
 
     def reset_action_states(self):
