@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 
+from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes import Mode, action
+from direct.gui.DirectGui import *
 
 class CamSaveMode(Mode):
     keymap = {
@@ -15,15 +17,50 @@ class CamSaveMode(Mode):
         self.mouse.track()
 
         self.task_action('escape', action.quit, True)
-        self.task_action('k', action.cam_save, True)
-        self.task_action('k-up', action.cam_save, False)
+        self.task_action('1', action.cam_save, True)
+        self.task_action('1-up', action.cam_save, False)
 
         self.add_task(self.cam_save_task, 'cam_save_task')
+        self.render_buttons()
+
+
+    def render_buttons(self):
+        self.cam_save_slots = GenericMenu(
+            title = "Release key with moused hovered over desired save slot",
+            frame_color = (0,0,0,0.4),
+            title_pos = (0,0,0.45),
+        )
+
+        pos = -1.2
+        for slot in range(1, 10):
+            exists = True if f'save_{slot}' in self.cam.states else False
+            button = self.cam_save_slots.add_button(
+                text = (f'{slot}', f'{slot}', 'replace' if exists else 'write', f'{slot}'),
+                command = lambda: None,
+                scale = 0.1,
+                text_scale = 0.6,
+                frameSize = (-1.2, 1.2, -1.2, 1.2),
+                frameColor = (0.3, 0.6, 0.6, 1.0) if exists else (0.8, 0.8, 0.8, 1.0),
+            )
+            button.setPos((pos, 0, 0.25))
+            button.bind(DGG.WITHIN, self.update_selection, extraArgs=[slot])
+            button.bind(DGG.WITHOUT, self.update_selection, extraArgs=[None])
+            pos += 0.3
+
+        self.cam_save_slots.show()
+
+
+    def update_selection(self, state, coords):
+        self.selection = state
 
 
     def exit(self):
+        if self.selection:
+            self.cam.store_state(name=f'save_{self.selection}', overwrite=True)
+
         self.remove_task('cam_save_task')
         self.mouse.touch()
+        self.cam_save_slots.hide()
 
 
     def cam_save_task(self, task):

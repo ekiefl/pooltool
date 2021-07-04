@@ -48,7 +48,7 @@ class ShotMode(Mode):
         self.task_action('arrow_left-up', action.rewind, False)
         self.task_action('arrow_right', action.fast_forward, True)
         self.task_action('arrow_right-up', action.fast_forward, False)
-        self.task_action('k', action.cam_save, True)
+        self.task_action('1', action.cam_save, True)
 
         self.add_task(self.shot_view_task, 'shot_view_task')
         self.add_task(self.shot_animation_task, 'shot_animation_task')

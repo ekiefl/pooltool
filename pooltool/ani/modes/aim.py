@@ -41,7 +41,7 @@ class AimMode(Mode):
         self.task_action('mouse1-up', action.zoom, False)
         self.task_action('s', action.stroke, True)
         self.task_action('v', action.view, True)
-        self.task_action('k', action.cam_save, True)
+        self.task_action('1', action.cam_save, True)
         self.task_action('b', action.elevation, True)
         self.task_action('b-up', action.elevation, False)
         self.task_action('e', action.english, True)

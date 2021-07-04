@@ -33,7 +33,7 @@ class ViewMode(Mode):
         self.task_action('a', action.aim, True)
         self.task_action('v', action.move, True)
         self.task_action('v-up', action.move, False)
-        self.task_action('k', action.cam_save, True)
+        self.task_action('1', action.cam_save, True)
 
         self.add_task(self.view_task, 'view_task')
 
@@ -44,10 +44,7 @@ class ViewMode(Mode):
 
     def view_task(self, task):
         if self.keymap[action.aim]:
-            enter_kwargs = dict(
-                load_prev_cam = True
-            )
-            self.change_mode('aim', enter_kwargs=enter_kwargs)
+            self.change_mode('aim', enter_kwargs=dict(load_prev_cam=True))
         elif self.keymap[action.zoom]:
             self.zoom_camera_view()
         elif self.keymap[action.move]:

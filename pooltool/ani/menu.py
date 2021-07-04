@@ -20,16 +20,16 @@ class Menus(object):
 
     def populate_main(self):
         m = GenericMenu(title = 'Main Screen')
-        m.add_button('New Game', self.go)
-        m.add_button('Options', lambda: self.show_menu('options'))
-        m.add_button('Quit', sys.exit)
+        m.add_button('New Game', self.go, scale=ani.menu_text_scale)
+        m.add_button('Options', lambda: self.show_menu('options'), scale=ani.menu_text_scale)
+        m.add_button('Quit', sys.exit, scale=ani.menu_text_scale)
 
         self.menus['main'] = m
 
 
     def populate_options(self):
         m = GenericMenu(title = 'Options')
-        m.add_button('Back', lambda: self.show_menu('main'))
+        m.add_button('Back', lambda: self.show_menu('main'), scale=ani.menu_text_scale)
         m.add_dropdown('Arrangement', options=['9_break', '10_balls'])
         m.add_direct_entry('Enter weight')
 
@@ -98,10 +98,10 @@ class GenericMenu(object):
         return set([x['name'] for x in self.elements])
 
 
-    def add_button(self, text, command=None):
+    def add_button(self, text, command=None, **kwargs):
         """Add a button at a location based on self.next_x and self.next_y"""
 
-        button = make_button(text, command)
+        button = make_button(text, command, **kwargs)
         button.reparentTo(self.titleMenu)
         button.setPos((self.next_x, 0, self.next_y))
 
@@ -112,6 +112,8 @@ class GenericMenu(object):
         })
 
         self.get_next_pos()
+
+        return button
 
 
     def add_dropdown(self, text, options=['None'], command=None):
@@ -171,12 +173,12 @@ class GenericMenu(object):
         self.titleMenu.show()
 
 
-def make_button(text, command=None):
+def make_button(text, command=None, **kwargs):
     return DirectButton(
         text = text,
         command = command,
-        scale = ani.menu_text_scale,
-        text_align = TextNode.ALeft,
+        text_align = TextNode.ACenter,
+        **kwargs
     )
 
 
