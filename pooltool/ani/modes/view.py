@@ -12,16 +12,20 @@ class ViewMode(Mode):
     keymap = {
         action.aim: False,
         action.fine_control: False,
-        action.move: True,
+        action.move: False,
         action.quit: False,
         action.zoom: False,
+        action.cam_save: False,
     }
 
 
-    def enter(self):
+    def enter(self, move_active=False):
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()
+
+        if move_active:
+            self.keymap[action.move] = True
 
         self.task_action('escape', action.quit, True)
         self.task_action('mouse1', action.zoom, True)
@@ -29,14 +33,13 @@ class ViewMode(Mode):
         self.task_action('a', action.aim, True)
         self.task_action('v', action.move, True)
         self.task_action('v-up', action.move, False)
+        self.task_action('k', action.cam_save, True)
 
         self.add_task(self.view_task, 'view_task')
-        self.add_task(self.quit_task, 'quit_task')
 
 
     def exit(self):
         self.remove_task('view_task')
-        self.remove_task('quit_task')
 
 
     def view_task(self, task):

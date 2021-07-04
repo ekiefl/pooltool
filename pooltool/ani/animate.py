@@ -16,6 +16,7 @@ from pooltool.ani.modes import (
     MenuMode,
     StrokeMode,
     ViewMode,
+    CamSaveMode,
 )
 from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import CustomCamera
@@ -26,7 +27,7 @@ from panda3d.core import *
 from direct.showbase.ShowBase import ShowBase
 
 
-class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode):
+class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamSaveMode, CalculateMode):
     def __init__(self):
         # Init every Mode class
         MenuMode.__init__(self)
@@ -34,6 +35,8 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode):
         StrokeMode.__init__(self)
         ViewMode.__init__(self)
         ShotMode.__init__(self)
+        CamSaveMode.__init__(self)
+        CalculateMode.__init__(self)
 
         self.modes = {
             'menu': MenuMode,
@@ -41,6 +44,8 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode):
             'stroke': StrokeMode,
             'view': ViewMode,
             'shot': ShotMode,
+            'calculate': CalculateMode,
+            'cam_save': CamSaveMode,
         }
 
         # Store the above as default states
@@ -50,6 +55,7 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode):
             for a, default_state in self.modes[mode].keymap.items():
                 self.action_state_defaults[mode][a] = default_state
 
+        self.last_mode = None
         self.mode = None
         self.keymap = None
 
@@ -70,6 +76,7 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode):
         self.end_mode(**exit_kwargs)
 
         # Build up operations for the new mode
+        self.last_mode = self.mode
         self.mode = mode
         self.keymap = self.modes[mode].keymap
         self.modes[mode].enter(self, **enter_kwargs)
@@ -94,8 +101,6 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode):
 class Interface(ShowBase, Menus, ModeManager):
     def __init__(self, *args, **kwargs):
         ShowBase.__init__(self)
-        Menus.__init__(self)
-        ModeManager.__init__(self)
 
         self.tasks = {}
         self.balls = {}
@@ -104,6 +109,9 @@ class Interface(ShowBase, Menus, ModeManager):
         self.cam = CustomCamera()
         self.table = None
         self.cue_stick = Cue()
+
+        Menus.__init__(self)
+        ModeManager.__init__(self)
 
         self.change_mode('menu')
 
@@ -188,13 +196,13 @@ class Interface(ShowBase, Menus, ModeManager):
 
 
     def monitor(self, task):
-        #print(f"Mode: {self.mode}")
-        #print(f"Tasks: {list(self.tasks.keys())}")
-        #print(f"Memory: {utils.get_total_memory_usage()}")
-        #print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
-        #print(f"Keymap: {self.keymap}")
-        #print(f"Frame: {self.frame}")
-        #print()
+        print(f"Mode: {self.mode}")
+        print(f"Tasks: {list(self.tasks.keys())}")
+        print(f"Memory: {utils.get_total_memory_usage()}")
+        print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
+        print(f"Keymap: {self.keymap}")
+        print(f"Frame: {self.frame}")
+        print()
         self.frame += 1
 
         return task.cont

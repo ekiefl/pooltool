@@ -18,6 +18,7 @@ class AimMode(Mode):
         action.zoom: False,
         action.elevation: False,
         action.english: False,
+        action.cam_save: False,
     }
 
     def enter(self, load_prev_cam=False):
@@ -40,6 +41,7 @@ class AimMode(Mode):
         self.task_action('mouse1-up', action.zoom, False)
         self.task_action('s', action.stroke, True)
         self.task_action('v', action.view, True)
+        self.task_action('k', action.cam_save, True)
         self.task_action('b', action.elevation, True)
         self.task_action('b-up', action.elevation, False)
         self.task_action('e', action.english, True)
@@ -56,7 +58,7 @@ class AimMode(Mode):
 
     def aim_task(self, task):
         if self.keymap[action.view]:
-            self.change_mode('view')
+            self.change_mode('view', enter_kwargs=dict(move_active=True))
         elif self.keymap[action.stroke]:
             self.change_mode('stroke')
         elif self.keymap[action.zoom]:
