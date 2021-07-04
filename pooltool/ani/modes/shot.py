@@ -20,9 +20,22 @@ class ShotMode(Mode):
         action.fast_forward: False,
         action.cam_save: False,
         action.cam_load: False,
+        action.close_scene: False,
     }
 
-    def enter(self, init_animations=False):
+    def enter(self, init_animations=False, single_instance=False):
+        """Enter method for Shot
+
+        Parameters
+        ==========
+        init_animations : bool, False
+            If True, the shot animations are built and looped via self.shot.init_shot_animation()
+            and self.shot.loop_animation()
+
+        single_instance : bool, False
+            If True, exiting with `esc` will close the scene. Otherwise, quit_task will be called,
+            and user is brought back to main menu.
+        """
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()
@@ -35,16 +48,20 @@ class ShotMode(Mode):
         self.accept('arrow_up', self.shot.speed_up)
         self.accept('arrow_down', self.shot.slow_down)
 
-        self.task_action('escape', action.quit, True)
+        if single_instance:
+            self.task_action('escape', action.close_scene, True)
+        else:
+            self.task_action('escape', action.quit, True)
+            self.task_action('a', action.aim, True)
+            self.task_action('z', action.undo_shot, True)
+            self.task_action('z-up', action.undo_shot, False)
+
         self.task_action('mouse1', action.zoom, True)
         self.task_action('mouse1-up', action.zoom, False)
-        self.task_action('a', action.aim, True)
         self.task_action('v', action.move, True)
         self.task_action('v-up', action.move, False)
         self.task_action('r', action.restart_ani, True)
         self.task_action('r-up', action.restart_ani, False)
-        self.task_action('z', action.undo_shot, True)
-        self.task_action('z-up', action.undo_shot, False)
         self.task_action('arrow_left', action.rewind, True)
         self.task_action('arrow_left-up', action.rewind, False)
         self.task_action('arrow_right', action.fast_forward, True)
@@ -101,7 +118,10 @@ class ShotMode(Mode):
 
 
     def shot_view_task(self, task):
-        if self.keymap[action.aim]:
+        if self.keymap[action.close_scene]:
+            self.close_scene()
+            self.end_mode()
+        elif self.keymap[action.aim]:
             self.change_mode('aim', exit_kwargs=dict(key='end'))
         elif self.keymap[action.zoom]:
             self.zoom_camera_shot()
