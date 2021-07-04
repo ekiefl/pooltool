@@ -4,29 +4,31 @@ from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes import Mode, action
 from direct.gui.DirectGui import *
 
-class CamSaveMode(Mode):
+class CamLoadMode(Mode):
     keymap = {
         action.quit: False,
-        action.cam_save: True,
+        action.cam_load: True,
     }
 
 
     def enter(self):
+        if self.last_mode == 'aim':
+            self.last_mode = 'view'
         self.mouse.show()
         self.mouse.absolute()
         self.mouse.track()
         self.selection = None
 
         self.task_action('escape', action.quit, True)
-        self.task_action('1', action.cam_save, True)
-        self.task_action('1-up', action.cam_save, False)
+        self.task_action('2', action.cam_load, True)
+        self.task_action('2-up', action.cam_load, False)
 
-        self.render_camera_save_buttons()
-        self.add_task(self.cam_save_task, 'cam_save_task')
+        self.render_camera_load_buttons()
+        self.add_task(self.cam_load_task, 'cam_load_task')
 
 
-    def render_camera_save_buttons(self):
-        self.cam_save_slots = GenericMenu(
+    def render_camera_load_buttons(self):
+        self.cam_load_slots = GenericMenu(
             title = "Release key with moused hovered over desired save slot",
             frame_color = (0,0,0,0.2),
             title_pos = (0,0,0.45),
@@ -35,8 +37,8 @@ class CamSaveMode(Mode):
         pos = -1.2
         for slot in range(1, 10):
             exists = True if f'save_{slot}' in self.cam.states else False
-            button = self.cam_save_slots.add_button(
-                text = (f'{slot}', f'{slot}', 'replace' if exists else 'write', f'{slot}'),
+            button = self.cam_load_slots.add_button(
+                text = (f'{slot}', f'{slot}', 'load' if exists else 'empty', f'{slot}'),
                 command = lambda: None,
                 scale = 0.1,
                 text_scale = 0.6,
@@ -44,29 +46,28 @@ class CamSaveMode(Mode):
                 frameColor = (0.3, 0.6, 0.6, 1.0) if exists else (0.8, 0.8, 0.8, 1.0),
             )
             button.setPos((pos, 0, 0.25))
-            button.bind(DGG.WITHIN, self.update_save_selection, extraArgs=[slot])
-            button.bind(DGG.WITHOUT, self.update_save_selection, extraArgs=[None])
+            button.bind(DGG.WITHIN, self.update_load_selection, extraArgs=[slot])
+            button.bind(DGG.WITHOUT, self.update_load_selection, extraArgs=[None])
             pos += 0.3
 
-        self.cam_save_slots.show()
+        self.cam_load_slots.show()
 
 
-    def update_save_selection(self, state, coords):
+    def update_load_selection(self, state, coords):
         self.selection = state
 
 
     def exit(self):
         if self.selection:
-            self.cam.store_state(name=f'save_{self.selection}', overwrite=True)
+            self.cam.load_state(name=f'save_{self.selection}', ok_if_not_exists=True)
 
-        self.remove_task('cam_save_task')
+        self.remove_task('cam_load_task')
         self.mouse.touch()
-        self.cam_save_slots.hide()
-        del self.selection
+        self.cam_load_slots.hide()
 
 
-    def cam_save_task(self, task):
-        if not self.keymap[action.cam_save]:
+    def cam_load_task(self, task):
+        if not self.keymap[action.cam_load]:
             enter_kwargs = dict(load_prev_cam = True) if self.last_mode == 'aim' else {}
             self.change_mode(self.last_mode, enter_kwargs=enter_kwargs)
 

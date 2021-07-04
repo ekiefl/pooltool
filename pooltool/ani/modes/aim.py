@@ -19,6 +19,7 @@ class AimMode(Mode):
         action.elevation: False,
         action.english: False,
         action.cam_save: False,
+        action.cam_load: False,
     }
 
     def enter(self, load_prev_cam=False):
@@ -42,6 +43,7 @@ class AimMode(Mode):
         self.task_action('s', action.stroke, True)
         self.task_action('v', action.view, True)
         self.task_action('1', action.cam_save, True)
+        self.task_action('2', action.cam_load, True)
         self.task_action('b', action.elevation, True)
         self.task_action('b-up', action.elevation, False)
         self.task_action('e', action.english, True)

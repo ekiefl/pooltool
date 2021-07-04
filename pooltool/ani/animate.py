@@ -17,6 +17,7 @@ from pooltool.ani.modes import (
     StrokeMode,
     ViewMode,
     CamSaveMode,
+    CamLoadMode,
 )
 from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import CustomCamera
@@ -27,7 +28,7 @@ from panda3d.core import *
 from direct.showbase.ShowBase import ShowBase
 
 
-class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamSaveMode, CalculateMode):
+class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode, CamSaveMode, CalculateMode):
     def __init__(self):
         # Init every Mode class
         MenuMode.__init__(self)
@@ -35,6 +36,7 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamSaveMode
         StrokeMode.__init__(self)
         ViewMode.__init__(self)
         ShotMode.__init__(self)
+        CamLoadMode.__init__(self)
         CamSaveMode.__init__(self)
         CalculateMode.__init__(self)
 
@@ -46,6 +48,7 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamSaveMode
             'shot': ShotMode,
             'calculate': CalculateMode,
             'cam_save': CamSaveMode,
+            'cam_load': CamLoadMode,
         }
 
         # Store the above as default states
@@ -196,13 +199,13 @@ class Interface(ShowBase, Menus, ModeManager):
 
 
     def monitor(self, task):
-        print(f"Mode: {self.mode}")
-        print(f"Tasks: {list(self.tasks.keys())}")
-        print(f"Memory: {utils.get_total_memory_usage()}")
-        print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
-        print(f"Keymap: {self.keymap}")
-        print(f"Frame: {self.frame}")
-        print()
+        #print(f"Mode: {self.mode}")
+        #print(f"Tasks: {list(self.tasks.keys())}")
+        #print(f"Memory: {utils.get_total_memory_usage()}")
+        #print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
+        #print(f"Keymap: {self.keymap}")
+        #print(f"Frame: {self.frame}")
+        #print()
         self.frame += 1
 
         return task.cont

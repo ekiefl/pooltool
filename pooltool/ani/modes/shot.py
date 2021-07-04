@@ -19,6 +19,7 @@ class ShotMode(Mode):
         action.rewind: False,
         action.fast_forward: False,
         action.cam_save: False,
+        action.cam_load: False,
     }
 
     def enter(self, init_animations=False):
@@ -49,6 +50,7 @@ class ShotMode(Mode):
         self.task_action('arrow_right', action.fast_forward, True)
         self.task_action('arrow_right-up', action.fast_forward, False)
         self.task_action('1', action.cam_save, True)
+        self.task_action('2', action.cam_load, True)
 
         self.add_task(self.shot_view_task, 'shot_view_task')
         self.add_task(self.shot_animation_task, 'shot_animation_task')
