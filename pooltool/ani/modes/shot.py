@@ -1,12 +1,14 @@
 #! /usr/bin/env python
 
+import pooltool.ani.utils as autils
 import pooltool.evolution as evolution
 
 from pooltool.ani.menu import GenericMenu
-from pooltool.ani.modes import CameraMode, action
+from pooltool.ani.modes import Mode, action
 
+import numpy as np
 
-class ShotMode(CameraMode):
+class ShotMode(Mode):
     keymap = {
         action.aim: False,
         action.move: False,
@@ -97,13 +99,13 @@ class ShotMode(CameraMode):
         if self.keymap[action.aim]:
             self.change_mode('aim')
         elif self.keymap[action.zoom]:
-            self.zoom_camera()
+            self.zoom_camera_shot()
         elif self.keymap[action.move]:
-            self.move_camera()
+            self.move_camera_shot()
         else:
             if task.time > 0.3:
                 # Prevents shot follow through from moving camera
-                self.rotate_camera(cue_stick_too=False)
+                self.rotate_camera_shot()
             else:
                 # Update mouse positions so there is not a big jump
                 self.mouse.touch()
@@ -151,3 +153,32 @@ class ShotMode(CameraMode):
         return task.done
 
 
+    def zoom_camera_shot(self):
+        with self.mouse:
+            s = -self.mouse.get_dy()*0.3
+
+        self.cam.node.setPos(autils.multiply_cw(self.cam.node.getPos(), 1-s))
+
+
+    def move_camera_shot(self):
+        with self.mouse:
+            dxp, dyp = self.mouse.get_dx(), self.mouse.get_dy()
+
+        h = self.cam.focus.getH() * np.pi/180 + np.pi/2
+        dx = dxp * np.cos(h) - dyp * np.sin(h)
+        dy = dxp * np.sin(h) + dyp * np.cos(h)
+
+        f = 0.6
+        self.cam.focus.setX(self.cam.focus.getX() + dx*f)
+        self.cam.focus.setY(self.cam.focus.getY() + dy*f)
+
+
+    def rotate_camera_shot(self):
+        fx, fy = 13, 3
+
+        with self.mouse:
+            alpha_x = self.cam.focus.getH() - fx * self.mouse.get_dx()
+            alpha_y = max(min(0, self.cam.focus.getR() + fy * self.mouse.get_dy()), -90)
+
+        self.cam.focus.setH(alpha_x) # Move view laterally
+        self.cam.focus.setR(alpha_y) # Move view vertically
