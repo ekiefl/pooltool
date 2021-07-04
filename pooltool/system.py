@@ -215,25 +215,29 @@ class SystemRender(object):
 
 
     def init_shot_animation(self):
-
         self.ball_animations = Parallel()
         for ball in self.balls.values():
             ball.set_playback_sequence(playback_speed=self.playback_speed)
             self.ball_animations.append(ball.playback_sequence)
 
-        self.cue.set_stroke_sequence()
-
-        self.stroke_animation = Sequence(
-            ShowInterval(self.cue.get_node('cue_stick')),
-            self.cue.stroke_sequence,
-            HideInterval(self.cue.get_node('cue_stick')),
-        )
-
-        self.shot_animation = Sequence(
-            self.stroke_animation,
-            self.ball_animations,
-            Func(self.restart_ball_animations)
-        )
+        if self.cue.rendered:
+            self.cue.set_stroke_sequence()
+            self.stroke_animation = Sequence(
+                ShowInterval(self.cue.get_node('cue_stick')),
+                self.cue.stroke_sequence,
+                HideInterval(self.cue.get_node('cue_stick')),
+            )
+            self.shot_animation = Sequence(
+                self.stroke_animation,
+                self.ball_animations,
+                Func(self.restart_ball_animations)
+            )
+        else:
+            self.stroke_animation = None
+            self.shot_animation = Sequence(
+                self.ball_animations,
+                Func(self.restart_ball_animations)
+            )
 
 
     def loop_animation(self):
