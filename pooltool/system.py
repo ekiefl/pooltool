@@ -206,7 +206,7 @@ class SystemHistory(Events):
             ball.attach_history(cts_history)
 
 
-class ShotRender(object):
+class SystemRender(object):
     def __init__(self):
         self.shot_animation = None
         self.ball_animations = None
@@ -238,7 +238,7 @@ class ShotRender(object):
 
     def loop_animation(self):
         if self.shot_animation is None:
-            raise Exception("First call ShotRender.init_shot_animation()")
+            raise Exception("First call SystemRender.init_shot_animation()")
 
         self.shot_animation.loop()
 
