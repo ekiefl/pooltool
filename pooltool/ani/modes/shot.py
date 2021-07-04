@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import pooltool.ani as ani
 import pooltool.ani.utils as autils
 import pooltool.evolution as evolution
 
@@ -103,7 +104,7 @@ class ShotMode(Mode):
         elif self.keymap[action.move]:
             self.move_camera_shot()
         else:
-            if task.time > 0.3:
+            if task.time > ani.rotate_downtime:
                 # Prevents shot follow through from moving camera
                 self.rotate_camera_shot()
             else:
@@ -118,12 +119,10 @@ class ShotMode(Mode):
             self.shot.restart_animation()
 
         if self.keymap[action.rewind]:
-            rate = 0.02 if not self.keymap[action.fine_control] else 0.002
-            self.shot.offset_time(-rate*self.shot.playback_speed)
+            self.shot.offset_time(-ani.fast_forward_dt*self.shot.playback_speed)
 
         if self.keymap[action.fast_forward]:
-            rate = 0.02 if not self.keymap[action.fine_control] else 0.002
-            self.shot.offset_time(rate*self.shot.playback_speed)
+            self.shot.offset_time(ani.rewind_dt*self.shot.playback_speed)
 
         if self.keymap[action.undo_shot]:
             exit_kwargs = dict(
@@ -155,7 +154,7 @@ class ShotMode(Mode):
 
     def zoom_camera_shot(self):
         with self.mouse:
-            s = -self.mouse.get_dy()*0.3
+            s = -self.mouse.get_dy()*ani.zoom_sensitivity
 
         self.cam.node.setPos(autils.multiply_cw(self.cam.node.getPos(), 1-s))
 
@@ -168,13 +167,12 @@ class ShotMode(Mode):
         dx = dxp * np.cos(h) - dyp * np.sin(h)
         dy = dxp * np.sin(h) + dyp * np.cos(h)
 
-        f = 0.6
-        self.cam.focus.setX(self.cam.focus.getX() + dx*f)
-        self.cam.focus.setY(self.cam.focus.getY() + dy*f)
+        self.cam.focus.setX(self.cam.focus.getX() + dx*ani.move_sensitivity)
+        self.cam.focus.setY(self.cam.focus.getY() + dy*ani.move_sensitivity)
 
 
     def rotate_camera_shot(self):
-        fx, fy = 13, 3
+        fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
 
         with self.mouse:
             alpha_x = self.cam.focus.getH() - fx * self.mouse.get_dx()

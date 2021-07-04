@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-"""File for animating utilities in 3D (panda3d) and 2D (pygame)"""
 
 from panda3d.core import *
 

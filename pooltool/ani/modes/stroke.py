@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+import pooltool.ani as ani
+
 from pooltool.ani.modes import Mode, action
 
 
@@ -45,10 +47,8 @@ class StrokeMode(Mode):
 
 
     def stroke_cue_stick(self):
-        f = 0.4
-        max_speed_cue = 7 # [m/s]
-        max_speed_mouse = max_speed_cue/f # [px/s]
-        max_backstroke = self.cue_stick.length/2 # [m]
+        max_speed_mouse = ani.max_stroke_speed/ani.stroke_sensitivity # [px/s]
+        max_backstroke = self.cue_stick.length*ani.backstroke_fraction # [m]
 
         with self.mouse:
             dt = self.mouse.get_dt()
@@ -59,7 +59,7 @@ class StrokeMode(Mode):
             dx *= max_speed_mouse/speed_mouse
 
         cue_stick_node = self.cue_stick.get_node('cue_stick')
-        newX = min(max_backstroke, cue_stick_node.getX() - dx*f)
+        newX = min(max_backstroke, cue_stick_node.getX() - dx*ani.stroke_sensitivity)
 
         if newX < 0:
             newX = 0

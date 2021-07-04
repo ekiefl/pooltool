@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import pooltool.ani as ani
 import pooltool.ani.utils as autils
 
 from pooltool.ani.modes import Mode, action
@@ -56,7 +57,7 @@ class ViewMode(Mode):
 
     def zoom_camera_view(self):
         with self.mouse:
-            s = -self.mouse.get_dy()*0.3
+            s = -self.mouse.get_dy()*ani.zoom_sensitivity
 
         self.cam.node.setPos(autils.multiply_cw(self.cam.node.getPos(), 1-s))
 
@@ -70,9 +71,8 @@ class ViewMode(Mode):
         dx = dxp * np.cos(h) - dyp * np.sin(h)
         dy = dxp * np.sin(h) + dyp * np.cos(h)
 
-        f = 0.6
-        self.cam.focus.setX(self.cam.focus.getX() + dx*f)
-        self.cam.focus.setY(self.cam.focus.getY() + dy*f)
+        self.cam.focus.setX(self.cam.focus.getX() + dx*ani.move_sensitivity)
+        self.cam.focus.setY(self.cam.focus.getY() + dy*ani.move_sensitivity)
 
 
     def fix_cue_stick_to_camera(self):
@@ -81,9 +81,9 @@ class ViewMode(Mode):
 
     def rotate_camera_view(self):
         if self.keymap[action.fine_control]:
-            fx, fy = 2, 0
+            fx, fy = ani.rotate_fine_sensitivity_x, ani.rotate_fine_sensitivity_y
         else:
-            fx, fy = 13, 3
+            fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
 
         with self.mouse:
             alpha_x = self.cam.focus.getH() - fx * self.mouse.get_dx()

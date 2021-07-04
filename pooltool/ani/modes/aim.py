@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import pooltool.ani as ani
 import pooltool.ani.utils as autils
 
 from pooltool.ani.modes import Mode, action
@@ -73,16 +74,16 @@ class AimMode(Mode):
 
     def zoom_camera_aim(self):
         with self.mouse:
-            s = -self.mouse.get_dy()*0.3
+            s = -self.mouse.get_dy()*ani.zoom_sensitivity
 
         self.cam.node.setPos(autils.multiply_cw(self.cam.node.getPos(), 1-s))
 
 
     def rotate_camera_aim(self):
         if self.keymap[action.fine_control]:
-            fx, fy = 2, 0
+            fx, fy = ani.rotate_fine_sensitivity_x, ani.rotate_fine_sensitivity_y
         else:
-            fx, fy = 13, 3
+            fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
 
         with self.mouse:
             alpha_x = self.cam.focus.getH() - fx * self.mouse.get_dx()
@@ -102,10 +103,10 @@ class AimMode(Mode):
         cue = self.cue_stick.get_node('cue_stick_focus')
 
         with self.mouse:
-            delta_elevation = self.mouse.get_dy()*3
+            delta_elevation = self.mouse.get_dy()*ani.elevate_sensitivity
 
         old_elevation = -cue.getR()
-        new_elevation = max(0, min(80, old_elevation + delta_elevation))
+        new_elevation = max(0, min(ani.max_elevate, old_elevation + delta_elevation))
         cue.setR(-new_elevation)
 
 
@@ -116,19 +117,16 @@ class AimMode(Mode):
         cue = self.cue_stick.get_node('cue_stick')
         R = self.cue_stick.follow.R
 
-        f = 0.1
-        delta_y, delta_z = dx*f, dy*f
-
-        max_english = 5/10
+        delta_y, delta_z = dx*ani.english_sensitivity, dy*ani.english_sensitivity
 
         # y corresponds to side spin, z to top/bottom spin
         new_y = cue.getY() + delta_y
         new_z = cue.getZ() + delta_z
 
         norm = np.sqrt(new_y**2 + new_z**2)
-        if norm > max_english*R:
-            new_y *= max_english*R/norm
-            new_z *= max_english*R/norm
+        if norm > ani.max_english*R:
+            new_y *= ani.max_english*R/norm
+            new_z *= ani.max_english*R/norm
 
         cue.setY(new_y)
         cue.setZ(new_z)
