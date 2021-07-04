@@ -46,15 +46,11 @@ class AimMode(Mode):
         self.task_action('e-up', action.english, False)
 
         self.add_task(self.aim_task, 'aim_task')
-        self.add_task(self.quit_task, 'quit_task')
 
 
     def exit(self):
         self.remove_task('aim_task')
-        self.remove_task('quit_task')
-
         self.cue_stick.hide_nodes()
-
         self.cam.store_state('aim', overwrite=True)
 
 

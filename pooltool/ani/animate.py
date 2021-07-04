@@ -9,7 +9,14 @@ from pooltool.objects.ball import Ball
 from pooltool.objects.table import Table
 
 from pooltool.ani.menu import Menus
-from pooltool.ani.modes import AimMode, ShotMode, MenuMode, StrokeMode, ViewMode
+from pooltool.ani.modes import (
+    AimMode,
+    CalculateMode,
+    ShotMode,
+    MenuMode,
+    StrokeMode,
+    ViewMode,
+)
 from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import CustomCamera
 

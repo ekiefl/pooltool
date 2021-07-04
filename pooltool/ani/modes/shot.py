@@ -2,9 +2,7 @@
 
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
-import pooltool.evolution as evolution
 
-from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes import Mode, action
 
 import numpy as np
@@ -27,16 +25,12 @@ class ShotMode(Mode):
         self.mouse.relative()
         self.mouse.track()
 
-        self.shot_sim_overlay = GenericMenu(
-            title = 'Calculating shot...',
-            frame_color = (0,0,0,0.4),
-            title_pos = (0,0,-0.2),
-        )
-        self.shot_sim_overlay.show()
+        self.shot.init_shot_animation()
+        self.shot.loop_animation()
 
-        self.cue_stick.set_object_state_as_render_state()
-
-        self.add_task(self.run_simulation, 'run_simulation', taskChain = 'simulation')
+        self.accept('space', self.shot.toggle_pause)
+        self.accept('arrow_up', self.shot.speed_up)
+        self.accept('arrow_down', self.shot.slow_down)
 
         self.task_action('escape', action.quit, True)
         self.task_action('mouse1', action.zoom, True)
@@ -54,7 +48,7 @@ class ShotMode(Mode):
         self.task_action('arrow_right-up', action.fast_forward, False)
 
         self.add_task(self.shot_view_task, 'shot_view_task')
-        self.add_task(self.quit_task, 'quit_task')
+        self.add_task(self.shot_animation_task, 'shot_animation_task')
 
 
     def exit(self, keep=True):
@@ -92,7 +86,6 @@ class ShotMode(Mode):
 
         self.remove_task('shot_view_task')
         self.remove_task('shot_animation_task')
-        self.remove_task('quit_task')
         self.shot = None
 
 
@@ -132,24 +125,6 @@ class ShotMode(Mode):
             return
 
         return task.cont
-
-
-    def run_simulation(self, task):
-        """Run a pool simulation"""
-        evolver = evolution.get_shot_evolver(algorithm='event')
-        self.shot = evolver(cue=self.cue_stick, table=self.table, balls=self.balls)
-        self.shot.simulate(set_playback=True, continuize=True)
-        self.shot.init_shot_animation()
-        self.shot.loop_animation()
-
-        self.accept('space', self.shot.toggle_pause)
-        self.accept('arrow_up', self.shot.speed_up)
-        self.accept('arrow_down', self.shot.slow_down)
-
-        self.shot_sim_overlay.hide()
-        self.add_task(self.shot_animation_task, 'shot_animation_task')
-
-        return task.done
 
 
     def zoom_camera_shot(self):

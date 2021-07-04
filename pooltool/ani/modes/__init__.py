@@ -14,9 +14,10 @@ class Mode(ABC):
         if self.keymap is None:
             raise NotImplementedError("Child classes of Mode must have 'keymap' attribute")
 
+        self.add_task(self.quit_task, 'quit_task')
 
     def quit_task(self, task):
-        if self.keymap[action.quit]:
+        if self.keymap.get(action.quit):
             self.keymap[action.quit] = False
             self.change_mode('menu')
             self.close_scene()
@@ -39,10 +40,4 @@ from pooltool.ani.modes.menu import MenuMode
 from pooltool.ani.modes.shot import ShotMode
 from pooltool.ani.modes.view import ViewMode
 from pooltool.ani.modes.stroke import StrokeMode
-
-# Instantiate each class to verify integrity
-AimMode()
-MenuMode()
-ShotMode()
-ViewMode()
-StrokeMode()
+from pooltool.ani.modes.calculate import CalculateMode
