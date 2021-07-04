@@ -12,11 +12,10 @@ class Mouse(ClockObject):
 
         self.mouse = base.mouseWatcherNode
         self.tracking = False
+        self.touch()
 
 
     def __enter__(self):
-        if not self.tracking:
-            raise Exception("Mouse :: self.tracking is False")
         return self
 
 
@@ -63,11 +62,11 @@ class Mouse(ClockObject):
 
 
     def get_x(self):
-        return self.mouse.getMouseX()
+        return self.mouse.getMouseX() if self.mouse.hasMouse() else 0
 
 
     def get_y(self):
-        return self.mouse.getMouseY()
+        return self.mouse.getMouseY() if self.mouse.hasMouse() else 0
 
 
     def get_xy(self):
