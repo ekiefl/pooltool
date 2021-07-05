@@ -16,8 +16,8 @@ class StrokeMode(Mode):
         self.mouse.relative()
         self.mouse.track()
 
-        self.cue_stick.track_stroke()
-        self.cue_stick.show_nodes()
+        self.cue.track_stroke()
+        self.cue.show_nodes()
 
         self.task_action('f', action.fine_control, True)
         self.task_action('f-up', action.fine_control, False)
@@ -48,7 +48,7 @@ class StrokeMode(Mode):
 
     def stroke_cue_stick(self):
         max_speed_mouse = ani.max_stroke_speed/ani.stroke_sensitivity # [px/s]
-        max_backstroke = self.cue_stick.length*ani.backstroke_fraction # [m]
+        max_backstroke = self.cue.length*ani.backstroke_fraction # [m]
 
         with self.mouse:
             dt = self.mouse.get_dt()
@@ -58,17 +58,17 @@ class StrokeMode(Mode):
         if speed_mouse > max_speed_mouse:
             dx *= max_speed_mouse/speed_mouse
 
-        cue_stick_node = self.cue_stick.get_node('cue_stick')
+        cue_stick_node = self.cue.get_node('cue_stick')
         newX = min(max_backstroke, cue_stick_node.getX() - dx*ani.stroke_sensitivity)
 
         if newX < 0:
             newX = 0
-            collision = True if self.cue_stick.is_shot() else False
+            collision = True if self.cue.is_shot() else False
         else:
             collision = False
 
         cue_stick_node.setX(newX)
-        self.cue_stick.append_stroke_data()
+        self.cue.append_stroke_data()
 
         return True if collision else False
 

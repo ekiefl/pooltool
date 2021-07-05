@@ -103,120 +103,6 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
             self.keymap[key] = self.action_state_defaults[self.mode][key]
 
 
-
-class Game(ShowBase, Menus, ModeManager):
-    def __init__(self, *args, **kwargs):
-        ShowBase.__init__(self)
-
-        self.tasks = {}
-        self.balls = {}
-        self.disableMouse()
-        self.mouse = Mouse()
-        self.cam = CustomCamera()
-        self.table = None
-        self.cue_stick = Cue()
-
-        Menus.__init__(self)
-        ModeManager.__init__(self)
-
-        self.change_mode('menu')
-
-        self.scene = None
-        self.add_task(self.monitor, 'monitor')
-
-        taskMgr.setupTaskChain('simulation', numThreads = 1, tickClock = None,
-                               threadPriority = None, frameBudget = None,
-                               frameSync = None, timeslicePriority = None)
-
-        self.frame = 0
-
-
-    def add_task(self, *args, **kwargs):
-        task = taskMgr.add(*args, **kwargs)
-        self.tasks[task.name] = task
-
-
-    def add_task_later(self, *args, **kwargs):
-        task = taskMgr.doMethodLater(*args, **kwargs)
-        self.tasks[task.name] = task
-
-
-    def remove_task(self, name):
-        taskMgr.remove(name)
-        del self.tasks[name]
-        pass
-
-
-    def close_scene(self):
-        self.cue_stick.remove_nodes()
-        for ball in self.balls.values():
-            ball.remove_nodes()
-        self.table.remove_nodes()
-        self.scene.removeNode()
-        del self.scene
-        gc.collect()
-
-
-    def go(self):
-        self.init_game_nodes()
-        self.change_mode('aim')
-
-
-    def init_game_nodes(self):
-        self.init_scene()
-        self.init_table()
-        self.init_balls()
-        self.init_cue_stick()
-
-        self.cam.create_focus(
-            parent = self.table.get_node('cloth'),
-            pos = self.balls['cue'].get_node('ball').getPos()
-        )
-
-
-    def init_table(self):
-        self.table = Table()
-        self.table.render()
-
-
-    def init_cue_stick(self):
-        self.cue_stick.render()
-        self.cue_stick.init_focus(self.balls['cue'])
-
-
-    def init_scene(self):
-        self.scene = render.attachNewNode('scene')
-
-
-    def init_balls(self):
-        ball_kwargs = {}
-        diamond = layouts.NineBallRack(**ball_kwargs)
-        diamond.center_by_table(self.table)
-        self.balls = {x: y for x, y in enumerate(diamond.balls)}
-
-        self.balls['cue'] = Ball('cue', **ball_kwargs)
-        self.balls['cue'].rvw[0] = [self.table.center[0] + 0.2, self.table.l/4, pooltool.R]
-
-        for ball in self.balls.values():
-            ball.render()
-
-
-    def monitor(self, task):
-        #print(f"Mode: {self.mode}")
-        #print(f"Tasks: {list(self.tasks.keys())}")
-        #print(f"Memory: {utils.get_total_memory_usage()}")
-        #print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
-        #print(f"Keymap: {self.keymap}")
-        #print(f"Frame: {self.frame}")
-        #print()
-        self.frame += 1
-
-        return task.cont
-
-    def start(self):
-        self.run()
-
-
 class Interface(ShowBase, ModeManager):
     def __init__(self, shot=None):
         ShowBase.__init__(self)
@@ -277,6 +163,9 @@ class Interface(ShowBase, ModeManager):
             if not ball.rendered:
                 ball.render()
 
+        self.cue.render()
+        self.cue.init_focus(self.balls['cue'])
+
         self.cam.create_focus(
             parent = self.table.get_node('cloth'),
             pos = self.balls['cue'].get_node('ball').getPos()
@@ -312,6 +201,52 @@ class ShotViewer(Interface):
             single_instance = True,
         )
         self.change_mode('shot', enter_kwargs=params)
+        self.run()
+
+
+class Play(Interface, Menus):
+    def __init__(self, *args, **kwargs):
+        Interface.__init__(self, shot=None)
+        Menus.__init__(self)
+
+        self.change_mode('menu')
+
+        taskMgr.setupTaskChain('simulation', numThreads = 1, tickClock = None,
+                               threadPriority = None, frameBudget = None,
+                               frameSync = None, timeslicePriority = None)
+
+
+    def go(self):
+        self.setup()
+        self.init_game_nodes()
+        self.change_mode('aim')
+
+
+    def setup(self):
+        self.setup_table()
+        self.setup_balls()
+        self.setup_cue()
+
+
+    def setup_table(self):
+        self.table = Table()
+
+
+    def setup_cue(self):
+        self.cue = Cue()
+
+
+    def setup_balls(self):
+        ball_kwargs = {}
+        diamond = layouts.NineBallRack(**ball_kwargs)
+        diamond.center_by_table(self.table)
+        self.balls = {x: y for x, y in enumerate(diamond.balls)}
+
+        self.balls['cue'] = Ball('cue', **ball_kwargs)
+        self.balls['cue'].rvw[0] = [self.table.center[0] + 0.2, self.table.l/4, pooltool.R]
+
+
+    def start(self):
         self.run()
 
 

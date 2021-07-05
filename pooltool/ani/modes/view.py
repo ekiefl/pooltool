@@ -78,7 +78,7 @@ class ViewMode(Mode):
 
 
     def fix_cue_stick_to_camera(self):
-        self.cue_stick.get_node('cue_stick_focus').setH(self.cam.focus.getH())
+        self.cue.get_node('cue_stick_focus').setH(self.cam.focus.getH())
 
 
     def rotate_camera_view(self):

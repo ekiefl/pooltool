@@ -27,8 +27,8 @@ class AimMode(Mode):
         self.mouse.relative()
         self.mouse.track()
 
-        self.cue_stick.show_nodes()
-        self.cue_stick.get_node('cue_stick').setX(0)
+        self.cue.show_nodes()
+        self.cue.get_node('cue_stick').setX(0)
         self.cam.update_focus(self.balls['cue'].get_node('ball').getPos())
         if load_prev_cam:
             self.cam.load_state('aim')
@@ -54,7 +54,7 @@ class AimMode(Mode):
 
     def exit(self):
         self.remove_task('aim_task')
-        self.cue_stick.hide_nodes()
+        self.cue.hide_nodes()
         self.cam.store_state('aim', overwrite=True)
 
 
@@ -108,11 +108,11 @@ class AimMode(Mode):
 
 
     def fix_cue_stick_to_camera(self):
-        self.cue_stick.get_node('cue_stick_focus').setH(self.cam.focus.getH())
+        self.cue.get_node('cue_stick_focus').setH(self.cam.focus.getH())
 
 
     def elevate_cue(self):
-        cue = self.cue_stick.get_node('cue_stick_focus')
+        cue = self.cue.get_node('cue_stick_focus')
 
         with self.mouse:
             delta_elevation = self.mouse.get_dy()*ani.elevate_sensitivity
@@ -126,8 +126,8 @@ class AimMode(Mode):
         with self.mouse:
             dx, dy = self.mouse.get_dx(), self.mouse.get_dy()
 
-        cue = self.cue_stick.get_node('cue_stick')
-        R = self.cue_stick.follow.R
+        cue = self.cue.get_node('cue_stick')
+        R = self.cue.follow.R
 
         delta_y, delta_z = dx*ani.english_sensitivity, dy*ani.english_sensitivity
 

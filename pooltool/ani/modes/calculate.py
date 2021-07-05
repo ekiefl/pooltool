@@ -28,7 +28,7 @@ class CalculateMode(Mode):
         )
         self.shot_sim_overlay.show()
 
-        self.cue_stick.set_object_state_as_render_state()
+        self.cue.set_object_state_as_render_state()
 
         self.add_task(self.run_simulation, 'run_simulation', taskChain = 'simulation')
 
@@ -69,7 +69,7 @@ class CalculateMode(Mode):
     def run_simulation(self, task):
         """Run a pool simulation"""
         evolver = evolution.get_shot_evolver(algorithm='event')
-        self.shot = evolver(cue=self.cue_stick, table=self.table, balls=self.balls)
+        self.shot = evolver(cue=self.cue, table=self.table, balls=self.balls)
         self.shot.simulate(continuize=True)
 
         self.remove_task('run_simulation')
