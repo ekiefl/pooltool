@@ -19,6 +19,9 @@ class CueRender(Render):
         self.stroke_sequence = None
         self.stroke_clock = ClockObject()
 
+        self.stroke_pos = []
+        self.stroke_time = []
+
 
     def init_model(self, R=pooltool.R):
         cue_stick_model = loader.loadModel(model_paths['cylinder'])
