@@ -104,7 +104,7 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
 
 
 
-class Interface(ShowBase, Menus, ModeManager):
+class Game(ShowBase, Menus, ModeManager):
     def __init__(self, *args, **kwargs):
         ShowBase.__init__(self)
 
@@ -215,3 +215,103 @@ class Interface(ShowBase, Menus, ModeManager):
 
     def start(self):
         self.run()
+
+
+class Interface(ShowBase, ModeManager):
+    def __init__(self, shot=None):
+        ShowBase.__init__(self)
+
+        self.shot = None
+        self.balls = None
+        self.table = None
+        self.cue = None
+        if shot:
+            self.set_shot(shot)
+
+        self.tasks = {}
+        self.disableMouse()
+        self.mouse = Mouse()
+        self.cam = CustomCamera()
+
+        ModeManager.__init__(self)
+
+        self.scene = None
+        self.add_task(self.monitor, 'monitor')
+        self.frame = 0
+
+
+    def set_shot(self, shot):
+        self.shot = shot
+        self.balls = self.shot.balls
+        self.table = self.shot.table
+        self.cue = self.shot.cue
+
+
+    def add_task(self, *args, **kwargs):
+        task = taskMgr.add(*args, **kwargs)
+        self.tasks[task.name] = task
+
+
+    def add_task_later(self, *args, **kwargs):
+        task = taskMgr.doMethodLater(*args, **kwargs)
+        self.tasks[task.name] = task
+
+
+    def remove_task(self, name):
+        taskMgr.remove(name)
+        del self.tasks[name]
+
+
+    def close_scene(self):
+        for ball in self.balls.values():
+            ball.remove_nodes()
+        self.table.remove_nodes()
+        gc.collect()
+
+
+    def init_game_nodes(self):
+        self.init_scene()
+        self.table.render()
+
+        for ball in self.balls.values():
+            if not ball.rendered:
+                ball.render()
+
+        self.cam.create_focus(
+            parent = self.table.get_node('cloth'),
+            pos = self.balls['cue'].get_node('ball').getPos()
+        )
+
+
+    def init_scene(self):
+        self.scene = render.attachNewNode('scene')
+
+
+    def monitor(self, task):
+        #print(f"Mode: {self.mode}")
+        #print(f"Tasks: {list(self.tasks.keys())}")
+        #print(f"Memory: {utils.get_total_memory_usage()}")
+        #print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
+        #print(f"Keymap: {self.keymap}")
+        #print(f"Frame: {self.frame}")
+        #print()
+        self.frame += 1
+
+        return task.cont
+
+
+class ShotViewer(Interface):
+    def __init__(self, shot=None):
+        Interface.__init__(self, shot=shot)
+
+
+    def start(self):
+        self.init_game_nodes()
+        params = dict(
+            init_animations = True,
+            single_instance = True,
+        )
+        self.change_mode('shot', enter_kwargs=params)
+        self.run()
+
+

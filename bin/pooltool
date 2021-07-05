@@ -6,6 +6,6 @@ ap = argparse.ArgumentParser()
 args = ap.parse_args()
 
 if __name__ == '__main__':
-    from pooltool.ani.animate import Interface
-    ani = Interface()
+    from pooltool.ani.animate import Game
+    ani = Game()
     ani.start()

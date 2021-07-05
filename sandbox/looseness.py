@@ -6,6 +6,7 @@ from pooltool.events import BallPocketCollision
 from pooltool.layouts import NineBallRack
 from pooltool.evolution import get_shot_evolver
 from pooltool.objects.cue import Cue
+from pooltool.ani.animate import ShotViewer
 from pooltool.objects.ball import Ball
 from pooltool.objects.table import Table
 
@@ -22,6 +23,8 @@ score_means = np.zeros(len(spacing_factors)).astype(int)
 score_stds = np.zeros(len(spacing_factors)).astype(int)
 
 get_cue_pos = lambda cue, table: [cue.R + np.random.rand()*(table.w - 2*cue.R), table.l/4, cue.R]
+
+interface = ShotViewer()
 
 for i, spacing_factor in enumerate(spacing_factors):
     score = np.zeros(N)
@@ -47,11 +50,10 @@ for i, spacing_factor in enumerate(spacing_factors):
         # Evolve the shot
         evolver = get_shot_evolver('event')
         shot = evolver(cue=cue, table=table, balls=balls)
-        try:
-            shot.simulate(name=f"factor: {spacing_factor}; n: {n}", set_playback=False, continuize=False)
-        except:
-            shot.progress.end()
-            continue
+        shot.simulate(name=f"factor: {spacing_factor}; n: {n}", continuize=True)
+
+        interface.set_shot(shot)
+        interface.start()
 
         # Count how many balls were potted, ignoring cue ball
         balls_potted = sum([isinstance(event, BallPocketCollision)
