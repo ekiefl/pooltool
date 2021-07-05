@@ -121,6 +121,7 @@ class ShotMode(Mode):
         if self.keymap[action.close_scene]:
             self.close_scene()
             self.end_mode()
+            self.stop()
         elif self.keymap[action.aim]:
             self.change_mode('aim', exit_kwargs=dict(key='end'))
         elif self.keymap[action.zoom]:

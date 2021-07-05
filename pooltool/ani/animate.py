@@ -192,16 +192,34 @@ class Interface(ShowBase, ModeManager):
 class ShotViewer(Interface):
     def __init__(self, shot=None):
         Interface.__init__(self, shot=shot)
+        self.stop()
 
 
     def start(self):
+        if not self.win:
+            self.openMainWindow()
+
+        self.mouse = Mouse()
         self.init_game_nodes()
         params = dict(
             init_animations = True,
             single_instance = True,
         )
         self.change_mode('shot', enter_kwargs=params)
-        self.run()
+
+        self.taskMgr.run()
+
+
+    def stop(self):
+        if self.win:
+            self.closeWindow(self.win)
+        self.taskMgr.stop()
+
+
+    def finalizeExit(self):
+        self.stop()
+
+
 
 
 class Play(Interface, Menus):
