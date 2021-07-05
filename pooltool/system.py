@@ -220,7 +220,8 @@ class SystemRender(object):
             ball.set_playback_sequence(playback_speed=self.playback_speed)
             self.ball_animations.append(ball.playback_sequence)
 
-        if self.cue.rendered:
+        if len(self.cue.stroke_pos):
+            # There exists a stroke trajectory. Create animation sequence
             self.cue.set_stroke_sequence()
             self.stroke_animation = Sequence(
                 ShowInterval(self.cue.get_node('cue_stick')),
@@ -233,6 +234,7 @@ class SystemRender(object):
                 Func(self.restart_ball_animations)
             )
         else:
+            self.cue.hide_nodes()
             self.stroke_animation = None
             self.shot_animation = Sequence(
                 self.ball_animations,
