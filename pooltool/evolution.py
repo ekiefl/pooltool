@@ -73,8 +73,6 @@ class EvolveShot(ABC, System, SystemHistory, SystemRender):
 
         self.run.info('Finished after', self.progress.t.time_elapsed_precise())
 
-        self.vectorize_trajectories()
-
 
     def evolve(self, dt):
         """Evolves current ball an amount of time dt
