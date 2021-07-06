@@ -18,6 +18,7 @@ class ViewMode(Mode):
         action.zoom: False,
         action.cam_save: False,
         action.cam_load: False,
+        action.pick_ball: False,
     }
 
 
@@ -38,6 +39,7 @@ class ViewMode(Mode):
         self.task_action('v-up', action.move, False)
         self.task_action('1', action.cam_save, True)
         self.task_action('2', action.cam_load, True)
+        self.task_action('q', action.pick_ball, True)
 
         self.add_task(self.view_task, 'view_task')
 
@@ -51,6 +53,8 @@ class ViewMode(Mode):
             self.change_mode('aim', enter_kwargs=dict(load_prev_cam=True))
         elif self.keymap[action.stroke]:
             self.change_mode('stroke')
+        elif self.keymap[action.pick_ball]:
+            self.change_mode('pick_ball')
         elif self.keymap[action.zoom]:
             self.zoom_camera_view()
         elif self.keymap[action.move]:
@@ -79,10 +83,6 @@ class ViewMode(Mode):
 
         self.player_cam.focus.setX(self.player_cam.focus.getX() + dx*ani.move_sensitivity)
         self.player_cam.focus.setY(self.player_cam.focus.getY() + dy*ani.move_sensitivity)
-
-
-    def fix_cue_stick_to_camera(self):
-        self.cue.get_node('cue_stick_focus').setH(self.player_cam.focus.getH())
 
 
     def rotate_camera_view(self):

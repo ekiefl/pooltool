@@ -19,6 +19,7 @@ from pooltool.ani.modes import (
     ViewMode,
     CamSaveMode,
     CamLoadMode,
+    PickBallMode,
 )
 from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import PlayerCam
@@ -29,7 +30,8 @@ from panda3d.core import *
 from direct.showbase.ShowBase import ShowBase
 
 
-class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode, CamSaveMode, CalculateMode):
+class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode, CamSaveMode, CalculateMode,
+                  PickBallMode):
     def __init__(self):
         # Init every Mode class
         MenuMode.__init__(self)
@@ -40,6 +42,7 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
         CamLoadMode.__init__(self)
         CamSaveMode.__init__(self)
         CalculateMode.__init__(self)
+        PickBallMode.__init__(self)
 
         self.modes = {
             'menu': MenuMode,
@@ -50,6 +53,7 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
             'calculate': CalculateMode,
             'cam_save': CamSaveMode,
             'cam_load': CamLoadMode,
+            'pick_ball': PickBallMode,
         }
 
         # Store the above as default states
@@ -221,8 +225,6 @@ class ShotViewer(Interface):
         self.stop()
 
 
-
-
 class Play(Interface, Menus):
     def __init__(self, *args, **kwargs):
         Interface.__init__(self, shot=None)
@@ -268,6 +270,8 @@ class Play(Interface, Menus):
 
         self.balls['cue'] = Ball('cue', **ball_kwargs)
         self.balls['cue'].rvw[0] = [self.table.center[0] + 0.2, self.table.l/4, pooltool.R]
+
+        self.cueing_ball = self.balls['cue']
 
 
     def start(self):

@@ -167,8 +167,7 @@ class NineBall(Game):
 
     def is_cue_ball_strike(self, shot):
         cue_strike = shot.filter_type(e.type_stick_ball)
-
-        if cue_strike.num_events == 0 or cue_strike.get(0).agents[1].id == 'cue':
+        if cue_strike.get(0).agents[1].id == 'cue':
             return True
         else:
             return False
@@ -180,7 +179,7 @@ class NineBall(Game):
 
         if not self.is_cue_ball_strike(shot):
             reason = 'Wrong ball was cued'
-        if not self.is_lowest_hit_first(shot):
+        elif not self.is_lowest_hit_first(shot):
             reason = 'Lowest ball not hit first'
         elif self.is_cue_pocketed(shot):
             reason = 'Cue ball in pocket!'

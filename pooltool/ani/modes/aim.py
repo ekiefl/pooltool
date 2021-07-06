@@ -20,6 +20,7 @@ class AimMode(Mode):
         action.english: False,
         action.cam_save: False,
         action.cam_load: False,
+        action.pick_ball: False,
     }
 
     def enter(self, load_prev_cam=False):
@@ -29,7 +30,7 @@ class AimMode(Mode):
 
         self.cue.show_nodes()
         self.cue.get_node('cue_stick').setX(0)
-        self.player_cam.update_focus(self.balls['cue'].get_node('ball').getPos())
+        self.player_cam.update_focus(self.cueing_ball.get_node('ball').getPos())
         if load_prev_cam:
             self.player_cam.load_state('aim')
 
@@ -44,6 +45,7 @@ class AimMode(Mode):
         self.task_action('v', action.view, True)
         self.task_action('1', action.cam_save, True)
         self.task_action('2', action.cam_load, True)
+        self.task_action('q', action.pick_ball, True)
         self.task_action('b', action.elevation, True)
         self.task_action('b-up', action.elevation, False)
         self.task_action('e', action.english, True)
@@ -63,6 +65,8 @@ class AimMode(Mode):
             self.change_mode('view', enter_kwargs=dict(move_active=True))
         elif self.keymap[action.stroke]:
             self.change_mode('stroke')
+        elif self.keymap[action.pick_ball]:
+            self.change_mode('pick_ball')
         elif self.keymap[action.zoom]:
             self.zoom_camera_aim()
         elif self.keymap[action.elevation]:
