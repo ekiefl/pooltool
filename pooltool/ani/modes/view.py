@@ -13,6 +13,7 @@ class ViewMode(Mode):
         action.aim: False,
         action.fine_control: False,
         action.move: False,
+        action.stroke: False,
         action.quit: False,
         action.zoom: False,
         action.cam_save: False,
@@ -33,6 +34,7 @@ class ViewMode(Mode):
         self.task_action('mouse1-up', action.zoom, False)
         self.task_action('a', action.aim, True)
         self.task_action('v', action.move, True)
+        self.task_action('s', action.stroke, True)
         self.task_action('v-up', action.move, False)
         self.task_action('1', action.cam_save, True)
         self.task_action('2', action.cam_load, True)
@@ -47,6 +49,8 @@ class ViewMode(Mode):
     def view_task(self, task):
         if self.keymap[action.aim]:
             self.change_mode('aim', enter_kwargs=dict(load_prev_cam=True))
+        elif self.keymap[action.stroke]:
+            self.change_mode('stroke')
         elif self.keymap[action.zoom]:
             self.zoom_camera_view()
         elif self.keymap[action.move]:

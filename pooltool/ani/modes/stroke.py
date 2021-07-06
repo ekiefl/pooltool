@@ -30,7 +30,6 @@ class StrokeMode(Mode):
     def exit(self):
         self.remove_task('stroke_task')
         self.cam.store_state('stroke', overwrite=True)
-        self.cam.load_state('aim')
 
 
     def stroke_task(self, task):
