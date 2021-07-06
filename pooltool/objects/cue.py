@@ -201,7 +201,11 @@ class CueRender(Render):
         cue_stick_focus = self.get_node('cue_stick_focus')
 
         phi = ((cue_stick_focus.getH() + 180) % 360)
-        V0 = self.calc_V0_from_stroke()
+        try:
+            # FIXME short strokes give NameError: name 'apex_index' is not defined
+            V0 = self.calc_V0_from_stroke()
+        except:
+            V0 = 1
         cueing_ball = self.follow
         theta = -cue_stick_focus.getR()
         a = -cue_stick.getY()/self.follow.R
