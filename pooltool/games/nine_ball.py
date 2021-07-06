@@ -65,12 +65,6 @@ class Game(ABC):
 
     def respot(self, shot, ball_id, x, y, z):
         """Move cue ball to head spot or close to"""
-        print("---------------------------")
-        print([ball.id for ball in shot.balls.values()])
-        print(ball_id)
-        print(ball_id in [ball.id for ball in shot.balls.values()])
-        print(ball_id in [ball.id for ball in shot.balls.values()])
-        print("---------------------------")
         R = shot.balls[ball_id].R
         shot.balls[ball_id].rvw[0] = [x, y, z]
 
@@ -175,8 +169,8 @@ class NineBall(Game):
         pocket_events = shot.filter_type(e.type_ball_pocket)
         pocketed_balls = [event.agents[0] for event in pocket_events.events]
 
-        #if (highest == lowest) and (highest in pocketed_balls) and (cue_ball in pocketed_balls):
-        if (highest in pocketed_balls):
+        if (highest == lowest) and (highest in pocketed_balls) and (cue_ball in pocketed_balls):
+            # Scratch on the highest ball left
             self.respot(shot, highest.id, shot.table.w/2, shot.table.l*3/4, highest.R)
 
 
@@ -286,10 +280,21 @@ class NineBall(Game):
         return True if (cushion_hit or ball_pocketed) else False
 
 
+    def is_cue_ball_strike(self, shot):
+        cue_strike = shot.filter_type(e.type_stick_ball)
+
+        if cue_strike.num_events == 0 or cue_strike.get(0).agents[1].id == 'cue':
+            return True
+        else:
+            return False
+
+
     def legality(self, shot):
         """Returns whether or not a shot is legal, and the reason"""
         reason = None
 
+        if not self.is_cue_ball_strike(shot):
+            reason = 'Wrong ball was cued'
         if not self.is_lowest_hit_first(shot):
             reason = 'Lowest ball not hit first'
         elif self.is_cue_pocketed(shot):
