@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+import pooltool
+
 import uuid
 
 from abc import ABC, abstractmethod
@@ -62,6 +64,7 @@ class Game(ABC):
         """Move cue ball to head spot or close to"""
         R = shot.balls[ball_id].R
         shot.balls[ball_id].rvw[0] = [x, y, z]
+        shot.balls[ball_id].s = pooltool.stationary
 
 
     def advance(self, shot):
