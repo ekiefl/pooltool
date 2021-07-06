@@ -29,7 +29,7 @@ class StrokeMode(Mode):
 
     def exit(self):
         self.remove_task('stroke_task')
-        self.cam.store_state('stroke', overwrite=True)
+        self.player_cam.store_state('stroke', overwrite=True)
 
 
     def stroke_task(self, task):

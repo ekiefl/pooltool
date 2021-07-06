@@ -36,7 +36,7 @@ class CamLoadMode(Mode):
 
         pos = -1.2
         for slot in range(1, 10):
-            exists = True if f'save_{slot}' in self.cam.states else False
+            exists = True if f'save_{slot}' in self.player_cam.states else False
             button = self.cam_load_slots.add_button(
                 text = (f'{slot}', f'{slot}', 'load' if exists else 'empty', f'{slot}'),
                 command = lambda: None,
@@ -59,7 +59,7 @@ class CamLoadMode(Mode):
 
     def exit(self):
         if self.selection:
-            self.cam.load_state(name=f'save_{self.selection}', ok_if_not_exists=True)
+            self.player_cam.load_state(name=f'save_{self.selection}', ok_if_not_exists=True)
 
         self.remove_task('cam_load_task')
         self.mouse.touch()

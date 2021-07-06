@@ -34,7 +34,7 @@ class CamSaveMode(Mode):
 
         pos = -1.2
         for slot in range(1, 10):
-            exists = True if f'save_{slot}' in self.cam.states else False
+            exists = True if f'save_{slot}' in self.player_cam.states else False
             button = self.cam_save_slots.add_button(
                 text = (f'{slot}', f'{slot}', 'replace' if exists else 'write', f'{slot}'),
                 command = lambda: None,
@@ -57,7 +57,7 @@ class CamSaveMode(Mode):
 
     def exit(self):
         if self.selection:
-            self.cam.store_state(name=f'save_{self.selection}', overwrite=True)
+            self.player_cam.store_state(name=f'save_{self.selection}', overwrite=True)
 
         self.remove_task('cam_save_task')
         self.mouse.touch()

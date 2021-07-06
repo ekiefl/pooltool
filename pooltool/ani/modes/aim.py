@@ -29,9 +29,9 @@ class AimMode(Mode):
 
         self.cue.show_nodes()
         self.cue.get_node('cue_stick').setX(0)
-        self.cam.update_focus(self.balls['cue'].get_node('ball').getPos())
+        self.player_cam.update_focus(self.balls['cue'].get_node('ball').getPos())
         if load_prev_cam:
-            self.cam.load_state('aim')
+            self.player_cam.load_state('aim')
 
         self.task_action('escape', action.quit, True)
         self.task_action('f', action.fine_control, True)
@@ -55,7 +55,7 @@ class AimMode(Mode):
     def exit(self):
         self.remove_task('aim_task')
         self.cue.hide_nodes()
-        self.cam.store_state('aim', overwrite=True)
+        self.player_cam.store_state('aim', overwrite=True)
 
 
     def aim_task(self, task):
@@ -81,14 +81,14 @@ class AimMode(Mode):
         with self.mouse:
             s = -self.mouse.get_dy()*ani.zoom_sensitivity
 
-        self.cam.node.setPos(autils.multiply_cw(self.cam.node.getPos(), 1-s))
+        self.player_cam.node.setPos(autils.multiply_cw(self.player_cam.node.getPos(), 1-s))
 
 
     def adjust_head_aim(self):
         with self.mouse:
-            alpha_y = max(min(0, self.cam.focus.getR() + ani.rotate_sensitivity_y * self.mouse.get_dy()), -90)
+            alpha_y = max(min(0, self.player_cam.focus.getR() + ani.rotate_sensitivity_y * self.mouse.get_dy()), -90)
 
-        self.cam.focus.setR(alpha_y) # Move view vertically
+        self.player_cam.focus.setR(alpha_y) # Move view vertically
 
 
     def rotate_camera_aim(self):
@@ -98,17 +98,17 @@ class AimMode(Mode):
             fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
 
         with self.mouse:
-            alpha_x = self.cam.focus.getH() - fx * self.mouse.get_dx()
-            alpha_y = max(min(0, self.cam.focus.getR() + fy * self.mouse.get_dy()), -90)
+            alpha_x = self.player_cam.focus.getH() - fx * self.mouse.get_dx()
+            alpha_y = max(min(0, self.player_cam.focus.getR() + fy * self.mouse.get_dy()), -90)
 
-        self.cam.focus.setH(alpha_x) # Move view laterally
-        self.cam.focus.setR(alpha_y) # Move view vertically
+        self.player_cam.focus.setH(alpha_x) # Move view laterally
+        self.player_cam.focus.setR(alpha_y) # Move view vertically
 
         self.fix_cue_stick_to_camera()
 
 
     def fix_cue_stick_to_camera(self):
-        self.cue.get_node('cue_stick_focus').setH(self.cam.focus.getH())
+        self.cue.get_node('cue_stick_focus').setH(self.player_cam.focus.getH())
 
 
     def elevate_cue(self):

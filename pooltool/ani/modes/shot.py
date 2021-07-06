@@ -101,7 +101,7 @@ class ShotMode(Mode):
             self.shot.cue.update_focus()
 
         elif key == 'reset':
-            self.cam.load_state('stroke')
+            self.player_cam.load_state('stroke')
             for ball in self.shot.balls.values():
                 if ball.history.is_populated():
                     ball.set(
@@ -122,6 +122,7 @@ class ShotMode(Mode):
         if self.keymap[action.close_scene]:
             self.close_scene()
             self.end_mode()
+            self.stop()
         elif self.keymap[action.aim]:
             self.game.advance(self.shot)
             self.change_mode('aim', exit_kwargs=dict(key='end'))
@@ -160,27 +161,27 @@ class ShotMode(Mode):
         with self.mouse:
             s = -self.mouse.get_dy()*ani.zoom_sensitivity
 
-        self.cam.node.setPos(autils.multiply_cw(self.cam.node.getPos(), 1-s))
+        self.player_cam.node.setPos(autils.multiply_cw(self.player_cam.node.getPos(), 1-s))
 
 
     def move_camera_shot(self):
         with self.mouse:
             dxp, dyp = self.mouse.get_dx(), self.mouse.get_dy()
 
-        h = self.cam.focus.getH() * np.pi/180 + np.pi/2
+        h = self.player_cam.focus.getH() * np.pi/180 + np.pi/2
         dx = dxp * np.cos(h) - dyp * np.sin(h)
         dy = dxp * np.sin(h) + dyp * np.cos(h)
 
-        self.cam.focus.setX(self.cam.focus.getX() + dx*ani.move_sensitivity)
-        self.cam.focus.setY(self.cam.focus.getY() + dy*ani.move_sensitivity)
+        self.player_cam.focus.setX(self.player_cam.focus.getX() + dx*ani.move_sensitivity)
+        self.player_cam.focus.setY(self.player_cam.focus.getY() + dy*ani.move_sensitivity)
 
 
     def rotate_camera_shot(self):
         fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
 
         with self.mouse:
-            alpha_x = self.cam.focus.getH() - fx * self.mouse.get_dx()
-            alpha_y = max(min(0, self.cam.focus.getR() + fy * self.mouse.get_dy()), -90)
+            alpha_x = self.player_cam.focus.getH() - fx * self.mouse.get_dx()
+            alpha_y = max(min(0, self.player_cam.focus.getR() + fy * self.mouse.get_dy()), -90)
 
-        self.cam.focus.setH(alpha_x) # Move view laterally
-        self.cam.focus.setR(alpha_y) # Move view vertically
+        self.player_cam.focus.setH(alpha_x) # Move view laterally
+        self.player_cam.focus.setR(alpha_y) # Move view vertically

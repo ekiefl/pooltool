@@ -26,6 +26,7 @@ get_cue_pos = lambda cue, table: [cue.R + np.random.rand()*(table.w - 2*cue.R), 
 
 interface = ShotViewer()
 
+best_break = 0
 for i, spacing_factor in enumerate(spacing_factors):
     score = np.zeros(N)
 
@@ -41,6 +42,7 @@ for i, spacing_factor in enumerate(spacing_factors):
         diamond.center_by_table(table)
         balls = {ball.id: ball for ball in diamond.balls}
         balls['cue'] = cue_ball
+        #balls = {key: val for key, val in balls.items() if key in {'1', '2', '3', 'cue'}}
 
         # Aim at the head ball then strike the cue ball
         cue.set_state(V0=8, theta=0, a=0, b=0, cueing_ball=balls['cue'])
@@ -50,10 +52,11 @@ for i, spacing_factor in enumerate(spacing_factors):
         # Evolve the shot
         evolver = get_shot_evolver('event')
         shot = evolver(cue=cue, table=table, balls=balls)
-        shot.simulate(name=f"factor: {spacing_factor}; n: {n}", continuize=True)
-
-        interface.set_shot(shot)
-        interface.start()
+        try:
+            shot.simulate(name=f"factor: {spacing_factor}; n: {n}", continuize=False)
+        except:
+            shot.progress.end()
+            continue
 
         # Count how many balls were potted, ignoring cue ball
         balls_potted = sum([isinstance(event, BallPocketCollision)
@@ -62,6 +65,12 @@ for i, spacing_factor in enumerate(spacing_factors):
 
         shot.run.info("Balls potted", balls_potted)
         score[n] = balls_potted
+
+        if balls_potted > best_break:
+            shot.continuize()
+            interface.set_shot(shot)
+            interface.start()
+            best_break = balls_potted
 
     score_means[i] = np.mean(score)
     score_stds[i] = np.std(score)

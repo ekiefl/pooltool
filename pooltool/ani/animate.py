@@ -21,7 +21,7 @@ from pooltool.ani.modes import (
     CamLoadMode,
 )
 from pooltool.ani.mouse import Mouse
-from pooltool.ani.camera import CustomCamera
+from pooltool.ani.camera import PlayerCam
 
 import gc
 
@@ -118,7 +118,7 @@ class Interface(ShowBase, ModeManager):
         self.tasks = {}
         self.disableMouse()
         self.mouse = Mouse()
-        self.cam = CustomCamera()
+        self.player_cam = PlayerCam()
 
         ModeManager.__init__(self)
 
@@ -167,7 +167,7 @@ class Interface(ShowBase, ModeManager):
         self.cue.render()
         self.cue.init_focus(self.balls['cue'])
 
-        self.cam.create_focus(
+        self.player_cam.create_focus(
             parent = self.table.get_node('cloth'),
             pos = self.balls['cue'].get_node('ball').getPos()
         )
@@ -193,16 +193,34 @@ class Interface(ShowBase, ModeManager):
 class ShotViewer(Interface):
     def __init__(self, shot=None):
         Interface.__init__(self, shot=shot)
+        self.stop()
 
 
     def start(self):
+        if not self.win:
+            self.openMainWindow()
+
+        self.mouse = Mouse()
         self.init_game_nodes()
         params = dict(
             init_animations = True,
             single_instance = True,
         )
         self.change_mode('shot', enter_kwargs=params)
-        self.run()
+
+        self.taskMgr.run()
+
+
+    def stop(self):
+        if self.win:
+            self.closeWindow(self.win)
+        self.taskMgr.stop()
+
+
+    def finalizeExit(self):
+        self.stop()
+
+
 
 
 class Play(Interface, Menus):

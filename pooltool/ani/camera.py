@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-class CustomCamera(object):
+class PlayerCam(object):
     def __init__(self):
         self.node = base.camera
         self.lens = base.camLens
@@ -44,7 +44,7 @@ class CustomCamera(object):
             if overwrite:
                 self.remove_state(name)
             else:
-                raise Exception(f"CustomCamera :: '{name}' is already a camera state")
+                raise Exception(f"PlayerCam :: '{name}' is already a camera state")
 
         self.states[name] = {
             'CamHpr': self.node.getHpr(),
@@ -61,7 +61,7 @@ class CustomCamera(object):
             if ok_if_not_exists:
                 return
             else:
-                raise Exception(f"CustomCamera :: '{name}' is not a camera state")
+                raise Exception(f"PlayerCam :: '{name}' is not a camera state")
 
         self.node.setPos(self.states[name]['CamPos'])
         self.node.setHpr(self.states[name]['CamHpr'])

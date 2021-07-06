@@ -67,6 +67,8 @@ class SystemHistory(Events):
 
         Events.__init__(self)
 
+        self.vectorized = False
+
 
     def init_history(self):
         """Add an initializing NonEvent"""
@@ -130,8 +132,9 @@ class SystemHistory(Events):
 
 
     def vectorize_trajectories(self):
-        for ball in self.balls.values():
-            ball.history.vectorize()
+        if not self.vectorized:
+            for ball in self.balls.values():
+                ball.history.vectorize()
 
 
     def continuize(self, dt=0.01):
@@ -215,6 +218,8 @@ class SystemRender(object):
 
 
     def init_shot_animation(self):
+        self.vectorize_trajectories()
+
         self.ball_animations = Parallel()
         for ball in self.balls.values():
             ball.set_playback_sequence(playback_speed=self.playback_speed)
