@@ -49,13 +49,11 @@ class NineBall(Game):
     def respot_balls(self, shot):
         highest = self.get_highest_ball(shot)
         lowest = self.get_lowest_ball(shot)
-        cue_ball = shot.balls['cue']
 
         pocket_events = shot.filter_type(e.type_ball_pocket)
         pocketed_balls = [event.agents[0] for event in pocket_events.events]
 
-        if (highest == lowest) and (highest in pocketed_balls) and (cue_ball in pocketed_balls):
-            # Scratch on the highest ball left
+        if (highest == lowest) and (highest in pocketed_balls) and not self.shot_info['is_legal']:
             self.respot(shot, highest.id, shot.table.w/2, shot.table.l*3/4, highest.R)
 
 
