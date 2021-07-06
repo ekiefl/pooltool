@@ -22,8 +22,8 @@ class Mode(ABC):
     def quit_task(self, task):
         if self.keymap.get(action.quit):
             self.keymap[action.quit] = False
-            self.change_mode('menu')
             self.close_scene()
+            self.change_mode('menu')
 
         return task.cont
 
