@@ -6,6 +6,7 @@ import pooltool.events as e
 from pooltool.games import Player, Game
 from pooltool.objects import DummyBall
 
+
 class NineBall(Game):
     def __init__(self, apa_rules=False):
         Game.__init__(self)
@@ -81,8 +82,7 @@ class NineBall(Game):
 
 
     def get_lowest_ball(self, shot):
-        lowest = DummyBall()
-        lowest.id = '10'
+        lowest = DummyBall(ball_id='10')
 
         for ball in shot.balls.values():
             if ball.id == 'cue':
@@ -96,8 +96,7 @@ class NineBall(Game):
 
 
     def get_highest_ball(self, shot):
-        highest = DummyBall()
-        highest.id = '0'
+        highest = DummyBall(ball_id='0')
 
         for ball in shot.balls.values():
             if ball.id == 'cue':
