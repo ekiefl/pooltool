@@ -96,6 +96,7 @@ class ShotMode(Mode):
 
             for ball in self.shot.balls.values():
                 ball.reset_angular_integration()
+                ball.set_render_state_as_object_state()
 
             self.shot.cue.update_focus()
 
@@ -122,7 +123,7 @@ class ShotMode(Mode):
             self.close_scene()
             self.end_mode()
         elif self.keymap[action.aim]:
-            self.game.advance()
+            self.game.advance(self.shot)
             self.change_mode('aim', exit_kwargs=dict(key='end'))
         elif self.keymap[action.zoom]:
             self.zoom_camera_shot()

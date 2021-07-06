@@ -246,7 +246,7 @@ class Events(object):
         self.num_events = 0
 
 
-    def filter_events_by_type(self, types):
+    def filter_type(self, types):
         """Return events in chronological order that are of an event type or types
 
         Parameters
@@ -271,7 +271,7 @@ class Events(object):
         return events
 
 
-    def filter_events_by_ball_id(self, balls):
+    def filter_ball(self, balls):
         """Return events in chronological order that involve a collection of balls
 
         Parameters
@@ -298,7 +298,7 @@ class Events(object):
         return events
 
 
-    def filter_events_by_time(self, t):
+    def filter_time(self, t):
         """Return events in chronological order after a certain time
 
         Parameters
