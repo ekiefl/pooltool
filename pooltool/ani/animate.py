@@ -7,6 +7,7 @@ import pooltool.layouts as layouts
 from pooltool.objects.cue import Cue
 from pooltool.objects.ball import Ball
 from pooltool.objects.table import Table
+from pooltool.games.nine_ball import NineBall
 
 from pooltool.ani.menu import Menus
 from pooltool.ani.modes import (
@@ -215,6 +216,8 @@ class Play(Interface, Menus):
                                threadPriority = None, frameBudget = None,
                                frameSync = None, timeslicePriority = None)
 
+        self.game = NineBall()
+
 
     def go(self):
         self.setup()
@@ -227,6 +230,9 @@ class Play(Interface, Menus):
         self.setup_balls()
         self.setup_cue()
 
+        self.game = NineBall()
+        self.game.init(num_players=2)
+
 
     def setup_table(self):
         self.table = Table()
@@ -238,7 +244,7 @@ class Play(Interface, Menus):
 
     def setup_balls(self):
         ball_kwargs = {}
-        diamond = layouts.NineBallRack(**ball_kwargs)
+        diamond = layouts.NineBallRack(ordered=True, **ball_kwargs)
         diamond.center_by_table(self.table)
         self.balls = {x: y for x, y in enumerate(diamond.balls)}
 
