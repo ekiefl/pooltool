@@ -264,7 +264,7 @@ class Play(Interface, Menus):
         ball_kwargs = {}
         diamond = layouts.NineBallRack(ordered=True, **ball_kwargs)
         diamond.center_by_table(self.table)
-        self.balls = {x: y for x, y in enumerate(diamond.balls)}
+        self.balls = diamond.get_balls_dict()
 
         self.balls['cue'] = Ball('cue', **ball_kwargs)
         self.balls['cue'].rvw[0] = [self.table.center[0] + 0.2, self.table.l/4, pooltool.R]
