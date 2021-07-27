@@ -64,7 +64,7 @@ class NineBall(Game):
             return True
 
         if shot.filter_type(e.type_ball_pocket).num_events > 0:
-            print(f"{shot.filter_type(e.type_ball_pocket).num_events} balls potted for player {self.active_player.id[:5]}")
+            self.add_msg(f"{shot.filter_type(e.type_ball_pocket).num_events} balls potted for player {self.active_player.name}", quiet=True)
             return False
 
         return True
