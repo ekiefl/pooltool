@@ -7,96 +7,28 @@ from pooltool.terminal import Timer
 import uuid
 
 from abc import ABC, abstractmethod
-from collections import deque
-from panda3d.core import *
-from direct.interval.IntervalGlobal import *
-from direct.gui.OnscreenText import OnscreenText
 
 class Log(object):
     def __init__(self):
         self.timer = Timer()
-        self.log = []
-
-        self.top_spot = -0.9
-        self.spacer = 0.06
-        self.scale1 = 0.06
-        self.scale2 = 0.04
-
-        self.colors = {
-            'bad': (1, 0.5, 0.5, 1),
-            'neutral': (1, 1, 0.5, 1),
-            'good': (0.5, 1, 0.5, 1),
-        }
-
-        self.on_screen = deque([])
-        self.on_screen_max = 5
-        for i in range(self.on_screen_max):
-            self.on_screen.append(self.init_text_object(i))
-
-
-    def init_text_object(self, i, msg="", color=None):
-        if color is None:
-            color = self.colors['neutral']
-
-        return OnscreenText(
-            text=msg,
-            pos=(-1.5, self.top_spot+self.spacer*i),
-            scale=self.scale1,
-            fg=color,
-            align=TextNode.ALeft,
-            mayChange=True
-        )
-
-
-    def broadcast_msg(self, msg, color=None):
-        self.on_screen.appendleft(self.init_text_object(-1, msg=msg, color=color))
-
-        off_screen = self.on_screen.pop()
-        off_screen.hide()
-        del off_screen
-
-        animation = Parallel()
-        for i, on_screen_text in enumerate(self.on_screen):
-            start, stop = self.top_spot+self.spacer*(i-1), self.top_spot+self.spacer*i
-            sequence = Sequence(
-                Wait(0.2),
-                LerpFunctionInterval(on_screen_text.setY, toData=stop, fromData=start, duration=0.5),
-            )
-            if i == 0:
-                sequence = Parallel(
-                    sequence,
-                    LerpFunctionInterval(on_screen_text.setAlphaScale, toData=1, fromData=0, duration=0.5),
-                )
-            elif i == 1:
-                sequence = Parallel(
-                    sequence,
-                    LerpFunctionInterval(on_screen_text.setScale, toData=self.scale2, fromData=self.scale1, duration=0.5),
-                    LerpFunctionInterval(on_screen_text.setAlphaScale, toData=1, fromData=0.7, duration=0.5),
-                )
-            elif i == self.on_screen_max - 1:
-                sequence = Parallel(
-                    sequence,
-                    LerpFunctionInterval(on_screen_text.setAlphaScale, toData=0, fromData=1, duration=0.5
-                    ),
-                )
-            animation.append(sequence)
-        animation.start()
+        self.msgs = []
 
 
     def add_msg(self, msg, sentiment='neutral', quiet=False):
-        self.log.append({
+        self.msgs.append({
             'time': self.timer.timestamp(),
+            'elapsed': self.timer.time_elapsed(fmt="{minutes}:{seconds}"),
             'msg': msg,
             'quiet': quiet,
             'sentiment': sentiment,
+            'broadcast': False
         })
 
         if not quiet:
-            timestamp = self.timer.time_elapsed(fmt="{minutes}:{seconds}")
-            self.broadcast_msg(f"({timestamp}) {msg}", color=self.colors[sentiment])
+            self.update = True
 
 
-class Game(ABC, Log):
+class Game(ABC):
     def __init__(self):
         self.players = None
         self.shot_number = None
@@ -107,7 +39,7 @@ class Game(ABC, Log):
         self.tie = False
         self.ball_in_hand = None
 
-        Log.__init__(self)
+        self.log = Log()
 
 
     def create_players(self, num_players):
@@ -136,16 +68,16 @@ class Game(ABC, Log):
             if self.last_player:
                 self.last_player.is_shooting = False
 
-            self.add_msg(f"{self.active_player.name} is up", sentiment='neutral')
+            self.log.add_msg(f"{self.active_player.name} is up", sentiment='neutral')
 
 
     def process_shot(self, shot):
         self.shot_info = {}
         self.shot_info['is_legal'], self.shot_info['reason'] = self.legality(shot)
         if self.shot_info['is_legal']:
-            self.add_msg("The shot was legal.", quiet=True)
+            self.log.add_msg("The shot was legal.", quiet=True)
         else:
-            self.add_msg(f"Illegal shot! {self.shot_info['reason']}", sentiment='bad')
+            self.log.add_msg(f"Illegal shot! {self.shot_info['reason']}", sentiment='bad')
         self.shot_info['is_turn_over'] = self.is_turn_over(shot)
 
         self.award_points(shot)
@@ -163,12 +95,12 @@ class Game(ABC, Log):
     def advance(self, shot):
         for player in self.players:
             player.points += self.shot_info['points'][player]
-            self.add_msg(f"{player.name} points: {player.points}", quiet=True)
+            self.log.add_msg(f"{player.name} points: {player.points}", quiet=True)
 
         if self.is_game_over(shot):
             self.game_over = True
             self.decide_winner(shot)
-            self.add_msg(f"Game over! The winner was {self.winner.name}", sentiment='good')
+            self.log.add_msg(f"Game over! The winner was {self.winner.name}", sentiment='good')
             return
 
         if self.shot_info['is_turn_over']:

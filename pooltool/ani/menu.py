@@ -58,15 +58,6 @@ class GenericMenu(object):
             parent = render2d,
         )
 
-        self.logo = OnscreenText(
-            text='pooltool',
-            style=1,
-            fg=(1, 1, 0, 1),
-            shadow=(0, 0, 0, 0.5),
-            pos=(0.87, -0.95),
-            scale = 0.07,
-        )
-
         self.text_scale = 0.07
         self.move = 0.12
 

@@ -9,6 +9,7 @@ from pooltool.objects.ball import Ball
 from pooltool.objects.table import Table
 from pooltool.games.nine_ball import NineBall
 
+from pooltool.ani.hud import HUD
 from pooltool.ani.menu import Menus
 from pooltool.ani.modes import (
     AimMode,
@@ -81,7 +82,7 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
     def change_mode(self, mode, exit_kwargs={}, enter_kwargs={}):
         assert mode in self.modes
 
-        # Build up operations for the new mode
+        # Teardown operations for the old mode
         self.last_mode = self.mode
         self.end_mode(**exit_kwargs)
 
@@ -95,7 +96,6 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
         # Stop watching actions related to mode
         self.ignoreAll()
 
-        # Tear down operations for the current mode
         if self.mode is not None:
             self.modes[self.mode].exit(self, **kwargs)
             self.reset_action_states()
@@ -157,6 +157,7 @@ class Interface(ShowBase, ModeManager):
         for ball in self.balls.values():
             ball.remove_nodes()
         self.table.remove_nodes()
+        self.delete_hud()
         gc.collect()
 
 
@@ -225,18 +226,18 @@ class ShotViewer(Interface):
         self.stop()
 
 
-class Play(Interface, Menus):
+class Play(Interface, Menus, HUD):
     def __init__(self, *args, **kwargs):
         Interface.__init__(self, shot=None)
         Menus.__init__(self)
+        HUD.__init__(self)
 
         self.change_mode('menu')
 
+        # This task chain allows simulations to be run in parallel to the game processes
         taskMgr.setupTaskChain('simulation', numThreads = 1, tickClock = None,
                                threadPriority = None, frameBudget = None,
                                frameSync = None, timeslicePriority = None)
-
-        self.game = NineBall()
 
 
     def go(self):
@@ -252,6 +253,7 @@ class Play(Interface, Menus):
 
         self.game = NineBall()
         self.game.init()
+        self.init_hud()
 
 
     def setup_table(self):

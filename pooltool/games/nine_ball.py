@@ -66,7 +66,7 @@ class NineBall(Game):
         pocket_events = shot.filter_type(e.type_ball_pocket)
         if pocket_events.num_events > 0:
             balls_potted = [e.agents[0].id for e in pocket_events.events]
-            self.add_msg(f"Ball(s) potted: {','.join(balls_potted)}", sentiment='good')
+            self.log.add_msg(f"Ball(s) potted: {','.join(balls_potted)}", sentiment='good')
             return False
 
         return True
