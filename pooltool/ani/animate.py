@@ -251,7 +251,7 @@ class Play(Interface, Menus):
         self.setup_cue()
 
         self.game = NineBall()
-        self.game.init(num_players=2)
+        self.game.init()
 
 
     def setup_table(self):

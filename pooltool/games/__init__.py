@@ -21,12 +21,13 @@ class Game(ABC):
 
     def create_players(self, num_players):
         self.players = []
-        for _ in range(num_players):
-            self.players.append(Player())
+        for n in range(1, num_players+1):
+            player = Player()
+            player.set_name(f"Player {n}")
+            self.players.append(player)
 
 
-    def init(self, num_players):
-        self.create_players(num_players)
+    def init(self):
         self.shot_number = 0
         self.turn_number = 0
         self.set_next_player()

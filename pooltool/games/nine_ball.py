@@ -11,6 +11,7 @@ class NineBall(Game):
     def __init__(self, apa_rules=False):
         Game.__init__(self)
         self.apa_rules = apa_rules
+        self.create_players(2)
 
 
     def award_points(self, shot):
