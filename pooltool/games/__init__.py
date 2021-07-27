@@ -22,25 +22,34 @@ class Log(object):
         self.scale1 = 0.06
         self.scale2 = 0.04
 
+        self.colors = {
+            'bad': (1, 0.5, 0.5, 1),
+            'neutral': (1, 1, 0.5, 1),
+            'good': (0.5, 1, 0.5, 1),
+        }
+
         self.on_screen = deque([])
         self.on_screen_max = 5
         for i in range(self.on_screen_max):
             self.on_screen.append(self.init_text_object(i))
 
 
-    def init_text_object(self, i, msg=""):
+    def init_text_object(self, i, msg="", color=None):
+        if color is None:
+            color = self.colors['neutral']
+
         return OnscreenText(
             text=msg,
             pos=(-1.5, self.top_spot+self.spacer*i),
             scale=self.scale1,
-            fg=(1, 0.5, 0.5, 1),
+            fg=color,
             align=TextNode.ALeft,
             mayChange=True
         )
 
 
-    def broadcast_msg(self, msg):
-        self.on_screen.appendleft(self.init_text_object(-1, msg=msg))
+    def broadcast_msg(self, msg, color=None):
+        self.on_screen.appendleft(self.init_text_object(-1, msg=msg, color=color))
 
         off_screen = self.on_screen.pop()
         off_screen.hide()
@@ -74,16 +83,17 @@ class Log(object):
         animation.start()
 
 
-    def add_msg(self, msg, quiet=False):
+    def add_msg(self, msg, sentiment='neutral', quiet=False):
         self.log.append({
             'time': self.timer.timestamp(),
             'msg': msg,
             'quiet': quiet,
+            'sentiment': sentiment,
         })
 
         if not quiet:
             timestamp = self.timer.time_elapsed(fmt="{minutes}:{seconds}")
-            self.broadcast_msg(f"({timestamp}) {msg}")
+            self.broadcast_msg(f"({timestamp}) {msg}", color=self.colors[sentiment])
 
 
 class Game(ABC, Log):
@@ -126,7 +136,7 @@ class Game(ABC, Log):
             if self.last_player:
                 self.last_player.is_shooting = False
 
-            self.add_msg(f"{self.active_player.name} is up")
+            self.add_msg(f"{self.active_player.name} is up", sentiment='neutral')
 
 
     def process_shot(self, shot):
@@ -135,7 +145,7 @@ class Game(ABC, Log):
         if self.shot_info['is_legal']:
             self.add_msg("The shot was legal.", quiet=True)
         else:
-            self.add_msg(f"The shot was illegal! {self.shot_info['reason']}")
+            self.add_msg(f"Illegal shot! {self.shot_info['reason']}", sentiment='bad')
         self.shot_info['is_turn_over'] = self.is_turn_over(shot)
 
         self.award_points(shot)
@@ -158,7 +168,7 @@ class Game(ABC, Log):
         if self.is_game_over(shot):
             self.game_over = True
             self.decide_winner(shot)
-            self.add_msg(f"Game over! The winner was {self.winner.name}")
+            self.add_msg(f"Game over! The winner was {self.winner.name}", sentiment='good')
             return
 
         if self.shot_info['is_turn_over']:
