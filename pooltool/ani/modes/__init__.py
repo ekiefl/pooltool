@@ -3,9 +3,15 @@
 import pooltool.ani.utils as autils
 import pooltool.ani.action as action
 
+import re
 import numpy as np
 
 from abc import ABC, abstractmethod
+from pathlib import Path
+from inspect import isclass
+from pkgutil import iter_modules
+from importlib import import_module
+
 
 class Mode(ABC):
     keymap = None
@@ -52,13 +58,18 @@ class Mode(ABC):
         pass
 
 
-from pooltool.ani.modes.aim import AimMode
-from pooltool.ani.modes.menu import MenuMode
-from pooltool.ani.modes.shot import ShotMode
-from pooltool.ani.modes.view import ViewMode
-from pooltool.ani.modes.stroke import StrokeMode
-from pooltool.ani.modes.cam_save import CamSaveMode
-from pooltool.ani.modes.cam_load import CamLoadMode
-from pooltool.ani.modes.pick_ball import PickBallMode
-from pooltool.ani.modes.game_over import GameOverMode
-from pooltool.ani.modes.calculate import CalculateMode
+# iterate through the modules in the current package
+package_dir = str(Path(__file__).resolve().parent)
+for (_, module_name, _) in iter_modules([package_dir]):
+    # import the module and iterate through its attributes
+    module = import_module(f"{__name__}.{module_name}")
+    for attribute_name in dir(module):
+        attribute = getattr(module, attribute_name)
+
+        if isclass(attribute):            
+            # Add the class to this package's variables
+            globals()[attribute_name] = attribute
+
+get_mode_name = lambda mode: re.sub(r'(?<!^)(?=[A-Z])', '_', mode.__name__[:-4]).lower()
+modes = {get_mode_name(cls): cls for cls in Mode.__subclasses__()}
+

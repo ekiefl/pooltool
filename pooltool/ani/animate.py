@@ -11,18 +11,7 @@ from pooltool.games.nine_ball import NineBall
 
 from pooltool.ani.hud import HUD
 from pooltool.ani.menu import Menus
-from pooltool.ani.modes import (
-    AimMode,
-    CalculateMode,
-    ShotMode,
-    MenuMode,
-    StrokeMode,
-    ViewMode,
-    CamSaveMode,
-    CamLoadMode,
-    PickBallMode,
-    GameOverMode,
-)
+from pooltool.ani.modes import *
 from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import PlayerCam
 
@@ -36,29 +25,9 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
                   PickBallMode, GameOverMode):
     def __init__(self):
         # Init every Mode class
-        MenuMode.__init__(self)
-        AimMode.__init__(self)
-        StrokeMode.__init__(self)
-        ViewMode.__init__(self)
-        ShotMode.__init__(self)
-        CamLoadMode.__init__(self)
-        CamSaveMode.__init__(self)
-        CalculateMode.__init__(self)
-        GameOverMode.__init__(self)
-        PickBallMode.__init__(self)
-
-        self.modes = {
-            'menu': MenuMode,
-            'aim': AimMode,
-            'stroke': StrokeMode,
-            'view': ViewMode,
-            'shot': ShotMode,
-            'calculate': CalculateMode,
-            'cam_save': CamSaveMode,
-            'cam_load': CamLoadMode,
-            'pick_ball': PickBallMode,
-            'game_over': GameOverMode,
-        }
+        self.modes = modes
+        for mode in modes.values():
+            mode.__init__(self)
 
         # Store the above as default states
         self.action_state_defaults = {}
