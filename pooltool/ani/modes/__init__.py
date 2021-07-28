@@ -60,4 +60,5 @@ from pooltool.ani.modes.stroke import StrokeMode
 from pooltool.ani.modes.cam_save import CamSaveMode
 from pooltool.ani.modes.cam_load import CamLoadMode
 from pooltool.ani.modes.pick_ball import PickBallMode
+from pooltool.ani.modes.game_over import GameOverMode
 from pooltool.ani.modes.calculate import CalculateMode

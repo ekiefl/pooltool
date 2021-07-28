@@ -21,6 +21,7 @@ from pooltool.ani.modes import (
     CamSaveMode,
     CamLoadMode,
     PickBallMode,
+    GameOverMode,
 )
 from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import PlayerCam
@@ -32,7 +33,7 @@ from direct.showbase.ShowBase import ShowBase
 
 
 class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode, CamSaveMode, CalculateMode,
-                  PickBallMode):
+                  PickBallMode, GameOverMode):
     def __init__(self):
         # Init every Mode class
         MenuMode.__init__(self)
@@ -43,6 +44,7 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
         CamLoadMode.__init__(self)
         CamSaveMode.__init__(self)
         CalculateMode.__init__(self)
+        GameOverMode.__init__(self)
         PickBallMode.__init__(self)
 
         self.modes = {
@@ -55,6 +57,7 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
             'cam_save': CamSaveMode,
             'cam_load': CamLoadMode,
             'pick_ball': PickBallMode,
+            'game_over': GameOverMode,
         }
 
         # Store the above as default states

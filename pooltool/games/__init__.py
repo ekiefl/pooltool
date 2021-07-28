@@ -100,7 +100,7 @@ class Game(ABC):
         if self.is_game_over(shot):
             self.game_over = True
             self.decide_winner(shot)
-            self.log.add_msg(f"Game over! The winner was {self.winner.name}", sentiment='good')
+            self.log.add_msg(f"Game over! {self.winner.name} wins!", sentiment='good')
             return
 
         if self.shot_info['is_turn_over']:
