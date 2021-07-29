@@ -195,7 +195,7 @@ class CueRender(Render):
 
 
     def get_render_state(self):
-        """Return phi, theta, a, and b as determined by the cue_stick node"""
+        """Return phi, theta, V0, a, and b as determined by the cue_stick node"""
 
         cue_stick = self.get_node('cue_stick')
         cue_stick_focus = self.get_node('cue_stick_focus')

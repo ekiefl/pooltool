@@ -147,4 +147,7 @@ class AimMode(Mode):
         cue.setY(new_y)
         cue.setZ(new_z)
 
+        # update hud
+        self.hud_elements['english'].crosshairs.setPos(new_y/R, 0, new_z/R)
+
 
