@@ -10,7 +10,6 @@ from direct.gui.DirectGui import *
 
 class Menus(object):
     def __init__(self):
-
         self.menus = {}
         self.populate_main()
         self.populate_options()
@@ -20,6 +19,7 @@ class Menus(object):
 
     def populate_main(self):
         m = GenericMenu(title = 'Main Screen')
+        m.add_image(ani.logo_paths['small'], pos=(0.7,0,-0.70), scale=0.25)
         m.add_button('New Game', self.go, scale=ani.menu_text_scale)
         m.add_button('Options', lambda: self.show_menu('options'), scale=ani.menu_text_scale)
         m.add_button('Quit', sys.exit, scale=ani.menu_text_scale)
@@ -51,7 +51,7 @@ class Menus(object):
 
 
 class GenericMenu(object):
-    def __init__(self, title='', frame_color=(0,0,0,1), title_pos=(0,0,0.8)):
+    def __init__(self, title='', frame_color=(1,1,1,1), title_pos=(0,0,0.8)):
         self.titleMenuBackdrop = DirectFrame(
             frameColor = frame_color,
             frameSize = (-1,1,-1,1),
@@ -105,6 +105,25 @@ class GenericMenu(object):
         self.get_next_pos()
 
         return button
+
+
+    def add_image(self, path, pos, scale):
+        """Add an image to the menu
+
+        Notes
+        =====
+        - images are parented to self.titleMenuBackdrop (as opposed self.titleMenu) in order to
+          preserve their aspect ratios.
+        """
+
+        img = OnscreenImage(image=path, pos=pos, parent=self.titleMenuBackdrop, scale=scale)
+        img.setTransparency(TransparencyAttrib.MAlpha)
+
+        self.elements.append({
+            'type': 'image',
+            'name': path,
+            'content': img,
+        })
 
 
     def add_dropdown(self, text, options=['None'], command=None):
@@ -196,7 +215,6 @@ def make_dropdown(text, options=['None'], command=None):
 
 
 def make_direct_entry(text, command=None, initial="None"):
-
     entry = DirectEntry(
         text = "",
         scale = ani.menu_text_scale,
