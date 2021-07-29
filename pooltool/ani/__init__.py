@@ -28,5 +28,7 @@ rewind_dt = 0.02
 fast_forward_dt = 0.02
 
 logo_paths = {
-    'default': Path(pooltool.__file__).parent.parent / 'logo' / 'logo.png'
+    'default': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo.png'),
+    'small': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_small.png'),
+    'smaller': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_smaller.png'),
 }

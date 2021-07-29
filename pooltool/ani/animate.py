@@ -129,7 +129,6 @@ class Interface(ShowBase, ModeManager):
         for ball in self.balls.values():
             ball.remove_nodes()
         self.table.remove_nodes()
-        self.delete_hud()
         gc.collect()
 
 
@@ -216,6 +215,11 @@ class Play(Interface, Menus, HUD):
         self.setup()
         self.init_game_nodes()
         self.change_mode('aim')
+
+
+    def close_scene(self):
+        Interface.close_scene(self)
+        self.destroy_hud()
 
 
     def setup(self):

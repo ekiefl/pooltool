@@ -57,6 +57,7 @@ class Mode(ABC):
     def exit(self):
         pass
 
+
 # https://julienharbulot.com/python-dynamical-import.html
 package_dir = str(Path(__file__).resolve().parent)
 for (_, module_name, _) in iter_modules([package_dir]):

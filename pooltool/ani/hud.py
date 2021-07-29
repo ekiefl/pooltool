@@ -1,26 +1,51 @@
 #! /usr/bin/env python
 
+import pooltool
+
+from pooltool.ani import logo_paths
+
+from abc import ABC, abstractmethod
+from pathlib import Path
 from collections import deque
 from panda3d.core import *
 from direct.interval.IntervalGlobal import *
 from direct.gui.OnscreenText import OnscreenText
+from direct.gui.OnscreenImage import OnscreenImage
 
 class HUD(object):
     def __init__(self):
-        self.logo = Logo()
-        self.log_win = LogWindow()
+        pass
 
 
     def init_hud(self):
-        self.log_win.init()
+        self.hud_elements = {
+            'logo': Logo(),
+            'log_win': LogWindow(),
+            'english': English(),
+        }
+
+        for element in self.hud_elements.values():
+            element.init()
+
         self.add_task(self.update_hud, 'update_hud')
 
 
-    def delete_hud(self):
+    def destroy_hud(self):
         self.remove_task('update_hud')
 
         # remove log messages
-        self.log_win.clear()
+        for element in self.hud_elements.values():
+            element.destroy()
+
+
+    def hide_hud_element(self, element):
+        assert element in self.hud_elements
+        self.hud_elements['element'].hide()
+
+
+    def show_hud_element(self, element):
+        assert element in self.hud_elements
+        self.hud_elements['element'].show()
 
 
     def update_log_window(self):
@@ -31,7 +56,7 @@ class HUD(object):
             if not msg['quiet']:
                 if not msg['broadcast']:
                     timestamp, msg_txt, sentiment = msg['elapsed'], msg['msg'], msg['sentiment']
-                    self.log_win.broadcast_msg(f"({timestamp}) {msg_txt}", color=self.log_win.colors[sentiment])
+                    self.hud_elements['log_win'].broadcast_msg(f"({timestamp}) {msg_txt}", color=self.hud_elements['log_win'].colors[sentiment])
                     msg['broadcast'] = True
                 else:
                     break
@@ -45,24 +70,95 @@ class HUD(object):
         return task.cont
 
 
-class Logo(object):
+class HUDElement(ABC):
+    @abstractmethod
+    def init(self):
+        pass
+
+
+    @abstractmethod
+    def show(self):
+        pass
+
+
+    @abstractmethod
+    def hide(self):
+        pass
+
+
+    @abstractmethod
+    def destroy(self):
+        pass
+
+
+class Logo(HUDElement):
     def __init__(self):
-        self.logo = OnscreenText(
-            text='pooltool',
-            style=1,
-            fg=(1, 1, 0, 1),
-            shadow=(0, 0, 0, 0.5),
-            pos=(0.87, -0.95),
-            scale = 0.07,
+        self.img = OnscreenImage(image=logo_paths['smaller'], pos=(0.85, 0, 0.85), parent=render2d, scale=0.10)
+        self.img.setTransparency(TransparencyAttrib.MAlpha)
+
+
+    def init(self):
+        self.show()
+
+
+    def show(self):
+        self.img.show()
+
+
+    def hide(self):
+        self.img.hide()
+
+
+    def destroy(self):
+        self.hide()
+        del self.img
+
+
+class English(HUDElement):
+    def __init__(self):
+        self.dir = Path(pooltool.__file__).parent.parent / 'models' / 'hud' / 'english'
+
+        self.circle = OnscreenImage(
+            image=str(self.dir / 'circle.png'),
+            pos=(1.4, 0, -0.8),
+            parent=aspect2d,
+            scale=0.15
         )
+        self.circle.setTransparency(TransparencyAttrib.MAlpha)
+
+        self.crosshairs = OnscreenImage(
+            image=str(self.dir / 'crosshairs.png'),
+            pos=(0, 0, 0),
+            parent=self.circle,
+            scale=0.14
+        )
+        self.crosshairs.setTransparency(TransparencyAttrib.MAlpha)
 
 
-class LogWindow(object):
+    def init(self):
+        self.show()
+
+
+    def show(self):
+        self.circle.show()
+
+
+    def hide(self):
+        self.circle.hide()
+
+
+    def destroy(self):
+        self.hide()
+        del self.circle
+
+
+class LogWindow(HUDElement):
     def __init__(self):
-        self.top_spot = -0.9
+        self.top_spot = -0.95
         self.spacer = 0.05
         self.scale1 = 0.05
         self.scale2 = 0.04
+        self.on_screen = deque([])
 
         self.colors = {
             'bad': (1, 0.5, 0.5, 1),
@@ -72,6 +168,7 @@ class LogWindow(object):
 
 
     def init(self):
+        self.destroy()
         self.on_screen = deque([])
         self.on_screen_max = 5
         for i in range(self.on_screen_max):
@@ -84,7 +181,7 @@ class LogWindow(object):
 
         return OnscreenText(
             text=msg,
-            pos=(-1.5, self.top_spot+self.spacer*i),
+            pos=(-1.55, self.top_spot+self.spacer*i),
             scale=self.scale1,
             fg=color,
             align=TextNode.ALeft,
@@ -92,7 +189,7 @@ class LogWindow(object):
         )
 
 
-    def delete(self):
+    def destroy(self):
         """Delete the on screen text nodes"""
         while True:
             try:
@@ -103,10 +200,14 @@ class LogWindow(object):
                 break
 
 
-    def clear(self):
-        """Delete then reinitialize the on screen text nodes"""
-        self.delete()
-        self.init()
+    def show(self):
+        for on_screen_text in self.on_screen:
+            on_screen_text.show()
+
+
+    def hide(self):
+        for on_screen_text in self.on_screen:
+            on_screen_text.hide()
 
 
     def broadcast_msg(self, msg, color=None):
