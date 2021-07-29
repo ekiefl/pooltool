@@ -125,6 +125,9 @@ class AimMode(Mode):
         new_elevation = max(0, min(ani.max_elevate, old_elevation + delta_elevation))
         cue.setR(-new_elevation)
 
+        # update hud
+        self.hud_elements['jack'].set(new_elevation)
+
 
     def apply_english(self):
         with self.mouse:
@@ -148,6 +151,8 @@ class AimMode(Mode):
         cue.setZ(new_z)
 
         # update hud
-        self.hud_elements['english'].crosshairs.setPos(new_y/R, 0, new_z/R)
+        a, b = -new_y/R, new_z/R
+        self.hud_elements['english'].set(a, b)
+        
 
 

@@ -1,8 +1,11 @@
 #! /usr/bin/env python
 
 import pooltool
+import pooltool.ani.utils as autils
 
 from pooltool.ani import logo_paths
+
+import numpy as np
 
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -11,6 +14,7 @@ from panda3d.core import *
 from direct.interval.IntervalGlobal import *
 from direct.gui.OnscreenText import OnscreenText
 from direct.gui.OnscreenImage import OnscreenImage
+
 
 class HUD(object):
     def __init__(self):
@@ -22,6 +26,7 @@ class HUD(object):
             'logo': Logo(),
             'log_win': LogWindow(),
             'english': English(),
+            'jack': Jack(),
         }
 
         for element in self.hud_elements.values():
@@ -48,6 +53,12 @@ class HUD(object):
         self.hud_elements['element'].show()
 
 
+    def update_hud(self, task):
+        self.update_log_window()
+
+        return task.cont
+
+
     def update_log_window(self):
         if not self.game.log.update:
             return
@@ -64,13 +75,14 @@ class HUD(object):
         self.game.log.update = False
 
 
-    def update_hud(self, task):
-        self.update_log_window()
-
-        return task.cont
-
-
 class HUDElement(ABC):
+    def __init__(self):
+        self.dummy_right = NodePath('right_panel_hud')
+        self.dummy_right.reparentTo(aspect2d)
+        self.dummy_right.setPos(1.25, 0, 0)
+
+
+
     @abstractmethod
     def init(self):
         pass
@@ -93,6 +105,8 @@ class HUDElement(ABC):
 
 class Logo(HUDElement):
     def __init__(self):
+        HUDElement.__init__(self)
+
         self.img = OnscreenImage(image=logo_paths['smaller'], pos=(0.85, 0, 0.85), parent=render2d, scale=0.10)
         self.img.setTransparency(TransparencyAttrib.MAlpha)
 
@@ -116,15 +130,19 @@ class Logo(HUDElement):
 
 class English(HUDElement):
     def __init__(self):
+        HUDElement.__init__(self)
         self.dir = Path(pooltool.__file__).parent.parent / 'models' / 'hud' / 'english'
+        self.text_scale = 0.2
+        self.text_color = (1,1,1,1)
 
         self.circle = OnscreenImage(
             image=str(self.dir / 'circle.png'),
-            pos=(1.4, 0, -0.8),
-            parent=aspect2d,
+            parent=self.dummy_right,
             scale=0.15
         )
         self.circle.setTransparency(TransparencyAttrib.MAlpha)
+        autils.alignTo(self.circle, self.dummy_right, autils.CL, autils.C)
+        self.circle.setZ(-0.75)
 
         self.crosshairs = OnscreenImage(
             image=str(self.dir / 'crosshairs.png'),
@@ -133,6 +151,21 @@ class English(HUDElement):
             scale=0.14
         )
         self.crosshairs.setTransparency(TransparencyAttrib.MAlpha)
+
+        self.text = OnscreenText(
+            text = "(0.00, 0.00)",
+            pos = (0, -1.15),
+            scale = self.text_scale,
+            fg = self.text_color,
+            align = TextNode.ACenter,
+            mayChange = True,
+            parent = self.circle,
+        )
+
+
+    def set(self, a, b):
+        self.crosshairs.setPos(-a, 0, b)
+        self.text.setText(f"({a:.2f},{b:.2f})")
 
 
     def init(self):
@@ -149,7 +182,81 @@ class English(HUDElement):
 
     def destroy(self):
         self.hide()
+        del self.text
+        del self.crosshairs
         del self.circle
+
+
+class Jack(HUDElement):
+    def __init__(self):
+        HUDElement.__init__(self)
+        self.dir = Path(pooltool.__file__).parent.parent / 'models' / 'hud' / 'jack'
+        self.text_scale = 0.4
+        self.text_color = (1,1,1,1)
+
+        self.arc = OnscreenImage(
+            image=str(self.dir / 'arc.png'),
+            pos=(1.4, 0, -0.45),
+            parent=aspect2d,
+            scale=0.075
+        )
+        self.arc.setTransparency(TransparencyAttrib.MAlpha)
+
+        self.cue_cartoon = OnscreenImage(
+            image=str(self.dir / 'cue.png'),
+            parent=aspect2d,
+            pos=(0,0,0),
+            scale=(0.15,1,0.01),
+        )
+        self.cue_cartoon.setTransparency(TransparencyAttrib.MAlpha)
+        autils.alignTo(self.cue_cartoon, self.dummy_right, autils.CL, autils.C)
+        self.cue_cartoon.setZ(-0.50)
+
+        autils.alignTo(self.arc, self.cue_cartoon, autils.LR, autils.CR)
+
+        self.rotational_point = OnscreenImage(
+            image=str(Path(pooltool.__file__).parent.parent / 'models' / 'hud' / 'english' / 'circle.png'),
+            parent=self.arc,
+            scale=0.15
+        )
+        self.rotational_point.setTransparency(TransparencyAttrib.MAlpha)
+        autils.alignTo(self.rotational_point, self.arc, autils.C, autils.LR)
+
+        self.cue_cartoon.wrtReparentTo(self.rotational_point)
+
+        self.text = OnscreenText(
+            text = "0 deg",
+            pos = (-1, -1.4),
+            scale = self.text_scale,
+            fg = self.text_color,
+            align = TextNode.ACenter,
+            mayChange = True,
+            parent = self.arc,
+        )
+
+
+    def set(self, theta):
+        self.text.setText(f"{theta:.0f} deg")
+        self.rotational_point.setR(theta)
+
+
+    def init(self):
+        self.show()
+
+
+    def show(self):
+        self.arc.show()
+        self.cue_cartoon.show()
+
+
+    def hide(self):
+        self.arc.hide()
+        self.cue_cartoon.hide()
+
+
+    def destroy(self):
+        self.hide()
+        del self.arc
 
 
 class LogWindow(HUDElement):
