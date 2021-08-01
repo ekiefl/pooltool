@@ -77,7 +77,6 @@ class TableRender(Render):
         self.nodes[f"pocket_{pocket_id}"] = node
 
 
-
     def init_pockets(self):
         for pocket_id in self.pockets:
             self.init_pocket(pocket_id)

@@ -31,4 +31,6 @@ logo_paths = {
     'default': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo.png'),
     'small': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_small.png'),
     'smaller': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_smaller.png'),
+    'pt': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_pt.png'),
+    'pt_smaller': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_pt_smaller.png'),
 }

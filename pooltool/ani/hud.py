@@ -107,7 +107,12 @@ class Logo(HUDElement):
     def __init__(self):
         HUDElement.__init__(self)
 
-        self.img = OnscreenImage(image=logo_paths['smaller'], pos=(0.85, 0, 0.85), parent=render2d, scale=0.10)
+        self.img = OnscreenImage(
+            image = logo_paths['pt_smaller'],
+            pos = (0.94, 0, 0.89),
+            parent = render2d,
+            scale=(0.08*0.49,1,0.08)
+        )
         self.img.setTransparency(TransparencyAttrib.MAlpha)
 
 
