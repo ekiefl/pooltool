@@ -16,7 +16,10 @@ class PickBallMode(Mode):
     }
 
     def __init__(self):
-        self.highlight_factor = 2
+        self.ball_highlight_factor = 2
+        self.ball_highlight_offset = 0.1
+        self.ball_highlight_amplitude = 0.03
+        self.ball_highlight_frequency = 4
 
 
     def enter(self):
@@ -34,6 +37,7 @@ class PickBallMode(Mode):
 
 
     def exit(self):
+        self.remove_ball_highlight()
         self.cueing_ball = self.closest_ball
         self.cue.init_focus(self.closest_ball)
         self.remove_task('pick_ball_task')
@@ -41,30 +45,42 @@ class PickBallMode(Mode):
 
     def pick_ball_task(self, task):
         if not self.keymap[action.pick_ball]:
-            self.remove_highlight()
             self.change_mode('aim')
+            return task.done
 
         self.move_camera_pick_ball()
 
         closest = self.find_closest()
         if closest != self.closest_ball:
-            self.remove_highlight()
+            self.remove_ball_highlight()
             self.closest_ball = closest
-            self.add_highlight()
+            self.ball_highlight = self.closest_ball.get_node('ball')
+            self.add_ball_highlight()
 
         return task.cont
 
 
-    def remove_highlight(self):
+    def remove_ball_highlight(self):
         if self.closest_ball is not None:
             node = self.closest_ball.get_node('ball')
-            node.setScale(node.getScale()/self.highlight_factor)
+            node.setScale(node.getScale()/self.ball_highlight_factor)
+            self.closest_ball.set_render_state_as_object_state()
+            self.remove_task('ball_highlight_animation')
 
 
-    def add_highlight(self):
+    def add_ball_highlight(self):
         if self.closest_ball is not None:
+            self.add_task(self.ball_highlight_animation, 'ball_highlight_animation')
             node = self.closest_ball.get_node('ball')
-            node.setScale(node.getScale()*self.highlight_factor)
+            node.setScale(node.getScale()*self.ball_highlight_factor)
+
+
+    def ball_highlight_animation(self, task):
+        phase = task.time * self.ball_highlight_frequency
+        new_height = self.ball_highlight_offset + self.ball_highlight_amplitude * np.sin(phase)
+        self.ball_highlight.setZ(new_height)
+
+        return task.cont
 
 
     def find_closest(self):
@@ -74,7 +90,7 @@ class PickBallMode(Mode):
         for ball in self.balls.values():
             if ball.s == pooltool.pocketed:
                 continue
-            d = (ball.get_node('ball').getPos() - cam_pos).length()
+            d = np.linalg.norm(ball.rvw[0] - cam_pos)
             if d < d_min:
                 d_min, closest = d, ball
 
