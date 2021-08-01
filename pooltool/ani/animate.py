@@ -8,6 +8,7 @@ from pooltool.objects.cue import Cue
 from pooltool.objects.ball import Ball
 from pooltool.objects.table import Table
 from pooltool.games.nine_ball import NineBall
+from pooltool.games.eight_ball import EightBall
 
 from pooltool.ani.hud import HUD
 from pooltool.ani.menu import Menus
@@ -22,7 +23,7 @@ from direct.showbase.ShowBase import ShowBase
 
 
 class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode, CamSaveMode, CalculateMode,
-                  PickBallMode, GameOverMode):
+                  PickBallMode, GameOverMode, CallShotMode):
     def __init__(self):
         # Init every Mode class
         self.modes = modes
@@ -206,9 +207,15 @@ class Play(Interface, Menus, HUD):
         self.change_mode('menu')
 
         # This task chain allows simulations to be run in parallel to the game processes
-        taskMgr.setupTaskChain('simulation', numThreads = 1, tickClock = None,
-                               threadPriority = None, frameBudget = None,
-                               frameSync = None, timeslicePriority = None)
+        taskMgr.setupTaskChain(
+            'simulation',
+            numThreads = 1,
+            tickClock = None,
+            threadPriority = None,
+            frameBudget = None,
+            frameSync = None,
+            timeslicePriority = None
+        )
 
 
     def go(self):
@@ -227,7 +234,8 @@ class Play(Interface, Menus, HUD):
         self.setup_balls()
         self.setup_cue()
 
-        self.game = NineBall()
+        #self.game = NineBall()
+        self.game = EightBall()
         self.game.init()
         self.init_hud()
 

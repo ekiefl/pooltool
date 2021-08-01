@@ -45,8 +45,8 @@ class Game(ABC):
         self.game_over = None
         self.winner = None
         self.tie = False
-        self.call_ball = None
-        self.call_pocket = None
+        self.ball_call = None
+        self.pocket_call = None
         self.ball_in_hand = None
 
         self.log = Log()
