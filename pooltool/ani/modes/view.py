@@ -11,6 +11,7 @@ import numpy as np
 class ViewMode(Mode):
     keymap = {
         action.aim: False,
+        action.call_shot: False,
         action.fine_control: False,
         action.move: False,
         action.stroke: False,
@@ -40,6 +41,7 @@ class ViewMode(Mode):
         self.task_action('1', action.cam_save, True)
         self.task_action('2', action.cam_load, True)
         self.task_action('q', action.pick_ball, True)
+        self.task_action('c', action.call_shot, True)
 
         self.add_task(self.view_task, 'view_task')
 
@@ -55,6 +57,8 @@ class ViewMode(Mode):
             self.change_mode('stroke')
         elif self.keymap[action.pick_ball]:
             self.change_mode('pick_ball')
+        elif self.keymap[action.call_shot]:
+            self.change_mode('call_shot')
         elif self.keymap[action.zoom]:
             self.zoom_camera_view()
         elif self.keymap[action.move]:
