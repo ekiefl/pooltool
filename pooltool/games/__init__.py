@@ -29,7 +29,15 @@ class Log(object):
 
 
 class Game(ABC):
+    is_call_pocket = None
+    is_call_ball = None
+
     def __init__(self):
+        if self.is_call_pocket is None:
+            raise Exception(f"{self.__class__.__name__} needs is_call_pocket defined")
+        if self.is_call_ball is None:
+            raise Exception(f"{self.__class__.__name__} needs is_call_ball defined")
+
         self.players = None
         self.shot_number = None
         self.turn_number = None
@@ -37,6 +45,8 @@ class Game(ABC):
         self.game_over = None
         self.winner = None
         self.tie = False
+        self.call_ball = None
+        self.call_pocket = None
         self.ball_in_hand = None
 
         self.log = Log()
