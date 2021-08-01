@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""A mode to for picking which ball to cue"""
 
 import pooltool
 import pooltool.ani as ani
@@ -37,7 +38,7 @@ class PickBallMode(Mode):
 
 
     def exit(self):
-        self.remove_ball_highlight()
+        PickBallMode.remove_ball_highlight(self)
         self.cueing_ball = self.closest_ball
         self.cue.init_focus(self.closest_ball)
         self.remove_task('pick_ball_task')
@@ -50,12 +51,12 @@ class PickBallMode(Mode):
 
         self.move_camera_pick_ball()
 
-        closest = self.find_closest()
+        closest = PickBallMode.find_closest_ball(self)
         if closest != self.closest_ball:
-            self.remove_ball_highlight()
+            PickBallMode.remove_ball_highlight(self)
             self.closest_ball = closest
             self.ball_highlight = self.closest_ball.get_node('ball')
-            self.add_ball_highlight()
+            PickBallMode.add_ball_highlight(self)
 
         return task.cont
 
@@ -83,7 +84,7 @@ class PickBallMode(Mode):
         return task.cont
 
 
-    def find_closest(self):
+    def find_closest_ball(self):
         cam_pos = self.player_cam.focus.getPos()
         d_min = np.inf
         closest = None
