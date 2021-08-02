@@ -180,6 +180,8 @@ class Player(object):
         self.name = None
         self.is_shooting = False
         self.points = 0
+        self.target_balls = []
+        self.can_cue = ['cue']
 
 
     def set_name(self, name):
