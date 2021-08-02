@@ -27,6 +27,7 @@ class HUD(object):
             'log_win': LogWindow(),
             'english': English(),
             'jack': Jack(),
+            'player_stats': PlayerStats(),
         }
 
         for element in self.hud_elements.values():
@@ -55,8 +56,17 @@ class HUD(object):
 
     def update_hud(self, task):
         self.update_log_window()
+        self.update_player_stats()
 
         return task.cont
+
+
+    def update_player_stats(self):
+        if not self.game.update_player_stats:
+            return
+
+        self.hud_elements['player_stats'].update(self.game)
+        self.game.update_player_stats = False
 
 
     def update_log_window(self):
@@ -82,7 +92,6 @@ class HUDElement(ABC):
         self.dummy_right.setPos(1.25, 0, 0)
 
 
-
     @abstractmethod
     def init(self):
         pass
@@ -101,6 +110,70 @@ class HUDElement(ABC):
     @abstractmethod
     def destroy(self):
         pass
+
+
+class PlayerStats(HUDElement):
+    def __init__(self):
+        self.top_spot = +0.93
+        self.spacer = 0.05
+        self.scale1 = 0.06
+        self.scale2 = 0.04
+        self.on_screen = []
+
+        self.colors = {
+            'inactive': (1, 1, 1, 1),
+            'active': (0.5, 1, 0.5, 1),
+        }
+
+
+    def init(self):
+        self.destroy()
+        self.on_screen = []
+
+
+    def init_text_object(self, i, msg="", color=None):
+        if color is None:
+            color = self.colors['inactive']
+
+        return OnscreenText(
+            text=msg,
+            pos=(-1.55, self.top_spot-self.spacer*i),
+            scale=self.scale1 if i == 0 else self.scale2,
+            fg=color,
+            align=TextNode.ALeft,
+            mayChange=True
+        )
+
+
+    def destroy(self):
+        """Delete the on screen text nodes"""
+        while True:
+            try:
+                on_screen_text = self.on_screen.pop()
+                on_screen_text.hide()
+                del on_screen_text
+            except IndexError:
+                break
+
+
+    def show(self):
+        for on_screen_text in self.on_screen:
+            on_screen_text.show()
+
+
+    def hide(self):
+        for on_screen_text in self.on_screen:
+            on_screen_text.hide()
+
+
+    def update(self, game):
+        self.init()
+
+        for i, player in enumerate(game.player_order()):
+            msg = f"{player.name}: {player.points}"
+            color = self.colors['active'] if i == 0 else self.colors['inactive']
+            self.on_screen.append(self.init_text_object(i, msg, color=color))
+
 
 
 class Logo(HUDElement):

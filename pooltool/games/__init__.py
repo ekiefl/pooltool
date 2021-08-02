@@ -49,8 +49,10 @@ class Game(ABC):
         self.ball_call = None
         self.pocket_call = None
         self.ball_in_hand = None
+        self.update_player_stats = True
 
         self.log = Log()
+
 
 
     def create_players(self, num_players):
@@ -70,6 +72,11 @@ class Game(ABC):
         self.tie = False
         self.ball_in_hand = None
         self.setup_initial_layout(table)
+
+
+    def player_order(self):
+        for i in range(len(self.players)):
+            yield self.players[(self.turn_number + i) % len(self.players)]
 
 
     def set_next_player(self):
@@ -120,6 +127,7 @@ class Game(ABC):
         self.shot_number += 1
 
         self.set_next_player()
+        self.update_player_stats = True
 
 
     @abstractmethod
