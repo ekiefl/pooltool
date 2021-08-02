@@ -26,6 +26,8 @@ class EightBall(Game):
 
         for player in self.players:
             player.stripes_or_solids = None
+            player.target_balls = []
+            player.can_cue = ['cue']
 
 
     def setup_initial_layout(self, table):
@@ -83,10 +85,13 @@ class EightBall(Game):
 
 
     def is_game_over(self, shot):
-        return False
+        pocket_events = shot.filter_type(e.type_ball_pocket)
+        for event in pocket_events.events:
+            if '8' in (event.agents[0].id, event.agents[1].id):
+                return True
 
 
-    def is_stripes_or_solids_hit_first(self, shot):
+    def is_object_ball_hit_first(self, shot):
         cue = shot.balls['cue']
         collisions = cue.filter_type(e.type_ball_ball)
         if collisions.num_events == 0:
@@ -131,7 +136,7 @@ class EightBall(Game):
 
 
     def is_cushion_after_first_contact(self, shot):
-        if not self.is_stripes_or_solids_hit_first(shot):
+        if not self.is_object_ball_hit_first(shot):
             return False
 
         first_contact = shot.balls['cue'].filter_type(e.type_ball_ball).get(0)
@@ -158,13 +163,25 @@ class EightBall(Game):
             return False
 
 
+    def is_8_ball_sunk_before_others(self, shot):
+        if '8' in self.active_player.target_balls:
+            return False
+
+        pocket_events = shot.filter_type(e.type_ball_pocket)
+        for event in pocket_events.events:
+            if '8' in (event.agents[0].id, event.agents[1].id):
+                return True
+
+
     def legality(self, shot):
         """Returns whether or not a shot is legal, and the reason"""
         reason = None
 
-        if not self.is_cue_ball_strike(shot):
+        if self.is_8_ball_sunk_before_others(shot):
+            reason = '8-ball sunk before others!'
+        elif not self.is_cue_ball_strike(shot):
             reason = 'Wrong ball was cued'
-        elif not self.is_stripes_or_solids_hit_first(shot):
+        elif not self.is_object_ball_hit_first(shot):
             reason = 'Object ball not hit first'
         elif not self.is_shot_called(shot):
             reason = 'No shot called!'
@@ -189,8 +206,19 @@ class EightBall(Game):
 
 
     def advance(self, shot):
+        self.update_target_balls(shot)
         self.decide_stripes_or_solids(shot)
         super().advance(shot)
+
+
+    def update_target_balls(self, shot):
+        for player in self.players:
+            if self.shot_number == 0:
+                player.target_balls = self.solids + self.stripes
+
+            states = [ball.s for ball in shot.balls.values() if ball.id in player.target_balls]
+            if all([state == pooltool.pocketed for state in states]):
+                player.target_balls.append('8')
 
 
     def decide_stripes_or_solids(self, shot):

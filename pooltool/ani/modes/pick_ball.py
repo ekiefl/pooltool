@@ -89,6 +89,8 @@ class PickBallMode(Mode):
         d_min = np.inf
         closest = None
         for ball in self.balls.values():
+            if ball.id not in self.game.active_player.can_cue:
+                continue
             if ball.s == pooltool.pocketed:
                 continue
             d = np.linalg.norm(ball.rvw[0] - cam_pos)
