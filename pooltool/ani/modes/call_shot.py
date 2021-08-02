@@ -24,6 +24,8 @@ class CallShotMode(Mode):
         self.ball_highlight_amplitude = 0.03
         self.ball_highlight_frequency = 4
 
+        self.head_raise = 14
+
         self.ball_highlight = None
         self.picking = None
 
@@ -34,6 +36,8 @@ class CallShotMode(Mode):
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()
+
+        self.player_cam.focus.setR(self.player_cam.focus.getR() - self.head_raise)
 
         self.closest_pocket = None
         self.closest_ball = None
@@ -54,6 +58,7 @@ class CallShotMode(Mode):
         if self.picking in ('ball', 'pocket'):
             CallShotMode.remove_ball_highlight(self)
         self.ball_highlight_sequence.pause()
+        self.player_cam.focus.setR(self.player_cam.focus.getR() + self.head_raise)
 
 
     def call_shot_task(self, task):
@@ -74,7 +79,8 @@ class CallShotMode(Mode):
             if self.keymap['next']:
                 self.keymap['next'] = False
                 self.game.ball_call = self.closest_ball
-                self.game.log.add_msg(f"Calling the {self.closest_ball.id} ball", sentiment='neutral')
+                if self.closest_ball is not None:
+                    self.game.log.add_msg(f"Calling the {self.closest_ball.id} ball", sentiment='neutral')
                 self.picking = 'pocket'
 
         elif self.picking == 'pocket':
@@ -86,7 +92,8 @@ class CallShotMode(Mode):
             if self.keymap['next']:
                 self.keymap['next'] = False
                 self.game.pocket_call = self.closest_pocket
-                self.game.log.add_msg(f"Calling the {self.closest_pocket.id} pocket", sentiment='neutral')
+                if self.closest_pocket is not None:
+                    self.game.log.add_msg(f"Calling the {self.closest_pocket.id} pocket", sentiment='neutral')
                 self.change_mode(self.last_mode)
                 return task.done
 
