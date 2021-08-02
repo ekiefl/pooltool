@@ -8,6 +8,7 @@ import uuid
 
 from abc import ABC, abstractmethod
 
+
 class Log(object):
     def __init__(self):
         self.timer = Timer()
@@ -60,7 +61,7 @@ class Game(ABC):
             self.players.append(player)
 
 
-    def init(self):
+    def init(self, table):
         self.shot_number = 0
         self.turn_number = 0
         self.set_next_player()
@@ -68,6 +69,7 @@ class Game(ABC):
         self.winner = None
         self.tie = False
         self.ball_in_hand = None
+        self.setup_initial_layout(table)
 
 
     def set_next_player(self):
@@ -151,6 +153,16 @@ class Game(ABC):
 
     @abstractmethod
     def decide_winner(self, shot):
+        pass
+
+
+    @abstractmethod
+    def setup_initial_layout(self):
+        pass
+
+
+    @abstractmethod
+    def set_initial_cueing_ball(self, balls):
         pass
 
 

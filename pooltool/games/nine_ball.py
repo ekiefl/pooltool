@@ -5,6 +5,7 @@ import pooltool.events as e
 
 from pooltool.games import Player, Game
 from pooltool.objects import DummyBall
+from pooltool.layouts import NineBallRack
 
 
 class NineBall(Game):
@@ -14,6 +15,19 @@ class NineBall(Game):
         Game.__init__(self)
         self.apa_rules = apa_rules
         self.create_players(2)
+
+
+    def setup_initial_layout(self, table):
+        ball_kwargs = {}
+        self.layout = NineBallRack(ordered=True, **ball_kwargs)
+        self.layout.center_by_table(table)
+
+        # get the cueing ball
+        self.layout.get_balls_dict()
+
+
+    def set_initial_cueing_ball(self, balls):
+        return balls['cue']
 
 
     def award_points(self, shot):

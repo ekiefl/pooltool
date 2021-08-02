@@ -2,7 +2,6 @@
 
 import pooltool
 import pooltool.utils as utils
-import pooltool.layouts as layouts
 
 from pooltool.objects.cue import Cue
 from pooltool.objects.ball import Ball
@@ -231,12 +230,15 @@ class Play(Interface, Menus, HUD):
 
     def setup(self):
         self.setup_table()
+
+        #game_class = NineBall
+        game_class = EightBall
+        self.game = game_class()
+        self.game.init(self.table)
+
         self.setup_balls()
         self.setup_cue()
 
-        #self.game = NineBall()
-        self.game = EightBall()
-        self.game.init()
         self.init_hud()
 
 
@@ -249,15 +251,8 @@ class Play(Interface, Menus, HUD):
 
 
     def setup_balls(self):
-        ball_kwargs = {}
-        diamond = layouts.NineBallRack(ordered=True, **ball_kwargs)
-        diamond.center_by_table(self.table)
-        self.balls = diamond.get_balls_dict()
-
-        self.balls['cue'] = Ball('cue', **ball_kwargs)
-        self.balls['cue'].rvw[0] = [self.table.center[0] + 0.2, self.table.l/4, pooltool.R]
-
-        self.cueing_ball = self.balls['cue']
+        self.balls = self.game.layout.get_balls_dict()
+        self.cueing_ball = self.game.set_initial_cueing_ball(self.balls)
 
 
     def start(self):
