@@ -7,6 +7,7 @@ import pooltool.ani.utils as autils
 
 from pooltool.games import Player, Game
 from pooltool.objects import DummyBall
+from pooltool.layouts import EightBallRack
 
 from panda3d.core import *
 from direct.interval.IntervalGlobal import *
@@ -25,6 +26,19 @@ class EightBall(Game):
 
         for player in self.players:
             player.stripes_or_solids = None
+
+
+    def setup_initial_layout(self, table):
+        ball_kwargs = {}
+        self.layout = EightBallRack(ordered=True, **ball_kwargs)
+        self.layout.center_by_table(table)
+
+        # get the cueing ball
+        self.layout.get_balls_dict()
+
+
+    def set_initial_cueing_ball(self, balls):
+        return balls['cue']
 
 
     def award_points(self, shot):
