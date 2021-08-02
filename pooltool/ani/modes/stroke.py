@@ -34,6 +34,11 @@ class StrokeMode(Mode):
 
     def stroke_task(self, task):
         if self.keymap[action.stroke]:
+            if self.game.is_call_pocket and self.game.pocket_call is None:
+                return task.cont
+            if self.game.is_call_ball and self.game.ball_call is None:
+                return task.cont
+
             if self.stroke_cue_stick():
                 # The cue stick has contacted the cue ball
                 self.change_mode('calculate')

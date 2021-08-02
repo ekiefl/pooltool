@@ -129,6 +129,9 @@ class Game(ABC):
         self.set_next_player()
         self.update_player_stats = True
 
+        self.ball_call = None
+        self.pocket_call = None
+
 
     @abstractmethod
     def legality(self, shot):

@@ -24,6 +24,10 @@ class EightBall(Game):
         self.solids = [str(i) for i in range(1,8)]
         self.stripes = [str(i) for i in range(9,16)]
 
+        # Allow stroke mode during break
+        self.ball_call = 'dummy'
+        self.pocket_call = 'dummy'
+
         for player in self.players:
             player.stripes_or_solids = None
             player.target_balls = []
