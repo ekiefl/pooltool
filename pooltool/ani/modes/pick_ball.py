@@ -14,6 +14,7 @@ class PickBallMode(Mode):
     keymap = {
         action.quit: False,
         action.pick_ball: True,
+        'done': False,
     }
 
     def __init__(self):
@@ -33,14 +34,13 @@ class PickBallMode(Mode):
         self.task_action('escape', action.quit, True)
         self.task_action('q', action.pick_ball, True)
         self.task_action('q-up', action.pick_ball, False)
+        self.task_action('mouse1-up', 'done', True)
 
         self.add_task(self.pick_ball_task, 'pick_ball_task')
 
 
     def exit(self):
         PickBallMode.remove_ball_highlight(self)
-        self.cueing_ball = self.closest_ball
-        self.cue.init_focus(self.closest_ball)
         self.remove_task('pick_ball_task')
 
 
@@ -58,11 +58,20 @@ class PickBallMode(Mode):
             self.ball_highlight = self.closest_ball.get_node('ball')
             PickBallMode.add_ball_highlight(self)
 
+        if self.keymap['done']:
+            PickBallMode.remove_ball_highlight(self)
+            self.cueing_ball = self.closest_ball
+            if self.cueing_ball is not None:
+                self.cue.init_focus(self.cueing_ball)
+                self.game.log.add_msg(f"Now cueing the {self.cueing_ball.id} ball", sentiment='neutral')
+            self.change_mode('aim')
+            return task.done
+
         return task.cont
 
 
     def remove_ball_highlight(self):
-        if self.closest_ball is not None:
+        if self.closest_ball is not None and 'ball_highlight_animation' in self.tasks:
             node = self.closest_ball.get_node('ball')
             node.setScale(node.getScale()/self.ball_highlight_factor)
             self.closest_ball.set_render_state_as_object_state()
