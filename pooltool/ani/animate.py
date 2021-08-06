@@ -81,7 +81,11 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
 
 
 class Interface(ShowBase, ModeManager):
+    is_game = None
     def __init__(self, shot=None):
+        if self.is_game is None:
+            raise Exception(f"'{self.__class__.__name__}' must set 'is_game' attribute")
+
         ShowBase.__init__(self)
 
         self.shot = None
@@ -167,9 +171,12 @@ class Interface(ShowBase, ModeManager):
 
 
 class ShotViewer(Interface):
+    is_game = False
+
     def __init__(self, shot=None):
         Interface.__init__(self, shot=shot)
         self.stop()
+        self.is_game = False
 
 
     def start(self):
@@ -198,6 +205,8 @@ class ShotViewer(Interface):
 
 
 class Play(Interface, Menus, HUD):
+    is_game = True
+
     def __init__(self, *args, **kwargs):
         Interface.__init__(self, shot=None)
         Menus.__init__(self)
@@ -231,8 +240,8 @@ class Play(Interface, Menus, HUD):
     def setup(self):
         self.setup_table()
 
-        #game_class = NineBall
-        game_class = EightBall
+        game_class = NineBall
+        #game_class = EightBall
         self.game = game_class()
         self.game.init(self.table)
 

@@ -94,6 +94,11 @@ class ShotMode(Mode):
             self.shot.cue.reset_state()
             self.shot.cue.set_render_state_as_object_state()
 
+            if self.is_game:
+                _, _, theta, a, b, _ = self.shot.cue.get_render_state()
+                english = self.hud_elements.get('english').set(a, b)
+                jack = self.hud_elements.get('jack').set(theta)
+
             for ball in self.shot.balls.values():
                 ball.reset_angular_integration()
                 ball.set_render_state_as_object_state()
