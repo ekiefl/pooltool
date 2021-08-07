@@ -48,7 +48,6 @@ class Game(ABC):
         self.tie = False
         self.ball_call = None
         self.pocket_call = None
-        self.ball_in_hand = None
         self.update_player_stats = True
 
         self.log = Log()
@@ -70,7 +69,6 @@ class Game(ABC):
         self.game_over = False
         self.winner = None
         self.tie = False
-        self.ball_in_hand = None
         self.setup_initial_layout(table)
 
 
@@ -127,6 +125,10 @@ class Game(ABC):
         self.shot_number += 1
 
         self.set_next_player()
+
+        if self.shot_info['ball_in_hand'] is not None:
+            self.active_player.ball_in_hand = self.shot_info['ball_in_hand']
+
         self.update_player_stats = True
 
         self.ball_call = None
@@ -184,6 +186,7 @@ class Player(object):
         self.is_shooting = False
         self.points = 0
         self.target_balls = []
+        self.ball_in_hand = ['cue']
         self.can_cue = ['cue']
 
 

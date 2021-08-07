@@ -11,7 +11,7 @@ model_paths = {str(path.stem): Filename.fromOsSpecific(str(path.absolute())) for
 
 menu_text_scale = 0.07
 zoom_sensitivity = 0.3
-max_english = 8/10
+max_english = 6/10
 elevate_sensitivity = 13
 english_sensitivity = 0.1
 rotate_sensitivity_x = 19

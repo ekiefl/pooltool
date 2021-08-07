@@ -52,7 +52,6 @@ class CallShotMode(Mode):
         self.add_task(self.call_shot_task, 'call_shot_task')
 
 
-
     def exit(self):
         self.remove_task('call_shot_task')
         if self.picking in ('ball', 'pocket'):

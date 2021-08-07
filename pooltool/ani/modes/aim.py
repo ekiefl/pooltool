@@ -22,6 +22,7 @@ class AimMode(Mode):
         action.cam_load: False,
         action.pick_ball: False,
         action.call_shot: False,
+        action.ball_in_hand: False,
     }
 
     def enter(self, load_prev_cam=False):
@@ -48,6 +49,7 @@ class AimMode(Mode):
         self.task_action('2', action.cam_load, True)
         self.task_action('q', action.pick_ball, True)
         self.task_action('c', action.call_shot, True)
+        self.task_action('g', action.ball_in_hand, True)
         self.task_action('b', action.elevation, True)
         self.task_action('b-up', action.elevation, False)
         self.task_action('e', action.english, True)
@@ -71,6 +73,8 @@ class AimMode(Mode):
             self.change_mode('pick_ball')
         elif self.keymap[action.call_shot]:
             self.change_mode('call_shot')
+        elif self.keymap[action.ball_in_hand]:
+            self.change_mode('ball_in_hand')
         elif self.keymap[action.zoom]:
             self.zoom_camera_aim()
         elif self.keymap[action.elevation]:

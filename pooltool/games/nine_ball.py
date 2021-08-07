@@ -58,10 +58,10 @@ class NineBall(Game):
 
     def award_ball_in_hand(self, shot):
         if not self.shot_info['is_legal']:
-            self.ball_in_hand = 'cue'
-            self.respot(shot, self.ball_in_hand, shot.table.w/2, shot.table.l*1/4, shot.balls[self.ball_in_hand].R)
+            self.shot_info['ball_in_hand'] = ['cue']
+            self.respot(shot, 'cue', shot.table.w/2, shot.table.l*1/4, shot.balls['cue'].R)
         else:
-            self.ball_in_hand = None
+            self.shot_info['ball_in_hand'] = None
 
 
     def respot_balls(self, shot):
