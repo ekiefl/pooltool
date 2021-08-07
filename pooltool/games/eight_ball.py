@@ -34,6 +34,10 @@ class EightBall(Game):
             player.can_cue = ['cue']
 
 
+    def start(self):
+        self.active_player.ball_in_hand = ['cue']
+
+
     def setup_initial_layout(self, table):
         ball_kwargs = {}
         self.layout = EightBallRack(ordered=True, **ball_kwargs)

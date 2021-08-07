@@ -136,7 +136,7 @@ class Interface(ShowBase, ModeManager):
         gc.collect()
 
 
-    def init_game_nodes(self):
+    def init_system_nodes(self):
         self.init_scene()
         self.table.render()
 
@@ -184,7 +184,7 @@ class ShotViewer(Interface):
             self.openMainWindow()
 
         self.mouse = Mouse()
-        self.init_game_nodes()
+        self.init_system_nodes()
         params = dict(
             init_animations = True,
             single_instance = True,
@@ -228,7 +228,7 @@ class Play(Interface, Menus, HUD):
 
     def go(self):
         self.setup()
-        self.init_game_nodes()
+        self.init_system_nodes()
         self.change_mode('aim')
 
 
@@ -240,15 +240,18 @@ class Play(Interface, Menus, HUD):
     def setup(self):
         self.setup_table()
 
-        game_class = NineBall
-        #game_class = EightBall
+        #game_class = NineBall
+        game_class = EightBall
         self.game = game_class()
         self.game.init(self.table)
+        self.game.start()
 
         self.setup_balls()
         self.setup_cue()
 
         self.init_hud()
+
+
 
 
     def setup_table(self):

@@ -17,6 +17,10 @@ class NineBall(Game):
         self.create_players(2)
 
 
+    def start(self):
+        self.active_player.ball_in_hand = ['cue']
+
+
     def setup_initial_layout(self, table):
         ball_kwargs = {}
         self.layout = NineBallRack(ordered=True, **ball_kwargs)

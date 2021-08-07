@@ -103,7 +103,12 @@ class Game(ABC):
 
 
     def respot(self, shot, ball_id, x, y, z):
-        """Move cue ball to head spot or close to"""
+        """Move cue ball to head spot
+
+        Notes
+        =====
+        - FIXME check if respot position overlaps with ball
+        """
         R = shot.balls[ball_id].R
         shot.balls[ball_id].rvw[0] = [x, y, z]
         shot.balls[ball_id].s = pooltool.stationary
@@ -124,8 +129,8 @@ class Game(ABC):
             self.turn_number += 1
         self.shot_number += 1
 
+        self.active_player.ball_in_hand = []
         self.set_next_player()
-
         if self.shot_info['ball_in_hand'] is not None:
             self.active_player.ball_in_hand = self.shot_info['ball_in_hand']
 
@@ -179,6 +184,11 @@ class Game(ABC):
         pass
 
 
+    @abstractmethod
+    def start(self):
+        pass
+
+
 class Player(object):
     def __init__(self):
         self.id = uuid.uuid4().hex
@@ -186,7 +196,7 @@ class Player(object):
         self.is_shooting = False
         self.points = 0
         self.target_balls = []
-        self.ball_in_hand = ['cue']
+        self.ball_in_hand = []
         self.can_cue = ['cue']
 
 
