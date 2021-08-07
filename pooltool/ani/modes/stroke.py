@@ -12,6 +12,7 @@ class StrokeMode(Mode):
     }
 
     def enter(self):
+        self.mode_stroked_from = self.last_mode
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()

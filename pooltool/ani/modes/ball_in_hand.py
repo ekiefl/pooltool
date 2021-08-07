@@ -20,16 +20,16 @@ class BallInHandMode(Mode):
 
 
     def __init__(self):
-        self.grab_highlight_offset = 0.1
-        self.grab_highlight_amplitude = 0.03
-        self.grab_highlight_frequency = 4
+        self.grab_selection_highlight_offset = 0.1
+        self.grab_selection_highlight_amplitude = 0.03
+        self.grab_selection_highlight_frequency = 4
 
-        self.grab_highlight = None
+        self.grab_ball_node = None
         self.picking = None
 
 
     def enter(self):
-        self.grab_highlight_sequence = Parallel()
+        self.grab_selection_highlight_sequence = Parallel()
 
         self.mouse.hide()
         self.mouse.relative()
@@ -42,7 +42,16 @@ class BallInHandMode(Mode):
         self.task_action('g-up', action.ball_in_hand, False)
         self.task_action('mouse1-up', 'next', True)
 
-        self.picking = 'ball'
+        num_options = len(self.game.active_player.ball_in_hand)
+        if num_options == 0:
+            # FIXME add message
+            self.picking = 'ball'
+        elif num_options == 1:
+            self.grabbed_ball = self.balls[self.game.active_player.ball_in_hand[0]]
+            self.grab_ball_node = self.grabbed_ball.get_node('ball')
+            self.picking = 'placement'
+        else:
+            self.picking = 'ball'
 
         self.add_task(self.ball_in_hand_task, 'ball_in_hand_task')
 
@@ -51,12 +60,12 @@ class BallInHandMode(Mode):
         self.remove_task('ball_in_hand_task')
 
         if self.picking == 'ball':
-            BallInHandMode.remove_grab_highlight(self)
+            BallInHandMode.remove_grab_selection_highlight(self)
 
         if self.picking == 'placement' and not success:
             self.grabbed_ball.set_render_state_as_object_state()
 
-        self.grab_highlight_sequence.pause()
+        self.grab_selection_highlight_sequence.pause()
 
 
     def ball_in_hand_task(self, task):
@@ -69,15 +78,15 @@ class BallInHandMode(Mode):
         if self.picking == 'ball':
             closest = BallInHandMode.find_closest_ball(self)
             if closest != self.grabbed_ball:
-                BallInHandMode.remove_grab_highlight(self)
+                BallInHandMode.remove_grab_selection_highlight(self)
                 self.grabbed_ball = closest
-                self.grab_highlight = self.grabbed_ball.get_node('ball')
-                BallInHandMode.add_grab_highlight(self)
+                self.grab_ball_node = self.grabbed_ball.get_node('ball')
+                BallInHandMode.add_grab_selection_highlight(self)
 
             if self.keymap['next']:
                 self.keymap['next'] = False
                 self.picking = 'placement'
-                BallInHandMode.remove_grab_highlight(self)
+                BallInHandMode.remove_grab_selection_highlight(self)
 
         elif self.picking == 'placement':
             self.move_grabbed_ball()
@@ -96,7 +105,7 @@ class BallInHandMode(Mode):
 
     def try_placement(self):
         """Checks if grabbed ball overlaps with others. If no, places and returns True. If yes, returns False"""
-        r, pos = self.grabbed_ball.R, np.array(self.grab_highlight.getPos())
+        r, pos = self.grabbed_ball.R, np.array(self.grab_ball_node.getPos())
 
         for ball in self.balls.values():
             if np.linalg.norm(ball.rvw[0] - pos) <= (r + ball.R):
@@ -108,29 +117,29 @@ class BallInHandMode(Mode):
 
 
     def move_grabbed_ball(self):
-        self.grab_highlight.setX(self.player_cam.focus.getX())
-        self.grab_highlight.setY(self.player_cam.focus.getY())
+        self.grab_ball_node.setX(self.player_cam.focus.getX())
+        self.grab_ball_node.setY(self.player_cam.focus.getY())
 
 
-    def remove_grab_highlight(self):
+    def remove_grab_selection_highlight(self):
         if self.grabbed_ball is not None:
             node = self.grabbed_ball.get_node('ball')
             node.setScale(node.getScale()/self.ball_highlight_factor)
             self.grabbed_ball.set_render_state_as_object_state()
-            self.remove_task('grab_highlight_animation')
+            self.remove_task('grab_selection_highlight_animation')
 
 
-    def add_grab_highlight(self):
+    def add_grab_selection_highlight(self):
         if self.grabbed_ball is not None:
-            self.add_task(self.grab_highlight_animation, 'grab_highlight_animation')
+            self.add_task(self.grab_selection_highlight_animation, 'grab_selection_highlight_animation')
             node = self.grabbed_ball.get_node('ball')
             node.setScale(node.getScale()*self.ball_highlight_factor)
 
 
-    def grab_highlight_animation(self, task):
-        phase = task.time * self.grab_highlight_frequency
-        new_height = self.grab_highlight_offset + self.grab_highlight_amplitude * np.sin(phase)
-        self.grab_highlight.setZ(new_height)
+    def grab_selection_highlight_animation(self, task):
+        phase = task.time * self.grab_selection_highlight_frequency
+        new_height = self.grab_selection_highlight_offset + self.grab_selection_highlight_amplitude * np.sin(phase)
+        self.grab_ball_node.setZ(new_height)
 
         return task.cont
 

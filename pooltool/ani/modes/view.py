@@ -24,10 +24,13 @@ class ViewMode(Mode):
     }
 
 
-    def enter(self, move_active=False):
+    def enter(self, move_active=False, load_prev_cam=False):
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()
+
+        if load_prev_cam:
+            self.player_cam.load_state('view')
 
         if move_active:
             self.keymap[action.move] = True
@@ -50,6 +53,7 @@ class ViewMode(Mode):
 
     def exit(self):
         self.remove_task('view_task')
+        self.player_cam.store_state('view', overwrite=True)
 
 
     def view_task(self, task):

@@ -160,7 +160,7 @@ class ShotMode(Mode):
             self.shot.offset_time(ani.rewind_dt*self.shot.playback_speed)
 
         if self.keymap[action.undo_shot]:
-            self.change_mode('aim', exit_kwargs=dict(key='reset'), enter_kwargs=dict(load_prev_cam=True))
+            self.change_mode(self.mode_stroked_from, exit_kwargs=dict(key='reset'), enter_kwargs=dict(load_prev_cam=True))
 
         return task.cont
 
