@@ -2,6 +2,7 @@
 
 import pooltool
 import pooltool.ani as ani
+import pooltool.games as games
 
 import sys
 
@@ -32,7 +33,7 @@ class Menus(object):
         m = GenericMenu(title = 'Options')
         m.add_button('Back', lambda: self.show_menu('main'), scale=ani.menu_text_scale)
 
-        m.add_dropdown(ani.options_game, options=[ani.options_8_ball, ani.options_9_ball])
+        m.add_dropdown(ani.options_game, options=list(games.game_classes.keys()))
 
         convert_factor = 12*2.54/100
         m.add_direct_entry(ani.options_table_length, initial=f"{pooltool.table_length/convert_factor:.3f}", convert_factor=convert_factor)

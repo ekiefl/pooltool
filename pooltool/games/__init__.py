@@ -207,8 +207,10 @@ class Player(object):
 
 from pooltool.games.nine_ball import NineBall
 from pooltool.games.eight_ball import EightBall
+from pooltool.games.sandbox import Sandbox
 
 game_classes = {
+    ani.options_sandbox : Sandbox,
     ani.options_9_ball : NineBall,
     ani.options_8_ball : EightBall,
 }
