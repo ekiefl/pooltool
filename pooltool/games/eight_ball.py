@@ -38,8 +38,7 @@ class EightBall(Game):
         self.active_player.ball_in_hand = ['cue']
 
 
-    def setup_initial_layout(self, table):
-        ball_kwargs = {}
+    def setup_initial_layout(self, table, ball_kwargs={}):
         self.layout = EightBallRack(ordered=True, **ball_kwargs)
         self.layout.center_by_table(table)
 

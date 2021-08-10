@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import pooltool
 import pooltool.ani as ani
 
 import sys
@@ -30,8 +31,29 @@ class Menus(object):
     def populate_options(self):
         m = GenericMenu(title = 'Options')
         m.add_button('Back', lambda: self.show_menu('main'), scale=ani.menu_text_scale)
-        m.add_dropdown('Arrangement', options=['9_break', '10_balls'])
-        m.add_direct_entry('Enter weight')
+
+        m.add_dropdown(ani.options_game, options=[ani.options_8_ball, ani.options_9_ball])
+
+        convert_factor = 12*2.54/100
+        m.add_direct_entry(ani.options_table_length, initial=f"{pooltool.table_length/convert_factor:.3f}", convert_factor=convert_factor)
+
+        convert_factor = 12*2.54/100
+        m.add_direct_entry(ani.options_table_width, initial=f"{pooltool.table_width/convert_factor:.3f}", convert_factor=convert_factor)
+
+        convert_factor = 1
+        m.add_direct_entry(ani.options_cushion_height_frac, initial=f"{pooltool.cushion_height_fraction/convert_factor:.3f}", convert_factor=convert_factor)
+
+        convert_factor = 2.54/100
+        m.add_direct_entry(ani.options_ball_diameter, initial=f"{pooltool.R*2/convert_factor:.3f}", convert_factor=convert_factor)
+
+        convert_factor = 1
+        m.add_direct_entry(ani.options_friction_roll, initial=f"{pooltool.u_r/convert_factor:.3f}", convert_factor=convert_factor)
+
+        convert_factor = 1
+        m.add_direct_entry(ani.options_friction_slide, initial=f"{pooltool.u_s/convert_factor:.3f}", convert_factor=convert_factor)
+
+        convert_factor = 1
+        m.add_direct_entry(ani.options_friction_spin, initial=f"{pooltool.u_sp/convert_factor:.3f}", convert_factor=convert_factor)
 
         self.menus['options'] = m
 
@@ -48,6 +70,22 @@ class Menus(object):
             self.menus[menu_name].hide()
 
         self.current_menu = None
+
+
+    def get_menu_options(self):
+        """Return an dictionary of user's selected (or default) options"""
+        options = {}
+        for option in self.menus['options'].elements:
+            if option['type'] in ('dropdown', 'direct_entry'):
+                value = option['content'].get()
+                try:
+                    value = float(value)
+                    if option['convert_factor'] is not None:
+                        value *= option['convert_factor']
+                except ValueError:
+                    pass
+                options[option['name']] = value
+        return options
 
 
 class GenericMenu(object):
@@ -69,7 +107,7 @@ class GenericMenu(object):
             pos = title_pos,
             parent = self.titleMenu,
             relief = None,
-            text_fg = (1,1,1,1),
+            text_fg = (0,0,0,1),
         )
 
         self.next_x, self.next_y = -0.5, 0.6
@@ -100,6 +138,7 @@ class GenericMenu(object):
             'type': 'button',
             'name': text,
             'content': button,
+            'convert_factor': None,
         })
 
         self.get_next_pos()
@@ -123,10 +162,11 @@ class GenericMenu(object):
             'type': 'image',
             'name': path,
             'content': img,
+            'convert_factor': None,
         })
 
 
-    def add_dropdown(self, text, options=['None'], command=None):
+    def add_dropdown(self, text, options=['None'], command=None, convert_factor=None):
 
         self.get_next_pos(move=self.move/2)
 
@@ -138,12 +178,13 @@ class GenericMenu(object):
             'type': 'dropdown',
             'name': text,
             'content': dropdown,
+            'convert_factor': convert_factor,
         })
 
         self.get_next_pos()
 
 
-    def add_direct_entry(self, text, command=None, initial="None"):
+    def add_direct_entry(self, text, command=None, initial="None", convert_factor=None):
 
         self.get_next_pos(move=self.move/2)
 
@@ -155,6 +196,7 @@ class GenericMenu(object):
             'type': 'direct_entry',
             'name': text,
             'content': direct_entry,
+            'convert_factor': convert_factor,
         })
 
         self.get_next_pos()
@@ -205,7 +247,7 @@ def make_dropdown(text, options=['None'], command=None):
     label = DirectLabel(
         text = text + ':',
         relief = None,
-        text_fg = (1,1,1,1),
+        text_fg = (0,0,0,1),
         text_align = TextNode.ALeft,
         parent = dropdown,
         pos = (0, 0, 1),
@@ -229,7 +271,7 @@ def make_direct_entry(text, command=None, initial="None"):
     label = DirectLabel(
         text = text + ':',
         relief = None,
-        text_fg = (1,1,1,1),
+        text_fg = (0,0,0,1),
         text_align = TextNode.ALeft,
         parent = entry,
         pos = (0, 0, 1.2),

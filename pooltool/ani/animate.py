@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 
 import pooltool
+import pooltool.ani as ani
 import pooltool.utils as utils
+import pooltool.games as games
 
 from pooltool.objects.cue import Cue
 from pooltool.objects.ball import Ball
@@ -238,24 +240,43 @@ class Play(Interface, Menus, HUD):
 
 
     def setup(self):
+        self.setup_options = self.get_menu_options()
+
         self.setup_table()
-
-        #game_class = NineBall
-        game_class = EightBall
-        self.game = game_class()
-        self.game.init(self.table)
-        self.game.start()
-
+        self.setup_game()
         self.setup_balls()
         self.setup_cue()
 
         self.init_hud()
 
 
-
-
     def setup_table(self):
-        self.table = Table()
+        self.table = Table(
+            w = self.setup_options[ani.options_table_width],
+            l = self.setup_options[ani.options_table_length],
+            cushion_height = self.setup_options[ani.options_cushion_height_frac]*self.setup_options[ani.options_ball_diameter],
+        )
+
+
+    def setup_game(self):
+        """Setup the game class from pooltool.games
+
+        Notes
+        =====
+        - For reasons of bad design, ball kwargs are defined in this method
+        """
+
+        ball_kwargs = dict(
+            R = self.setup_options[ani.options_ball_diameter]/2,
+            u_s = self.setup_options[ani.options_friction_slide],
+            u_r = self.setup_options[ani.options_friction_roll],
+            u_sp = self.setup_options[ani.options_friction_spin],
+        )
+
+        game_class = games.game_classes[self.setup_options[ani.options_game]]
+        self.game = game_class()
+        self.game.init(self.table, ball_kwargs)
+        self.game.start()
 
 
     def setup_cue(self):

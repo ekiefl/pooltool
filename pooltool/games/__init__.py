@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import pooltool
+import pooltool.ani as ani
 
 from pooltool.terminal import Timer
 
@@ -62,14 +63,14 @@ class Game(ABC):
             self.players.append(player)
 
 
-    def init(self, table):
+    def init(self, table, ball_kwargs={}):
         self.shot_number = 0
         self.turn_number = 0
         self.set_next_player()
         self.game_over = False
         self.winner = None
         self.tie = False
-        self.setup_initial_layout(table)
+        self.setup_initial_layout(table, ball_kwargs)
 
 
     def player_order(self):
@@ -204,6 +205,13 @@ class Player(object):
         self.name = name
 
 
+from pooltool.games.nine_ball import NineBall
+from pooltool.games.eight_ball import EightBall
+
+game_classes = {
+    ani.options_9_ball : NineBall,
+    ani.options_8_ball : EightBall,
+}
 
 
 

@@ -27,6 +27,17 @@ rotate_downtime = 0.3 # number of seconds that camera rotation is disabled when 
 rewind_dt = 0.02
 fast_forward_dt = 0.02
 
+options_table_length = 'Play surface length (ft)'
+options_table_width = 'Play surface width (ft)'
+options_game = 'Game'
+options_8_ball = '8-ball'
+options_9_ball = '9-ball'
+options_ball_diameter = 'Ball diameter (in)'
+options_cushion_height_frac = 'Cushion height (rel to ball)'
+options_friction_slide = 'Coeff. sliding friction'
+options_friction_roll = 'Coeff. rolling friction'
+options_friction_spin = 'Coeff. spinning friction'
+
 logo_paths = {
     'default': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo.png'),
     'small': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_small.png'),
