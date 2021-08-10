@@ -70,7 +70,7 @@ EOF
 
 Upon activating your conda environment once more (`conda activate pooltool`), `pooltool` is now a binary
 that can be run anywhere in your filesystem whenever you are in the `pooltool` conda environment. Time
-to test your installation starting up pooltool:
+to test your installation by starting up pooltool:
 
 ```
 pooltool
