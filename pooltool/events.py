@@ -246,9 +246,91 @@ class Events(object):
         self.num_events = 0
 
 
+    def filter_type(self, types):
+        """Return events in chronological order that are of an event type or types
+
+        Parameters
+        ==========
+        types : str or list of str
+            Event types to be filtered by. E.g. pooltool.events.type_ball_cushion
+
+        Returns
+        =======
+        events : pooltool.events.Event
+            A subset Events object containing events only of specified types
+        """
+
+        if isinstance(types, str):
+            types = [types]
+
+        events = Events()
+        for event in self.events:
+            if event.event_type in types:
+                events.add_event(event)
+
+        return events
+
+
+    def filter_ball(self, balls):
+        """Return events in chronological order that involve a collection of balls
+
+        Parameters
+        ==========
+        balls : str or list of str
+            Balls that you want events for.
+
+        Returns
+        =======
+        events : pooltool.events.Event
+            A subset Events object containing events only with specified balls
+        """
+
+        if isinstance(balls, str):
+            balls = [balls]
+
+        events = Events()
+        for event in self.events:
+            for ball in balls:
+                if ball in event.agents:
+                    events.add_event(event)
+                    break
+
+        return events
+
+
+    def filter_time(self, t):
+        """Return events in chronological order after a certain time
+
+        Parameters
+        ==========
+        t : float
+            time after which you want events for
+
+        Returns
+        =======
+        events : pooltool.events.Event
+            A subset Events object containing events only after specified time
+        """
+
+        idx = 0
+        events = Events()
+        for event in reversed(self.events):
+            if event.time > t:
+                events.add_event(event)
+            else:
+                break
+
+        events.events = events.events[::-1]
+        return events
+
+
     def add_event(self, event):
         self.events.append(event)
         self.num_events += 1
+
+
+    def get(self, idx):
+        return self.events[idx]
 
 
     def reset_events(self):

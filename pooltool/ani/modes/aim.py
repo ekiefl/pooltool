@@ -20,6 +20,9 @@ class AimMode(Mode):
         action.english: False,
         action.cam_save: False,
         action.cam_load: False,
+        action.pick_ball: False,
+        action.call_shot: False,
+        action.ball_in_hand: False,
     }
 
     def enter(self, load_prev_cam=False):
@@ -27,9 +30,10 @@ class AimMode(Mode):
         self.mouse.relative()
         self.mouse.track()
 
+        self.cue.init_focus(self.cueing_ball)
         self.cue.show_nodes()
         self.cue.get_node('cue_stick').setX(0)
-        self.player_cam.update_focus(self.balls['cue'].get_node('ball').getPos())
+        self.player_cam.update_focus(self.cueing_ball.get_node('ball').getPos())
         if load_prev_cam:
             self.player_cam.load_state('aim')
 
@@ -44,6 +48,9 @@ class AimMode(Mode):
         self.task_action('v', action.view, True)
         self.task_action('1', action.cam_save, True)
         self.task_action('2', action.cam_load, True)
+        self.task_action('q', action.pick_ball, True)
+        self.task_action('c', action.call_shot, True)
+        self.task_action('g', action.ball_in_hand, True)
         self.task_action('b', action.elevation, True)
         self.task_action('b-up', action.elevation, False)
         self.task_action('e', action.english, True)
@@ -63,6 +70,12 @@ class AimMode(Mode):
             self.change_mode('view', enter_kwargs=dict(move_active=True))
         elif self.keymap[action.stroke]:
             self.change_mode('stroke')
+        elif self.keymap[action.pick_ball]:
+            self.change_mode('pick_ball')
+        elif self.keymap[action.call_shot]:
+            self.change_mode('call_shot')
+        elif self.keymap[action.ball_in_hand]:
+            self.change_mode('ball_in_hand')
         elif self.keymap[action.zoom]:
             self.zoom_camera_aim()
         elif self.keymap[action.elevation]:
@@ -121,6 +134,9 @@ class AimMode(Mode):
         new_elevation = max(0, min(ani.max_elevate, old_elevation + delta_elevation))
         cue.setR(-new_elevation)
 
+        # update hud
+        self.hud_elements['jack'].set(new_elevation)
+
 
     def apply_english(self):
         with self.mouse:
@@ -142,5 +158,10 @@ class AimMode(Mode):
 
         cue.setY(new_y)
         cue.setZ(new_z)
+
+        # update hud
+        a, b = -new_y/R, new_z/R
+        self.hud_elements['english'].set(a, b)
+        
 
 

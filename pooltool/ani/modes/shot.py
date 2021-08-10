@@ -94,8 +94,14 @@ class ShotMode(Mode):
             self.shot.cue.reset_state()
             self.shot.cue.set_render_state_as_object_state()
 
+            if self.is_game:
+                _, _, theta, a, b, _ = self.shot.cue.get_render_state()
+                english = self.hud_elements.get('english').set(a, b)
+                jack = self.hud_elements.get('jack').set(theta)
+
             for ball in self.shot.balls.values():
                 ball.reset_angular_integration()
+                ball.set_render_state_as_object_state()
 
             self.shot.cue.update_focus()
 
@@ -123,7 +129,11 @@ class ShotMode(Mode):
             self.end_mode()
             self.stop()
         elif self.keymap[action.aim]:
-            self.change_mode('aim', exit_kwargs=dict(key='end'))
+            self.game.advance(self.shot)
+            if self.game.game_over:
+                self.change_mode('game_over')
+            else:
+                self.change_mode('aim', exit_kwargs=dict(key='end'))
         elif self.keymap[action.zoom]:
             self.zoom_camera_shot()
         elif self.keymap[action.move]:
@@ -150,7 +160,7 @@ class ShotMode(Mode):
             self.shot.offset_time(ani.rewind_dt*self.shot.playback_speed)
 
         if self.keymap[action.undo_shot]:
-            self.change_mode('aim', exit_kwargs=dict(key='reset'))
+            self.change_mode(self.mode_stroked_from, exit_kwargs=dict(key='reset'), enter_kwargs=dict(load_prev_cam=True))
 
         return task.cont
 

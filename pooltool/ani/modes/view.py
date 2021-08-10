@@ -11,19 +11,26 @@ import numpy as np
 class ViewMode(Mode):
     keymap = {
         action.aim: False,
+        action.call_shot: False,
         action.fine_control: False,
         action.move: False,
+        action.stroke: False,
         action.quit: False,
         action.zoom: False,
         action.cam_save: False,
         action.cam_load: False,
+        action.pick_ball: False,
+        action.ball_in_hand: False,
     }
 
 
-    def enter(self, move_active=False):
+    def enter(self, move_active=False, load_prev_cam=False):
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()
+
+        if load_prev_cam:
+            self.player_cam.load_state('view')
 
         if move_active:
             self.keymap[action.move] = True
@@ -33,20 +40,33 @@ class ViewMode(Mode):
         self.task_action('mouse1-up', action.zoom, False)
         self.task_action('a', action.aim, True)
         self.task_action('v', action.move, True)
+        self.task_action('s', action.stroke, True)
         self.task_action('v-up', action.move, False)
         self.task_action('1', action.cam_save, True)
         self.task_action('2', action.cam_load, True)
+        self.task_action('q', action.pick_ball, True)
+        self.task_action('g', action.ball_in_hand, True)
+        self.task_action('c', action.call_shot, True)
 
         self.add_task(self.view_task, 'view_task')
 
 
     def exit(self):
         self.remove_task('view_task')
+        self.player_cam.store_state('view', overwrite=True)
 
 
     def view_task(self, task):
         if self.keymap[action.aim]:
             self.change_mode('aim', enter_kwargs=dict(load_prev_cam=True))
+        elif self.keymap[action.stroke]:
+            self.change_mode('stroke')
+        elif self.keymap[action.pick_ball]:
+            self.change_mode('pick_ball')
+        elif self.keymap[action.call_shot]:
+            self.change_mode('call_shot')
+        elif self.keymap[action.ball_in_hand]:
+            self.change_mode('ball_in_hand')
         elif self.keymap[action.zoom]:
             self.zoom_camera_view()
         elif self.keymap[action.move]:
@@ -75,10 +95,6 @@ class ViewMode(Mode):
 
         self.player_cam.focus.setX(self.player_cam.focus.getX() + dx*ani.move_sensitivity)
         self.player_cam.focus.setY(self.player_cam.focus.getY() + dy*ani.move_sensitivity)
-
-
-    def fix_cue_stick_to_camera(self):
-        self.cue.get_node('cue_stick_focus').setH(self.player_cam.focus.getH())
 
 
     def rotate_camera_view(self):

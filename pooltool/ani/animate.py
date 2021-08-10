@@ -1,24 +1,19 @@
 #! /usr/bin/env python
 
 import pooltool
+import pooltool.ani as ani
 import pooltool.utils as utils
-import pooltool.layouts as layouts
+import pooltool.games as games
 
 from pooltool.objects.cue import Cue
 from pooltool.objects.ball import Ball
 from pooltool.objects.table import Table
+from pooltool.games.nine_ball import NineBall
+from pooltool.games.eight_ball import EightBall
 
+from pooltool.ani.hud import HUD
 from pooltool.ani.menu import Menus
-from pooltool.ani.modes import (
-    AimMode,
-    CalculateMode,
-    ShotMode,
-    MenuMode,
-    StrokeMode,
-    ViewMode,
-    CamSaveMode,
-    CamLoadMode,
-)
+from pooltool.ani.modes import *
 from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import PlayerCam
 
@@ -28,28 +23,13 @@ from panda3d.core import *
 from direct.showbase.ShowBase import ShowBase
 
 
-class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode, CamSaveMode, CalculateMode):
+class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode, CamSaveMode, CalculateMode,
+                  PickBallMode, GameOverMode, CallShotMode, BallInHandMode):
     def __init__(self):
         # Init every Mode class
-        MenuMode.__init__(self)
-        AimMode.__init__(self)
-        StrokeMode.__init__(self)
-        ViewMode.__init__(self)
-        ShotMode.__init__(self)
-        CamLoadMode.__init__(self)
-        CamSaveMode.__init__(self)
-        CalculateMode.__init__(self)
-
-        self.modes = {
-            'menu': MenuMode,
-            'aim': AimMode,
-            'stroke': StrokeMode,
-            'view': ViewMode,
-            'shot': ShotMode,
-            'calculate': CalculateMode,
-            'cam_save': CamSaveMode,
-            'cam_load': CamLoadMode,
-        }
+        self.modes = modes
+        for mode in modes.values():
+            mode.__init__(self)
 
         # Store the above as default states
         self.action_state_defaults = {}
@@ -76,7 +56,7 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
     def change_mode(self, mode, exit_kwargs={}, enter_kwargs={}):
         assert mode in self.modes
 
-        # Build up operations for the new mode
+        # Teardown operations for the old mode
         self.last_mode = self.mode
         self.end_mode(**exit_kwargs)
 
@@ -90,7 +70,6 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
         # Stop watching actions related to mode
         self.ignoreAll()
 
-        # Tear down operations for the current mode
         if self.mode is not None:
             self.modes[self.mode].exit(self, **kwargs)
             self.reset_action_states()
@@ -104,7 +83,11 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
 
 
 class Interface(ShowBase, ModeManager):
+    is_game = None
     def __init__(self, shot=None):
+        if self.is_game is None:
+            raise Exception(f"'{self.__class__.__name__}' must set 'is_game' attribute")
+
         ShowBase.__init__(self)
 
         self.shot = None
@@ -155,7 +138,7 @@ class Interface(ShowBase, ModeManager):
         gc.collect()
 
 
-    def init_game_nodes(self):
+    def init_system_nodes(self):
         self.init_scene()
         self.table.render()
 
@@ -164,7 +147,6 @@ class Interface(ShowBase, ModeManager):
                 ball.render()
 
         self.cue.render()
-        self.cue.init_focus(self.balls['cue'])
 
         self.player_cam.create_focus(
             parent = self.table.get_node('cloth'),
@@ -190,9 +172,12 @@ class Interface(ShowBase, ModeManager):
 
 
 class ShotViewer(Interface):
+    is_game = False
+
     def __init__(self, shot=None):
         Interface.__init__(self, shot=shot)
         self.stop()
+        self.is_game = False
 
 
     def start(self):
@@ -200,7 +185,7 @@ class ShotViewer(Interface):
             self.openMainWindow()
 
         self.mouse = Mouse()
-        self.init_game_nodes()
+        self.init_system_nodes()
         params = dict(
             init_animations = True,
             single_instance = True,
@@ -220,34 +205,77 @@ class ShotViewer(Interface):
         self.stop()
 
 
+class Play(Interface, Menus, HUD):
+    is_game = True
 
-
-class Play(Interface, Menus):
     def __init__(self, *args, **kwargs):
         Interface.__init__(self, shot=None)
         Menus.__init__(self)
+        HUD.__init__(self)
 
         self.change_mode('menu')
 
-        taskMgr.setupTaskChain('simulation', numThreads = 1, tickClock = None,
-                               threadPriority = None, frameBudget = None,
-                               frameSync = None, timeslicePriority = None)
+        # This task chain allows simulations to be run in parallel to the game processes
+        taskMgr.setupTaskChain(
+            'simulation',
+            numThreads = 1,
+            tickClock = None,
+            threadPriority = None,
+            frameBudget = None,
+            frameSync = None,
+            timeslicePriority = None
+        )
 
 
     def go(self):
         self.setup()
-        self.init_game_nodes()
+        self.init_system_nodes()
         self.change_mode('aim')
 
 
+    def close_scene(self):
+        Interface.close_scene(self)
+        self.destroy_hud()
+
+
     def setup(self):
+        self.setup_options = self.get_menu_options()
+
         self.setup_table()
+        self.setup_game()
         self.setup_balls()
         self.setup_cue()
 
+        self.init_hud()
+
 
     def setup_table(self):
-        self.table = Table()
+        self.table = Table(
+            w = self.setup_options[ani.options_table_width],
+            l = self.setup_options[ani.options_table_length],
+            cushion_height = self.setup_options[ani.options_cushion_height_frac]*self.setup_options[ani.options_ball_diameter],
+        )
+
+
+    def setup_game(self):
+        """Setup the game class from pooltool.games
+
+        Notes
+        =====
+        - For reasons of bad design, ball kwargs are defined in this method
+        """
+
+        ball_kwargs = dict(
+            R = self.setup_options[ani.options_ball_diameter]/2,
+            u_s = self.setup_options[ani.options_friction_slide],
+            u_r = self.setup_options[ani.options_friction_roll],
+            u_sp = self.setup_options[ani.options_friction_spin],
+        )
+
+        game_class = games.game_classes[self.setup_options[ani.options_game]]
+        self.game = game_class()
+        self.game.init(self.table, ball_kwargs)
+        self.game.start()
 
 
     def setup_cue(self):
@@ -255,13 +283,8 @@ class Play(Interface, Menus):
 
 
     def setup_balls(self):
-        ball_kwargs = {}
-        diamond = layouts.NineBallRack(**ball_kwargs)
-        diamond.center_by_table(self.table)
-        self.balls = {x: y for x, y in enumerate(diamond.balls)}
-
-        self.balls['cue'] = Ball('cue', **ball_kwargs)
-        self.balls['cue'].rvw[0] = [self.table.center[0] + 0.2, self.table.l/4, pooltool.R]
+        self.balls = self.game.layout.get_balls_dict()
+        self.cueing_ball = self.game.set_initial_cueing_ball(self.balls)
 
 
     def start(self):

@@ -77,7 +77,6 @@ class TableRender(Render):
         self.nodes[f"pocket_{pocket_id}"] = node
 
 
-
     def init_pockets(self):
         for pocket_id in self.pockets:
             self.init_pocket(pocket_id)
@@ -157,25 +156,25 @@ class Table(Object, TableRender):
         self.cushion_segments = {
             'linear' : {
                 # long segments
-                '3': LinearCushionSegment('3', p1 = (0, c, self.cushion_height), p2 = (0, self.l/2-s, self.cushion_height)),
-                '6': LinearCushionSegment('6', p1 = (0, self.l/2+s, self.cushion_height), p2 = (0, self.l-c, self.cushion_height)),
-                '9': LinearCushionSegment('9', p1 = (c, self.l, self.cushion_height), p2 = (self.w-c, self.l, self.cushion_height)),
-                '12': LinearCushionSegment('12', p1 = (self.w, self.l-c, self.cushion_height), p2 = (self.w, self.l/2+s, self.cushion_height)),
-                '15': LinearCushionSegment('15', p1 = (self.w, self.l/2-s, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
-                '18': LinearCushionSegment('18', p1 = (self.w-c, 0, self.cushion_height), p2 = (c, 0, self.cushion_height)),
+                '3': LinearCushionSegment('3_edge', p1 = (0, c, self.cushion_height), p2 = (0, self.l/2-s, self.cushion_height)),
+                '6': LinearCushionSegment('6_edge', p1 = (0, self.l/2+s, self.cushion_height), p2 = (0, self.l-c, self.cushion_height)),
+                '9': LinearCushionSegment('9_edge', p1 = (c, self.l, self.cushion_height), p2 = (self.w-c, self.l, self.cushion_height)),
+                '12': LinearCushionSegment('12_edge', p1 = (self.w, self.l-c, self.cushion_height), p2 = (self.w, self.l/2+s, self.cushion_height)),
+                '15': LinearCushionSegment('15_edge', p1 = (self.w, self.l/2-s, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
+                '18': LinearCushionSegment('18_edge', p1 = (self.w-c, 0, self.cushion_height), p2 = (c, 0, self.cushion_height)),
                 # jaw segments
-                '1': LinearCushionSegment('1', p1 = (c-js, -js, self.cushion_height), p2 = (c, 0, self.cushion_height)),
-                '2': LinearCushionSegment('2', p1 = (-js, c-js, self.cushion_height), p2 = (0, c, self.cushion_height)),
-                '4': LinearCushionSegment('4', p1 = (-j, self.l/2-s, self.cushion_height), p2 = (0, self.l/2-s, self.cushion_height)),
-                '5': LinearCushionSegment('5', p1 = (-j, self.l/2+s, self.cushion_height), p2 = (0, self.l/2+s, self.cushion_height)),
-                '7': LinearCushionSegment('7', p1 = (-js, self.l-c+js, self.cushion_height), p2 = (0, self.l-c, self.cushion_height)),
-                '8': LinearCushionSegment('8', p1 = (c-js, self.l+js, self.cushion_height), p2 = (c, self.l, self.cushion_height)),
-                '10': LinearCushionSegment('10', p1 = (self.w-c+js, self.l+js, self.cushion_height), p2 = (self.w-c, self.l, self.cushion_height)),
-                '11': LinearCushionSegment('11', p1 = (self.w+js, self.l-c+js, self.cushion_height), p2 = (self.w, self.l-c, self.cushion_height)),
-                '13': LinearCushionSegment('13', p1 = (self.w+j, self.l/2 + s, self.cushion_height), p2 = (self.w, self.l/2 + s, self.cushion_height)),
-                '14': LinearCushionSegment('14', p1 = (self.w+j, self.l/2 - s, self.cushion_height), p2 = (self.w, self.l/2 - s, self.cushion_height)),
-                '16': LinearCushionSegment('16', p1 = (self.w+js, c-js, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
-                '17': LinearCushionSegment('17', p1 = (self.w-c+js, -js, self.cushion_height), p2 = (self.w-c, 0, self.cushion_height)),
+                '1': LinearCushionSegment('1_edge', p1 = (c-js, -js, self.cushion_height), p2 = (c, 0, self.cushion_height)),
+                '2': LinearCushionSegment('2_edge', p1 = (-js, c-js, self.cushion_height), p2 = (0, c, self.cushion_height)),
+                '4': LinearCushionSegment('4_edge', p1 = (-j, self.l/2-s, self.cushion_height), p2 = (0, self.l/2-s, self.cushion_height)),
+                '5': LinearCushionSegment('5_edge', p1 = (-j, self.l/2+s, self.cushion_height), p2 = (0, self.l/2+s, self.cushion_height)),
+                '7': LinearCushionSegment('7_edge', p1 = (-js, self.l-c+js, self.cushion_height), p2 = (0, self.l-c, self.cushion_height)),
+                '8': LinearCushionSegment('8_edge', p1 = (c-js, self.l+js, self.cushion_height), p2 = (c, self.l, self.cushion_height)),
+                '10': LinearCushionSegment('10_edge', p1 = (self.w-c+js, self.l+js, self.cushion_height), p2 = (self.w-c, self.l, self.cushion_height)),
+                '11': LinearCushionSegment('11_edge', p1 = (self.w+js, self.l-c+js, self.cushion_height), p2 = (self.w, self.l-c, self.cushion_height)),
+                '13': LinearCushionSegment('13_edge', p1 = (self.w+j, self.l/2 + s, self.cushion_height), p2 = (self.w, self.l/2 + s, self.cushion_height)),
+                '14': LinearCushionSegment('14_edge', p1 = (self.w+j, self.l/2 - s, self.cushion_height), p2 = (self.w, self.l/2 - s, self.cushion_height)),
+                '16': LinearCushionSegment('16_edge', p1 = (self.w+js, c-js, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
+                '17': LinearCushionSegment('17_edge', p1 = (self.w-c+js, -js, self.cushion_height), p2 = (self.w-c, 0, self.cushion_height)),
             },
             'circular': {
             }

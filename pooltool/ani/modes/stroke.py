@@ -12,6 +12,7 @@ class StrokeMode(Mode):
     }
 
     def enter(self):
+        self.mode_stroked_from = self.last_mode
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()
@@ -30,11 +31,15 @@ class StrokeMode(Mode):
     def exit(self):
         self.remove_task('stroke_task')
         self.player_cam.store_state('stroke', overwrite=True)
-        self.player_cam.load_state('aim')
 
 
     def stroke_task(self, task):
         if self.keymap[action.stroke]:
+            if self.game.is_call_pocket and self.game.pocket_call is None:
+                return task.cont
+            if self.game.is_call_ball and self.game.ball_call is None:
+                return task.cont
+
             if self.stroke_cue_stick():
                 # The cue stick has contacted the cue ball
                 self.change_mode('calculate')

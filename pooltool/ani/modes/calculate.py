@@ -71,6 +71,7 @@ class CalculateMode(Mode):
         evolver = evolution.get_shot_evolver(algorithm='event')
         self.shot = evolver(cue=self.cue, table=self.table, balls=self.balls)
         self.shot.simulate(continuize=True)
+        self.game.process_shot(self.shot)
 
         self.remove_task('run_simulation')
 

@@ -11,11 +11,11 @@ model_paths = {str(path.stem): Filename.fromOsSpecific(str(path.absolute())) for
 
 menu_text_scale = 0.07
 zoom_sensitivity = 0.3
-max_english = 5/10
-elevate_sensitivity = 3
+max_english = 6/10
+elevate_sensitivity = 13
 english_sensitivity = 0.1
-rotate_sensitivity_x = 13
-rotate_sensitivity_y = 3
+rotate_sensitivity_x = 19
+rotate_sensitivity_y = 5
 rotate_fine_sensitivity_x = 2
 rotate_fine_sensitivity_y = 0
 move_sensitivity = 0.6
@@ -27,6 +27,22 @@ rotate_downtime = 0.3 # number of seconds that camera rotation is disabled when 
 rewind_dt = 0.02
 fast_forward_dt = 0.02
 
+options_table_length = 'Play surface length (ft)'
+options_table_width = 'Play surface width (ft)'
+options_game = 'Game'
+options_8_ball = '8-ball'
+options_9_ball = '9-ball'
+options_sandbox = 'Sandbox'
+options_ball_diameter = 'Ball diameter (in)'
+options_cushion_height_frac = 'Cushion height (rel to ball)'
+options_friction_slide = 'Coeff. sliding friction'
+options_friction_roll = 'Coeff. rolling friction'
+options_friction_spin = 'Coeff. spinning friction'
+
 logo_paths = {
-    'default': Path(pooltool.__file__).parent.parent / 'logo' / 'logo.png'
+    'default': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo.png'),
+    'small': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_small.png'),
+    'smaller': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_smaller.png'),
+    'pt': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_pt.png'),
+    'pt_smaller': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_pt_smaller.png'),
 }
