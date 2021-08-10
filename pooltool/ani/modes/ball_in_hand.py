@@ -70,7 +70,10 @@ class BallInHandMode(Mode):
 
     def ball_in_hand_task(self, task):
         if not self.keymap[action.ball_in_hand]:
-            self.change_mode('aim')
+            self.change_mode(
+                self.last_mode,
+                enter_kwargs=dict(load_prev_cam=True),
+            )
             return task.done
 
         self.move_camera_ball_in_hand()
@@ -94,7 +97,11 @@ class BallInHandMode(Mode):
             if self.keymap['next']:
                 self.keymap['next'] = False
                 if self.try_placement():
-                    self.change_mode('aim', exit_kwargs=dict(success=True))
+                    self.change_mode(
+                        self.last_mode,
+                        exit_kwargs=dict(success=True),
+                        enter_kwargs=dict(load_prev_cam=True),
+                    )
                     return task.done
                 else:
                     # FIXME add error sound and message
