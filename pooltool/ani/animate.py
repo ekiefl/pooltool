@@ -147,7 +147,7 @@ class Interface(ShowBase, ModeManager):
                 ball.render()
 
         self.cue.render()
-        self.cue.init_focus(self.balls['cue'])
+        self.cue.init_focus(self.cueing_ball)
 
         self.player_cam.create_focus(
             parent = self.table.get_node('cloth'),

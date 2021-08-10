@@ -30,6 +30,7 @@ class AimMode(Mode):
         self.mouse.relative()
         self.mouse.track()
 
+        self.cue.init_focus(self.cueing_ball)
         self.cue.show_nodes()
         self.cue.get_node('cue_stick').setX(0)
         self.player_cam.update_focus(self.cueing_ball.get_node('ball').getPos())
