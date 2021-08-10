@@ -100,7 +100,6 @@ class BallInHandMode(Mode):
                     self.change_mode(
                         self.last_mode,
                         exit_kwargs=dict(success=True),
-                        enter_kwargs=dict(load_prev_cam=True),
                     )
                     return task.done
                 else:
