@@ -25,6 +25,7 @@ class Sandbox(Game):
         self.active_player.ball_in_hand = [ball.id for ball in self.layout.get_balls_dict().values()]
         for player in self.players:
             player.can_cue = [ball.id for ball in self.layout.get_balls_dict().values()]
+            player.target_balls = [ball.id for ball in self.layout.get_balls_dict().values()]
 
 
     def setup_initial_layout(self, table, ball_kwargs={}):
