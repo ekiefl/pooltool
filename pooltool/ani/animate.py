@@ -18,6 +18,7 @@ from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import PlayerCam
 
 import gc
+import simplepbr
 
 from panda3d.core import *
 from direct.showbase.ShowBase import ShowBase
@@ -89,6 +90,7 @@ class Interface(ShowBase, ModeManager):
             raise Exception(f"'{self.__class__.__name__}' must set 'is_game' attribute")
 
         ShowBase.__init__(self)
+        simplepbr.init()
 
         self.shot = None
         self.balls = None
