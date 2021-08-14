@@ -18,6 +18,7 @@ from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import PlayerCam
 
 import gc
+import gltf
 import simplepbr
 
 from panda3d.core import *
@@ -91,6 +92,7 @@ class Interface(ShowBase, ModeManager):
 
         ShowBase.__init__(self)
         simplepbr.init()
+        gltf.patch_loader(self.loader)
 
         self.shot = None
         self.balls = None
