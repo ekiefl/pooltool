@@ -8,6 +8,7 @@ from pooltool.objects import *
 
 import numpy as np
 
+from pathlib import Path
 from panda3d.core import *
 
 class TableRender(Render):
@@ -17,25 +18,10 @@ class TableRender(Render):
 
 
     def init_cloth(self):
-        node = render.find('scene').attachNewNode(
-            autils.make_rectangle(
-                x1=0,
-                y1=0,
-                z1=0,
-                x2=self.w,
-                y2=self.l,
-                z2=0,
-                name='cloth'
-            )
-        )
-
-        node.setPos(0, 0, self.height)
-
-        # Currently there are no texture coordinates for make_rectangle, so this just picks a single color
-        cloth_tex = loader.loadTexture(model_paths['blue_cloth'])
-        cloth_tex.setWrapU(Texture.WM_repeat)
-        cloth_tex.setWrapV(Texture.WM_repeat)
-        node.setTexture(cloth_tex)
+        path = str(Path(pooltool.__file__).parent.parent / 'models' / 'table' / 'table_default.glb')
+        node = loader.loadModel(path)
+        node.reparentTo(render.find('scene'))
+        node.setName('cloth')
 
         self.nodes['cloth'] = node
 
@@ -43,9 +29,9 @@ class TableRender(Render):
     def init_cushion_line(self, cushion_id):
         cushion = self.cushion_segments['linear'][cushion_id]
 
-        self.cushion_drawer.moveTo(cushion.p1[0], cushion.p1[1], cushion.p1[2] + self.height)
-        self.cushion_drawer.drawTo(cushion.p2[0], cushion.p2[1], cushion.p2[2] + self.height)
-        node = render.find('scene').attachNewNode(self.cushion_drawer.create())
+        self.cushion_drawer.moveTo(cushion.p1[0], cushion.p1[1], cushion.p1[2])
+        self.cushion_drawer.drawTo(cushion.p2[0], cushion.p2[1], cushion.p2[2])
+        node = render.find('scene').find('cloth').attachNewNode(self.cushion_drawer.create())
 
         self.nodes[f"cushion_{cushion_id}"] = node
 
@@ -55,10 +41,10 @@ class TableRender(Render):
 
         radius = cushion.radius
         center_x, center_y, center_z = cushion.center
-        height = center_z + self.height
+        height = center_z
 
         circle = self.draw_circle(self.cushion_drawer, (center_x, center_y, height), radius, 30)
-        node = render.find('scene').attachNewNode(circle)
+        node = render.find('scene').find('cloth').attachNewNode(circle)
         self.nodes[f"cushion_{cushion_id}"] = node
 
 
@@ -73,7 +59,7 @@ class TableRender(Render):
     def init_pocket(self, pocket_id):
         pocket = self.pockets[pocket_id]
         circle = self.draw_circle(self.pocket_drawer, pocket.center, pocket.radius, 30)
-        node = render.find('scene').attachNewNode(circle)
+        node = render.find('scene').find('cloth').attachNewNode(circle)
         self.nodes[f"pocket_{pocket_id}"] = node
 
 
@@ -183,7 +169,7 @@ class Table(Object, TableRender):
         for x in [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17]:
             self.cushion_segments['circular'][f'{x}t'] = add_circle(str(x))
 
-        height = self.height
+        height = 0
         radius = c*0.70
         self.pockets = {
             'lb': Pocket('lb', center=(-radius/np.sqrt(2), -radius/np.sqrt(2), height), radius=radius),
