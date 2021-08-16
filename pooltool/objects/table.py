@@ -18,7 +18,8 @@ class TableRender(Render):
 
 
     def init_cloth(self):
-        path = str(Path(pooltool.__file__).parent.parent / 'models' / 'table' / 'table_default.glb')
+        #path = str(Path(pooltool.__file__).parent.parent / 'models' / 'table' / 'table_default.glb')
+        path = str(Path(pooltool.__file__).parent.parent / 'models' / 'table' / 'table_test.glb')
         node = loader.loadModel(path)
         node.reparentTo(render.find('scene'))
         node.setName('cloth')
