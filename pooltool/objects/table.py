@@ -59,7 +59,7 @@ class TableRender(Render):
 
     def init_pocket(self, pocket_id):
         pocket = self.pockets[pocket_id]
-        circle = self.draw_circle(self.pocket_drawer, pocket.center, pocket.radius, 30)
+        circle = self.draw_circle(self.pocket_drawer, pocket.center, pocket.radius, 100)
         node = render.find('scene').find('cloth').attachNewNode(circle)
         self.nodes[f"pocket_{pocket_id}"] = node
 
@@ -146,22 +146,7 @@ class PocketTable(Object, TableRender):
         self.center = (self.w/2, self.l/2)
 
         self.cushion_segments = self.get_cushion_segments()
-
-        s = 0.05
-        c = 0.082
-        j = 0.1
-        js = 1/np.sqrt(2) * j
-
-        height = 0
-        radius = c*0.70
-        self.pockets = {
-            'lb': Pocket('lb', center=(-radius/np.sqrt(2), -radius/np.sqrt(2), height), radius=radius),
-            'lc': Pocket('lc', center=(-radius*np.sqrt(2), self.l/2, height), radius=radius),
-            'lt': Pocket('lt', center=(-radius/np.sqrt(2), self.l+radius/np.sqrt(2), height), radius=radius),
-            'rb': Pocket('rb', center=(self.w+radius/np.sqrt(2), -radius/np.sqrt(2), height), radius=radius),
-            'rc': Pocket('rc', center=(self.w+radius*np.sqrt(2), self.l/2, height), radius=radius),
-            'rt': Pocket('rt', center=(self.w+radius/np.sqrt(2), self.l+radius/np.sqrt(2), height), radius=radius),
-        }
+        self.pockets = self.get_pockets()
 
         TableRender.__init__(self)
 
@@ -290,11 +275,30 @@ class PocketTable(Object, TableRender):
                 '17t': CircularCushionSegment('17t', center=(self.w-pw*np.cos(np.pi/4)-dc, -rc, h), radius=rc),
             },
         }
-        #add_circle = lambda x: CircularCushionSegment(f'{x}t', center=self.cushion_segments['linear'][x].p2, radius=0)
-        #for x in [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17]:
-        #    self.cushion_segments['circular'][f'{x}t'] = add_circle(str(x))
 
         return cushion_segments
+
+
+    def get_pockets(self):
+        pw = self.corner_pocket_width
+        cr = self.corner_pocket_radius
+        sr = self.side_pocket_radius
+        cd = self.corner_pocket_depth
+        sd = self.side_pocket_depth
+
+        cD = cr + cd - pw/2
+        sD = sr + sd
+
+        pockets = {
+            'lb': Pocket('lb', center=(-cD/np.sqrt(2), -cD/np.sqrt(2), 0), radius=cr),
+            'lc': Pocket('lc', center=(-sD, self.l/2, 0), radius=sr),
+            'lt': Pocket('lt', center=(-cD/np.sqrt(2), self.l+cD/np.sqrt(2), 0), radius=cr),
+            'rb': Pocket('rb', center=(self.w+cD/np.sqrt(2), -cD/np.sqrt(2), 0), radius=cr),
+            'rc': Pocket('rc', center=(self.w+sD, self.l/2, 0), radius=sr),
+            'rt': Pocket('rt', center=(self.w+cD/np.sqrt(2), self.l+cD/np.sqrt(2), 0), radius=cr),
+        }
+
+        return pockets
 
 
 class BilliardTable(Object, TableRender):
