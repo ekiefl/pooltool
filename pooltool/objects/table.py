@@ -77,13 +77,13 @@ class TableRender(Render):
 
         # draw cushion_segments as edges
         self.cushion_drawer = LineSegs()
-        self.cushion_drawer.setThickness(5)
+        self.cushion_drawer.setThickness(1)
         self.cushion_drawer.setColor(0.3, 0.3, 0.3)
         self.init_cushion_edges()
 
         # draw pockets as unfilled circles
         self.pocket_drawer = LineSegs()
-        self.pocket_drawer.setThickness(5)
+        self.pocket_drawer.setThickness(1)
         self.pocket_drawer.setColor(0, 0, 0)
         self.init_pockets()
 
@@ -189,55 +189,55 @@ class PocketTable(Object, TableRender):
                 ),
                 '6': LinearCushionSegment(
                     '6_edge',
-                    p1 = (0, (self.l+sw)/2, h),
-                    p2 = (0, -pw*np.cos(np.pi/4)+self.l, h)
+                    p1 = (0, (self.l+sw)/2+ds, h),
+                    p2 = (0, -pw*np.cos(np.pi/4)+self.l-dc, h)
                 ),
                 '15': LinearCushionSegment(
                     '15_edge',
-                    p1 = (self.w, pw*np.cos(np.pi/4), h),
-                    p2 = (self.w, (self.l-sw)/2, h)
+                    p1 = (self.w, pw*np.cos(np.pi/4)+dc, h),
+                    p2 = (self.w, (self.l-sw)/2-ds, h)
                 ),
                 '12': LinearCushionSegment(
                     '12_edge',
-                    p1 = (self.w, (self.l+sw)/2, h),
-                    p2 = (self.w, -pw*np.cos(np.pi/4)+self.l, h)
+                    p1 = (self.w, (self.l+sw)/2+ds, h),
+                    p2 = (self.w, -pw*np.cos(np.pi/4)+self.l-dc, h)
                 ),
                 '18': LinearCushionSegment(
                     '18_edge',
-                    p1 = (pw*np.cos(np.pi/4), 0, h),
-                    p2 = (-pw*np.cos(np.pi/4)+self.w, 0, h)
+                    p1 = (pw*np.cos(np.pi/4)+dc, 0, h),
+                    p2 = (-pw*np.cos(np.pi/4)+self.w-dc, 0, h)
                 ),
                 '9': LinearCushionSegment(
                     '9_edge',
-                    p1 = (pw*np.cos(np.pi/4), self.l, h),
-                    p2 = (-pw*np.cos(np.pi/4)+self.w, self.l, h)
+                    p1 = (pw*np.cos(np.pi/4)+dc, self.l, h),
+                    p2 = (-pw*np.cos(np.pi/4)+self.w-dc, self.l, h)
                 ),
                 # side jaw segments
                 '5': LinearCushionSegment(
                     '5_edge',
                     p1 = (-cw, (self.l+sw)/2-cw*np.sin(sa), h),
-                    p2 = (0, (self.l+sw)/2, h),
+                    p2 = (-ds*np.cos(sa), (self.l+sw)/2-ds*np.sin(sa), h),
                 ),
                 '4': LinearCushionSegment(
                     '4_edge',
                     p1 = (-cw, (self.l-sw)/2+cw*np.sin(sa), h),
-                    p2 = (0, (self.l-sw)/2, h),
-                ),
-                '14': LinearCushionSegment(
-                    '14_edge',
-                    p1 = (self.w+cw, (self.l+sw)/2-cw*np.sin(sa), h),
-                    p2 = (self.w, (self.l+sw)/2, h),
+                    p2 = (-ds*np.cos(sa), (self.l-sw)/2+ds*np.sin(sa), h),
                 ),
                 '13': LinearCushionSegment(
                     '13_edge',
+                    p1 = (self.w+cw, (self.l+sw)/2-cw*np.sin(sa), h),
+                    p2 = (self.w+ds*np.cos(sa), (self.l+sw)/2-ds*np.sin(sa), h),
+                ),
+                '14': LinearCushionSegment(
+                    '14_edge',
                     p1 = (self.w+cw, (self.l-sw)/2+cw*np.sin(sa), h),
-                    p2 = (self.w, (self.l-sw)/2, h),
+                    p2 = (self.w+ds*np.cos(sa), (self.l-sw)/2+ds*np.sin(sa), h),
                 ),
                 # corner jaw segments
                 '1': LinearCushionSegment(
                     '1_edge',
                     p1 = (pw*np.cos(np.pi/4)-cw*np.tan(ca), -cw, h),
-                    p2 = (pw*np.cos(np.pi/4), 0, h),
+                    p2 = (pw*np.cos(np.pi/4)-dc*np.sin(ca), -dc*np.cos(ca), h),
                 ),
                 '2': LinearCushionSegment(
                     '2_edge',
@@ -247,36 +247,47 @@ class PocketTable(Object, TableRender):
                 '8': LinearCushionSegment(
                     '8_edge',
                     p1 = (pw*np.cos(np.pi/4)-cw*np.tan(ca), cw+self.l, h),
-                    p2 = (pw*np.cos(np.pi/4), self.l, h),
+                    p2 = (pw*np.cos(np.pi/4)-dc*np.sin(ca), self.l+dc*np.cos(ca), h),
                 ),
                 '7': LinearCushionSegment(
                     '7_edge',
                     p1 = (-cw, -pw*np.cos(np.pi/4)+cw*np.tan(ca)+self.l, h),
-                    p2 = (0, -pw*np.cos(np.pi/4)+self.l, h),
+                    p2 = (-dc*np.cos(ca), -pw*np.cos(np.pi/4)+self.l+dc*np.sin(ca), h),
                 ),
                 '11': LinearCushionSegment(
                     '11_edge',
                     p1 = (cw+self.w, -pw*np.cos(np.pi/4)+cw*np.tan(ca)+self.l, h),
-                    p2 = (self.w, -pw*np.cos(np.pi/4)+self.l, h),
+                    p2 = (self.w+dc*np.cos(ca), -pw*np.cos(np.pi/4)+self.l+dc*np.sin(ca), h),
                 ),
                 '10': LinearCushionSegment(
                     '10_edge',
                     p1 = (-pw*np.cos(np.pi/4)+cw*np.tan(ca)+self.w, cw+self.l, h),
-                    p2 = (-pw*np.cos(np.pi/4)+self.w, self.l, h),
+                    p2 = (-pw*np.cos(np.pi/4)+self.w+dc*np.sin(ca), self.l+dc*np.cos(ca), h),
                 ),
                 '16': LinearCushionSegment(
                     '16_edge',
                     p1 = (cw+self.w, +pw*np.cos(np.pi/4)-cw*np.tan(ca), h),
-                    p2 = (self.w, +pw*np.cos(np.pi/4), h),
+                    p2 = (self.w+dc*np.cos(ca), pw*np.cos(np.pi/4)-dc*np.sin(ca), h),
                 ),
                 '17': LinearCushionSegment(
                     '17_edge',
                     p1 = (-pw*np.cos(np.pi/4)+cw*np.tan(ca)+self.w, -cw, h),
-                    p2 = (-pw*np.cos(np.pi/4)+self.w, 0, h),
+                    p2 = (-pw*np.cos(np.pi/4)+self.w+dc*np.sin(ca), -dc*np.cos(ca), h),
                 ),
             },
             'circular': {
+                '1t': CircularCushionSegment('1t', center=(pw*np.cos(np.pi/4)+dc, -rc, h), radius=rc),
                 '2t': CircularCushionSegment('2t', center=(-rc, pw*np.cos(np.pi/4)+dc, h), radius=rc),
+                '4t': CircularCushionSegment('4t', center=(-rs, self.l/2-sw/2-ds, h), radius=rs),
+                '5t': CircularCushionSegment('5t', center=(-rs, self.l/2+sw/2+ds, h), radius=rs),
+                '7t': CircularCushionSegment('7t', center=(-rc, self.l - (pw*np.cos(np.pi/4)+dc), h), radius=rc),
+                '8t': CircularCushionSegment('8t', center=(pw*np.cos(np.pi/4)+dc, self.l+rc, h), radius=rc),
+                '10t': CircularCushionSegment('10t', center=(self.w-pw*np.cos(np.pi/4)-dc, self.l+rc, h), radius=rc),
+                '11t': CircularCushionSegment('11t', center=(self.w+rc, self.l - (pw*np.cos(np.pi/4)+dc), h), radius=rc),
+                '13t': CircularCushionSegment('13t', center=(self.w+rs, self.l/2+sw/2+ds, h), radius=rs),
+                '14t': CircularCushionSegment('14t', center=(self.w+rs, self.l/2-sw/2-ds, h), radius=rs),
+                '16t': CircularCushionSegment('16t', center=(self.w+rc, pw*np.cos(np.pi/4)+dc, h), radius=rc),
+                '17t': CircularCushionSegment('17t', center=(self.w-pw*np.cos(np.pi/4)-dc, -rc, h), radius=rc),
             },
         }
         #add_circle = lambda x: CircularCushionSegment(f'{x}t', center=self.cushion_segments['linear'][x].p2, radius=0)

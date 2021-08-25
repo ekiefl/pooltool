@@ -32,13 +32,12 @@ corner_pocket_width = 0.118
 corner_pocket_angle = 5.3 # degrees
 corner_pocket_depth = 0.0398
 corner_pocket_radius = 0.124/2,
-corner_jaw_radius = 0.0493
+corner_jaw_radius = 0.0419/2
 side_pocket_width = 0.137
 side_pocket_angle = 7.14 # degrees
 side_pocket_depth = 0.00437
 side_pocket_radius = 0.129/2
-side_jaw_radius = 0.0157/2
-#side_jaw_radius = 0.0457/7
+side_jaw_radius = 0.0159/2
 
 # Ball states
 stationary=0
