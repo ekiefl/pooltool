@@ -7,7 +7,7 @@ import pooltool.games as games
 
 from pooltool.objects.cue import Cue
 from pooltool.objects.ball import Ball
-from pooltool.objects.table import Table
+from pooltool.objects.table import PocketTable, BilliardTable
 from pooltool.games.nine_ball import NineBall
 from pooltool.games.eight_ball import EightBall
 
@@ -254,7 +254,7 @@ class Play(Interface, Menus, HUD):
 
 
     def setup_table(self):
-        self.table = Table(
+        self.table = PocketTable(
             w = self.setup_options[ani.options_table_width],
             l = self.setup_options[ani.options_table_length],
             cushion_height = self.setup_options[ani.options_cushion_height_frac]*self.setup_options[ani.options_ball_diameter],
