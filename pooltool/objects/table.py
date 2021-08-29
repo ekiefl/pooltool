@@ -3,7 +3,6 @@
 import pooltool.utils as utils
 import pooltool.ani.utils as autils
 
-from pooltool.ani import model_paths
 from pooltool.objects import *
 
 import numpy as np
@@ -13,16 +12,24 @@ from panda3d.core import *
 
 
 class TableRender(Render):
-    def __init__(self):
+    def __init__(self, model):
         """A class for all pool table associated panda3d nodes"""
+        self.model = model # relative to repo root
         Render.__init__(self)
 
 
     def init_cloth(self):
-        path = str(Path(pooltool.__file__).parent.parent / 'models' / 'table' / 'table_default.glb')
-        node = loader.loadModel(path)
-        node.reparentTo(render.find('scene'))
-        node.setName('cloth')
+        if self.model is None:
+            node = render.find('scene').attachNewNode('cloth') 
+            path = str(Path(pooltool.__file__).parent.parent / 'models' / 'table' / 'custom.glb')
+            model = loader.loadModel(path)
+            model.reparentTo(node)
+            model.setScale(self.w, self.l, 1)
+        else:
+            path = str(Path(pooltool.__file__).parent.parent / self.model)
+            node = loader.loadModel(path)
+            node.reparentTo(render.find('scene'))
+            node.setName('cloth')
 
         self.nodes['cloth'] = node
 
