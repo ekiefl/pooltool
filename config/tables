@@ -1,0 +1,18 @@
+[7_foot]
+type = pocket
+model = models/table/7_foot.glb
+table_length = 1.9812
+table_width = 0.9906
+table_height = 0.708
+cushion_width = 0.0508
+cushion_height = 0.036576
+corner_pocket_width = 0.118
+corner_pocket_angle = 5.3
+corner_pocket_depth = 0.0398
+corner_pocket_radius = 0.0612
+corner_jaw_radius = 0.02095
+side_pocket_width = 0.137
+side_pocket_angle = 7.14
+side_pocket_depth = 0.00437
+side_pocket_radius = 0.0645
+side_jaw_radius = 0.00795
