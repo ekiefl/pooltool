@@ -20,11 +20,11 @@ R = 0.028575 # ball radius
 u_s = 0.2 # sliding friction
 u_r = 0.01 # rolling friction
 u_sp = 10 * 2/5*R/9 # spinning friction
+
 table_length = 1.9812 # 7-foot table (78x39 in^2 playing surface)
 table_width = 1.9812/2 # 7-foot table (78x39 in^2 playing surface)
-table_height = 0.762
+table_height = 0.708
 lights_height = 1.1 # relative to playing surface
-
 cushion_width = 2*2.54/100 # 2 inches x 2.54 cm/inch x 1/100 m/cm
 cushion_height_fraction = 0.64
 cushion_height = cushion_height_fraction*2*R

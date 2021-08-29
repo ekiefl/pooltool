@@ -15,6 +15,8 @@ class Menus(object):
         self.menus = {}
         self.populate_main()
         self.populate_options()
+        self.populate_table_options()
+        self.populate_ball_options()
 
         self.current_menu = None
 
@@ -35,28 +37,64 @@ class Menus(object):
 
         m.add_dropdown(ani.options_game, options=list(games.game_classes.keys()))
 
-        convert_factor = 12*2.54/100
-        m.add_direct_entry(ani.options_table_length, initial=f"{pooltool.table_length/convert_factor:.3f}", convert_factor=convert_factor)
-
-        convert_factor = 12*2.54/100
-        m.add_direct_entry(ani.options_table_width, initial=f"{pooltool.table_width/convert_factor:.3f}", convert_factor=convert_factor)
-
-        convert_factor = 1
-        m.add_direct_entry(ani.options_cushion_height_frac, initial=f"{pooltool.cushion_height_fraction/convert_factor:.3f}", convert_factor=convert_factor)
-
-        convert_factor = 2.54/100
-        m.add_direct_entry(ani.options_ball_diameter, initial=f"{pooltool.R*2/convert_factor:.3f}", convert_factor=convert_factor)
-
-        convert_factor = 1
-        m.add_direct_entry(ani.options_friction_roll, initial=f"{pooltool.u_r/convert_factor:.3f}", convert_factor=convert_factor)
-
-        convert_factor = 1
-        m.add_direct_entry(ani.options_friction_slide, initial=f"{pooltool.u_s/convert_factor:.3f}", convert_factor=convert_factor)
-
-        convert_factor = 1
-        m.add_direct_entry(ani.options_friction_spin, initial=f"{pooltool.u_sp/convert_factor:.3f}", convert_factor=convert_factor)
+        m.add_button('Customize table', lambda: self.show_menu('table'), scale=ani.menu_text_scale)
+        m.add_button('Customize balls', lambda: self.show_menu('balls'), scale=ani.menu_text_scale)
 
         self.menus['options'] = m
+
+
+    def populate_table_options(self):
+        m = GenericMenu(title = 'Table customization (SI units)')
+        m.add_button('Back', lambda: self.show_menu('options'), scale=ani.menu_text_scale)
+
+        m.add_dropdown(ani.options_table, options=list(ani.table_config.keys()) + ['custom'], command=self.show_custom_table_options)
+
+        m.add_dropdown(ani.options_table_type, options=list(pooltool.objects.table.table_types.keys()), scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_table_length, initial=f"{pooltool.table_length:.5f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_table_width, initial=f"{pooltool.table_width:.5f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_table_height, initial=f"{pooltool.table_height:.5f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_lights_height, initial=f"{pooltool.lights_height:.5f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_cushion_width, initial=f"{pooltool.cushion_width:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_cushion_height, initial=f"{pooltool.cushion_height:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_corner_pocket_width, initial=f"{pooltool.corner_pocket_width:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_corner_pocket_angle, initial=f"{pooltool.corner_pocket_angle:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_corner_pocket_depth, initial=f"{pooltool.corner_pocket_depth:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_corner_pocket_radius, initial=f"{pooltool.corner_pocket_radius:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_corner_jaw_radius, initial=f"{pooltool.corner_jaw_radius:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_side_pocket_width, initial=f"{pooltool.side_pocket_width:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_side_pocket_angle, initial=f"{pooltool.side_pocket_angle:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_side_pocket_depth, initial=f"{pooltool.side_pocket_depth:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_side_pocket_radius, initial=f"{pooltool.side_pocket_radius:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_side_jaw_radius, initial=f"{pooltool.side_jaw_radius:.3f}", scale=ani.menu_text_scale_small)
+
+        self.menus['table'] = m
+
+        for element in self.menus['table'].elements:
+            if element['name'] not in ('Back', ani.options_table):
+                element['content'].hide()
+
+
+    def show_custom_table_options(self, response):
+        if response == 'custom':
+            for element in self.menus['table'].elements:
+                if element['name'] not in ('Back', ani.options_table):
+                    element['content'].show()
+        else:
+            for element in self.menus['table'].elements:
+                if element['name'] not in ('Back', ani.options_table):
+                    element['content'].hide()
+
+
+    def populate_ball_options(self):
+        m = GenericMenu(title = 'Ball customization')
+        m.add_button('Back', lambda: self.show_menu('options'), scale=ani.menu_text_scale)
+
+        m.add_direct_entry(ani.options_ball_diameter, initial=f"{pooltool.R*2:.3f}")
+        m.add_direct_entry(ani.options_friction_roll, initial=f"{pooltool.u_r:.3f}")
+        m.add_direct_entry(ani.options_friction_slide, initial=f"{pooltool.u_s:.3f}")
+        m.add_direct_entry(ani.options_friction_spin, initial=f"{pooltool.u_sp:.3f}")
+
+        self.menus['balls'] = m
 
 
     def show_menu(self, name):
@@ -76,7 +114,7 @@ class Menus(object):
     def get_menu_options(self):
         """Return an dictionary of user's selected (or default) options"""
         options = {}
-        for option in self.menus['options'].elements:
+        for option in self.menus['options'].elements + self.menus['table'].elements + self.menus['balls'].elements:
             if option['type'] in ('dropdown', 'direct_entry'):
                 value = option['content'].get()
                 try:
@@ -167,11 +205,11 @@ class GenericMenu(object):
         })
 
 
-    def add_dropdown(self, text, options=['None'], command=None, convert_factor=None):
+    def add_dropdown(self, text, options=['None'], command=None, convert_factor=None, scale=ani.menu_text_scale):
 
         self.get_next_pos(move=self.move/2)
 
-        dropdown = make_dropdown(text, options, command)
+        dropdown = make_dropdown(text, options, command, scale)
         dropdown.reparentTo(self.titleMenu)
         dropdown.setPos((self.next_x, 0, self.next_y))
 
@@ -185,11 +223,11 @@ class GenericMenu(object):
         self.get_next_pos()
 
 
-    def add_direct_entry(self, text, command=None, initial="None", convert_factor=None):
+    def add_direct_entry(self, text, command=None, initial="None", convert_factor=None, scale=None):
 
         self.get_next_pos(move=self.move/2)
 
-        direct_entry = make_direct_entry(text, command, initial)
+        direct_entry = make_direct_entry(text, command, scale, initial)
         direct_entry.reparentTo(self.titleMenu)
         direct_entry.setPos((self.next_x, 0, self.next_y))
 
@@ -235,9 +273,9 @@ def make_button(text, command=None, **kwargs):
     )
 
 
-def make_dropdown(text, options=['None'], command=None):
+def make_dropdown(text, options=['None'], command=None, scale=ani.menu_text_scale):
     dropdown = DirectOptionMenu(
-        scale=ani.menu_text_scale,
+        scale=scale,
         items=options,
         highlightColor=(0.65, 0.65, 0.65, 1),
         command=command,
@@ -257,10 +295,10 @@ def make_dropdown(text, options=['None'], command=None):
     return dropdown
 
 
-def make_direct_entry(text, command=None, initial="None"):
+def make_direct_entry(text, command=None, scale=ani.menu_text_scale, initial="None"):
     entry = DirectEntry(
         text = "",
-        scale = ani.menu_text_scale,
+        scale = scale,
         command = command,
         initialText = initial,
         numLines = 1,

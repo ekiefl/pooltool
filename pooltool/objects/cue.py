@@ -2,7 +2,6 @@
 
 import pooltool.utils as utils
 
-from pooltool.ani import model_paths
 from pooltool.events import StickBallCollision
 from pooltool.objects import *
 

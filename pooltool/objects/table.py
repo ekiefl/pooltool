@@ -77,13 +77,14 @@ class TableRender(Render):
 
         # draw cushion_segments as edges
         self.cushion_drawer = LineSegs()
-        self.cushion_drawer.setThickness(1)
-        self.cushion_drawer.setColor(0.3, 0.3, 0.3)
+        self.cushion_drawer.setThickness(2)
+        self.cushion_drawer.setColor(0.3, 0.3, 1)
+
         self.init_cushion_edges()
 
         # draw pockets as unfilled circles
         self.pocket_drawer = LineSegs()
-        self.pocket_drawer.setThickness(1)
+        self.pocket_drawer.setThickness(2)
         self.pocket_drawer.setColor(0, 0, 0)
         self.init_pockets()
 
@@ -121,13 +122,13 @@ class TableRender(Render):
 class PocketTable(Object, TableRender):
     object_type = 'pocket_table'
 
-    def __init__(self, w=None, l=None, cushion_width=None, cushion_height=None, corner_pocket_width=None,
+    def __init__(self, table_width=None, table_length=None, cushion_width=None, cushion_height=None, corner_pocket_width=None,
                  corner_pocket_angle=None, corner_pocket_depth=None, corner_pocket_radius=None, corner_jaw_radius=None,
                  side_pocket_width=None, side_pocket_angle=None, side_pocket_depth=None, side_pocket_radius=None,
-                 side_jaw_radius=None, table_height=None, lights_height=None):
+                 side_jaw_radius=None, table_height=None, lights_height=None, model=None):
 
-        self.w = w or pooltool.table_width
-        self.l = l or pooltool.table_length
+        self.w = table_width or pooltool.table_width
+        self.l = table_length or pooltool.table_length
         self.cushion_width = cushion_width or pooltool.cushion_width
         self.cushion_height = cushion_height or pooltool.cushion_height
         self.corner_pocket_width = corner_pocket_width or pooltool.corner_pocket_width
@@ -148,7 +149,7 @@ class PocketTable(Object, TableRender):
         self.cushion_segments = self.get_cushion_segments()
         self.pockets = self.get_pockets()
 
-        TableRender.__init__(self)
+        TableRender.__init__(self, model=model)
 
 
     def get_cushion_segments(self):
@@ -303,68 +304,8 @@ class PocketTable(Object, TableRender):
 
 class BilliardTable(Object, TableRender):
     object_type = 'billiard_table'
-
-    def __init__(self, w=None, l=None,
-                 edge_width=None, cushion_width=None, cushion_height=None,
-                 table_height=None, lights_height=None):
-
-        self.w = w or pooltool.table_width
-        self.l = l or pooltool.table_length
-        self.edge_width = edge_width or pooltool.table_edge_width
-        self.cushion_height = cushion_height or pooltool.cushion_height
-        self.cushion_width = cushion_width or pooltool.cushion_width # for visualization
-        self.height = table_height or pooltool.table_height # for visualization
-        self.lights_height = lights_height or pooltool.lights_height # for visualization
-
-        self.center = (self.w/2, self.l/2)
-
-        s = 0.05
-        c = 0.082
-        j = 0.1
-        js = 1/np.sqrt(2) * j
-        # https://ekiefl.github.io/2020/12/20/pooltool-alg/#-ball-cushion-collision-times for diagram
-        self.cushion_segments = {
-            'linear' : {
-                # long segments
-                '3': LinearCushionSegment('3_edge', p1 = (0, c, self.cushion_height), p2 = (0, self.l/2-s, self.cushion_height)),
-                '6': LinearCushionSegment('6_edge', p1 = (0, self.l/2+s, self.cushion_height), p2 = (0, self.l-c, self.cushion_height)),
-                '9': LinearCushionSegment('9_edge', p1 = (c, self.l, self.cushion_height), p2 = (self.w-c, self.l, self.cushion_height)),
-                '12': LinearCushionSegment('12_edge', p1 = (self.w, self.l-c, self.cushion_height), p2 = (self.w, self.l/2+s, self.cushion_height)),
-                '15': LinearCushionSegment('15_edge', p1 = (self.w, self.l/2-s, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
-                '18': LinearCushionSegment('18_edge', p1 = (self.w-c, 0, self.cushion_height), p2 = (c, 0, self.cushion_height)),
-                # jaw segments
-                '1': LinearCushionSegment('1_edge', p1 = (c-js, -js, self.cushion_height), p2 = (c, 0, self.cushion_height)),
-                '2': LinearCushionSegment('2_edge', p1 = (-js, c-js, self.cushion_height), p2 = (0, c, self.cushion_height)),
-                '4': LinearCushionSegment('4_edge', p1 = (-j, self.l/2-s, self.cushion_height), p2 = (0, self.l/2-s, self.cushion_height)),
-                '5': LinearCushionSegment('5_edge', p1 = (-j, self.l/2+s, self.cushion_height), p2 = (0, self.l/2+s, self.cushion_height)),
-                '7': LinearCushionSegment('7_edge', p1 = (-js, self.l-c+js, self.cushion_height), p2 = (0, self.l-c, self.cushion_height)),
-                '8': LinearCushionSegment('8_edge', p1 = (c-js, self.l+js, self.cushion_height), p2 = (c, self.l, self.cushion_height)),
-                '10': LinearCushionSegment('10_edge', p1 = (self.w-c+js, self.l+js, self.cushion_height), p2 = (self.w-c, self.l, self.cushion_height)),
-                '11': LinearCushionSegment('11_edge', p1 = (self.w+js, self.l-c+js, self.cushion_height), p2 = (self.w, self.l-c, self.cushion_height)),
-                '13': LinearCushionSegment('13_edge', p1 = (self.w+j, self.l/2 + s, self.cushion_height), p2 = (self.w, self.l/2 + s, self.cushion_height)),
-                '14': LinearCushionSegment('14_edge', p1 = (self.w+j, self.l/2 - s, self.cushion_height), p2 = (self.w, self.l/2 - s, self.cushion_height)),
-                '16': LinearCushionSegment('16_edge', p1 = (self.w+js, c-js, self.cushion_height), p2 = (self.w, c, self.cushion_height)),
-                '17': LinearCushionSegment('17_edge', p1 = (self.w-c+js, -js, self.cushion_height), p2 = (self.w-c, 0, self.cushion_height)),
-            },
-            'circular': {
-            }
-        }
-        add_circle = lambda x: CircularCushionSegment(f'{x}t', center=self.cushion_segments['linear'][x].p2, radius=0)
-        for x in [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17]:
-            self.cushion_segments['circular'][f'{x}t'] = add_circle(str(x))
-
-        height = 0
-        radius = c*0.70
-        self.pockets = {
-            'lb': Pocket('lb', center=(-radius/np.sqrt(2), -radius/np.sqrt(2), height), radius=radius),
-            'lc': Pocket('lc', center=(-radius*np.sqrt(2), self.l/2, height), radius=radius),
-            'lt': Pocket('lt', center=(-radius/np.sqrt(2), self.l+radius/np.sqrt(2), height), radius=radius),
-            'rb': Pocket('rb', center=(self.w+radius/np.sqrt(2), -radius/np.sqrt(2), height), radius=radius),
-            'rc': Pocket('rc', center=(self.w+radius*np.sqrt(2), self.l/2, height), radius=radius),
-            'rt': Pocket('rt', center=(self.w+radius/np.sqrt(2), self.l+radius/np.sqrt(2), height), radius=radius),
-        }
-
-        TableRender.__init__(self)
+    def __init__(self):
+        pass
 
 
 class CushionSegment(Object):
@@ -443,3 +384,7 @@ class Pocket(object):
         self.contains.remove(ball_id)
 
 
+table_types = {
+    'pocket': PocketTable,
+    'billiard': BilliardTable,
+}

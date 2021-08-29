@@ -3,7 +3,6 @@
 import pooltool.physics as physics
 import pooltool.ani.utils as autils
 
-from pooltool.ani import model_paths
 from pooltool.events import *
 from pooltool.objects import *
 
@@ -22,14 +21,6 @@ class BallRender(Render):
         node = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}")
 
         sphere_node = loader.loadModel('models/smiley')
-        expected_texture_name = f"{str(self.id).split('_')[0]}_ball"
-
-        try:
-            tex = loader.loadTexture(model_paths[expected_texture_name])
-            sphere_node.setTexture(tex, 1)
-        except KeyError:
-            # No ball texture is found for the given ball.id. Keeping smiley
-            pass
 
         sphere_node.reparentTo(node)
         sphere_node.setScale(self.get_scale_factor(sphere_node))
@@ -40,27 +31,6 @@ class BallRender(Render):
         self.nodes['ball'] = node
 
         self.randomize_orientation()
-
-
-    def init_arrow(self):
-        """Good for spin diagnostics"""
-        arrow = loader.loadModel(model_paths['cylinder'])
-
-        m, M = arrow.getTightBounds()
-        model_R, model_l = (M-m)[0]/2, (M-m)[2]
-
-        arrow.setSx(self.R / 7 / model_R)
-        arrow.setSy(self.R / 7 / model_R)
-        arrow.setSz(self.R*3 / model_l)
-
-        arrow.setColor(0, 0, 1, 1)
-        m, M = arrow.getTightBounds()
-        model_R, model_l = (M-m)[0]/2, (M-m)[2]
-
-        arrow.reparentTo(self.nodes['ball'])
-        arrow.setZ(arrow.getZ() + model_l/2)
-
-        self.nodes['arrow'] = arrow
 
 
     def get_scale_factor(self, node):
@@ -124,7 +94,6 @@ class BallRender(Render):
     def render(self):
         super().render()
         self.init_sphere()
-        #self.init_arrow()
 
 
 class BallHistory(object):
