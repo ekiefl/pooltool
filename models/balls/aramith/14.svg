@@ -13,11 +13,11 @@
    width="6144"
    height="2816"
    viewBox="0 0 6144 2816"
-   sodipodi:docname="15_ref.svg"
+   sodipodi:docname="14.svg"
    inkscape:version="1.0.2 (e86c8708, 2021-01-15)"
-   inkscape:export-filename="/Users/evan/Software/pooltool/models/balls/aramith/9_ref.png"
-   inkscape:export-xdpi="300"
-   inkscape:export-ydpi="300">
+   inkscape:export-filename="/Users/evan/Software/pooltool/models/balls/aramith/14.png"
+   inkscape:export-xdpi="150"
+   inkscape:export-ydpi="150">
   <metadata
      id="metadata875">
     <rdf:RDF>
@@ -26,7 +26,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -74,15 +74,15 @@
     <filter
        inkscape:collect="always"
        style="color-interpolation-filters:sRGB"
-       id="filter16873"
-       x="-0.21304643"
-       width="1.4260929"
-       y="-0.12969946"
-       height="1.2593989">
+       id="filter16120"
+       x="-0.18163547"
+       width="1.3632709"
+       y="-0.12403117"
+       height="1.2480623">
       <feGaussianBlur
          inkscape:collect="always"
-         stdDeviation="2.6142887"
-         id="feGaussianBlur16875" />
+         stdDeviation="2.4983401"
+         id="feGaussianBlur16122" />
     </filter>
   </defs>
   <sodipodi:namedview
@@ -98,9 +98,9 @@
      inkscape:window-height="1005"
      id="namedview871"
      showgrid="false"
-     inkscape:zoom="1.7111208"
-     inkscape:cx="1766.9414"
-     inkscape:cy="429.3214"
+     inkscape:zoom="1.7449664"
+     inkscape:cx="1657.2215"
+     inkscape:cy="470.67657"
      inkscape:window-x="0"
      inkscape:window-y="23"
      inkscape:window-maximized="1"
@@ -120,7 +120,7 @@
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <rect
-       style="fill:#924e23;fill-opacity:1;stroke:none;stroke-width:1.86525;stroke-linecap:round;stroke-opacity:1"
+       style="fill:#56b07e;fill-opacity:1;stroke:none;stroke-width:1.86525;stroke-linecap:round;stroke-opacity:1"
        id="rect946"
        width="822.09424"
        height="170"
@@ -212,14 +212,14 @@
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <path
-       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.318304px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 1755.3205,455.3578 c 0,0 0.4958,-2.15728 1.1776,-2.76403 0.6818,-0.60673 2.1694,-0.67415 2.1694,-0.67415 l 16.9212,0.13483 c 0,0 2.0455,0.26966 2.0455,2.62921 0,2.35951 -1.7356,3.23592 -1.7356,3.23592 l -15.1237,0.0675 -1.9215,8.76398 c 0,0 5.408,-1.73597 11.0252,0.3792 5.6172,2.11515 11.4435,8.08143 9.0572,20.2499 -2.3864,12.16847 -13.2953,14.47743 -19.8886,12.0589 -6.5934,-2.41854 -8.8714,-9.56454 -8.8714,-9.56454 0,0 -0.9296,-3.23593 1.9835,-4.11233 2.9132,-0.87638 3.7191,2.6292 3.7191,2.6292 0,0 2.2158,4.14603 6.2368,5.32581 4.0213,1.17976 10.2393,-0.68413 11.3661,-9.77523 1.1038,-8.90522 -5.8108,-12.08419 -10.4828,-11.89882 -4.6719,0.18541 -6.6863,3.47192 -6.6863,3.47192 0,0 -0.6198,1.88763 -2.8511,0.94379 -2.2314,-0.94379 -2.0455,-2.764 -2.0455,-2.764 z"
-       id="path2475"
-       sodipodi:nodetypes="csccscccssscscssscscc" />
+       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.288238px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 1774.257,483.80838 0.057,-27.19635 c 0,0 0.1216,-4.01042 -4.6529,-4.86647 -2.9094,-0.52168 -7.034,4.17692 -7.034,4.17692 0,0 -8.4049,8.20626 -12.3659,20.19363 -1.8956,5.73674 -2.8996,11.21648 -2.8996,11.21648 0,0 -0.5951,1.94867 1.514,2.83527 0.9493,0.39915 2.8085,0.47724 2.8085,0.47724 l 16.5822,-0.0773 0.01,7.10189 c 0,0 -0.2049,2.32471 3.1432,2.37761 2.8033,0.0442 2.9315,-2.20954 2.9315,-2.20954 l 0.066,-7.36284 3.8922,-0.0588 c 0,0 2.0196,-0.37692 1.9858,-3.14796 -0.033,-2.771 -2.1419,-3.25883 -2.1419,-3.25883 l -24.3675,0.10824 c 0,0 1.6239,-7.29974 5.3556,-14.11168 3.7318,-6.81193 9.2069,-11.13854 9.2069,-11.13854 l -0.228,25.98641 6.1494,-0.0928 z"
+       id="path2359"
+       sodipodi:nodetypes="ccscscscccscccsccscccc" />
     <path
-       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.31830399999999998px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter16873)"
-       d="m 1755.3205,455.3578 c 0,0 0.4958,-2.15728 1.1776,-2.76403 0.6818,-0.60673 2.1694,-0.67415 2.1694,-0.67415 l 16.9212,0.13483 c 0,0 2.0455,0.26966 2.0455,2.62921 0,2.35951 -1.7356,3.23592 -1.7356,3.23592 l -15.1237,0.0675 -1.9215,8.76398 c 0,0 5.408,-1.73597 11.0252,0.3792 5.6172,2.11515 11.4435,8.08143 9.0572,20.2499 -2.3864,12.16847 -13.2953,14.47743 -19.8886,12.0589 -6.5934,-2.41854 -8.8714,-9.56454 -8.8714,-9.56454 0,0 -0.9296,-3.23593 1.9835,-4.11233 2.9132,-0.87638 3.7191,2.6292 3.7191,2.6292 0,0 2.2158,4.14603 6.2368,5.32581 4.0213,1.17976 10.2393,-0.68413 11.3661,-9.77523 1.1038,-8.90522 -5.8108,-12.08419 -10.4828,-11.89882 -4.6719,0.18541 -6.6863,3.47192 -6.6863,3.47192 0,0 -0.6198,1.88763 -2.8511,0.94379 -2.2314,-0.94379 -2.0455,-2.764 -2.0455,-2.764 z"
-       id="path16795"
-       sodipodi:nodetypes="csccscccssscscssscscc" />
+       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.28823799999999999px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter16120)"
+       d="m 1774.257,483.80838 0.057,-27.19635 c 0,0 0.1216,-4.01042 -4.6529,-4.86647 -2.9094,-0.52168 -7.034,4.17692 -7.034,4.17692 0,0 -8.4049,8.20626 -12.3659,20.19363 -1.8956,5.73674 -2.8996,11.21648 -2.8996,11.21648 0,0 -0.5951,1.94867 1.514,2.83527 0.9493,0.39915 2.8085,0.47724 2.8085,0.47724 l 16.5822,-0.0773 0.01,7.10189 c 0,0 -0.2049,2.32471 3.1432,2.37761 2.8033,0.0442 2.9315,-2.20954 2.9315,-2.20954 l 0.066,-7.36284 3.8922,-0.0588 c 0,0 2.0196,-0.37692 1.9858,-3.14796 -0.033,-2.771 -2.1419,-3.25883 -2.1419,-3.25883 l -24.3675,0.10824 c 0,0 1.6239,-7.29974 5.3556,-14.11168 3.7318,-6.81193 9.2069,-11.13854 9.2069,-11.13854 l -0.228,25.98641 6.1494,-0.0928 z"
+       id="path16018"
+       sodipodi:nodetypes="ccscscscccscccsccscccc" />
   </g>
 </svg>

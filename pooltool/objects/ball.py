@@ -8,6 +8,7 @@ from pooltool.objects import *
 
 import numpy as np
 
+from pathlib import Path
 from direct.interval.IntervalGlobal import *
 
 class BallRender(Render):
@@ -20,7 +21,13 @@ class BallRender(Render):
     def init_sphere(self):
         node = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}")
 
-        sphere_node = loader.loadModel('models/smiley')
+        expected_path = Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'aramith' / f'{self.id}.glb'
+        if expected_path.exists():
+            path = str(expected_path)
+        else:
+            path = str(Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'aramith' / '1.glb')
+
+        sphere_node = loader.loadModel(path)
 
         sphere_node.reparentTo(node)
         sphere_node.setScale(self.get_scale_factor(sphere_node))
