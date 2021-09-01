@@ -170,29 +170,6 @@ class Interface(ShowBase, ModeManager):
         node.setY(self.table.l/2)
         node.setName('room')
 
-        plight1 = PointLight('plight1')
-        intensity = 20
-        plight1.setColor((intensity, intensity, intensity, 1))
-        plight1.attenuation = (1, 0, 1)
-        plnp = render.attachNewNode(plight1)
-        plnp.setPos(-4.1358-self.table.w/2, 2.17+self.table.l/2, 2.2)
-        render.setLight(plnp)
-
-        plight21 = PointLight('plight21')
-        intensity = 20
-        plight21.setColor((intensity, intensity, intensity, 1))
-        plight21.attenuation = (1, 0, 1)
-        plnp = render.attachNewNode(plight21)
-        plnp.setPos(+4.1358-self.table.w/2, 2.17+self.table.l/2, 2.2)
-        render.setLight(plnp)
-
-        alight = AmbientLight('alight')
-        intensity = 0.3
-        alight.setColor((intensity, intensity, intensity, 1))
-        alnp = render.attachNewNode(alight)
-        render.setLight(alnp)
-
-
 
     def monitor(self, task):
         #print(f"Mode: {self.mode}")
