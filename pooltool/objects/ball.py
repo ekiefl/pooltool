@@ -20,10 +20,11 @@ class BallRender(Render):
 
 
     def init_sphere(self):
-        node = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}")
+        ball = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}")
 
         fallback_path = str(Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'aramith' / '1.glb')
         expected_path = Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'aramith' / f'{self.id}.glb'
+        shadow_path = Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'aramith' / f'shadow.glb'
 
         if expected_path.exists():
             path = str(expected_path)
@@ -31,7 +32,7 @@ class BallRender(Render):
             path = fallback_path
 
         sphere_node = base.loader.loadModel(path)
-        sphere_node.reparentTo(node)
+        sphere_node.reparentTo(ball)
 
         # https://discourse.panda3d.org/t/visual-artifact-at-poles-of-uv-sphere-gltf-format/27975/8
         if path == fallback_path:
@@ -41,10 +42,15 @@ class BallRender(Render):
         tex.set_minfilter(SamplerState.FT_linear)
 
         sphere_node.setScale(self.get_scale_factor(sphere_node))
-        node.setPos(*self.rvw[0,:])
+        ball.setPos(*self.rvw[0,:])
+
+        shadow_node = base.loader.loadModel(shadow_path)
+        shadow_node.reparentTo(render.find('scene').find('cloth'))
+        shadow_node.setPos(self.rvw[0,0], self.rvw[0,1], 0)
 
         self.nodes['sphere'] = sphere_node
-        self.nodes['ball'] = node
+        self.nodes['shadow'] = shadow_node
+        self.nodes['ball'] = ball
 
         self.randomize_orientation()
 
@@ -68,6 +74,7 @@ class BallRender(Render):
 
     def set_render_state_as_object_state(self):
         self.nodes['ball'].setPos(*self.rvw[0,:])
+        self.nodes['shadow'].setPos(self.rvw[0,0], self.rvw[0,1], 0)
 
 
     def set_playback_sequence(self, playback_speed=1):
@@ -81,18 +88,28 @@ class BallRender(Render):
 
         # Init the sequences
         ball_sequence = Sequence()
+        shadow_sequence = Sequence()
 
         for i in range(len(playback_dts)):
+            x, y, z = xyzs[i+1]
+
             # Append to ball sequence
             ball_sequence.append(LerpPosQuatInterval(
                 nodePath = self.nodes['ball'],
                 duration = playback_dts[i],
-                pos = xyzs[i+1],
+                pos = (x, y, z),
                 quat = quats[i+1]
+            ))
+
+            shadow_sequence.append(LerpPosInterval(
+                nodePath = self.nodes['shadow'],
+                duration = playback_dts[i],
+                pos = (x, y, 0),
             ))
 
         self.playback_sequence = Parallel()
         self.playback_sequence.append(ball_sequence)
+        self.playback_sequence.append(shadow_sequence)
 
 
     def randomize_orientation(self):

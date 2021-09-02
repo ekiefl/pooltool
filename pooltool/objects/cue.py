@@ -35,7 +35,6 @@ class CueRender(Render):
 
 
     def init_focus(self, ball):
-        # FIXME this is a potentially memory-leaky reference to an object
         self.follow = ball
 
         cue_stick = self.get_node('cue_stick')
