@@ -12,6 +12,7 @@ class Environment(object):
         self.room = None
 
         self.slights_on = True
+        self.shadow = True
 
         self.slights = {}
         self.plights = {}
@@ -121,7 +122,7 @@ class Environment(object):
                     strength = 2,
                     far = 1,
                     illuminates = (self.room,),
-                    shadows = False,
+                    shadows = self.shadow,
                 ),
                 'under_bar_1_2': self.get_slight(
                     light_id = 1,
@@ -130,7 +131,7 @@ class Environment(object):
                     strength = 2,
                     far = 1,
                     illuminates = (self.room,),
-                    shadows = False,
+                    shadows = self.shadow,
                 ),
                 'under_bar_1_3': self.get_slight(
                     light_id = 2,
@@ -139,7 +140,7 @@ class Environment(object):
                     strength = 2,
                     far = 1,
                     illuminates = (self.room,),
-                    shadows = False,
+                    shadows = self.shadow,
                 ),
                 # under bar #2
                 'under_bar_2_1': self.get_slight(
@@ -149,7 +150,7 @@ class Environment(object):
                     strength = 2,
                     far = 1,
                     illuminates = (self.room,),
-                    shadows = False,
+                    shadows = self.shadow,
                 ),
                 'under_bar_2_2': self.get_slight(
                     light_id = 4,
@@ -158,7 +159,7 @@ class Environment(object):
                     strength = 2,
                     far = 1,
                     illuminates = (self.room,),
-                    shadows = False,
+                    shadows = self.shadow,
                 ),
                 'cues': self.get_slight(
                     light_id = 5,
@@ -167,7 +168,7 @@ class Environment(object):
                     fov = (30, 30),
                     far = 2,
                     illuminates = (self.room,),
-                    shadows = True,
+                    shadows = self.shadow,
                 ),
             }
         else:

@@ -24,7 +24,6 @@ class BallRender(Render):
 
         fallback_path = str(Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'aramith' / '1.glb')
         expected_path = Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'aramith' / f'{self.id}.glb'
-        shadow_path = Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'aramith' / f'shadow.glb'
 
         if expected_path.exists():
             path = str(expected_path)
@@ -44,15 +43,31 @@ class BallRender(Render):
         sphere_node.setScale(self.get_scale_factor(sphere_node))
         ball.setPos(*self.rvw[0,:])
 
-        shadow_node = base.loader.loadModel(shadow_path)
-        shadow_node.reparentTo(render.find('scene').find('cloth'))
-        shadow_node.setPos(self.rvw[0,0], self.rvw[0,1], 0)
+        shadow_node = self.init_shadow()
 
         self.nodes['sphere'] = sphere_node
         self.nodes['shadow'] = shadow_node
         self.nodes['ball'] = ball
 
         self.randomize_orientation()
+
+
+    def init_shadow(self):
+        N = 12
+        z_offset = 0.0005
+        extent = 0.9
+
+        shadow_path = Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'aramith' / f'shadow.glb'
+        shadow_node = render.find('scene').find('cloth').attachNewNode(f'shadow_{self.id}')
+        shadow_node.setPos(self.rvw[0,0], self.rvw[0,1], 0)
+
+        for i in range(1,N+1):
+            shadow_layer = base.loader.loadModel(shadow_path)
+            shadow_layer.reparentTo(shadow_node)
+            shadow_layer.setScale(i/N*extent)
+            shadow_layer.setZ(z_offset*(1 - i/N))
+
+        return shadow_node
 
 
     def get_scale_factor(self, node):
