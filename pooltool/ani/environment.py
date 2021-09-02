@@ -11,6 +11,8 @@ class Environment(object):
         self.set_table_offset(table)
         self.room = None
 
+        self.slights_on = True
+
         self.slights = {}
         self.plights = {}
 
@@ -24,7 +26,7 @@ class Environment(object):
         self.dlight_color = (0.8, 0.8, 0.7, 1)
 
 
-    def get_slight(self, light_id, pos, hpr, illuminates, strength=None, color=None, fov=60, shadows=False, near=0.01, far=10):
+    def get_slight(self, light_id, pos, hpr, illuminates, strength=None, color=None, fov=60, shadows=False, near=0.01, far=10, frustum=False):
         if strength is None:
             strength = self.slight_str
         if color is None:
@@ -45,7 +47,8 @@ class Environment(object):
 
         if shadows:
             slight.setShadowCaster(True, 512, 512)
-            slight.showFrustum()
+            if frustum:
+                slight.showFrustum()
 
         slnp = render.attachNewNode(slight)
         slnp.setPos((self.offset[0]+pos[0], self.offset[1]+pos[1], self.offset[2]+pos[2]))
@@ -57,7 +60,7 @@ class Environment(object):
         return slnp
 
 
-    def get_plight(self, light_id, pos, illuminates, strength=None, color=None, shadows=False):
+    def get_plight(self, light_id, pos, illuminates, strength=None, color=None):
         if strength is None:
             strength = self.plight_str
         if color is None:
@@ -68,10 +71,6 @@ class Environment(object):
         plight = PointLight(f'plight_{light_id}')
         plight.setColor(color)
         plight.attenuation = (1, 0, 1)
-
-        if shadows:
-            plight.setShadowCaster(True, 512, 512)
-            plight.showFrustum()
 
         plnp = render.attachNewNode(plight)
         plnp.setPos((self.offset[0]+pos[0], self.offset[1]+pos[1], self.offset[2]+pos[2]))
@@ -106,125 +105,97 @@ class Environment(object):
 
 
     def load_lights(self):
-        #render.setShaderAuto()
-
-        a_str = 0.05
+        a_str = 0.1
         alight = AmbientLight('alight')
         alight.setColor((a_str, a_str, a_str, 1))
         alnp = render.attachNewNode(alight)
         render.setLight(alnp)
 
-        self.slights = {
-            # under bar #1
-            0: self.get_slight(
-                light_id = 0,
-                pos = (-4.0343, 0.83994, 0.97004),
-                hpr = (-90, -95, 0),
-                strength = 2,
-                illuminates = (self.room,),
-                shadows = True,
-            ),
-            1: self.get_slight(
-                light_id = 1,
-                pos = (-4.0343, -1.78035, 0.97004),
-                hpr = (-90, -95, 0),
-                strength = 2,
-                illuminates = (self.room,),
-                shadows = True,
-            ),
-            2: self.get_slight(
-                light_id = 2,
-                pos = (-4.0343, 3.18681, 0.97004),
-                hpr = (-90, -95, 0),
-                strength = 2,
-                illuminates = (self.room,),
-                shadows = True,
-            ),
-            # under bar #2
-            3: self.get_slight(
-                light_id = 3,
-                pos = (1.6281, -4.7401, 0.96149),
-                hpr = (0, -95, 0),
-                strength = 2,
-                illuminates = (self.room,),
-                shadows = True,
-            ),
-            4: self.get_slight(
-                light_id = 4,
-                pos = (3.0487, -4.7401, 0.96149),
-                hpr = (0, -95, 0),
-                strength = 2,
-                illuminates = (self.room,),
-                shadows = True,
-            ),
-            ## above bar #1
-            #5: self.get_slight(
-            #    light_id = 5,
-            #    pos = (-4.1358+0.08, 1.9538, 2.2042),
-            #    hpr = (-90, -45, 0),
-            #    fov = (130, 90),
-            #    far = 1.5,
-            #    illuminates = (render.find('scene'),),
-            #    shadows = True,
-            #),
-            #6: self.get_slight(
-            #    light_id = 6,
-            #    pos = (-4.1358+0.08, -1.281, 2.2042),
-            #    hpr = (-90, -45, 0),
-            #    fov = (130, 90),
-            #    far = 1.5,
-            #    illuminates = (render.find('scene'),),
-            #    shadows = True,
-            #),
-            ## above cues
-            7: self.get_slight(
-                light_id = 7,
-                pos = (0.068, -4.811+0.04, 2.2599-0.04),
-                hpr = (0, -100, 0),
-                fov = (30, 30),
-                far = 2,
-                illuminates = (render.find('scene'),),
-                shadows = True,
-            ),
-            ## cocktail corner
-            #8: self.get_slight(
-            #    light_id = 8,
-            #    pos = (4.0877-0.08, 3.5745, 2.2042),
-            #    hpr = (90, -45, 0),
-            #    fov = (130, 90),
-            #    far = 1.5,
-            #    illuminates = (render.find('scene'),),
-            #    shadows = True,
-            #),
-        }
+        if self.slights_on:
+            self.slights = {
+                 # under bar #1
+                'under_bar_1_1': self.get_slight(
+                    light_id = 0,
+                    pos = (-4.0343, 0.83994, 0.97004),
+                    hpr = (-90, -95, 0),
+                    strength = 2,
+                    far = 1,
+                    illuminates = (self.room,),
+                    shadows = False,
+                ),
+                'under_bar_1_2': self.get_slight(
+                    light_id = 1,
+                    pos = (-4.0343, -1.78035, 0.97004),
+                    hpr = (-90, -95, 0),
+                    strength = 2,
+                    far = 1,
+                    illuminates = (self.room,),
+                    shadows = False,
+                ),
+                'under_bar_1_3': self.get_slight(
+                    light_id = 2,
+                    pos = (-4.0343, 3.18681, 0.97004),
+                    hpr = (-90, -95, 0),
+                    strength = 2,
+                    far = 1,
+                    illuminates = (self.room,),
+                    shadows = False,
+                ),
+                # under bar #2
+                'under_bar_2_1': self.get_slight(
+                    light_id = 3,
+                    pos = (1.6281, -4.7401, 0.96149),
+                    hpr = (0, -95, 0),
+                    strength = 2,
+                    far = 1,
+                    illuminates = (self.room,),
+                    shadows = False,
+                ),
+                'under_bar_2_2': self.get_slight(
+                    light_id = 4,
+                    pos = (3.0487, -4.7401, 0.96149),
+                    hpr = (0, -95, 0),
+                    strength = 2,
+                    far = 1,
+                    illuminates = (self.room,),
+                    shadows = False,
+                ),
+                'cues': self.get_slight(
+                    light_id = 5,
+                    pos = (0.068, -4.811+0.04, 2.2599-0.04),
+                    hpr = (0, -100, 0),
+                    fov = (30, 30),
+                    far = 2,
+                    illuminates = (self.room,),
+                    shadows = True,
+                ),
+            }
+        else:
+            self.slights = {}
 
         self.plights = {
-            # above bar #1
-            5: self.get_plight(
-                light_id = 5,
-                pos = (-4.1358+0.08, 1.9538, 2.2042),
-                illuminates = (render.find('scene'),),
-                shadows = False,
-            ),
-            6: self.get_plight(
-                light_id = 6,
-                pos = (-4.1358+0.08, -1.281, 2.2042),
-                illuminates = (render.find('scene'),),
-                shadows = False,
-            ),
             # cocktail corner
             8: self.get_plight(
-                light_id = 8,
+                light_id = 2,
                 pos = (4.0877-0.08, 3.5745, 2.2042),
                 illuminates = (render.find('scene'),),
-                shadows = False,
+            ),
+            # above bar #1
+            5: self.get_plight(
+                light_id = 0,
+                pos = (-4.1358+0.08, 1.9538, 2.2042),
+                illuminates = (render.find('scene'),),
+            ),
+            6: self.get_plight(
+                light_id = 1,
+                pos = (-4.1358+0.08, -1.281, 2.2042),
+                illuminates = (render.find('scene'),),
             ),
             # above bar # 2
             7: self.get_plight(
-                light_id = 7,
+                light_id = 3,
                 pos = (2.1875, -4.811+0.08, 2.1823),
                 illuminates = (render.find('scene'),),
-                shadows = False,
             ),
         }
 
@@ -234,7 +205,7 @@ class Environment(object):
                 light_id = 0,
                 hpr = (0, -90, 0),
                 illuminates = (render.find('scene').find('cloth'),),
-                shadows = True,
+                shadows = False,
             ),
         }
 

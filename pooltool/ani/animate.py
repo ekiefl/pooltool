@@ -93,8 +93,7 @@ class Interface(ShowBase, ModeManager):
             raise Exception(f"'{self.__class__.__name__}' must set 'is_game' attribute")
 
         super().__init__(self)
-        simplepbr.init(enable_shadows=True)
-        gltf.patch_loader(self.loader)
+        simplepbr.init(enable_shadows=True, max_lights=13)
 
         self.shot = None
         self.balls = None
