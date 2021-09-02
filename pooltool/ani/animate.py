@@ -4,6 +4,7 @@ import pooltool
 import pooltool.ani as ani
 import pooltool.utils as utils
 import pooltool.games as games
+import pooltool.ani.environment as environment
 
 from pooltool.objects.cue import Cue
 from pooltool.objects.ball import Ball
@@ -92,7 +93,7 @@ class Interface(ShowBase, ModeManager):
             raise Exception(f"'{self.__class__.__name__}' must set 'is_game' attribute")
 
         super().__init__(self)
-        simplepbr.init()
+        simplepbr.init(enable_shadows=True)
         gltf.patch_loader(self.loader)
 
         self.shot = None
@@ -146,6 +147,7 @@ class Interface(ShowBase, ModeManager):
     def init_system_nodes(self):
         self.init_scene()
         self.table.render()
+        self.init_environment()
 
         for ball in self.balls.values():
             if not ball.rendered:
@@ -162,13 +164,13 @@ class Interface(ShowBase, ModeManager):
     def init_scene(self):
         self.scene = render.attachNewNode('scene')
 
+
+    def init_environment(self):
         path = str(Path(pooltool.__file__).parent.parent / 'models/room/room.glb')
-        node = loader.loadModel(path)
-        node.reparentTo(render.find('scene'))
-        node.setZ(-self.table.height)
-        node.setX(self.table.w/2)
-        node.setY(self.table.l/2)
-        node.setName('room')
+
+        self.environment = environment.Environment(self.table)
+        self.environment.load_room(path)
+        self.environment.load_lights()
 
 
     def monitor(self, task):

@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+import pooltool.terminal as terminal
+
 class PlayerCam(object):
     def __init__(self):
         self.node = base.camera

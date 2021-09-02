@@ -82,18 +82,19 @@ class TableRender(Render):
         # draw table as rectangle
         self.init_cloth()
 
-        # draw cushion_segments as edges
-        self.cushion_drawer = LineSegs()
-        self.cushion_drawer.setThickness(2)
-        self.cushion_drawer.setColor(0.3, 0.3, 1)
+        if not self.model:
+            # draw cushion_segments as edges
+            self.cushion_drawer = LineSegs()
+            self.cushion_drawer.setThickness(2)
+            self.cushion_drawer.setColor(0.3, 0.3, 1)
 
-        self.init_cushion_edges()
+            self.init_cushion_edges()
 
-        # draw pockets as unfilled circles
-        self.pocket_drawer = LineSegs()
-        self.pocket_drawer.setThickness(2)
-        self.pocket_drawer.setColor(0, 0, 0)
-        self.init_pockets()
+            # draw pockets as unfilled circles
+            self.pocket_drawer = LineSegs()
+            self.pocket_drawer.setThickness(2)
+            self.pocket_drawer.setColor(0, 0, 0)
+            self.init_pockets()
 
 
     def draw_circle(self, drawer, center, radius, num_points):
