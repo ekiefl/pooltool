@@ -11,8 +11,8 @@ class Environment(object):
         self.set_table_offset(table)
         self.room = None
 
-        self.slights_on = True
-        self.shadow = True
+        self.slights_on = False
+        self.shadow = False
 
         self.slights = {}
         self.plights = {}
