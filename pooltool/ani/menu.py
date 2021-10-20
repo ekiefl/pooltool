@@ -89,10 +89,10 @@ class Menus(object):
         m = GenericMenu(title = 'Ball customization')
         m.add_button('Back', lambda: self.show_menu('options'), scale=ani.menu_text_scale)
 
-        m.add_direct_entry(ani.options_ball_diameter, initial=f"{pooltool.R*2:.3f}")
-        m.add_direct_entry(ani.options_friction_roll, initial=f"{pooltool.u_r:.3f}")
-        m.add_direct_entry(ani.options_friction_slide, initial=f"{pooltool.u_s:.3f}")
-        m.add_direct_entry(ani.options_friction_spin, initial=f"{pooltool.u_sp:.3f}")
+        m.add_direct_entry(ani.options_ball_diameter, initial=f"{pooltool.R*2:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_friction_roll, initial=f"{pooltool.u_r:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_friction_slide, initial=f"{pooltool.u_s:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_friction_spin, initial=f"{pooltool.u_sp:.3f}", scale=ani.menu_text_scale_small)
 
         self.menus['balls'] = m
 
