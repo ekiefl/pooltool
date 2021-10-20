@@ -6,6 +6,7 @@ import pooltool.utils as utils
 import pooltool.games as games
 import pooltool.ani.environment as environment
 
+from pooltool.error import TableConfigError
 from pooltool.objects.cue import Cue
 from pooltool.objects.ball import Ball
 from pooltool.objects.table import table_types
@@ -289,7 +290,12 @@ class Play(Interface, Menus, HUD):
                 side_jaw_radius = self.setup_options[ani.options_side_jaw_radius],
             )
         table_type = table_params.pop('type')
-        self.table = table_types[table_type](**table_params)
+        try:
+            self.table = table_types[table_type](**table_params)
+        except TypeError as e:
+            raise TableConfigError(f"Something went wrong with your table config file. Probably you "
+                                   f"provided a parameter in the table config that's unrecognized by "
+                                   f"pooltool. Here is the error: {e}")
 
 
     def setup_game(self):

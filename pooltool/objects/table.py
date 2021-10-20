@@ -12,14 +12,15 @@ from panda3d.core import *
 
 
 class TableRender(Render):
-    def __init__(self, model):
+    def __init__(self, model, has_model):
         """A class for all pool table associated panda3d nodes"""
+        self.has_model = has_model
         self.model = model # relative to repo root
         Render.__init__(self)
 
 
     def init_cloth(self):
-        if self.model is None:
+        if not self.has_model:
             node = render.find('scene').attachNewNode('cloth') 
             path = str(Path(pooltool.__file__).parent.parent / 'models' / 'table' / 'custom.glb')
             model = loader.loadModel(path)
@@ -82,7 +83,7 @@ class TableRender(Render):
         # draw table as rectangle
         self.init_cloth()
 
-        if not self.model:
+        if not self.has_model:
             # draw cushion_segments as edges
             self.cushion_drawer = LineSegs()
             self.cushion_drawer.setThickness(2)
@@ -133,7 +134,7 @@ class PocketTable(Object, TableRender):
     def __init__(self, table_width=None, table_length=None, cushion_width=None, cushion_height=None, corner_pocket_width=None,
                  corner_pocket_angle=None, corner_pocket_depth=None, corner_pocket_radius=None, corner_jaw_radius=None,
                  side_pocket_width=None, side_pocket_angle=None, side_pocket_depth=None, side_pocket_radius=None,
-                 side_jaw_radius=None, table_height=None, lights_height=None, model=None):
+                 side_jaw_radius=None, table_height=None, lights_height=None, has_model=False, model=None):
 
         self.w = table_width or pooltool.table_width
         self.l = table_length or pooltool.table_length
@@ -157,7 +158,7 @@ class PocketTable(Object, TableRender):
         self.cushion_segments = self.get_cushion_segments()
         self.pockets = self.get_pockets()
 
-        TableRender.__init__(self, model=model)
+        TableRender.__init__(self, model=model, has_model=has_model)
 
 
     def get_cushion_segments(self):

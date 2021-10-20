@@ -9,10 +9,6 @@ ap = argparse.ArgumentParser()
 args = ap.parse_args()
 
 if __name__ == '__main__':
-    try:
-        from pooltool.ani.animate import Play
-        play = Play()
-        play.start()
-    except TableConfigError as e:
-        print(e)
-        sys.exit(-1)
+    from pooltool.ani.animate import Play
+    play = Play()
+    play.start()

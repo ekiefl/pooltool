@@ -1,5 +1,6 @@
 [7_foot]
 type = pocket
+has_model = 1
 model = models/table/7_foot.glb
 table_length = 1.9812
 table_width = 0.9906
@@ -16,3 +17,12 @@ side_pocket_angle = 7.14
 side_pocket_depth = 0.00437
 side_pocket_radius = 0.0645
 side_jaw_radius = 0.00795
+
+[tight]
+type = pocket
+has_model = 0
+model = n/a
+corner_pocket_width = 0.07
+corner_pocket_angle = 3
+side_pocket_width = 0.08
+side_pocket_angle = 5
