@@ -66,17 +66,22 @@ logo_paths = {
     'pt_smaller': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_pt_smaller.png'),
 }
 
-tables_path = Path(__file__).parent.parent.parent / 'config' / 'tables'
-table_config_obj = configparser.ConfigParser()
-try:
-    table_config_obj.read(tables_path)
-except Exception as e:
-    raise TableConfigError(f"Something went wrong with your table config file. Here is the reported issue: {e}")
-table_config = {}
-for table in table_config_obj.sections():
-    table_config[table] = {}
-    for k, v in table_config_obj[table].items():
-        try:
-            table_config[table][k] = ast.literal_eval(v)
-        except:
-            table_config[table][k] = v
+
+def load_config(name, exception_type=Exception, exception_msg="Something went wrong. Here is what we know: {}"):
+    config_path = Path(__file__).parent.parent.parent / 'config' / name
+    config_obj = configparser.ConfigParser()
+    try:
+        config_obj.read(config_path)
+    except Exception as e:
+        raise exception_type(f"Something went wrong with your table config file. Here is the reported issue: {e}")
+    config = {}
+    for section in config_obj.sections():
+        config[section] = {}
+        for k, v in config_obj[section].items():
+            try:
+                config[section][k] = ast.literal_eval(v)
+            except:
+                config[section][k] = v
+    return config
+
+table_config = load_config('tables', TableConfigError)
