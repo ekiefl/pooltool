@@ -1,15 +1,15 @@
 #! /usr/bin/env python
+
 import ast
 import pooltool
 import configparser
+
+from pooltool.error import TableConfigError
 
 from pathlib import Path
 from panda3d.core import *
 
 loadPrcFile(str(Path(pooltool.__file__).parent / 'Config.prc'))
-
-#model_paths = (path for path in (Path(pooltool.__file__).parent.parent / 'models').glob('*') if path.is_file())
-#model_paths = {str(path.stem): Filename.fromOsSpecific(str(path.absolute())) for path in model_paths}
 
 menu_text_scale = 0.07
 menu_text_scale_small = 0.04
@@ -68,7 +68,10 @@ logo_paths = {
 
 tables_path = Path(__file__).parent.parent.parent / 'config' / 'tables'
 table_config_obj = configparser.ConfigParser()
-table_config_obj.read(tables_path)
+try:
+    table_config_obj.read(tables_path)
+except Exception as e:
+    raise TableConfigError(f"Something went wrong with your table config file. Here is the reported issue: {e}")
 table_config = {}
 for table in table_config_obj.sections():
     table_config[table] = {}
