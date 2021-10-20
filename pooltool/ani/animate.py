@@ -94,7 +94,13 @@ class Interface(ShowBase, ModeManager):
             raise Exception(f"'{self.__class__.__name__}' must set 'is_game' attribute")
 
         super().__init__(self)
-        simplepbr.init(enable_shadows=True, max_lights=13)
+        simplepbr.init(enable_shadows=ani.settings['graphics']['shadows'], max_lights=13)
+
+        if not ani.settings['graphics']['shader']:
+            render.set_shader_off()
+
+        globalClock.setMode(ClockObject.MLimited)
+        globalClock.setFrameRate(ani.settings['graphics']['fps'])
 
         self.shot = None
         self.balls = None
@@ -171,8 +177,10 @@ class Interface(ShowBase, ModeManager):
         path = str(Path(pooltool.__file__).parent.parent / 'models/room/room.glb')
 
         self.environment = environment.Environment(self.table)
-        self.environment.load_room(path)
-        self.environment.load_lights()
+        if ani.settings['graphics']['room']:
+            self.environment.load_room(path)
+        if ani.settings['graphics']['lights']:
+            self.environment.load_lights()
 
 
     def monitor(self, task):

@@ -2,6 +2,8 @@
 
 import pooltool
 
+from pooltool.ani import settings
+
 from pathlib import Path
 from panda3d.core import *
 
@@ -10,9 +12,10 @@ class Environment(object):
 
         self.set_table_offset(table)
         self.room = None
+        self.room_loaded = False
+        self.lights_loaded = False
 
-        self.slights_on = False
-        self.shadow = False
+        self.shadow = True
 
         self.slights = {}
         self.plights = {}
@@ -56,7 +59,8 @@ class Environment(object):
         slnp.setHpr(hpr)
 
         for illuminated in illuminates:
-            illuminated.setLight(slnp)
+            if illuminated is not None:
+                illuminated.setLight(slnp)
 
         return slnp
 
@@ -77,7 +81,8 @@ class Environment(object):
         plnp.setPos((self.offset[0]+pos[0], self.offset[1]+pos[1], self.offset[2]+pos[2]))
 
         for illuminated in illuminates:
-            illuminated.setLight(plnp)
+            if illuminated is not None:
+                illuminated.setLight(plnp)
 
         return plnp
 
@@ -100,7 +105,8 @@ class Environment(object):
         dlnp.setHpr(hpr)
 
         for illuminated in illuminates:
-            illuminated.setLight(dlnp)
+            if illuminated is not None:
+                illuminated.setLight(dlnp)
 
         return dlnp
 
@@ -112,67 +118,64 @@ class Environment(object):
         alnp = render.attachNewNode(alight)
         render.setLight(alnp)
 
-        if self.slights_on:
-            self.slights = {
-                 # under bar #1
-                'under_bar_1_1': self.get_slight(
-                    light_id = 0,
-                    pos = (-4.0343, 0.83994, 0.97004),
-                    hpr = (-90, -95, 0),
-                    strength = 2,
-                    far = 1,
-                    illuminates = (self.room,),
-                    shadows = self.shadow,
-                ),
-                'under_bar_1_2': self.get_slight(
-                    light_id = 1,
-                    pos = (-4.0343, -1.78035, 0.97004),
-                    hpr = (-90, -95, 0),
-                    strength = 2,
-                    far = 1,
-                    illuminates = (self.room,),
-                    shadows = self.shadow,
-                ),
-                'under_bar_1_3': self.get_slight(
-                    light_id = 2,
-                    pos = (-4.0343, 3.18681, 0.97004),
-                    hpr = (-90, -95, 0),
-                    strength = 2,
-                    far = 1,
-                    illuminates = (self.room,),
-                    shadows = self.shadow,
-                ),
-                # under bar #2
-                'under_bar_2_1': self.get_slight(
-                    light_id = 3,
-                    pos = (1.6281, -4.7401, 0.96149),
-                    hpr = (0, -95, 0),
-                    strength = 2,
-                    far = 1,
-                    illuminates = (self.room,),
-                    shadows = self.shadow,
-                ),
-                'under_bar_2_2': self.get_slight(
-                    light_id = 4,
-                    pos = (3.0487, -4.7401, 0.96149),
-                    hpr = (0, -95, 0),
-                    strength = 2,
-                    far = 1,
-                    illuminates = (self.room,),
-                    shadows = self.shadow,
-                ),
-                'cues': self.get_slight(
-                    light_id = 5,
-                    pos = (0.068, -4.811+0.04, 2.2599-0.04),
-                    hpr = (0, -100, 0),
-                    fov = (30, 30),
-                    far = 2,
-                    illuminates = (self.room,),
-                    shadows = self.shadow,
-                ),
-            }
-        else:
-            self.slights = {}
+        self.slights = {
+             # under bar #1
+            'under_bar_1_1': self.get_slight(
+                light_id = 0,
+                pos = (-4.0343, 0.83994, 0.97004),
+                hpr = (-90, -95, 0),
+                strength = 2,
+                far = 1,
+                illuminates = (self.room,),
+                shadows = self.shadow,
+            ),
+            'under_bar_1_2': self.get_slight(
+                light_id = 1,
+                pos = (-4.0343, -1.78035, 0.97004),
+                hpr = (-90, -95, 0),
+                strength = 2,
+                far = 1,
+                illuminates = (self.room,),
+                shadows = self.shadow,
+            ),
+            'under_bar_1_3': self.get_slight(
+                light_id = 2,
+                pos = (-4.0343, 3.18681, 0.97004),
+                hpr = (-90, -95, 0),
+                strength = 2,
+                far = 1,
+                illuminates = (self.room,),
+                shadows = self.shadow,
+            ),
+            # under bar #2
+            'under_bar_2_1': self.get_slight(
+                light_id = 3,
+                pos = (1.6281, -4.7401, 0.96149),
+                hpr = (0, -95, 0),
+                strength = 2,
+                far = 1,
+                illuminates = (self.room,),
+                shadows = self.shadow,
+            ),
+            'under_bar_2_2': self.get_slight(
+                light_id = 4,
+                pos = (3.0487, -4.7401, 0.96149),
+                hpr = (0, -95, 0),
+                strength = 2,
+                far = 1,
+                illuminates = (self.room,),
+                shadows = self.shadow,
+            ),
+            'cues': self.get_slight(
+                light_id = 5,
+                pos = (0.068, -4.811+0.04, 2.2599-0.04),
+                hpr = (0, -100, 0),
+                fov = (30, 30),
+                far = 2,
+                illuminates = (self.room,),
+                shadows = self.shadow,
+            ),
+        }
 
         self.plights = {
             # cocktail corner
@@ -210,6 +213,8 @@ class Environment(object):
             ),
         }
 
+        self.lights_loaded = True
+
 
     def set_table_offset(self, table):
         self.offset = (table.w/2, table.l/2, -table.height)
@@ -224,16 +229,26 @@ class Environment(object):
         self.room.setPos(self.offset)
         self.room.setName('room')
 
+        self.room_loaded = True
+
         return self.room
 
 
     def unload_room(self):
+        if not self.room_loaded:
+            return
+
         self.room.removeNode()
         del self.room
+
+        self.room_loaded = False
 
 
     def unload_lights(self):
         render.clearLight()
+
+        if not self.lights_loaded:
+            return
 
         for light in self.slights.values():
             light.removeNode()
@@ -245,5 +260,7 @@ class Environment(object):
         self.slights = {}
         self.plights = {}
         self.dlights = {}
+
+        self.lights_loaded = False
 
 

@@ -4,7 +4,7 @@ import ast
 import pooltool
 import configparser
 
-from pooltool.error import TableConfigError
+from pooltool.error import ConfigError, TableConfigError
 
 from pathlib import Path
 from panda3d.core import *
@@ -85,3 +85,6 @@ def load_config(name, exception_type=Exception, exception_msg="Something went wr
     return config
 
 table_config = load_config('tables', TableConfigError)
+settings = load_config('settings', ConfigError)
+
+
