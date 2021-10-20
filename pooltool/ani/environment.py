@@ -227,3 +227,23 @@ class Environment(object):
         return self.room
 
 
+    def unload_room(self):
+        self.room.removeNode()
+        del self.room
+
+
+    def unload_lights(self):
+        render.clearLight()
+
+        for light in self.slights.values():
+            light.removeNode()
+        for light in self.plights.values():
+            light.removeNode()
+        for light in self.dlights.values():
+            light.removeNode()
+
+        self.slights = {}
+        self.plights = {}
+        self.dlights = {}
+
+

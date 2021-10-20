@@ -140,6 +140,8 @@ class Interface(ShowBase, ModeManager):
         for ball in self.balls.values():
             ball.remove_nodes()
         self.table.remove_nodes()
+        self.environment.unload_room()
+        self.environment.unload_lights()
         gc.collect()
 
 
