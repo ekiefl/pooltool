@@ -3,4 +3,4 @@ room = 1
 lights = 1
 shadows = 1
 shader = 1
-fps = 60
+fps = 30
