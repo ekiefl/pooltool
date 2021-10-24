@@ -174,7 +174,10 @@ class Interface(ShowBase, ModeManager):
 
 
     def init_environment(self):
-        path = str(Path(pooltool.__file__).parent.parent / 'models/room/room.glb')
+        if ani.settings['graphics']['physical_based_rendering']:
+            path = str(Path(pooltool.__file__).parent.parent / 'models/room/room_pbr.glb')
+        else:
+            path = str(Path(pooltool.__file__).parent.parent / 'models/room/room.glb')
 
         self.environment = environment.Environment(self.table)
         if ani.settings['graphics']['room']:
@@ -277,6 +280,7 @@ class Play(Interface, Menus, HUD):
     def setup_table(self):
         if self.setup_options[ani.options_table] != 'custom':
             table_params = copy.deepcopy(ani.table_config[self.setup_options[ani.options_table]])
+            table_params['model_name'] = self.setup_options[ani.options_table]
         else:
             table_params = dict(
                 type = self.setup_options[ani.options_table_type],
@@ -296,6 +300,7 @@ class Play(Interface, Menus, HUD):
                 side_pocket_depth = self.setup_options[ani.options_side_pocket_depth],
                 side_pocket_radius = self.setup_options[ani.options_side_pocket_radius],
                 side_jaw_radius = self.setup_options[ani.options_side_jaw_radius],
+                model_name = self.setup_options[ani.options_table]
             )
         table_type = table_params.pop('type')
         try:

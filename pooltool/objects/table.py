@@ -3,6 +3,8 @@
 import pooltool.utils as utils
 import pooltool.ani.utils as autils
 
+from pooltool.ani import settings
+from pooltool.error import ConfigError
 from pooltool.objects import *
 
 import numpy as np
@@ -12,23 +14,36 @@ from panda3d.core import *
 
 
 class TableRender(Render):
-    def __init__(self, model, has_model):
+    def __init__(self, name, has_model):
         """A class for all pool table associated panda3d nodes"""
+        self.name = name
         self.has_model = has_model
-        self.model = model # relative to repo root
         Render.__init__(self)
 
 
     def init_cloth(self):
         if not self.has_model:
             node = render.find('scene').attachNewNode('cloth') 
-            path = str(Path(pooltool.__file__).parent.parent / 'models' / 'table' / 'custom.glb')
+            path = str(Path(pooltool.__file__).parent.parent / 'models' / 'table' / 'custom' / 'custom.glb')
+
             model = loader.loadModel(path)
             model.reparentTo(node)
             model.setScale(self.w, self.l, 1)
         else:
-            path = str(Path(pooltool.__file__).parent.parent / self.model)
-            node = loader.loadModel(path)
+            path_dir = Path(pooltool.__file__).parent.parent / 'models' / 'table' / self.name
+            pbr_path = path_dir / (self.name + '_pbr.glb')
+            standard_path = path_dir / (self.name + '.glb')
+            if settings['graphics']['physical_based_rendering']:
+                path = pbr_path
+                if not path.exists():
+                    path = standard_path
+            else:
+                path = standard_path
+
+            if not path.exists():
+                raise ConfigError(f"Couldn't find table model at {standard_path} or {pbr_path}")
+
+            node = loader.loadModel(str(path))
             node.reparentTo(render.find('scene'))
             node.setName('cloth')
 
@@ -134,7 +149,7 @@ class PocketTable(Object, TableRender):
     def __init__(self, table_width=None, table_length=None, cushion_width=None, cushion_height=None, corner_pocket_width=None,
                  corner_pocket_angle=None, corner_pocket_depth=None, corner_pocket_radius=None, corner_jaw_radius=None,
                  side_pocket_width=None, side_pocket_angle=None, side_pocket_depth=None, side_pocket_radius=None,
-                 side_jaw_radius=None, table_height=None, lights_height=None, has_model=False, model=None):
+                 side_jaw_radius=None, table_height=None, lights_height=None, has_model=False, model_name='none'):
 
         self.w = table_width or pooltool.table_width
         self.l = table_length or pooltool.table_length
@@ -158,7 +173,7 @@ class PocketTable(Object, TableRender):
         self.cushion_segments = self.get_cushion_segments()
         self.pockets = self.get_pockets()
 
-        TableRender.__init__(self, model=model, has_model=has_model)
+        TableRender.__init__(self, name=model_name, has_model=has_model)
 
 
     def get_cushion_segments(self):

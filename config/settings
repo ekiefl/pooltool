@@ -3,4 +3,5 @@ room = 1
 lights = 1
 shadows = 1
 shader = 1
+physical_based_rendering = 1
 fps = 30
