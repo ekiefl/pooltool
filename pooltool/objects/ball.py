@@ -65,7 +65,7 @@ class BallRender(Render):
         for i, scale in enumerate(scales):
             shadow_layer = base.loader.loadModel(shadow_path)
             shadow_layer.reparentTo(shadow_node)
-            shadow_layer.setScale(scale)
+            shadow_layer.setScale(self.get_scale_factor(shadow_layer)*scale)
             shadow_layer.setZ(z_offset*(1 - i/N))
 
         return shadow_node
