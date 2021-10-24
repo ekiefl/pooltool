@@ -53,18 +53,19 @@ class BallRender(Render):
 
 
     def init_shadow(self):
-        N = 12
+        N = 20
+        start, stop = 0.5, 0.9 # fraction of ball radius
         z_offset = 0.0005
-        extent = 0.9
+        scales = np.linspace(start, stop, N)
 
         shadow_path = Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'set_1' / f'shadow.glb'
         shadow_node = render.find('scene').find('cloth').attachNewNode(f'shadow_{self.id}')
         shadow_node.setPos(self.rvw[0,0], self.rvw[0,1], 0)
 
-        for i in range(1,N+1):
+        for i, scale in enumerate(scales):
             shadow_layer = base.loader.loadModel(shadow_path)
             shadow_layer.reparentTo(shadow_node)
-            shadow_layer.setScale(i/N*extent)
+            shadow_layer.setScale(scale)
             shadow_layer.setZ(z_offset*(1 - i/N))
 
         return shadow_node
