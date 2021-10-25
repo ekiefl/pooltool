@@ -5,3 +5,5 @@ pandas
 panda3d
 colored
 pyquaternion
+panda3d-gltf
+panda3d-simplepbr

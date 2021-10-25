@@ -4,10 +4,12 @@ import pooltool
 import pooltool.ani as ani
 import pooltool.utils as utils
 import pooltool.games as games
+import pooltool.ani.environment as environment
 
+from pooltool.error import TableConfigError
 from pooltool.objects.cue import Cue
 from pooltool.objects.ball import Ball
-from pooltool.objects.table import Table
+from pooltool.objects.table import table_types
 from pooltool.games.nine_ball import NineBall
 from pooltool.games.eight_ball import EightBall
 
@@ -18,6 +20,9 @@ from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import PlayerCam
 
 import gc
+import copy
+import gltf
+import simplepbr
 
 from panda3d.core import *
 from direct.showbase.ShowBase import ShowBase
@@ -88,7 +93,14 @@ class Interface(ShowBase, ModeManager):
         if self.is_game is None:
             raise Exception(f"'{self.__class__.__name__}' must set 'is_game' attribute")
 
-        ShowBase.__init__(self)
+        super().__init__(self)
+        simplepbr.init(enable_shadows=ani.settings['graphics']['shadows'], max_lights=13)
+
+        if not ani.settings['graphics']['shader']:
+            render.set_shader_off()
+
+        globalClock.setMode(ClockObject.MLimited)
+        globalClock.setFrameRate(ani.settings['graphics']['fps'])
 
         self.shot = None
         self.balls = None
@@ -135,12 +147,15 @@ class Interface(ShowBase, ModeManager):
         for ball in self.balls.values():
             ball.remove_nodes()
         self.table.remove_nodes()
+        self.environment.unload_room()
+        self.environment.unload_lights()
         gc.collect()
 
 
     def init_system_nodes(self):
         self.init_scene()
         self.table.render()
+        self.init_environment()
 
         for ball in self.balls.values():
             if not ball.rendered:
@@ -156,6 +171,19 @@ class Interface(ShowBase, ModeManager):
 
     def init_scene(self):
         self.scene = render.attachNewNode('scene')
+
+
+    def init_environment(self):
+        if ani.settings['graphics']['physical_based_rendering']:
+            path = str(Path(pooltool.__file__).parent.parent / 'models/room/room_pbr.glb')
+        else:
+            path = str(Path(pooltool.__file__).parent.parent / 'models/room/room.glb')
+
+        self.environment = environment.Environment(self.table)
+        if ani.settings['graphics']['room']:
+            self.environment.load_room(path)
+        if ani.settings['graphics']['lights']:
+            self.environment.load_lights()
 
 
     def monitor(self, task):
@@ -250,11 +278,37 @@ class Play(Interface, Menus, HUD):
 
 
     def setup_table(self):
-        self.table = Table(
-            w = self.setup_options[ani.options_table_width],
-            l = self.setup_options[ani.options_table_length],
-            cushion_height = self.setup_options[ani.options_cushion_height_frac]*self.setup_options[ani.options_ball_diameter],
-        )
+        if self.setup_options[ani.options_table] != 'custom':
+            table_params = copy.deepcopy(ani.table_config[self.setup_options[ani.options_table]])
+            table_params['model_name'] = self.setup_options[ani.options_table]
+        else:
+            table_params = dict(
+                type = self.setup_options[ani.options_table_type],
+                table_length = self.setup_options[ani.options_table_length],
+                table_width = self.setup_options[ani.options_table_width],
+                table_height = self.setup_options[ani.options_table_height],
+                lights_height = self.setup_options[ani.options_lights_height],
+                cushion_width = self.setup_options[ani.options_cushion_width],
+                cushion_height = self.setup_options[ani.options_cushion_height],
+                corner_pocket_width = self.setup_options[ani.options_corner_pocket_width],
+                corner_pocket_angle = self.setup_options[ani.options_corner_pocket_angle],
+                corner_pocket_depth = self.setup_options[ani.options_corner_pocket_depth],
+                corner_pocket_radius = self.setup_options[ani.options_corner_pocket_radius],
+                corner_jaw_radius = self.setup_options[ani.options_corner_jaw_radius],
+                side_pocket_width = self.setup_options[ani.options_side_pocket_width],
+                side_pocket_angle = self.setup_options[ani.options_side_pocket_angle],
+                side_pocket_depth = self.setup_options[ani.options_side_pocket_depth],
+                side_pocket_radius = self.setup_options[ani.options_side_pocket_radius],
+                side_jaw_radius = self.setup_options[ani.options_side_jaw_radius],
+                model_name = self.setup_options[ani.options_table]
+            )
+        table_type = table_params.pop('type')
+        try:
+            self.table = table_types[table_type](**table_params)
+        except TypeError as e:
+            raise TableConfigError(f"Something went wrong with your table config file. Probably you "
+                                   f"provided a parameter in the table config that's unrecognized by "
+                                   f"pooltool. Here is the error: {e}")
 
 
     def setup_game(self):

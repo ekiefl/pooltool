@@ -2,12 +2,12 @@
 
 import pooltool.utils as utils
 
-from pooltool.ani import model_paths
 from pooltool.events import StickBallCollision
 from pooltool.objects import *
 
 import numpy as np
 
+from pathlib import Path
 from panda3d.core import *
 from direct.interval.IntervalGlobal import *
 
@@ -24,20 +24,9 @@ class CueRender(Render):
 
 
     def init_model(self, R=pooltool.R):
-        cue_stick_model = loader.loadModel(model_paths['cylinder'])
+        path = str(Path(pooltool.__file__).parent.parent / 'models' / 'cue' / 'cue.glb')
+        cue_stick_model = loader.loadModel(path)
         cue_stick_model.setName('cue_stick_model')
-
-        m, M = cue_stick_model.getTightBounds()
-        model_R, model_l = (M-m)[0]/2, (M-m)[2]
-
-        # Rescale model to match cue dimensions
-        cue_stick_model.setSx(self.tip_radius / model_R)
-        cue_stick_model.setSy(self.tip_radius / model_R)
-        cue_stick_model.setSz(self.length / model_l)
-
-        cue_stick_tex = loader.loadTexture(model_paths['red_cloth'])
-        cue_stick_model.setTexture(cue_stick_tex)
-        cue_stick_model.setTexScale(TextureStage.getDefault(), 0.01, 0.01)
 
         cue_stick = render.find('scene').find('cloth').attachNewNode('cue_stick')
         cue_stick_model.reparentTo(cue_stick)
@@ -46,14 +35,10 @@ class CueRender(Render):
 
 
     def init_focus(self, ball):
-        # FIXME this is a potentially memory-leaky reference to an object
         self.follow = ball
 
         cue_stick = self.get_node('cue_stick')
-
-        cue_stick.find('cue_stick_model').setPos(0, 0, self.length/2 + 1.2*ball.R)
-        cue_stick.setP(90)
-        cue_stick.setH(90)
+        cue_stick.find('cue_stick_model').setPos(+1.05*ball.R, 0, 0)
 
         cue_stick_focus = render.find('scene').find('cloth').attachNewNode("cue_stick_focus")
         self.nodes['cue_stick_focus'] = cue_stick_focus

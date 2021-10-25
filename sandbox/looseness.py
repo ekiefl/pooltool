@@ -8,7 +8,7 @@ from pooltool.evolution import get_shot_evolver
 from pooltool.objects.cue import Cue
 from pooltool.ani.animate import ShotViewer
 from pooltool.objects.ball import Ball
-from pooltool.objects.table import Table
+from pooltool.objects.table import PocketTable
 
 import numpy as np
 
@@ -33,7 +33,7 @@ for i, spacing_factor in enumerate(spacing_factors):
     for n in range(N):
         # setup table, cue, and cue ball
         cue = Cue()
-        table = Table()
+        table = PocketTable()
         cue_ball = Ball('cue')
         cue_ball.rvw[0] = get_cue_pos(cue_ball, table)
 

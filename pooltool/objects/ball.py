@@ -3,12 +3,13 @@
 import pooltool.physics as physics
 import pooltool.ani.utils as autils
 
-from pooltool.ani import model_paths
 from pooltool.events import *
 from pooltool.objects import *
 
 import numpy as np
 
+from pathlib import Path
+from panda3d.core import *
 from direct.interval.IntervalGlobal import *
 
 class BallRender(Render):
@@ -19,48 +20,55 @@ class BallRender(Render):
 
 
     def init_sphere(self):
-        node = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}")
+        ball = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}")
 
-        sphere_node = loader.loadModel('models/smiley')
-        expected_texture_name = f"{str(self.id).split('_')[0]}_ball"
+        fallback_path = str(Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'set_1' / '1.glb')
+        expected_path = Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'set_1' / f'{self.id}.glb'
 
-        try:
-            tex = loader.loadTexture(model_paths[expected_texture_name])
-            sphere_node.setTexture(tex, 1)
-        except KeyError:
-            # No ball texture is found for the given ball.id. Keeping smiley
-            pass
+        if expected_path.exists():
+            path = str(expected_path)
+        else:
+            path = fallback_path
 
-        sphere_node.reparentTo(node)
+        sphere_node = base.loader.loadModel(path)
+        sphere_node.reparentTo(ball)
+
+        # https://discourse.panda3d.org/t/visual-artifact-at-poles-of-uv-sphere-gltf-format/27975/8
+        if path == fallback_path:
+            tex = sphere_node.find_texture(Path(fallback_path).stem)
+        else:
+            tex = sphere_node.find_texture(self.id)
+        tex.set_minfilter(SamplerState.FT_linear)
+
         sphere_node.setScale(self.get_scale_factor(sphere_node))
+        ball.setPos(*self.rvw[0,:])
 
-        node.setPos(*self.rvw[0,:])
+        shadow_node = self.init_shadow()
 
         self.nodes['sphere'] = sphere_node
-        self.nodes['ball'] = node
+        self.nodes['shadow'] = shadow_node
+        self.nodes['ball'] = ball
 
         self.randomize_orientation()
 
 
-    def init_arrow(self):
-        """Good for spin diagnostics"""
-        arrow = loader.loadModel(model_paths['cylinder'])
+    def init_shadow(self):
+        N = 20
+        start, stop = 0.5, 0.9 # fraction of ball radius
+        z_offset = 0.0005
+        scales = np.linspace(start, stop, N)
 
-        m, M = arrow.getTightBounds()
-        model_R, model_l = (M-m)[0]/2, (M-m)[2]
+        shadow_path = Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'set_1' / f'shadow.glb'
+        shadow_node = render.find('scene').find('cloth').attachNewNode(f'shadow_{self.id}')
+        shadow_node.setPos(self.rvw[0,0], self.rvw[0,1], 0)
 
-        arrow.setSx(self.R / 7 / model_R)
-        arrow.setSy(self.R / 7 / model_R)
-        arrow.setSz(self.R*3 / model_l)
+        for i, scale in enumerate(scales):
+            shadow_layer = base.loader.loadModel(shadow_path)
+            shadow_layer.reparentTo(shadow_node)
+            shadow_layer.setScale(self.get_scale_factor(shadow_layer)*scale)
+            shadow_layer.setZ(z_offset*(1 - i/N))
 
-        arrow.setColor(0, 0, 1, 1)
-        m, M = arrow.getTightBounds()
-        model_R, model_l = (M-m)[0]/2, (M-m)[2]
-
-        arrow.reparentTo(self.nodes['ball'])
-        arrow.setZ(arrow.getZ() + model_l/2)
-
-        self.nodes['arrow'] = arrow
+        return shadow_node
 
 
     def get_scale_factor(self, node):
@@ -82,6 +90,7 @@ class BallRender(Render):
 
     def set_render_state_as_object_state(self):
         self.nodes['ball'].setPos(*self.rvw[0,:])
+        self.nodes['shadow'].setPos(self.rvw[0,0], self.rvw[0,1], 0)
 
 
     def set_playback_sequence(self, playback_speed=1):
@@ -95,18 +104,28 @@ class BallRender(Render):
 
         # Init the sequences
         ball_sequence = Sequence()
+        shadow_sequence = Sequence()
 
         for i in range(len(playback_dts)):
+            x, y, z = xyzs[i+1]
+
             # Append to ball sequence
             ball_sequence.append(LerpPosQuatInterval(
                 nodePath = self.nodes['ball'],
                 duration = playback_dts[i],
-                pos = xyzs[i+1],
+                pos = (x, y, z),
                 quat = quats[i+1]
+            ))
+
+            shadow_sequence.append(LerpPosInterval(
+                nodePath = self.nodes['shadow'],
+                duration = playback_dts[i],
+                pos = (x, y, 0),
             ))
 
         self.playback_sequence = Parallel()
         self.playback_sequence.append(ball_sequence)
+        self.playback_sequence.append(shadow_sequence)
 
 
     def randomize_orientation(self):
@@ -124,7 +143,6 @@ class BallRender(Render):
     def render(self):
         super().render()
         self.init_sphere()
-        #self.init_arrow()
 
 
 class BallHistory(object):
