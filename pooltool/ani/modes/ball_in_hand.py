@@ -122,6 +122,8 @@ class BallInHandMode(Mode):
         r, pos = self.grabbed_ball.R, np.array(self.grab_ball_node.getPos())
 
         for ball in self.balls.values():
+            if ball == self.grabbed_ball:
+                continue
             if np.linalg.norm(ball.rvw[0] - pos) <= (r + ball.R):
                 return False
 
