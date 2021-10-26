@@ -68,24 +68,32 @@ class PickBallMode(Mode):
 
 
     def remove_ball_highlight(self):
-        if self.closest_ball is not None and 'ball_highlight_animation' in self.tasks:
+        if self.closest_ball is not None and 'pick_ball_highlight_animation' in self.tasks:
             node = self.closest_ball.get_node('ball')
             node.setScale(node.getScale()/ani.ball_highlight['ball_factor'])
+            self.closest_ball.get_node('shadow').setAlphaScale(1)
+            self.closest_ball.get_node('shadow').setScale(1)
             self.closest_ball.set_render_state_as_object_state()
-            self.remove_task('ball_highlight_animation')
+            self.remove_task('pick_ball_highlight_animation')
 
 
     def add_ball_highlight(self):
         if self.closest_ball is not None:
-            self.add_task(self.ball_highlight_animation, 'ball_highlight_animation')
+            self.add_task(self.pick_ball_highlight_animation, 'pick_ball_highlight_animation')
             node = self.closest_ball.get_node('ball')
             node.setScale(node.getScale()*ani.ball_highlight['ball_factor'])
 
 
-    def ball_highlight_animation(self, task):
+    def pick_ball_highlight_animation(self, task):
         phase = task.time * ani.ball_highlight['ball_frequency']
+
         new_height = ani.ball_highlight['ball_offset'] + ani.ball_highlight['ball_amplitude'] * np.sin(phase)
         self.ball_highlight.setZ(new_height)
+
+        new_alpha = ani.ball_highlight['shadow_alpha_offset'] + ani.ball_highlight['shadow_alpha_amplitude'] * np.sin(-phase)
+        new_scale = ani.ball_highlight['shadow_scale_offset'] + ani.ball_highlight['shadow_scale_amplitude'] * np.sin(phase)
+        self.closest_ball.get_node('shadow').setAlphaScale(new_alpha)
+        self.closest_ball.get_node('shadow').setScale(new_scale)
 
         return task.cont
 
