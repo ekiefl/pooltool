@@ -18,10 +18,7 @@ class PickBallMode(Mode):
     }
 
     def __init__(self):
-        self.ball_highlight_factor = 2
-        self.ball_highlight_offset = 0.1
-        self.ball_highlight_amplitude = 0.03
-        self.ball_highlight_frequency = 4
+        pass
 
 
     def enter(self):
@@ -73,7 +70,7 @@ class PickBallMode(Mode):
     def remove_ball_highlight(self):
         if self.closest_ball is not None and 'ball_highlight_animation' in self.tasks:
             node = self.closest_ball.get_node('ball')
-            node.setScale(node.getScale()/self.ball_highlight_factor)
+            node.setScale(node.getScale()/ani.ball_highlight['ball_factor'])
             self.closest_ball.set_render_state_as_object_state()
             self.remove_task('ball_highlight_animation')
 
@@ -82,12 +79,12 @@ class PickBallMode(Mode):
         if self.closest_ball is not None:
             self.add_task(self.ball_highlight_animation, 'ball_highlight_animation')
             node = self.closest_ball.get_node('ball')
-            node.setScale(node.getScale()*self.ball_highlight_factor)
+            node.setScale(node.getScale()*ani.ball_highlight['ball_factor'])
 
 
     def ball_highlight_animation(self, task):
-        phase = task.time * self.ball_highlight_frequency
-        new_height = self.ball_highlight_offset + self.ball_highlight_amplitude * np.sin(phase)
+        phase = task.time * ani.ball_highlight['ball_frequency']
+        new_height = ani.ball_highlight['ball_offset'] + ani.ball_highlight['ball_amplitude'] * np.sin(phase)
         self.ball_highlight.setZ(new_height)
 
         return task.cont

@@ -59,6 +59,13 @@ options_side_pocket_depth = 'Pocket depth (side)'
 options_side_pocket_radius = 'Pocket radius (side)'
 options_side_jaw_radius = 'Jaw radius (side)'
 
+ball_highlight = {
+    'ball_offset': 0.12,
+    'ball_amplitude': 0.03,
+    'ball_frequency': 4,
+    'ball_factor': 1.3,
+}
+
 logo_paths = {
     'default': utils.panda_path(Path(pooltool.__file__).parent.parent / 'logo' / 'logo.png'),
     'small': utils.panda_path(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_small.png'),
