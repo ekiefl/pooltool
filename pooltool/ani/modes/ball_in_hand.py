@@ -25,6 +25,7 @@ class BallInHandMode(Mode):
         self.grab_selection_highlight_frequency = 4
 
         self.grab_ball_node = None
+        self.grab_ball_shadow_node = None
         self.picking = None
 
 
@@ -49,6 +50,7 @@ class BallInHandMode(Mode):
         elif num_options == 1:
             self.grabbed_ball = self.balls[self.game.active_player.ball_in_hand[0]]
             self.grab_ball_node = self.grabbed_ball.get_node('ball')
+            self.grab_ball_shadow_node = self.grabbed_ball.get_node('shadow')
             self.picking = 'placement'
         else:
             self.picking = 'ball'
@@ -84,6 +86,7 @@ class BallInHandMode(Mode):
                 BallInHandMode.remove_grab_selection_highlight(self)
                 self.grabbed_ball = closest
                 self.grab_ball_node = self.grabbed_ball.get_node('ball')
+                self.grab_ball_shadow_node = self.grabbed_ball.get_node('shadow')
                 BallInHandMode.add_grab_selection_highlight(self)
 
             if self.keymap['next']:
@@ -125,6 +128,8 @@ class BallInHandMode(Mode):
     def move_grabbed_ball(self):
         self.grab_ball_node.setX(self.player_cam.focus.getX())
         self.grab_ball_node.setY(self.player_cam.focus.getY())
+        self.grab_ball_shadow_node.setX(self.player_cam.focus.getX())
+        self.grab_ball_shadow_node.setY(self.player_cam.focus.getY())
 
 
     def remove_grab_selection_highlight(self):
