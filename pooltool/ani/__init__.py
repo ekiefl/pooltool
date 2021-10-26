@@ -64,6 +64,10 @@ ball_highlight = {
     'ball_amplitude': 0.03,
     'ball_frequency': 4,
     'ball_factor': 1.3,
+    'shadow_alpha_offset': 0.27,
+    'shadow_alpha_amplitude': 0.07,
+    'shadow_scale_offset': 2.2,
+    'shadow_scale_amplitude': 0.4,
 }
 
 logo_paths = {

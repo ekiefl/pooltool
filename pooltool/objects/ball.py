@@ -64,6 +64,9 @@ class BallRender(Render):
         shadow_node = render.find('scene').find('cloth').attachNewNode(f'shadow_{self.id}')
         shadow_node.setPos(self.rvw[0,0], self.rvw[0,1], 0)
 
+        # allow transparency of shadow to change
+        shadow_node.setTransparency(TransparencyAttrib.MAlpha)
+
         for i, scale in enumerate(scales):
             shadow_layer = base.loader.loadModel(panda_path(shadow_path))
             shadow_layer.reparentTo(shadow_node)

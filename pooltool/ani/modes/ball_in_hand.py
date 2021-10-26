@@ -139,6 +139,8 @@ class BallInHandMode(Mode):
         if self.grabbed_ball is not None:
             node = self.grabbed_ball.get_node('ball')
             node.setScale(node.getScale()/ani.ball_highlight['ball_factor'])
+            self.grab_ball_shadow_node.setAlphaScale(1)
+            self.grab_ball_shadow_node.setScale(1)
             self.grabbed_ball.set_render_state_as_object_state()
             self.remove_task('grab_selection_highlight_animation')
 
@@ -155,6 +157,11 @@ class BallInHandMode(Mode):
 
         new_height = ani.ball_highlight['ball_offset'] + ani.ball_highlight['ball_amplitude'] * np.sin(phase)
         self.grab_ball_node.setZ(new_height)
+
+        new_alpha = ani.ball_highlight['shadow_alpha_offset'] + ani.ball_highlight['shadow_alpha_amplitude'] * np.sin(-phase)
+        new_scale = ani.ball_highlight['shadow_scale_offset'] + ani.ball_highlight['shadow_scale_amplitude'] * np.sin(phase)
+        self.grab_ball_shadow_node.setAlphaScale(new_alpha)
+        self.grab_ball_shadow_node.setScale(new_scale)
 
         return task.cont
 
