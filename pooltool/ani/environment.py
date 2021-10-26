@@ -13,6 +13,7 @@ class Environment(object):
 
         self.set_table_offset(table)
         self.room = None
+        self.floor = None
         self.room_loaded = False
         self.floor_loaded = False
         self.lights_loaded = False
@@ -128,7 +129,7 @@ class Environment(object):
                 hpr = (-90, -95, 0),
                 strength = 2,
                 far = 1,
-                illuminates = (self.room,),
+                illuminates = (self.room, self.floor),
                 shadows = self.shadow,
             ),
             'under_bar_1_2': self.get_slight(
@@ -137,7 +138,7 @@ class Environment(object):
                 hpr = (-90, -95, 0),
                 strength = 2,
                 far = 1,
-                illuminates = (self.room,),
+                illuminates = (self.room, self.floor),
                 shadows = self.shadow,
             ),
             'under_bar_1_3': self.get_slight(
@@ -146,7 +147,7 @@ class Environment(object):
                 hpr = (-90, -95, 0),
                 strength = 2,
                 far = 1,
-                illuminates = (self.room,),
+                illuminates = (self.room, self.floor),
                 shadows = self.shadow,
             ),
             # under bar #2
@@ -156,7 +157,7 @@ class Environment(object):
                 hpr = (0, -95, 0),
                 strength = 2,
                 far = 1,
-                illuminates = (self.room,),
+                illuminates = (self.room, self.floor),
                 shadows = self.shadow,
             ),
             'under_bar_2_2': self.get_slight(
@@ -165,7 +166,7 @@ class Environment(object):
                 hpr = (0, -95, 0),
                 strength = 2,
                 far = 1,
-                illuminates = (self.room,),
+                illuminates = (self.room, self.floor),
                 shadows = self.shadow,
             ),
             'cues': self.get_slight(
@@ -174,7 +175,7 @@ class Environment(object):
                 hpr = (0, -100, 0),
                 fov = (30, 30),
                 far = 2,
-                illuminates = (self.room,),
+                illuminates = (self.room, self.floor),
                 shadows = self.shadow,
             ),
         }
