@@ -4,10 +4,12 @@ import pooltool
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 
+from pooltool.utils import panda_path
 from pooltool.ani.modes import Mode, action
 
 import numpy as np
 
+from panda3d.core import TransparencyAttrib
 from direct.interval.IntervalGlobal import *
 
 
@@ -24,6 +26,7 @@ class BallInHandMode(Mode):
         self.grab_selection_highlight_amplitude = 0.03
         self.grab_selection_highlight_frequency = 4
 
+        self.trans_ball = None
         self.grab_ball_node = None
         self.grab_ball_shadow_node = None
         self.picking = None
@@ -60,6 +63,7 @@ class BallInHandMode(Mode):
 
     def exit(self, success=False):
         self.remove_task('ball_in_hand_task')
+        self.remove_transparent_ball()
 
         if self.picking == 'ball':
             BallInHandMode.remove_grab_selection_highlight(self)
@@ -93,6 +97,7 @@ class BallInHandMode(Mode):
                 self.keymap['next'] = False
                 self.picking = 'placement'
                 BallInHandMode.remove_grab_selection_highlight(self)
+                self.add_transparent_ball()
 
         elif self.picking == 'placement':
             self.move_grabbed_ball()
@@ -153,6 +158,20 @@ class BallInHandMode(Mode):
         self.grab_ball_node.setZ(new_height)
 
         return task.cont
+
+
+    def add_transparent_ball(self):
+        self.trans_ball = base.loader.loadModel(panda_path(self.grabbed_ball.model_path))
+        self.trans_ball.reparentTo(render.find('scene').find('cloth'))
+        self.trans_ball.setTransparency(TransparencyAttrib.MAlpha)
+        self.trans_ball.setAlphaScale(0.4)
+        self.trans_ball.setPos(self.grabbed_ball.get_node('ball').getPos())
+        self.trans_ball.setHpr(self.grabbed_ball.get_node('sphere').getHpr())
+
+
+    def remove_transparent_ball(self):
+        self.trans_ball.removeNode()
+        self.trans_ball = None
 
 
     def find_closest_ball(self):
