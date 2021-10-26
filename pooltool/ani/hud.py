@@ -274,7 +274,7 @@ class Jack(HUDElement):
         self.text_color = (1,1,1,1)
 
         self.arc = OnscreenImage(
-            image=str(self.dir / 'arc.png'),
+            image=panda_path(self.dir / 'arc.png'),
             pos=(1.4, 0, -0.45),
             parent=aspect2d,
             scale=0.075
@@ -282,7 +282,7 @@ class Jack(HUDElement):
         self.arc.setTransparency(TransparencyAttrib.MAlpha)
 
         self.cue_cartoon = OnscreenImage(
-            image=str(self.dir / 'cue.png'),
+            image=panda_path(self.dir / 'cue.png'),
             parent=aspect2d,
             pos=(0,0,0),
             scale=(0.15,1,0.01),
