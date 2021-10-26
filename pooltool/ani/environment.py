@@ -14,6 +14,7 @@ class Environment(object):
         self.set_table_offset(table)
         self.room = None
         self.room_loaded = False
+        self.floor_loaded = False
         self.lights_loaded = False
 
         self.shadow = True
@@ -235,6 +236,17 @@ class Environment(object):
         return self.room
 
 
+    def load_floor(self, path):
+        self.floor = loader.loadModel(panda_path(path))
+        self.floor.reparentTo(render.find('scene'))
+        self.floor.setPos(self.offset)
+        self.floor.setName('floor')
+
+        self.floor_loaded = True
+
+        return self.floor
+
+
     def unload_room(self):
         if not self.room_loaded:
             return
@@ -243,6 +255,16 @@ class Environment(object):
         del self.room
 
         self.room_loaded = False
+
+
+    def unload_floor(self):
+        if not self.floor_loaded:
+            return
+
+        self.floor.removeNode()
+        del self.floor
+
+        self.floor_loaded = False
 
 
     def unload_lights(self):
