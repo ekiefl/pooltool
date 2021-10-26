@@ -4,6 +4,7 @@ import pooltool
 import pooltool.ani.utils as autils
 
 from pooltool.ani import logo_paths
+from pooltool.utils import panda_path
 
 import numpy as np
 
@@ -214,7 +215,7 @@ class English(HUDElement):
         self.text_color = (1,1,1,1)
 
         self.circle = OnscreenImage(
-            image=str(self.dir / 'circle.png'),
+            image=panda_path(self.dir / 'circle.png'),
             parent=self.dummy_right,
             scale=0.15
         )
@@ -223,7 +224,7 @@ class English(HUDElement):
         self.circle.setZ(-0.75)
 
         self.crosshairs = OnscreenImage(
-            image=str(self.dir / 'crosshairs.png'),
+            image=panda_path(self.dir / 'crosshairs.png'),
             pos=(0, 0, 0),
             parent=self.circle,
             scale=0.14
@@ -273,7 +274,7 @@ class Jack(HUDElement):
         self.text_color = (1,1,1,1)
 
         self.arc = OnscreenImage(
-            image=str(self.dir / 'arc.png'),
+            image=panda_path(self.dir / 'arc.png'),
             pos=(1.4, 0, -0.45),
             parent=aspect2d,
             scale=0.075
@@ -281,7 +282,7 @@ class Jack(HUDElement):
         self.arc.setTransparency(TransparencyAttrib.MAlpha)
 
         self.cue_cartoon = OnscreenImage(
-            image=str(self.dir / 'cue.png'),
+            image=panda_path(self.dir / 'cue.png'),
             parent=aspect2d,
             pos=(0,0,0),
             scale=(0.15,1,0.01),
@@ -293,7 +294,7 @@ class Jack(HUDElement):
         autils.alignTo(self.arc, self.cue_cartoon, autils.LR, autils.CR)
 
         self.rotational_point = OnscreenImage(
-            image=str(Path(pooltool.__file__).parent.parent / 'models' / 'hud' / 'english' / 'circle.png'),
+            image=panda_path(Path(pooltool.__file__).parent.parent / 'models' / 'hud' / 'english' / 'circle.png'),
             parent=self.arc,
             scale=0.15
         )

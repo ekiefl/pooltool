@@ -7,8 +7,13 @@ import psutil
 import linecache
 import tracemalloc
 
-from scipy.spatial.transform import Rotation
+from panda3d.core import Filename
 from pyquaternion import Quaternion
+from scipy.spatial.transform import Rotation
+
+
+def panda_path(path):
+    return str(Filename.fromOsSpecific(str(path)))
 
 
 def get_total_memory_usage(keep_raw=False):

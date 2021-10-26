@@ -3,6 +3,7 @@
 import pooltool
 
 from pooltool.ani import settings
+from pooltool.utils import panda_path
 
 from pathlib import Path
 from panda3d.core import *
@@ -224,7 +225,7 @@ class Environment(object):
 
 
     def load_room(self, path):
-        self.room = loader.loadModel(path)
+        self.room = loader.loadModel(panda_path(path))
         self.room.reparentTo(render.find('scene'))
         self.room.setPos(self.offset)
         self.room.setName('room')

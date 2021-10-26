@@ -7,10 +7,8 @@ import os
 import re
 import sys
 import time
-import fcntl
 import struct
 import pandas as pd
-import termios
 import datetime
 import textwrap
 
@@ -715,6 +713,8 @@ def get_terminal_size():
     """function was taken from http://stackoverflow.com/a/566752"""
     def ioctl_GWINSZ(fd):
         try:
+            import fcntl
+            import termios
             cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ,
         '1234'))
         except:
