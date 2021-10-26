@@ -31,11 +31,12 @@ class BallRender(Render):
         else:
             path = fallback_path
 
-        sphere_node = base.loader.loadModel(panda_path(path))
+        self.model_path = path
+        sphere_node = base.loader.loadModel(panda_path(self.model_path))
         sphere_node.reparentTo(ball)
 
         # https://discourse.panda3d.org/t/visual-artifact-at-poles-of-uv-sphere-gltf-format/27975/8
-        if path == fallback_path:
+        if self.model_path == fallback_path:
             tex = sphere_node.find_texture(Path(fallback_path).stem)
         else:
             tex = sphere_node.find_texture(self.id)
