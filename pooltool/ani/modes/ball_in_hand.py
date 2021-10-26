@@ -63,7 +63,7 @@ class BallInHandMode(Mode):
 
     def exit(self, success=False):
         self.remove_task('ball_in_hand_task')
-        self.remove_transparent_ball()
+        BallInHandMode.remove_transparent_ball(self)
 
         if self.picking == 'ball':
             BallInHandMode.remove_grab_selection_highlight(self)
@@ -97,7 +97,7 @@ class BallInHandMode(Mode):
                 self.keymap['next'] = False
                 self.picking = 'placement'
                 BallInHandMode.remove_grab_selection_highlight(self)
-                self.add_transparent_ball()
+                BallInHandMode.add_transparent_ball(self)
 
         elif self.picking == 'placement':
             self.move_grabbed_ball()
@@ -170,7 +170,8 @@ class BallInHandMode(Mode):
 
 
     def remove_transparent_ball(self):
-        self.trans_ball.removeNode()
+        if self.trans_ball is not None:
+            self.trans_ball.removeNode()
         self.trans_ball = None
 
 

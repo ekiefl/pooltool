@@ -4,10 +4,12 @@ import pooltool
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 
+from pooltool.utils import panda_path
 from pooltool.ani.modes import Mode, action
 
 import numpy as np
 
+from panda3d.core import TransparencyAttrib
 from direct.interval.IntervalGlobal import *
 
 
@@ -26,6 +28,7 @@ class CallShotMode(Mode):
 
         self.head_raise = 14
 
+        self.trans_ball = None
         self.ball_highlight = None
         self.picking = None
 
@@ -56,6 +59,7 @@ class CallShotMode(Mode):
         self.remove_task('call_shot_task')
         if self.picking in ('ball', 'pocket'):
             CallShotMode.remove_ball_highlight(self)
+        CallShotMode.remove_transparent_ball(self)
         self.ball_highlight_sequence.pause()
         self.player_cam.focus.setR(self.player_cam.focus.getR() + self.head_raise)
 
@@ -81,6 +85,7 @@ class CallShotMode(Mode):
                 if self.closest_ball is not None:
                     self.game.log.add_msg(f"Calling the {self.closest_ball.id} ball", sentiment='neutral')
                 self.picking = 'pocket'
+                self.trans_ball.show()
 
         elif self.picking == 'pocket':
             closest = self.find_closest_pocket()
@@ -143,6 +148,8 @@ class CallShotMode(Mode):
 
     def add_ball_highlight(self):
         if self.closest_ball is not None:
+            CallShotMode.add_transparent_ball(self)
+            self.trans_ball.hide()
             self.add_task(self.ball_highlight_animation, 'ball_highlight_animation')
             node = self.closest_ball.get_node('ball')
             node.setScale(node.getScale()*self.ball_highlight_factor)
@@ -154,6 +161,21 @@ class CallShotMode(Mode):
         self.ball_highlight.setZ(new_height)
 
         return task.cont
+
+
+    def add_transparent_ball(self):
+        self.trans_ball = base.loader.loadModel(panda_path(self.closest_ball.model_path))
+        self.trans_ball.reparentTo(render.find('scene').find('cloth'))
+        self.trans_ball.setTransparency(TransparencyAttrib.MAlpha)
+        self.trans_ball.setAlphaScale(0.4)
+        self.trans_ball.setPos(self.closest_ball.get_node('ball').getPos())
+        self.trans_ball.setHpr(self.closest_ball.get_node('sphere').getHpr())
+
+
+    def remove_transparent_ball(self):
+        if self.trans_ball is not None:
+            self.trans_ball.removeNode()
+        self.trans_ball = None
 
 
     def find_closest_ball(self):
