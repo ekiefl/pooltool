@@ -5,6 +5,7 @@ import pooltool.ani.utils as autils
 
 from pooltool.ani import settings
 from pooltool.error import ConfigError
+from pooltool.utils import panda_path
 from pooltool.objects import *
 
 import numpy as np
@@ -24,9 +25,9 @@ class TableRender(Render):
     def init_cloth(self):
         if not self.has_model:
             node = render.find('scene').attachNewNode('cloth') 
-            path = str(Path(pooltool.__file__).parent.parent / 'models' / 'table' / 'custom' / 'custom.glb')
+            path = Path(pooltool.__file__).parent.parent / 'models' / 'table' / 'custom' / 'custom.glb'
 
-            model = loader.loadModel(path)
+            model = loader.loadModel(panda_path(path))
             model.reparentTo(node)
             model.setScale(self.w, self.l, 1)
         else:
@@ -43,7 +44,7 @@ class TableRender(Render):
             if not path.exists():
                 raise ConfigError(f"Couldn't find table model at {standard_path} or {pbr_path}")
 
-            node = loader.loadModel(str(path))
+            node = loader.loadModel(panda_path(path))
             node.reparentTo(render.find('scene'))
             node.setName('cloth')
 
