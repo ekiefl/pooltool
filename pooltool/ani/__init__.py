@@ -3,13 +3,14 @@
 import ast
 import pooltool
 import configparser
+import pooltool.utils as utils
 
 from pooltool.error import ConfigError, TableConfigError
 
 from pathlib import Path
 from panda3d.core import *
 
-loadPrcFile(str(Path(pooltool.__file__).parent / 'Config.prc'))
+loadPrcFile(utils.panda_path(Path(pooltool.__file__).parent / 'Config.prc'))
 
 menu_text_scale = 0.07
 menu_text_scale_small = 0.04
@@ -59,11 +60,11 @@ options_side_pocket_radius = 'Pocket radius (side)'
 options_side_jaw_radius = 'Jaw radius (side)'
 
 logo_paths = {
-    'default': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo.png'),
-    'small': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_small.png'),
-    'smaller': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_smaller.png'),
-    'pt': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_pt.png'),
-    'pt_smaller': str(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_pt_smaller.png'),
+    'default': utils.panda_path(Path(pooltool.__file__).parent.parent / 'logo' / 'logo.png'),
+    'small': utils.panda_path(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_small.png'),
+    'smaller': utils.panda_path(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_smaller.png'),
+    'pt': utils.panda_path(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_pt.png'),
+    'pt_smaller': utils.panda_path(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_pt_smaller.png'),
 }
 
 

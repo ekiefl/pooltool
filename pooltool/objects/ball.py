@@ -3,6 +3,7 @@
 import pooltool.physics as physics
 import pooltool.ani.utils as autils
 
+from pooltool.utils import panda_path
 from pooltool.events import *
 from pooltool.objects import *
 
@@ -22,15 +23,15 @@ class BallRender(Render):
     def init_sphere(self):
         ball = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}")
 
-        fallback_path = str(Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'set_1' / '1.glb')
+        fallback_path = Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'set_1' / '1.glb'
         expected_path = Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'set_1' / f'{self.id}.glb'
 
         if expected_path.exists():
-            path = str(expected_path)
+            path = expected_path
         else:
             path = fallback_path
 
-        sphere_node = base.loader.loadModel(path)
+        sphere_node = base.loader.loadModel(panda_path(path))
         sphere_node.reparentTo(ball)
 
         # https://discourse.panda3d.org/t/visual-artifact-at-poles-of-uv-sphere-gltf-format/27975/8
@@ -63,7 +64,7 @@ class BallRender(Render):
         shadow_node.setPos(self.rvw[0,0], self.rvw[0,1], 0)
 
         for i, scale in enumerate(scales):
-            shadow_layer = base.loader.loadModel(shadow_path)
+            shadow_layer = base.loader.loadModel(panda_path(shadow_path))
             shadow_layer.reparentTo(shadow_node)
             shadow_layer.setScale(self.get_scale_factor(shadow_layer)*scale)
             shadow_layer.setZ(z_offset*(1 - i/N))

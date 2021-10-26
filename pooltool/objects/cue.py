@@ -24,7 +24,7 @@ class CueRender(Render):
 
 
     def init_model(self, R=pooltool.R):
-        path = str(Path(pooltool.__file__).parent.parent / 'models' / 'cue' / 'cue.glb')
+        path = utils.panda_path(Path(pooltool.__file__).parent.parent / 'models' / 'cue' / 'cue.glb')
         cue_stick_model = loader.loadModel(path)
         cue_stick_model.setName('cue_stick_model')
 

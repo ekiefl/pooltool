@@ -4,6 +4,8 @@ import pooltool
 import pooltool.ani as ani
 import pooltool.games as games
 
+from pooltool.utils import panda_path
+
 import sys
 
 from panda3d.core import *
@@ -194,12 +196,12 @@ class GenericMenu(object):
           preserve their aspect ratios.
         """
 
-        img = OnscreenImage(image=path, pos=pos, parent=self.titleMenuBackdrop, scale=scale)
+        img = OnscreenImage(image=panda_path(path), pos=pos, parent=self.titleMenuBackdrop, scale=scale)
         img.setTransparency(TransparencyAttrib.MAlpha)
 
         self.elements.append({
             'type': 'image',
-            'name': path,
+            'name': panda_path(path),
             'content': img,
             'convert_factor': None,
         })
