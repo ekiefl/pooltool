@@ -18,6 +18,7 @@ class CueRender(Render):
         self.follow = None
         self.stroke_sequence = None
         self.stroke_clock = ClockObject()
+        self.has_focus = False
 
         self.stroke_pos = []
         self.stroke_time = []
@@ -45,6 +46,8 @@ class CueRender(Render):
 
         self.update_focus()
         cue_stick.reparentTo(cue_stick_focus)
+
+        self.has_focus = True
 
 
     def track_stroke(self):
