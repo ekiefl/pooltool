@@ -92,6 +92,7 @@ class BallInHandMode(Mode):
             if self.keymap['next']:
                 self.keymap['next'] = False
                 self.picking = 'placement'
+                self.player_cam.update_focus(self.grab_ball_node.getPos())
                 BallInHandMode.remove_grab_selection_highlight(self)
                 BallInHandMode.add_transparent_ball(self)
 
@@ -126,10 +127,12 @@ class BallInHandMode(Mode):
 
 
     def move_grabbed_ball(self):
-        self.grab_ball_node.setX(self.player_cam.focus.getX())
-        self.grab_ball_node.setY(self.player_cam.focus.getY())
-        self.grab_ball_shadow_node.setX(self.player_cam.focus.getX())
-        self.grab_ball_shadow_node.setY(self.player_cam.focus.getY())
+        x, y = self.player_cam.focus.getX(), self.player_cam.focus.getY()
+
+        self.grab_ball_node.setX(x)
+        self.grab_ball_node.setY(y)
+        self.grab_ball_shadow_node.setX(x)
+        self.grab_ball_shadow_node.setY(y)
 
 
     def remove_grab_selection_highlight(self):
