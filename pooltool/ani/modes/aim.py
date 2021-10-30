@@ -166,6 +166,5 @@ class AimMode(Mode):
         # update hud
         a, b = -new_y/R, new_z/R
         self.hud_elements['english'].set(a, b)
-        
 
 

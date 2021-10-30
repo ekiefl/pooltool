@@ -124,7 +124,6 @@ class BallInHandMode(Mode):
                 return False
 
         self.grabbed_ball.set_object_state_as_render_state()
-        self.cue.init_focus(self.grabbed_ball)
         return True
 
 

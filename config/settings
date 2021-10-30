@@ -1,8 +1,8 @@
 [graphics]
-room = 0
+room = 1
 floor = 1
-lights = 0
-shadows = 0
+lights = 1
+shadows = 1
 shader = 1
-physical_based_rendering = 0
-fps = 60
+physical_based_rendering = 1
+fps = 30
