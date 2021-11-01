@@ -74,7 +74,7 @@ class BallInHandMode(Mode):
         if not self.keymap[action.ball_in_hand]:
             self.change_mode(
                 self.last_mode,
-                enter_kwargs=dict(load_prev_cam=True),
+                enter_kwargs=dict(load_prev_cam=False),
             )
             return task.done
 
