@@ -42,6 +42,15 @@ class PlayerCam(object):
         self.focus.setPos(pos)
 
 
+    def get_state(self):
+        return {
+            'CamHpr': self.node.getHpr(),
+            'CamPos': self.node.getPos(),
+            'FocusHpr': self.focus.getHpr() if self.has_focus else None,
+            'FocusPos': self.focus.getPos() if self.has_focus else None,
+        }
+
+
     def store_state(self, name, overwrite=False):
         if name in self.states:
             if overwrite:
@@ -49,13 +58,7 @@ class PlayerCam(object):
             else:
                 raise Exception(f"PlayerCam :: '{name}' is already a camera state")
 
-        self.states[name] = {
-            'CamHpr': self.node.getHpr(),
-            'CamPos': self.node.getPos(),
-            'FocusHpr': self.focus.getHpr() if self.has_focus else None,
-            'FocusPos': self.focus.getPos() if self.has_focus else None,
-        }
-
+        self.states[name] = self.get_state()
         self.last_state = name
 
 

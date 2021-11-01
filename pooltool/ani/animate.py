@@ -28,8 +28,8 @@ from panda3d.core import *
 from direct.showbase.ShowBase import ShowBase
 
 
-class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode, CamSaveMode, CalculateMode,
-                  PickBallMode, GameOverMode, CallShotMode, BallInHandMode):
+class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode, CamSaveMode,
+                  CalculateMode, PickBallMode, GameOverMode, CallShotMode, BallInHandMode):
     def __init__(self):
         # Init every Mode class
         self.modes = modes
