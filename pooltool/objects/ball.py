@@ -125,7 +125,7 @@ class BallRender(Render):
             shadow_sequence.append(LerpPosInterval(
                 nodePath = self.nodes['shadow'],
                 duration = playback_dts[i],
-                pos = (x, y, 0),
+                pos = (x, y, min(0, z-self.R)),
             ))
 
         self.playback_sequence = Parallel()
