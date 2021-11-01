@@ -21,6 +21,8 @@ u_s = 0.2 # sliding friction
 u_r = 0.01 # rolling friction
 u_sp = 10 * 2/5*R/9 # spinning friction
 
+english_fraction = 0.5
+
 table_length = 1.9812 # 7-foot table (78x39 in^2 playing surface)
 table_width = 1.9812/2 # 7-foot table (78x39 in^2 playing surface)
 table_height = 0.708
