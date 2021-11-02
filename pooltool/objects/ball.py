@@ -31,11 +31,12 @@ class BallRender(Render):
         else:
             path = fallback_path
 
-        sphere_node = base.loader.loadModel(panda_path(path))
+        self.model_path = path
+        sphere_node = base.loader.loadModel(panda_path(self.model_path))
         sphere_node.reparentTo(ball)
 
         # https://discourse.panda3d.org/t/visual-artifact-at-poles-of-uv-sphere-gltf-format/27975/8
-        if path == fallback_path:
+        if self.model_path == fallback_path:
             tex = sphere_node.find_texture(Path(fallback_path).stem)
         else:
             tex = sphere_node.find_texture(self.id)
@@ -62,6 +63,9 @@ class BallRender(Render):
         shadow_path = Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'set_1' / f'shadow.glb'
         shadow_node = render.find('scene').find('cloth').attachNewNode(f'shadow_{self.id}')
         shadow_node.setPos(self.rvw[0,0], self.rvw[0,1], 0)
+
+        # allow transparency of shadow to change
+        shadow_node.setTransparency(TransparencyAttrib.MAlpha)
 
         for i, scale in enumerate(scales):
             shadow_layer = base.loader.loadModel(panda_path(shadow_path))
@@ -121,7 +125,7 @@ class BallRender(Render):
             shadow_sequence.append(LerpPosInterval(
                 nodePath = self.nodes['shadow'],
                 duration = playback_dts[i],
-                pos = (x, y, 0),
+                pos = (x, y, min(0, z-self.R)),
             ))
 
         self.playback_sequence = Parallel()

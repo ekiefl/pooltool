@@ -546,10 +546,16 @@ def cue_strike(m, M, R, V0, phi, theta, a, b):
     b : float
         How much vertical english should be put on? -1 being bottom-most side of ball, +1 being
         topmost side of ball
+
+    Notes
+    =====
+    - This function creates unrealistic magnitudes of spin. To compensate, I've got a fake factor
+      that scales down the passed a and b values, called pooltool.english_fraction
+
     """
 
-    a *= R
-    b *= R
+    a *= R*pooltool.english_fraction
+    b *= R*pooltool.english_fraction
 
     phi *= np.pi/180
     theta *= np.pi/180

@@ -4,10 +4,12 @@ import pooltool
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 
+from pooltool.utils import panda_path
 from pooltool.ani.modes import Mode, action
 
 import numpy as np
 
+from panda3d.core import TransparencyAttrib
 from direct.interval.IntervalGlobal import *
 
 
@@ -20,12 +22,9 @@ class CallShotMode(Mode):
 
 
     def __init__(self):
-        self.ball_highlight_offset = 0.1
-        self.ball_highlight_amplitude = 0.03
-        self.ball_highlight_frequency = 4
-
         self.head_raise = 14
 
+        self.trans_ball = None
         self.ball_highlight = None
         self.picking = None
 
@@ -56,6 +55,7 @@ class CallShotMode(Mode):
         self.remove_task('call_shot_task')
         if self.picking in ('ball', 'pocket'):
             CallShotMode.remove_ball_highlight(self)
+        CallShotMode.remove_transparent_ball(self)
         self.ball_highlight_sequence.pause()
         self.player_cam.focus.setR(self.player_cam.focus.getR() + self.head_raise)
 
@@ -81,6 +81,7 @@ class CallShotMode(Mode):
                 if self.closest_ball is not None:
                     self.game.log.add_msg(f"Calling the {self.closest_ball.id} ball", sentiment='neutral')
                 self.picking = 'pocket'
+                self.trans_ball.show()
 
         elif self.picking == 'pocket':
             closest = self.find_closest_pocket()
@@ -117,6 +118,20 @@ class CallShotMode(Mode):
                     duration=0.07,
                     blendType='easeInOut',
                 ),
+                LerpFunc(
+                    self.closest_ball.get_node('shadow').setX,
+                    fromData=self.closest_ball.get_node('shadow').getX(),
+                    toData=self.closest_pocket.center[0],
+                    duration=0.07,
+                    blendType='easeInOut',
+                ),
+                LerpFunc(
+                    self.closest_ball.get_node('shadow').setY,
+                    fromData=self.closest_ball.get_node('shadow').getY(),
+                    toData=self.closest_pocket.center[1],
+                    duration=0.07,
+                    blendType='easeInOut',
+                ),
             )
             self.ball_highlight_sequence.start()
 
@@ -136,24 +151,48 @@ class CallShotMode(Mode):
     def remove_ball_highlight(self):
         if self.closest_ball is not None:
             node = self.closest_ball.get_node('ball')
-            node.setScale(node.getScale()/self.ball_highlight_factor)
+            node.setScale(node.getScale()/ani.ball_highlight['ball_factor'])
+            self.closest_ball.get_node('shadow').setAlphaScale(1)
+            self.closest_ball.get_node('shadow').setScale(1)
             self.closest_ball.set_render_state_as_object_state()
-            self.remove_task('ball_highlight_animation')
+            self.remove_task('call_shot_ball_highlight_animation')
 
 
     def add_ball_highlight(self):
         if self.closest_ball is not None:
-            self.add_task(self.ball_highlight_animation, 'ball_highlight_animation')
+            CallShotMode.add_transparent_ball(self)
+            self.trans_ball.hide()
+            self.add_task(self.call_shot_ball_highlight_animation, 'call_shot_ball_highlight_animation')
             node = self.closest_ball.get_node('ball')
-            node.setScale(node.getScale()*self.ball_highlight_factor)
+            node.setScale(node.getScale()*ani.ball_highlight['ball_factor'])
 
 
-    def ball_highlight_animation(self, task):
-        phase = task.time * self.ball_highlight_frequency
-        new_height = self.ball_highlight_offset + self.ball_highlight_amplitude * np.sin(phase)
+    def call_shot_ball_highlight_animation(self, task):
+        phase = task.time * ani.ball_highlight['ball_frequency']
+        new_height = ani.ball_highlight['ball_offset'] + ani.ball_highlight['ball_amplitude'] * np.sin(phase)
         self.ball_highlight.setZ(new_height)
 
+        new_alpha = ani.ball_highlight['shadow_alpha_offset'] + ani.ball_highlight['shadow_alpha_amplitude'] * np.sin(-phase)
+        new_scale = ani.ball_highlight['shadow_scale_offset'] + ani.ball_highlight['shadow_scale_amplitude'] * np.sin(phase)
+        self.closest_ball.get_node('shadow').setAlphaScale(new_alpha)
+        self.closest_ball.get_node('shadow').setScale(new_scale)
+
         return task.cont
+
+
+    def add_transparent_ball(self):
+        self.trans_ball = base.loader.loadModel(panda_path(self.closest_ball.model_path))
+        self.trans_ball.reparentTo(render.find('scene').find('cloth'))
+        self.trans_ball.setTransparency(TransparencyAttrib.MAlpha)
+        self.trans_ball.setAlphaScale(0.4)
+        self.trans_ball.setPos(self.closest_ball.get_node('ball').getPos())
+        self.trans_ball.setHpr(self.closest_ball.get_node('sphere').getHpr())
+
+
+    def remove_transparent_ball(self):
+        if self.trans_ball is not None:
+            self.trans_ball.removeNode()
+        self.trans_ball = None
 
 
     def find_closest_ball(self):

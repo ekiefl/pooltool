@@ -13,7 +13,9 @@ class Environment(object):
 
         self.set_table_offset(table)
         self.room = None
+        self.floor = None
         self.room_loaded = False
+        self.floor_loaded = False
         self.lights_loaded = False
 
         self.shadow = True
@@ -127,7 +129,7 @@ class Environment(object):
                 hpr = (-90, -95, 0),
                 strength = 2,
                 far = 1,
-                illuminates = (self.room,),
+                illuminates = (self.room, self.floor),
                 shadows = self.shadow,
             ),
             'under_bar_1_2': self.get_slight(
@@ -136,7 +138,7 @@ class Environment(object):
                 hpr = (-90, -95, 0),
                 strength = 2,
                 far = 1,
-                illuminates = (self.room,),
+                illuminates = (self.room, self.floor),
                 shadows = self.shadow,
             ),
             'under_bar_1_3': self.get_slight(
@@ -145,7 +147,7 @@ class Environment(object):
                 hpr = (-90, -95, 0),
                 strength = 2,
                 far = 1,
-                illuminates = (self.room,),
+                illuminates = (self.room, self.floor),
                 shadows = self.shadow,
             ),
             # under bar #2
@@ -155,7 +157,7 @@ class Environment(object):
                 hpr = (0, -95, 0),
                 strength = 2,
                 far = 1,
-                illuminates = (self.room,),
+                illuminates = (self.room, self.floor),
                 shadows = self.shadow,
             ),
             'under_bar_2_2': self.get_slight(
@@ -164,7 +166,7 @@ class Environment(object):
                 hpr = (0, -95, 0),
                 strength = 2,
                 far = 1,
-                illuminates = (self.room,),
+                illuminates = (self.room, self.floor),
                 shadows = self.shadow,
             ),
             'cues': self.get_slight(
@@ -173,7 +175,7 @@ class Environment(object):
                 hpr = (0, -100, 0),
                 fov = (30, 30),
                 far = 2,
-                illuminates = (self.room,),
+                illuminates = (self.room, self.floor),
                 shadows = self.shadow,
             ),
         }
@@ -235,6 +237,17 @@ class Environment(object):
         return self.room
 
 
+    def load_floor(self, path):
+        self.floor = loader.loadModel(panda_path(path))
+        self.floor.reparentTo(render.find('scene'))
+        self.floor.setPos(self.offset)
+        self.floor.setName('floor')
+
+        self.floor_loaded = True
+
+        return self.floor
+
+
     def unload_room(self):
         if not self.room_loaded:
             return
@@ -243,6 +256,16 @@ class Environment(object):
         del self.room
 
         self.room_loaded = False
+
+
+    def unload_floor(self):
+        if not self.floor_loaded:
+            return
+
+        self.floor.removeNode()
+        del self.floor
+
+        self.floor_loaded = False
 
 
     def unload_lights(self):

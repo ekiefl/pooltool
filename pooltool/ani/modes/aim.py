@@ -30,7 +30,11 @@ class AimMode(Mode):
         self.mouse.relative()
         self.mouse.track()
 
-        self.cue.init_focus(self.cueing_ball)
+        if not self.cue.has_focus:
+            self.cue.init_focus(self.cueing_ball)
+        else:
+            self.cue.update_focus()
+
         self.cue.show_nodes()
         self.cue.get_node('cue_stick').setX(0)
         self.player_cam.update_focus(self.cueing_ball.get_node('ball').getPos())
@@ -162,6 +166,5 @@ class AimMode(Mode):
         # update hud
         a, b = -new_y/R, new_z/R
         self.hud_elements['english'].set(a, b)
-        
 
 

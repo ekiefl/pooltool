@@ -28,8 +28,8 @@ from panda3d.core import *
 from direct.showbase.ShowBase import ShowBase
 
 
-class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode, CamSaveMode, CalculateMode,
-                  PickBallMode, GameOverMode, CallShotMode, BallInHandMode):
+class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode, CamSaveMode,
+                  CalculateMode, PickBallMode, GameOverMode, CallShotMode, BallInHandMode):
     def __init__(self):
         # Init every Mode class
         self.modes = modes
@@ -175,13 +175,17 @@ class Interface(ShowBase, ModeManager):
 
     def init_environment(self):
         if ani.settings['graphics']['physical_based_rendering']:
-            path = utils.panda_path(Path(pooltool.__file__).parent.parent / 'models/room/room_pbr.glb')
+            room_path = utils.panda_path(Path(pooltool.__file__).parent.parent / 'models/room/room_pbr.glb')
+            floor_path = utils.panda_path(Path(pooltool.__file__).parent.parent / 'models/room/floor_pbr.glb')
         else:
-            path = utils.panda_path(Path(pooltool.__file__).parent.parent / 'models/room/room.glb')
+            room_path = utils.panda_path(Path(pooltool.__file__).parent.parent / 'models/room/room.glb')
+            floor_path = utils.panda_path(Path(pooltool.__file__).parent.parent / 'models/room/floor.glb')
 
         self.environment = environment.Environment(self.table)
         if ani.settings['graphics']['room']:
-            self.environment.load_room(path)
+            self.environment.load_room(room_path)
+        if ani.settings['graphics']['floor']:
+            self.environment.load_floor(floor_path)
         if ani.settings['graphics']['lights']:
             self.environment.load_lights()
 
