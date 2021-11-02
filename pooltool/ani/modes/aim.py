@@ -61,6 +61,7 @@ class AimMode(Mode):
         self.task_action('e-up', action.english, False)
 
         self.add_task(self.aim_task, 'aim_task')
+        self.watch_cue_collision()
 
 
     def exit(self):
@@ -92,6 +93,18 @@ class AimMode(Mode):
             self.rotate_camera_aim()
 
         return task.cont
+
+
+    def watch_cue_collision(self):
+        for ball in self.balls.values():
+            name = f"ball_csphere_{ball.id}"
+            self.accept(f"into-{name}", self.cue_stick_collide)
+            self.accept(f"outof-{name}", self.cue_stick_collide)
+            self.accept(f"again-{name}", self.cue_stick_collide)
+
+
+    def cue_stick_collide(self, entry):
+        print(entry)
 
 
     def zoom_camera_aim(self):

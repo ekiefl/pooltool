@@ -34,10 +34,16 @@ class CueRender(Render):
 
         self.nodes['cue_stick'] = cue_stick
         self.nodes['cue_stick_model'] = cue_stick_model
-        self.init_collision()
 
 
-    def init_collision(self):
+    def init_collision_handling(self, collision_handler):
+        if not ani.settings['gameplay']['cue_collision']:
+            return
+
+        if not self.rendered:
+            raise ConfigError("Cue.init_collision_handling :: Cue has not been rendered, "
+                              "so collision handling cannot be initialized.")
+
         bounds = self.nodes['cue_stick'].get_tight_bounds()
 
         x = bounds[0][0]
@@ -45,19 +51,25 @@ class CueRender(Render):
         r = self.tip_radius
         R = self.butt_radius
 
-        N = 20
+        N = 8
         for i in range(N):
             theta = i/N*2*np.pi
-            collision_node = self.nodes['cue_stick_model'].attachNewNode(CollisionNode(f"cue_cseg_{i}"))
+
+            cnode = CollisionNode(f"cue_cseg_{i}")
+            cnode.set_into_collide_mask(0)
+            collision_node = self.nodes['cue_stick_model'].attachNewNode(cnode)
             collision_node.node().addSolid(
                 CollisionSegment(
                     x, r*np.sin(theta), r*np.cos(theta),
                     X, R*np.sin(theta), R*np.cos(theta)
                 )
             )
+
+            self.nodes[f"cue_cseg_{i}"] = collision_node
+            base.cTrav.addCollider(collision_node, collision_handler)
+
             if ani.settings['graphics']['debug']:
                 collision_node.show()
-            self.nodes[f"cue_cseg_{i}"] = collision_node
 
 
     def init_focus(self, ball):

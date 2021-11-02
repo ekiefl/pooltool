@@ -7,3 +7,6 @@ shader = 1
 physical_based_rendering = 1
 debug = 1
 fps = 30
+
+[gameplay]
+cue_collision = 1
