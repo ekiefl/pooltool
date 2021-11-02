@@ -61,6 +61,8 @@ class BallRender(Render):
         if ani.settings['graphics']['debug']:
             collision_node.show()
 
+        return collision_node
+
 
     def init_shadow(self):
         N = 20
