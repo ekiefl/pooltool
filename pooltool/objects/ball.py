@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import pooltool.ani as ani
 import pooltool.physics as physics
 import pooltool.ani.utils as autils
 
@@ -45,13 +46,23 @@ class BallRender(Render):
         sphere_node.setScale(self.get_scale_factor(sphere_node))
         ball.setPos(*self.rvw[0,:])
 
-        shadow_node = self.init_shadow()
-
         self.nodes['sphere'] = sphere_node
-        self.nodes['shadow'] = shadow_node
         self.nodes['ball'] = ball
 
+        shadow_node = self.init_shadow()
+        self.nodes['shadow'] = shadow_node
+
+        collision_node = self.init_collision()
+        self.nodes['collision'] = collision_node
+
         self.randomize_orientation()
+
+
+    def init_collision(self):
+        collision_node = self.nodes['ball'].attachNewNode(CollisionNode('cnode'))
+        collision_node.node().addSolid(CollisionSphere(0, 0, 0, self.R*1.1)) # FIXME
+        if ani.settings['graphics']['debug']:
+            collision_node.show()
 
 
     def init_shadow(self):
