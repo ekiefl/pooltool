@@ -45,10 +45,10 @@ class CueRender(Render):
         r = self.tip_radius
         R = self.butt_radius
 
-        N = 8
-        for i in range(8):
-            theta = i/8*2*np.pi
-            collision_node = self.nodes['cue_stick_model'].attachNewNode(CollisionNode(f"cnode_{i}"))
+        N = 20
+        for i in range(N):
+            theta = i/N*2*np.pi
+            collision_node = self.nodes['cue_stick_model'].attachNewNode(CollisionNode(f"cue_cseg_{i}"))
             collision_node.node().addSolid(
                 CollisionSegment(
                     x, r*np.sin(theta), r*np.cos(theta),
@@ -57,7 +57,7 @@ class CueRender(Render):
             )
             if ani.settings['graphics']['debug']:
                 collision_node.show()
-            self.nodes[f"collision_{i}"] = collision_node
+            self.nodes[f"cue_cseg_{i}"] = collision_node
 
 
     def init_focus(self, ball):

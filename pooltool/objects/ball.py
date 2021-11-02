@@ -50,13 +50,13 @@ class BallRender(Render):
         self.nodes['ball'] = ball
 
         self.nodes['shadow'] = self.init_shadow()
-        self.nodes['collision'] = self.init_collision()
+        self.nodes[f"ball_csphere_{self.id}"] = self.init_collision()
 
         self.randomize_orientation()
 
 
     def init_collision(self):
-        collision_node = self.nodes['ball'].attachNewNode(CollisionNode('cnode'))
+        collision_node = self.nodes['ball'].attachNewNode(CollisionNode(f"ball_csphere_{self.id}"))
         collision_node.node().addSolid(CollisionSphere(0, 0, 0, self.R*1.1)) # FIXME
         if ani.settings['graphics']['debug']:
             collision_node.show()
