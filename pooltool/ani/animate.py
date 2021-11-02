@@ -102,6 +102,8 @@ class Interface(ShowBase, ModeManager):
         globalClock.setMode(ClockObject.MLimited)
         globalClock.setFrameRate(ani.settings['graphics']['fps'])
 
+        self.init_collision_handler()
+
         self.shot = None
         self.balls = None
         self.table = None
@@ -188,6 +190,17 @@ class Interface(ShowBase, ModeManager):
             self.environment.load_floor(floor_path)
         if ani.settings['graphics']['lights']:
             self.environment.load_lights()
+
+
+    def init_collision_handler(self):
+        # NOTE this Panda3D collision handler is specifically for determining whether the
+        # cue stick is intersecting with cushions or balls. All other collisions discussed at
+        # https://ekiefl.github.io/2020/12/20/pooltool-alg/#2-what-are-events are _not_
+        # handled by Panda3D
+        base.cTrav = CollisionTraverser()
+        self.collision_handler = CollisionHandlerEvent()
+        self.collision_handler.addInPattern('into-%in')
+        self.collision_handler.addInPattern('outof-%in')
 
 
     def monitor(self, task):
