@@ -4,10 +4,12 @@ import pooltool
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 
+from pooltool.utils import panda_path
 from pooltool.ani.modes import Mode, action
 
 import numpy as np
 
+from panda3d.core import TransparencyAttrib
 from direct.interval.IntervalGlobal import *
 
 
@@ -20,11 +22,9 @@ class BallInHandMode(Mode):
 
 
     def __init__(self):
-        self.grab_selection_highlight_offset = 0.1
-        self.grab_selection_highlight_amplitude = 0.03
-        self.grab_selection_highlight_frequency = 4
-
+        self.trans_ball = None
         self.grab_ball_node = None
+        self.grab_ball_shadow_node = None
         self.picking = None
 
 
@@ -49,6 +49,7 @@ class BallInHandMode(Mode):
         elif num_options == 1:
             self.grabbed_ball = self.balls[self.game.active_player.ball_in_hand[0]]
             self.grab_ball_node = self.grabbed_ball.get_node('ball')
+            self.grab_ball_shadow_node = self.grabbed_ball.get_node('shadow')
             self.picking = 'placement'
         else:
             self.picking = 'ball'
@@ -58,6 +59,7 @@ class BallInHandMode(Mode):
 
     def exit(self, success=False):
         self.remove_task('ball_in_hand_task')
+        BallInHandMode.remove_transparent_ball(self)
 
         if self.picking == 'ball':
             BallInHandMode.remove_grab_selection_highlight(self)
@@ -72,7 +74,7 @@ class BallInHandMode(Mode):
         if not self.keymap[action.ball_in_hand]:
             self.change_mode(
                 self.last_mode,
-                enter_kwargs=dict(load_prev_cam=True),
+                enter_kwargs=dict(load_prev_cam=False),
             )
             return task.done
 
@@ -84,12 +86,15 @@ class BallInHandMode(Mode):
                 BallInHandMode.remove_grab_selection_highlight(self)
                 self.grabbed_ball = closest
                 self.grab_ball_node = self.grabbed_ball.get_node('ball')
+                self.grab_ball_shadow_node = self.grabbed_ball.get_node('shadow')
                 BallInHandMode.add_grab_selection_highlight(self)
 
             if self.keymap['next']:
                 self.keymap['next'] = False
                 self.picking = 'placement'
+                self.player_cam.update_focus(self.grab_ball_node.getPos())
                 BallInHandMode.remove_grab_selection_highlight(self)
+                BallInHandMode.add_transparent_ball(self)
 
         elif self.picking == 'placement':
             self.move_grabbed_ball()
@@ -97,10 +102,8 @@ class BallInHandMode(Mode):
             if self.keymap['next']:
                 self.keymap['next'] = False
                 if self.try_placement():
-                    self.change_mode(
-                        self.last_mode,
-                        exit_kwargs=dict(success=True),
-                    )
+                    BallInHandMode.exit(self, success=True)
+                    BallInHandMode.enter(self)
                     return task.done
                 else:
                     # FIXME add error sound and message
@@ -114,23 +117,30 @@ class BallInHandMode(Mode):
         r, pos = self.grabbed_ball.R, np.array(self.grab_ball_node.getPos())
 
         for ball in self.balls.values():
+            if ball == self.grabbed_ball:
+                continue
             if np.linalg.norm(ball.rvw[0] - pos) <= (r + ball.R):
                 return False
 
         self.grabbed_ball.set_object_state_as_render_state()
-        self.cue.init_focus(self.grabbed_ball)
         return True
 
 
     def move_grabbed_ball(self):
-        self.grab_ball_node.setX(self.player_cam.focus.getX())
-        self.grab_ball_node.setY(self.player_cam.focus.getY())
+        x, y = self.player_cam.focus.getX(), self.player_cam.focus.getY()
+
+        self.grab_ball_node.setX(x)
+        self.grab_ball_node.setY(y)
+        self.grab_ball_shadow_node.setX(x)
+        self.grab_ball_shadow_node.setY(y)
 
 
     def remove_grab_selection_highlight(self):
         if self.grabbed_ball is not None:
             node = self.grabbed_ball.get_node('ball')
-            node.setScale(node.getScale()/self.ball_highlight_factor)
+            node.setScale(node.getScale()/ani.ball_highlight['ball_factor'])
+            self.grab_ball_shadow_node.setAlphaScale(1)
+            self.grab_ball_shadow_node.setScale(1)
             self.grabbed_ball.set_render_state_as_object_state()
             self.remove_task('grab_selection_highlight_animation')
 
@@ -139,15 +149,36 @@ class BallInHandMode(Mode):
         if self.grabbed_ball is not None:
             self.add_task(self.grab_selection_highlight_animation, 'grab_selection_highlight_animation')
             node = self.grabbed_ball.get_node('ball')
-            node.setScale(node.getScale()*self.ball_highlight_factor)
+            node.setScale(node.getScale()*ani.ball_highlight['ball_factor'])
 
 
     def grab_selection_highlight_animation(self, task):
-        phase = task.time * self.grab_selection_highlight_frequency
-        new_height = self.grab_selection_highlight_offset + self.grab_selection_highlight_amplitude * np.sin(phase)
+        phase = task.time * ani.ball_highlight['ball_frequency']
+
+        new_height = ani.ball_highlight['ball_offset'] + ani.ball_highlight['ball_amplitude'] * np.sin(phase)
         self.grab_ball_node.setZ(new_height)
 
+        new_alpha = ani.ball_highlight['shadow_alpha_offset'] + ani.ball_highlight['shadow_alpha_amplitude'] * np.sin(-phase)
+        new_scale = ani.ball_highlight['shadow_scale_offset'] + ani.ball_highlight['shadow_scale_amplitude'] * np.sin(phase)
+        self.grab_ball_shadow_node.setAlphaScale(new_alpha)
+        self.grab_ball_shadow_node.setScale(new_scale)
+
         return task.cont
+
+
+    def add_transparent_ball(self):
+        self.trans_ball = base.loader.loadModel(panda_path(self.grabbed_ball.model_path))
+        self.trans_ball.reparentTo(render.find('scene').find('cloth'))
+        self.trans_ball.setTransparency(TransparencyAttrib.MAlpha)
+        self.trans_ball.setAlphaScale(0.4)
+        self.trans_ball.setPos(self.grabbed_ball.get_node('ball').getPos())
+        self.trans_ball.setHpr(self.grabbed_ball.get_node('sphere').getHpr())
+
+
+    def remove_transparent_ball(self):
+        if self.trans_ball is not None:
+            self.trans_ball.removeNode()
+        self.trans_ball = None
 
 
     def find_closest_ball(self):
