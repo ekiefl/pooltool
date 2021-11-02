@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import pooltool.ani as ani
 import pooltool.utils as utils
 
 from pooltool.events import StickBallCollision
@@ -23,7 +24,6 @@ class CueRender(Render):
         self.stroke_pos = []
         self.stroke_time = []
 
-
     def init_model(self, R=pooltool.R):
         path = utils.panda_path(Path(pooltool.__file__).parent.parent / 'models' / 'cue' / 'cue.glb')
         cue_stick_model = loader.loadModel(path)
@@ -33,6 +33,31 @@ class CueRender(Render):
         cue_stick_model.reparentTo(cue_stick)
 
         self.nodes['cue_stick'] = cue_stick
+        self.nodes['cue_stick_model'] = cue_stick_model
+        self.init_collision()
+
+
+    def init_collision(self):
+        bounds = self.nodes['cue_stick'].get_tight_bounds()
+
+        x = bounds[0][0]
+        X = bounds[1][0]
+        r = self.tip_radius
+        R = self.butt_radius
+
+        N = 8
+        for i in range(8):
+            theta = i/8*2*np.pi
+            collision_node = self.nodes['cue_stick_model'].attachNewNode(CollisionNode(f"cnode_{i}"))
+            collision_node.node().addSolid(
+                CollisionSegment(
+                    x, r*np.sin(theta), r*np.cos(theta),
+                    X, R*np.sin(theta), R*np.cos(theta)
+                )
+            )
+            if ani.settings['graphics']['debug']:
+                collision_node.show()
+            self.nodes[f"collision_{i}"] = collision_node
 
 
     def init_focus(self, ball):
