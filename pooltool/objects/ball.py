@@ -49,11 +49,8 @@ class BallRender(Render):
         self.nodes['sphere'] = sphere_node
         self.nodes['ball'] = ball
 
-        shadow_node = self.init_shadow()
-        self.nodes['shadow'] = shadow_node
-
-        collision_node = self.init_collision()
-        self.nodes['collision'] = collision_node
+        self.nodes['shadow'] = self.init_shadow()
+        self.nodes['collision'] = self.init_collision()
 
         self.randomize_orientation()
 
