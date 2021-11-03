@@ -8,7 +8,60 @@ from pooltool.ani.modes import Mode, action
 import numpy as np
 
 
-class AimMode(Mode):
+class CueAvoid(object):
+    def __init__(self):
+        self.into = set()
+
+
+    def print_queue(self):
+        for entry in self.collision_handler.entries:
+            print(entry)
+
+
+    def get_ball_from_into_node_path(self, node_path):
+        ball_node_name = node_path.name
+        expected_prefix = 'ball_csphere_'
+        assert ball_node_name.startswith(expected_prefix)
+        ball_id = ball_node_name[len(expected_prefix):]
+
+        return self.balls[ball_id]
+
+
+    def avoid_cue_collision(self):
+        if not len(self.collision_handler.entries):
+            return
+
+        cue = self.cue.get_node('cue_stick_focus')
+        max_theta = -cue.getR()
+        for entry in self.collision_handler.entries:
+            ball = self.get_ball_from_into_node_path(entry.into_node_path)
+
+            ball_x, ball_y, ball_z = entry.getSurfacePoint(entry.into_node_path)
+            cue_x, cue_y, cue_z = entry.getSurfacePoint(self.cue.get_node('cue_stick_model'))
+
+            # Height of hemisphere
+            h = ball.R**2 - ball_x**2 - ball_y**2
+            if h < 0: h = 0
+            h = np.sqrt(h)
+
+            # Required adjustment since the cue has dimension
+            h_adj = -cue_z
+
+            clearance_factor = 1.2
+
+            d = cue_x + self.cue.nodes['cue_stick_model'].getPos()[0]
+            theta = np.arcsin((h + h_adj)*clearance_factor/d) * 180/np.pi
+
+            if theta > max_theta:
+                max_theta = theta
+
+        cue.setR(-max_theta)
+
+        # update hud
+        self.hud_elements['jack'].set(max_theta)
+
+
+class AimMode(Mode, CueAvoid):
     keymap = {
         action.fine_control: False,
         action.adjust_head: False,
@@ -61,7 +114,8 @@ class AimMode(Mode):
         self.task_action('e-up', action.english, False)
 
         self.add_task(self.aim_task, 'aim_task')
-        self.watch_cue_collision()
+
+        CueAvoid.__init__(self)
 
 
     def exit(self):
@@ -83,28 +137,16 @@ class AimMode(Mode):
             self.change_mode('ball_in_hand')
         elif self.keymap[action.zoom]:
             self.zoom_camera_aim()
-        elif self.keymap[action.elevation]:
-            self.elevate_cue()
         elif self.keymap[action.adjust_head]:
             self.adjust_head_aim()
+        elif self.keymap[action.elevation]:
+            self.elevate_cue()
         elif self.keymap[action.english]:
             self.apply_english()
         else:
             self.rotate_camera_aim()
 
         return task.cont
-
-
-    def watch_cue_collision(self):
-        for ball in self.balls.values():
-            name = f"ball_csphere_{ball.id}"
-            self.accept(f"into-{name}", self.cue_stick_collide)
-            self.accept(f"outof-{name}", self.cue_stick_collide)
-            self.accept(f"again-{name}", self.cue_stick_collide)
-
-
-    def cue_stick_collide(self, entry):
-        print(entry)
 
 
     def zoom_camera_aim(self):
@@ -135,6 +177,7 @@ class AimMode(Mode):
         self.player_cam.focus.setR(alpha_y) # Move view vertically
 
         self.fix_cue_stick_to_camera()
+        self.avoid_cue_collision()
 
 
     def fix_cue_stick_to_camera(self):
@@ -179,5 +222,4 @@ class AimMode(Mode):
         # update hud
         a, b = -new_y/R, new_z/R
         self.hud_elements['english'].set(a, b)
-
 

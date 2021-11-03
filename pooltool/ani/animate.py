@@ -358,11 +358,7 @@ class Play(Interface, Menus, HUD):
         """
 
         base.cTrav = CollisionTraverser()
-        self.collision_handler = CollisionHandlerEvent()
-        self.collision_handler.addInPattern('into-%in')
-        self.collision_handler.addOutPattern('outof-%in')
-        self.collision_handler.addAgainPattern('again-%in')
-
+        self.collision_handler = CollisionHandlerQueue()
         self.cue.init_collision_handling(self.collision_handler)
 
 

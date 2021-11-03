@@ -65,9 +65,8 @@ for (_, module_name, _) in iter_modules([package_dir]):
     for attribute_name in dir(module):
         attribute = getattr(module, attribute_name)
 
-        if isclass(attribute):            
+        if isclass(attribute):
             globals()[attribute_name] = attribute
 
 get_mode_name = lambda mode: re.sub(r'(?<!^)(?=[A-Z])', '_', mode.__name__[:-4]).lower()
 modes = {get_mode_name(cls): cls for cls in Mode.__subclasses__()}
-

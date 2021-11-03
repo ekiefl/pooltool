@@ -57,7 +57,7 @@ class BallRender(Render):
 
     def init_collision(self):
         collision_node = self.nodes['ball'].attachNewNode(CollisionNode(f"ball_csphere_{self.id}"))
-        collision_node.node().addSolid(CollisionSphere(0, 0, 0, self.R*1.04))
+        collision_node.node().addSolid(CollisionSphere(0, 0, 0, self.R))
         if ani.settings['graphics']['debug']:
             collision_node.show()
 
