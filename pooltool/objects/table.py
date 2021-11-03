@@ -49,6 +49,30 @@ class TableRender(Render):
             node.setName('cloth')
 
         self.nodes['cloth'] = node
+        self.collision_nodes = {}
+
+
+    def init_collisions(self):
+        if not settings['gameplay']['cue_collision']:
+            return
+
+        for cushion_id in self.cushion_segments['linear']:
+            cushion = self.cushion_segments['linear'][cushion_id]
+
+            x1, y1, z1 = cushion.p1
+            x2, y2, z2 = cushion.p2
+
+            collision_node = self.nodes['cloth'].attachNewNode(CollisionNode(f"cushion_ccapsule_{cushion_id}"))
+            collision_node.node().addSolid(CollisionCapsule(
+                x1, y1, 0, x2, y2, 0, (z1 + z2)/2
+            ))
+
+            self.collision_nodes[f"cushion_ccapsule_{cushion_id}"] = collision_node
+
+            if settings['graphics']['debug']:
+                collision_node.show()
+
+        return collision_node
 
 
     def init_cushion_line(self, cushion_id):
@@ -112,6 +136,8 @@ class TableRender(Render):
             self.pocket_drawer.setThickness(2)
             self.pocket_drawer.setColor(0, 0, 0)
             self.init_pockets()
+
+        self.init_collisions()
 
 
     def draw_circle(self, drawer, center, radius, num_points):

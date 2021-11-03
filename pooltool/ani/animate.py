@@ -199,6 +199,20 @@ class Interface(ShowBase, ModeManager):
         #print(f"Frame: {self.frame}")
         #print()
         self.frame += 1
+        #if self.cue is not None:
+        #    cue = self.cue.get_node('cue_stick')
+        #    cue_focus = self.cue.get_node('cue_stick_focus')
+        #    cue_model = self.cue.get_node('cue_stick_model')
+        #    print(f"Cue info")
+        #    print(f"========")
+        #    print(f"cue_stick Pos: {cue.getPos()}")
+        #    print(f"cue_stick Hpr: {cue.getHpr()}")
+        #    print(f"cue_stick_model Pos: {cue_model.getPos()}")
+        #    print(f"cue_stick_model Hpr: {cue_model.getHpr()}")
+        #    print(f"cue_stick_focus Pos: {cue_focus.getPos()}")
+        #    print(f"cue_stick_focus Hpr: {cue_focus.getHpr()}")
+        #    print()
+
 
         return task.cont
 
@@ -359,12 +373,17 @@ class Play(Interface, Menus, HUD):
 
         base.cTrav = CollisionTraverser()
 
+        self.collision_handler_cushion = CollisionHandlerPusher()
+        self.collision_handler_cushion.addInPattern('cushion-into-%in')
+        self.collision_handler_cushion.addAgainPattern('cushion-again-%in')
+        self.collision_handler_cushion.addAgainPattern('cushion-outof-%in')
+
         self.collision_handler = CollisionHandlerPusher()
         self.collision_handler.addInPattern('into-%in')
         self.collision_handler.addAgainPattern('again-%in')
         self.collision_handler.addAgainPattern('outof-%in')
 
-        self.cue.init_collision_handling(self.collision_handler)
+        self.cue.init_collision_handling((self.collision_handler_cushion, self.collision_handler))
 
 
     def start(self):

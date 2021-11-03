@@ -50,7 +50,7 @@ class CueRender(Render):
         self.has_focus = True
 
 
-    def init_collision_handling(self, collision_handler):
+    def init_collision_handling(self, collision_handlers):
         if not ani.settings['gameplay']['cue_collision']:
             return
 
@@ -74,8 +74,9 @@ class CueRender(Render):
         )
 
         self.nodes[f"cue_ccapsule"] = collision_node
-        base.cTrav.addCollider(collision_node, collision_handler)
-        collision_handler.addCollider(collision_node, self.nodes['cue_stick_model'])
+        for collision_handler in collision_handlers:
+            base.cTrav.addCollider(collision_node, collision_handler)
+            collision_handler.addCollider(collision_node, self.nodes['cue_stick_model'])
 
         if ani.settings['graphics']['debug']:
             collision_node.show()
