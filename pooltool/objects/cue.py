@@ -75,14 +75,13 @@ class CueRender(Render):
     def init_focus(self, ball):
         self.follow = ball
 
-        cue_stick = self.get_node('cue_stick')
-        cue_stick.find('cue_stick_model').setPos(+1.05*ball.R, 0, 0)
+        self.nodes['cue_stick_model'].setPos(+1.05*ball.R, 0, 0)
 
         cue_stick_focus = render.find('scene').find('cloth').attachNewNode("cue_stick_focus")
         self.nodes['cue_stick_focus'] = cue_stick_focus
 
         self.update_focus()
-        cue_stick.reparentTo(cue_stick_focus)
+        self.get_node('cue_stick').reparentTo(cue_stick_focus)
 
         self.has_focus = True
 
