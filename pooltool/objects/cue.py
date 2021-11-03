@@ -52,16 +52,16 @@ class CueRender(Render):
         R = self.butt_radius
 
         N = 8
-        for i in range(N):
-            theta = i/N*2*np.pi
+        for i in range(N+1):
+            theta = i/N*np.pi
 
             cnode = CollisionNode(f"cue_cseg_{i}")
             cnode.set_into_collide_mask(0)
             collision_node = self.nodes['cue_stick_model'].attachNewNode(cnode)
             collision_node.node().addSolid(
                 CollisionSegment(
-                    x, r*np.sin(theta), r*np.cos(theta),
-                    X, R*np.sin(theta), R*np.cos(theta)
+                    x, r*np.cos(theta), -r*np.sin(theta),
+                    X, R*np.cos(theta), -R*np.sin(theta)
                 )
             )
 
