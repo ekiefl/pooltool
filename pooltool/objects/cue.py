@@ -50,26 +50,21 @@ class CueRender(Render):
         X = bounds[1][0]
         r = self.tip_radius
         R = self.butt_radius
+        rho = (r + R)/2
 
-        N = 8
-        for i in range(N+1):
-            theta = i/N*np.pi
+        cnode = CollisionNode(f"cue_ccapsule")
+        cnode.set_into_collide_mask(0)
+        collision_node = self.nodes['cue_stick_model'].attachNewNode(cnode)
+        collision_node.node().addSolid(
+            CollisionCapsule(x+rho, 0, 0, X-rho, 0, 0, rho)
+        )
 
-            cnode = CollisionNode(f"cue_cseg_{i}")
-            cnode.set_into_collide_mask(0)
-            collision_node = self.nodes['cue_stick_model'].attachNewNode(cnode)
-            collision_node.node().addSolid(
-                CollisionSegment(
-                    x, r*np.cos(theta), -r*np.sin(theta),
-                    X, R*np.cos(theta), -R*np.sin(theta)
-                )
-            )
+        self.nodes[f"cue_ccapsule"] = collision_node
+        base.cTrav.addCollider(collision_node, collision_handler)
+        collision_handler.addCollider(collision_node, self.nodes['cue_stick'])
 
-            self.nodes[f"cue_cseg_{i}"] = collision_node
-            base.cTrav.addCollider(collision_node, collision_handler)
-
-            if ani.settings['graphics']['debug']:
-                collision_node.show()
+        if ani.settings['graphics']['debug']:
+            collision_node.show()
 
 
     def init_focus(self, ball):

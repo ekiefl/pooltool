@@ -177,7 +177,6 @@ class AimMode(Mode, CueAvoid):
         self.player_cam.focus.setR(alpha_y) # Move view vertically
 
         self.fix_cue_stick_to_camera()
-        self.avoid_cue_collision()
 
 
     def fix_cue_stick_to_camera(self):
