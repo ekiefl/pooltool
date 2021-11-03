@@ -36,6 +36,20 @@ class CueRender(Render):
         self.nodes['cue_stick_model'] = cue_stick_model
 
 
+    def init_focus(self, ball):
+        self.follow = ball
+
+        self.nodes['cue_stick_model'].setPos(+1.05*ball.R, 0, 0)
+
+        cue_stick_focus = render.find('scene').find('cloth').attachNewNode("cue_stick_focus")
+        self.nodes['cue_stick_focus'] = cue_stick_focus
+
+        self.update_focus()
+        self.get_node('cue_stick').reparentTo(cue_stick_focus)
+
+        self.has_focus = True
+
+
     def init_collision_handling(self, collision_handler):
         if not ani.settings['gameplay']['cue_collision']:
             return
@@ -61,24 +75,10 @@ class CueRender(Render):
 
         self.nodes[f"cue_ccapsule"] = collision_node
         base.cTrav.addCollider(collision_node, collision_handler)
-        collision_handler.addCollider(collision_node, self.nodes['cue_stick'])
+        collision_handler.addCollider(collision_node, self.nodes['cue_stick_model'])
 
         if ani.settings['graphics']['debug']:
             collision_node.show()
-
-
-    def init_focus(self, ball):
-        self.follow = ball
-
-        self.nodes['cue_stick_model'].setPos(+1.05*ball.R, 0, 0)
-
-        cue_stick_focus = render.find('scene').find('cloth').attachNewNode("cue_stick_focus")
-        self.nodes['cue_stick_focus'] = cue_stick_focus
-
-        self.update_focus()
-        self.get_node('cue_stick').reparentTo(cue_stick_focus)
-
-        self.has_focus = True
 
 
     def track_stroke(self):
@@ -216,7 +216,7 @@ class CueRender(Render):
     def get_render_state(self):
         """Return phi, theta, V0, a, and b as determined by the cue_stick node"""
 
-        cue_stick = self.get_node('cue_stick')
+        cue_stick = self.get_node('cue_stick_model')
         cue_stick_focus = self.get_node('cue_stick_focus')
 
         phi = ((cue_stick_focus.getH() + 180) % 360)
@@ -240,7 +240,7 @@ class CueRender(Render):
     def set_render_state_as_object_state(self):
         self.update_focus()
 
-        cue_stick = self.get_node('cue_stick')
+        cue_stick = self.get_node('cue_stick_model')
         cue_stick_focus = self.get_node('cue_stick_focus')
 
         cue_stick_focus.setH(self.phi + 180) # phi

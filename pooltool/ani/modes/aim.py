@@ -11,54 +11,30 @@ import numpy as np
 class CueAvoid(object):
     def __init__(self):
         self.into = set()
+        for ball in self.balls.values():
+            name = f"ball_csphere_{ball.id}"
+            self.accept(f"into-{name}", self.get_prior_state)
+            self.accept(f"again-{name}", self.get_info)
+            self.accept(f"outof-{name}", self.set_to_prior_state)
 
 
-    def print_queue(self):
-        for entry in self.collision_handler.entries:
-            print(entry)
+    def get_prior_state(self, entry):
+        (self.prior_V0,
+         self.prior_phi,
+         self.prior_theta,
+         self.prior_a,
+         self.prior_b,
+         self.prior_cueing_ball) = self.cue.get_render_state()
 
 
-    def get_ball_from_into_node_path(self, node_path):
-        ball_node_name = node_path.name
-        expected_prefix = 'ball_csphere_'
-        assert ball_node_name.startswith(expected_prefix)
-        ball_id = ball_node_name[len(expected_prefix):]
-
-        return self.balls[ball_id]
+    def set_to_prior_state(self, entry):
+        V0, phi, theta, a, b, cueing_ball = self.cue.get_render_state()
+        self.cue.set_state(V0, phi, self.prior_theta, self.prior_a, self.prior_b, cueing_ball)
+        self.cue.set_render_state_as_object_state()
 
 
-    def avoid_cue_collision(self):
-        if not len(self.collision_handler.entries):
-            return
-
-        cue = self.cue.get_node('cue_stick_focus')
-        max_theta = -cue.getR()
-        for entry in self.collision_handler.entries:
-            ball = self.get_ball_from_into_node_path(entry.into_node_path)
-
-            ball_x, ball_y, ball_z = entry.getSurfacePoint(entry.into_node_path)
-            cue_x, cue_y, cue_z = entry.getSurfacePoint(self.cue.get_node('cue_stick_model'))
-
-            # Height of hemisphere
-            h = ball.R**2 - ball_x**2 - ball_y**2
-            if h < 0: h = 0
-            h = np.sqrt(h)
-
-            # Required adjustment since the cue has dimension
-            h_adj = -cue_z
-
-            clearance_factor = 1.2
-
-            d = cue_x + self.cue.nodes['cue_stick_model'].getPos()[0]
-            theta = np.arcsin((h + h_adj)*clearance_factor/d) * 180/np.pi
-
-            if theta > max_theta:
-                max_theta = theta
-
-        cue.setR(-max_theta)
-
-        # update hud
-        self.hud_elements['jack'].set(max_theta)
+    def get_info(self, entry):
+        pass
 
 
 class AimMode(Mode, CueAvoid):
@@ -201,7 +177,7 @@ class AimMode(Mode, CueAvoid):
         with self.mouse:
             dx, dy = self.mouse.get_dx(), self.mouse.get_dy()
 
-        cue = self.cue.get_node('cue_stick')
+        cue = self.cue.get_node('cue_stick_model')
         R = self.cue.follow.R
 
         delta_y, delta_z = dx*ani.english_sensitivity, dy*ani.english_sensitivity
