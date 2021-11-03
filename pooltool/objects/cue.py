@@ -238,7 +238,6 @@ class CueRender(Render):
 
 
     def set_render_state_as_object_state(self):
-        # FIXME implement phi, theta, a, and b
         self.update_focus()
 
         cue_stick = self.get_node('cue_stick')
