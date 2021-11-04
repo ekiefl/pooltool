@@ -10,31 +10,24 @@ import numpy as np
 
 class CueAvoid(object):
     def __init__(self):
-        self.into = set()
-        for ball in self.balls.values():
-            name = f"ball_csphere_{ball.id}"
-            self.accept(f"into-{name}", self.get_prior_state)
-            self.accept(f"again-{name}", self.get_info)
-            self.accept(f"outof-{name}", self.set_to_prior_state)
+        self.min_theta = 0
 
 
-    def get_prior_state(self, entry):
-        (self.prior_V0,
-         self.prior_phi,
-         self.prior_theta,
-         self.prior_a,
-         self.prior_b,
-         self.prior_cueing_ball) = self.cue.get_render_state()
+    def process_collisions(self, task):
+        for entry in self.collision_handler.entries:
+            cushion_id = self.get_cushion_id(entry)
+            print(cushion_id)
+
+        print('')
+        return task.cont
 
 
-    def set_to_prior_state(self, entry):
-        V0, phi, theta, a, b, cueing_ball = self.cue.get_render_state()
-        self.cue.set_state(V0, phi, self.prior_theta, self.prior_a, self.prior_b, cueing_ball)
-        self.cue.set_render_state_as_object_state()
-
-
-    def get_info(self, entry):
-        pass
+    def get_cushion_id(self, entry):
+        expected_suffix = 'cushion_cplane_'
+        into_node_path_name = entry.get_into_node_path().name
+        assert into_node_path_name.startswith(expected_suffix)
+        cushion_id = into_node_path_name[len(expected_suffix):]
+        return cushion_id
 
 
 class AimMode(Mode, CueAvoid):
@@ -89,9 +82,10 @@ class AimMode(Mode, CueAvoid):
         self.task_action('e', action.english, True)
         self.task_action('e-up', action.english, False)
 
-        self.add_task(self.aim_task, 'aim_task')
-
         CueAvoid.__init__(self)
+
+        self.add_task(self.process_collisions, 'collision_task')
+        self.add_task(self.aim_task, 'aim_task')
 
 
     def exit(self):
@@ -167,6 +161,7 @@ class AimMode(Mode, CueAvoid):
 
         old_elevation = -cue.getR()
         new_elevation = max(0, min(ani.max_elevate, old_elevation + delta_elevation))
+
         cue.setR(-new_elevation)
 
         # update hud
@@ -177,7 +172,7 @@ class AimMode(Mode, CueAvoid):
         with self.mouse:
             dx, dy = self.mouse.get_dx(), self.mouse.get_dy()
 
-        cue = self.cue.get_node('cue_stick_model')
+        cue = self.cue.get_node('cue_stick')
         R = self.cue.follow.R
 
         delta_y, delta_z = dx*ani.english_sensitivity, dy*ani.english_sensitivity

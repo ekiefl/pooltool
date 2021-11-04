@@ -50,7 +50,8 @@ class BallRender(Render):
         self.nodes['ball'] = ball
 
         self.nodes['shadow'] = self.init_shadow()
-        self.nodes[f"ball_csphere_{self.id}"] = self.init_collision()
+        # FIXME
+        #self.nodes[f"ball_csphere_{self.id}"] = self.init_collision()
 
         self.randomize_orientation()
 

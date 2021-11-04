@@ -128,3 +128,5 @@ class EightBallRack(object):
 
     def get_balls_dict(self):
         return {str(ball.id): ball for ball in self.balls}
+
+

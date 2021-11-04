@@ -24,6 +24,7 @@ class CueRender(Render):
         self.stroke_pos = []
         self.stroke_time = []
 
+
     def init_model(self, R=pooltool.R):
         path = utils.panda_path(Path(pooltool.__file__).parent.parent / 'models' / 'cue' / 'cue.glb')
         cue_stick_model = loader.loadModel(path)
@@ -50,7 +51,7 @@ class CueRender(Render):
         self.has_focus = True
 
 
-    def init_collision_handling(self, collision_handlers):
+    def init_collision_handling(self, collision_handler):
         if not ani.settings['gameplay']['cue_collision']:
             return
 
@@ -62,24 +63,19 @@ class CueRender(Render):
 
         x = bounds[0][0]
         X = bounds[1][0]
-        r = self.tip_radius
-        R = self.butt_radius
-        rho = (r + R)/2
 
-        cnode = CollisionNode(f"cue_ccapsule")
+        cnode = CollisionNode(f"cue_cseg")
         cnode.set_into_collide_mask(0)
         collision_node = self.nodes['cue_stick_model'].attachNewNode(cnode)
         collision_node.node().addSolid(
-            CollisionCapsule(x+rho, 0, 0, X-rho, 0, 0, rho)
+            CollisionSegment(x, 0, 0, X, 0, 0)
         )
-
-        self.nodes[f"cue_ccapsule"] = collision_node
-        for collision_handler in collision_handlers:
-            base.cTrav.addCollider(collision_node, collision_handler)
-            collision_handler.addCollider(collision_node, self.nodes['cue_stick_model'])
 
         if ani.settings['graphics']['debug']:
             collision_node.show()
+
+        self.nodes[f"cue_cseg"] = collision_node
+        base.cTrav.addCollider(collision_node, collision_handler)
 
 
     def track_stroke(self):
@@ -217,7 +213,7 @@ class CueRender(Render):
     def get_render_state(self):
         """Return phi, theta, V0, a, and b as determined by the cue_stick node"""
 
-        cue_stick = self.get_node('cue_stick_model')
+        cue_stick = self.get_node('cue_stick')
         cue_stick_focus = self.get_node('cue_stick_focus')
 
         phi = ((cue_stick_focus.getH() + 180) % 360)
@@ -241,7 +237,7 @@ class CueRender(Render):
     def set_render_state_as_object_state(self):
         self.update_focus()
 
-        cue_stick = self.get_node('cue_stick_model')
+        cue_stick = self.get_node('cue_stick')
         cue_stick_focus = self.get_node('cue_stick_focus')
 
         cue_stick_focus.setH(self.phi + 180) # phi

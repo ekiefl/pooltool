@@ -56,21 +56,31 @@ class TableRender(Render):
         if not settings['gameplay']['cue_collision']:
             return
 
-        for cushion_id in self.cushion_segments['linear']:
-            cushion = self.cushion_segments['linear'][cushion_id]
+        if self.object_type == 'pocket_table':
+            # Make 4 planes
+            # For diagram of cushion ids, see https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times
+            for cushion_id in ['3', '9', '12', '18']:
+                cushion = self.cushion_segments['linear'][cushion_id]
 
-            x1, y1, z1 = cushion.p1
-            x2, y2, z2 = cushion.p2
+                x1, y1, z1 = cushion.p1
+                x2, y2, z2 = cushion.p2
 
-            collision_node = self.nodes['cloth'].attachNewNode(CollisionNode(f"cushion_ccapsule_{cushion_id}"))
-            collision_node.node().addSolid(CollisionCapsule(
-                x1, y1, 0, x2, y2, 0, (z1 + z2)/2
-            ))
+                n1, n2, n3 = cushion.normal
+                if cushion_id in ['9', '12']:
+                    # These normals need to be flipped
+                    n1, n2, n3 = -n1, -n2, -n3
 
-            self.collision_nodes[f"cushion_ccapsule_{cushion_id}"] = collision_node
+                collision_node = self.nodes['cloth'].attachNewNode(CollisionNode(f"cushion_cplane_{cushion_id}"))
+                collision_node.node().addSolid(CollisionPlane(Plane(
+                    Vec3(n1, n2, n3), Point3(x1, y1, z1)
+                )))
 
-            if settings['graphics']['debug']:
-                collision_node.show()
+                self.collision_nodes[f"cushion_ccapsule_{cushion_id}"] = collision_node
+
+                if settings['graphics']['debug']:
+                    collision_node.show()
+        else:
+            raise NotImplementedError(f"TableRender.init_collisions :: has no routine for table type '{self.object_type}'")
 
         return collision_node
 

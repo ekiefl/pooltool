@@ -372,18 +372,8 @@ class Play(Interface, Menus, HUD):
         """
 
         base.cTrav = CollisionTraverser()
-
-        self.collision_handler_cushion = CollisionHandlerPusher()
-        self.collision_handler_cushion.addInPattern('cushion-into-%in')
-        self.collision_handler_cushion.addAgainPattern('cushion-again-%in')
-        self.collision_handler_cushion.addAgainPattern('cushion-outof-%in')
-
-        self.collision_handler = CollisionHandlerPusher()
-        self.collision_handler.addInPattern('into-%in')
-        self.collision_handler.addAgainPattern('again-%in')
-        self.collision_handler.addAgainPattern('outof-%in')
-
-        self.cue.init_collision_handling((self.collision_handler_cushion, self.collision_handler))
+        self.collision_handler = CollisionHandlerQueue()
+        self.cue.init_collision_handling(self.collision_handler)
 
 
     def start(self):
