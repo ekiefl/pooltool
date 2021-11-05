@@ -12,22 +12,42 @@ class CueAvoid(object):
     def __init__(self):
         self.min_theta = 0
 
+        # length of cue butt from cueing ball center
+        self.cueing_ball_pos = self.cue.get_node('cue_stick_focus').getPos()
 
-    def process_collisions(self, task):
+
+    def collision_task(self, task):
+        max_min_theta = 0
         for entry in self.collision_handler.entries:
-            cushion_id = self.get_cushion_id(entry)
-            print(cushion_id)
+            min_theta = self.process_collision(entry)
+            if min_theta > max_min_theta:
+                max_min_theta = min_theta
 
-        print('')
+        self.min_theta = max_min_theta
         return task.cont
 
 
-    def get_cushion_id(self, entry):
+    def process_collision(self, entry):
+        cushion = self.get_cushion(entry)
+        cushion_height = cushion.p1[2]
+        contact_point = entry.getSurfacePoint(render.find('scene'))
+        desired_contact_point = contact_point
+        desired_contact_point[2] = cushion_height
+
+        bx, by, bz = self.cueing_ball_pos
+        cx, cy, cz = desired_contact_point
+
+        min_theta = max(0, np.arctan2(cz-bz, np.sqrt((bx-cx)**2 + (by-cy)**2)) * 180/np.pi)
+
+        return min_theta
+
+
+    def get_cushion(self, entry):
         expected_suffix = 'cushion_cplane_'
         into_node_path_name = entry.get_into_node_path().name
         assert into_node_path_name.startswith(expected_suffix)
         cushion_id = into_node_path_name[len(expected_suffix):]
-        return cushion_id
+        return self.table.cushion_segments['linear'][cushion_id]
 
 
 class AimMode(Mode, CueAvoid):
@@ -51,6 +71,8 @@ class AimMode(Mode, CueAvoid):
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()
+
+        self.magnet_theta = True
 
         if not self.cue.has_focus:
             self.cue.init_focus(self.cueing_ball)
@@ -84,7 +106,7 @@ class AimMode(Mode, CueAvoid):
 
         CueAvoid.__init__(self)
 
-        self.add_task(self.process_collisions, 'collision_task')
+        self.add_task(self.collision_task, 'collision_task')
         self.add_task(self.aim_task, 'aim_task')
 
 
@@ -148,6 +170,11 @@ class AimMode(Mode, CueAvoid):
 
         self.fix_cue_stick_to_camera()
 
+        current_theta = -self.cue.get_node('cue_stick_focus').getR()
+        if (current_theta < self.min_theta) or self.magnet_theta:
+            self.cue.get_node('cue_stick_focus').setR(-self.min_theta)
+            self.hud_elements['jack'].set(self.min_theta)
+
 
     def fix_cue_stick_to_camera(self):
         self.cue.get_node('cue_stick_focus').setH(self.player_cam.focus.getH())
@@ -162,10 +189,19 @@ class AimMode(Mode, CueAvoid):
         old_elevation = -cue.getR()
         new_elevation = max(0, min(ani.max_elevate, old_elevation + delta_elevation))
 
+        if self.min_theta > new_elevation:
+            # user set theta to minimum value, resume cushion tracking
+            self.magnet_theta = True
+            new_elevation = self.min_theta
+        else:
+            # theta has been modified by the user, so no longer tracks the cushion
+            self.magnet_theta = False
+
         cue.setR(-new_elevation)
 
         # update hud
         self.hud_elements['jack'].set(new_elevation)
+
 
 
     def apply_english(self):
