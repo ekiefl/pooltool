@@ -114,6 +114,7 @@ class AimMode(Mode, CueAvoid):
 
     def exit(self):
         self.remove_task('aim_task')
+        self.remove_task('collision_task')
         self.cue.hide_nodes()
         self.player_cam.store_state('aim', overwrite=True)
 
