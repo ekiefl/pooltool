@@ -12,9 +12,6 @@ class CueAvoid(object):
     def __init__(self):
         self.min_theta = 0
 
-        # length of cue butt from cueing ball center
-        self.cueing_ball_pos = self.cue.get_node('cue_stick_focus').getPos()
-
 
     def collision_task(self, task):
         max_min_theta = 0
@@ -30,16 +27,38 @@ class CueAvoid(object):
     def process_collision(self, entry):
         cushion = self.get_cushion(entry)
         cushion_height = cushion.p1[2]
-        contact_point = entry.getSurfacePoint(render.find('scene'))
-        desired_contact_point = contact_point
-        desired_contact_point[2] = cushion_height
 
-        bx, by, bz = self.cueing_ball_pos
-        cx, cy, cz = desired_contact_point
+        scene = render.find('scene')
+        px, py, pz = entry.getSurfacePoint(scene)
+        ex, ey, ez = self.cue.get_node('cue_stick_model').getPos(scene)
+        bx, by, bz = self.cue.get_node('cue_stick_focus').getPos(scene)
+        dx, dy, dz = px, py, cushion_height
 
-        min_theta = max(0, np.arctan2(cz-bz, np.sqrt((bx-cx)**2 + (by-cy)**2)) * 180/np.pi)
+        # distance from cue tip to desired collision point
+        l = np.sqrt((dx-ex)**2 + (dy-ey)**2 + (dz-ez)**2)
+        cue_radius = self.get_cue_radius(l)
 
-        return min_theta
+        min_theta = np.arctan2(dz-bz, np.sqrt((dx-bx)**2 + (dy-by)**2))
+
+        # correct for cue's cylindrical radius at collision point
+        min_theta += np.arctan2(cue_radius, l)
+
+        return max(0, min_theta) * 180/np.pi
+
+
+    def get_cue_radius(self, l):
+        """Returns radius of cue at collision point, given collision point is distance l cue tip"""
+
+        bounds = self.cue.get_node('cue_stick').get_tight_bounds()
+        L = bounds[1][0] - bounds[0][0] # cue length
+
+        r = self.cue.tip_radius
+        R = self.cue.butt_radius
+
+        m = (R - r)/L # rise/run
+        b = r # intercept
+
+        return m*l + b
 
 
     def get_cushion(self, entry):
@@ -192,7 +211,7 @@ class AimMode(Mode, CueAvoid):
         old_elevation = -cue.getR()
         new_elevation = max(0, min(ani.max_elevate, old_elevation + delta_elevation))
 
-        if self.min_theta > new_elevation:
+        if self.min_theta >= new_elevation:
             # user set theta to minimum value, resume cushion tracking
             self.magnet_theta = True
             new_elevation = self.min_theta
