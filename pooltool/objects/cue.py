@@ -40,7 +40,7 @@ class CueRender(Render):
     def init_focus(self, ball):
         self.follow = ball
 
-        self.nodes['cue_stick_model'].setPos(+1.05*ball.R, 0, 0)
+        self.get_node('cue_stick_model').setPos(+1.05*ball.R, 0, 0)
 
         cue_stick_focus = render.find('scene').find('cloth').attachNewNode("cue_stick_focus")
         self.nodes['cue_stick_focus'] = cue_stick_focus
@@ -59,14 +59,14 @@ class CueRender(Render):
             raise ConfigError("Cue.init_collision_handling :: Cue has not been rendered, "
                               "so collision handling cannot be initialized.")
 
-        bounds = self.nodes['cue_stick'].get_tight_bounds()
+        bounds = self.get_node('cue_stick').get_tight_bounds()
 
         x = bounds[0][0]
         X = bounds[1][0]
 
         cnode = CollisionNode(f"cue_cseg")
         cnode.set_into_collide_mask(0)
-        collision_node = self.nodes['cue_stick_model'].attachNewNode(cnode)
+        collision_node = self.get_node('cue_stick_model').attachNewNode(cnode)
         collision_node.node().addSolid(
             CollisionSegment(x, 0, 0, X, 0, 0)
         )
@@ -87,16 +87,16 @@ class CueRender(Render):
 
     def append_stroke_data(self):
         """Append current cue position and timestamp to the cue tracking data"""
-        cue_stick = self.nodes['cue_stick']
+        cue_stick = self.get_node('cue_stick')
 
-        self.stroke_pos.append(self.nodes['cue_stick'].getX())
+        self.stroke_pos.append(self.get_node('cue_stick').getX())
         self.stroke_time.append(self.stroke_clock.getRealTime())
 
 
     def set_stroke_sequence(self):
         """Initiate a stroke sequence based off of self.stroke_pos and self.stroke_time"""
 
-        cue_stick = self.nodes['cue_stick']
+        cue_stick = self.get_node('cue_stick')
         self.stroke_sequence = Sequence()
 
         # If the stroke is longer than max_time seconds, truncate to max_time
@@ -207,7 +207,7 @@ class CueRender(Render):
 
 
     def update_focus(self):
-        self.nodes['cue_stick_focus'].setPos(self.follow.get_node('ball').getPos())
+        self.get_node('cue_stick_focus').setPos(self.follow.get_node('ball').getPos())
 
 
     def get_render_state(self):
