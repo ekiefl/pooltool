@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import pooltool.ani as ani
+import pooltool.utils as utils
 import pooltool.ani.utils as autils
 
 from pooltool.ani.modes import Mode, action
@@ -34,13 +35,16 @@ class CueAvoid(object):
         bx, by, bz = self.cue.get_node('cue_stick_focus').getPos(scene)
         dx, dy, dz = px, py, cushion_height
 
+        # theta required after accounting for side spin
+        v = np.array([ex-dx, ey-dy, ez-dz])
+        u = utils.unit_vector(v)*self.cue.get_node('cue_stick_model').getX()
+        fx, fy, fz = ex + u[0], ey + u[1], ez + u[2]
+        min_theta = np.arctan2(dz-fz, np.sqrt((dx-fx)**2 + (dy-fy)**2))
+
+        # correct for cue's cylindrical radius at collision point
         # distance from cue tip to desired collision point
         l = np.sqrt((dx-ex)**2 + (dy-ey)**2 + (dz-ez)**2)
         cue_radius = self.get_cue_radius(l)
-
-        min_theta = np.arctan2(dz-bz, np.sqrt((dx-bx)**2 + (dy-by)**2))
-
-        # correct for cue's cylindrical radius at collision point
         min_theta += np.arctan2(cue_radius, l)
 
         return max(0, min_theta) * 180/np.pi
@@ -231,6 +235,7 @@ class AimMode(Mode, CueAvoid):
             dx, dy = self.mouse.get_dx(), self.mouse.get_dy()
 
         cue = self.cue.get_node('cue_stick')
+        cue_focus = self.cue.get_node('cue_stick_focus')
         R = self.cue.follow.R
 
         delta_y, delta_z = dx*ani.english_sensitivity, dy*ani.english_sensitivity
@@ -246,6 +251,10 @@ class AimMode(Mode, CueAvoid):
 
         cue.setY(new_y)
         cue.setZ(new_z)
+
+        # if application of english increases min_theta beyond current elevation, increase elevation
+        if self.magnet_theta or self.min_theta >= -cue_focus.getR():
+            cue_focus.setR(-self.min_theta)
 
         # update hud
         a, b = -new_y/R, new_z/R
