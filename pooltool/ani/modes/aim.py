@@ -67,12 +67,14 @@ class AimMode(Mode, CueAvoid):
         action.ball_in_hand: False,
     }
 
+    def __init__(self):
+        self.magnet_theta = True
+
+
     def enter(self, load_prev_cam=False):
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()
-
-        self.magnet_theta = True
 
         if not self.cue.has_focus:
             self.cue.init_focus(self.cueing_ball)
