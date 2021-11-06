@@ -95,6 +95,7 @@ class AimMode(Mode, CueAvoid):
 
     def __init__(self):
         self.magnet_theta = True
+        self.magnet_threshold = 0.2
 
 
     def enter(self, load_prev_cam=False):
@@ -199,10 +200,12 @@ class AimMode(Mode, CueAvoid):
 
         self.fix_cue_stick_to_camera()
 
-        current_theta = -self.cue.get_node('cue_stick_focus').getR()
-        if (current_theta < self.min_theta) or self.magnet_theta:
+        if (-self.cue.get_node('cue_stick_focus').getR() < self.min_theta) or self.magnet_theta:
             self.cue.get_node('cue_stick_focus').setR(-self.min_theta)
             self.hud_elements['jack'].set(self.min_theta)
+
+        if -self.player_cam.focus.getR() < (-self.cue.get_node('cue_stick_focus').getR() + ani.min_player_cam):
+            self.player_cam.focus.setR(-(-self.cue.get_node('cue_stick_focus').getR() + ani.min_player_cam))
 
 
     def fix_cue_stick_to_camera(self):
@@ -218,7 +221,7 @@ class AimMode(Mode, CueAvoid):
         old_elevation = -cue.getR()
         new_elevation = max(0, min(ani.max_elevate, old_elevation + delta_elevation))
 
-        if self.min_theta >= new_elevation:
+        if self.min_theta >= new_elevation - self.magnet_threshold:
             # user set theta to minimum value, resume cushion tracking
             self.magnet_theta = True
             new_elevation = self.min_theta
@@ -227,6 +230,9 @@ class AimMode(Mode, CueAvoid):
             self.magnet_theta = False
 
         cue.setR(-new_elevation)
+
+        if -self.player_cam.focus.getR() < (new_elevation + ani.min_player_cam):
+            self.player_cam.focus.setR(-(new_elevation + ani.min_player_cam))
 
         # update hud
         self.hud_elements['jack'].set(new_elevation)
@@ -256,10 +262,14 @@ class AimMode(Mode, CueAvoid):
         cue.setZ(new_z)
 
         # if application of english increases min_theta beyond current elevation, increase elevation
-        if self.magnet_theta or self.min_theta >= -cue_focus.getR():
+        if self.magnet_theta or self.min_theta >= -cue_focus.getR() - self.magnet_threshold:
             cue_focus.setR(-self.min_theta)
+
+        if -self.player_cam.focus.getR() < (-self.cue.get_node('cue_stick_focus').getR() + ani.min_player_cam):
+            self.player_cam.focus.setR(-(-self.cue.get_node('cue_stick_focus').getR() + ani.min_player_cam))
 
         # update hud
         a, b = -new_y/R, new_z/R
         self.hud_elements['english'].set(a, b)
+        self.hud_elements['jack'].set(-self.cue.get_node('cue_stick_focus').getR())
 
