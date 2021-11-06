@@ -26,6 +26,10 @@ class CueAvoid(object):
 
 
     def process_collision(self, entry):
+        if not entry.has_surface_point():
+            # Not a collision we care about
+            return 0
+
         cushion = self.get_cushion(entry)
         cushion_height = cushion.p1[2]
 
@@ -35,8 +39,7 @@ class CueAvoid(object):
         bx, by, bz = self.cue.get_node('cue_stick_focus').getPos(scene)
         dx, dy, dz = px, py, cushion_height
 
-        # theta required after accounting for side spin
-        v = np.array([ex-dx, ey-dy, ez-dz])
+        v = np.array([ex-px, ey-py, ez-pz])
         u = utils.unit_vector(v)*self.cue.get_node('cue_stick_model').getX()
         fx, fy, fz = ex + u[0], ey + u[1], ez + u[2]
         min_theta = np.arctan2(dz-fz, np.sqrt((dx-fx)**2 + (dy-fy)**2))
