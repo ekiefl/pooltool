@@ -11,6 +11,23 @@ import numpy as np
 
 class CueAvoid(object):
     def __init__(self):
+        """Calculates minimum elevation required by cue stick to avoid colliding with balls and cushions
+
+        This class uses Panda3D collision detection to determine when the cue stick is intersecting
+        with a ball or cushion. Rather than use the built in collision solving (e.g.
+        https://docs.panda3d.org/1.10/python/reference/panda3d.core.CollisionHandlerPusher), which
+        tended to push the cue off of objects in arbitrary ways (such that the cue no longer pointed
+        at the cueing ball), I instead rely on geometry to solve the minimum angle that the cue
+        stick must be raised in order to avoid all collisions. At each step in AimMode.aim_task, if
+        the cue elevation is less than this angle, the elevation is automatically set to this
+        minimum.
+
+        Notes
+        =====
+        - This class has nothing to do with collisions that occurr during the shot evolution, e.g.
+          ball-ball collisions, ball-cushion collisions, etc. All of those are handled in events.py
+        """
+
         self.min_theta = 0
 
 
@@ -29,7 +46,16 @@ class CueAvoid(object):
         if not entry.has_surface_point():
             # Not a collision we care about
             return 0
+        elif entry.into_node.name.startswith('cushion'):
+            return self.process_cushion_collision(entry)
+        elif entry.into_node.name.startswith('ball'):
+            return 0
+            #return self.process_ball_collision(entry)
+        else:
+            raise NotImplementedError(f"CueAvoid :: no collision solver for node {entry.into_node.name}")
 
+
+    def process_cushion_collision(self, entry):
         cushion = self.get_cushion(entry)
         cushion_height = cushion.p1[2]
 
@@ -53,8 +79,12 @@ class CueAvoid(object):
         return max(0, min_theta) * 180/np.pi
 
 
+    def process_ball_collision(self, entry):
+        pass
+
+
     def get_cue_radius(self, l):
-        """Returns radius of cue at collision point, given collision point is distance l cue tip"""
+        """Returns radius of cue at collision point, given collision point is distance l from cue tip"""
 
         bounds = self.cue.get_node('cue_stick').get_tight_bounds()
         L = bounds[1][0] - bounds[0][0] # cue length
@@ -94,7 +124,9 @@ class AimMode(Mode, CueAvoid):
     }
 
     def __init__(self):
+        # In this state, the cue sticks to the self.min_theta
         self.magnet_theta = True
+        # if cue angle is within this many degrees from self.min_theta, it sticks to self.min_theta
         self.magnet_threshold = 0.2
 
 
