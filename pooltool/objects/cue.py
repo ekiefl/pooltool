@@ -344,6 +344,9 @@ class CueAvoid(object):
 
         self.min_theta = 0
 
+        if not ani.settings['gameplay']['cue_collision']:
+            return
+
         # Declare frequently used nodes
         self.avoid_nodes = {
             'scene': render.find('scene'),
