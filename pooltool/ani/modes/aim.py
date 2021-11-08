@@ -32,13 +32,21 @@ class CueAvoid(object):
 
         self.min_theta = 0
 
+        # Declare frequently used nodes
+        self.avoid_nodes = {
+            'scene': render.find('scene'),
+            'cue_collision_node': self.cue.get_node('cue_cseg'),
+            'cue_stick_model': self.cue.get_node('cue_stick_model'),
+            'cue_stick': self.cue.get_node('cue_stick'),
+            'cue_stick_focus': self.cue.get_node('cue_stick_focus'),
+        }
+
 
     def collision_task(self, task):
         max_min_theta = 0
 
         # Lay cue collision segment flat
-        self.cue_collision_node = self.cue.get_node('cue_cseg')
-        self.cue_collision_node.setR(-self.cue.get_node('cue_stick_focus').getR())
+        self.avoid_nodes['cue_collision_node'].setR(-self.avoid_nodes['cue_stick_focus'].getR())
 
         for entry in self.collision_handler.entries:
             min_theta = self.process_collision(entry)
@@ -65,20 +73,28 @@ class CueAvoid(object):
         cushion = self.get_cushion(entry)
         cushion_height = cushion.p1[2]
 
-        scene = render.find('scene')
-        px, py, pz = entry.getSurfacePoint(scene)
-        ex, ey, ez = self.cue.get_node('cue_stick_model').getPos(scene)
-        bx, by, bz = self.cue.get_node('cue_stick_focus').getPos(scene)
-        dx, dy, dz = px, py, cushion_height
+        # Point where cue center contacts collision plane
+        Px, Py, Pz = entry.getSurfacePoint(self.avoid_nodes['scene'])
 
-        v = np.array([ex-px, ey-py, ez-pz])
-        u = utils.unit_vector(v)*self.cue.get_node('cue_stick_model').getX()
-        fx, fy, fz = ex + u[0], ey + u[1], ez + u[2]
-        min_theta = np.arctan2(dz-fz, np.sqrt((dx-fx)**2 + (dy-fy)**2))
+        # The tip of the cue stick
+        Ex, Ey, Ez = self.avoid_nodes['cue_stick_model'].getPos(self.avoid_nodes['scene'])
 
-        # correct for cue's cylindrical radius at collision point
-        # distance from cue tip to desired collision point
-        l = np.sqrt((dx-ex)**2 + (dy-ey)**2 + (dz-ez)**2)
+        # Center ofthe cueing ball
+        Bx, By, Bz = self.avoid_nodes['cue_stick_focus'].getPos(self.avoid_nodes['scene'])
+
+        # The desired point where cue contacts collision plane, excluding cue width
+        Dx, Dy, Dz = Px, Py, cushion_height
+
+        # Center of aim
+        v = np.array([Ex-Px, Ey-Py, Ez-Pz])
+        u = utils.unit_vector(v)*self.avoid_nodes['cue_stick_model'].getX()
+        Fx, Fy, Fz = Ex + u[0], Ey + u[1], Ez + u[2]
+
+        min_theta = np.arctan2(Dz-Fz, np.sqrt((Dx-Fx)**2 + (Dy-Fy)**2))
+
+        # Correct for cue's cylindrical radius at collision point
+        # distance from cue tip (E) to desired collision point (D)
+        l = np.sqrt((Dx-Ex)**2 + (Dy-Ey)**2 + (Dz-Ez)**2)
         cue_radius = self.get_cue_radius(l)
         min_theta += np.arctan2(cue_radius, l)
 
@@ -96,7 +112,7 @@ class CueAvoid(object):
 
         # Radius of transect
         n = np.array(entry.get_surface_normal(render.find('scene')))
-        phi = ((self.cue.get_node('cue_stick_focus').getH() + 180) % 360) * np.pi/180
+        phi = ((self.avoid_nodes['cue_stick_focus'].getH() + 180) % 360) * np.pi/180
         c = np.array([np.cos(phi), np.sin(phi), 0])
         gamma = np.arccos(np.dot(n, c))
         AB = (ball.R + self.cue.tip_radius)*np.cos(gamma)
@@ -108,8 +124,8 @@ class CueAvoid(object):
         Az = ball.R
 
         # Center of aim, leveled to ball height
-        Cx, Cy, Cz = self.cue.get_node('cue_stick_focus').getPos(scene)
-        axR = -self.cue.get_node('cue_stick').getY()
+        Cx, Cy, Cz = self.avoid_nodes['cue_stick_focus'].getPos(scene)
+        axR = -self.avoid_nodes['cue_stick'].getY()
         Cx += -axR*np.sin(phi)
         Cy += axR*np.cos(phi)
 
@@ -118,7 +134,7 @@ class CueAvoid(object):
         min_theta_no_english = np.arcsin(AB/AC)
 
         # Cue tip point, no top/bottom english
-        m = self.cue.get_node('cue_stick_model').getX()
+        m = self.avoid_nodes['cue_stick_model'].getX()
         u = utils.unit_vector(np.array([-np.cos(phi), -np.sin(phi), np.sin(min_theta_no_english)]))
         Ex, Ey, Ez = Cx + m*u[0], Cy + m*u[1], Cz + m*u[2]
 
@@ -127,7 +143,7 @@ class CueAvoid(object):
 
         # Extra angle due to top/bottom english
         BE = np.sqrt((Bx-Ex)**2 + (By-Ey)**2 + (Bz-Ez)**2)
-        bxR = self.cue.get_node('cue_stick').getZ()
+        bxR = self.avoid_nodes['cue_stick'].getZ()
         beta = -np.arctan2(bxR, BE)
         if beta < 0:
             beta += 10*np.pi/180*(np.exp(bxR/BE)**2 - 1)
