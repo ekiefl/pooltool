@@ -17,7 +17,7 @@ from direct.interval.IntervalGlobal import *
 
 class BallRender(Render):
     def __init__(self):
-        self.xyzs = None
+        self.quats = None
         self.playback_sequence = None
         Render.__init__(self)
 
@@ -114,7 +114,7 @@ class BallRender(Render):
         """Creates the sequence motions of the ball for a given playback speed"""
         # Get the trajectories
         xyzs = autils.get_list_of_Vec3s_from_array(self.history.rvw[:, 0, :])
-        quats = autils.get_quaternion_list_from_array(utils.as_quaternion(self.history.rvw[:, 3, :]))
+        self.quats = autils.get_quaternion_list_from_array(utils.as_quaternion(self.history.rvw[:, 3, :]))
 
         dts = np.diff(self.history.t)
         playback_dts = dts/playback_speed
@@ -131,7 +131,7 @@ class BallRender(Render):
                 nodePath = self.nodes['ball'],
                 duration = playback_dts[i],
                 pos = (x, y, z),
-                quat = quats[i+1]
+                quat = self.quats[i+1]
             ))
 
             shadow_sequence.append(LerpPosInterval(
