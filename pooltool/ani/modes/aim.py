@@ -33,6 +33,11 @@ class CueAvoid(object):
 
     def collision_task(self, task):
         max_min_theta = 0
+
+        # Lay cue collision segment flat
+        self.cue_collision_node = self.cue.get_node('cue_cseg')
+        self.cue_collision_node.setR(-self.cue.get_node('cue_stick_focus').getR())
+
         for entry in self.collision_handler.entries:
             min_theta = self.process_collision(entry)
             if min_theta > max_min_theta:
