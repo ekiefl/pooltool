@@ -59,7 +59,7 @@ class BallRender(Render):
             raise ConfigError("BallRender.init_collision :: `cue` must be rendered")
 
         collision_node = self.nodes['ball'].attachNewNode(CollisionNode(f"ball_csphere_{self.id}"))
-        collision_node.node().addSolid(CollisionCapsule(0, 0, 0, 0, 0, cue.get_length(), cue.butt_radius + self.R))
+        collision_node.node().addSolid(CollisionCapsule(0, 0, -self.R, 0, 0, self.R, cue.tip_radius + self.R))
         if ani.settings['graphics']['debug']:
             collision_node.show()
 

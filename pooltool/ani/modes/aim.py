@@ -6,6 +6,8 @@ import pooltool.ani.utils as autils
 
 from pooltool.ani.modes import Mode, action
 
+from panda3d.core import *
+
 import numpy as np
 
 
@@ -29,6 +31,11 @@ class CueAvoid(object):
         """
 
         self.min_theta = 0
+        self.troubleshoot = loader.loadModel('smiley.egg')
+        self.troubleshoot.setScale(0.005)
+        self.troubleshoot.setColor((0,1,1,1))
+        self.troubleshoot.reparentTo(self.render.find('scene'))
+
 
 
     def collision_task(self, task):
@@ -52,10 +59,10 @@ class CueAvoid(object):
             # Not a collision we care about
             return 0
         elif entry.into_node.name.startswith('cushion'):
-            return self.process_cushion_collision(entry)
-        elif entry.into_node.name.startswith('ball'):
-            self.process_ball_collision(entry)
             return 0
+            #return self.process_cushion_collision(entry)
+        elif entry.into_node.name.startswith('ball'):
+            return self.process_ball_collision(entry)
         else:
             raise NotImplementedError(f"CueAvoid :: no collision solver for node {entry.into_node.name}")
 
@@ -85,7 +92,52 @@ class CueAvoid(object):
 
 
     def process_ball_collision(self, entry):
-        pass
+        min_theta = 0
+        ball = self.get_ball(entry)
+
+        if ball == self.cueing_ball:
+            return 0
+
+        scene = render.find('scene')
+
+        # get radius of transect
+        n = np.array(entry.get_surface_normal(render.find('scene')))
+        phi = ((self.cue.get_node('cue_stick_focus').getH() + 180) % 360) * np.pi/180
+        c = np.array([np.cos(phi), np.sin(phi), 0])
+        gamma = np.arccos(np.dot(n, c))
+        AB = (ball.R + self.cue.tip_radius)*np.cos(gamma)
+
+        # Center of blocking ball transect
+        Ax, Ay, _ = entry.getSurfacePoint(scene)
+        Ax -= (AB + self.cue.tip_radius)*np.cos(phi)
+        Ay -= (AB + self.cue.tip_radius)*np.sin(phi)
+        Az = ball.R
+
+        # Center of aim, leveled to ball height
+        Ex, Ey, _ = self.cue.get_node('cue_stick_model').getPos(scene)
+        Px, Py, _ = entry.getSurfacePoint(scene)
+        v = np.array([Ex-Px, Ey-Py, 0])
+        u = utils.unit_vector(v)*self.cue.get_node('cue_stick_model').getX()
+        Cx, Cy, Cz = Ex + u[0], Ey + u[1], self.cueing_ball.R + u[2]
+
+
+        self.troubleshoot.setPos(Cx, Cy, Cz)
+        self.cue.get_node('cue_stick_model').setTransparency(TransparencyAttrib.MAlpha)
+        self.cueing_ball.get_node('ball').setTransparency(TransparencyAttrib.MAlpha)
+        self.cueing_ball.get_node('ball').setAlphaScale(0.2)
+        ball.get_node('ball').setTransparency(TransparencyAttrib.MAlpha)
+        ball.get_node('ball').setAlphaScale(0.2)
+        self.cue.get_node('cue_stick_model').setAlphaScale(0.4)
+
+        AC = np.sqrt((Ax-Cx)**2 + (Ay-Cy)**2 + (Az-Cz)**2)
+
+        BC = np.sqrt(AC**2 - AB**2)
+
+        min_theta_no_english = np.arcsin(AB/AC)
+
+
+
+        return max(0, min_theta_no_english) * 180/np.pi
 
 
     def get_cue_radius(self, l):
@@ -109,6 +161,14 @@ class CueAvoid(object):
         assert into_node_path_name.startswith(expected_suffix)
         cushion_id = into_node_path_name[len(expected_suffix):]
         return self.table.cushion_segments['linear'][cushion_id]
+
+
+    def get_ball(self, entry):
+        expected_suffix = 'ball_csphere_'
+        into_node_path_name = entry.get_into_node_path().name
+        assert into_node_path_name.startswith(expected_suffix)
+        ball_id = into_node_path_name[len(expected_suffix):]
+        return self.balls[ball_id]
 
 
 class AimMode(Mode, CueAvoid):
@@ -172,13 +232,16 @@ class AimMode(Mode, CueAvoid):
 
         CueAvoid.__init__(self)
 
-        self.add_task(self.collision_task, 'collision_task')
+        if ani.settings['gameplay']['cue_collision']:
+            self.add_task(self.collision_task, 'collision_task')
         self.add_task(self.aim_task, 'aim_task')
 
 
     def exit(self):
         self.remove_task('aim_task')
-        self.remove_task('collision_task')
+        if ani.settings['gameplay']['cue_collision']:
+            self.remove_task('collision_task')
+
         self.cue.hide_nodes()
         self.player_cam.store_state('aim', overwrite=True)
 
