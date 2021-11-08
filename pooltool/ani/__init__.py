@@ -15,6 +15,7 @@ loadPrcFile(utils.panda_path(Path(pooltool.__file__).parent / 'Config.prc'))
 menu_text_scale = 0.07
 menu_text_scale_small = 0.04
 zoom_sensitivity = 0.3
+min_player_cam = 2
 max_english = 6/10
 elevate_sensitivity = 13
 english_sensitivity = 0.1

@@ -315,7 +315,7 @@ class Jack(HUDElement):
 
 
     def set(self, theta):
-        self.text.setText(f"{theta:.0f} deg")
+        self.text.setText(f"{theta:.1f} deg")
         self.rotational_point.setR(theta)
 
 

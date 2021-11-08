@@ -49,6 +49,40 @@ class TableRender(Render):
             node.setName('cloth')
 
         self.nodes['cloth'] = node
+        self.collision_nodes = {}
+
+
+    def init_collisions(self):
+        if not settings['gameplay']['cue_collision']:
+            return
+
+        if self.object_type == 'pocket_table':
+            # Make 4 planes
+            # For diagram of cushion ids, see https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times
+            for cushion_id in ['3', '9', '12', '18']:
+                cushion = self.cushion_segments['linear'][cushion_id]
+
+                x1, y1, z1 = cushion.p1
+                x2, y2, z2 = cushion.p2
+
+                n1, n2, n3 = cushion.normal
+                if cushion_id in ['9', '12']:
+                    # These normals need to be flipped
+                    n1, n2, n3 = -n1, -n2, -n3
+
+                collision_node = self.nodes['cloth'].attachNewNode(CollisionNode(f"cushion_cplane_{cushion_id}"))
+                collision_node.node().addSolid(CollisionPlane(Plane(
+                    Vec3(n1, n2, n3), Point3(x1, y1, z1)
+                )))
+
+                self.collision_nodes[f"cushion_ccapsule_{cushion_id}"] = collision_node
+
+                if settings['graphics']['debug']:
+                    collision_node.show()
+        else:
+            raise NotImplementedError(f"TableRender.init_collisions :: has no routine for table type '{self.object_type}'")
+
+        return collision_node
 
 
     def init_cushion_line(self, cushion_id):
@@ -112,6 +146,8 @@ class TableRender(Render):
             self.pocket_drawer.setThickness(2)
             self.pocket_drawer.setColor(0, 0, 0)
             self.init_pockets()
+
+        self.init_collisions()
 
 
     def draw_circle(self, drawer, center, radius, num_points):

@@ -114,6 +114,7 @@ class ShotMode(Mode):
                         s = ball.history.s[0],
                         t = 0,
                     )
+                    ball.get_node('ball').setQuat(ball.quats[0])
                 ball.set_render_state_as_object_state()
                 ball.history.reset_history()
 

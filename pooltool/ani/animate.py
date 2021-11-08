@@ -6,7 +6,7 @@ import pooltool.utils as utils
 import pooltool.games as games
 import pooltool.ani.environment as environment
 
-from pooltool.error import TableConfigError
+from pooltool.error import TableConfigError, ConfigError
 from pooltool.objects.cue import Cue
 from pooltool.objects.ball import Ball
 from pooltool.objects.table import table_types
@@ -199,6 +199,20 @@ class Interface(ShowBase, ModeManager):
         #print(f"Frame: {self.frame}")
         #print()
         self.frame += 1
+        #if self.cue is not None:
+        #    cue = self.cue.get_node('cue_stick')
+        #    cue_focus = self.cue.get_node('cue_stick_focus')
+        #    cue_model = self.cue.get_node('cue_stick_model')
+        #    print(f"Cue info")
+        #    print(f"========")
+        #    print(f"cue_stick Pos: {cue.getPos()}")
+        #    print(f"cue_stick Hpr: {cue.getHpr()}")
+        #    print(f"cue_stick_model Pos: {cue_model.getPos()}")
+        #    print(f"cue_stick_model Hpr: {cue_model.getHpr()}")
+        #    print(f"cue_stick_focus Pos: {cue_focus.getPos()}")
+        #    print(f"cue_stick_focus Hpr: {cue_focus.getHpr()}")
+        #    print()
+
 
         return task.cont
 
@@ -262,6 +276,7 @@ class Play(Interface, Menus, HUD):
     def go(self):
         self.setup()
         self.init_system_nodes()
+        self.init_collisions()
         self.change_mode('aim')
 
 
@@ -343,6 +358,25 @@ class Play(Interface, Menus, HUD):
     def setup_balls(self):
         self.balls = self.game.layout.get_balls_dict()
         self.cueing_ball = self.game.set_initial_cueing_ball(self.balls)
+
+
+    def init_collisions(self):
+        """Setup collision detection for cue stick
+
+        Notes
+        =====
+        - NOTE this Panda3D collision handler is specifically for determining whether the
+          cue stick is intersecting with cushions or balls. All other collisions discussed at
+          https://ekiefl.github.io/2020/12/20/pooltool-alg/#2-what-are-events are unrelated
+          to this.
+        """
+
+        base.cTrav = CollisionTraverser()
+        self.collision_handler = CollisionHandlerQueue()
+        self.cue.init_collision_handling(self.collision_handler)
+
+        for ball in self.balls.values():
+            ball.init_collision(self.cue)
 
 
     def start(self):

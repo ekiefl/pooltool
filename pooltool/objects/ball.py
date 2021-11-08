@@ -1,9 +1,11 @@
 #! /usr/bin/env python
 
+import pooltool.ani as ani
 import pooltool.physics as physics
 import pooltool.ani.utils as autils
 
 from pooltool.utils import panda_path
+from pooltool.error import ConfigError
 from pooltool.events import *
 from pooltool.objects import *
 
@@ -15,7 +17,7 @@ from direct.interval.IntervalGlobal import *
 
 class BallRender(Render):
     def __init__(self):
-        self.xyzs = None
+        self.quats = None
         self.playback_sequence = None
         Render.__init__(self)
 
@@ -45,13 +47,23 @@ class BallRender(Render):
         sphere_node.setScale(self.get_scale_factor(sphere_node))
         ball.setPos(*self.rvw[0,:])
 
-        shadow_node = self.init_shadow()
-
         self.nodes['sphere'] = sphere_node
-        self.nodes['shadow'] = shadow_node
         self.nodes['ball'] = ball
+        self.nodes['shadow'] = self.init_shadow()
 
         self.randomize_orientation()
+
+
+    def init_collision(self, cue):
+        if not cue.rendered:
+            raise ConfigError("BallRender.init_collision :: `cue` must be rendered")
+
+        collision_node = self.nodes['ball'].attachNewNode(CollisionNode(f"ball_csphere_{self.id}"))
+        collision_node.node().addSolid(CollisionCapsule(0, 0, -self.R, 0, 0, self.R, cue.tip_radius + self.R))
+        if ani.settings['graphics']['debug']:
+            collision_node.show()
+
+        self.nodes[f"ball_csphere_{self.id}"] = collision_node
 
 
     def init_shadow(self):
@@ -102,7 +114,7 @@ class BallRender(Render):
         """Creates the sequence motions of the ball for a given playback speed"""
         # Get the trajectories
         xyzs = autils.get_list_of_Vec3s_from_array(self.history.rvw[:, 0, :])
-        quats = autils.get_quaternion_list_from_array(utils.as_quaternion(self.history.rvw[:, 3, :]))
+        self.quats = autils.get_quaternion_list_from_array(utils.as_quaternion(self.history.rvw[:, 3, :]))
 
         dts = np.diff(self.history.t)
         playback_dts = dts/playback_speed
@@ -119,7 +131,7 @@ class BallRender(Render):
                 nodePath = self.nodes['ball'],
                 duration = playback_dts[i],
                 pos = (x, y, z),
-                quat = quats[i+1]
+                quat = self.quats[i+1]
             ))
 
             shadow_sequence.append(LerpPosInterval(
