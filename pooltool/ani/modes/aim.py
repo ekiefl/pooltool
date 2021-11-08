@@ -31,11 +31,6 @@ class CueAvoid(object):
         """
 
         self.min_theta = 0
-        self.troubleshoot = loader.loadModel('smiley.egg')
-        self.troubleshoot.setScale(0.005)
-        self.troubleshoot.setColor((0,1,1,1))
-        self.troubleshoot.reparentTo(self.render.find('scene'))
-
 
 
     def collision_task(self, task):
@@ -59,8 +54,7 @@ class CueAvoid(object):
             # Not a collision we care about
             return 0
         elif entry.into_node.name.startswith('cushion'):
-            return 0
-            #return self.process_cushion_collision(entry)
+            return self.process_cushion_collision(entry)
         elif entry.into_node.name.startswith('ball'):
             return self.process_ball_collision(entry)
         else:
@@ -100,7 +94,7 @@ class CueAvoid(object):
 
         scene = render.find('scene')
 
-        # get radius of transect
+        # Radius of transect
         n = np.array(entry.get_surface_normal(render.find('scene')))
         phi = ((self.cue.get_node('cue_stick_focus').getH() + 180) % 360) * np.pi/180
         c = np.array([np.cos(phi), np.sin(phi), 0])
@@ -114,32 +108,32 @@ class CueAvoid(object):
         Az = ball.R
 
         # Center of aim, leveled to ball height
-        Ex, Ey, _ = self.cue.get_node('cue_stick_model').getPos(scene)
-        Px, Py, _ = entry.getSurfacePoint(scene)
-        v = np.array([Ex-Px, Ey-Py, 0])
-        u = utils.unit_vector(v)*self.cue.get_node('cue_stick_model').getX()
-        Cx, Cy, Cz = Ex + u[0], Ey + u[1], self.cueing_ball.R + u[2]
-
-
-        self.troubleshoot.setPos(Cx, Cy, Cz)
-        self.cue.get_node('cue_stick_model').setTransparency(TransparencyAttrib.MAlpha)
-        self.cueing_ball.get_node('ball').setTransparency(TransparencyAttrib.MAlpha)
-        self.cueing_ball.get_node('ball').setAlphaScale(0.2)
-        ball.get_node('ball').setTransparency(TransparencyAttrib.MAlpha)
-        ball.get_node('ball').setAlphaScale(0.2)
-        self.cue.get_node('cue_stick_model').setAlphaScale(0.4)
+        Cx, Cy, Cz = self.cue.get_node('cue_stick_focus').getPos(scene)
+        axR = -self.cue.get_node('cue_stick').getY()
+        Cx += -axR*np.sin(phi)
+        Cy += axR*np.cos(phi)
 
         AC = np.sqrt((Ax-Cx)**2 + (Ay-Cy)**2 + (Az-Cz)**2)
-
         BC = np.sqrt(AC**2 - AB**2)
-
         min_theta_no_english = np.arcsin(AB/AC)
 
+        # Cue tip point, no top/bottom english
+        m = self.cue.get_node('cue_stick_model').getX()
+        u = utils.unit_vector(np.array([-np.cos(phi), -np.sin(phi), np.sin(min_theta_no_english)]))
+        Ex, Ey, Ez = Cx + m*u[0], Cy + m*u[1], Cz + m*u[2]
 
+        # Point where cue contacts blocking ball, no top/bottom english
+        Bx, By, Bz = Cx + BC*u[0], Cy + BC*u[1], Cz + BC*u[2]
 
-        return max(0, min_theta_no_english) * 180/np.pi
+        # Extra angle due to top/bottom english
+        BE = np.sqrt((Bx-Ex)**2 + (By-Ey)**2 + (Bz-Ez)**2)
+        bxR = self.cue.get_node('cue_stick').getZ()
+        beta = -np.arctan2(bxR, BE)
         if beta < 0:
             beta += 10*np.pi/180*(np.exp(bxR/BE)**2 - 1)
+
+        min_theta = min_theta_no_english + beta
+        return max(0, min_theta) * 180/np.pi
 
 
     def get_cue_radius(self, l):
