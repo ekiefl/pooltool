@@ -5,6 +5,7 @@ import pooltool.physics as physics
 import pooltool.ani.utils as autils
 
 from pooltool.utils import panda_path
+from pooltool.error import ConfigError
 from pooltool.events import *
 from pooltool.objects import *
 
@@ -48,21 +49,21 @@ class BallRender(Render):
 
         self.nodes['sphere'] = sphere_node
         self.nodes['ball'] = ball
-
         self.nodes['shadow'] = self.init_shadow()
-        # FIXME
-        #self.nodes[f"ball_csphere_{self.id}"] = self.init_collision()
 
         self.randomize_orientation()
 
 
-    def init_collision(self):
+    def init_collision(self, cue):
+        if not cue.rendered:
+            raise ConfigError("BallRender.init_collision :: `cue` must be rendered")
+
         collision_node = self.nodes['ball'].attachNewNode(CollisionNode(f"ball_csphere_{self.id}"))
-        collision_node.node().addSolid(CollisionSphere(0, 0, 0, self.R))
+        collision_node.node().addSolid(CollisionCapsule(0, 0, 0, 0, 0, cue.get_length(), cue.butt_radius + self.R))
         if ani.settings['graphics']['debug']:
             collision_node.show()
 
-        return collision_node
+        self.nodes[f"ball_csphere_{self.id}"] = collision_node
 
 
     def init_shadow(self):

@@ -375,6 +375,9 @@ class Play(Interface, Menus, HUD):
         self.collision_handler = CollisionHandlerQueue()
         self.cue.init_collision_handling(self.collision_handler)
 
+        for ball in self.balls.values():
+            ball.init_collision(self.cue)
+
 
     def start(self):
         self.run()

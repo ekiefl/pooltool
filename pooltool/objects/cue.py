@@ -78,6 +78,11 @@ class CueRender(Render):
         base.cTrav.addCollider(collision_node, collision_handler)
 
 
+    def get_length(self):
+        bounds = self.get_node('cue_stick').get_tight_bounds()
+        return bounds[1][0] - bounds[0][0]
+
+
     def track_stroke(self):
         """Initialize variables for storing cue position during stroke"""
         self.stroke_pos = []

@@ -49,8 +49,8 @@ class CueAvoid(object):
         elif entry.into_node.name.startswith('cushion'):
             return self.process_cushion_collision(entry)
         elif entry.into_node.name.startswith('ball'):
+            self.process_ball_collision(entry)
             return 0
-            #return self.process_ball_collision(entry)
         else:
             raise NotImplementedError(f"CueAvoid :: no collision solver for node {entry.into_node.name}")
 
