@@ -138,6 +138,8 @@ class CueAvoid(object):
 
 
         return max(0, min_theta_no_english) * 180/np.pi
+        if beta < 0:
+            beta += 10*np.pi/180*(np.exp(bxR/BE)**2 - 1)
 
 
     def get_cue_radius(self, l):
