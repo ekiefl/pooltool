@@ -4,29 +4,38 @@
 
 *pooltool* is a sandbox billiards game that emphasizes realistic physics. You can play any form of billiards, experiment with different physics settings, or you use the API to investigate billiards-related research questions.
 
-# This project is in pre-alpha
+# Gallery
 
-Use at your own risk.
+<img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_1.png" width="300" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_2.png" width="300" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_3.png" width="300" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_5.png" width="300" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_6.png" width="300" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_7.png" width="300" />
 
 # Blog
 
-A blog dedicated to the development of this project can be found on [my website](https://ekiefl.github.io/projects/pooltool/).
-
+I have blogged about every aspect of this project. Read the detailed account [here](https://ekiefl.github.io/projects/pooltool/).
 
 # Installation
 
-The installation instructions assume you have [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html). conda isn't a requirement for installing, but if you don't want to use it, you're on your own.
+Here is how to install pooltool
 
-Deactivate from any conda environments you are currently in, and then create a new conda environment
-called pooltool:
+## Users
 
-```
+Creating OS-specific installers is on my to do list for the alpha release. Until then, please follow the developer instructions.
+
+## Developers
+
+A small note. If you don't have the ability to create isolated python environments, I would recommend intalling `conda` ([here](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)) so you can isolate pooltool from your other business.
+
+**First**, create a new, python environment that uses Python 3.8.10.
+
+With `conda`, you could do the following:
+
+```bash
 conda deactivate
+conda env remove --name pooltool
 conda create -n pooltool python=3.8.10
 conda activate pooltool
 ```
 
-Verify you're running `3.8.10`
+Regardless of how you managed your python environment, please verify you're running `3.8.10`
 
 ```
 $ python
@@ -36,28 +45,29 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> exit()
 ```
 
-Install all of the dependencies (these installations are localized to your conda environment):
+**Second**, grab the codebase:
 
-```
-conda install -y numpy
-conda install -y -c anaconda psutil
-conda install -y scipy
-conda install -y pandas
-conda install -y -c conda-forge panda3d
-conda install -y -c conda-forge colored
-pip install pyquaternion
-```
-
-Now, its time to fetch a copy of the codebase:
-
-```
+```bash
+cd <A_DIRECTORY_YOU_LIKE>
 git clone https://github.com/ekiefl/pooltool.git
 cd pooltool
 ```
 
-Finally, create a script that runs whenever the conda environment is activated. This script
-modifies `$PATH` and `$PYTHONPATH` so that python knows where to find pooltool libraries and the shell knows where to find the pooltool binary. **These path
-modifications live safely inside the pooltool conda environment, and do not propagate into your global
+**Third**, install the dependencies:
+
+```bash
+pip install -r requirements
+```
+
+**Fourth**, test out your installation:
+
+```bash
+./pooltool
+```
+
+The game window should appear (escape key to exit).
+
+**Fifth (optional)**, if you used a conda environment that you named `pooltool`, create this script that runs whenever the conda environment is activated. This script modifies `$PATH` and `$PYTHONPATH` so that python knows where to find pooltool libraries and the shell knows where to find the pooltool binary. **These path modifications live safely inside the pooltool conda environment, and do not propagate into your global
 environment**:
 
 ```
@@ -68,11 +78,11 @@ export PATH=\$PATH:$(pwd)/bin
 EOF
 ```
 
-Upon activating your conda environment once more (`conda activate pooltool`), `pooltool` is now a binary
-that can be run anywhere in your filesystem whenever you are in the `pooltool` conda environment. Time
-to test your installation by starting up pooltool:
+The next time you activate your conda environment (`conda activate pooltool`), `pooltool` is now a binary
+that can be run anywhere in your filesystem whenever you are in the `pooltool` conda environment. Test it out:
 
 ```
+conda activate pooltool
 pooltool
 ```
 
