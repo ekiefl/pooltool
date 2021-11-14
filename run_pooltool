@@ -1,1 +1,14 @@
-bin/run_pooltool
+#! /usr/bin/env python
+
+import sys
+import argparse
+
+from pooltool.error import TableConfigError
+
+ap = argparse.ArgumentParser()
+args = ap.parse_args()
+
+if __name__ == '__main__':
+    from pooltool.ani.animate import Play
+    play = Play()
+    play.start()

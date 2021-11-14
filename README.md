@@ -62,7 +62,7 @@ pip install -r requirements
 **Fourth**, test out your installation:
 
 ```bash
-./pooltool
+./run_pooltool # (or `python run_pooltool`)
 ```
 
 The game window should appear (escape key to exit).
@@ -74,7 +74,7 @@ environment**:
 mkdir -p ${CONDA_PREFIX}/etc/conda/activate.d
 cat <<EOF >${CONDA_PREFIX}/etc/conda/activate.d/pooltool.sh
 export PYTHONPATH=\$PYTHONPATH:$(pwd)
-export PATH=\$PATH:$(pwd)/bin
+export PATH=\$PATH:$(pwd)
 EOF
 ```
 
