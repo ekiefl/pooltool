@@ -23,7 +23,7 @@ class TableRender(Render):
 
 
     def init_cloth(self):
-        if not self.has_model:
+        if not self.has_model or not settings['graphics']['table']:
             node = render.find('scene').attachNewNode('cloth') 
             path = Path(pooltool.__file__).parent.parent / 'models' / 'table' / 'custom' / 'custom.glb'
 
@@ -133,7 +133,7 @@ class TableRender(Render):
         # draw table as rectangle
         self.init_cloth()
 
-        if not self.has_model:
+        if not self.has_model or not settings['graphics']['table']:
             # draw cushion_segments as edges
             self.cushion_drawer = LineSegs()
             self.cushion_drawer.setThickness(2)
