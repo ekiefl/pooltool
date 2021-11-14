@@ -22,7 +22,7 @@ Creating OS-specific installers is on my to do list for the alpha release. Until
 
 ## Developers
 
-A small note. If you don't have the ability to create isolated python environments, I would recommend intalling `conda` ([here](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)) so you can isolate pooltool from your other business.
+A small note. If you don't have the ability to create isolated python environments, I would recommend installing `conda` ([here](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)) so you can isolate pooltool from your other business.
 
 **First**, create a new, python environment that uses Python 3.8.10.
 
