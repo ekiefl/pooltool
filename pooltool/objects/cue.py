@@ -74,7 +74,7 @@ class CueRender(Render):
         if ani.settings['graphics']['debug']:
             collision_node.show()
 
-        self.nodes[f"cue_cseg"] = collision_node
+        self.nodes['cue_cseg'] = collision_node
         base.cTrav.addCollider(collision_node, collision_handler)
 
 

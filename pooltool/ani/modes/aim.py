@@ -44,7 +44,7 @@ class AimMode(Mode, CueAvoid):
         else:
             self.cue.update_focus()
 
-        self.cue.show_nodes()
+        self.cue.show_nodes(ignore=('cue_cseg',))
         self.cue.get_node('cue_stick').setX(0)
         self.player_cam.update_focus(self.cueing_ball.get_node('ball').getPos())
         if load_prev_cam:
@@ -81,7 +81,7 @@ class AimMode(Mode, CueAvoid):
         if ani.settings['gameplay']['cue_collision']:
             self.remove_task('collision_task')
 
-        self.cue.hide_nodes()
+        self.cue.hide_nodes(ignore=('cue_cseg',))
         self.player_cam.store_state('aim', overwrite=True)
 
 

@@ -199,20 +199,6 @@ class Interface(ShowBase, ModeManager):
         #print(f"Frame: {self.frame}")
         #print()
         self.frame += 1
-        #if self.cue is not None:
-        #    cue = self.cue.get_node('cue_stick')
-        #    cue_focus = self.cue.get_node('cue_stick_focus')
-        #    cue_model = self.cue.get_node('cue_stick_model')
-        #    print(f"Cue info")
-        #    print(f"========")
-        #    print(f"cue_stick Pos: {cue.getPos()}")
-        #    print(f"cue_stick Hpr: {cue.getHpr()}")
-        #    print(f"cue_stick_model Pos: {cue_model.getPos()}")
-        #    print(f"cue_stick_model Hpr: {cue_model.getHpr()}")
-        #    print(f"cue_stick_focus Pos: {cue_focus.getPos()}")
-        #    print(f"cue_stick_focus Hpr: {cue_focus.getHpr()}")
-        #    print()
-
 
         return task.cont
 
