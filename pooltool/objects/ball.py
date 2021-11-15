@@ -107,7 +107,7 @@ class BallRender(Render):
 
     def set_render_state_as_object_state(self):
         self.nodes['ball'].setPos(*self.rvw[0,:])
-        self.nodes['shadow'].setPos(self.rvw[0,0], self.rvw[0,1], 0)
+        self.nodes['shadow'].setPos(self.rvw[0,0], self.rvw[0,1], min(0, self.rvw[0,2]-self.R))
 
 
     def set_playback_sequence(self, playback_speed=1):
