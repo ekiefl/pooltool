@@ -59,8 +59,10 @@ class Render(ABC):
         self.nodes[name].hide()
 
 
-    def hide_nodes(self):
+    def hide_nodes(self, ignore=set()):
         for node_name in self.nodes:
+            if node_name in ignore:
+                continue
             self.hide_node(node_name)
 
 
@@ -68,8 +70,10 @@ class Render(ABC):
         self.nodes[name].show()
 
 
-    def show_nodes(self):
+    def show_nodes(self, ignore=set()):
         for node_name in self.nodes:
+            if node_name in ignore:
+                continue
             self.show_node(node_name)
 
 
