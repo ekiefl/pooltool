@@ -31,7 +31,7 @@ With `conda`, you could do the following:
 ```bash
 conda deactivate
 conda env remove --name pooltool
-conda create -n pooltool python=3.8.10
+conda create -y -n pooltool python=3.8.10
 conda activate pooltool
 ```
 
@@ -56,7 +56,7 @@ cd pooltool
 **Third**, install the dependencies:
 
 ```bash
-pip install -r requirements
+pip install -r requirements.txt
 ```
 
 **Fourth**, test out your installation:
