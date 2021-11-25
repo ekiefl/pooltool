@@ -3,11 +3,43 @@
 All units are SI unless otherwise stated.
 """
 
+__version__ = '0.1'
+
+from pooltool.error import ConfigError
+
 import numpy as np
+import importlib.util
+
+from pathlib import Path
 
 np.set_printoptions(precision=10, suppress=True)
 
-__version__ = '0.1'
+def is_developer():
+    extras_path = Path(__file__).parent.parent / 'requirements-extras.txt'
+    extra_names = [package.strip() for package in open(extras_path).readlines()]
+
+    found, missing = [], []
+    for extra_name in extra_names:
+        exists = importlib.util.find_spec(extra_name) is not None
+        if exists:
+            found.append(extra_name)
+        else:
+            missing.append(extra_name)
+
+    all_missing = len(missing) == len(extra_names)
+    if all_missing:
+        return False
+
+    all_found = len(found) == len(extra_names)
+    if all_found:
+        return True
+
+    raise ConfigError(f"Not all packages found in requirements-extras.txt could be found. "
+                      f"The following packages are missing: {missing}. If you are a pooltool "
+                      f"developer, you should install these packages. If you are a user, "
+                      f"please report this as GitHub issue: https://github.com/ekiefl/pooltool/issues")
+
+developer = is_developer()
 
 # Taken from https://billiards.colostate.edu/faq/physics/physical-properties/
 g = 9.8 # gravitational constant

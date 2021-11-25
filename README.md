@@ -57,6 +57,7 @@ cd pooltool
 
 ```bash
 pip install -r requirements.txt
+pip install -r requirements-extras.txt
 ```
 
 **Fourth**, test out your installation:
