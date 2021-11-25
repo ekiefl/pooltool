@@ -25,7 +25,7 @@ class Menus(object):
 
     def populate_main(self):
         m = GenericMenu(title = 'Main Screen')
-        m.add_image(ani.logo_paths['small'], pos=(0.7,0,-0.70), scale=0.25)
+        m.add_image(ani.logo_paths['small'], pos=(0.7,0,-0.70), scale=(0.25, 1, 0.22))
         m.add_button('New Game', self.go, scale=ani.menu_text_scale)
         m.add_button('Options', lambda: self.show_menu('options'), scale=ani.menu_text_scale)
         m.add_button('Quit', sys.exit, scale=ani.menu_text_scale)
