@@ -84,6 +84,7 @@ that can be run anywhere in your filesystem whenever you are in the `pooltool` c
 
 ```
 conda activate pooltool
+cd ~
 run_pooltool
 ```
 
