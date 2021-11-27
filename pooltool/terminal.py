@@ -11,9 +11,37 @@ import struct
 import pandas as pd
 import datetime
 import textwrap
+import importlib.util
 
-from colored import fore, back, style
 from collections import OrderedDict
+
+def get_color_objects():
+    """Get objects for coloring the progress bar
+
+    `colored` is a module used for coloring the progress bar, however this module does not create
+    wheels for all platform tags.  Therefore not all pooltool distributions will have colored. This
+    code imports `colored` if it exists, and provides colorless functionality if it does not
+
+    Notes
+    =====
+    - Rather than using fore, back, and style, the progress bar should use the
+      pooltool.terminal.tty_colors dictionary so that `colored` can be removed as a module altogether
+    """
+
+    if importlib.util.find_spec('colored') is not None:
+        from colored import fore, back, style
+    else:
+        class NoColored(object):
+            def __getattr__(self, attr): return ''
+        class Fore(NoColored): pass
+        class Back(NoColored): pass
+        class Style(NoColored): pass
+        fore = Fore()
+        back = Back()
+        style = Style()
+    return fore, back, style
+
+fore, back, style = get_color_objects()
 
 # clean garbage garbage:
 ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
@@ -710,13 +738,14 @@ def get_date():
 
 
 def get_terminal_size():
-    """function was taken from http://stackoverflow.com/a/566752"""
+    """Function was taken from http://stackoverflow.com/a/566752"""
+
     def ioctl_GWINSZ(fd):
         try:
+            # These imports are Windows incompatible
             import fcntl
             import termios
-            cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ,
-        '1234'))
+            cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
         except:
             return None
         return cr
@@ -734,3 +763,5 @@ def get_terminal_size():
         except:
             cr = (25, 80)
     return int(cr[1]), int(cr[0])
+
+
