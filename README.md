@@ -1,4 +1,4 @@
-<img src="logo/logo.png" width="600" />
+<img src="pooltool/logo/logo.png" width="600" />
 
 # Intro
 
