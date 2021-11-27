@@ -22,19 +22,19 @@ Installation instructions vary depending on how you want to interact with poolto
 | PIP       | ✓   | ✓   |         |
 | Developer | ✓   | ✓   | ✓       |
 
-## (1) Installer
+### Install option #1: Installer
 
 This is by far the easiest option. If you want to play and experiment with billiards using the graphical user interface (GUI), this option is for you. You won't have access to the python API, or be able to edit the source code. In other words, this is the non-coding option.
 
 Unfortunately, I haven't sorted out this step yet, but eventually there will be OS-specific installers available for download here. Until then, please follow the PIP or Developer instructions below.
 
-## (2) API
+### Install option #2: PIP
 
 With this option, you have access to the python API so that you can code up billiards simulations. You also have command-line access to the GUI.
 
 FIXME
 
-## (3) Developer
+### Install option #3: Developer
 
 If you want to develop for pooltool, have access to the most up-to-date version of the codebase, or modify the code to your liking, this is for you.
 
