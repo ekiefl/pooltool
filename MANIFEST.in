@@ -1,0 +1,4 @@
+include pooltool/config/*
+recursive-include pooltool/logo *
+recursive-include pooltool/models *
+recursive-exclude pooltool/models *.blend *.blend1 *.pptx *.svg

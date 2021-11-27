@@ -25,8 +25,8 @@ class BallRender(Render):
     def init_sphere(self):
         ball = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}")
 
-        fallback_path = Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'set_1' / '1.glb'
-        expected_path = Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'set_1' / f'{self.id}.glb'
+        fallback_path = ani.model_dir / 'balls' / 'set_1' / '1.glb'
+        expected_path = ani.model_dir / 'balls' / 'set_1' / f'{self.id}.glb'
 
         if expected_path.exists():
             path = expected_path
@@ -72,7 +72,7 @@ class BallRender(Render):
         z_offset = 0.0005
         scales = np.linspace(start, stop, N)
 
-        shadow_path = Path(pooltool.__file__).parent.parent / 'models' / 'balls' / 'set_1' / f'shadow.glb'
+        shadow_path = ani.model_dir / 'balls' / 'set_1' / f'shadow.glb'
         shadow_node = render.find('scene').find('cloth').attachNewNode(f'shadow_{self.id}')
         shadow_node.setPos(self.rvw[0,0], self.rvw[0,1], 0)
 

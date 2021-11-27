@@ -175,11 +175,11 @@ class Interface(ShowBase, ModeManager):
 
     def init_environment(self):
         if ani.settings['graphics']['physical_based_rendering']:
-            room_path = utils.panda_path(Path(pooltool.__file__).parent.parent / 'models/room/room_pbr.glb')
-            floor_path = utils.panda_path(Path(pooltool.__file__).parent.parent / 'models/room/floor_pbr.glb')
+            room_path = utils.panda_path(ani.model_dir / 'room/room_pbr.glb')
+            floor_path = utils.panda_path(ani.model_dir / 'room/floor_pbr.glb')
         else:
-            room_path = utils.panda_path(Path(pooltool.__file__).parent.parent / 'models/room/room.glb')
-            floor_path = utils.panda_path(Path(pooltool.__file__).parent.parent / 'models/room/floor.glb')
+            room_path = utils.panda_path(ani.model_dir / 'room/room.glb')
+            floor_path = utils.panda_path(ani.model_dir / 'room/floor.glb')
 
         self.environment = environment.Environment(self.table)
         if ani.settings['graphics']['room']:

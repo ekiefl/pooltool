@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 
 import pooltool
+import pooltool.ani as ani
 import pooltool.ani.utils as autils
 
-from pooltool.ani import logo_paths
 from pooltool.utils import panda_path
 
 import numpy as np
@@ -182,7 +182,7 @@ class Logo(HUDElement):
         HUDElement.__init__(self)
 
         self.img = OnscreenImage(
-            image = logo_paths['pt_smaller'],
+            image = ani.logo_paths['pt_smaller'],
             pos = (0.94, 0, 0.89),
             parent = render2d,
             scale=(0.08*0.49,1,0.08)
@@ -210,7 +210,7 @@ class Logo(HUDElement):
 class English(HUDElement):
     def __init__(self):
         HUDElement.__init__(self)
-        self.dir = Path(pooltool.__file__).parent.parent / 'models' / 'hud' / 'english'
+        self.dir = ani.model_dir / 'hud' / 'english'
         self.text_scale = 0.2
         self.text_color = (1,1,1,1)
 
@@ -269,7 +269,7 @@ class English(HUDElement):
 class Jack(HUDElement):
     def __init__(self):
         HUDElement.__init__(self)
-        self.dir = Path(pooltool.__file__).parent.parent / 'models' / 'hud' / 'jack'
+        self.dir = ani.model_dir / 'hud' / 'jack'
         self.text_scale = 0.4
         self.text_color = (1,1,1,1)
 
@@ -294,7 +294,7 @@ class Jack(HUDElement):
         autils.alignTo(self.arc, self.cue_cartoon, autils.LR, autils.CR)
 
         self.rotational_point = OnscreenImage(
-            image=panda_path(Path(pooltool.__file__).parent.parent / 'models' / 'hud' / 'english' / 'circle.png'),
+            image=panda_path(ani.model_dir / 'hud' / 'english' / 'circle.png'),
             parent=self.arc,
             scale=0.15
         )

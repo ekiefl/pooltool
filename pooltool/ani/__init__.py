@@ -10,7 +10,7 @@ from pooltool.error import ConfigError, TableConfigError
 from pathlib import Path
 from panda3d.core import *
 
-loadPrcFile(utils.panda_path(Path(pooltool.__file__).parent / 'Config.prc'))
+loadPrcFile(utils.panda_path(Path(pooltool.__file__).parent / 'config' / 'config_panda3d.prc'))
 
 menu_text_scale = 0.07
 menu_text_scale_small = 0.04
@@ -71,17 +71,20 @@ ball_highlight = {
     'shadow_scale_amplitude': 0.4,
 }
 
+model_dir = Path(pooltool.__file__).parent / 'models'
+
+logo_dir = Path(pooltool.__file__).parent / 'logo'
 logo_paths = {
-    'default': utils.panda_path(Path(pooltool.__file__).parent.parent / 'logo' / 'logo.png'),
-    'small': utils.panda_path(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_small.png'),
-    'smaller': utils.panda_path(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_smaller.png'),
-    'pt': utils.panda_path(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_pt.png'),
-    'pt_smaller': utils.panda_path(Path(pooltool.__file__).parent.parent / 'logo' / 'logo_pt_smaller.png'),
+    'default': utils.panda_path(logo_dir / 'logo.png'),
+    'small': utils.panda_path(logo_dir / 'logo_small.png'),
+    'smaller': utils.panda_path(logo_dir / 'logo_smaller.png'),
+    'pt': utils.panda_path(logo_dir / 'logo_pt.png'),
+    'pt_smaller': utils.panda_path(logo_dir / 'logo_pt_smaller.png'),
 }
 
 
 def load_config(name, exception_type=Exception, exception_msg="Something went wrong. Here is what we know: {}"):
-    config_path = Path(__file__).parent.parent.parent / 'config' / name
+    config_path = Path(__file__).parent.parent / 'config' / name
     config_obj = configparser.ConfigParser()
     try:
         config_obj.read(config_path)

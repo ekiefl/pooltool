@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 
+import pooltool.ani as ani
 import pooltool.utils as utils
 import pooltool.ani.utils as autils
 
-from pooltool.ani import settings
 from pooltool.error import ConfigError
 from pooltool.utils import panda_path
 from pooltool.objects import *
@@ -23,18 +23,18 @@ class TableRender(Render):
 
 
     def init_cloth(self):
-        if not self.has_model or not settings['graphics']['table']:
+        if not self.has_model or not ani.settings['graphics']['table']:
             node = render.find('scene').attachNewNode('cloth') 
-            path = Path(pooltool.__file__).parent.parent / 'models' / 'table' / 'custom' / 'custom.glb'
+            path = ani.model_dir / 'table' / 'custom' / 'custom.glb'
 
             model = loader.loadModel(panda_path(path))
             model.reparentTo(node)
             model.setScale(self.w, self.l, 1)
         else:
-            path_dir = Path(pooltool.__file__).parent.parent / 'models' / 'table' / self.name
+            path_dir = ani.model_dir / 'table' / self.name
             pbr_path = path_dir / (self.name + '_pbr.glb')
             standard_path = path_dir / (self.name + '.glb')
-            if settings['graphics']['physical_based_rendering']:
+            if ani.settings['graphics']['physical_based_rendering']:
                 path = pbr_path
                 if not path.exists():
                     path = standard_path
@@ -53,7 +53,7 @@ class TableRender(Render):
 
 
     def init_collisions(self):
-        if not settings['gameplay']['cue_collision']:
+        if not ani.settings['gameplay']['cue_collision']:
             return
 
         if self.object_type == 'pocket_table':
@@ -77,7 +77,7 @@ class TableRender(Render):
 
                 self.collision_nodes[f"cushion_ccapsule_{cushion_id}"] = collision_node
 
-                if settings['graphics']['debug']:
+                if ani.settings['graphics']['debug']:
                     collision_node.show()
         else:
             raise NotImplementedError(f"TableRender.init_collisions :: has no routine for table type '{self.object_type}'")
@@ -133,7 +133,7 @@ class TableRender(Render):
         # draw table as rectangle
         self.init_cloth()
 
-        if not self.has_model or not settings['graphics']['table']:
+        if not self.has_model or not ani.settings['graphics']['table']:
             # draw cushion_segments as edges
             self.cushion_drawer = LineSegs()
             self.cushion_drawer.setThickness(2)
