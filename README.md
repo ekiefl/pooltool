@@ -2,7 +2,7 @@
 
 # Intro
 
-*pooltool* is a sandbox billiards game that emphasizes realistic physics. You can play any form of billiards, experiment with different physics settings, or you use the API to investigate billiards-related research questions.
+*pooltool* is a sandbox billiards game that emphasizes realistic physics. You can play different types of billiards, experiment with different physics settings, or you use the API to investigate billiards-related research questions.
 
 # Gallery
 
@@ -14,17 +14,33 @@ I have blogged about every aspect of this project. Read the detailed account [he
 
 # Installation
 
-Here is how to install pooltool
+Installation instructions vary depending on how you want to interact with pooltool. There are 3 general categories for installation and they each support eh following features:
 
-## Users
+| Method    | GUI | API | Develop |
+|-----------|-----|-----|---------|
+| Installer | ✓   |     |         |
+| PIP       | ✓   | ✓   |         |
+| Developer | ✓   | ✓   | ✓       |
 
-Creating OS-specific installers is on my to do list for the alpha release. Until then, please follow the developer instructions.
+## (1) Installer
 
-## Developers
+This is by far the easiest option. If you want to play and experiment with billiards using the graphical user interface (GUI), this option is for you. You won't have access to the python API, or be able to edit the source code. In other words, this is the non-coding option.
+
+Unfortunately, I haven't sorted out this step yet, but eventually there will be OS-specific installers available for download here. Until then, please follow the PIP or Developer instructions below.
+
+## (2) API
+
+With this option, you have access to the python API so that you can code up billiards simulations. You also have command-line access to the GUI.
+
+FIXME
+
+## (3) Developer
+
+If you want to develop for pooltool, have access to the most up-to-date version of the codebase, or modify the code to your liking, this is for you.
 
 A small note. If you don't have the ability to create isolated python environments, I would recommend installing `conda` ([here](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)) so you can isolate pooltool from your other business.
 
-**First**, create a new, python environment that uses Python 3.8.10.
+**(i)**, create a new, python environment that uses Python 3.8.10.
 
 With `conda`, you could do the following:
 
@@ -45,7 +61,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> exit()
 ```
 
-**Second**, grab the codebase:
+**(ii)**, grab the codebase:
 
 ```bash
 cd <A_DIRECTORY_YOU_LIKE>
@@ -53,22 +69,23 @@ git clone https://github.com/ekiefl/pooltool.git
 cd pooltool
 ```
 
-**Third**, install the dependencies:
+**(iii)**, install the dependencies:
 
 ```bash
-pip install -r requirements.txt
-pip install -r requirements-extras.txt
+pip install -r requirements_developer.txt
 ```
 
-**Fourth**, test out your installation:
+In contrast to `requirements.txt`, `requirements_developer.txt` includes some additional convenience modules.
+
+**(iv)**, test out your installation:
 
 ```bash
-./run_pooltool # (or `python run_pooltool`)
+python run_pooltool
 ```
 
 The game window should appear (escape key to exit).
 
-**Fifth (optional)**, if you used a conda environment that you named `pooltool`, create this script that runs whenever the conda environment is activated. This script modifies `$PATH` and `$PYTHONPATH` so that python knows where to find pooltool libraries and the shell knows where to find the pooltool binary. **These path modifications live safely inside the pooltool conda environment, and do not propagate into your global
+**(v optional)**, if you used a conda environment that you named `pooltool`, create this script that runs whenever the conda environment is activated. This script modifies `$PATH` and `$PYTHONPATH` so that python knows where to find pooltool libraries and the shell knows where to find the pooltool binary. **These path modifications live safely inside the pooltool conda environment, and do not propagate into your global
 environment**:
 
 ```
