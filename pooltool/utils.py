@@ -3,9 +3,9 @@
 import os
 import numpy as np
 import cmath
-import psutil
 import linecache
 import tracemalloc
+import importlib.util
 
 from panda3d.core import Filename
 from pyquaternion import Quaternion
@@ -25,6 +25,12 @@ def get_total_memory_usage(keep_raw=False):
         A human readable format is returned, e.g. "1.41 GB". If keep_raw, the raw number is
         returned, e.g. 1515601920
     """
+    if importlib.util.find_spec('psutil') is None:
+        # psutil does not exist in this distribution
+        return '??'
+    else:
+        import psutil
+
     current_process = psutil.Process(os.getpid())
     mem = current_process.memory_info().rss
     for child in current_process.children(recursive=True):
@@ -44,7 +50,7 @@ def display_top_memory_usage(snapshot, key_type='lineno', limit=10):
     Examples
     ========
     >>> import tracemalloc
-    >>> import anvio.utils as utils
+    >>> import pooltool.utils as utils
     >>> tracemalloc.start()
     >>> snap = tracemalloc.take_snapshot
     >>> utils.display_top_memory_usage(snap)
