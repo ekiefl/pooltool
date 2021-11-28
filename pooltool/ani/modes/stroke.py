@@ -18,7 +18,7 @@ class StrokeMode(Mode):
         self.mouse.track()
 
         self.cue.track_stroke()
-        self.cue.show_nodes()
+        self.cue.show_nodes(ignore=('cue_cseg',))
 
         self.task_action('f', action.fine_control, True)
         self.task_action('f-up', action.fine_control, False)
