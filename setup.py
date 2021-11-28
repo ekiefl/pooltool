@@ -3,18 +3,23 @@
 from pathlib import Path
 from setuptools import setup, find_packages
 
-get_reqs = lambda path: [i.strip() for i in open(path).readlines()]
-requirements = get_reqs('requirements.txt')
-
 setup(
-    name = 'pooltool',
-    version = '0.1',
-    packages = find_packages(include=['pooltool']),
+    name = 'pooltool-billiards',
+    version = '0.1.5',
+    packages = find_packages(),
     scripts = ['run_pooltool'],
     author_email = 'kiefl.evan@gmail.com',
     author = 'Evan Kiefl',
     url = 'https://github.com/ekiefl/pooltool',
-    install_requires = requirements,
+    install_requires = [
+        'numpy',
+        'scipy',
+        'pandas',
+        'panda3d==1.10.10',
+        'panda3d-gltf',
+        'panda3d-simplepbr',
+        'pyquaternion',
+    ],
     include_package_data = True,
     zip_safe = False,
     #options = {
