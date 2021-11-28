@@ -24,13 +24,13 @@ conda activate asdf
 ```
 
 5. Test the installation:
-   `pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple pooltool-billiards==X.X.X`.
+   `pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple pooltool-billiards==X.X.X --force-reinstall`.
    Don't use the expected
 
 6. Make sure `cd ~; which run_pooltool` leads to the asdf environment: `/Users/evan/anaconda3/envs/asdf/bin/run_pooltool`
    Then see if it works: `run_pooltool`
 
-7. Change version to X.X in `setup.py`, then create dist: `python setup.py sdist`
+7. Change version to X.X in `setup.py`, then **back in the development environment** create dist: `python setup.py sdist`
 
 8. Upload to pypi `twine upload dist/pooltool-billiards-X.X.tar.gz`
 

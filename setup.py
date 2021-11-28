@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'pooltool-billiards',
-    version = '0.1.5',
+    version = '0.1',
     packages = find_packages(),
     scripts = ['run_pooltool'],
     author_email = 'kiefl.evan@gmail.com',
