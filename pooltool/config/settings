@@ -1,13 +1,13 @@
 [graphics]
 room = 0
 floor = 0
-table = 0
+table = 1
 lights = 0
 shadows = 0
 shader = 1
 physical_based_rendering = 0
 debug = 0
-fps = 30
+fps = 60
 
 [gameplay]
 cue_collision = 1

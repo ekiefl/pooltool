@@ -72,7 +72,7 @@ class CallShotMode(Mode):
             if closest != self.closest_ball:
                 CallShotMode.remove_ball_highlight(self)
                 self.closest_ball = closest
-                self.ball_highlight = self.closest_ball.get_node('ball')
+                self.ball_highlight = self.closest_ball.get_node('pos')
                 CallShotMode.add_ball_highlight(self)
 
             if self.keymap['next']:
@@ -150,7 +150,7 @@ class CallShotMode(Mode):
 
     def remove_ball_highlight(self):
         if self.closest_ball is not None:
-            node = self.closest_ball.get_node('ball')
+            node = self.closest_ball.get_node('pos')
             node.setScale(node.getScale()/ani.ball_highlight['ball_factor'])
             self.closest_ball.get_node('shadow').setAlphaScale(1)
             self.closest_ball.get_node('shadow').setScale(1)
@@ -163,7 +163,7 @@ class CallShotMode(Mode):
             CallShotMode.add_transparent_ball(self)
             self.trans_ball.hide()
             self.add_task(self.call_shot_ball_highlight_animation, 'call_shot_ball_highlight_animation')
-            node = self.closest_ball.get_node('ball')
+            node = self.closest_ball.get_node('pos')
             node.setScale(node.getScale()*ani.ball_highlight['ball_factor'])
 
 
@@ -185,7 +185,7 @@ class CallShotMode(Mode):
         self.trans_ball.reparentTo(render.find('scene').find('cloth'))
         self.trans_ball.setTransparency(TransparencyAttrib.MAlpha)
         self.trans_ball.setAlphaScale(0.4)
-        self.trans_ball.setPos(self.closest_ball.get_node('ball').getPos())
+        self.trans_ball.setPos(self.closest_ball.get_node('pos').getPos())
         self.trans_ball.setHpr(self.closest_ball.get_node('sphere').getHpr())
 
 

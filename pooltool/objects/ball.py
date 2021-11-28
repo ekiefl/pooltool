@@ -23,7 +23,8 @@ class BallRender(Render):
 
 
     def init_sphere(self):
-        ball = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}")
+        position = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}_position")
+        ball = position.attachNewNode(f"ball_{self.id}")
 
         fallback_path = ani.model_dir / 'balls' / 'set_1' / '1.glb'
         expected_path = ani.model_dir / 'balls' / 'set_1' / f'{self.id}.glb'
@@ -45,10 +46,11 @@ class BallRender(Render):
         tex.set_minfilter(SamplerState.FT_linear)
 
         sphere_node.setScale(self.get_scale_factor(sphere_node))
-        ball.setPos(*self.rvw[0,:])
+        position.setPos(*self.rvw[0,:])
 
         self.nodes['sphere'] = sphere_node
         self.nodes['ball'] = ball
+        self.nodes['pos'] = position
         self.nodes['shadow'] = self.init_shadow()
 
         self.randomize_orientation()
@@ -97,7 +99,7 @@ class BallRender(Render):
 
 
     def get_render_state(self):
-        x, y, z = self.nodes['ball'].getPos()
+        x, y, z = self.nodes['pos'].getPos()
         return x, y, z
 
 
@@ -106,7 +108,7 @@ class BallRender(Render):
 
 
     def set_render_state_as_object_state(self):
-        self.nodes['ball'].setPos(*self.rvw[0,:])
+        self.nodes['pos'].setPos(*self.rvw[0,:])
         self.nodes['shadow'].setPos(self.rvw[0,0], self.rvw[0,1], min(0, self.rvw[0,2]-self.R))
 
 
@@ -121,16 +123,21 @@ class BallRender(Render):
 
         # Init the sequences
         ball_sequence = Sequence()
+        rotation_sequence = Sequence()
         shadow_sequence = Sequence()
 
         for i in range(len(playback_dts)):
             x, y, z = xyzs[i+1]
 
-            # Append to ball sequence
-            ball_sequence.append(LerpPosQuatInterval(
-                nodePath = self.nodes['ball'],
+            ball_sequence.append(LerpPosInterval(
+                nodePath = self.nodes['pos'],
                 duration = playback_dts[i],
                 pos = (x, y, z),
+            ))
+
+            rotation_sequence.append(LerpQuatInterval(
+                nodePath = self.nodes['ball'],
+                duration = playback_dts[i],
                 quat = self.quats[i+1]
             ))
 
@@ -142,6 +149,7 @@ class BallRender(Render):
 
         self.playback_sequence = Parallel()
         self.playback_sequence.append(ball_sequence)
+        self.playback_sequence.append(rotation_sequence)
         self.playback_sequence.append(shadow_sequence)
 
 

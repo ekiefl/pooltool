@@ -212,7 +212,7 @@ class CueRender(Render):
 
 
     def update_focus(self):
-        self.get_node('cue_stick_focus').setPos(self.follow.get_node('ball').getPos())
+        self.get_node('cue_stick_focus').setPos(self.follow.get_node('pos').getPos())
 
 
     def get_render_state(self):

@@ -46,7 +46,7 @@ class AimMode(Mode, CueAvoid):
 
         self.cue.show_nodes(ignore=('cue_cseg',))
         self.cue.get_node('cue_stick').setX(0)
-        self.player_cam.update_focus(self.cueing_ball.get_node('ball').getPos())
+        self.player_cam.update_focus(self.cueing_ball.get_node('pos').getPos())
         if load_prev_cam:
             self.player_cam.load_state('aim')
 

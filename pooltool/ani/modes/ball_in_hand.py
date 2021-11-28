@@ -48,7 +48,7 @@ class BallInHandMode(Mode):
             self.picking = 'ball'
         elif num_options == 1:
             self.grabbed_ball = self.balls[self.game.active_player.ball_in_hand[0]]
-            self.grab_ball_node = self.grabbed_ball.get_node('ball')
+            self.grab_ball_node = self.grabbed_ball.get_node('pos')
             self.grab_ball_shadow_node = self.grabbed_ball.get_node('shadow')
             self.picking = 'placement'
         else:
@@ -85,7 +85,7 @@ class BallInHandMode(Mode):
             if closest != self.grabbed_ball:
                 BallInHandMode.remove_grab_selection_highlight(self)
                 self.grabbed_ball = closest
-                self.grab_ball_node = self.grabbed_ball.get_node('ball')
+                self.grab_ball_node = self.grabbed_ball.get_node('pos')
                 self.grab_ball_shadow_node = self.grabbed_ball.get_node('shadow')
                 BallInHandMode.add_grab_selection_highlight(self)
 
@@ -137,7 +137,7 @@ class BallInHandMode(Mode):
 
     def remove_grab_selection_highlight(self):
         if self.grabbed_ball is not None:
-            node = self.grabbed_ball.get_node('ball')
+            node = self.grabbed_ball.get_node('pos')
             node.setScale(node.getScale()/ani.ball_highlight['ball_factor'])
             self.grab_ball_shadow_node.setAlphaScale(1)
             self.grab_ball_shadow_node.setScale(1)
@@ -148,7 +148,7 @@ class BallInHandMode(Mode):
     def add_grab_selection_highlight(self):
         if self.grabbed_ball is not None:
             self.add_task(self.grab_selection_highlight_animation, 'grab_selection_highlight_animation')
-            node = self.grabbed_ball.get_node('ball')
+            node = self.grabbed_ball.get_node('pos')
             node.setScale(node.getScale()*ani.ball_highlight['ball_factor'])
 
 
@@ -171,7 +171,7 @@ class BallInHandMode(Mode):
         self.trans_ball.reparentTo(render.find('scene').find('cloth'))
         self.trans_ball.setTransparency(TransparencyAttrib.MAlpha)
         self.trans_ball.setAlphaScale(0.4)
-        self.trans_ball.setPos(self.grabbed_ball.get_node('ball').getPos())
+        self.trans_ball.setPos(self.grabbed_ball.get_node('pos').getPos())
         self.trans_ball.setHpr(self.grabbed_ball.get_node('sphere').getHpr())
 
 

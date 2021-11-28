@@ -52,7 +52,7 @@ class PickBallMode(Mode):
         if closest != self.closest_ball:
             PickBallMode.remove_ball_highlight(self)
             self.closest_ball = closest
-            self.ball_highlight = self.closest_ball.get_node('ball')
+            self.ball_highlight = self.closest_ball.get_node('pos')
             PickBallMode.add_ball_highlight(self)
 
         if self.keymap['done']:
@@ -69,7 +69,7 @@ class PickBallMode(Mode):
 
     def remove_ball_highlight(self):
         if self.closest_ball is not None and 'pick_ball_highlight_animation' in self.tasks:
-            node = self.closest_ball.get_node('ball')
+            node = self.closest_ball.get_node('pos')
             node.setScale(node.getScale()/ani.ball_highlight['ball_factor'])
             self.closest_ball.get_node('shadow').setAlphaScale(1)
             self.closest_ball.get_node('shadow').setScale(1)
@@ -80,7 +80,7 @@ class PickBallMode(Mode):
     def add_ball_highlight(self):
         if self.closest_ball is not None:
             self.add_task(self.pick_ball_highlight_animation, 'pick_ball_highlight_animation')
-            node = self.closest_ball.get_node('ball')
+            node = self.closest_ball.get_node('pos')
             node.setScale(node.getScale()*ani.ball_highlight['ball_factor'])
 
 

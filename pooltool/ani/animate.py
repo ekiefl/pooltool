@@ -165,7 +165,7 @@ class Interface(ShowBase, ModeManager):
 
         self.player_cam.create_focus(
             parent = self.table.get_node('cloth'),
-            pos = self.balls['cue'].get_node('ball').getPos()
+            pos = self.balls['cue'].get_node('pos').getPos()
         )
 
 
