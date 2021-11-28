@@ -44,9 +44,11 @@ This installation uses `pip`. With this option, you have access to the python AP
 
 This installation has been tested with the following python versions:
 
-```
-Python 3.8.10 (default, May 19 2021, 11:01:55)
-```
+- Python 3.6.2 |Anaconda, Inc.| (default, Oct  5 2017, 03:00:07)
+- Python 3.6.10 |Anaconda, Inc.| (default, May  7 2020, 23:06:31)
+- Python 3.8.10 (default, May 19 2021, 11:01:55)
+- Python 3.9.0 (default, Nov 15 2020, 06:25:35)
+- Python 3.10.0 (default, Nov 10 2021, 11:24:47) [Clang 12.0.0 ] on darwin
 
 With a compatible python version, install via
 
@@ -96,6 +98,8 @@ interface.set_shot(shot)
 interface.start()
 ```
 
+The API clearly needs some work. But hopefully you get the idea.
+
 ### Install option #3: Developer
 
 | Method    | GUI | API | Develop |
@@ -106,7 +110,7 @@ If you want to develop for pooltool, have access to the most up-to-date version 
 
 A small note. If you don't have the ability to create isolated python environments, I would recommend installing `conda` ([here](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)) so you can isolate pooltool from your other business.
 
-**(i)**, create a new, python environment that uses Python 3.8.10.
+**(i)** create a new, python environment that uses Python 3.8.10.
 
 With `conda`, you could do the following:
 
@@ -127,7 +131,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> exit()
 ```
 
-**(ii)**, grab the codebase:
+**(ii)** grab the codebase:
 
 ```bash
 cd <A_DIRECTORY_YOU_LIKE>
@@ -135,7 +139,7 @@ git clone https://github.com/ekiefl/pooltool.git
 cd pooltool
 ```
 
-**(iii)**, install the dependencies:
+**(iii)** install the dependencies:
 
 ```bash
 pip install -r requirements_developer.txt
@@ -143,7 +147,7 @@ pip install -r requirements_developer.txt
 
 In contrast to `requirements.txt`, `requirements_developer.txt` includes some additional convenience modules.
 
-**(iv)**, test out your installation:
+**(iv)** test out your installation:
 
 ```bash
 python run_pooltool
@@ -151,7 +155,7 @@ python run_pooltool
 
 The game window should appear (escape key to exit).
 
-**(v optional)**, if you used a conda environment that you named `pooltool`, create this script that runs whenever the conda environment is activated. This script modifies `$PATH` and `$PYTHONPATH` so that python knows where to find pooltool libraries and the shell knows where to find the pooltool binary. **These path modifications live safely inside the pooltool conda environment, and do not propagate into your global
+**(v optional)** if you used a conda environment that you named `pooltool`, create this script that runs whenever the conda environment is activated. This script modifies `$PATH` and `$PYTHONPATH` so that python knows where to find pooltool libraries and the shell knows where to find the pooltool binary. **These path modifications live safely inside the pooltool conda environment, and do not propagate into your global
 environment**:
 
 ```
