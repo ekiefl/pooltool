@@ -8,8 +8,6 @@ import tracemalloc
 import importlib.util
 
 from panda3d.core import Filename
-from pyquaternion import Quaternion
-from scipy.spatial.transform import Rotation
 
 
 def panda_path(path):
@@ -119,27 +117,27 @@ def wiggle(x, val):
     return x + val*(2*np.random.rand() - 1)
 
 
-def normalize_rotation_vector(v):
-    """Reduce a rotation vector to it's minimum magnitude equivalent"""
-    return Rotation.from_rotvec(v).as_rotvec()
+def unit_vector(vector, ord=None, handle_zero=False):
+    """Returns the unit vector of the vector.
 
-
-def as_quaternion(v):
-    """Convert rotation vector to quaternion"""
-    n = v.shape[0]
-    quats = np.zeros((n, 4))
-    for i in range(n):
-        norm = np.linalg.norm(v[i,:])
-        if norm == 0:
-            quats[i, :] = np.array([1,0,0,0])
-            continue
-        quats[i, :] = Quaternion(axis=unit_vector(v[i,:]), angle=norm).normalised.elements
-    return quats
-
-
-def unit_vector(vector):
-    """Returns the unit vector of the vector."""
-    return vector / np.linalg.norm(vector)
+    Parameters
+    ==========
+    ord: None
+        The type of normalization used. See
+        https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html
+    handle_zero: bool, False
+        If True and vector = <0,0,0>, <0,0,0> is returned.
+    """
+    if len(vector.shape) > 1:
+        norm = np.linalg.norm(vector, ord=ord, axis=1, keepdims=True)
+        if handle_zero:
+            norm[(norm == 0).all(axis=1), :] = 1
+        return vector / norm
+    else:
+        norm = np.linalg.norm(vector, ord=ord)
+        if norm == 0 and handle_zero:
+            norm = 1
+        return vector / norm
 
 
 def angle(v2, v1=(1,0)):

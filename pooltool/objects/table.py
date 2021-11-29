@@ -91,6 +91,7 @@ class TableRender(Render):
         self.cushion_drawer.moveTo(cushion.p1[0], cushion.p1[1], cushion.p1[2])
         self.cushion_drawer.drawTo(cushion.p2[0], cushion.p2[1], cushion.p2[2])
         node = render.find('scene').find('cloth').attachNewNode(self.cushion_drawer.create())
+        node.set_shader_auto(True)
 
         self.nodes[f"cushion_{cushion_id}"] = node
 
@@ -104,6 +105,7 @@ class TableRender(Render):
 
         circle = self.draw_circle(self.cushion_drawer, (center_x, center_y, height), radius, 30)
         node = render.find('scene').find('cloth').attachNewNode(circle)
+        node.set_shader_auto(True)
         self.nodes[f"cushion_{cushion_id}"] = node
 
 
@@ -119,6 +121,7 @@ class TableRender(Render):
         pocket = self.pockets[pocket_id]
         circle = self.draw_circle(self.pocket_drawer, pocket.center, pocket.radius, 100)
         node = render.find('scene').find('cloth').attachNewNode(circle)
+        node.set_shader_auto(True)
         self.nodes[f"pocket_{pocket_id}"] = node
 
 
@@ -136,15 +139,15 @@ class TableRender(Render):
         if not self.has_model or not ani.settings['graphics']['table']:
             # draw cushion_segments as edges
             self.cushion_drawer = LineSegs()
-            self.cushion_drawer.setThickness(2)
-            self.cushion_drawer.setColor(0.3, 0.3, 1)
+            self.cushion_drawer.setThickness(3)
+            self.cushion_drawer.setColor(1, 1, 1)
 
             self.init_cushion_edges()
 
             # draw pockets as unfilled circles
             self.pocket_drawer = LineSegs()
-            self.pocket_drawer.setThickness(2)
-            self.pocket_drawer.setColor(0, 0, 0)
+            self.pocket_drawer.setThickness(3)
+            self.pocket_drawer.setColor(1, 1, 1)
             self.init_pockets()
 
         self.init_collisions()

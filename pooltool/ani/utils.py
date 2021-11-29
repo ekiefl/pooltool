@@ -1,5 +1,9 @@
 #! /usr/bin/env python
 
+import pooltool.utils as utils
+
+import numpy as np
+
 from panda3d.core import *
 from pandac.PandaModules import NodePath, PGItem, Vec4
 from direct.gui.DirectGui import DGG
@@ -13,6 +17,48 @@ def get_list_of_Vec3s_from_array(array):
         vec3s.append(Vec3(*array[i,:]))
 
     return vec3s
+
+
+def as_quaternion(w, t):
+    """Convert angular velocities to quaternions
+
+    Notes
+    =====
+    - This mathematics is taken from the following stackexchange answer:
+      https://stackoverflow.com/questions/23503151/how-to-update-quaternion-based-on-3d-gyro-data/41226401
+      Though as pointed out by jrichner, the correct quaternions are produced
+      only after reversing the order of multiplication.
+    """
+    dquats = get_infinitesimal_quaternions(w, t)
+    dquats = get_quaternion_list_from_array(dquats)
+
+    # Begin with identity quaternion
+    quats = [dquats[0]]
+    for i in range(1, len(dquats)):
+        quats.append(quats[i-1]*dquats[i])
+
+    return quats
+
+
+def get_infinitesimal_quaternions(w, t):
+    w_norm = np.linalg.norm(w, axis=1)
+    w_unit = utils.unit_vector(w, handle_zero=True)
+
+    dt = np.diff(t)
+    theta = w_norm[1:]*dt
+
+    # Quaternion looks like m + xi + yj + zk
+    dQ_m = np.cos(theta/2)[:, None]
+    dQ_xyz = w_unit[1:] * np.sin(theta/2)[:, None]
+    dQ = np.hstack([dQ_m, dQ_xyz])
+
+    # Since the time elapsed is calculated from a difference of timestamps
+    # there is one less datapoint than needed. I remedy this by adding the
+    # identity quaternion as the first point
+    dQ_0 = np.array([1,0,0,0])
+    dQ = np.vstack([dQ_0, dQ])
+
+    return dQ
 
 
 def get_quaternion_list_from_array(array):
@@ -42,58 +88,6 @@ def normalize(*args):
 
 def multiply_cw(v, c):
     return LVector3(v[0]*c, v[1]*c, v[2]*c)
-
-
-def make_rectangle(x1, y1, z1, x2, y2, z2, name='rectangle'):
-    fmt = GeomVertexFormat.getV3n3cpt2()
-    vdata = GeomVertexData('rectangle', fmt, Geom.UHDynamic)
-
-    vertex = GeomVertexWriter(vdata, 'vertex')
-    normal = GeomVertexWriter(vdata, 'normal')
-    #texcoord = GeomVertexWriter(vdata, 'texcoord')
-
-    # make sure we draw the sqaure in the right plane
-    if x1 != x2:
-        vertex.addData3(x1, y1, z1)
-        vertex.addData3(x2, y1, z1)
-        vertex.addData3(x2, y2, z2)
-        vertex.addData3(x1, y2, z2)
-
-        # FIXME calculate the norm
-        normal.addData3(normalize(0,0,1))
-        normal.addData3(normalize(0,0,1))
-        normal.addData3(normalize(0,0,1))
-        normal.addData3(normalize(0,0,1))
-
-    else:
-        vertex.addData3(x1, y1, z1)
-        vertex.addData3(x2, y2, z1)
-        vertex.addData3(x2, y2, z2)
-        vertex.addData3(x1, y1, z2)
-
-        # FIXME calculate the norm
-        normal.addData3(normalize(0,0,1))
-        normal.addData3(normalize(0,0,1))
-        normal.addData3(normalize(0,0,1))
-        normal.addData3(normalize(0,0,1))
-
-    # FIXME calculate with a scale or something
-    #scale = 1
-    #texcoord.addData2f(0.0, scale)
-    #texcoord.addData2f(0.0, 0.0)
-    #texcoord.addData2f(scale, 0.0)
-    #texcoord.addData2f(scale, scale)
-
-    tris = GeomTriangles(Geom.UHDynamic)
-    tris.addVertices(0, 1, 3)
-    tris.addVertices(1, 2, 3)
-
-    rectangle = Geom(vdata)
-    rectangle.addPrimitive(tris)
-    rectangle_node = GeomNode(name)
-    rectangle_node.addGeom(rectangle)
-
-    return rectangle_node
 
 
 def alignTo(obj, other, selfPos, otherPos=None, gap=(0,0)):
