@@ -38,7 +38,7 @@ import numpy as np
 
 
 def get_rel_velocity(rvw, R):
-    _, v, w, _ = rvw
+    _, v, w = rvw
     return v + R * np.cross(np.array([0,0,1]), w)
 
 
@@ -356,12 +356,12 @@ def get_slide_time(rvw, R, u_s, g):
 
 
 def get_roll_time(rvw, u_r, g):
-    _, v, _, _ = rvw
+    _, v, _ = rvw
     return np.linalg.norm(v) / (u_r*g)
 
 
 def get_spin_time(rvw, R, u_sp, g):
-    _, _, w, _ = rvw
+    _, _, w = rvw
     return np.abs(w[2]) * 2/5*R/u_sp/g
 
 
@@ -435,12 +435,10 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
         np.array([rvw_B0[1,0]*t - 1/2*u_s*g*t**2 * u_0[0], -1/2*u_s*g*t**2 * u_0[1], 0]),
         rvw_B0[1] - u_s*g*t*u_0,
         rvw_B0[2] - 5/2/R*u_s*g*t * np.cross(u_0, np.array([0,0,1])),
-        rvw_B0[3] + rvw_B0[2]*t - 1/2 * 5/2/R*u_s*g*t**2 * np.cross(u_0, np.array([0,0,1])),
     ])
 
     # This transformation governs the z evolution of angular velocity
     rvw_B[2, 2] = rvw_B0[2, 2]
-    rvw_B[3, 2] = rvw_B0[3, 2]
     rvw_B = evolve_perpendicular_spin_state(rvw_B, R, u_sp, g, t)
 
     # Rotate to table reference
@@ -454,30 +452,28 @@ def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
     if t == 0:
         return rvw
 
-    r_0, v_0, w_0, e_0 = rvw
+    r_0, v_0, w_0 = rvw
 
     v_0_hat = utils.unit_vector(v_0)
 
     r = r_0 + v_0 * t - 1/2*u_r*g*t**2 * v_0_hat
     v = v_0 - u_r*g*t * v_0_hat
     w = utils.coordinate_rotation(v/R, np.pi/2)
-    e = e_0 + utils.coordinate_rotation((v_0*t - 1/2*u_r*g*t**2 * v_0_hat)/R, np.pi/2)
 
     # Independently evolve the z spin
     temp = evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)
 
     w[2] = temp[2, 2]
-    e[2] = temp[3, 2]
 
-    return np.array([r, v, w, e])
+    return np.array([r, v, w])
 
 
-def evolve_perpendicular_spin_component(wz, ez, R, u_sp, g, t):
+def evolve_perpendicular_spin_component(wz, R, u_sp, g, t):
     if t == 0:
-        return wz, ez
+        return wz
 
     if abs(wz) < pooltool.tol:
-        return wz, ez
+        return wz
 
     alpha = 5*u_sp*g/(2*R)
 
@@ -489,9 +485,7 @@ def evolve_perpendicular_spin_component(wz, ez, R, u_sp, g, t):
     sign = 1 if wz > 0 else -1
 
     wz_final = wz - sign*alpha*t
-    ez_final = ez + wz*t - sign*1/2*alpha*t**2
-
-    return wz_final, ez_final
+    return wz_final
 
 
 def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
@@ -499,7 +493,7 @@ def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
     # FIXME framework has changed, this may not be true
     rvw = rvw.copy()
 
-    rvw[2, 2], rvw[3, 2] = evolve_perpendicular_spin_component(rvw[2, 2], rvw[3, 2], R, u_sp, g, t)
+    rvw[2, 2] = evolve_perpendicular_spin_component(rvw[2, 2], R, u_sp, g, t)
     return rvw
 
 

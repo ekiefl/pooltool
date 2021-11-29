@@ -162,7 +162,6 @@ class BallRender(Render):
         sphere.setQuat(sphere.getQuat() * ball.getQuat())
 
         ball.setHpr(0, 0, 0)
-        self.rvw[3] = np.zeros(3)
 
 
     def render(self):
@@ -179,7 +178,7 @@ class BallHistory(object):
     def reset_history(self):
         n = 0
         self.vectorized = False
-        self.rvw = [np.nan * np.ones((4,3))] * n
+        self.rvw = [np.nan * np.ones((3,3))] * n
         self.s = [np.nan] * n
         self.t = [np.nan] * n
 
@@ -231,8 +230,7 @@ class Ball(Object, BallRender, Events):
         self.s = pooltool.stationary
         self.rvw = np.array([[np.nan, np.nan, np.nan],  # positions (r)
                              [0,      0,      0     ],  # velocities (v)
-                             [0,      0,      0     ],  # angular velocities (w)
-                             [0,      0,      0     ]]) # angular integrations (e)
+                             [0,      0,      0     ]]) # angular velocities (w)
         self.update_next_transition_event()
 
         self.history = BallHistory()
@@ -287,8 +285,7 @@ class Ball(Object, BallRender, Events):
             f' ├── state    : {self.s}',
             f' ├── position : {self.rvw[0]}',
             f' ├── velocity : {self.rvw[1]}',
-            f' ├── angular  : {self.rvw[2]}',
-            f' └── euler    : {self.rvw[3]}',
+            f' └── angular  : {self.rvw[2]}',
         ]
 
         return '\n'.join(lines) + '\n'

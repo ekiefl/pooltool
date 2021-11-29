@@ -126,7 +126,7 @@ class StickBallCollision(Collision):
         cue_stick, ball = self.agents
 
         v, w = physics.cue_strike(ball.m, cue_stick.M, ball.R, cue_stick.V0, cue_stick.phi, cue_stick.theta, cue_stick.a, cue_stick.b)
-        rvw = np.array([ball.rvw[0], v, w, ball.rvw[3]])
+        rvw = np.array([ball.rvw[0], v, w])
 
         s = (pooltool.rolling
              if abs(np.sum(physics.get_rel_velocity(rvw, ball.R))) <= pooltool.tol
@@ -151,7 +151,6 @@ class BallPocketCollision(Collision):
 
         # Ball is placed at the pocket center
         rvw = np.array([[pocket.a, pocket.b, -pocket.depth],
-                        [0,        0,         0           ],
                         [0,        0,         0           ],
                         [0,        0,         0           ]])
 
