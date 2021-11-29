@@ -13,7 +13,6 @@ setup(
     url = 'https://github.com/ekiefl/pooltool',
     install_requires = [
         'numpy',
-        'scipy',
         'pandas',
         'panda3d==1.10.10',
         'panda3d-gltf',

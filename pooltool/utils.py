@@ -8,7 +8,6 @@ import tracemalloc
 import importlib.util
 
 from panda3d.core import Filename
-from scipy.spatial.transform import Rotation
 
 
 def panda_path(path):
@@ -116,11 +115,6 @@ def human_readable_file_size(nbytes):
 def wiggle(x, val):
     """Vary a float or int x by +- val according to a uniform distribution"""
     return x + val*(2*np.random.rand() - 1)
-
-
-def normalize_rotation_vector(v):
-    """Reduce a rotation vector to it's minimum magnitude equivalent"""
-    return Rotation.from_rotvec(v).as_rotvec()
 
 
 def unit_vector(vector, ord=None, handle_zero=False):
