@@ -137,10 +137,6 @@ def as_quaternion(v):
     return quats
 
 
-def as_euler_angle(w):
-    return Rotation.from_rotvec(w).as_euler('ZXY', degrees=True)
-
-
 def unit_vector(vector):
     """Returns the unit vector of the vector."""
     return vector / np.linalg.norm(vector)
