@@ -1,7 +1,7 @@
 [graphics]
 room = 0
 floor = 0
-table = 1
+table = 0
 lights = 0
 shadows = 0
 shader = 1
