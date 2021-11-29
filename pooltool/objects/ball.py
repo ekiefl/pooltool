@@ -52,6 +52,8 @@ class BallRender(Render):
         self.nodes['ball'] = ball
         self.nodes['pos'] = position
         self.nodes['shadow'] = self.init_shadow()
+        if ani.settings['graphics']['angular_vectors']:
+            self.nodes['vector'] = self.init_angular_vector()
 
         self.randomize_orientation()
 
@@ -90,6 +92,41 @@ class BallRender(Render):
         return shadow_node
 
 
+    def init_angular_vector(self):
+        self.vector_drawer = LineSegs()
+        self.vector_drawer.setThickness(3)
+        node = self.nodes['pos'].attachNewNode(self.vector_drawer.create())
+
+        return node
+
+
+    def get_angular_vector(self, t, w):
+        if 'vector' in self.nodes:
+            self.remove_node('vector')
+
+        unit = utils.unit_vector(w, handle_zero=True)
+        norm = np.linalg.norm(w)
+
+        max_norm = 50
+        min_len = self.R
+        max_len = 6*self.R
+
+        factor = min(1, norm/max_norm)
+        arrow_len = factor*(max_len - min_len) + min_len
+
+        self.vector_drawer.reset()
+        self.vector_drawer.setColor(1, 1-factor, 1-factor)
+        self.vector_drawer.moveTo(0, 0, 0)
+        self.vector_drawer.drawTo(*(arrow_len*unit))
+        try:
+            # It is possible that this function is ran after scene is closed, in which case
+            # self.nodes['pos'] does not exist.
+            self.nodes['vector'] = self.nodes['pos'].attachNewNode(self.vector_drawer.create())
+            self.nodes['vector'].set_shader_auto(True)
+        except:
+            pass
+
+
     def get_scale_factor(self, node):
         """Find scale factor to match model size to ball's SI radius"""
         m, M = node.getTightBounds()
@@ -125,6 +162,8 @@ class BallRender(Render):
         ball_sequence = Sequence()
         rotation_sequence = Sequence()
         shadow_sequence = Sequence()
+        if ani.settings['graphics']['angular_vectors']:
+            angular_vector_sequence = Sequence()
 
         for i in range(len(playback_dts)):
             x, y, z = xyzs[i+1]
@@ -147,10 +186,19 @@ class BallRender(Render):
                 pos = (x, y, min(0, z-self.R)),
             ))
 
+            if ani.settings['graphics']['angular_vectors']:
+                angular_vector_sequence.append(LerpFunc(
+                    self.get_angular_vector,
+                    duration = playback_dts[i],
+                    extraArgs = [self.history.rvw[i, 2, :]]
+                ))
+
         self.playback_sequence = Parallel()
         self.playback_sequence.append(ball_sequence)
         self.playback_sequence.append(rotation_sequence)
         self.playback_sequence.append(shadow_sequence)
+        if ani.settings['graphics']['angular_vectors']:
+            self.playback_sequence.append(angular_vector_sequence)
 
 
     def randomize_orientation(self):

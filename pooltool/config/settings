@@ -7,6 +7,7 @@ shadows = 0
 shader = 1
 physical_based_rendering = 0
 debug = 0
+angular_vectors = 0
 fps = 60
 
 [gameplay]

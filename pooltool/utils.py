@@ -135,7 +135,9 @@ def unit_vector(vector, ord=None, handle_zero=False):
         return vector / norm
     else:
         norm = np.linalg.norm(vector, ord=ord)
-        return vector / (norm if not handle_zero else 1)
+        if norm == 0 and handle_zero:
+            norm = 1
+        return vector / norm
 
 
 def angle(v2, v1=(1,0)):
