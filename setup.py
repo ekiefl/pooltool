@@ -18,7 +18,6 @@ setup(
         'panda3d==1.10.10',
         'panda3d-gltf',
         'panda3d-simplepbr',
-        'pyquaternion',
     ],
     include_package_data = True,
     zip_safe = False,

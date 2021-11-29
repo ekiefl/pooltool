@@ -8,7 +8,6 @@ import tracemalloc
 import importlib.util
 
 from panda3d.core import Filename
-from pyquaternion import Quaternion
 from scipy.spatial.transform import Rotation
 
 
