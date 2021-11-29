@@ -124,15 +124,16 @@ def normalize_rotation_vector(v):
     return Rotation.from_rotvec(v).as_rotvec()
 
 
-def as_quaternion(w):
-    n = w.shape[0]
+def as_quaternion(v):
+    """Convert rotation vector to quaternion"""
+    n = v.shape[0]
     quats = np.zeros((n, 4))
     for i in range(n):
-        norm = np.linalg.norm(w[i,:])
+        norm = np.linalg.norm(v[i,:])
         if norm == 0:
             quats[i, :] = np.array([1,0,0,0])
             continue
-        quats[i, :] = Quaternion(axis=unit_vector(w[i,:]), angle=norm).normalised.elements
+        quats[i, :] = Quaternion(axis=unit_vector(v[i,:]), angle=norm).normalised.elements
     return quats
 
 
