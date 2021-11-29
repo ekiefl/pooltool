@@ -114,12 +114,12 @@ class BallRender(Render):
 
     def set_playback_sequence(self, playback_speed=1):
         """Creates the sequence motions of the ball for a given playback speed"""
-        # Get the trajectories
-        xyzs = autils.get_list_of_Vec3s_from_array(self.history.rvw[:, 0, :])
-        self.quats = autils.get_quaternion_list_from_array(utils.as_quaternion(self.history.rvw[:, 3, :]))
-
         dts = np.diff(self.history.t)
         playback_dts = dts/playback_speed
+
+        # Get the trajectories
+        xyzs = autils.get_list_of_Vec3s_from_array(self.history.rvw[:, 0, :])
+        self.quats = autils.as_quaternion(self.history.rvw[:, 2, :], self.history.t)
 
         # Init the sequences
         ball_sequence = Sequence()

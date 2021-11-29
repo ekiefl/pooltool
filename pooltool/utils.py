@@ -124,22 +124,25 @@ def normalize_rotation_vector(v):
     return Rotation.from_rotvec(v).as_rotvec()
 
 
-def as_quaternion(v):
-    """Convert rotation vector to quaternion"""
-    n = v.shape[0]
-    quats = np.zeros((n, 4))
-    for i in range(n):
-        norm = np.linalg.norm(v[i,:])
-        if norm == 0:
-            quats[i, :] = np.array([1,0,0,0])
-            continue
-        quats[i, :] = Quaternion(axis=unit_vector(v[i,:]), angle=norm).normalised.elements
-    return quats
+def unit_vector(vector, ord=None, handle_zero=False):
+    """Returns the unit vector of the vector.
 
-
-def unit_vector(vector):
-    """Returns the unit vector of the vector."""
-    return vector / np.linalg.norm(vector)
+    Parameters
+    ==========
+    ord: None
+        The type of normalization used. See
+        https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html
+    handle_zero: bool, False
+        If True and vector = <0,0,0>, <0,0,0> is returned.
+    """
+    if len(vector.shape) > 1:
+        norm = np.linalg.norm(vector, ord=ord, axis=1, keepdims=True)
+        if handle_zero:
+            norm[(norm == 0).all(axis=1), :] = 1
+        return vector / norm
+    else:
+        norm = np.linalg.norm(vector, ord=ord)
+        return vector / (norm if not handle_zero else 1)
 
 
 def angle(v2, v1=(1,0)):
