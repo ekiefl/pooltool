@@ -20,6 +20,7 @@ class ShotMode(Mode):
         action.fast_forward: False,
         action.cam_save: False,
         action.cam_load: False,
+        action.show_help: False,
         action.close_scene: False,
     }
 
@@ -68,6 +69,7 @@ class ShotMode(Mode):
         self.task_action('arrow_right-up', action.fast_forward, False)
         self.task_action('1', action.cam_save, True)
         self.task_action('2', action.cam_load, True)
+        self.task_action('h', action.show_help, True)
 
         self.add_task(self.shot_view_task, 'shot_view_task')
         self.add_task(self.shot_animation_task, 'shot_animation_task')

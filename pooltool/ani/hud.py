@@ -115,7 +115,7 @@ class HUDElement(ABC):
 
 class PlayerStats(HUDElement):
     def __init__(self):
-        self.top_spot = +0.93
+        self.top_spot = -0.28
         self.spacer = 0.05
         self.scale1 = 0.06
         self.scale2 = 0.04
@@ -138,10 +138,10 @@ class PlayerStats(HUDElement):
 
         return OnscreenText(
             text=msg,
-            pos=(-1.55, self.top_spot-self.spacer*i),
+            pos=(1.55, self.top_spot+self.spacer*i),
             scale=self.scale1 if i == 0 else self.scale2,
             fg=color,
-            align=TextNode.ALeft,
+            align=TextNode.ARight,
             mayChange=True
         )
 
@@ -174,7 +174,6 @@ class PlayerStats(HUDElement):
             msg = f"{player.name}: {player.points}"
             color = self.colors['active'] if i == 0 else self.colors['inactive']
             self.on_screen.append(self.init_text_object(i, msg, color=color))
-
 
 
 class Logo(HUDElement):
