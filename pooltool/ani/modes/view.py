@@ -19,6 +19,7 @@ class ViewMode(Mode):
         action.zoom: False,
         action.cam_save: False,
         action.cam_load: False,
+        action.show_help: False,
         action.pick_ball: False,
         action.ball_in_hand: False,
     }
@@ -44,6 +45,7 @@ class ViewMode(Mode):
         self.task_action('v-up', action.move, False)
         self.task_action('1', action.cam_save, True)
         self.task_action('2', action.cam_load, True)
+        self.task_action('h', action.show_help, True)
         self.task_action('q', action.pick_ball, True)
         self.task_action('g', action.ball_in_hand, True)
         self.task_action('c', action.call_shot, True)

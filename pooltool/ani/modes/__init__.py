@@ -23,6 +23,7 @@ class Mode(ABC):
         self.add_task(self.quit_task, 'quit_task')
         self.add_task(self.cam_save_watch, 'cam_save_watch')
         self.add_task(self.cam_load_watch, 'cam_load_watch')
+        self.add_task(self.help_watch, 'help_watch')
 
 
     def quit_task(self, task):
@@ -44,6 +45,17 @@ class Mode(ABC):
     def cam_load_watch(self, task):
         if self.keymap.get(action.cam_load) and self.mode != 'cam_load':
             self.change_mode('cam_load')
+
+        return task.cont
+
+
+    def help_watch(self, task):
+        if self.keymap.get(action.show_help):
+            self.keymap[action.show_help] = False
+            if self.help_node.is_hidden():
+                self.help_node.show()
+            else:
+                self.help_node.hide()
 
         return task.cont
 
