@@ -94,6 +94,7 @@ class Interface(ShowBase, ModeManager):
             raise Exception(f"'{self.__class__.__name__}' must set 'is_game' attribute")
 
         super().__init__(self)
+        base.setBackgroundColor(0.04, 0.04, 0.04)
         simplepbr.init(enable_shadows=ani.settings['graphics']['shadows'], max_lights=13)
 
         if not ani.settings['graphics']['shader']:
@@ -140,7 +141,7 @@ class Interface(ShowBase, ModeManager):
             text = OnscreenText(
                 text = msg,
                 style = 1,
-                fg = (0, 0, 0, 1),
+                fg = (1, 1, 1, 1),
                 parent = base.a2dTopLeft,
                 align = TextNode.ALeft,
                 pos = (-1.45 if not title else -1.55, 0.85-pos),
