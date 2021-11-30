@@ -90,7 +90,6 @@ class ShotMode(Mode):
 
         if key != 'soft':
             self.shot.finish_animation()
-            self.shot.ball_animations.finish()
 
         if key == 'end':
             self.shot.cue.reset_state()
