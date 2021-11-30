@@ -167,6 +167,7 @@ class BallRender(Render):
 
         for i in range(len(playback_dts)):
             x, y, z = xyzs[i+1]
+            Qm, Qx, Qy, Qz = self.quats[i+1]
 
             ball_sequence.append(LerpPosInterval(
                 nodePath = self.nodes['pos'],
@@ -177,7 +178,7 @@ class BallRender(Render):
             rotation_sequence.append(LerpQuatInterval(
                 nodePath = self.nodes['ball'],
                 duration = playback_dts[i],
-                quat = self.quats[i+1]
+                quat = (Qm, Qx, Qy, Qz),
             ))
 
             shadow_sequence.append(LerpPosInterval(
