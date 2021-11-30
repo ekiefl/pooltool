@@ -262,6 +262,10 @@ class SystemRender(object):
         self.ball_animations.set_t(0)
 
 
+    def clear_animation(self):
+        self.shot_animation.clearToInitial()
+
+
     def toggle_pause(self):
         if self.shot_animation.isPlaying():
             self.pause_animation()

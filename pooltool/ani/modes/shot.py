@@ -88,10 +88,8 @@ class ShotMode(Mode):
         """
         assert key in {'end', 'reset', 'soft'}
 
-        if key != 'soft':
-            self.shot.finish_animation()
-
         if key == 'end':
+            self.shot.finish_animation()
             self.shot.cue.reset_state()
             self.shot.cue.set_render_state_as_object_state()
 
@@ -107,6 +105,7 @@ class ShotMode(Mode):
             self.shot.cue.update_focus()
 
         elif key == 'reset':
+            self.shot.clear_animation()
             self.player_cam.load_state('stroke')
             for ball in self.shot.balls.values():
                 if ball.history.is_populated():
