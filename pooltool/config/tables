@@ -25,3 +25,9 @@ corner_pocket_angle = 3
 side_pocket_width = 0.08
 side_pocket_angle = 5
 
+[big]
+type = pocket
+has_model = 0
+table_length = 4
+table_width = 2
+
