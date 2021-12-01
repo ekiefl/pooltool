@@ -14,7 +14,7 @@ from pooltool.games.nine_ball import NineBall
 from pooltool.games.eight_ball import EightBall
 
 from pooltool.ani.hud import HUD
-from pooltool.ani.menu import Menus
+from pooltool.ani.menu import Menus, GenericMenu
 from pooltool.ani.modes import *
 from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import PlayerCam
@@ -121,66 +121,6 @@ class Interface(ShowBase, ModeManager):
         self.add_task(self.monitor, 'monitor')
         self.frame = 0
 
-        self.init_help_page()
-
-
-    def init_help_page(self):
-        text = OnscreenText(
-            text = "Press 'h' to toggle help",
-            pos = (-1.55, 0.93),
-            scale = ani.menu_text_scale*0.9,
-            fg = (1,1,1,1),
-            align = TextNode.ALeft,
-            parent = aspect2d,
-        )
-        text.show()
-
-        self.help_node = aspect2d.attachNewNode('help')
-
-        def add_instruction(pos, msg, title=False):
-            text = OnscreenText(
-                text = msg,
-                style = 1,
-                fg = (1, 1, 1, 1),
-                parent = base.a2dTopLeft,
-                align = TextNode.ALeft,
-                pos = (-1.45 if not title else -1.55, 0.85-pos),
-                scale = ani.menu_text_scale if title else 0.7*ani.menu_text_scale,
-            )
-            text.reparentTo(self.help_node)
-
-        h = lambda x: 0.06*x
-        add_instruction(h(1), "Camera controls", True)
-        add_instruction(h(2), "Rotate - [mouse]")
-        add_instruction(h(3), "Pan - [hold v]")
-        add_instruction(h(4), "Zoom - [hold left-click]")
-
-        add_instruction(h(6), "Aim controls", True)
-        add_instruction(h(7), "Enter aim mode - [a]")
-        add_instruction(h(8), "Apply english - [hold e]")
-        add_instruction(h(9), "Elevate cue - [hold b]")
-        add_instruction(h(10), "Precise aiming - [hold f]")
-        add_instruction(h(11), "Raise head - [hold t]")
-
-        add_instruction(h(13), "Shoot controls", True)
-        add_instruction(h(14), "Stroke - [hold s] (move mouse down then up)")
-        add_instruction(h(15), "Take next shot - [a]")
-        add_instruction(h(16), "Undo shot - [z]")
-        add_instruction(h(17), "Replay shot - [r]")
-        add_instruction(h(18), "Pause shot - [space]")
-        add_instruction(h(19), "Rewind - [hold left-arrow]")
-        add_instruction(h(20), "Fast forward - [hold right-arrow]")
-        add_instruction(h(21), "Slow down - [down-arrow]")
-        add_instruction(h(22), "Speed up - [up-arrow]")
-
-        add_instruction(h(24), "Other controls", True)
-        add_instruction(h(25), "Cue different ball - [hold q]\n    (select with mouse, click to confirm)")
-        add_instruction(h(27), "Move ball - [hold g]\n    (click once to select ball, move with mouse, then click to confirm move")
-
-
-
-        self.help_node.hide()
-
 
     def set_shot(self, shot):
         self.shot = shot
@@ -252,13 +192,13 @@ class Interface(ShowBase, ModeManager):
 
 
     def monitor(self, task):
-        #print(f"Mode: {self.mode}")
-        #print(f"Tasks: {list(self.tasks.keys())}")
-        #print(f"Memory: {utils.get_total_memory_usage()}")
-        #print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
-        #print(f"Keymap: {self.keymap}")
-        #print(f"Frame: {self.frame}")
-        #print()
+        print(f"Mode: {self.mode}")
+        print(f"Tasks: {list(self.tasks.keys())}")
+        print(f"Memory: {utils.get_total_memory_usage()}")
+        print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
+        print(f"Keymap: {self.keymap}")
+        print(f"Frame: {self.frame}")
+        print()
         self.frame += 1
 
         return task.cont
@@ -269,14 +209,43 @@ class ShotViewer(Interface):
 
     def __init__(self, shot=None):
         Interface.__init__(self, shot=shot)
-        self.stop()
         self.is_game = False
+        self.create_standby_screen()
+        self.create_instructions()
+
+        self.stop()
+
+
+    def create_instructions(self):
+        self.instructions = OnscreenText(
+            text = "<escape> to exit",
+            pos = (-1.55, 0.93),
+            scale = ani.menu_text_scale*0.7,
+            fg = (1,1,1,1),
+            align = TextNode.ALeft,
+            parent = aspect2d,
+        )
+        self.instructions.hide()
+
+
+    def create_standby_screen(self):
+        self.standby_screen = GenericMenu(frame_color=(0.3,0.3,0.3,1))
+        self.standby_screen.add_image(ani.logo_paths['default'], pos=(0,0,0), scale=(0.5, 1, 0.44))
+
+        text = OnscreenText(
+            text = 'Standing by...',
+            style = 1,
+            fg = (1, 1, 1, 1),
+            parent = self.standby_screen.titleMenu,
+            align = TextNode.ALeft,
+            pos = (-1.55,0.93),
+            scale = 0.8*ani.menu_text_scale,
+        )
 
 
     def start(self):
-        if not self.win:
-            self.openMainWindow()
-
+        self.standby_screen.hide()
+        self.instructions.show()
         self.mouse = Mouse()
         self.init_system_nodes()
         params = dict(
@@ -289,8 +258,11 @@ class ShotViewer(Interface):
 
 
     def stop(self):
-        if self.win:
-            self.closeWindow(self.win)
+        self.standby_screen.show()
+        self.instructions.hide()
+        base.graphicsEngine.renderFrame()
+        base.graphicsEngine.renderFrame()
+
         self.taskMgr.stop()
 
 
@@ -320,7 +292,64 @@ class Play(Interface, Menus, HUD):
         )
 
 
+    def init_help_page(self):
+        text = OnscreenText(
+            text = "Press 'h' to toggle help",
+            pos = (-1.55, 0.93),
+            scale = ani.menu_text_scale*0.9,
+            fg = (1,1,1,1),
+            align = TextNode.ALeft,
+            parent = aspect2d,
+        )
+        text.show()
+
+        self.help_node = aspect2d.attachNewNode('help')
+
+        def add_instruction(pos, msg, title=False):
+            text = OnscreenText(
+                text = msg,
+                style = 1,
+                fg = (1, 1, 1, 1),
+                parent = base.a2dTopLeft,
+                align = TextNode.ALeft,
+                pos = (-1.45 if not title else -1.55, 0.85-pos),
+                scale = ani.menu_text_scale if title else 0.7*ani.menu_text_scale,
+            )
+            text.reparentTo(self.help_node)
+
+        h = lambda x: 0.06*x
+        add_instruction(h(1), "Camera controls", True)
+        add_instruction(h(2), "Rotate - [mouse]")
+        add_instruction(h(3), "Pan - [hold v]")
+        add_instruction(h(4), "Zoom - [hold left-click]")
+
+        add_instruction(h(6), "Aim controls", True)
+        add_instruction(h(7), "Enter aim mode - [a]")
+        add_instruction(h(8), "Apply english - [hold e]")
+        add_instruction(h(9), "Elevate cue - [hold b]")
+        add_instruction(h(10), "Precise aiming - [hold f]")
+        add_instruction(h(11), "Raise head - [hold t]")
+
+        add_instruction(h(13), "Shoot controls", True)
+        add_instruction(h(14), "Stroke - [hold s] (move mouse down then up)")
+        add_instruction(h(15), "Take next shot - [a]")
+        add_instruction(h(16), "Undo shot - [z]")
+        add_instruction(h(17), "Replay shot - [r]")
+        add_instruction(h(18), "Pause shot - [space]")
+        add_instruction(h(19), "Rewind - [hold left-arrow]")
+        add_instruction(h(20), "Fast forward - [hold right-arrow]")
+        add_instruction(h(21), "Slow down - [down-arrow]")
+        add_instruction(h(22), "Speed up - [up-arrow]")
+
+        add_instruction(h(24), "Other controls", True)
+        add_instruction(h(25), "Cue different ball - [hold q]\n    (select with mouse, click to confirm)")
+        add_instruction(h(27), "Move ball - [hold g]\n    (click once to select ball, move with mouse, then click to confirm move")
+
+        self.help_node.hide()
+
+
     def go(self):
+        self.init_help_page()
         self.setup()
         self.init_system_nodes()
         self.init_collisions()

@@ -43,6 +43,9 @@ for n in range(N):
     shot = evolver(cue=cue, table=table, balls=balls)
     try:
         shot.simulate(name=f"factor: {spacing_factor}; n: {n}", continuize=False)
+    except KeyboardInterrupt:
+        shot.progress.end()
+        break
     except:
         shot.progress.end()
         continue

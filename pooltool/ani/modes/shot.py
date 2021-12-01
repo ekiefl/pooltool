@@ -51,6 +51,7 @@ class ShotMode(Mode):
 
         if single_instance:
             self.task_action('escape', action.close_scene, True)
+            self.task_action('escape-up', action.close_scene, False)
         else:
             self.task_action('escape', action.quit, True)
             self.task_action('a', action.aim, True)
