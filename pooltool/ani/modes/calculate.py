@@ -14,6 +14,7 @@ class CalculateMode(Mode):
         action.move: False,
         action.quit: False,
         action.zoom: False,
+        action.show_help: False,
     }
 
     def enter(self):
@@ -38,6 +39,7 @@ class CalculateMode(Mode):
         self.task_action('a', action.aim, True)
         self.task_action('v', action.move, True)
         self.task_action('v-up', action.move, False)
+        self.task_action('h', action.show_help, True)
 
         self.add_task(self.calculate_view_task, 'calculate_view_task')
 
