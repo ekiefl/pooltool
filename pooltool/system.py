@@ -287,10 +287,6 @@ class SystemRender(object):
         self.shot_animation.resume()
 
 
-    def finish_animation(self):
-        self.shot_animation.finish()
-
-
     def slow_down(self):
         self.playback_speed *= 0.5
         self.shot_animation.setPlayRate(0.5*self.shot_animation.getPlayRate())

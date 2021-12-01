@@ -89,7 +89,7 @@ class ShotMode(Mode):
         assert key in {'end', 'reset', 'soft'}
 
         if key == 'end':
-            self.shot.finish_animation()
+            self.shot.clear_animation()
             self.shot.cue.reset_state()
             self.shot.cue.set_render_state_as_object_state()
 
