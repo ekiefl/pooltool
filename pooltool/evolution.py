@@ -58,8 +58,7 @@ class EvolveShot(ABC, System, SystemHistory, SystemRender):
         def progress_update():
             """Convenience function for updating progress"""
             energy = self.get_system_energy()
-            num_stationary = len([_ for _ in self.balls.values() if _.s == 0])
-            msg = f"ENERGY {np.round(energy, 2)}J | STATIONARY {num_stationary} | EVENTS {self.num_events}"
+            msg = f"ENERGY {np.round(energy, 2)}J | SIM TIME {self.t:.6f} | EVENTS {self.num_events}"
             self.progress.update(msg)
             self.progress.increment(increment_to=int(energy_start - energy))
 
