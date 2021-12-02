@@ -103,7 +103,3 @@ class Render(ABC):
         self.rendered = True
 
 
-from .ball import *
-from .cue import *
-from .table import *
-
