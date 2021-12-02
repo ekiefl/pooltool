@@ -437,7 +437,7 @@ class Play(Interface, Menus, HUD):
 
 
     def setup_balls(self):
-        self.balls = self.game.layout.get_balls_dict()
+        self.balls = self.game.balls
         self.cueing_ball = self.game.set_initial_cueing_ball(self.balls)
 
 

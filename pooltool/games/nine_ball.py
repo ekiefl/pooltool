@@ -22,11 +22,7 @@ class NineBall(Game):
 
 
     def setup_initial_layout(self, table, ball_kwargs={}):
-        self.layout = NineBallRack(ordered=True, **ball_kwargs)
-        self.layout.center_by_table(table)
-
-        # get the cueing ball
-        self.layout.get_balls_dict()
+        self.balls = NineBallRack(table=table, ordered=True, **ball_kwargs).balls
 
 
     def set_initial_cueing_ball(self, balls):
