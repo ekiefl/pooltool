@@ -1,46 +1,32 @@
 #! /usr/bin/env python
+"""This illustrates how shots can be visualized multiple times in a single script"""
 
-import pooltool.utils as utils
+import pooltool as pt
 import pooltool.events as e
-
-from pooltool.layouts import NineBallRack
-from pooltool.evolution import get_shot_evolver
-from pooltool.objects.cue import Cue
-from pooltool.ani.animate import ShotViewer
-from pooltool.objects.ball import Ball
-from pooltool.objects.table import PocketTable
 
 import numpy as np
 
 N = 300
 spacing_factor = 0.01
 
-interface = ShotViewer()
+interface = pt.ShotViewer()
 best_break = 0
 
 get_cue_pos = lambda cue, table: [cue.R + np.random.rand()*(table.w - 2*cue.R), table.l/4, cue.R]
 
 for n in range(N):
     # setup table, cue, and cue ball
-    cue = Cue()
-    table = PocketTable()
-    cue_ball = Ball('cue')
-    cue_ball.rvw[0] = get_cue_pos(cue_ball, table)
-
-    # Create a rack with specified spacing factor
-    diamond = NineBallRack(spacing_factor=spacing_factor, ordered=True)
-    diamond.center_by_table(table)
-    balls = diamond.get_balls_dict()
-    balls['cue'] = cue_ball
+    table = pt.PocketTable()
+    balls = pt.get_nine_ball_rack(table, spacing_factor=spacing_factor, ordered=True)
+    balls['cue'].rvw[0] = get_cue_pos(balls['cue'], table)
+    cue = pt.Cue(cueing_ball=balls['cue'])
 
     # Aim at the head ball then strike the cue ball
-    cue.set_state(V0=8, theta=0, a=0, b=0, cueing_ball=balls['cue'])
-    cue.aim_at(balls['1'].rvw[0])
-    cue.strike()
+    cue.aim_at_ball(balls['1'])
+    cue.strike(V0=8)
 
     # Evolve the shot
-    evolver = get_shot_evolver('event')
-    shot = evolver(cue=cue, table=table, balls=balls)
+    shot = pt.EvolveShotEventBased(cue=cue, table=table, balls=balls)
     try:
         shot.simulate(name=f"factor: {spacing_factor}; n: {n}", continuize=False)
     except KeyboardInterrupt:
@@ -48,6 +34,7 @@ for n in range(N):
         break
     except:
         shot.progress.end()
+        shot.run.info("Shot calculation failed", ":(")
         continue
 
     # Count how many balls were potted, ignoring cue ball
@@ -60,9 +47,8 @@ for n in range(N):
     shot.run.info("Balls potted", balls_potted)
 
     if balls_potted > best_break:
-        shot.continuize(dt=0.001)
-        interface.set_shot(shot)
-        interface.start()
+        shot.continuize(dt=0.01)
+        interface.show(shot)
         best_break = balls_potted
 
 
