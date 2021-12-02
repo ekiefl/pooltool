@@ -6,7 +6,11 @@ from pooltool.objects.ball import Ball
 
 import numpy as np
 
-class NineBallRack(object):
+
+class Rack(object):
+    pass
+
+class NineBallRack(Rack):
     """Arrange a list of balls into 9-ball break configuration"""
     def __init__(self, spacing_factor=1e-3, ordered=False, **ball_kwargs):
         self.balls = [Ball(str(i), **ball_kwargs) for i in range(1,10)]
@@ -65,7 +69,7 @@ class NineBallRack(object):
         return {str(ball.id): ball for ball in self.balls}
 
 
-class EightBallRack(object):
+class EightBallRack(Rack):
     """Arrange a list of balls into 8-ball break configuration"""
     def __init__(self, spacing_factor=1e-3, ordered=False, **ball_kwargs):
         self.balls = [Ball(str(i), **ball_kwargs) for i in range(1,16)]

@@ -26,6 +26,12 @@ import simplepbr
 from panda3d.core import *
 from direct.showbase.ShowBase import ShowBase
 
+__all__ = [
+    'Interface',
+    'ShotViewer',
+    'Play',
+]
+
 
 class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode, CamSaveMode,
                   CalculateMode, PickBallMode, GameOverMode, CallShotMode, BallInHandMode):

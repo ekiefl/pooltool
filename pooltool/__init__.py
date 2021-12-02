@@ -11,5 +11,10 @@ import pooltool.ani.utils as autils
 from .objects.ball import *
 from .objects.cue import *
 from .objects.table import *
+
+from .ani.animate import *
+
 from .constants import *
+from .layouts import *
+from .evolution import *
 
