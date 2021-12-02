@@ -92,13 +92,14 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
             self.keymap[key] = self.action_state_defaults[self.mode][key]
 
 
-class Interface(ShowBase, ModeManager):
+class Interface(ShowBase, ModeManager, HUD):
     is_game = None
     def __init__(self, shot=None):
         if self.is_game is None:
             raise Exception(f"'{self.__class__.__name__}' must set 'is_game' attribute")
 
         super().__init__(self)
+        HUD.__init__(self)
         base.setBackgroundColor(0.04, 0.04, 0.04)
         simplepbr.init(enable_shadows=ani.settings['graphics']['shadows'], max_lights=13)
 
@@ -156,6 +157,7 @@ class Interface(ShowBase, ModeManager):
         self.environment.unload_room()
         self.environment.unload_lights()
         gc.collect()
+        self.destroy_hud()
 
 
     def init_system_nodes(self):
@@ -317,6 +319,7 @@ class ShotViewer(Interface):
         self.help_hint.hide()
         self.mouse = Mouse()
         self.init_system_nodes()
+        self.init_hud()
         params = dict(
             init_animations = True,
             single_instance = True,
@@ -344,13 +347,12 @@ class ShotViewer(Interface):
         self.stop()
 
 
-class Play(Interface, Menus, HUD):
+class Play(Interface, Menus):
     is_game = True
 
     def __init__(self, *args, **kwargs):
         Interface.__init__(self, shot=None)
         Menus.__init__(self)
-        HUD.__init__(self)
 
         self.change_mode('menu')
 
@@ -376,7 +378,6 @@ class Play(Interface, Menus, HUD):
 
     def close_scene(self):
         Interface.close_scene(self)
-        self.destroy_hud()
 
 
     def setup(self):
