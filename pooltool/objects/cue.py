@@ -263,7 +263,7 @@ class Cue(Object, CueRender):
     object_type = 'cue_stick'
 
     def __init__(self, M=c.M, length=c.cue_length, tip_radius=c.cue_tip_radius,
-                 butt_radius=c.cue_butt_radius, cue_id='cue_stick', brand=None):
+                 butt_radius=c.cue_butt_radius, cueing_ball=None, cue_id='cue_stick', brand=None):
 
         self.id = cue_id
         self.M = M
@@ -272,13 +272,13 @@ class Cue(Object, CueRender):
         self.butt_radius = butt_radius
         self.brand = brand
 
-        self.V0 = None
-        self.phi = None
-        self.theta = None
-        self.a = None
-        self.b = None
+        self.V0 = 0
+        self.phi = 0
+        self.theta = 0
+        self.a = 0
+        self.b = 0
 
-        self.cueing_ball = None
+        self.cueing_ball = cueing_ball
 
         CueRender.__init__(self)
 
@@ -303,7 +303,21 @@ class Cue(Object, CueRender):
         if cueing_ball is not None: self.cueing_ball = cueing_ball
 
 
-    def strike(self, t=None):
+    def strike(self, t=None, **state_kwargs):
+        """Strike the cue ball
+
+        Parameters
+        ==========
+        t : float, None
+            The time that the collision occurs at
+
+        state_kwargs: **kwargs
+            Pass state parameters to be updated before the cue strike. Any parameters accepted by Cue.set_state
+            are permissible.
+        """
+
+        self.set_state(**state_kwargs)
+
         if (self.V0 is None or self.phi is None or self.theta is None or self.a is None or self.b is None):
             raise ValueError("Cue.strike :: Must set V0, phi, theta, a, and b")
 
@@ -313,7 +327,7 @@ class Cue(Object, CueRender):
         return event
 
 
-    def aim_at(self, pos):
+    def aim_at_pos(self, pos):
         """Set phi to aim at a 3D position
 
         Parameters
@@ -324,6 +338,18 @@ class Cue(Object, CueRender):
 
         direction = utils.angle(utils.unit_vector(np.array(pos) - self.cueing_ball.rvw[0]))
         self.set_state(phi = direction * 180/np.pi)
+
+
+    def aim_at_ball(self, ball):
+        """Set phi to aim directly at a ball
+
+        Parameters
+        ==========
+        ball : pooltool.objects.ball.Ball
+            A ball
+        """
+
+        self.aim_at_pos(ball.rvw[0])
 
 
 class CueAvoid(object):
