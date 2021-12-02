@@ -281,7 +281,7 @@ class ShotViewer(Interface):
 
     def create_instructions(self):
         self.instructions = OnscreenText(
-            text = "<escape> to exit",
+            text = "Press <escape> to exit",
             pos = (-1.55, 0.93),
             scale = ani.menu_text_scale*0.7,
             fg = (1,1,1,1),
