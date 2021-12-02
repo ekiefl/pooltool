@@ -66,39 +66,27 @@ You can also use the API. Here is a small python script that runs a shot simulat
 
 ```python
 #! /usr/bin/env python
-from pooltool.layouts import NineBallRack
-from pooltool.evolution import get_shot_evolver
-from pooltool.ani.animate import ShotViewer
-from pooltool.objects.cue import Cue
-from pooltool.objects.ball import Ball
-from pooltool.objects.table import PocketTable
 
-# This object will launch the GUI
-interface = ShotViewer()
+import pooltool as pt
 
-cue = Cue()
-table = PocketTable()
+interface = pt.ShotViewer()
 
-diamond = NineBallRack(ordered=True)
-diamond.center_by_table(table)
-balls = diamond.get_balls_dict()
-balls['cue'].rvw[0] = [table.w/2, table.l/4, balls['cue'].R]
+table = pt.PocketTable()
+balls = pt.get_nine_ball_rack(table, ordered=True)
+cue = pt.Cue(cueing_ball=balls['cue'])
 
 # Aim at the head ball then strike the cue ball
-cue.set_state(V0=8, theta=0, a=0, b=0, cueing_ball=balls['cue'])
-cue.aim_at(balls['1'].rvw[0])
-cue.strike()
+cue.aim_at_ball(balls['1'])
+cue.strike(V0=8)
 
 # Evolve the shot
-evolver = get_shot_evolver('event')
-shot = evolver(cue=cue, table=table, balls=balls)
+shot = pt.EvolveShotEventBased(cue=cue, table=table, balls=balls)
 shot.simulate(continuize=True)
 
-interface.set_shot(shot)
-interface.start()
+interface.show(shot)
 ```
 
-The API clearly needs some work. But hopefully you get the idea.
+I haven't spent much time on the API yet but hopefully you get the idea.
 
 ### Install option #3: Developer
 
