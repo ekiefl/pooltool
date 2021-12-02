@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 
-import pooltool as pt
 import pooltool.ani as ani
 import pooltool.events as e
+import pooltool.constants as c
 
 from pooltool.games import Player, Game
 from pooltool.objects import DummyBall
@@ -52,7 +52,7 @@ class Sandbox(Game):
 
 
     def respot_balls(self, shot):
-        if shot.balls['cue'].s == pt.pocketed:
+        if shot.balls['cue'].s == c.pocketed:
             self.respot(shot, 'cue', shot.table.w/2, shot.table.l*1/4, shot.balls['cue'].R)
 
 

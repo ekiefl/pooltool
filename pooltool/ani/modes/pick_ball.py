@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 """A mode to for picking which ball to cue"""
 
-import pooltool as pt
 import pooltool.ani as ani
+import pooltool.constants as c
 
 from pooltool.ani.modes import Mode, action
 
@@ -104,7 +104,7 @@ class PickBallMode(Mode):
         for ball in self.balls.values():
             if ball.id not in self.game.active_player.can_cue:
                 continue
-            if ball.s == pt.pocketed:
+            if ball.s == c.pocketed:
                 continue
             d = np.linalg.norm(ball.rvw[0] - cam_pos)
             if d < d_min:

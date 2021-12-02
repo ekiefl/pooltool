@@ -2,15 +2,18 @@
 
 import pooltool.ani as ani
 import pooltool.utils as utils
+import pooltool.constants as c
 
 from pooltool.events import StickBallCollision
-from pooltool.objects import *
+from pooltool.objects import Object, Render
 
 import numpy as np
 
 from pathlib import Path
 from panda3d.core import *
 from direct.interval.IntervalGlobal import *
+
+__all__ = ['Cue']
 
 class CueRender(Render):
     def __init__(self):
@@ -25,7 +28,7 @@ class CueRender(Render):
         self.stroke_time = []
 
 
-    def init_model(self, R=pt.R):
+    def init_model(self, R=c.R):
         path = utils.panda_path(ani.model_dir / 'cue' / 'cue.glb')
         cue_stick_model = loader.loadModel(path)
         cue_stick_model.setName('cue_stick_model')
@@ -259,8 +262,8 @@ class CueRender(Render):
 class Cue(Object, CueRender):
     object_type = 'cue_stick'
 
-    def __init__(self, M=pt.M, length=pt.cue_length, tip_radius=pt.cue_tip_radius,
-                 butt_radius=pt.cue_butt_radius, cue_id='cue_stick', brand=None):
+    def __init__(self, M=c.M, length=c.cue_length, tip_radius=c.cue_tip_radius,
+                 butt_radius=c.cue_butt_radius, cue_id='cue_stick', brand=None):
 
         self.id = cue_id
         self.M = M

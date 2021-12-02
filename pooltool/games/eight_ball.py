@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 
-import pooltool as pt
 import pooltool.ani as ani
 import pooltool.events as e
+import pooltool.constants as c
 
 from pooltool.games import Player, Game
 from pooltool.objects import DummyBall
@@ -138,7 +138,7 @@ class EightBall(Game):
 
 
     def is_cue_pocketed(self, shot):
-        return True if shot.balls['cue'].s == pt.pocketed else False
+        return True if shot.balls['cue'].s == c.pocketed else False
 
 
     def is_cushion_after_first_contact(self, shot):
@@ -223,7 +223,7 @@ class EightBall(Game):
                 player.target_balls = self.solids + self.stripes
 
             states = [ball.s for ball in shot.balls.values() if ball.id in player.target_balls]
-            if all([state == pt.pocketed for state in states]):
+            if all([state == c.pocketed for state in states]):
                 player.target_balls.append('8')
 
 

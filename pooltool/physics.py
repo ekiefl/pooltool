@@ -31,8 +31,8 @@ All units are SI (https://en.wikipedia.org/wiki/International_System_of_Units)
     The acceleration due to gravity felt by a ball.
 """
 
-import pooltool as pt
 import pooltool.utils as utils
+import pooltool.constants as const
 
 import numpy as np
 
@@ -169,14 +169,14 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
     c1x, c1y = rvw1[0, 0], rvw1[0, 1]
     c2x, c2y = rvw2[0, 0], rvw2[0, 1]
 
-    if s1 in pt.nontranslating:
+    if s1 in const.nontranslating:
         a1x, a1y, b1x, b1y = 0, 0, 0, 0
     else:
         phi1 = utils.angle(rvw1[1])
         v1 = np.linalg.norm(rvw1[1])
 
         u1 = (np.array([1,0,0])
-              if s1 == pt.rolling
+              if s1 == const.rolling
               else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw1, R)), -phi1))
 
         a1x = -1/2*mu1*g1*(u1[0]*np.cos(phi1) - u1[1]*np.sin(phi1))
@@ -184,14 +184,14 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
         b1x = v1*np.cos(phi1)
         b1y = v1*np.sin(phi1)
 
-    if s2 in pt.nontranslating:
+    if s2 in const.nontranslating:
         a2x, a2y, b2x, b2y = 0, 0, 0, 0
     else:
         phi2 = utils.angle(rvw2[1])
         v2 = np.linalg.norm(rvw2[1])
 
         u2 = (np.array([1,0,0])
-              if s2 == pt.rolling
+              if s2 == const.rolling
               else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw2, R)), -phi2))
 
         a2x = -1/2*mu2*g2*(u2[0]*np.cos(phi2) - u2[1]*np.sin(phi2))
@@ -212,8 +212,8 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
     roots = np.roots([a,b,c,d,e])
 
     roots = roots[
-        (abs(roots.imag) <= pt.tol) & \
-        (roots.real > pt.tol)
+        (abs(roots.imag) <= const.tol) & \
+        (roots.real > const.tol)
     ].real
 
     return roots.min() if len(roots) else np.inf
@@ -221,14 +221,14 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
 
 def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g, R):
     """Get the time until collision between ball and linear cushion segment"""
-    if s in pt.nontranslating:
+    if s in const.nontranslating:
         return np.inf
 
     phi = utils.angle(rvw[1])
     v = np.linalg.norm(rvw[1])
 
     u = (np.array([1,0,0]
-         if s == pt.rolling
+         if s == const.rolling
          else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw, R)), -phi)))
 
     ax = -1/2*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
@@ -244,8 +244,8 @@ def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g,
     roots = np.append(np.roots([A,B,C1]), np.roots([A,B,C2]))
 
     roots = roots[
-        (abs(roots.imag) <= pt.tol) & \
-        (roots.real > pt.tol)
+        (abs(roots.imag) <= const.tol) & \
+        (roots.real > const.tol)
     ].real
 
     # All roots beyond this point are real and positive
@@ -274,14 +274,14 @@ def get_ball_circular_cushion_collision_time(rvw, s, a, b, r, mu, m, g, R):
         The rolling or sliding coefficient of friction. Should match the value of s
     """
 
-    if s in pt.nontranslating:
+    if s in const.nontranslating:
         return np.inf
 
     phi = utils.angle(rvw[1])
     v = np.linalg.norm(rvw[1])
 
     u = (np.array([1,0,0]
-         if s == pt.rolling
+         if s == const.rolling
          else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw, R)), -phi)))
 
     ax = -1/2*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
@@ -298,8 +298,8 @@ def get_ball_circular_cushion_collision_time(rvw, s, a, b, r, mu, m, g, R):
     roots = np.roots([A,B,C,D,E])
 
     roots = roots[
-        (abs(roots.imag) <= pt.tol) & \
-        (roots.real > pt.tol)
+        (abs(roots.imag) <= const.tol) & \
+        (roots.real > const.tol)
     ].real
 
     return roots.min() if len(roots) else np.inf
@@ -320,14 +320,14 @@ def get_ball_pocket_collision_time(rvw, s, a, b, r, mu, m, g, R):
         The rolling or sliding coefficient of friction. Should match the value of s
     """
 
-    if s in pt.nontranslating:
+    if s in const.nontranslating:
         return np.inf
 
     phi = utils.angle(rvw[1])
     v = np.linalg.norm(rvw[1])
 
     u = (np.array([1,0,0]
-         if s == pt.rolling
+         if s == const.rolling
          else utils.coordinate_rotation(utils.unit_vector(get_rel_velocity(rvw, R)), -phi)))
 
     ax = -1/2*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
@@ -344,8 +344,8 @@ def get_ball_pocket_collision_time(rvw, s, a, b, r, mu, m, g, R):
     roots = np.roots([A,B,C,D,E])
 
     roots = roots[
-        (abs(roots.imag) <= pt.tol) & \
-        (roots.real > pt.tol)
+        (abs(roots.imag) <= const.tol) & \
+        (roots.real > const.tol)
     ].real
 
     return roots.min() if len(roots) else np.inf
@@ -371,48 +371,48 @@ def get_ball_energy(rvw, R, m):
 
 
 def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
-    if state == pt.stationary or state == pt.pocketed:
+    if state == const.stationary or state == const.pocketed:
         return rvw, state
 
-    if state == pt.sliding:
+    if state == const.sliding:
         dtau_E_slide = get_slide_time(rvw, R, u_s, g)
 
         if t >= dtau_E_slide:
             rvw = evolve_slide_state(rvw, R, m, u_s, u_sp, g, dtau_E_slide)
-            state = pt.rolling
+            state = const.rolling
             t -= dtau_E_slide
         else:
-            return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), pt.sliding
+            return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), const.sliding
 
-    if state == pt.rolling:
+    if state == const.rolling:
         dtau_E_roll = get_roll_time(rvw, u_r, g)
 
         if t >= dtau_E_roll:
             rvw = evolve_roll_state(rvw, R, u_r, u_sp, g, dtau_E_roll)
-            state = pt.spinning
+            state = const.spinning
             t -= dtau_E_roll
         else:
-            return evolve_roll_state(rvw, R, u_r, u_sp, g, t), pt.rolling
+            return evolve_roll_state(rvw, R, u_r, u_sp, g, t), const.rolling
 
-    if state == pt.spinning:
+    if state == const.spinning:
         dtau_E_spin = get_spin_time(rvw, R, u_sp, g)
 
         if t >= dtau_E_spin:
-            return evolve_perpendicular_spin_state(rvw, R, u_sp, g, dtau_E_spin), pt.stationary
+            return evolve_perpendicular_spin_state(rvw, R, u_sp, g, dtau_E_spin), const.stationary
         else:
-            return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), pt.spinning
+            return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), const.spinning
 
 
 def evolve_state_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
     """Variant of evolve_ball_motion that does not respect motion transition events"""
-    if state == pt.stationary or state == pt.pocketed:
+    if state == const.stationary or state == const.pocketed:
         return rvw, state
-    elif state == pt.sliding:
-        return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), pt.sliding
-    elif state == pt.rolling:
-        return evolve_roll_state(rvw, R, u_r, u_sp, g, t), pt.rolling
-    elif state == pt.spinning:
-        return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), pt.spinning
+    elif state == const.sliding:
+        return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), const.sliding
+    elif state == const.rolling:
+        return evolve_roll_state(rvw, R, u_r, u_sp, g, t), const.rolling
+    elif state == const.spinning:
+        return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), const.spinning
 
 
 def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
@@ -472,7 +472,7 @@ def evolve_perpendicular_spin_component(wz, R, u_sp, g, t):
     if t == 0:
         return wz
 
-    if abs(wz) < pt.tol:
+    if abs(wz) < const.tol:
         return wz
 
     alpha = 5*u_sp*g/(2*R)
@@ -548,8 +548,8 @@ def cue_strike(m, M, R, V0, phi, theta, a, b):
 
     """
 
-    a *= R*pt.english_fraction
-    b *= R*pt.english_fraction
+    a *= R*const.english_fraction
+    b *= R*const.english_fraction
 
     phi *= np.pi/180
     theta *= np.pi/180

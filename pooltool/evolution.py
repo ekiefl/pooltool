@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
-import pooltool as pt
 import pooltool.terminal as terminal
+import pooltool.constants as c
 
 from pooltool.events import *
 from pooltool.system import System, SystemHistory, SystemRender
@@ -180,10 +180,10 @@ class EvolveShotEventBased(EvolveShot):
                 if i >= j:
                     continue
 
-                if ball1.s == pt.pocketed or ball2.s == pt.pocketed:
+                if ball1.s == c.pocketed or ball2.s == c.pocketed:
                     continue
 
-                if ball1.s in pt.nontranslating and ball2.s in pt.nontranslating:
+                if ball1.s in c.nontranslating and ball2.s in c.nontranslating:
                     continue
 
                 dtau_E = physics.get_ball_ball_collision_time(
@@ -191,8 +191,8 @@ class EvolveShotEventBased(EvolveShot):
                     rvw2=ball2.rvw,
                     s1=ball1.s,
                     s2=ball2.s,
-                    mu1=(ball1.u_s if ball1.s == pt.sliding else ball1.u_r),
-                    mu2=(ball2.u_s if ball2.s == pt.sliding else ball2.u_r),
+                    mu1=(ball1.u_s if ball1.s == c.sliding else ball1.u_r),
+                    mu2=(ball2.u_s if ball2.s == c.sliding else ball2.u_r),
                     m1=ball1.m,
                     m2=ball2.m,
                     g1=ball1.g,
@@ -216,7 +216,7 @@ class EvolveShotEventBased(EvolveShot):
         involved_agents = tuple([DummyBall(), NonObject()])
 
         for ball in self.balls.values():
-            if ball.s in pt.nontranslating:
+            if ball.s in c.nontranslating:
                 continue
 
             for cushion in self.table.cushion_segments['linear'].values():
@@ -228,7 +228,7 @@ class EvolveShotEventBased(EvolveShot):
                     l0=cushion.l0,
                     p1=cushion.p1,
                     p2=cushion.p2,
-                    mu=(ball.u_s if ball.s == pt.sliding else ball.u_r),
+                    mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
                     m=ball.m,
                     g=ball.g,
                     R=ball.R
@@ -245,7 +245,7 @@ class EvolveShotEventBased(EvolveShot):
                     a=cushion.a,
                     b=cushion.b,
                     r=cushion.radius,
-                    mu=(ball.u_s if ball.s == pt.sliding else ball.u_r),
+                    mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
                     m=ball.m,
                     g=ball.g,
                     R=ball.R
@@ -267,7 +267,7 @@ class EvolveShotEventBased(EvolveShot):
         involved_agents = tuple([DummyBall(), NonObject()])
 
         for ball in self.balls.values():
-            if ball.s in pt.nontranslating:
+            if ball.s in c.nontranslating:
                 continue
 
             for pocket in self.table.pockets.values():
@@ -277,7 +277,7 @@ class EvolveShotEventBased(EvolveShot):
                     a=pocket.a,
                     b=pocket.b,
                     r=pocket.radius,
-                    mu=(ball.u_s if ball.s == pt.sliding else ball.u_r),
+                    mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
                     m=ball.m,
                     g=ball.g,
                     R=ball.R
@@ -316,7 +316,7 @@ class EvolveShotDiscreteTime(EvolveShot):
             if t_final is not None and self.t >= t_final:
                 break
 
-            if self.get_system_energy() < pt.tol:
+            if self.get_system_energy() < c.tol:
                 break
 
             steps += 1
@@ -340,7 +340,7 @@ class EvolveShotDiscreteTime(EvolveShot):
                 if i >= j:
                     continue
 
-                if ball1.s in pt.nontranslating and ball2.s in pt.nontranslating:
+                if ball1.s in c.nontranslating and ball2.s in c.nontranslating:
                     continue
 
                 if physics.is_overlapping(ball1.rvw, ball2.rvw, ball1.R, ball2.R):
