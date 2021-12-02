@@ -1,8 +1,7 @@
 #! /usr/bin/env python
 
-import pooltool
+import pooltool as pt
 import pooltool.ani as ani
-import pooltool.utils as utils
 import pooltool.games as games
 import pooltool.ani.environment as environment
 
@@ -26,6 +25,12 @@ import simplepbr
 
 from panda3d.core import *
 from direct.showbase.ShowBase import ShowBase
+
+__all__ = [
+    'Interface',
+    'ShotViewer',
+    'Play',
+]
 
 
 class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode, CamSaveMode,
@@ -87,13 +92,14 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
             self.keymap[key] = self.action_state_defaults[self.mode][key]
 
 
-class Interface(ShowBase, ModeManager):
+class Interface(ShowBase, ModeManager, HUD):
     is_game = None
     def __init__(self, shot=None):
         if self.is_game is None:
             raise Exception(f"'{self.__class__.__name__}' must set 'is_game' attribute")
 
         super().__init__(self)
+        HUD.__init__(self)
         base.setBackgroundColor(0.04, 0.04, 0.04)
         simplepbr.init(enable_shadows=ani.settings['graphics']['shadows'], max_lights=13)
 
@@ -151,6 +157,7 @@ class Interface(ShowBase, ModeManager):
         self.environment.unload_room()
         self.environment.unload_lights()
         gc.collect()
+        self.destroy_hud()
 
 
     def init_system_nodes(self):
@@ -176,11 +183,11 @@ class Interface(ShowBase, ModeManager):
 
     def init_environment(self):
         if ani.settings['graphics']['physical_based_rendering']:
-            room_path = utils.panda_path(ani.model_dir / 'room/room_pbr.glb')
-            floor_path = utils.panda_path(ani.model_dir / 'room/floor_pbr.glb')
+            room_path = pt.utils.panda_path(ani.model_dir / 'room/room_pbr.glb')
+            floor_path = pt.utils.panda_path(ani.model_dir / 'room/floor_pbr.glb')
         else:
-            room_path = utils.panda_path(ani.model_dir / 'room/room.glb')
-            floor_path = utils.panda_path(ani.model_dir / 'room/floor.glb')
+            room_path = pt.utils.panda_path(ani.model_dir / 'room/room.glb')
+            floor_path = pt.utils.panda_path(ani.model_dir / 'room/floor.glb')
 
         self.environment = environment.Environment(self.table)
         if ani.settings['graphics']['room']:
@@ -194,7 +201,7 @@ class Interface(ShowBase, ModeManager):
     def monitor(self, task):
         #print(f"Mode: {self.mode}")
         #print(f"Tasks: {list(self.tasks.keys())}")
-        #print(f"Memory: {utils.get_total_memory_usage()}")
+        #print(f"Memory: {pt.utils.get_total_memory_usage()}")
         #print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
         #print(f"Keymap: {self.keymap}")
         #print(f"Frame: {self.frame}")
@@ -204,96 +211,8 @@ class Interface(ShowBase, ModeManager):
         return task.cont
 
 
-class ShotViewer(Interface):
-    is_game = False
-
-    def __init__(self, shot=None):
-        Interface.__init__(self, shot=shot)
-        self.is_game = False
-        self.create_standby_screen()
-        self.create_instructions()
-
-        self.stop()
-
-
-    def create_instructions(self):
-        self.instructions = OnscreenText(
-            text = "<escape> to exit",
-            pos = (-1.55, 0.93),
-            scale = ani.menu_text_scale*0.7,
-            fg = (1,1,1,1),
-            align = TextNode.ALeft,
-            parent = aspect2d,
-        )
-        self.instructions.hide()
-
-
-    def create_standby_screen(self):
-        self.standby_screen = GenericMenu(frame_color=(0.3,0.3,0.3,1))
-        self.standby_screen.add_image(ani.logo_paths['default'], pos=(0,0,0), scale=(0.5, 1, 0.44))
-
-        text = OnscreenText(
-            text = 'Standing by...',
-            style = 1,
-            fg = (1, 1, 1, 1),
-            parent = self.standby_screen.titleMenu,
-            align = TextNode.ALeft,
-            pos = (-1.55,0.93),
-            scale = 0.8*ani.menu_text_scale,
-        )
-
-
-    def start(self):
-        self.standby_screen.hide()
-        self.instructions.show()
-        self.mouse = Mouse()
-        self.init_system_nodes()
-        params = dict(
-            init_animations = True,
-            single_instance = True,
-        )
-        self.change_mode('shot', enter_kwargs=params)
-
-        self.taskMgr.run()
-
-
-    def stop(self):
-        self.standby_screen.show()
-        self.instructions.hide()
-        base.graphicsEngine.renderFrame()
-        base.graphicsEngine.renderFrame()
-
-        self.taskMgr.stop()
-
-
-    def finalizeExit(self):
-        self.stop()
-
-
-class Play(Interface, Menus, HUD):
-    is_game = True
-
-    def __init__(self, *args, **kwargs):
-        Interface.__init__(self, shot=None)
-        Menus.__init__(self)
-        HUD.__init__(self)
-
-        self.change_mode('menu')
-
-        # This task chain allows simulations to be run in parallel to the game processes
-        taskMgr.setupTaskChain(
-            'simulation',
-            numThreads = 1,
-            tickClock = None,
-            threadPriority = None,
-            frameBudget = None,
-            frameSync = None,
-            timeslicePriority = None
-        )
-
-
     def init_help_page(self):
-        text = OnscreenText(
+        self.help_hint = OnscreenText(
             text = "Press 'h' to toggle help",
             pos = (-1.55, 0.93),
             scale = ani.menu_text_scale*0.9,
@@ -301,7 +220,7 @@ class Play(Interface, Menus, HUD):
             align = TextNode.ALeft,
             parent = aspect2d,
         )
-        text.show()
+        self.help_hint.show()
 
         self.help_node = aspect2d.attachNewNode('help')
 
@@ -330,7 +249,7 @@ class Play(Interface, Menus, HUD):
         add_instruction(h(10), "Precise aiming - [hold f]")
         add_instruction(h(11), "Raise head - [hold t]")
 
-        add_instruction(h(13), "Shoot controls", True)
+        add_instruction(h(13), "Shot controls", True)
         add_instruction(h(14), "Stroke - [hold s] (move mouse down then up)")
         add_instruction(h(15), "Take next shot - [a]")
         add_instruction(h(16), "Undo shot - [z]")
@@ -348,6 +267,107 @@ class Play(Interface, Menus, HUD):
         self.help_node.hide()
 
 
+class ShotViewer(Interface):
+    is_game = False
+
+    def __init__(self, shot=None):
+        Interface.__init__(self, shot=shot)
+        self.is_game = False
+        self.create_standby_screen()
+        self.create_instructions()
+
+        self.stop()
+
+
+    def create_instructions(self):
+        self.instructions = OnscreenText(
+            text = "Press <escape> to exit",
+            pos = (-1.55, 0.93),
+            scale = ani.menu_text_scale*0.7,
+            fg = (1,1,1,1),
+            align = TextNode.ALeft,
+            parent = aspect2d,
+        )
+        self.instructions.hide()
+
+
+    def create_standby_screen(self):
+        self.standby_screen = GenericMenu(frame_color=(0.3,0.3,0.3,1))
+        self.standby_screen.add_image(ani.logo_paths['default'], pos=(0,0,0), scale=(0.5, 1, 0.44))
+
+        text = OnscreenText(
+            text = 'GUI standing by...',
+            style = 1,
+            fg = (1, 1, 1, 1),
+            parent = self.standby_screen.titleMenu,
+            align = TextNode.ALeft,
+            pos = (-1.55,0.93),
+            scale = 0.8*ani.menu_text_scale,
+        )
+
+
+    def show(self, shot=None):
+        if shot:
+            self.set_shot(shot)
+
+        if self.shot is None:
+            raise ConfigError("ShotViewer.show :: No shot passed and no shot set.")
+
+        self.standby_screen.hide()
+        self.instructions.show()
+        self.init_help_page()
+        self.help_hint.hide()
+        self.mouse = Mouse()
+        self.init_system_nodes()
+        self.init_hud()
+        params = dict(
+            init_animations = True,
+            single_instance = True,
+        )
+        self.change_mode('shot', enter_kwargs=params)
+
+        self.taskMgr.run()
+
+
+    def stop(self):
+        self.standby_screen.show()
+        self.instructions.hide()
+        base.graphicsEngine.renderFrame()
+        base.graphicsEngine.renderFrame()
+
+        self.shot = None
+        self.balls = None
+        self.table = None
+        self.cue = None
+
+        self.taskMgr.stop()
+
+
+    def finalizeExit(self):
+        self.stop()
+
+
+class Play(Interface, Menus):
+    is_game = True
+
+    def __init__(self, *args, **kwargs):
+        Interface.__init__(self, shot=None)
+        Menus.__init__(self)
+
+        self.change_mode('menu')
+
+        # This task chain allows simulations to be run in parallel to the game processes
+        taskMgr.setupTaskChain(
+            'simulation',
+            numThreads = 1,
+            tickClock = None,
+            threadPriority = None,
+            frameBudget = None,
+            frameSync = None,
+            timeslicePriority = None
+        )
+
+
     def go(self):
         self.init_help_page()
         self.setup()
@@ -358,7 +378,6 @@ class Play(Interface, Menus, HUD):
 
     def close_scene(self):
         Interface.close_scene(self)
-        self.destroy_hud()
 
 
     def setup(self):
@@ -432,7 +451,7 @@ class Play(Interface, Menus, HUD):
 
 
     def setup_balls(self):
-        self.balls = self.game.layout.get_balls_dict()
+        self.balls = self.game.balls
         self.cueing_ball = self.game.set_initial_cueing_ball(self.balls)
 
 

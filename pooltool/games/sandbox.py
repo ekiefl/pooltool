@@ -1,9 +1,8 @@
 #! /usr/bin/env python
 
-import pooltool
 import pooltool.ani as ani
 import pooltool.events as e
-import pooltool.ani.utils as autils
+import pooltool.constants as c
 
 from pooltool.games import Player, Game
 from pooltool.objects import DummyBall
@@ -21,19 +20,16 @@ class Sandbox(Game):
         Game.__init__(self)
         self.create_players(1)
 
+
     def start(self):
-        self.active_player.ball_in_hand = [ball.id for ball in self.layout.get_balls_dict().values()]
+        self.active_player.ball_in_hand = [ball_id for ball_id in self.balls]
         for player in self.players:
-            player.can_cue = [ball.id for ball in self.layout.get_balls_dict().values()]
-            player.target_balls = [ball.id for ball in self.layout.get_balls_dict().values()]
+            player.can_cue = [ball_id for ball_id in self.balls]
+            player.target_balls = [ball_id for ball_id in self.balls]
 
 
     def setup_initial_layout(self, table, ball_kwargs={}):
-        self.layout = NineBallRack(ordered=True, **ball_kwargs)
-        self.layout.center_by_table(table)
-
-        # get the cueing ball
-        self.layout.get_balls_dict()
+        self.balls = NineBallRack(table, ordered=True, **ball_kwargs).balls
 
 
     def set_initial_cueing_ball(self, balls):
@@ -53,7 +49,7 @@ class Sandbox(Game):
 
 
     def respot_balls(self, shot):
-        if shot.balls['cue'].s == pooltool.pocketed:
+        if shot.balls['cue'].s == c.pocketed:
             self.respot(shot, 'cue', shot.table.w/2, shot.table.l*1/4, shot.balls['cue'].R)
 
 

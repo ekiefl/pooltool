@@ -3,17 +3,20 @@
 import pooltool.ani as ani
 import pooltool.physics as physics
 import pooltool.ani.utils as autils
+import pooltool.constants as c
 
 from pooltool.utils import panda_path
 from pooltool.error import ConfigError
 from pooltool.events import *
-from pooltool.objects import *
+from pooltool.objects import Render, Object
 
 import numpy as np
 
 from pathlib import Path
 from panda3d.core import *
 from direct.interval.IntervalGlobal import *
+
+__all__ = ['Ball']
 
 class BallRender(Render):
     def __init__(self):
@@ -265,18 +268,18 @@ class Ball(Object, BallRender, Events):
         self.id = ball_id
 
         # physical properties
-        self.m = m or pooltool.m
-        self.R = R or pooltool.R
+        self.m = m or c.m
+        self.R = R or c.R
         self.I = 2/5 * self.m * self.R**2
-        self.g = g or pooltool.g
+        self.g = g or c.g
 
         # felt properties
-        self.u_s = u_s or pooltool.u_s
-        self.u_r = u_r or pooltool.u_r
-        self.u_sp = u_sp or pooltool.u_sp
+        self.u_s = u_s or c.u_s
+        self.u_r = u_r or c.u_r
+        self.u_sp = u_sp or c.u_sp
 
         self.t = 0
-        self.s = pooltool.stationary
+        self.s = c.stationary
         self.rvw = np.array([[np.nan, np.nan, np.nan],  # positions (r)
                              [0,      0,      0     ],  # velocities (v)
                              [0,      0,      0     ]]) # angular velocities (w)
@@ -303,14 +306,14 @@ class Ball(Object, BallRender, Events):
 
 
     def update_next_transition_event(self):
-        if self.s == pooltool.stationary or self.s == pooltool.pocketed:
+        if self.s == c.stationary or self.s == c.pocketed:
             self.next_transition_event = NonEvent(t = np.inf)
 
-        elif self.s == pooltool.spinning:
+        elif self.s == c.spinning:
             dtau_E = physics.get_spin_time(self.rvw, self.R, self.u_sp, self.g)
             self.next_transition_event = SpinningStationaryTransition(self, t=(self.t + dtau_E))
 
-        elif self.s == pooltool.rolling:
+        elif self.s == c.rolling:
             dtau_E_spin = physics.get_spin_time(self.rvw, self.R, self.u_sp, self.g)
             dtau_E_roll = physics.get_roll_time(self.rvw, self.u_r, self.g)
 
@@ -319,7 +322,7 @@ class Ball(Object, BallRender, Events):
             else:
                 self.next_transition_event = RollingStationaryTransition(self, t=(self.t + dtau_E_roll))
 
-        elif self.s == pooltool.sliding:
+        elif self.s == c.sliding:
             dtau_E = physics.get_slide_time(self.rvw, self.R, self.u_s, self.g)
             self.next_transition_event = SlidingRollingTransition(self, t=(self.t + dtau_E))
 

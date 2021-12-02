@@ -1,8 +1,7 @@
 #! /usr/bin/env python
 
-import pooltool
 import pooltool.ani as ani
-import pooltool.ani.utils as autils
+import pooltool.constants as c
 
 from pooltool.utils import panda_path
 from pooltool.ani.modes import Mode, action
@@ -188,7 +187,7 @@ class BallInHandMode(Mode):
         for ball in self.balls.values():
             if ball.id not in self.game.active_player.ball_in_hand:
                 continue
-            if ball.s == pooltool.pocketed:
+            if ball.s == c.pocketed:
                 continue
             d = np.linalg.norm(ball.rvw[0] - cam_pos)
             if d < d_min:

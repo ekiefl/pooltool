@@ -1,9 +1,8 @@
 #! /usr/bin/env python
 
-import pooltool
+import pooltool.constants as c
 
 from abc import ABC, abstractmethod
-
 
 class Object(object):
     object_type = None
@@ -20,7 +19,7 @@ class NonObject(Object):
 
 
 class DummyBall(NonObject):
-    s = pooltool.stationary
+    s = c.stationary
     def __init__(self, ball_id='NA'):
         self.id = ball_id
 

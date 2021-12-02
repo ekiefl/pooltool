@@ -45,6 +45,9 @@ class ShotMode(Mode):
             self.shot.init_shot_animation()
             self.shot.loop_animation()
 
+        self.hud_elements.get('english').set(self.shot.cue.a, self.shot.cue.b)
+        self.hud_elements.get('jack').set(self.shot.cue.theta)
+
         self.accept('space', self.shot.toggle_pause)
         self.accept('arrow_up', self.shot.speed_up)
         self.accept('arrow_down', self.shot.slow_down)
@@ -94,10 +97,9 @@ class ShotMode(Mode):
             self.shot.cue.reset_state()
             self.shot.cue.set_render_state_as_object_state()
 
-            if self.is_game:
-                _, _, theta, a, b, _ = self.shot.cue.get_render_state()
-                english = self.hud_elements.get('english').set(a, b)
-                jack = self.hud_elements.get('jack').set(theta)
+            _, _, theta, a, b, _ = self.shot.cue.get_render_state()
+            self.hud_elements.get('english').set(a, b)
+            self.hud_elements.get('jack').set(theta)
 
             for ball in self.shot.balls.values():
                 ball.reset_angular_integration()

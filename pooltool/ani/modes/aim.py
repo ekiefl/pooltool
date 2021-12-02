@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
 import pooltool.ani as ani
-import pooltool.utils as utils
 import pooltool.ani.utils as autils
 
 from pooltool.ani.modes import Mode, action

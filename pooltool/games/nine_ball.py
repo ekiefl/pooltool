@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
-import pooltool
 import pooltool.events as e
+import pooltool.constants as c
 
 from pooltool.games import Player, Game
 from pooltool.objects import DummyBall
@@ -22,11 +22,7 @@ class NineBall(Game):
 
 
     def setup_initial_layout(self, table, ball_kwargs={}):
-        self.layout = NineBallRack(ordered=True, **ball_kwargs)
-        self.layout.center_by_table(table)
-
-        # get the cueing ball
-        self.layout.get_balls_dict()
+        self.balls = NineBallRack(table=table, ordered=True, **ball_kwargs).balls
 
 
     def set_initial_cueing_ball(self, balls):
@@ -109,7 +105,7 @@ class NineBall(Game):
         for ball in shot.balls.values():
             if ball.id == 'cue':
                 continue
-            if ball.history.s[0] == pooltool.pocketed:
+            if ball.history.s[0] == c.pocketed:
                 continue
             if int(ball.id) < int(lowest.id):
                 lowest = ball
@@ -123,7 +119,7 @@ class NineBall(Game):
         for ball in shot.balls.values():
             if ball.id == 'cue':
                 continue
-            if ball.history.s[0] == pooltool.pocketed:
+            if ball.history.s[0] == c.pocketed:
                 continue
             if int(ball.id) > int(highest.id):
                 highest = ball
@@ -161,7 +157,7 @@ class NineBall(Game):
 
 
     def is_cue_pocketed(self, shot):
-        return True if shot.balls['cue'].s == pooltool.pocketed else False
+        return True if shot.balls['cue'].s == c.pocketed else False
 
 
     def is_cushion_after_first_contact(self, shot):

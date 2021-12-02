@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-import pooltool
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 
@@ -56,8 +55,9 @@ class HUD(object):
 
 
     def update_hud(self, task):
-        self.update_log_window()
-        self.update_player_stats()
+        if self.is_game:
+            self.update_log_window()
+            self.update_player_stats()
 
         return task.cont
 

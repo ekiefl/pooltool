@@ -3,15 +3,21 @@
 import pooltool.ani as ani
 import pooltool.utils as utils
 import pooltool.ani.utils as autils
+import pooltool.constants as c
 
 from pooltool.error import ConfigError
 from pooltool.utils import panda_path
-from pooltool.objects import *
+from pooltool.objects import Object, Render
 
 import numpy as np
 
 from pathlib import Path
 from panda3d.core import *
+
+__all__ = [
+    'PocketTable',
+    'BilliardTable',
+]
 
 
 class TableRender(Render):
@@ -191,22 +197,22 @@ class PocketTable(Object, TableRender):
                  side_pocket_width=None, side_pocket_angle=None, side_pocket_depth=None, side_pocket_radius=None,
                  side_jaw_radius=None, table_height=None, lights_height=None, has_model=False, model_name='none'):
 
-        self.w = table_width or pooltool.table_width
-        self.l = table_length or pooltool.table_length
-        self.cushion_width = cushion_width or pooltool.cushion_width
-        self.cushion_height = cushion_height or pooltool.cushion_height
-        self.corner_pocket_width = corner_pocket_width or pooltool.corner_pocket_width
-        self.corner_pocket_angle = corner_pocket_angle or pooltool.corner_pocket_angle
-        self.corner_pocket_depth = corner_pocket_depth or pooltool.corner_pocket_depth
-        self.corner_pocket_radius = corner_pocket_radius or pooltool.corner_pocket_radius
-        self.corner_jaw_radius = corner_jaw_radius or pooltool.corner_jaw_radius
-        self.side_pocket_width = side_pocket_width or pooltool.side_pocket_width
-        self.side_pocket_angle = side_pocket_angle or pooltool.side_pocket_angle
-        self.side_pocket_depth = side_pocket_depth or pooltool.side_pocket_depth
-        self.side_pocket_radius = side_pocket_radius or pooltool.side_pocket_radius
-        self.side_jaw_radius = side_jaw_radius or pooltool.side_jaw_radius
-        self.height = table_height or pooltool.table_height # for visualization
-        self.lights_height = lights_height or pooltool.lights_height # for visualization
+        self.w = table_width or c.table_width
+        self.l = table_length or c.table_length
+        self.cushion_width = cushion_width or c.cushion_width
+        self.cushion_height = cushion_height or c.cushion_height
+        self.corner_pocket_width = corner_pocket_width or c.corner_pocket_width
+        self.corner_pocket_angle = corner_pocket_angle or c.corner_pocket_angle
+        self.corner_pocket_depth = corner_pocket_depth or c.corner_pocket_depth
+        self.corner_pocket_radius = corner_pocket_radius or c.corner_pocket_radius
+        self.corner_jaw_radius = corner_jaw_radius or c.corner_jaw_radius
+        self.side_pocket_width = side_pocket_width or c.side_pocket_width
+        self.side_pocket_angle = side_pocket_angle or c.side_pocket_angle
+        self.side_pocket_depth = side_pocket_depth or c.side_pocket_depth
+        self.side_pocket_radius = side_pocket_radius or c.side_pocket_radius
+        self.side_jaw_radius = side_jaw_radius or c.side_jaw_radius
+        self.height = table_height or c.table_height # for visualization
+        self.lights_height = lights_height or c.lights_height # for visualization
 
         self.center = (self.w/2, self.l/2)
 
