@@ -1,16 +1,16 @@
 #! /usr/bin/env python
 
 import ast
-import pooltool
+import pooltool as pt
 import configparser
-import pooltool.utils as utils
 
+from pooltool.utils import panda_path
 from pooltool.error import ConfigError, TableConfigError
 
 from pathlib import Path
 from panda3d.core import *
 
-loadPrcFile(utils.panda_path(Path(pooltool.__file__).parent / 'config' / 'config_panda3d.prc'))
+loadPrcFile(panda_path(Path(pt.__file__).parent / 'config' / 'config_panda3d.prc'))
 
 menu_text_scale = 0.07
 menu_text_scale_small = 0.04
@@ -71,15 +71,15 @@ ball_highlight = {
     'shadow_scale_amplitude': 0.4,
 }
 
-model_dir = Path(pooltool.__file__).parent / 'models'
+model_dir = Path(pt.__file__).parent / 'models'
 
-logo_dir = Path(pooltool.__file__).parent / 'logo'
+logo_dir = Path(pt.__file__).parent / 'logo'
 logo_paths = {
-    'default': utils.panda_path(logo_dir / 'logo.png'),
-    'small': utils.panda_path(logo_dir / 'logo_small.png'),
-    'smaller': utils.panda_path(logo_dir / 'logo_smaller.png'),
-    'pt': utils.panda_path(logo_dir / 'logo_pt.png'),
-    'pt_smaller': utils.panda_path(logo_dir / 'logo_pt_smaller.png'),
+    'default': panda_path(logo_dir / 'logo.png'),
+    'small': panda_path(logo_dir / 'logo_small.png'),
+    'smaller': panda_path(logo_dir / 'logo_smaller.png'),
+    'pt': panda_path(logo_dir / 'logo_pt.png'),
+    'pt_smaller': panda_path(logo_dir / 'logo_pt_smaller.png'),
 }
 
 

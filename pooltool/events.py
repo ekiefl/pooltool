@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import pooltool
+import pooltool as pt
 import pooltool.utils as utils
 import pooltool.physics as physics
 
@@ -64,10 +64,10 @@ class BallBallCollision(Collision):
 
     def __init__(self, ball1, ball2, t=None):
         self.ball1_state_start = ball1.s
-        self.ball1_state_end = pooltool.sliding
+        self.ball1_state_end = pt.sliding
 
         self.ball2_state_start = ball2.s
-        self.ball2_state_end = pooltool.sliding
+        self.ball2_state_end = pt.sliding
 
         Collision.__init__(self, body1=ball1, body2=ball2, t=t)
 
@@ -76,7 +76,7 @@ class BallBallCollision(Collision):
         ball1, ball2 = self.agents
 
         rvw1, rvw2 = physics.resolve_ball_ball_collision(ball1.rvw, ball2.rvw)
-        s1, s2 = pooltool.sliding, pooltool.sliding
+        s1, s2 = pt.sliding, pt.sliding
 
         ball1.set(rvw1, s1, t=self.time)
         ball1.update_next_transition_event()
@@ -90,7 +90,7 @@ class BallCushionCollision(Collision):
 
     def __init__(self, ball, cushion, t=None):
         self.state_start = ball.s
-        self.state_end = pooltool.sliding
+        self.state_end = pt.sliding
 
         Collision.__init__(self, body1=ball, body2=cushion, t=t)
 
@@ -106,7 +106,7 @@ class BallCushionCollision(Collision):
             m=ball.m,
             h=cushion.height,
         )
-        s = pooltool.sliding
+        s = pt.sliding
 
         ball.set(rvw, s, t=self.time)
         ball.update_next_transition_event()
@@ -117,7 +117,7 @@ class StickBallCollision(Collision):
 
     def __init__(self, cue_stick, ball, t=None):
         self.state_start = ball.s
-        self.state_end = pooltool.sliding
+        self.state_end = pt.sliding
 
         Collision.__init__(self, body1=cue_stick, body2=ball, t=t)
 
@@ -128,9 +128,9 @@ class StickBallCollision(Collision):
         v, w = physics.cue_strike(ball.m, cue_stick.M, ball.R, cue_stick.V0, cue_stick.phi, cue_stick.theta, cue_stick.a, cue_stick.b)
         rvw = np.array([ball.rvw[0], v, w])
 
-        s = (pooltool.rolling
-             if abs(np.sum(physics.get_rel_velocity(rvw, ball.R))) <= pooltool.tol
-             else pooltool.sliding)
+        s = (pt.rolling
+             if abs(np.sum(physics.get_rel_velocity(rvw, ball.R))) <= pt.tol
+             else pt.sliding)
 
         ball.set(rvw, s)
         ball.update_next_transition_event()
@@ -141,7 +141,7 @@ class BallPocketCollision(Collision):
 
     def __init__(self, ball, pocket, t=None):
         self.state_start = ball.s
-        self.state_end = pooltool.pocketed
+        self.state_end = pt.pocketed
 
         Collision.__init__(self, body1=ball, body2=pocket, t=t)
 
@@ -178,7 +178,7 @@ class SpinningStationaryTransition(Transition):
 
     def __init__(self, ball, t=None):
         Transition.__init__(self, ball, t=t)
-        self.state_start, self.state_end = pooltool.spinning, pooltool.stationary
+        self.state_start, self.state_end = pt.spinning, pt.stationary
 
 
 class RollingStationaryTransition(Transition):
@@ -186,7 +186,7 @@ class RollingStationaryTransition(Transition):
 
     def __init__(self, ball, t=None):
         Transition.__init__(self, ball, t=t)
-        self.state_start, self.state_end = pooltool.rolling, pooltool.stationary
+        self.state_start, self.state_end = pt.rolling, pt.stationary
 
 
 class RollingSpinningTransition(Transition):
@@ -194,7 +194,7 @@ class RollingSpinningTransition(Transition):
 
     def __init__(self, ball, t=None):
         Transition.__init__(self, ball, t=t)
-        self.state_start, self.state_end = pooltool.rolling, pooltool.spinning
+        self.state_start, self.state_end = pt.rolling, pt.spinning
 
 
 class SlidingRollingTransition(Transition):
@@ -202,7 +202,7 @@ class SlidingRollingTransition(Transition):
 
     def __init__(self, ball, t=None):
         Transition.__init__(self, ball, t=t)
-        self.state_start, self.state_end = pooltool.sliding, pooltool.rolling
+        self.state_start, self.state_end = pt.sliding, pt.rolling
 
 
 class NonEvent(Event):

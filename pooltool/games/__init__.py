@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import pooltool
+import pooltool as pt
 import pooltool.ani as ani
 
 from pooltool.terminal import Timer
@@ -112,7 +112,7 @@ class Game(ABC):
         """
         R = shot.balls[ball_id].R
         shot.balls[ball_id].rvw[0] = [x, y, z]
-        shot.balls[ball_id].s = pooltool.stationary
+        shot.balls[ball_id].s = pt.stationary
 
 
     def advance(self, shot):

@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import pooltool
+import pooltool as pt
 import pooltool.events as e
 
 from pooltool.games import Player, Game
@@ -109,7 +109,7 @@ class NineBall(Game):
         for ball in shot.balls.values():
             if ball.id == 'cue':
                 continue
-            if ball.history.s[0] == pooltool.pocketed:
+            if ball.history.s[0] == pt.pocketed:
                 continue
             if int(ball.id) < int(lowest.id):
                 lowest = ball
@@ -123,7 +123,7 @@ class NineBall(Game):
         for ball in shot.balls.values():
             if ball.id == 'cue':
                 continue
-            if ball.history.s[0] == pooltool.pocketed:
+            if ball.history.s[0] == pt.pocketed:
                 continue
             if int(ball.id) > int(highest.id):
                 highest = ball
@@ -161,7 +161,7 @@ class NineBall(Game):
 
 
     def is_cue_pocketed(self, shot):
-        return True if shot.balls['cue'].s == pooltool.pocketed else False
+        return True if shot.balls['cue'].s == pt.pocketed else False
 
 
     def is_cushion_after_first_contact(self, shot):

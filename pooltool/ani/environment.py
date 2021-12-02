@@ -1,8 +1,5 @@
 #! /usr/bin/env python
 
-import pooltool
-
-from pooltool.ani import settings
 from pooltool.utils import panda_path
 
 from pathlib import Path

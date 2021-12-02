@@ -25,7 +25,7 @@ class CueRender(Render):
         self.stroke_time = []
 
 
-    def init_model(self, R=pooltool.R):
+    def init_model(self, R=pt.R):
         path = utils.panda_path(ani.model_dir / 'cue' / 'cue.glb')
         cue_stick_model = loader.loadModel(path)
         cue_stick_model.setName('cue_stick_model')
@@ -259,8 +259,8 @@ class CueRender(Render):
 class Cue(Object, CueRender):
     object_type = 'cue_stick'
 
-    def __init__(self, M=pooltool.M, length=pooltool.cue_length, tip_radius=pooltool.cue_tip_radius,
-                 butt_radius=pooltool.cue_butt_radius, cue_id='cue_stick', brand=None):
+    def __init__(self, M=pt.M, length=pt.cue_length, tip_radius=pt.cue_tip_radius,
+                 butt_radius=pt.cue_butt_radius, cue_id='cue_stick', brand=None):
 
         self.id = cue_id
         self.M = M

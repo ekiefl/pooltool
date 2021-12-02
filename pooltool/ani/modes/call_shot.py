@@ -1,8 +1,7 @@
 #! /usr/bin/env python
 
-import pooltool
+import pooltool as pt
 import pooltool.ani as ani
-import pooltool.ani.utils as autils
 
 from pooltool.utils import panda_path
 from pooltool.ani.modes import Mode, action
@@ -202,7 +201,7 @@ class CallShotMode(Mode):
         for ball in self.balls.values():
             if ball.id not in self.game.active_player.target_balls:
                 continue
-            if ball.s == pooltool.pocketed:
+            if ball.s == pt.pocketed:
                 continue
             d = np.linalg.norm(ball.rvw[0] - cam_pos)
             if d < d_min:

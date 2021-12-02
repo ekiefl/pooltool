@@ -191,22 +191,22 @@ class PocketTable(Object, TableRender):
                  side_pocket_width=None, side_pocket_angle=None, side_pocket_depth=None, side_pocket_radius=None,
                  side_jaw_radius=None, table_height=None, lights_height=None, has_model=False, model_name='none'):
 
-        self.w = table_width or pooltool.table_width
-        self.l = table_length or pooltool.table_length
-        self.cushion_width = cushion_width or pooltool.cushion_width
-        self.cushion_height = cushion_height or pooltool.cushion_height
-        self.corner_pocket_width = corner_pocket_width or pooltool.corner_pocket_width
-        self.corner_pocket_angle = corner_pocket_angle or pooltool.corner_pocket_angle
-        self.corner_pocket_depth = corner_pocket_depth or pooltool.corner_pocket_depth
-        self.corner_pocket_radius = corner_pocket_radius or pooltool.corner_pocket_radius
-        self.corner_jaw_radius = corner_jaw_radius or pooltool.corner_jaw_radius
-        self.side_pocket_width = side_pocket_width or pooltool.side_pocket_width
-        self.side_pocket_angle = side_pocket_angle or pooltool.side_pocket_angle
-        self.side_pocket_depth = side_pocket_depth or pooltool.side_pocket_depth
-        self.side_pocket_radius = side_pocket_radius or pooltool.side_pocket_radius
-        self.side_jaw_radius = side_jaw_radius or pooltool.side_jaw_radius
-        self.height = table_height or pooltool.table_height # for visualization
-        self.lights_height = lights_height or pooltool.lights_height # for visualization
+        self.w = table_width or pt.table_width
+        self.l = table_length or pt.table_length
+        self.cushion_width = cushion_width or pt.cushion_width
+        self.cushion_height = cushion_height or pt.cushion_height
+        self.corner_pocket_width = corner_pocket_width or pt.corner_pocket_width
+        self.corner_pocket_angle = corner_pocket_angle or pt.corner_pocket_angle
+        self.corner_pocket_depth = corner_pocket_depth or pt.corner_pocket_depth
+        self.corner_pocket_radius = corner_pocket_radius or pt.corner_pocket_radius
+        self.corner_jaw_radius = corner_jaw_radius or pt.corner_jaw_radius
+        self.side_pocket_width = side_pocket_width or pt.side_pocket_width
+        self.side_pocket_angle = side_pocket_angle or pt.side_pocket_angle
+        self.side_pocket_depth = side_pocket_depth or pt.side_pocket_depth
+        self.side_pocket_radius = side_pocket_radius or pt.side_pocket_radius
+        self.side_jaw_radius = side_jaw_radius or pt.side_jaw_radius
+        self.height = table_height or pt.table_height # for visualization
+        self.lights_height = lights_height or pt.lights_height # for visualization
 
         self.center = (self.w/2, self.l/2)
 

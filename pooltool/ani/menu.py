@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import pooltool
+import pooltool as pt
 import pooltool.ani as ani
 import pooltool.games as games
 
@@ -51,23 +51,23 @@ class Menus(object):
 
         m.add_dropdown(ani.options_table, options=list(ani.table_config.keys()) + ['custom'], command=self.show_custom_table_options)
 
-        m.add_dropdown(ani.options_table_type, options=list(pooltool.objects.table.table_types.keys()), scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_table_length, initial=f"{pooltool.table_length:.5f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_table_width, initial=f"{pooltool.table_width:.5f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_table_height, initial=f"{pooltool.table_height:.5f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_lights_height, initial=f"{pooltool.lights_height:.5f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_cushion_width, initial=f"{pooltool.cushion_width:.3f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_cushion_height, initial=f"{pooltool.cushion_height:.3f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_corner_pocket_width, initial=f"{pooltool.corner_pocket_width:.3f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_corner_pocket_angle, initial=f"{pooltool.corner_pocket_angle:.3f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_corner_pocket_depth, initial=f"{pooltool.corner_pocket_depth:.3f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_corner_pocket_radius, initial=f"{pooltool.corner_pocket_radius:.3f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_corner_jaw_radius, initial=f"{pooltool.corner_jaw_radius:.3f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_side_pocket_width, initial=f"{pooltool.side_pocket_width:.3f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_side_pocket_angle, initial=f"{pooltool.side_pocket_angle:.3f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_side_pocket_depth, initial=f"{pooltool.side_pocket_depth:.3f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_side_pocket_radius, initial=f"{pooltool.side_pocket_radius:.3f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_side_jaw_radius, initial=f"{pooltool.side_jaw_radius:.3f}", scale=ani.menu_text_scale_small)
+        m.add_dropdown(ani.options_table_type, options=list(pt.objects.table.table_types.keys()), scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_table_length, initial=f"{pt.table_length:.5f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_table_width, initial=f"{pt.table_width:.5f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_table_height, initial=f"{pt.table_height:.5f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_lights_height, initial=f"{pt.lights_height:.5f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_cushion_width, initial=f"{pt.cushion_width:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_cushion_height, initial=f"{pt.cushion_height:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_corner_pocket_width, initial=f"{pt.corner_pocket_width:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_corner_pocket_angle, initial=f"{pt.corner_pocket_angle:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_corner_pocket_depth, initial=f"{pt.corner_pocket_depth:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_corner_pocket_radius, initial=f"{pt.corner_pocket_radius:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_corner_jaw_radius, initial=f"{pt.corner_jaw_radius:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_side_pocket_width, initial=f"{pt.side_pocket_width:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_side_pocket_angle, initial=f"{pt.side_pocket_angle:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_side_pocket_depth, initial=f"{pt.side_pocket_depth:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_side_pocket_radius, initial=f"{pt.side_pocket_radius:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_side_jaw_radius, initial=f"{pt.side_jaw_radius:.3f}", scale=ani.menu_text_scale_small)
 
         self.menus['table'] = m
 
@@ -91,10 +91,10 @@ class Menus(object):
         m = GenericMenu(title = 'Ball customization')
         m.add_button('Back', lambda: self.show_menu('options'), scale=ani.menu_text_scale)
 
-        m.add_direct_entry(ani.options_ball_diameter, initial=f"{pooltool.R*2:.3f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_friction_roll, initial=f"{pooltool.u_r:.3f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_friction_slide, initial=f"{pooltool.u_s:.3f}", scale=ani.menu_text_scale_small)
-        m.add_direct_entry(ani.options_friction_spin, initial=f"{pooltool.u_sp:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_ball_diameter, initial=f"{pt.R*2:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_friction_roll, initial=f"{pt.u_r:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_friction_slide, initial=f"{pt.u_s:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_friction_spin, initial=f"{pt.u_sp:.3f}", scale=ani.menu_text_scale_small)
 
         self.menus['balls'] = m
 

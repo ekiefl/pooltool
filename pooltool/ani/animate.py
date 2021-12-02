@@ -1,8 +1,7 @@
 #! /usr/bin/env python
 
-import pooltool
+import pooltool as pt
 import pooltool.ani as ani
-import pooltool.utils as utils
 import pooltool.games as games
 import pooltool.ani.environment as environment
 
@@ -176,11 +175,11 @@ class Interface(ShowBase, ModeManager):
 
     def init_environment(self):
         if ani.settings['graphics']['physical_based_rendering']:
-            room_path = utils.panda_path(ani.model_dir / 'room/room_pbr.glb')
-            floor_path = utils.panda_path(ani.model_dir / 'room/floor_pbr.glb')
+            room_path = pt.utils.panda_path(ani.model_dir / 'room/room_pbr.glb')
+            floor_path = pt.utils.panda_path(ani.model_dir / 'room/floor_pbr.glb')
         else:
-            room_path = utils.panda_path(ani.model_dir / 'room/room.glb')
-            floor_path = utils.panda_path(ani.model_dir / 'room/floor.glb')
+            room_path = pt.utils.panda_path(ani.model_dir / 'room/room.glb')
+            floor_path = pt.utils.panda_path(ani.model_dir / 'room/floor.glb')
 
         self.environment = environment.Environment(self.table)
         if ani.settings['graphics']['room']:
@@ -194,7 +193,7 @@ class Interface(ShowBase, ModeManager):
     def monitor(self, task):
         #print(f"Mode: {self.mode}")
         #print(f"Tasks: {list(self.tasks.keys())}")
-        #print(f"Memory: {utils.get_total_memory_usage()}")
+        #print(f"Memory: {pt.utils.get_total_memory_usage()}")
         #print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
         #print(f"Keymap: {self.keymap}")
         #print(f"Frame: {self.frame}")

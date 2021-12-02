@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import pooltool
+import pooltool as pt
 
 from pooltool.objects.ball import Ball
 
@@ -12,7 +12,7 @@ class NineBallRack(object):
         self.balls = [Ball(str(i), **ball_kwargs) for i in range(1,10)]
         self.radius = max([ball.R for ball in self.balls])
         self.spacer = spacing_factor * self.radius
-        self.eff_radius = self.radius + self.spacer + pooltool.tol
+        self.eff_radius = self.radius + self.spacer + pt.tol
 
         if not ordered:
             self.balls = np.random.choice(self.balls, replace=False, size=len(self.balls))
@@ -71,7 +71,7 @@ class EightBallRack(object):
         self.balls = [Ball(str(i), **ball_kwargs) for i in range(1,16)]
         self.radius = max([ball.R for ball in self.balls])
         self.spacer = spacing_factor * self.radius
-        self.eff_radius = self.radius + self.spacer + pooltool.tol
+        self.eff_radius = self.radius + self.spacer + pt.tol
 
         if not ordered:
             self.balls = np.random.choice(self.balls, replace=False, size=len(self.balls))

@@ -265,18 +265,18 @@ class Ball(Object, BallRender, Events):
         self.id = ball_id
 
         # physical properties
-        self.m = m or pooltool.m
-        self.R = R or pooltool.R
+        self.m = m or pt.m
+        self.R = R or pt.R
         self.I = 2/5 * self.m * self.R**2
-        self.g = g or pooltool.g
+        self.g = g or pt.g
 
         # felt properties
-        self.u_s = u_s or pooltool.u_s
-        self.u_r = u_r or pooltool.u_r
-        self.u_sp = u_sp or pooltool.u_sp
+        self.u_s = u_s or pt.u_s
+        self.u_r = u_r or pt.u_r
+        self.u_sp = u_sp or pt.u_sp
 
         self.t = 0
-        self.s = pooltool.stationary
+        self.s = pt.stationary
         self.rvw = np.array([[np.nan, np.nan, np.nan],  # positions (r)
                              [0,      0,      0     ],  # velocities (v)
                              [0,      0,      0     ]]) # angular velocities (w)
@@ -303,14 +303,14 @@ class Ball(Object, BallRender, Events):
 
 
     def update_next_transition_event(self):
-        if self.s == pooltool.stationary or self.s == pooltool.pocketed:
+        if self.s == pt.stationary or self.s == pt.pocketed:
             self.next_transition_event = NonEvent(t = np.inf)
 
-        elif self.s == pooltool.spinning:
+        elif self.s == pt.spinning:
             dtau_E = physics.get_spin_time(self.rvw, self.R, self.u_sp, self.g)
             self.next_transition_event = SpinningStationaryTransition(self, t=(self.t + dtau_E))
 
-        elif self.s == pooltool.rolling:
+        elif self.s == pt.rolling:
             dtau_E_spin = physics.get_spin_time(self.rvw, self.R, self.u_sp, self.g)
             dtau_E_roll = physics.get_roll_time(self.rvw, self.u_r, self.g)
 
@@ -319,7 +319,7 @@ class Ball(Object, BallRender, Events):
             else:
                 self.next_transition_event = RollingStationaryTransition(self, t=(self.t + dtau_E_roll))
 
-        elif self.s == pooltool.sliding:
+        elif self.s == pt.sliding:
             dtau_E = physics.get_slide_time(self.rvw, self.R, self.u_s, self.g)
             self.next_transition_event = SlidingRollingTransition(self, t=(self.t + dtau_E))
 

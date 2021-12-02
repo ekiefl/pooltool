@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import pooltool
+import pooltool as pt
 import pooltool.physics as physics
 
 from pooltool.events import *
@@ -202,7 +202,7 @@ class SystemHistory(Events):
                     t=remainder,
                 )
 
-                cts_history.add(rvw, s, next_event.time - pooltool.tol)
+                cts_history.add(rvw, s, next_event.time - pt.tol)
                 cts_history.add(ball.history.rvw[n+1], ball.history.s[n+1], next_event.time)
 
             # Attach the newly created history to the ball, overwriting the existing history

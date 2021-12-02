@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
+import pooltool as pt
 import pooltool.ani as ani
-import pooltool.ani.utils as autils
 import pooltool.evolution as evolution
 
 from pooltool.ani.menu import GenericMenu
@@ -84,7 +84,7 @@ class CalculateMode(Mode):
         with self.mouse:
             s = -self.mouse.get_dy()*ani.zoom_sensitivity
 
-        self.player_cam.node.setPos(autils.multiply_cw(self.player_cam.node.getPos(), 1-s))
+        self.player_cam.node.setPos(pt.autils.multiply_cw(self.player_cam.node.getPos(), 1-s))
 
 
     def move_camera_calculate(self):
