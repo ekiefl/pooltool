@@ -248,7 +248,13 @@ class ShotViewer(Interface):
         )
 
 
-    def start(self):
+    def show(self, shot=None):
+        if shot:
+            self.set_shot(shot)
+
+        if self.shot is None:
+            raise ConfigError("ShotViewer.show :: No shot passed and no shot set.")
+
         self.standby_screen.hide()
         self.instructions.show()
         self.mouse = Mouse()
@@ -267,6 +273,11 @@ class ShotViewer(Interface):
         self.instructions.hide()
         base.graphicsEngine.renderFrame()
         base.graphicsEngine.renderFrame()
+
+        self.shot = None
+        self.balls = None
+        self.table = None
+        self.cue = None
 
         self.taskMgr.stop()
 
