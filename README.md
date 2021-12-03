@@ -6,7 +6,7 @@
 
 # Gallery
 
-<img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_1.png" width="300" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_2.png" width="300" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_3.png" width="300" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_5.png" width="300" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_6.png" width="300" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_7.png" width="300" />
+<img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_1.png" width="350" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_2.png" width="350" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_3.png" width="350" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_5.png" width="350" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_6.png" width="350" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_7.png" width="350" />
 
 # Blog
 
