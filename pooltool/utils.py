@@ -3,11 +3,23 @@
 import os
 import numpy as np
 import cmath
+import pickle
 import linecache
 import tracemalloc
 import importlib.util
 
 from panda3d.core import Filename
+
+
+def save_pickle(x, path):
+    """Save an object `x` to filepath `path`"""
+    with open(path, 'wb') as f:
+        pickle.dump(x, f)
+
+
+def load_pickle(path):
+    with open(path, 'rb') as f:
+        return pickle.load(f)
 
 
 def panda_path(path):
