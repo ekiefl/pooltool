@@ -103,6 +103,8 @@ class BallCushionCollision(Collision):
             R=ball.R,
             m=ball.m,
             h=cushion.height,
+            e_c=ball.e_c,
+            f_c=ball.f_c,
         )
         s = c.sliding
 

@@ -264,7 +264,7 @@ class BallHistory(object):
 class Ball(Object, BallRender, Events):
     object_type = 'ball'
 
-    def __init__(self, ball_id, m=None, R=None, u_s=None, u_r=None, u_sp=None, g=None):
+    def __init__(self, ball_id, m=None, R=None, u_s=None, u_r=None, u_sp=None, g=None, e_c=None, f_c=None):
         self.id = ball_id
 
         if not (isinstance(self.id, int) or isinstance(self.id, str)):
@@ -280,6 +280,10 @@ class Ball(Object, BallRender, Events):
         self.u_s = u_s or c.u_s
         self.u_r = u_r or c.u_r
         self.u_sp = u_sp or c.u_sp
+
+        # restitution properties
+        self.e_c = c.e_c
+        self.f_c = c.f_c
 
         self.t = 0
         self.s = c.stationary
