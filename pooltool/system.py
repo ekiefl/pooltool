@@ -44,6 +44,12 @@ class System(object):
         return energy
 
 
+    def reset_balls(self):
+        """Reset balls to their initial states, i.e. ball.history.*[0]"""
+        for ball in self.balls.values():
+            ball.set(ball.history.rvw[0], ball.history.s[0], ball.history.t[0])
+
+
     def is_balls_overlapping(self):
         for ball1 in self.balls.values():
             for ball2 in self.balls.values():
@@ -112,7 +118,14 @@ class System(object):
 
 
     def copy(self):
-        """Make a fresh copy of this system state"""
+        """Make a fresh copy of this system state
+
+        Notes
+        =====
+        - FIXME continuize() does not work on the fresh copy due to Event data not being stored
+          in System or Ball. The solution is to call simulate() again on the copy and then continuize()
+        """
+
         balls, table, cue = self.from_dict(self.as_dict())
         return self.__class__(balls=balls, table=table, cue=cue)
 
