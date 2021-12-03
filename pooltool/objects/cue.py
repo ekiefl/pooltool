@@ -382,7 +382,7 @@ class Cue(Object, CueRender):
 
 
     def save(self, path):
-        utils.pickle_save(self.as_dict(), path)
+        utils.save_pickle(self.as_dict(), path)
 
 
 class CueAvoid(object):
