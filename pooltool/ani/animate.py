@@ -413,9 +413,9 @@ class Play(Interface, Menus):
         else:
             table_params = dict(
                 type = self.setup_options[ani.options_table_type],
-                table_length = self.setup_options[ani.options_table_length],
-                table_width = self.setup_options[ani.options_table_width],
-                table_height = self.setup_options[ani.options_table_height],
+                l = self.setup_options[ani.options_table_length],
+                w = self.setup_options[ani.options_table_width],
+                height = self.setup_options[ani.options_table_height],
                 lights_height = self.setup_options[ani.options_lights_height],
                 cushion_width = self.setup_options[ani.options_cushion_width],
                 cushion_height = self.setup_options[ani.options_cushion_height],

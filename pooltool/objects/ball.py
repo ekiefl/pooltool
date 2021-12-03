@@ -16,7 +16,7 @@ from pathlib import Path
 from panda3d.core import *
 from direct.interval.IntervalGlobal import *
 
-__all__ = ['Ball']
+__all__ = ['Ball', 'ball_from_dict', 'ball_from_pickle']
 
 class BallRender(Render):
     def __init__(self):
@@ -362,55 +362,62 @@ class Ball(Object, BallRender, Events):
         - FIXME This does not capture self.events
         """
 
-        return {
-            'id': self.id,
-            'm': self.m,
-            'R': self.R,
-            'I': self.I,
-            'g': self.g,
-            'u_s': self.u_s,
-            'u_r': self.u_r,
-            'u_sp': self.u_sp,
-            's': self.s,
-            't': self.t,
-            'rvw': self.rvw,
-            'history': {
-                'rvw': self.history.rvw,
-                's': self.history.s,
-                't': self.history.t,
-                'vectorized': self.history.vectorized,
-            },
-        }
+        return dict(
+            id = self.id,
+            m = self.m,
+            R = self.R,
+            I = self.I,
+            g = self.g,
+            u_s = self.u_s,
+            u_r = self.u_r,
+            u_sp = self.u_sp,
+            s = self.s,
+            t = self.t,
+            rvw = self.rvw,
+            history = dict(
+                rvw = self.history.rvw,
+                s = self.history.s,
+                t = self.history.t,
+                vectorized = self.history.vectorized,
+            ),
+        )
 
 
-    @staticmethod
-    def from_dict(d):
-        """Return a ball object from a dictionary
+    def save(self, path):
+        utils.pickle_save(self.as_dict(), path)
 
-        For dictionary form see return value of Ball.as_dict
-        """
 
-        ball = Ball(d['id'])
-        ball.m = d['m']
-        ball.R = d['R']
-        ball.I = d['I']
-        ball.g = d['g']
-        ball.u_s = d['u_s']
-        ball.u_r = d['u_r']
-        ball.u_sp = d['u_sp']
-        ball.s = d['s']
-        ball.t = d['t']
-        ball.rvw = d['rvw']
-        ball.history = d['rvw']
+def ball_from_dict(d):
+    """Return a ball object from a dictionary
 
-        ball_history = BallHistory()
-        ball_history.rvw = d['history']['rvw']
-        ball_history.s = d['history']['s']
-        ball_history.t = d['history']['t']
-        ball_history.vectorized = d['history']['vectorized']
-        ball.attach_history(ball_history)
+    For dictionary form see return value of Ball.as_dict
+    """
 
-        return ball
+    ball = Ball(d['id'])
+    ball.m = d['m']
+    ball.R = d['R']
+    ball.I = d['I']
+    ball.g = d['g']
+    ball.u_s = d['u_s']
+    ball.u_r = d['u_r']
+    ball.u_sp = d['u_sp']
+    ball.s = d['s']
+    ball.t = d['t']
+    ball.rvw = d['rvw']
+    ball.history = d['rvw']
 
+    ball_history = BallHistory()
+    ball_history.rvw = d['history']['rvw']
+    ball_history.s = d['history']['s']
+    ball_history.t = d['history']['t']
+    ball_history.vectorized = d['history']['vectorized']
+    ball.attach_history(ball_history)
+
+    return ball
+
+
+def ball_from_pickle(path):
+    d = utils.load_pickle(path)
+    return ball_from_dict(d)
 
 

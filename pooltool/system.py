@@ -1,7 +1,12 @@
 #! /usr/bin/env python
 
+import pooltool.utils as utils
 import pooltool.physics as physics
 import pooltool.constants as c
+
+from pooltool.objects.cue import cue_from_dict
+from pooltool.objects.ball import ball_from_dict
+from pooltool.objects.table import table_from_dict
 
 from pooltool.events import *
 from pooltool.objects.ball import BallHistory
@@ -55,15 +60,67 @@ class System(object):
         raise NotImplementedError("set_system_state FIXME. What should this take as input?")
 
 
-class SystemHistory(Events):
-    balls = None
+    def as_dict(self):
+        d = {}
 
+        if self.balls:
+            d['balls'] = {}
+            for ball in self.balls.values():
+                d['balls'][ball.id] = ball.as_dict()
+
+        if self.cue:
+            d['cue'] = self.cue.as_dict()
+
+        if self.table:
+            d['table'] = self.table.as_dict()
+
+        return d
+
+
+    def from_dict(self, d):
+        """Return balls, table, cue objects from dictionary"""
+        if 'balls' in d:
+            balls = {}
+            for ball_id, ball_dict in d['balls'].items():
+                balls[ball_id] = ball_from_dict(ball_dict)
+        else:
+            balls = None
+
+        if 'cue' in d:
+            cue = cue_from_dict(d['cue'])
+            if balls and cue.cueing_ball_id in balls:
+                cue.set_state(cueing_ball = balls[cue.cueing_ball_id])
+        else:
+            cue = None
+
+        if 'table' in d:
+            table = table_from_dict(d['table'])
+        else:
+            table = None
+
+        return balls, table, cue
+
+
+    def save(self, path):
+        """Save the system state as a pickle"""
+        utils.save_pickle(self.as_dict(), path)
+
+
+    def load(self, path):
+        """Load a pickle-stored system state"""
+        self.balls, self.table, self.cue = self.from_dict(utils.load_pickle(path))
+
+
+    def copy(self):
+        """Make a fresh copy of this system state"""
+        balls, table, cue = self.from_dict(self.as_dict())
+        return self.__class__(balls=balls, table=table, cue=cue)
+
+
+class SystemHistory(Events):
     def __init__(self):
         self.t = None
         self.num_events = 0
-
-        if self.balls is None:
-            raise NotImplementedError("Child classes of SystemHistory must have self.balls defined")
 
         Events.__init__(self)
 
