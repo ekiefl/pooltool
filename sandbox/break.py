@@ -20,7 +20,7 @@ def main(args):
     cue.strike(V0=8)
 
     # Evolve the shot
-    shot = pt.EvolveShotEventBased(cue=cue, table=table, balls=balls)
+    shot = pt.System(cue=cue, table=table, balls=balls)
     shot.simulate(continuize=True)
 
     if not args.no_viz:

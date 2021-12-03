@@ -4,6 +4,7 @@ import pooltool.utils as utils
 import pooltool.physics as physics
 import pooltool.constants as c
 
+from pooltool.evolution import EvolveShotEventBased
 from pooltool.objects.cue import cue_from_dict
 from pooltool.objects.ball import ball_from_dict
 from pooltool.objects.table import table_from_dict
@@ -13,121 +14,6 @@ from pooltool.objects.ball import BallHistory
 
 from panda3d.direct import HideInterval, ShowInterval
 from direct.interval.IntervalGlobal import *
-
-
-class System(object):
-    def __init__(self, cue=None, table=None, balls=None):
-        self.cue = cue
-        self.table = table
-        self.balls = balls
-
-        self.t = None
-
-
-    def set_cue(self, cue):
-        self.cue = cue
-
-
-    def set_table(self, table):
-        self.table = table
-
-
-    def set_balls(self, balls):
-        self.balls = balls
-
-
-    def get_system_energy(self):
-        energy = 0
-        for ball in self.balls.values():
-            energy += physics.get_ball_energy(ball.rvw, ball.R, ball.m)
-
-        return energy
-
-
-    def reset_balls(self):
-        """Reset balls to their initial states, i.e. ball.history.*[0]"""
-        for ball in self.balls.values():
-            ball.set(ball.history.rvw[0], ball.history.s[0], ball.history.t[0])
-
-
-    def is_balls_overlapping(self):
-        for ball1 in self.balls.values():
-            for ball2 in self.balls.values():
-                if ball1 is ball2:
-                    continue
-
-                if physics.is_overlapping(ball1.rvw, ball2.rvw, ball1.R, ball2.R):
-                    return True
-
-        return False
-
-
-    def set_system_state(self):
-        raise NotImplementedError("set_system_state FIXME. What should this take as input?")
-
-
-    def as_dict(self):
-        d = {}
-
-        if self.balls:
-            d['balls'] = {}
-            for ball in self.balls.values():
-                d['balls'][ball.id] = ball.as_dict()
-
-        if self.cue:
-            d['cue'] = self.cue.as_dict()
-
-        if self.table:
-            d['table'] = self.table.as_dict()
-
-        return d
-
-
-    def from_dict(self, d):
-        """Return balls, table, cue objects from dictionary"""
-        if 'balls' in d:
-            balls = {}
-            for ball_id, ball_dict in d['balls'].items():
-                balls[ball_id] = ball_from_dict(ball_dict)
-        else:
-            balls = None
-
-        if 'cue' in d:
-            cue = cue_from_dict(d['cue'])
-            if balls and cue.cueing_ball_id in balls:
-                cue.set_state(cueing_ball = balls[cue.cueing_ball_id])
-        else:
-            cue = None
-
-        if 'table' in d:
-            table = table_from_dict(d['table'])
-        else:
-            table = None
-
-        return balls, table, cue
-
-
-    def save(self, path):
-        """Save the system state as a pickle"""
-        utils.save_pickle(self.as_dict(), path)
-
-
-    def load(self, path):
-        """Load a pickle-stored system state"""
-        self.balls, self.table, self.cue = self.from_dict(utils.load_pickle(path))
-
-
-    def copy(self):
-        """Make a fresh copy of this system state
-
-        Notes
-        =====
-        - FIXME continuize() does not work on the fresh copy due to Event data not being stored
-          in System or Ball. The solution is to call simulate() again on the copy and then continuize()
-        """
-
-        balls, table, cue = self.from_dict(self.as_dict())
-        return self.__class__(balls=balls, table=table, cue=cue)
 
 
 class SystemHistory(Events):
@@ -365,5 +251,124 @@ class SystemRender(object):
     def speed_up(self):
         self.playback_speed *= 2.0
         self.shot_animation.setPlayRate(2.0*self.shot_animation.getPlayRate())
+
+
+class System(SystemHistory, SystemRender, EvolveShotEventBased):
+    def __init__(self, cue=None, table=None, balls=None):
+        SystemHistory.__init__(self)
+        SystemRender.__init__(self)
+        EvolveShotEventBased.__init__(self)
+
+        self.cue = cue
+        self.table = table
+        self.balls = balls
+
+        self.t = None
+
+
+    def set_cue(self, cue):
+        self.cue = cue
+
+
+    def set_table(self, table):
+        self.table = table
+
+
+    def set_balls(self, balls):
+        self.balls = balls
+
+
+    def get_system_energy(self):
+        energy = 0
+        for ball in self.balls.values():
+            energy += physics.get_ball_energy(ball.rvw, ball.R, ball.m)
+
+        return energy
+
+
+    def reset_balls(self):
+        """Reset balls to their initial states, i.e. ball.history.*[0]"""
+        for ball in self.balls.values():
+            ball.set(ball.history.rvw[0], ball.history.s[0], ball.history.t[0])
+
+
+    def is_balls_overlapping(self):
+        for ball1 in self.balls.values():
+            for ball2 in self.balls.values():
+                if ball1 is ball2:
+                    continue
+
+                if physics.is_overlapping(ball1.rvw, ball2.rvw, ball1.R, ball2.R):
+                    return True
+
+        return False
+
+
+    def set_system_state(self):
+        raise NotImplementedError("set_system_state FIXME. What should this take as input?")
+
+
+    def as_dict(self):
+        d = {}
+
+        if self.balls:
+            d['balls'] = {}
+            for ball in self.balls.values():
+                d['balls'][ball.id] = ball.as_dict()
+
+        if self.cue:
+            d['cue'] = self.cue.as_dict()
+
+        if self.table:
+            d['table'] = self.table.as_dict()
+
+        return d
+
+
+    def from_dict(self, d):
+        """Return balls, table, cue objects from dictionary"""
+        if 'balls' in d:
+            balls = {}
+            for ball_id, ball_dict in d['balls'].items():
+                balls[ball_id] = ball_from_dict(ball_dict)
+        else:
+            balls = None
+
+        if 'cue' in d:
+            cue = cue_from_dict(d['cue'])
+            if balls and cue.cueing_ball_id in balls:
+                cue.set_state(cueing_ball = balls[cue.cueing_ball_id])
+        else:
+            cue = None
+
+        if 'table' in d:
+            table = table_from_dict(d['table'])
+        else:
+            table = None
+
+        return balls, table, cue
+
+
+    def save(self, path):
+        """Save the system state as a pickle"""
+        utils.save_pickle(self.as_dict(), path)
+
+
+    def load(self, path):
+        """Load a pickle-stored system state"""
+        self.balls, self.table, self.cue = self.from_dict(utils.load_pickle(path))
+
+
+    def copy(self):
+        """Make a fresh copy of this system state
+
+        Notes
+        =====
+        - FIXME continuize() does not work on the fresh copy due to Event data not being stored
+          in System or Ball. The solution is to call simulate() again on the copy and then continuize()
+        """
+
+        balls, table, cue = self.from_dict(self.as_dict())
+        return self.__class__(balls=balls, table=table, cue=cue)
 
 

@@ -4,7 +4,6 @@ import pooltool.terminal as terminal
 import pooltool.constants as c
 
 from pooltool.events import *
-from pooltool.system import System, SystemHistory, SystemRender
 from pooltool.objects import NonObject, DummyBall
 
 import numpy as np
@@ -12,14 +11,10 @@ import numpy as np
 from abc import ABC
 
 
-class EvolveShot(ABC, System, SystemHistory, SystemRender):
-    def __init__(self, cue=None, table=None, balls=None, run=terminal.Run(), progress=terminal.Progress()):
+class EvolveShot(ABC):
+    def __init__(self, run=terminal.Run(), progress=terminal.Progress()):
         self.run = run
         self.progress = progress
-
-        System.__init__(self, cue=cue, table=table, balls=balls)
-        SystemHistory.__init__(self)
-        SystemRender.__init__(self)
 
         # What kinds of events should be considered?
         self.include = {
