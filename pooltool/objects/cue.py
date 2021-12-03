@@ -6,6 +6,7 @@ import pooltool.constants as c
 
 from pooltool.events import StickBallCollision
 from pooltool.objects import Object, Render
+from pooltool.objects.ball import Ball
 
 import numpy as np
 
@@ -13,7 +14,7 @@ from pathlib import Path
 from panda3d.core import *
 from direct.interval.IntervalGlobal import *
 
-__all__ = ['Cue']
+__all__ = ['Cue', 'cue_from_dict', 'cue_from_pickle']
 
 class CueRender(Render):
     def __init__(self):
@@ -263,7 +264,8 @@ class Cue(Object, CueRender):
     object_type = 'cue_stick'
 
     def __init__(self, M=c.M, length=c.cue_length, tip_radius=c.cue_tip_radius,
-                 butt_radius=c.cue_butt_radius, cueing_ball=None, cue_id='cue_stick', brand=None):
+                 butt_radius=c.cue_butt_radius, cueing_ball=None, cue_id='cue_stick', brand=None,
+                 V0=0, phi=0, theta=0, a=0, b=0):
 
         self.id = cue_id
         self.M = M
@@ -272,11 +274,11 @@ class Cue(Object, CueRender):
         self.butt_radius = butt_radius
         self.brand = brand
 
-        self.V0 = 0
-        self.phi = 0
-        self.theta = 0
-        self.a = 0
-        self.b = 0
+        self.V0 = V0
+        self.phi = phi
+        self.theta = theta
+        self.a = a
+        self.b = b
 
         self.cueing_ball = cueing_ball
 
@@ -350,6 +352,37 @@ class Cue(Object, CueRender):
         """
 
         self.aim_at_pos(ball.rvw[0])
+
+
+    def as_dict(self):
+        try:
+            # It doesn't make sense to store a dictionary copy of the cueing_ball, since building
+            # the ball from Ball.from_dict will lead to an object that is unreferenced elsewhere.
+            # Instead, I store the cueing_ball.id, if it exists. This way, if a system state is
+            # loaded from dictionary, the balls and cue can be built, and then set the cueing_ball
+            # can be directly set by referencing the newly built Ball
+            cueing_ball_id = self.cueing_ball.id
+        except AttributeError:
+            cueing_ball_id = None
+
+        return dict(
+            cue_id = self.id,
+            M = self.M,
+            length = self.length,
+            tip_radius = self.tip_radius,
+            butt_radius = self.butt_radius,
+            brand = self.brand,
+            V0 = self.V0,
+            phi = self.phi,
+            theta = self.theta,
+            a = self.a,
+            b = self.b,
+            cueing_ball_id = cueing_ball_id,
+        )
+
+
+    def save(self, path):
+        utils.pickle_save(self.as_dict(), path)
 
 
 class CueAvoid(object):
@@ -525,5 +558,17 @@ class CueAvoid(object):
         assert into_node_path_name.startswith(expected_suffix)
         ball_id = into_node_path_name[len(expected_suffix):]
         return self.balls[ball_id]
+
+
+def cue_from_dict(d):
+    cueing_ball_id = d.pop('cueing_ball_id')
+    cue = Cue(**d)
+    cue.cueing_ball_id = cueing_ball_id
+    return cue
+
+
+def cue_from_pickle(path):
+    d = utils.load_pickle(path)
+    return cue_from_dict(d)
 
 

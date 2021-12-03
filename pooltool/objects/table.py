@@ -17,6 +17,9 @@ from panda3d.core import *
 __all__ = [
     'PocketTable',
     'BilliardTable',
+    'table_types',
+    'table_from_dict',
+    'table_from_pickle'
 ]
 
 
@@ -192,13 +195,13 @@ class TableRender(Render):
 class PocketTable(Object, TableRender):
     object_type = 'pocket_table'
 
-    def __init__(self, table_width=None, table_length=None, cushion_width=None, cushion_height=None, corner_pocket_width=None,
+    def __init__(self, w=None, l=None, cushion_width=None, cushion_height=None, corner_pocket_width=None,
                  corner_pocket_angle=None, corner_pocket_depth=None, corner_pocket_radius=None, corner_jaw_radius=None,
                  side_pocket_width=None, side_pocket_angle=None, side_pocket_depth=None, side_pocket_radius=None,
-                 side_jaw_radius=None, table_height=None, lights_height=None, has_model=False, model_name='none'):
+                 side_jaw_radius=None, height=None, lights_height=None, has_model=False, model_name='none'):
 
-        self.w = table_width or c.table_width
-        self.l = table_length or c.table_length
+        self.w = w or c.table_width
+        self.l = l or c.table_length
         self.cushion_width = cushion_width or c.cushion_width
         self.cushion_height = cushion_height or c.cushion_height
         self.corner_pocket_width = corner_pocket_width or c.corner_pocket_width
@@ -211,15 +214,24 @@ class PocketTable(Object, TableRender):
         self.side_pocket_depth = side_pocket_depth or c.side_pocket_depth
         self.side_pocket_radius = side_pocket_radius or c.side_pocket_radius
         self.side_jaw_radius = side_jaw_radius or c.side_jaw_radius
-        self.height = table_height or c.table_height # for visualization
+        self.height = height or c.table_height # for visualization
         self.lights_height = lights_height or c.lights_height # for visualization
+        self.has_model = has_model
+
+        self.model_name = model_name
+        if self.model_name != 'none':
+            # User is passing a table with pre-existing parameters. All params explicitly defined by
+            # this preset table will overwrite all other options
+            table_params = ani.table_config[self.model_name]
+            for key, val in table_params.items():
+                setattr(self, key, val)
 
         self.center = (self.w/2, self.l/2)
-
         self.cushion_segments = self.get_cushion_segments()
         self.pockets = self.get_pockets()
 
-        TableRender.__init__(self, name=model_name, has_model=has_model)
+
+        TableRender.__init__(self, name=self.model_name, has_model=self.has_model)
 
 
     def get_cushion_segments(self):
@@ -372,6 +384,34 @@ class PocketTable(Object, TableRender):
         return pockets
 
 
+    def as_dict(self):
+        return dict(
+            w = self.w,
+            l = self.l,
+            cushion_width = self.cushion_width,
+            cushion_height = self.cushion_height,
+            corner_pocket_width = self.corner_pocket_width,
+            corner_pocket_angle = self.corner_pocket_angle,
+            corner_pocket_depth = self.corner_pocket_depth,
+            corner_pocket_radius = self.corner_pocket_radius,
+            corner_jaw_radius = self.corner_jaw_radius,
+            side_pocket_width = self.side_pocket_width,
+            side_pocket_angle = self.side_pocket_angle,
+            side_pocket_depth = self.side_pocket_depth,
+            side_pocket_radius = self.side_pocket_radius,
+            side_jaw_radius = self.side_jaw_radius,
+            height = self.height,
+            lights_height = self.lights_height,
+            has_model = self.has_model,
+            model_name = self.model_name,
+            table_type = 'pocket',
+        )
+
+
+    def save(self, path):
+        utils.pickle_save(self.as_dict(), path)
+
+
 class BilliardTable(Object, TableRender):
     object_type = 'billiard_table'
     def __init__(self):
@@ -458,3 +498,22 @@ table_types = {
     'pocket': PocketTable,
     'billiard': BilliardTable,
 }
+
+
+def table_from_dict(d):
+    table_type = d.pop('table_type')
+    return table_types[table_type](**d)
+
+
+def table_from_pickle(path):
+    d = utils.load_pickle(path)
+    return table_from_dict(d)
+
+
+
+
+
+
+
+
+
