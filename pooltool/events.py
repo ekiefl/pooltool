@@ -43,7 +43,6 @@ class Event(ABC):
         return '\n'.join(lines) + '\n'
 
 
-
     @abstractmethod
     def resolve(self):
         pass
@@ -60,17 +59,14 @@ class BallBallCollision(Collision):
     event_type = type_ball_ball
 
     def __init__(self, ball1, ball2, t=None):
-        self.ball1_state_start = ball1.s
-        self.ball1_state_end = c.sliding
-
-        self.ball2_state_start = ball2.s
-        self.ball2_state_end = c.sliding
-
         Collision.__init__(self, body1=ball1, body2=ball2, t=t)
 
 
     def resolve(self):
         ball1, ball2 = self.agents
+
+        self.ball1_state_start = (np.copy(ball1.rvw), ball1.s)
+        self.ball2_state_start = (np.copy(ball2.rvw), ball2.s)
 
         rvw1, rvw2 = physics.resolve_ball_ball_collision(ball1.rvw, ball2.rvw)
         s1, s2 = c.sliding, c.sliding
@@ -80,6 +76,9 @@ class BallBallCollision(Collision):
 
         ball2.set(rvw2, s2, t=self.time)
         ball2.update_next_transition_event()
+
+        self.ball1_state_end = (np.copy(ball1.rvw), ball1.s)
+        self.ball2_state_end = (np.copy(ball2.rvw), ball2.s)
 
 
 class BallCushionCollision(Collision):
@@ -96,6 +95,8 @@ class BallCushionCollision(Collision):
         ball, cushion = self.agents
         normal = cushion.get_normal(ball.rvw)
 
+        self.ball_state_start = (np.copy(ball.rvw), ball.s)
+
         rvw = physics.resolve_ball_cushion_collision(
             rvw=ball.rvw,
             normal=normal,
@@ -107,6 +108,8 @@ class BallCushionCollision(Collision):
 
         ball.set(rvw, s, t=self.time)
         ball.update_next_transition_event()
+
+        self.ball_state_end = (np.copy(ball.rvw), ball.s)
 
 
 class StickBallCollision(Collision):
@@ -122,6 +125,8 @@ class StickBallCollision(Collision):
     def resolve(self):
         cue_stick, ball = self.agents
 
+        self.ball_state_start = (np.copy(ball.rvw), ball.s)
+
         v, w = physics.cue_strike(ball.m, cue_stick.M, ball.R, cue_stick.V0, cue_stick.phi, cue_stick.theta, cue_stick.a, cue_stick.b)
         rvw = np.array([ball.rvw[0], v, w])
 
@@ -131,6 +136,8 @@ class StickBallCollision(Collision):
 
         ball.set(rvw, s)
         ball.update_next_transition_event()
+
+        self.ball_state_end = (np.copy(ball.rvw), ball.s)
 
 
 class BallPocketCollision(Collision):
