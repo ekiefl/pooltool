@@ -43,9 +43,6 @@ class Event(ABC):
         return '\n'.join(lines) + '\n'
 
 
-    def add_time(self, t):
-        self.time += t
-
 
     @abstractmethod
     def resolve(self):
