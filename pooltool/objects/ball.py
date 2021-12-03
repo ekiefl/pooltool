@@ -267,6 +267,9 @@ class Ball(Object, BallRender, Events):
     def __init__(self, ball_id, m=None, R=None, u_s=None, u_r=None, u_sp=None, g=None):
         self.id = ball_id
 
+        if not (isinstance(self.id, int) or isinstance(self.id, str)):
+            raise ConfigError("ball_id must be integer or string")
+
         # physical properties
         self.m = m or c.m
         self.R = R or c.R
