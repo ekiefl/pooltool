@@ -272,11 +272,23 @@ class ShotViewer(Interface):
 
     def __init__(self, shot=None):
         Interface.__init__(self, shot=shot)
-        self.is_game = False
         self.create_standby_screen()
         self.create_instructions()
+        self.create_title('')
 
         self.stop()
+
+
+    def create_title(self, title):
+        self.title_node = OnscreenText(
+            text = title,
+            pos = (-1.55, -0.93),
+            scale = ani.menu_text_scale*0.7,
+            fg = (1,1,1,1),
+            align = TextNode.ALeft,
+            parent = aspect2d,
+        )
+        self.title_node.hide()
 
 
     def create_instructions(self):
@@ -306,7 +318,7 @@ class ShotViewer(Interface):
         )
 
 
-    def show(self, shot=None):
+    def show(self, shot=None, title=''):
         if shot:
             self.set_shot(shot)
 
@@ -315,6 +327,8 @@ class ShotViewer(Interface):
 
         self.standby_screen.hide()
         self.instructions.show()
+        self.create_title(title)
+        self.title_node.show()
         self.init_help_page()
         self.help_hint.hide()
         self.mouse = Mouse()
@@ -332,6 +346,7 @@ class ShotViewer(Interface):
     def stop(self):
         self.standby_screen.show()
         self.instructions.hide()
+        self.title_node.hide()
         base.graphicsEngine.renderFrame()
         base.graphicsEngine.renderFrame()
 
