@@ -29,7 +29,7 @@ class EvolveShot(ABC, System, SystemHistory, SystemRender):
         }
 
 
-    def simulate(self, strike=True, name="NA", **kwargs):
+    def simulate(self, name="NA", **kwargs):
         """Run a simulation
 
         Parameters
@@ -38,20 +38,12 @@ class EvolveShot(ABC, System, SystemHistory, SystemRender):
             The simulation will run until the time is greater than this value. If None, simulation
             is ran until the next event occurs at np.inf
 
-        strike : bool, True
-            If True, the cue stick will strike a ball at the start of the simulation. If you already
-            struck the cue ball, you should set this to False.
-
         name : str, 'NA'
             A name for the simulated shot
         """
 
         self.reset_history()
         self.init_history()
-
-        if strike:
-            event = self.cue.strike(t = self.t)
-            self.update_history(event)
 
         energy_start = self.get_system_energy()
 
