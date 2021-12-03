@@ -28,3 +28,9 @@ def test_resolve_ball_ball_collision(ball_ball_collision_pack):
 
     np.testing.assert_allclose(b1_rvw, b1_expected_rvw)
     np.testing.assert_allclose(b2_rvw, b2_expected_rvw)
+
+
+def test_resolve_ball_cushion_collision(ball_cushion_collision_pack):
+    ball, cushion, expected_rvw = ball_cushion_collision_pack
+    rvw = p.resolve_ball_cushion_collision(ball.rvw, cushion.normal, ball.R, ball.m, cushion.height)
+    np.testing.assert_allclose(rvw, expected_rvw)

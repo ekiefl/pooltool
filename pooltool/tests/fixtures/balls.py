@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import pooltool as pt
+from pooltool.tests import ball_kwargs
 
 from pooltool.objects.ball import Ball
 
@@ -9,7 +10,7 @@ import pytest
 
 @pytest.fixture
 def sliding_ball():
-    ball = pt.Ball('slider', R=0.028575)
+    ball = pt.Ball('slider', **ball_kwargs)
     ball.s = pt.sliding
     ball.t = 0.2683117547266862
     ball.rvw = np.array([[ 0.558495956 ,  1.1708239284,  0.028575    ],
@@ -20,7 +21,7 @@ def sliding_ball():
 
 @pytest.fixture
 def rolling_ball():
-    ball = pt.Ball('roller', R=0.028575)
+    ball = pt.Ball('roller', **ball_kwargs)
     ball.s = pt.rolling
     ball.t = 0.8678446812335155
     ball.rvw = np.array([[  0.0793380432,   0.5162592019,   0.028575    ],
@@ -31,7 +32,7 @@ def rolling_ball():
 
 @pytest.fixture
 def spinning_ball():
-    ball = pt.Ball('spinner', R=0.028575)
+    ball = pt.Ball('spinner', **ball_kwargs)
     ball.s = pt.spinning
     ball.t = 2.2394790988971039
     ball.rvw = np.array([[ 0.6663102336,  1.8105621081,  0.028575    ],
@@ -42,7 +43,7 @@ def spinning_ball():
 
 @pytest.fixture
 def stationary_ball():
-    ball = pt.Ball('still_guy', R=0.028575)
+    ball = pt.Ball('still_guy', **ball_kwargs)
     ball.s = pt.stationary
     ball.t = 6.653887765968978
     ball.rvw = np.array([[ 0.6663102336,  1.8105621081,  0.028575    ],
@@ -53,7 +54,7 @@ def stationary_ball():
 
 @pytest.fixture
 def pocketed_ball():
-    ball = pt.Ball('pocketed_guy', R=0.028575)
+    ball = pt.Ball('pocketed_guy', **ball_kwargs)
     ball.s = pt.pocketed
     ball.t = 4.353881365968999
     ball.rvw = np.array([[ 1.05947,  0.9906 , -0.08   ],
