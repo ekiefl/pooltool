@@ -103,7 +103,6 @@ class ShotMode(Mode):
 
             for ball in self.shot.balls.values():
                 ball.reset_angular_integration()
-                ball.set_from_history(-1) # Set the ball's state to the final value in history
                 ball.set_render_state_as_object_state()
 
             self.shot.cue.update_focus()

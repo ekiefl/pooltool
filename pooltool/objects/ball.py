@@ -196,9 +196,7 @@ class BallRender(Render):
         if ani.settings['graphics']['angular_vectors']:
             angular_vector_sequence = Sequence()
 
-        self.set_from_history(0)
-        self.set_render_state_as_object_state()
-
+        self.set_render_state_from_history(0)
         for i in range(len(playback_dts)):
             x, y, z = xyzs[i+1]
             Qm, Qx, Qy, Qz = self.quats[i+1]
