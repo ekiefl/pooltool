@@ -98,6 +98,8 @@ class Interface(ShowBase, ModeManager, HUD):
         if self.is_game is None:
             raise Exception(f"'{self.__class__.__name__}' must set 'is_game' attribute")
 
+        self.stdout = pt.terminal.Run()
+
         super().__init__(self)
         HUD.__init__(self)
         base.setBackgroundColor(0.04, 0.04, 0.04)
@@ -124,9 +126,12 @@ class Interface(ShowBase, ModeManager, HUD):
         ModeManager.__init__(self)
 
         self.scene = None
+
+        self.frame = 0
+        self.add_task(self.monitor, 'monitor')
+
         if monitor:
-            self.frame = 0
-            self.add_task(self.monitor, 'monitor')
+            self.add_task(self.increment_frame, 'increment_frame')
 
 
     def set_shot(self, shot):
@@ -200,15 +205,19 @@ class Interface(ShowBase, ModeManager, HUD):
 
 
     def monitor(self, task):
-        print(f"Mode: {self.mode}")
-        print(f"Tasks: {list(self.tasks.keys())}")
-        print(f"Memory: {pt.utils.get_total_memory_usage()}")
-        print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
-        print(f"Keymap: {self.keymap}")
-        print(f"Frame: {self.frame}")
-        print()
-        self.frame += 1
+        self.stdout.warning('', header=f"Frame {self.frame}", lc='green', nl_before=1, nl_after=0)
+        self.stdout.info('Mode', self.mode)
+        self.stdout.info('Tasks', list(self.tasks.keys()))
+        self.stdout.info('Memory', pt.utils.get_total_memory_usage())
+        self.stdout.info('Actions', [k for k in self.keymap if self.keymap[k]])
+        self.stdout.info('Keymap', self.keymap)
+        self.stdout.info('Frame', self.frame)
 
+        return task.cont
+
+
+    def increment_frame(self, task):
+        self.frame += 1
         return task.cont
 
 
