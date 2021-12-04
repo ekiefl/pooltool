@@ -11,7 +11,7 @@ def main(args):
         import numpy as np
         np.random.seed(args.seed)
 
-    table = pt.PocketTable()
+    table = pt.PocketTable(model_name='7_foot')
     balls = pt.get_nine_ball_rack(table, ordered=True)
     cue = pt.Cue(cueing_ball=balls['cue'])
 
