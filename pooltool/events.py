@@ -25,7 +25,7 @@ type_sliding_rolling = 'sliding-rolling'
 
 
 class Event(ABC):
-    event_type = None
+    event_type = type_none
     event_class = class_none
 
     def __init__(self, *agents, t=None):
@@ -51,11 +51,34 @@ class Event(ABC):
         pass
 
 
+    @abstractmethod
+    def as_dict(self):
+        pass
+
+
 class Collision(Event):
     event_class = class_collision
 
     def __init__(self, body1, body2, t=None):
         Event.__init__(self, body1, body2, t=t)
+
+        self.agent1_state_initial = None
+        self.agent2_state_initial = None
+        self.agent1_state_final = None
+        self.agent2_state_final = None
+
+
+    def as_dict(self):
+        return dict(
+            event_class = self.event_class,
+            event_type = self.event_type,
+            agent_ids = [agent.id for agent in self.agents],
+            agent1_state_initial = self.agent1_state_initial,
+            agent2_state_initial = self.agent2_state_initial,
+            agent1_state_final = self.agent1_state_final,
+            agent2_state_final = self.agent2_state_final,
+            t = self.t,
+        )
 
 
 class BallBallCollision(Collision):
@@ -63,11 +86,6 @@ class BallBallCollision(Collision):
 
     def __init__(self, ball1, ball2, t=None):
         Collision.__init__(self, body1=ball1, body2=ball2, t=t)
-
-        self.agent1_state_initial = None
-        self.agent2_state_initial = None
-        self.agent1_state_final = None
-        self.agent2_state_final = None
 
 
     def resolve(self):
@@ -93,9 +111,6 @@ class BallCushionCollision(Collision):
     event_type = type_ball_cushion
 
     def __init__(self, ball, cushion, t=None):
-        self.state_start = ball.s
-        self.state_end = c.sliding
-
         Collision.__init__(self, body1=ball, body2=cushion, t=t)
 
 
@@ -154,9 +169,6 @@ class BallPocketCollision(Collision):
     event_type = type_ball_pocket
 
     def __init__(self, ball, pocket, t=None):
-        self.state_start = ball.s
-        self.state_end = c.pocketed
-
         Collision.__init__(self, body1=ball, body2=pocket, t=t)
 
 
@@ -168,7 +180,7 @@ class BallPocketCollision(Collision):
                         [0,        0,         0           ],
                         [0,        0,         0           ]])
 
-        ball.set(rvw, self.state_end)
+        ball.set(rvw, c.pocketed)
         ball.update_next_transition_event()
 
         pocket.add(ball.id)
@@ -185,6 +197,10 @@ class Transition(Event):
     def resolve(self):
         self.ball.s = self.state_end
         self.ball.update_next_transition_event()
+
+
+    def as_dict(self):
+        pass
 
 
 class SpinningStationaryTransition(Transition):
@@ -220,13 +236,15 @@ class SlidingRollingTransition(Transition):
 
 
 class NonEvent(Event):
-    event_class, event_type = class_none, type_none
-
     def __init__(self, t=None):
         Event.__init__(self, t=t)
 
 
     def resolve(self):
+        pass
+
+
+    def as_dict(self):
         pass
 
 
