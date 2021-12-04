@@ -289,7 +289,7 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
     def reset_balls(self):
         """Reset balls to their initial states, i.e. ball.history.*[0]"""
         for ball in self.balls.values():
-            ball.set(ball.history.rvw[0], ball.history.s[0], ball.history.t[0])
+            ball.reset()
 
 
     def is_balls_overlapping(self):
@@ -351,6 +351,7 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
 
     def save(self, path):
         """Save the system state as a pickle"""
+        self.reset_balls()
         utils.save_pickle(self.as_dict(), path)
 
 

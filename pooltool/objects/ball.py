@@ -168,6 +168,9 @@ class BallRender(Render):
         if ani.settings['graphics']['angular_vectors']:
             angular_vector_sequence = Sequence()
 
+        self.reset()
+        self.set_render_state_as_object_state()
+
         for i in range(len(playback_dts)):
             x, y, z = xyzs[i+1]
             Qm, Qx, Qy, Qz = self.quats[i+1]
@@ -355,6 +358,11 @@ class Ball(Object, BallRender, Events):
         self.rvw = rvw
         if t is not None:
             self.t = t
+
+
+    def reset(self):
+        """Set ball state to first entry in ball.history"""
+        self.set(self.history.rvw[0], self.history.s[0], self.history.t[0])
 
 
     def set_time(self, t):
