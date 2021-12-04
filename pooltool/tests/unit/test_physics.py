@@ -1,36 +1,18 @@
 #! /usr/bin/env python
+"""Unit testing for physics.py
+
+FIXME My plan for this module is to test each of the functions in physics.py by taking the reference shot
+(ref) and parsing its events. For example, resolve_ball_ball_collision could be tested by collecting
+every ball-ball collision event in ref, and then creating a new BallBallCollisionEvent with two balls
+with states event.ball1_state_start, event.ball2_state_start. Then, by calling event.resolve, I can
+ensure event.ball1_state_end, and event.ball2_state.end are produced. The reason this hasn't yet happened
+is that I need to create a pickleable representation for the Event object, so that saving/loading/copying
+system states preserve event history.
+"""
 
 import pooltool.physics as p
 
-from pooltool.tests import *
+from pooltool.tests import trial, ref
 
-def test_get_rel_velocity(sliding_ball, rolling_ball, spinning_ball, stationary_ball, pocketed_ball):
-    ans = p.get_rel_velocity(sliding_ball.rvw, sliding_ball.R)
-    np.testing.assert_allclose(ans, np.array([0.0703005532, -0.3504767645, 0.]))
-
-    ans = p.get_rel_velocity(rolling_ball.rvw, rolling_ball.R)
-    np.testing.assert_allclose(ans, np.zeros(3), atol=1e-7)
-
-    ans = p.get_rel_velocity(spinning_ball.rvw, spinning_ball.R)
-    np.testing.assert_allclose(ans, np.zeros(3), atol=1e-7)
-
-    ans = p.get_rel_velocity(stationary_ball.rvw, stationary_ball.R)
-    np.testing.assert_allclose(ans, np.zeros(3), atol=1e-7)
-
-    ans = p.get_rel_velocity(pocketed_ball.rvw, pocketed_ball.R)
-    np.testing.assert_allclose(ans, np.zeros(3), atol=1e-7)
-
-
-def test_resolve_ball_ball_collision(ball_ball_collision_pack):
-    b1, b2, b1_expected_rvw, b2_expected_rvw = ball_ball_collision_pack
-
-    b1_rvw, b2_rvw = p.resolve_ball_ball_collision(b1.rvw, b2.rvw)
-
-    np.testing.assert_allclose(b1_rvw, b1_expected_rvw)
-    np.testing.assert_allclose(b2_rvw, b2_expected_rvw)
-
-
-def test_resolve_ball_cushion_collision(ball_cushion_collision_pack):
-    ball, cushion, expected_rvw = ball_cushion_collision_pack
-    rvw = p.resolve_ball_cushion_collision(ball.rvw, cushion.normal, ball.R, ball.m, cushion.height)
-    np.testing.assert_allclose(rvw, expected_rvw)
+def test_resolve_ball_ball_collision(ref):
+    pass
