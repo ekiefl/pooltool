@@ -94,7 +94,7 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
 
 class Interface(ShowBase, ModeManager, HUD):
     is_game = None
-    def __init__(self, shot=None):
+    def __init__(self, shot=None, monitor=False):
         if self.is_game is None:
             raise Exception(f"'{self.__class__.__name__}' must set 'is_game' attribute")
 
@@ -124,8 +124,9 @@ class Interface(ShowBase, ModeManager, HUD):
         ModeManager.__init__(self)
 
         self.scene = None
-        self.add_task(self.monitor, 'monitor')
-        self.frame = 0
+        if monitor:
+            self.frame = 0
+            self.add_task(self.monitor, 'monitor')
 
 
     def set_shot(self, shot):
@@ -199,13 +200,13 @@ class Interface(ShowBase, ModeManager, HUD):
 
 
     def monitor(self, task):
-        #print(f"Mode: {self.mode}")
-        #print(f"Tasks: {list(self.tasks.keys())}")
-        #print(f"Memory: {pt.utils.get_total_memory_usage()}")
-        #print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
-        #print(f"Keymap: {self.keymap}")
-        #print(f"Frame: {self.frame}")
-        #print()
+        print(f"Mode: {self.mode}")
+        print(f"Tasks: {list(self.tasks.keys())}")
+        print(f"Memory: {pt.utils.get_total_memory_usage()}")
+        print(f"Actions: {[k for k in self.keymap if self.keymap[k]]}")
+        print(f"Keymap: {self.keymap}")
+        print(f"Frame: {self.frame}")
+        print()
         self.frame += 1
 
         return task.cont
@@ -270,8 +271,8 @@ class Interface(ShowBase, ModeManager, HUD):
 class ShotViewer(Interface):
     is_game = False
 
-    def __init__(self, shot=None):
-        Interface.__init__(self, shot=shot)
+    def __init__(self, *args, **kwargs):
+        Interface.__init__(self, *args, **kwargs)
         self.create_standby_screen()
         self.create_instructions()
         self.create_title('')
@@ -366,7 +367,7 @@ class Play(Interface, Menus):
     is_game = True
 
     def __init__(self, *args, **kwargs):
-        Interface.__init__(self, shot=None)
+        Interface.__init__(self, *args, **kwargs)
         Menus.__init__(self)
 
         self.change_mode('menu')

@@ -1,12 +1,18 @@
 #! /usr/bin/env python
 
+from pooltool.ani.animate import Play
+
 import sys
 import argparse
 
-ap = argparse.ArgumentParser()
-args = ap.parse_args()
+def main(args):
+    play = Play(monitor=args.monitor)
+    play.start()
+
 
 if __name__ == '__main__':
-    from pooltool.ani.animate import Play
-    play = Play()
-    play.start()
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--monitor', action='store_true', help='Spit out per-frame info about game')
+    args = ap.parse_args()
+
+    main(args)
