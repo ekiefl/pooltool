@@ -64,12 +64,17 @@ class BallBallCollision(Collision):
     def __init__(self, ball1, ball2, t=None):
         Collision.__init__(self, body1=ball1, body2=ball2, t=t)
 
+        self.agent1_state_initial = None
+        self.agent2_state_initial = None
+        self.agent1_state_final = None
+        self.agent2_state_final = None
+
 
     def resolve(self):
         ball1, ball2 = self.agents
 
-        self.ball1_state_start = (np.copy(ball1.rvw), ball1.s)
-        self.ball2_state_start = (np.copy(ball2.rvw), ball2.s)
+        self.agent1_state_initial = (np.copy(ball1.rvw), ball1.s)
+        self.agent2_state_initial = (np.copy(ball2.rvw), ball2.s)
 
         rvw1, rvw2 = physics.resolve_ball_ball_collision(ball1.rvw, ball2.rvw)
         s1, s2 = c.sliding, c.sliding
@@ -80,8 +85,8 @@ class BallBallCollision(Collision):
         ball2.set(rvw2, s2, t=self.time)
         ball2.update_next_transition_event()
 
-        self.ball1_state_end = (np.copy(ball1.rvw), ball1.s)
-        self.ball2_state_end = (np.copy(ball2.rvw), ball2.s)
+        self.agent1_state_final = (np.copy(ball1.rvw), ball1.s)
+        self.agent2_state_final = (np.copy(ball2.rvw), ball2.s)
 
 
 class BallCushionCollision(Collision):
