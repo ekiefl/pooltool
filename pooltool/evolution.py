@@ -97,6 +97,11 @@ class EvolveShotEventBased(EvolveShot):
     def evolution_algorithm(self, t_final=None, continuize=True, dt=0.01):
         """The event-based evolution algorithm"""
 
+        # Balls may already have energy. Therefore, it is critical to establish their
+        # next transition events.
+        for ball in self.balls.values():
+            ball.update_next_transition_event()
+
         while True:
             event = self.get_next_event()
 
