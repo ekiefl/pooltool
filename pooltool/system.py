@@ -289,7 +289,10 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
     def reset_balls(self):
         """Reset balls to their initial states, i.e. ball.history.*[0]"""
         for ball in self.balls.values():
-            ball.set_from_history(0)
+            try:
+                ball.set_from_history(0)
+            except IndexError:
+                pass
 
 
     def is_balls_overlapping(self):
@@ -369,7 +372,9 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
           in System or Ball. The solution is to call simulate() again on the copy and then continuize()
         """
 
-        balls, table, cue = self.from_dict(self.as_dict())
+        filepath = utils.get_temp_file_path()
+        self.save(filepath)
+        balls, table, cue = self.from_dict(utils.load_pickle(filepath))
         return self.__class__(balls=balls, table=table, cue=cue)
 
 

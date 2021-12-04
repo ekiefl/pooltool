@@ -398,7 +398,7 @@ class Ball(Object, BallRender, Events):
             u_sp = self.u_sp,
             s = self.s,
             t = self.t,
-            rvw = self.rvw,
+            rvw = np.copy(self.rvw),
             history = dict(
                 rvw = self.history.rvw,
                 s = self.history.s,
