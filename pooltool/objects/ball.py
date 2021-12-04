@@ -139,17 +139,45 @@ class BallRender(Render):
 
 
     def get_render_state(self):
+        """Return the position of the rendered ball"""
         x, y, z = self.nodes['pos'].getPos()
         return x, y, z
 
 
     def set_object_state_as_render_state(self):
-        self.rvw[0,0], self.rvw[0,1], self.rvw[0,2] = self.get_render_state()
+        """Set the object position based on the rendered position"""
+        self.rvw[0] = self.get_render_state()
 
 
     def set_render_state_as_object_state(self):
-        self.nodes['pos'].setPos(*self.rvw[0,:])
-        self.nodes['shadow'].setPos(self.rvw[0,0], self.rvw[0,1], min(0, self.rvw[0,2]-self.R))
+        """Set rendered position based on the object's position (self.rvw[0,:])"""
+        pos = self.rvw[0]
+        self.set_render_state(pos)
+
+
+    def set_render_state(self, pos):
+        """Set the position of the rendered ball
+
+        Parameters
+        ==========
+        pos : length-3 iterable
+        """
+
+        self.nodes['pos'].setPos(*pos)
+        self.nodes['shadow'].setPos(pos[0], pos[1], min(0, pos[2]-self.R))
+
+
+    def set_render_state_from_history(self, i):
+        """Set the position of the rendered ball based on history index
+
+        Parameters
+        ==========
+        i : int
+            An index from the history. e.g. 0 refers to initial state, -1 refers to final state
+        """
+
+        rvw, _, _ = self.history.get_state(i)
+        self.set_render_state(rvw[0])
 
 
     def set_playback_sequence(self, playback_speed=1):
