@@ -168,7 +168,7 @@ class BallRender(Render):
         if ani.settings['graphics']['angular_vectors']:
             angular_vector_sequence = Sequence()
 
-        self.reset()
+        self.set_from_history(0)
         self.set_render_state_as_object_state()
 
         for i in range(len(playback_dts)):
@@ -228,6 +228,16 @@ class BallHistory(object):
     def __init__(self):
         self.vectorized = False
         self.reset_history()
+
+
+    def get_state(self, i):
+        """Get state based on history index
+
+        Returns
+        =======
+        out : (rvw, s, t)
+        """
+        return self.rvw[i], self.s[i], self.t[i]
 
 
     def reset_history(self):
@@ -360,9 +370,9 @@ class Ball(Object, BallRender, Events):
             self.t = t
 
 
-    def reset(self):
-        """Set ball state to first entry in ball.history"""
-        self.set(self.history.rvw[0], self.history.s[0], self.history.t[0])
+    def set_from_history(self, i):
+        """Set the ball state according to a history index"""
+        self.set(*self.history.get_state(i))
 
 
     def set_time(self, t):

@@ -289,7 +289,7 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
     def reset_balls(self):
         """Reset balls to their initial states, i.e. ball.history.*[0]"""
         for ball in self.balls.values():
-            ball.reset()
+            ball.set_from_history(0)
 
 
     def is_balls_overlapping(self):
