@@ -4,7 +4,9 @@ import pooltool.utils as utils
 import pooltool.physics as physics
 import pooltool.constants as c
 
+import sys
 import numpy as np
+import inspect
 
 from abc import ABC, abstractmethod
 
@@ -23,6 +25,7 @@ type_sliding_rolling = 'sliding-rolling'
 
 
 class Event(ABC):
+    event_type = None
     event_class = class_none
 
     def __init__(self, *agents, t=None):
@@ -326,5 +329,17 @@ class Events(object):
 
     def __repr__(self):
         return '\n'.join([event.__repr__() for event in self.events])
+
+
+# event_classes looks like {
+#    'spinning-stationary': <class 'pooltool.events.SpinningStationaryTransition'>,
+#    'rolling-stationary': <class 'pooltool.events.RollingStationaryTransition'>,
+#    'ball-ball': <class 'pooltool.events.BallBallCollision'>,
+#    'ball-cushion': <class 'pooltool.events.BallCushionCollision'>,
+#    (...)
+# }
+event_classes = {subsubcls.event_type: subsubcls           # BallBallCollision, etc.
+                 for subcls in Event.__subclasses__()      # Event
+                 for subsubcls in subcls.__subclasses__()} # Collision, Transition
 
 
