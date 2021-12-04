@@ -128,10 +128,10 @@ class Interface(ShowBase, ModeManager, HUD):
         self.scene = None
 
         self.frame = 0
-        self.add_task(self.monitor, 'monitor')
+        self.add_task(self.increment_frame, 'increment_frame')
 
         if monitor:
-            self.add_task(self.increment_frame, 'increment_frame')
+            self.add_task(self.monitor, 'monitor')
 
 
     def set_shot(self, shot):
