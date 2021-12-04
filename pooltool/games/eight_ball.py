@@ -157,14 +157,6 @@ class EightBall(Game):
         return True if (cushion_hit or ball_pocketed) else False
 
 
-    def is_cue_ball_strike(self, shot):
-        cue_strike = shot.filter_type(e.type_stick_ball)
-        if cue_strike.get(0).agents[1].id == 'cue':
-            return True
-        else:
-            return False
-
-
     def is_8_ball_sunk_before_others(self, shot):
         if '8' in self.active_player.target_balls:
             return False
@@ -181,8 +173,6 @@ class EightBall(Game):
 
         if self.is_8_ball_sunk_before_others(shot):
             reason = '8-ball sunk before others!'
-        elif not self.is_cue_ball_strike(shot):
-            reason = 'Wrong ball was cued'
         elif not self.is_object_ball_hit_first(shot):
             reason = 'Object ball not hit first'
         elif not self.is_shot_called(shot):

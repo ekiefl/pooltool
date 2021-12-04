@@ -180,21 +180,11 @@ class NineBall(Game):
         return True if (cushion_hit or ball_pocketed) else False
 
 
-    def is_cue_ball_strike(self, shot):
-        cue_strike = shot.filter_type(e.type_stick_ball)
-        if cue_strike.get(0).agents[1].id == 'cue':
-            return True
-        else:
-            return False
-
-
     def legality(self, shot):
         """Returns whether or not a shot is legal, and the reason"""
         reason = None
 
-        if not self.is_cue_ball_strike(shot):
-            reason = 'Wrong ball was cued'
-        elif not self.is_lowest_hit_first(shot):
+        if not self.is_lowest_hit_first(shot):
             reason = 'Lowest ball not hit first'
         elif self.is_cue_pocketed(shot):
             reason = 'Cue ball in pocket!'
