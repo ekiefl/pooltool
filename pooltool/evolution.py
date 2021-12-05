@@ -81,7 +81,9 @@ class EvolveShot(ABC):
                 g=ball.g,
                 t=dt,
             )
-            ball.set(rvw, s, t=(self.t + dt))
+            # NOTE though s is returned, we do not set it. Resolving changes in ball motion state
+            # are strictly the responsibility of event.Transition.resolve.
+            ball.set(rvw, s=None, t=(self.t + dt))
 
 
     @abstractmethod

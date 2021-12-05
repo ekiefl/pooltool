@@ -389,9 +389,10 @@ class Ball(Object, BallRender, Events):
         return '\n'.join(lines) + '\n'
 
 
-    def set(self, rvw, s, t=None):
-        self.s = s
+    def set(self, rvw, s=None, t=None):
         self.rvw = rvw
+        if s is not None:
+            self.s = s
         if t is not None:
             self.t = t
 
