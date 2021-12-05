@@ -253,7 +253,7 @@ class BallRender(Render):
 class BallHistory(object):
     def __init__(self):
         self.vectorized = False
-        self.reset_history()
+        self.reset()
 
 
     def get_state(self, i):
@@ -266,7 +266,7 @@ class BallHistory(object):
         return self.rvw[i], self.s[i], self.t[i]
 
 
-    def reset_history(self):
+    def reset(self):
         n = 0
         self.vectorized = False
         self.rvw = [np.nan * np.ones((3,3))] * n
@@ -300,7 +300,7 @@ class BallHistory(object):
         self.vectorized = True
 
 
-class Ball(Object, BallRender, Events):
+class Ball(Object, BallRender):
     object_type = 'ball'
 
     def __init__(self, ball_id, m=None, R=None, u_s=None, u_r=None, u_sp=None, g=None, e_c=None, f_c=None):
@@ -332,9 +332,9 @@ class Ball(Object, BallRender, Events):
         self.update_next_transition_event()
 
         self.history = BallHistory()
+        self.events = Events()
 
         BallRender.__init__(self)
-        Events.__init__(self)
 
 
     def attach_history(self, history):
@@ -344,7 +344,7 @@ class Ball(Object, BallRender, Events):
 
     def update_history(self, event):
         self.history.add(np.copy(self.rvw), self.s, event.time)
-        self.add_event(event)
+        self.events.append(event)
 
 
     def init_history(self):
@@ -467,7 +467,7 @@ def ball_from_dict(d):
     ball.attach_history(ball_history)
 
     for event_dict in d['events']:
-        ball.add_event(event_from_dict(event_dict))
+        ball.events.append(event_from_dict(event_dict))
 
     return ball
 

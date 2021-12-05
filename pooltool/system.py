@@ -16,38 +16,30 @@ from panda3d.direct import HideInterval, ShowInterval
 from direct.interval.IntervalGlobal import *
 
 
-class SystemHistory(Events):
+class SystemHistory(object):
     def __init__(self):
         self.t = None
-        self.num_events = 0
-
-        Events.__init__(self)
-
+        self.events = Events()
         self.vectorized = False
 
 
     def init_history(self):
         """Add an initializing NonEvent"""
-
-        self.num_events += 1
-
         event = NonEvent(t=0)
         for ball in self.balls.values():
             ball.update_history(event)
 
-        self.add_event(event)
+        self.events.append(event)
 
 
     def end_history(self):
         """Add a final NonEvent that timestamps the final state of each ball"""
 
-        self.num_events += 1
-
         event = NonEvent(t=self.t)
         for ball in self.balls.values():
             ball.update_history(event)
 
-        self.add_event(event)
+        self.events.append(event)
 
 
     def reset_history(self):
@@ -55,11 +47,11 @@ class SystemHistory(Events):
 
         self.t = 0
         for ball in self.balls.values():
-            ball.history.reset_history()
-            ball.reset_events()
+            ball.history.reset()
+            ball.events.reset()
             ball.set_time(0)
 
-        self.reset_events()
+        self.events.reset()
 
 
     def update_history(self, event, update_all=False):
@@ -74,7 +66,6 @@ class SystemHistory(Events):
             event. However, if update_all is True, each ball's history will be updated.
         """
         self.t = event.time
-        self.num_events += 1
 
         if update_all:
             for ball in self.balls.values():
@@ -84,7 +75,7 @@ class SystemHistory(Events):
                 if agent.object_type == 'ball':
                     agent.update_history(event)
 
-        self.add_event(event)
+        self.events.append(event)
 
 
     def vectorize_trajectories(self):
@@ -113,7 +104,7 @@ class SystemHistory(Events):
             # Add t=0
             cts_history.add(ball.history.rvw[0], ball.history.s[0], 0)
 
-            for n in range(ball.num_events - 1):
+            for n in range(len(ball.events) - 1):
                 curr_event = ball.events[n]
                 next_event = ball.events[n+1]
 

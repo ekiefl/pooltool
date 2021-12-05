@@ -122,7 +122,7 @@ class ShotMode(Mode):
                     )
                     ball.get_node('ball').setQuat(ball.quats[0])
                 ball.set_render_state_as_object_state()
-                ball.history.reset_history()
+                ball.history.reset()
 
             self.shot.cue.update_focus()
 

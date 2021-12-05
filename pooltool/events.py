@@ -8,6 +8,7 @@ from pooltool.error import ConfigError
 from pooltool.objects import NonObject
 
 import numpy as np
+import collections.abc
 
 from abc import ABC, abstractmethod
 
@@ -288,14 +289,42 @@ class NonEvent(Event):
         )
 
 
-class Events(object):
-    def __init__(self, events=None):
-        if events is not None:
-            self.events = events
-        else:
-            self.events = []
+class Events(collections.abc.MutableSequence):
+    """Stores Event objects
 
-        self.num_events = 0
+    This is a list-like object. It supports len, del, insert, [], and append
+    """
+
+    def __init__(self):
+        self._events = list()
+
+
+    def __len__(self):
+        return len(self._events)
+
+
+    def __delitem__(self, index):
+        self._events.__delitem__(index)
+
+
+    def insert(self, index, value):
+        self._events.insert(index, value)
+
+
+    def __setitem__(self, index, value):
+        self._events.__setitem__(index, value)
+
+
+    def __getitem__(self, index):
+        return self._events.__getitem__(index)
+
+
+    def append(self, value):
+        self.insert(len(self) + 1, value)
+
+
+    def __repr__(self):
+        return self._events.__repr__()
 
 
     def filter_type(self, types):
@@ -304,47 +333,52 @@ class Events(object):
         Parameters
         ==========
         types : str or list of str
-            Event types to be filtered by. E.g. pooltool.events.type_ball_cushion
+            Event types to be filtered by. E.g. pooltool.events.type_ball_cushion or
+            equivalently, 'ball-cushion'
 
         Returns
         =======
-        events : pooltool.events.Event
+        events : pooltool.events.Events
             A subset Events object containing events only of specified types
         """
 
-        if isinstance(types, str):
+        try:
+            iter(types)
+        except TypeError:
             types = [types]
 
         events = Events()
-        for event in self.events:
+        for event in self._events:
             if event.event_type in types:
-                events.add_event(event)
+                events.append(event)
 
         return events
 
 
-    def filter_ball(self, balls):
+    def filter_ball(self, balls, exclude=False):
         """Return events in chronological order that involve a collection of balls
 
         Parameters
         ==========
-        balls : str or list of str
+        balls : pooltool.objects.ball.Ball or list of pooltool.objects.ball.Ball
             Balls that you want events for.
 
         Returns
         =======
-        events : pooltool.events.Event
+        events : pooltool.events.Events
             A subset Events object containing events only with specified balls
         """
 
-        if isinstance(balls, str):
+        try:
+            iter(balls)
+        except TypeError:
             balls = [balls]
 
         events = Events()
-        for event in self.events:
+        for event in self._events:
             for ball in balls:
                 if ball in event.agents:
-                    events.add_event(event)
+                    events.append(event)
                     break
 
         return events
@@ -360,42 +394,32 @@ class Events(object):
 
         Returns
         =======
-        events : pooltool.events.Event
+        events : pooltool.events.Events
             A subset Events object containing events only after specified time
         """
 
         idx = 0
         events = Events()
-        for event in reversed(self.events):
+        for event in reversed(self._events):
             if event.time > t:
-                events.add_event(event)
+                events.append(event)
             else:
                 break
 
-        events.events = events.events[::-1]
+        events._events = events._events[::-1]
         return events
 
 
-    def add_event(self, event):
-        self.events.append(event)
-        self.num_events += 1
-
-
-    def get(self, idx):
-        return self.events[idx]
-
-
-    def reset_events(self):
-        self.events = []
-        self.num_events = 0
+    def reset(self):
+        self._events = []
 
 
     def events_as_dict(self):
-        return [event.as_dict() for event in self.events]
+        return [event.as_dict() for event in self._events]
 
 
     def __repr__(self):
-        return '\n'.join([event.__repr__() for event in self.events])
+        return '\n'.join([event.__repr__() for event in self._events])
 
 
 def get_subclasses(cls):

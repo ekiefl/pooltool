@@ -45,7 +45,7 @@ class EvolveShot(ABC):
         def progress_update():
             """Convenience function for updating progress"""
             energy = self.get_system_energy()
-            msg = f"SIM TIME {self.t:.6f}s | ENERGY {np.round(energy, 2)}J | EVENTS {self.num_events}"
+            msg = f"SIM TIME {self.t:.6f}s | ENERGY {np.round(energy, 2)}J | EVENTS {len(self.events)}"
             self.progress.update(msg)
             self.progress.increment(increment_to=int(energy_start - energy))
 
@@ -115,7 +115,7 @@ class EvolveShotEventBased(EvolveShot):
 
             self.update_history(event)
 
-            if (self.num_events % 10) == 0:
+            if (len(self.events) % 10) == 0:
                 self.progress_update()
 
             if t_final is not None and self.t >= t_final:
