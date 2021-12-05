@@ -419,7 +419,7 @@ class Events(collections.abc.MutableSequence):
 
 
     def __repr__(self):
-        return '\n'.join([event.__repr__() for event in self._events])
+        return '\n'.join([f"{i}: {event.__repr__()}" for i, event in enumerate(self._events)])
 
 
 def get_subclasses(cls):
