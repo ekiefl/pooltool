@@ -391,7 +391,7 @@ class Events(object):
 
 
     def events_as_dict(self):
-        return {i: event.as_dict() for i, event in enumerate(self.events)}
+        return [event.as_dict() for event in self.events]
 
 
     def __repr__(self):
