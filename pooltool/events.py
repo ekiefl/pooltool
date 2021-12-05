@@ -56,6 +56,10 @@ class Event(ABC):
         pass
 
 
+    def save(self, path):
+        utils.save_pickle(self.as_dict(), path)
+
+
 class Collision(Event):
     event_class = class_collision
 
@@ -77,7 +81,7 @@ class Collision(Event):
             agent2_state_initial = self.agent2_state_initial,
             agent1_state_final = self.agent1_state_final,
             agent2_state_final = self.agent2_state_final,
-            t = self.t,
+            t = self.time,
         )
 
 
@@ -118,7 +122,7 @@ class BallCushionCollision(Collision):
         ball, cushion = self.agents
         normal = cushion.get_normal(ball.rvw)
 
-        self.ball_state_start = (np.copy(ball.rvw), ball.s)
+        self.agent1_state_initial = (np.copy(ball.rvw), ball.s)
 
         rvw = physics.resolve_ball_cushion_collision(
             rvw=ball.rvw,
@@ -134,23 +138,20 @@ class BallCushionCollision(Collision):
         ball.set(rvw, s, t=self.time)
         ball.update_next_transition_event()
 
-        self.ball_state_end = (np.copy(ball.rvw), ball.s)
+        self.agent1_state_final = (np.copy(ball.rvw), ball.s)
 
 
 class StickBallCollision(Collision):
     event_type = type_stick_ball
 
     def __init__(self, cue_stick, ball, t=None):
-        self.state_start = ball.s
-        self.state_end = c.sliding
-
         Collision.__init__(self, body1=cue_stick, body2=ball, t=t)
 
 
     def resolve(self):
         cue_stick, ball = self.agents
 
-        self.ball_state_start = (np.copy(ball.rvw), ball.s)
+        self.agent1_state_initial = (np.copy(ball.rvw), ball.s)
 
         v, w = physics.cue_strike(ball.m, cue_stick.M, ball.R, cue_stick.V0, cue_stick.phi, cue_stick.theta, cue_stick.a, cue_stick.b)
         rvw = np.array([ball.rvw[0], v, w])
@@ -162,7 +163,7 @@ class StickBallCollision(Collision):
         ball.set(rvw, s)
         ball.update_next_transition_event()
 
-        self.ball_state_end = (np.copy(ball.rvw), ball.s)
+        self.agent1_state_final = (np.copy(ball.rvw), ball.s)
 
 
 class BallPocketCollision(Collision):
@@ -175,6 +176,8 @@ class BallPocketCollision(Collision):
     def resolve(self):
         ball, pocket = self.agents
 
+        self.agent1_state_initial = (np.copy(ball.rvw), ball.s)
+
         # Ball is placed at the pocket center
         rvw = np.array([[pocket.a, pocket.b, -pocket.depth],
                         [0,        0,         0           ],
@@ -185,6 +188,8 @@ class BallPocketCollision(Collision):
 
         pocket.add(ball.id)
 
+        self.agent1_state_final = (np.copy(ball.rvw), ball.s)
+
 
 class Transition(Event):
     event_class = class_transition
@@ -193,14 +198,28 @@ class Transition(Event):
         Event.__init__(self, ball, t=t)
         self.ball = self.agents[0]
 
+        self.agent_state_initial = None
+        self.agent_state_final = None
+
 
     def resolve(self):
+        self.agent_state_initial = (np.copy(self.ball.rvw), self.ball.s)
+
         self.ball.s = self.state_end
         self.ball.update_next_transition_event()
 
+        self.agent_state_final = (np.copy(self.ball.rvw), self.ball.s)
+
 
     def as_dict(self):
-        pass
+        return dict(
+            event_class = self.event_class,
+            event_type = self.event_type,
+            agent_ids = [agent.id for agent in self.agents],
+            agent_state_initial = self.agent_state_initial,
+            agent_state_final = self.agent_state_final,
+            t = self.time,
+        )
 
 
 class SpinningStationaryTransition(Transition):
@@ -245,7 +264,11 @@ class NonEvent(Event):
 
 
     def as_dict(self):
-        pass
+        return dict(
+            event_class = self.event_class,
+            event_type = self.event_type,
+            t = self.time,
+        )
 
 
 class Events(object):
