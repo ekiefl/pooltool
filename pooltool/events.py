@@ -414,7 +414,7 @@ class Events(collections.abc.MutableSequence):
         self._events = []
 
 
-    def events_as_dict(self):
+    def as_dict(self):
         return [event.as_dict() for event in self._events]
 
 

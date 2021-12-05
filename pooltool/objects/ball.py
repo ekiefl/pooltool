@@ -432,7 +432,7 @@ class Ball(Object, BallRender):
                 t = self.history.t,
                 vectorized = self.history.vectorized,
             ),
-            events = self.events_as_dict(),
+            events = self.events.as_dict(),
         )
 
 
@@ -466,8 +466,10 @@ def ball_from_dict(d):
     ball_history.vectorized = d['history']['vectorized']
     ball.attach_history(ball_history)
 
+    events = Events()
     for event_dict in d['events']:
-        ball.events.append(event_from_dict(event_dict))
+        events.append(event_from_dict(event_dict))
+    ball.events = events
 
     return ball
 

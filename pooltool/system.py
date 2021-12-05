@@ -316,11 +316,13 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
         if self.table:
             d['table'] = self.table.as_dict()
 
+        d['events'] = self.events.as_dict()
+
         return d
 
 
     def from_dict(self, d):
-        """Return balls, table, cue objects from dictionary"""
+        """Return balls, table, cue, and events objects from dictionary"""
         if 'balls' in d:
             balls = {}
             for ball_id, ball_dict in d['balls'].items():
@@ -340,7 +342,44 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
         else:
             table = None
 
-        return balls, table, cue
+        events = Events()
+        for event_dict in d['events']:
+            event = event_from_dict(event_dict)
+
+            # The agents of this event are NonObjects, since they came from a pickleable dictionary.
+            # We attempt to change that by associating the proper agents based on object IDs. So if
+            # the NonObject agent has an id 'cue', We replace this agent with a proper instantiation
+            # of 'cue', i.e. balls['cue']
+            if event.event_type == type_ball_ball:
+                agent1, agent2 = event.agents
+                event.agents = (balls[agent1.id], balls[agent2.id])
+
+            elif event.event_type == type_ball_cushion:
+                agent1, agent2 = event.agents
+                if agent2.id.endswith('edge'):
+                    cushion = table.cushion_segments['linear'][agent2.id.split('_')[0]]
+                else:
+                    cushion = table.cushion_segments['circular'][agent2.id]
+                event.agents = (balls[agent1.id], cushion)
+
+            elif event.event_type == type_ball_pocket:
+                agent1, agent2 = event.agents
+                event.agents = (balls[agent1.id], table.pockets[agent2.id])
+
+            elif event.event_type == type_stick_ball:
+                agent1, agent2 = event.agents
+                event.agents = (cue, balls[agent2.id])
+
+            elif event.event_class == class_transition:
+                agent = event.agents[0]
+                event.agents = (balls[agent.id],)
+
+            # The event now has no NonObject agents, so it is not longer 'partial'. For example,
+            # event.resolve may not be called
+            event.partial = False
+            events.append(event)
+
+        return balls, table, cue, events
 
 
     def save(self, path):
@@ -351,7 +390,7 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
 
     def load(self, path):
         """Load a pickle-stored system state"""
-        self.balls, self.table, self.cue = self.from_dict(utils.load_pickle(path))
+        self.balls, self.table, self.cue, self.events = self.from_dict(utils.load_pickle(path))
 
 
     def copy(self):
@@ -365,7 +404,10 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
 
         filepath = utils.get_temp_file_path()
         self.save(filepath)
-        balls, table, cue = self.from_dict(utils.load_pickle(filepath))
-        return self.__class__(balls=balls, table=table, cue=cue)
+        balls, table, cue, events = self.from_dict(utils.load_pickle(filepath))
+
+        system = self.__class__(balls=balls, table=table, cue=cue)
+        system.events = events
+        return system
 
 
