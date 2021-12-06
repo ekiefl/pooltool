@@ -189,3 +189,32 @@ def test_get_ball_pocket_collision_time(ref):
             np.testing.assert_allclose(t, t_expected)
 
 
+def test_evolve_ball_motion(ref):
+    for i in range(len(ref.events)-1):
+        event = ref.events[i]
+        next_event = ref.events[i+1]
+
+        dt = next_event.time - event.time
+
+        for ball in ref.balls.values():
+            if ball in next_event.agents:
+                # The ball takes part in the next event. This is problematic for testing
+                # evolve_ball_motion, since events by definition disrupt the validity of the
+                # equations of motion:
+                # https://ekiefl.github.io/2020/12/20/pooltool-alg/#continuous-event-based-evolution
+                # Technically, resolving an event leaves the position of the ball unchanged, so I
+                # could assert that at least the position is correct. It is also possible to parse
+                # the event and determine the ball state _before_ resolving the collision. However,
+                # both of these require a significant amount of thought. Since there are plenty of
+                # other dat to gather, I opt to move on instead.
+                continue
+
+            rvw_expected, s_expected = ball.history.rvw[i+1], ball.history.s[i+1]
+
+            ball.set_from_history(i)
+            rvw, s = p.evolve_ball_motion(ball.s, ball.rvw, ball.R, ball.m, ball.u_s, ball.u_sp, ball.u_r, ball.g, dt)
+
+            np.testing.assert_allclose(rvw, rvw_expected)
+            np.testing.assert_allclose(s, s_expected)
+
+
