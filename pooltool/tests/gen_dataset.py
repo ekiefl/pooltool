@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-"""This is a basic example of the pooltool API"""
+"""This script creates data/benchmark.pkl, that is used by unit and integration tests as ground truth"""
 
 import pooltool as pt
 
@@ -14,7 +14,8 @@ def main(args):
         raise ConfigError("Many of the unit tests are generated automatically by parsing the output of this script. "
                           "That means the output serves as a ground truth. By running this script, you are deciding "
                           "that a new ground truth should be issued, which is clearly no joke. Provide the flag --force "
-                          "to proceed. The trajectories of the balls in this simmulation will be taken as true.")
+                          "to proceed. The trajectories of the balls in this simmulation will be taken as true and used "
+                          "to compare the identicality of future versions of the code.")
 
     table = pt.PocketTable(model_name='7_foot')
     balls = pt.get_nine_ball_rack(table, ordered=True)
@@ -29,8 +30,10 @@ def main(args):
     shot.simulate(continuize=False)
 
     # Visualize the shot
+    shot_continuized = shot.copy()
+    shot_continuized.continuize(dt=0.005)
     interface = pt.ShotViewer()
-    interface.show(shot, 'This is the new benchmark (continuize = False).')
+    interface.show(shot_continuized, 'This is the new benchmark.')
 
     # Save the shot
     output_dir = Path(pt.__file__).parent / 'tests' / 'data'
@@ -47,7 +50,7 @@ if __name__ == '__main__':
     ap.add_argument(
         '--force',
         action = 'store_true',
-        help = 'Use to regenerate benchmark.pkl'
+        help = 'Use this flag to regenerate benchmark.pkl'
     )
 
     args = ap.parse_args()
