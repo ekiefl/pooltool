@@ -14,15 +14,7 @@ I have blogged about every aspect of this project. Read the detailed account [he
 
 # Installation
 
-Installation instructions vary depending on how you want to interact with pooltool. There are 3 general categories for installation and they each support the following features:
-
-| Method    | GUI | API | Develop |
-|-----------|-----|-----|---------|
-| Installer | ✅   | ❌   | ❌       |
-| PIP       | ✅   | ✅   | ❌       |
-| Developer | ✅   | ✅   | ✅       |
-
-Read on for descriptions and instructions for each installation method.
+Installation instructions vary depending on how you want to interact with pooltool. There are 3 current options: _#1 Installer_, _#2 PIP_, and _#3 Developer_. Read on for descriptions and instructions for each installation method.
 
 ### Install option #1: Installer
 
