@@ -19,6 +19,7 @@ rather to preserve functionality in the face of any refactoring that takes place
 """
 
 import pooltool.physics as p
+import pooltool.constants as c
 
 from pooltool.tests import trial, ref
 
@@ -71,8 +72,120 @@ def test_resolve_ball_cushion_collision(ref):
         col.resolve()
         ball_rvw, ball_s = col.agent1_state_final
 
-        # Assert the calculated values equal the reference values
         np.testing.assert_allclose(ball_rvw, ball_rvw_expected)
         np.testing.assert_allclose(ball_s, ball_s_expected)
+
+
+def test_get_ball_ball_collision_time(ref):
+    for i, event in enumerate(ref.events):
+        if event.event_type == 'ball-ball':
+            prev_event = ref.events[i-1]
+
+            t_expected = event.time - prev_event.time
+
+            # Set ball states to previous event state
+            ball1, ball2 = event.agents
+            ball1.set_from_history(i-1)
+            ball2.set_from_history(i-1)
+
+            # Calculate time until collision
+            t = p.get_ball_ball_collision_time(
+                rvw1 = ball1.rvw,
+                rvw2 = ball2.rvw,
+                s1 = ball1.s,
+                s2 = ball2.s,
+                mu1 = ball1.u_s if ball1.s == c.sliding else ball1.u_r,
+                mu2 = ball2.u_s if ball2.s == c.sliding else ball2.u_r,
+                m1 = ball1.m,
+                m2 = ball2.m,
+                g1 = ball1.g,
+                g2 = ball2.g,
+                R = ball1.R
+            )
+
+            np.testing.assert_allclose(t, t_expected)
+
+
+def test_get_ball_linear_cushion_collision_time(ref):
+    for i, event in enumerate(ref.events):
+        if event.event_type == 'ball-cushion':
+            ball, cushion = event.agents
+
+            if cushion.object_type != 'linear_cushion_segment':
+                continue
+
+            prev_event = ref.events[i-1]
+            t_expected = event.time - prev_event.time
+
+            ball.set_from_history(i-1)
+
+            t = p.get_ball_linear_cushion_collision_time(
+                rvw=ball.rvw,
+                s=ball.s,
+                lx=cushion.lx,
+                ly=cushion.ly,
+                l0=cushion.l0,
+                p1=cushion.p1,
+                p2=cushion.p2,
+                mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
+                m=ball.m,
+                g=ball.g,
+                R=ball.R
+            )
+
+            np.testing.assert_allclose(t, t_expected)
+
+
+def test_get_ball_circular_cushion_collision_time(ref):
+    for i, event in enumerate(ref.events):
+        if event.event_type == 'ball-cushion':
+            ball, cushion = event.agents
+
+            if cushion.object_type != 'circular_cushion_segment':
+                continue
+
+            prev_event = ref.events[i-1]
+            t_expected = event.time - prev_event.time
+
+            ball.set_from_history(i-1)
+
+            t = p.get_ball_circular_cushion_collision_time(
+                rvw=ball.rvw,
+                s=ball.s,
+                a=cushion.a,
+                b=cushion.b,
+                r=cushion.radius,
+                mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
+                m=ball.m,
+                g=ball.g,
+                R=ball.R
+            )
+
+            np.testing.assert_allclose(t, t_expected)
+
+
+def test_get_ball_pocket_collision_time(ref):
+    for i, event in enumerate(ref.events):
+        if event.event_type == 'ball-pocket':
+            ball, pocket = event.agents
+
+            prev_event = ref.events[i-1]
+            t_expected = event.time - prev_event.time
+
+            ball.set_from_history(i-1)
+
+            t = p.get_ball_pocket_collision_time(
+                rvw=ball.rvw,
+                s=ball.s,
+                a=pocket.a,
+                b=pocket.b,
+                r=pocket.radius,
+                mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
+                m=ball.m,
+                g=ball.g,
+                R=ball.R
+            )
+
+            np.testing.assert_allclose(t, t_expected)
 
 
