@@ -378,7 +378,7 @@ class Ball(Object, BallRender):
 
     def __repr__(self):
         lines = [
-            f'<{self.__class__.__module__}.{self.__class__.__name__} object at {hex(id(self))}>',
+            f'<{self.__class__.__name__} object at {hex(id(self))}>',
             f' ├── id       : {self.id}',
             f' ├── state    : {self.s}',
             f' ├── position : {self.rvw[0]}',

@@ -41,7 +41,7 @@ class Event(ABC):
 
     def __repr__(self):
         lines = [
-            f'<{self.__class__.__module__}.{self.__class__.__name__} object at {hex(id(self))}>',
+            f'<{self.__class__.__name__} object at {hex(id(self))}>',
             f' ├── time   : {self.time}',
             f' └── agents : {[(agent.id if agent is not None else None) for agent in self.agents]}',
         ]
