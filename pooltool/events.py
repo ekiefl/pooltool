@@ -217,12 +217,12 @@ class Transition(Event):
         ball = self.agents[0]
 
         self.is_partial()
-        self.agent_state_initial = (np.copy(ball.rvw), ball.s)
+        self.agent_state_initial = (np.copy(ball.rvw), self.state_start)
 
         ball.s = self.state_end
         ball.update_next_transition_event()
 
-        self.agent_state_final = (np.copy(ball.rvw), ball.s)
+        self.agent_state_final = (np.copy(ball.rvw), self.state_end)
 
 
     def as_dict(self):
