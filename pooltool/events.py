@@ -208,20 +208,21 @@ class Transition(Event):
 
     def __init__(self, ball, t=None):
         Event.__init__(self, ball, t=t)
-        self.ball = self.agents[0]
 
         self.agent_state_initial = None
         self.agent_state_final = None
 
 
     def resolve(self):
+        ball = self.agents[0]
+
         self.is_partial()
-        self.agent_state_initial = (np.copy(self.ball.rvw), self.ball.s)
+        self.agent_state_initial = (np.copy(ball.rvw), ball.s)
 
-        self.ball.s = self.state_end
-        self.ball.update_next_transition_event()
+        ball.s = self.state_end
+        ball.update_next_transition_event()
 
-        self.agent_state_final = (np.copy(self.ball.rvw), self.ball.s)
+        self.agent_state_final = (np.copy(ball.rvw), ball.s)
 
 
     def as_dict(self):
