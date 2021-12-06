@@ -17,14 +17,12 @@ if not benchmark_path.exists():
 
 shot_ref = System()
 shot_ref.load(benchmark_path)
-shot_ref.reset_balls()
 
 @pytest.fixture
 def ref():
-    return shot_ref
+    return shot_ref.copy()
 
 shot_trial = shot_ref.copy()
-shot_trial.reset_balls()
 shot_trial.simulate(continuize=False)
 shot_trial.reset_balls()
 
