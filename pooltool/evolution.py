@@ -113,7 +113,7 @@ class EvolveShotEventBased(EvolveShot):
             if self.include.get(event.event_type, True):
                 event.resolve()
 
-            self.update_history(event)
+            self.update_history(event, update_all=True)
 
             if (len(self.events) % 10) == 0:
                 self.progress_update()
