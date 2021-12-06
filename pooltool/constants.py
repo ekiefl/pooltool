@@ -37,6 +37,8 @@ R = 0.028575 # ball radius
 u_s = 0.2 # sliding friction
 u_r = 0.01 # rolling friction
 u_sp = 10 * 2/5*R/9 # spinning friction
+e_c = 0.85 # cushion coeffiient of restitution
+f_c = 0.2 # cushion coeffiient of friction
 
 english_fraction = 0.5
 

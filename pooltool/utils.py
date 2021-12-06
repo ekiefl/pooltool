@@ -4,6 +4,7 @@ import os
 import numpy as np
 import cmath
 import pickle
+import tempfile
 import linecache
 import tracemalloc
 import importlib.util
@@ -24,6 +25,13 @@ def load_pickle(path):
 
 def panda_path(path):
     return str(Filename.fromOsSpecific(str(path)))
+
+
+def get_temp_file_path():
+    f = tempfile.NamedTemporaryFile(delete=False)
+    temp_file_name = f.name
+    f.close()
+    return temp_file_name
 
 
 def get_total_memory_usage(keep_raw=False):

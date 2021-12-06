@@ -4,7 +4,6 @@ import pooltool.terminal as terminal
 import pooltool.constants as c
 
 from pooltool.events import *
-from pooltool.system import System, SystemHistory, SystemRender
 from pooltool.objects import NonObject, DummyBall
 
 import numpy as np
@@ -12,14 +11,10 @@ import numpy as np
 from abc import ABC
 
 
-class EvolveShot(ABC, System, SystemHistory, SystemRender):
-    def __init__(self, cue=None, table=None, balls=None, run=terminal.Run(), progress=terminal.Progress()):
+class EvolveShot(ABC):
+    def __init__(self, run=terminal.Run(), progress=terminal.Progress()):
         self.run = run
         self.progress = progress
-
-        System.__init__(self, cue=cue, table=table, balls=balls)
-        SystemHistory.__init__(self)
-        SystemRender.__init__(self)
 
         # What kinds of events should be considered?
         self.include = {
@@ -29,7 +24,7 @@ class EvolveShot(ABC, System, SystemHistory, SystemRender):
         }
 
 
-    def simulate(self, strike=True, name="NA", **kwargs):
+    def simulate(self, name="NA", **kwargs):
         """Run a simulation
 
         Parameters
@@ -38,10 +33,6 @@ class EvolveShot(ABC, System, SystemHistory, SystemRender):
             The simulation will run until the time is greater than this value. If None, simulation
             is ran until the next event occurs at np.inf
 
-        strike : bool, True
-            If True, the cue stick will strike a ball at the start of the simulation. If you already
-            struck the cue ball, you should set this to False.
-
         name : str, 'NA'
             A name for the simulated shot
         """
@@ -49,16 +40,12 @@ class EvolveShot(ABC, System, SystemHistory, SystemRender):
         self.reset_history()
         self.init_history()
 
-        if strike:
-            event = self.cue.strike(t = self.t)
-            self.update_history(event)
-
         energy_start = self.get_system_energy()
 
         def progress_update():
             """Convenience function for updating progress"""
             energy = self.get_system_energy()
-            msg = f"SIM TIME {self.t:.6f}s | ENERGY {np.round(energy, 2)}J | EVENTS {self.num_events}"
+            msg = f"SIM TIME {self.t:.6f}s | ENERGY {np.round(energy, 2)}J | EVENTS {len(self.events)}"
             self.progress.update(msg)
             self.progress.increment(increment_to=int(energy_start - energy))
 
@@ -94,7 +81,7 @@ class EvolveShot(ABC, System, SystemHistory, SystemRender):
                 g=ball.g,
                 t=dt,
             )
-            ball.set(rvw, s, t=(self.t + dt))
+            ball.set(rvw, s=s, t=(self.t + dt))
 
 
     @abstractmethod
@@ -110,6 +97,11 @@ class EvolveShotEventBased(EvolveShot):
     def evolution_algorithm(self, t_final=None, continuize=True, dt=0.01):
         """The event-based evolution algorithm"""
 
+        # Balls may already have energy. Therefore, it is critical to establish their
+        # next transition events.
+        for ball in self.balls.values():
+            ball.update_next_transition_event()
+
         while True:
             event = self.get_next_event()
 
@@ -121,9 +113,9 @@ class EvolveShotEventBased(EvolveShot):
             if self.include.get(event.event_type, True):
                 event.resolve()
 
-            self.update_history(event)
+            self.update_history(event, update_all=True)
 
-            if (self.num_events % 10) == 0:
+            if (len(self.events) % 10) == 0:
                 self.progress_update()
 
             if t_final is not None and self.t >= t_final:

@@ -4,6 +4,7 @@ import pooltool.utils as utils
 import pooltool.physics as physics
 import pooltool.constants as c
 
+from pooltool.evolution import EvolveShotEventBased
 from pooltool.objects.cue import cue_from_dict
 from pooltool.objects.ball import ball_from_dict
 from pooltool.objects.table import table_from_dict
@@ -15,140 +16,30 @@ from panda3d.direct import HideInterval, ShowInterval
 from direct.interval.IntervalGlobal import *
 
 
-class System(object):
-    def __init__(self, cue=None, table=None, balls=None):
-        self.cue = cue
-        self.table = table
-        self.balls = balls
-
-        self.t = None
-
-
-    def set_cue(self, cue):
-        self.cue = cue
-
-
-    def set_table(self, table):
-        self.table = table
-
-
-    def set_balls(self, balls):
-        self.balls = balls
-
-
-    def get_system_energy(self):
-        energy = 0
-        for ball in self.balls.values():
-            energy += physics.get_ball_energy(ball.rvw, ball.R, ball.m)
-
-        return energy
-
-
-    def is_balls_overlapping(self):
-        for ball1 in self.balls.values():
-            for ball2 in self.balls.values():
-                if ball1 is ball2:
-                    continue
-
-                if physics.is_overlapping(ball1.rvw, ball2.rvw, ball1.R, ball2.R):
-                    return True
-
-        return False
-
-
-    def set_system_state(self):
-        raise NotImplementedError("set_system_state FIXME. What should this take as input?")
-
-
-    def as_dict(self):
-        d = {}
-
-        if self.balls:
-            d['balls'] = {}
-            for ball in self.balls.values():
-                d['balls'][ball.id] = ball.as_dict()
-
-        if self.cue:
-            d['cue'] = self.cue.as_dict()
-
-        if self.table:
-            d['table'] = self.table.as_dict()
-
-        return d
-
-
-    def from_dict(self, d):
-        """Return balls, table, cue objects from dictionary"""
-        if 'balls' in d:
-            balls = {}
-            for ball_id, ball_dict in d['balls'].items():
-                balls[ball_id] = ball_from_dict(ball_dict)
-        else:
-            balls = None
-
-        if 'cue' in d:
-            cue = cue_from_dict(d['cue'])
-            if balls and cue.cueing_ball_id in balls:
-                cue.set_state(cueing_ball = balls[cue.cueing_ball_id])
-        else:
-            cue = None
-
-        if 'table' in d:
-            table = table_from_dict(d['table'])
-        else:
-            table = None
-
-        return balls, table, cue
-
-
-    def save(self, path):
-        """Save the system state as a pickle"""
-        utils.save_pickle(self.as_dict(), path)
-
-
-    def load(self, path):
-        """Load a pickle-stored system state"""
-        self.balls, self.table, self.cue = self.from_dict(utils.load_pickle(path))
-
-
-    def copy(self):
-        """Make a fresh copy of this system state"""
-        balls, table, cue = self.from_dict(self.as_dict())
-        return self.__class__(balls=balls, table=table, cue=cue)
-
-
-class SystemHistory(Events):
+class SystemHistory(object):
     def __init__(self):
         self.t = None
-        self.num_events = 0
-
-        Events.__init__(self)
-
+        self.events = Events()
         self.vectorized = False
 
 
     def init_history(self):
         """Add an initializing NonEvent"""
-
-        self.num_events += 1
-
         event = NonEvent(t=0)
         for ball in self.balls.values():
             ball.update_history(event)
 
-        self.add_event(event)
+        self.events.append(event)
 
 
     def end_history(self):
         """Add a final NonEvent that timestamps the final state of each ball"""
 
-        self.num_events += 1
-
         event = NonEvent(t=self.t)
         for ball in self.balls.values():
             ball.update_history(event)
 
-        self.add_event(event)
+        self.events.append(event)
 
 
     def reset_history(self):
@@ -156,11 +47,11 @@ class SystemHistory(Events):
 
         self.t = 0
         for ball in self.balls.values():
-            ball.history.reset_history()
-            ball.reset_events()
+            ball.history.reset()
+            ball.events.reset()
             ball.set_time(0)
 
-        self.reset_events()
+        self.events.reset()
 
 
     def update_history(self, event, update_all=False):
@@ -175,7 +66,6 @@ class SystemHistory(Events):
             event. However, if update_all is True, each ball's history will be updated.
         """
         self.t = event.time
-        self.num_events += 1
 
         if update_all:
             for ball in self.balls.values():
@@ -185,7 +75,7 @@ class SystemHistory(Events):
                 if agent.object_type == 'ball':
                     agent.update_history(event)
 
-        self.add_event(event)
+        self.events.append(event)
 
 
     def vectorize_trajectories(self):
@@ -214,7 +104,7 @@ class SystemHistory(Events):
             # Add t=0
             cts_history.add(ball.history.rvw[0], ball.history.s[0], 0)
 
-            for n in range(ball.num_events - 1):
+            for n in range(len(ball.events) - 1):
                 curr_event = ball.events[n]
                 next_event = ball.events[n+1]
 
@@ -352,5 +242,172 @@ class SystemRender(object):
     def speed_up(self):
         self.playback_speed *= 2.0
         self.shot_animation.setPlayRate(2.0*self.shot_animation.getPlayRate())
+
+
+class System(SystemHistory, SystemRender, EvolveShotEventBased):
+    def __init__(self, cue=None, table=None, balls=None):
+        SystemHistory.__init__(self)
+        SystemRender.__init__(self)
+        EvolveShotEventBased.__init__(self)
+
+        self.cue = cue
+        self.table = table
+        self.balls = balls
+
+        self.t = None
+
+
+    def set_cue(self, cue):
+        self.cue = cue
+
+
+    def set_table(self, table):
+        self.table = table
+
+
+    def set_balls(self, balls):
+        self.balls = balls
+
+
+    def get_system_energy(self):
+        energy = 0
+        for ball in self.balls.values():
+            energy += physics.get_ball_energy(ball.rvw, ball.R, ball.m)
+
+        return energy
+
+
+    def reset_balls(self):
+        """Reset balls to their initial states, i.e. ball.history.*[0]"""
+        for ball in self.balls.values():
+            try:
+                ball.set_from_history(0)
+            except IndexError:
+                pass
+
+
+    def is_balls_overlapping(self):
+        for ball1 in self.balls.values():
+            for ball2 in self.balls.values():
+                if ball1 is ball2:
+                    continue
+
+                if physics.is_overlapping(ball1.rvw, ball2.rvw, ball1.R, ball2.R):
+                    return True
+
+        return False
+
+
+    def set_system_state(self):
+        raise NotImplementedError("set_system_state FIXME. What should this take as input?")
+
+
+    def as_dict(self):
+        d = {}
+
+        if self.balls:
+            d['balls'] = {}
+            for ball in self.balls.values():
+                d['balls'][ball.id] = ball.as_dict()
+
+        if self.cue:
+            d['cue'] = self.cue.as_dict()
+
+        if self.table:
+            d['table'] = self.table.as_dict()
+
+        d['events'] = self.events.as_dict()
+
+        return d
+
+
+    def from_dict(self, d):
+        """Return balls, table, cue, and events objects from dictionary"""
+        if 'balls' in d:
+            balls = {}
+            for ball_id, ball_dict in d['balls'].items():
+                balls[ball_id] = ball_from_dict(ball_dict)
+        else:
+            balls = None
+
+        if 'cue' in d:
+            cue = cue_from_dict(d['cue'])
+            if balls and cue.cueing_ball_id in balls:
+                cue.set_state(cueing_ball = balls[cue.cueing_ball_id])
+        else:
+            cue = None
+
+        if 'table' in d:
+            table = table_from_dict(d['table'])
+        else:
+            table = None
+
+        events = Events()
+        for event_dict in d['events']:
+            event = event_from_dict(event_dict)
+
+            # The agents of this event are NonObjects, since they came from a pickleable dictionary.
+            # We attempt to change that by associating the proper agents based on object IDs. So if
+            # the NonObject agent has an id 'cue', We replace this agent with a proper instantiation
+            # of 'cue', i.e. balls['cue']
+            if event.event_type == type_ball_ball:
+                agent1, agent2 = event.agents
+                event.agents = (balls[agent1.id], balls[agent2.id])
+
+            elif event.event_type == type_ball_cushion:
+                agent1, agent2 = event.agents
+                if agent2.id.endswith('edge'):
+                    cushion = table.cushion_segments['linear'][agent2.id.split('_')[0]]
+                else:
+                    cushion = table.cushion_segments['circular'][agent2.id]
+                event.agents = (balls[agent1.id], cushion)
+
+            elif event.event_type == type_ball_pocket:
+                agent1, agent2 = event.agents
+                event.agents = (balls[agent1.id], table.pockets[agent2.id])
+
+            elif event.event_type == type_stick_ball:
+                agent1, agent2 = event.agents
+                event.agents = (cue, balls[agent2.id])
+
+            elif event.event_class == class_transition:
+                agent = event.agents[0]
+                event.agents = (balls[agent.id],)
+
+            # The event now has no NonObject agents, so it is not longer 'partial'. For example,
+            # event.resolve may not be called
+            event.partial = False
+            events.append(event)
+
+        return balls, table, cue, events
+
+
+    def save(self, path):
+        """Save the system state as a pickle"""
+        self.reset_balls()
+        utils.save_pickle(self.as_dict(), path)
+
+
+    def load(self, path):
+        """Load a pickle-stored system state"""
+        self.balls, self.table, self.cue, self.events = self.from_dict(utils.load_pickle(path))
+
+
+    def copy(self):
+        """Make a fresh copy of this system state
+
+        Notes
+        =====
+        - FIXME continuize() does not work on the fresh copy due to Event data not being stored
+          in System or Ball. The solution is to call simulate() again on the copy and then continuize()
+        """
+
+        filepath = utils.get_temp_file_path()
+        self.save(filepath)
+        balls, table, cue, events = self.from_dict(utils.load_pickle(filepath))
+
+        system = self.__class__(balls=balls, table=table, cue=cue)
+        system.events = events
+        return system
 
 

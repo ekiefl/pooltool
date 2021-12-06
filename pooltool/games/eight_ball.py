@@ -72,12 +72,12 @@ class EightBall(Game):
         if not self.shot_info['is_legal']:
             return True
 
-        pocket_events = shot.filter_type(e.type_ball_pocket)
+        pocket_events = shot.events.filter_type(e.type_ball_pocket)
 
-        if self.active_player.stripes_or_solids is None and pocket_events.num_events > 0:
+        if self.active_player.stripes_or_solids is None and len(pocket_events):
             return False
 
-        for event in pocket_events.events:
+        for event in pocket_events:
             ball, pocket = event.agents
             if ball == self.ball_call and pocket == self.pocket_call:
                 self.log.add_msg(f"Ball potted: {ball.id}", sentiment='good')
@@ -87,19 +87,19 @@ class EightBall(Game):
 
 
     def is_game_over(self, shot):
-        pocket_events = shot.filter_type(e.type_ball_pocket)
-        for event in pocket_events.events:
+        pocket_events = shot.events.filter_type(e.type_ball_pocket)
+        for event in pocket_events:
             if '8' in (event.agents[0].id, event.agents[1].id):
                 return True
 
 
     def is_object_ball_hit_first(self, shot):
         cue = shot.balls['cue']
-        collisions = cue.filter_type(e.type_ball_ball)
-        if collisions.num_events == 0:
+        collisions = cue.events.filter_type(e.type_ball_ball)
+        if not len(collisions):
             return False
 
-        first_collision = collisions.get(0)
+        first_collision = collisions[0]
         ball1, ball2 = first_collision.agents
         first_ball_hit = ball1 if ball1.id != 'cue' else ball2
 
@@ -117,7 +117,7 @@ class EightBall(Game):
         if self.shot_number != 0:
             return True
 
-        ball_pocketed = True if shot.filter_type(e.type_ball_pocket).num_events > 0 else False
+        ball_pocketed = True if len(shot.events.filter_type(e.type_ball_pocket)) else False
         enough_cushions = True if len(self.numbered_balls_that_hit_cushion(shot)) >= 4 else False
 
         return True if (ball_pocketed or enough_cushions) else False
@@ -126,11 +126,11 @@ class EightBall(Game):
     def numbered_balls_that_hit_cushion(self, shot):
         numbered_balls = [ball for ball in shot.balls.values() if ball.id != 'cue']
 
-        cushion_events = shot.\
+        cushion_events = shot.events.\
             filter_type(e.type_ball_cushion).\
             filter_ball(numbered_balls)
 
-        return set([event.agents[0].id for event in cushion_events.events])
+        return set([event.agents[0].id for event in cushion_events])
 
 
     def is_cue_pocketed(self, shot):
@@ -141,36 +141,27 @@ class EightBall(Game):
         if not self.is_object_ball_hit_first(shot):
             return False
 
-        first_contact = shot.balls['cue'].filter_type(e.type_ball_ball).get(0)
-        cushion_events = shot.\
+        first_contact = shot.balls['cue'].events.filter_type(e.type_ball_ball)[0]
+        cushion_events = shot.events.\
             filter_time(first_contact.time).\
             filter_type(e.type_ball_cushion)
 
-        cushion_hit = True if cushion_events.num_events > 0 else False
+        cushion_hit = True if len(cushion_events) else False
 
         numbered_balls = [ball for ball in shot.balls.values() if ball.id != 'cue']
-        ball_pocketed = shot.\
+        ball_pocketed = shot.events.\
             filter_type(e.type_ball_pocket).\
-            filter_ball(numbered_balls).\
-            num_events > 0
+            filter_ball(numbered_balls)
 
-        return True if (cushion_hit or ball_pocketed) else False
-
-
-    def is_cue_ball_strike(self, shot):
-        cue_strike = shot.filter_type(e.type_stick_ball)
-        if cue_strike.get(0).agents[1].id == 'cue':
-            return True
-        else:
-            return False
+        return True if (cushion_hit or len(ball_pocketed)) else False
 
 
     def is_8_ball_sunk_before_others(self, shot):
         if '8' in self.active_player.target_balls:
             return False
 
-        pocket_events = shot.filter_type(e.type_ball_pocket)
-        for event in pocket_events.events:
+        pocket_events = shot.events.filter_type(e.type_ball_pocket)
+        for event in pocket_events:
             if '8' in (event.agents[0].id, event.agents[1].id):
                 return True
 
@@ -181,8 +172,6 @@ class EightBall(Game):
 
         if self.is_8_ball_sunk_before_others(shot):
             reason = '8-ball sunk before others!'
-        elif not self.is_cue_ball_strike(shot):
-            reason = 'Wrong ball was cued'
         elif not self.is_object_ball_hit_first(shot):
             reason = 'Object ball not hit first'
         elif not self.is_shot_called(shot):

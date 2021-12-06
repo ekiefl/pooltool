@@ -12,7 +12,7 @@ All units are SI (https://en.wikipedia.org/wiki/International_System_of_Units)
 `R` : float
     The radius of the ball.
 `m` : float
-    The radius of the ball.
+    The mass of the ball.
 `h` : float
     The height of the cushion.
 `s` : int
@@ -27,6 +27,10 @@ All units are SI (https://en.wikipedia.org/wiki/International_System_of_Units)
     The spinning coefficient of friction.
 `u_r` : float
     The rolling coefficient of friction.
+`e_c` : float
+    The cushion coefficient of restitution
+`f_c` : float
+    The cushion coefficient of friction
 `g` : float
     The acceleration due to gravity felt by a ball.
 """
@@ -62,7 +66,7 @@ def resolve_ball_ball_collision(rvw1, rvw2):
     return rvw1, rvw2
 
 
-def resolve_ball_cushion_collision(rvw, normal, R, m, h):
+def resolve_ball_cushion_collision(rvw, normal, R, m, h, e_c, f_c):
     """Inhwan Han (2005) 'Dynamics in Carom and Three Cushion Billiards'"""
 
     # orient the normal so it points away from playing surface
@@ -77,8 +81,8 @@ def resolve_ball_cushion_collision(rvw, normal, R, m, h):
     phi = utils.angle(rvw_R[1]) % (2*np.pi)
 
     # Get mu and e
-    e = get_bail_cushion_restitution(rvw_R)
-    mu = get_bail_cushion_friction(rvw_R)
+    e = get_ball_cushion_restitution(rvw_R, e_c)
+    mu = get_ball_cushion_friction(rvw_R, f_c)
 
     # Depends on height of cushion relative to ball
     theta_a = np.arcsin(h/R - 1)
@@ -124,7 +128,7 @@ def resolve_ball_cushion_collision(rvw, normal, R, m, h):
     return rvw
 
 
-def get_bail_cushion_restitution(rvw):
+def get_ball_cushion_restitution(rvw, e_c):
     """Get restitution coefficient dependent on ball state
 
     Parameters
@@ -138,14 +142,14 @@ def get_bail_cushion_restitution(rvw):
     - https://essay.utwente.nl/59134/1/scriptie_J_van_Balen.pdf suggests a constant value of 0.85
     """
 
-    return 0.85
+    return e_c
     return max([
         0.40,
         0.50 + 0.257*rvw[1,0] - 0.044*rvw[1,0]**2
     ])
 
 
-def get_bail_cushion_friction(rvw):
+def get_ball_cushion_friction(rvw, f_c):
     """Get friction coeffecient depend on ball state
 
     Parameters
@@ -160,7 +164,7 @@ def get_bail_cushion_friction(rvw):
     if ang > np.pi:
         ang = np.abs(2*np.pi - ang)
 
-    ans = 0.2
+    ans = f_c
     return ans
 
 

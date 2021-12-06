@@ -80,7 +80,7 @@ cue.aim_at_ball(balls['1'])
 cue.strike(V0=8)
 
 # Evolve the shot
-shot = pt.EvolveShotEventBased(cue=cue, table=table, balls=balls)
+shot = pt.System(cue=cue, table=table, balls=balls)
 shot.simulate(continuize=True)
 
 interface.show(shot)

@@ -139,17 +139,45 @@ class BallRender(Render):
 
 
     def get_render_state(self):
+        """Return the position of the rendered ball"""
         x, y, z = self.nodes['pos'].getPos()
         return x, y, z
 
 
     def set_object_state_as_render_state(self):
-        self.rvw[0,0], self.rvw[0,1], self.rvw[0,2] = self.get_render_state()
+        """Set the object position based on the rendered position"""
+        self.rvw[0] = self.get_render_state()
 
 
     def set_render_state_as_object_state(self):
-        self.nodes['pos'].setPos(*self.rvw[0,:])
-        self.nodes['shadow'].setPos(self.rvw[0,0], self.rvw[0,1], min(0, self.rvw[0,2]-self.R))
+        """Set rendered position based on the object's position (self.rvw[0,:])"""
+        pos = self.rvw[0]
+        self.set_render_state(pos)
+
+
+    def set_render_state(self, pos):
+        """Set the position of the rendered ball
+
+        Parameters
+        ==========
+        pos : length-3 iterable
+        """
+
+        self.nodes['pos'].setPos(*pos)
+        self.nodes['shadow'].setPos(pos[0], pos[1], min(0, pos[2]-self.R))
+
+
+    def set_render_state_from_history(self, i):
+        """Set the position of the rendered ball based on history index
+
+        Parameters
+        ==========
+        i : int
+            An index from the history. e.g. 0 refers to initial state, -1 refers to final state
+        """
+
+        rvw, _, _ = self.history.get_state(i)
+        self.set_render_state(rvw[0])
 
 
     def set_playback_sequence(self, playback_speed=1):
@@ -168,6 +196,7 @@ class BallRender(Render):
         if ani.settings['graphics']['angular_vectors']:
             angular_vector_sequence = Sequence()
 
+        self.set_render_state_from_history(0)
         for i in range(len(playback_dts)):
             x, y, z = xyzs[i+1]
             Qm, Qx, Qy, Qz = self.quats[i+1]
@@ -224,10 +253,20 @@ class BallRender(Render):
 class BallHistory(object):
     def __init__(self):
         self.vectorized = False
-        self.reset_history()
+        self.reset()
 
 
-    def reset_history(self):
+    def get_state(self, i):
+        """Get state based on history index
+
+        Returns
+        =======
+        out : (rvw, s, t)
+        """
+        return self.rvw[i], self.s[i], self.t[i]
+
+
+    def reset(self):
         n = 0
         self.vectorized = False
         self.rvw = [np.nan * np.ones((3,3))] * n
@@ -261,11 +300,14 @@ class BallHistory(object):
         self.vectorized = True
 
 
-class Ball(Object, BallRender, Events):
+class Ball(Object, BallRender):
     object_type = 'ball'
 
-    def __init__(self, ball_id, m=None, R=None, u_s=None, u_r=None, u_sp=None, g=None):
+    def __init__(self, ball_id, m=None, R=None, u_s=None, u_r=None, u_sp=None, g=None, e_c=None, f_c=None):
         self.id = ball_id
+
+        if not (isinstance(self.id, int) or isinstance(self.id, str)):
+            raise ConfigError("ball_id must be integer or string")
 
         # physical properties
         self.m = m or c.m
@@ -278,6 +320,10 @@ class Ball(Object, BallRender, Events):
         self.u_r = u_r or c.u_r
         self.u_sp = u_sp or c.u_sp
 
+        # restitution properties
+        self.e_c = c.e_c
+        self.f_c = c.f_c
+
         self.t = 0
         self.s = c.stationary
         self.rvw = np.array([[np.nan, np.nan, np.nan],  # positions (r)
@@ -286,9 +332,9 @@ class Ball(Object, BallRender, Events):
         self.update_next_transition_event()
 
         self.history = BallHistory()
+        self.events = Events()
 
         BallRender.__init__(self)
-        Events.__init__(self)
 
 
     def attach_history(self, history):
@@ -298,7 +344,7 @@ class Ball(Object, BallRender, Events):
 
     def update_history(self, event):
         self.history.add(np.copy(self.rvw), self.s, event.time)
-        self.add_event(event)
+        self.events.append(event)
 
 
     def init_history(self):
@@ -332,7 +378,7 @@ class Ball(Object, BallRender, Events):
 
     def __repr__(self):
         lines = [
-            f'<{self.__class__.__module__}.{self.__class__.__name__} object at {hex(id(self))}>',
+            f'<{self.__class__.__name__} object at {hex(id(self))}>',
             f' ├── id       : {self.id}',
             f' ├── state    : {self.s}',
             f' ├── position : {self.rvw[0]}',
@@ -343,11 +389,17 @@ class Ball(Object, BallRender, Events):
         return '\n'.join(lines) + '\n'
 
 
-    def set(self, rvw, s, t=None):
-        self.s = s
+    def set(self, rvw, s=None, t=None):
         self.rvw = rvw
+        if s is not None:
+            self.s = s
         if t is not None:
             self.t = t
+
+
+    def set_from_history(self, i):
+        """Set the ball state according to a history index"""
+        self.set(*self.history.get_state(i))
 
 
     def set_time(self, t):
@@ -373,18 +425,19 @@ class Ball(Object, BallRender, Events):
             u_sp = self.u_sp,
             s = self.s,
             t = self.t,
-            rvw = self.rvw,
+            rvw = np.copy(self.rvw),
             history = dict(
                 rvw = self.history.rvw,
                 s = self.history.s,
                 t = self.history.t,
                 vectorized = self.history.vectorized,
             ),
+            events = self.events.as_dict(),
         )
 
 
     def save(self, path):
-        utils.pickle_save(self.as_dict(), path)
+        utils.save_pickle(self.as_dict(), path)
 
 
 def ball_from_dict(d):
@@ -412,6 +465,11 @@ def ball_from_dict(d):
     ball_history.t = d['history']['t']
     ball_history.vectorized = d['history']['vectorized']
     ball.attach_history(ball_history)
+
+    events = Events()
+    for event_dict in d['events']:
+        events.append(event_from_dict(event_dict))
+    ball.events = events
 
     return ball
 

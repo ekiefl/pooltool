@@ -15,17 +15,16 @@ def main():
     cue = pt.Cue(cueing_ball=balls['cue'])
 
     # Set up a shot
-    shot = pt.EvolveShotEventBased(cue=cue, table=table, balls=balls)
+    shot = pt.System(cue=cue, table=table, balls=balls)
     shot.cue.aim_at_ball(shot.balls['1'])
     shot.cue.strike(V0=8)
 
     # Now instead of simulating, save the system as a pickle file
-    file = tempfile.NamedTemporaryFile()
-    filepath = file.name
+    filepath = pt.utils.get_temp_file_path()
     shot.save(filepath)
 
     # Ok now make a new system and attach the old state
-    shot2 = pt.EvolveShotEventBased()
+    shot2 = pt.System()
     shot2.load(filepath)
 
     # Now simulate the first

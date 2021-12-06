@@ -22,6 +22,7 @@ class ShotMode(Mode):
         action.cam_load: False,
         action.show_help: False,
         action.close_scene: False,
+        action.introspect: False,
     }
 
     def enter(self, init_animations=False, single_instance=False):
@@ -74,6 +75,8 @@ class ShotMode(Mode):
         self.task_action('1', action.cam_save, True)
         self.task_action('2', action.cam_load, True)
         self.task_action('h', action.show_help, True)
+        self.task_action('i', action.introspect, True)
+        self.task_action('i-up', action.introspect, False)
 
         self.add_task(self.shot_view_task, 'shot_view_task')
         self.add_task(self.shot_animation_task, 'shot_animation_task')
@@ -119,7 +122,7 @@ class ShotMode(Mode):
                     )
                     ball.get_node('ball').setQuat(ball.quats[0])
                 ball.set_render_state_as_object_state()
-                ball.history.reset_history()
+                ball.history.reset()
 
             self.shot.cue.update_focus()
 
@@ -154,6 +157,10 @@ class ShotMode(Mode):
 
 
     def shot_animation_task(self, task):
+        if self.keymap[action.introspect]:
+            import pooltool as pt
+            import pdb; pdb.set_trace()
+
         if self.keymap[action.restart_ani]:
             self.shot.restart_animation()
 

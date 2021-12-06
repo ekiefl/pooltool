@@ -110,7 +110,6 @@ class Game(ABC):
         =====
         - FIXME check if respot position overlaps with ball
         """
-        R = shot.balls[ball_id].R
         shot.balls[ball_id].rvw[0] = [x, y, z]
         shot.balls[ball_id].s = c.stationary
 

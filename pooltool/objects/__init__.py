@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import numpy as np
 import pooltool.constants as c
 
 from abc import ABC, abstractmethod
@@ -20,6 +21,7 @@ class NonObject(Object):
 
 class DummyBall(NonObject):
     s = c.stationary
+    rvw = np.zeros((3,3))
     def __init__(self, ball_id='NA'):
         self.id = ball_id
 

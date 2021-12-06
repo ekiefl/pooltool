@@ -37,7 +37,7 @@ class NineBall(Game):
             return
 
         points = 0
-        for event in shot.filter_type(e.type_ball_pocket).events:
+        for event in shot.events.filter_type(e.type_ball_pocket):
             ball, pocket = event.agents
             points += 2 if (ball.id == '9') else 1
 
@@ -67,8 +67,8 @@ class NineBall(Game):
         highest = self.get_highest_ball(shot)
         lowest = self.get_lowest_ball(shot)
 
-        pocket_events = shot.filter_type(e.type_ball_pocket)
-        pocketed_balls = [event.agents[0] for event in pocket_events.events]
+        pocket_events = shot.events.filter_type(e.type_ball_pocket)
+        pocketed_balls = [event.agents[0] for event in pocket_events]
 
         if (highest == lowest) and (highest in pocketed_balls) and not self.shot_info['is_legal']:
             self.respot(shot, highest.id, shot.table.w/2, shot.table.l*3/4, highest.R)
@@ -78,9 +78,9 @@ class NineBall(Game):
         if not self.shot_info['is_legal']:
             return True
 
-        pocket_events = shot.filter_type(e.type_ball_pocket)
-        if pocket_events.num_events > 0:
-            balls_potted = [e.agents[0].id for e in pocket_events.events]
+        pocket_events = shot.events.filter_type(e.type_ball_pocket)
+        if len(pocket_events):
+            balls_potted = [e.agents[0].id for e in pocket_events]
             self.log.add_msg(f"Ball(s) potted: {','.join(balls_potted)}", sentiment='good')
             return False
 
@@ -90,8 +90,8 @@ class NineBall(Game):
     def is_game_over(self, shot):
         highest = self.get_highest_ball(shot)
 
-        pocket_events = shot.filter_type(e.type_ball_pocket)
-        pocketed_balls = [event.agents[0] for event in pocket_events.events]
+        pocket_events = shot.events.filter_type(e.type_ball_pocket)
+        pocketed_balls = [event.agents[0] for event in pocket_events]
 
         if highest in pocketed_balls and self.shot_info['is_legal']:
             return True
@@ -131,16 +131,16 @@ class NineBall(Game):
         lowest = self.get_lowest_ball(shot)
         cue = shot.balls['cue']
 
-        collisions = cue.filter_type(e.type_ball_ball)
+        collisions = cue.events.filter_type(e.type_ball_ball)
 
-        return True if (collisions.num_events > 0 and lowest in collisions.get(0).agents) else False
+        return True if (len(collisions) and lowest in collisions[0].agents) else False
 
 
     def is_legal_break(self, shot):
         if self.shot_number != 0:
             return True
 
-        ball_pocketed = True if shot.filter_type(e.type_ball_pocket).num_events > 0 else False
+        ball_pocketed = True if len(shot.events.filter_type(e.type_ball_pocket)) else False
         enough_cushions = True if len(self.numbered_balls_that_hit_cushion(shot)) >= 4 else False
 
         return True if (ball_pocketed or enough_cushions) else False
@@ -149,11 +149,11 @@ class NineBall(Game):
     def numbered_balls_that_hit_cushion(self, shot):
         numbered_balls = [ball for ball in shot.balls.values() if ball.id != 'cue']
 
-        cushion_events = shot.\
+        cushion_events = shot.events.\
             filter_type(e.type_ball_cushion).\
             filter_ball(numbered_balls)
 
-        return set([event.agents[0].id for event in cushion_events.events])
+        return set([event.agents[0].id for event in cushion_events])
 
 
     def is_cue_pocketed(self, shot):
@@ -164,37 +164,26 @@ class NineBall(Game):
         if not self.is_lowest_hit_first(shot):
             return False
 
-        first_contact = shot.balls['cue'].filter_type(e.type_ball_ball).get(0)
-        cushion_events = shot.\
+        first_contact = shot.balls['cue'].events.filter_type(e.type_ball_ball)[0]
+        cushion_events = shot.events.\
             filter_time(first_contact.time).\
             filter_type(e.type_ball_cushion)
 
-        cushion_hit = True if cushion_events.num_events > 0 else False
+        cushion_hit = True if len(cushion_events) else False
 
         numbered_balls = [ball for ball in shot.balls.values() if ball.id != 'cue']
-        ball_pocketed = shot.\
+        ball_pocketed = shot.events.\
             filter_type(e.type_ball_pocket).\
-            filter_ball(numbered_balls).\
-            num_events > 0
+            filter_ball(numbered_balls)
 
-        return True if (cushion_hit or ball_pocketed) else False
-
-
-    def is_cue_ball_strike(self, shot):
-        cue_strike = shot.filter_type(e.type_stick_ball)
-        if cue_strike.get(0).agents[1].id == 'cue':
-            return True
-        else:
-            return False
+        return True if (cushion_hit or len(ball_pocketed)) else False
 
 
     def legality(self, shot):
         """Returns whether or not a shot is legal, and the reason"""
         reason = None
 
-        if not self.is_cue_ball_strike(shot):
-            reason = 'Wrong ball was cued'
-        elif not self.is_lowest_hit_first(shot):
+        if not self.is_lowest_hit_first(shot):
             reason = 'Lowest ball not hit first'
         elif self.is_cue_pocketed(shot):
             reason = 'Cue ball in pocket!'
