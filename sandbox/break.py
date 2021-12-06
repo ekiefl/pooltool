@@ -21,7 +21,7 @@ def main(args):
 
     # Evolve the shot
     shot = pt.System(cue=cue, table=table, balls=balls)
-    shot.simulate(continuize=True)
+    shot.simulate(continuize=(not args.no_continuize))
 
     if not args.no_viz:
         interface.show(shot)
@@ -32,6 +32,7 @@ if __name__ == '__main__':
 
     ap = argparse.ArgumentParser('A good old 9-ball break')
     ap.add_argument('--no-viz', action='store_true', help="If set, the break will not be visualized")
+    ap.add_argument('--no-continuize', action='store_true', help="If set, shot will not be continuized")
     ap.add_argument('--seed', type=int, default=None, help="Provide a random seed if you want reproducible results")
 
     args = ap.parse_args()
