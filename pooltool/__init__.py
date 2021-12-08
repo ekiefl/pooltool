@@ -15,6 +15,7 @@ from .objects.table import *
 from .ani.animate import *
 
 from .constants import *
+from .terminal import *
 from .layouts import *
 from .system import *
 from .events import *

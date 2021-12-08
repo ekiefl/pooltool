@@ -4,6 +4,7 @@ import pooltool.utils as utils
 import pooltool.physics as physics
 import pooltool.constants as c
 
+from pooltool.error import ConfigError
 from pooltool.evolution import EvolveShotEventBased
 from pooltool.objects.cue import cue_from_dict
 from pooltool.objects.ball import ball_from_dict
@@ -12,6 +13,7 @@ from pooltool.objects.table import table_from_dict
 from pooltool.events import *
 from pooltool.objects.ball import BallHistory
 
+from pathlib import Path
 from panda3d.direct import HideInterval, ShowInterval
 from direct.interval.IntervalGlobal import *
 
@@ -245,14 +247,21 @@ class SystemRender(object):
 
 
 class System(SystemHistory, SystemRender, EvolveShotEventBased):
-    def __init__(self, cue=None, table=None, balls=None):
+    def __init__(self, cue=None, table=None, balls=None, path=None):
         SystemHistory.__init__(self)
         SystemRender.__init__(self)
         EvolveShotEventBased.__init__(self)
 
-        self.cue = cue
-        self.table = table
-        self.balls = balls
+        if path and (cue or table or balls):
+            raise ConfigError("System :: if path provided, cue, table, and balls must be None")
+
+        if path:
+            path = Path(path)
+            self.load(path)
+        else:
+            self.cue = cue
+            self.table = table
+            self.balls = balls
 
         self.t = None
 
