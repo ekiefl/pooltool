@@ -284,6 +284,34 @@ def min_real_root(p, tol=1e-12):
     return times.min(), times.argmin()
 
 
+@jit(nopython=True, cache=True)
+def min_real_root_fast(p, tol=1e-12):
+    """Given an array of polynomial coefficients, find the minimum real root (just-in-time compiled)
+
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/min_real_root.py
+    """
+    # Get the roots for the polynomials
+    times = roots_fast(p)
+    M, N = times.shape
+
+    min_root, min_index = np.inf, 0
+    for m in range(M):
+        for n in range(N):
+            el = times[m, n]
+            if np.abs(el.imag) > tol:
+                continue
+            elif el.real < tol:
+                continue
+
+            if el.real < min_root:
+                min_root = el.real
+                min_index = m
+
+    return min_root, min_index
+
+
 def unit_vector(vector, handle_zero=False):
     """Returns the unit vector of the vector.
 
