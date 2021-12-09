@@ -161,6 +161,22 @@ def cross_fast(u, v):
     ])
 
 
+def get_rel_velocity(rvw, R):
+    _, v, w = rvw
+    return v + R * cross(np.array([0,0,1]), w)
+
+
+@jit(nopython=True, cache=True)
+def get_rel_velocity_fast(rvw, R):
+    """
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/get_rel_velocity.py
+    """
+    _, v, w = rvw
+    return v + R * cross_fast(np.array([0.,0.,1.], dtype=np.float64), w)
+
+
 def quadratic(a,b,c):
     """Solve a quadratic equation At^2 + Bt + C = 0"""
     if a == 0:
