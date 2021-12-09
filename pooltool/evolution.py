@@ -288,16 +288,16 @@ class EvolveShotEventBased(EvolveShot):
 
     def get_min_ball_pocket_event_time(self):
         """Returns minimum time until next ball-pocket collision"""
-
-        dtau_E_min = np.inf
-        involved_agents = tuple([DummyBall(), NonObject()])
+        dtau_E = np.inf
+        agent_ids = []
+        collision_coeffs = []
 
         for ball in self.balls.values():
             if ball.s in c.nontranslating:
                 continue
 
             for pocket in self.table.pockets.values():
-                dtau_E = physics.get_ball_pocket_collision_time(
+                collision_coeffs.append(physics.get_ball_pocket_collision_coeffs(
                     rvw=ball.rvw,
                     s=ball.s,
                     a=pocket.a,
@@ -307,15 +307,23 @@ class EvolveShotEventBased(EvolveShot):
                     m=ball.m,
                     g=ball.g,
                     R=ball.R
-                )
+                ))
 
-                if dtau_E < dtau_E_min:
-                    involved_agents = (ball, pocket)
-                    dtau_E_min = dtau_E
+                agent_ids.append((ball.id, pocket.id))
 
-        dtau_E = dtau_E_min
+        if not len(collision_coeffs):
+            # There are no collisions to test for
+            return BallBallCollision(DummyBall(), NonObject(), t=(self.t + dtau_E))
 
-        return BallPocketCollision(*involved_agents, t=(self.t + dtau_E))
+        dtau_E, index = utils.min_real_root(
+            p = np.array(collision_coeffs),
+            tol = c.tol
+        )
+
+        ball_id, pocket_id = agent_ids[index]
+        ball, pocket = self.balls[ball_id], self.table.pockets[pocket_id]
+
+        return BallPocketCollision(ball, pocket, t=(self.t + dtau_E))
 
 
 class EvolveShotDiscreteTime(EvolveShot):
