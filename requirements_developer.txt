@@ -6,3 +6,4 @@ panda3d-gltf
 panda3d-simplepbr
 psutil
 colored
+ipython
