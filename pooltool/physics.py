@@ -256,7 +256,14 @@ def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g,
     C1 = l0 + lx*cx + ly*cy + R*np.sqrt(lx**2 + ly**2)
     C2 = l0 + lx*cx + ly*cy - R*np.sqrt(lx**2 + ly**2)
 
-    roots = np.append(np.roots([A,B,C1]), np.roots([A,B,C2]))
+    root1, root2 = utils.quadratic(A,B,C1)
+    root3, root4 = utils.quadratic(A,B,C2)
+    roots = np.array([
+        root1,
+        root2,
+        root3,
+        root4,
+    ])
 
     roots = roots[
         (abs(roots.imag) <= const.tol) & \

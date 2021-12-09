@@ -9,8 +9,8 @@ import linecache
 import tracemalloc
 import importlib.util
 
+from numba import jit
 from panda3d.core import Filename
-
 
 def save_pickle(x, path):
     """Save an object `x` to filepath `path`"""
@@ -146,6 +146,19 @@ def cross(v, u):
     ])
 
 
+@jit(nopython=True, cache=True)
+def quadratic(a,b,c):
+    """Solve a quadratic equation At^2 + Bt + C = 0"""
+    if a == 0:
+        u = -c/b
+        return u, u
+    bp=b/2
+    delta=bp*bp-a*c
+    u1=(-bp-delta**.5)/a
+    u2=-u1-b/a
+    return u1,u2
+
+
 def roots(p):
     """Simultaneously solve polynomial equations
 
@@ -198,7 +211,6 @@ def min_real_root(p, tol=1e-12):
     times = np.min(times.real, axis=1)
 
     return times.min(), times.argmin()
-
 
 
 def unit_vector(vector, ord=None, handle_zero=False):
