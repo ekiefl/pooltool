@@ -248,9 +248,13 @@ def angle(v2, v1=(1,0)):
 def coordinate_rotation(v, phi):
     """Rotate vector/matrix from one frame of reference to another (3D FIXME)"""
 
-    rotation = np.array([[np.cos(phi), -np.sin(phi), 0],
-                         [np.sin(phi),  np.cos(phi), 0],
-                         [0          ,  0          , 1]])
+    cos_phi = np.cos(phi)
+    sin_phi = np.sin(phi)
+    rotation = np.array([[cos_phi, -sin_phi, 0],
+                         [sin_phi,  cos_phi, 0],
+                         [0      ,  0      , 1]])
+
+    return np.dot(rotation, v)
 
     return np.matmul(rotation, v)
 
