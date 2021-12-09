@@ -338,7 +338,7 @@ class Cue(Object, CueRender):
             A length-3 iterable specifying the x, y, z coordinates of the position to be aimed at
         """
 
-        direction = utils.angle(utils.unit_vector(np.array(pos) - self.cueing_ball.rvw[0]))
+        direction = utils.angle(utils.unit_vector_fast(np.array(pos) - self.cueing_ball.rvw[0]))
         self.set_state(phi = direction * 180/np.pi)
 
 
@@ -464,7 +464,7 @@ class CueAvoid(object):
 
         # Center of aim
         v = np.array([Ex-Px, Ey-Py, Ez-Pz])
-        u = utils.unit_vector(v)*self.avoid_nodes['cue_stick_model'].getX()
+        u = utils.unit_vector_fast(v)*self.avoid_nodes['cue_stick_model'].getX()
         Fx, Fy, Fz = Ex + u[0], Ey + u[1], Ez + u[2]
 
         min_theta = np.arctan2(Dz-Fz, np.sqrt((Dx-Fx)**2 + (Dy-Fy)**2))
@@ -512,7 +512,7 @@ class CueAvoid(object):
 
         # Cue tip point, no top/bottom english
         m = self.avoid_nodes['cue_stick_model'].getX()
-        u = utils.unit_vector(np.array([-np.cos(phi), -np.sin(phi), np.sin(min_theta_no_english)]))
+        u = utils.unit_vector_fast(np.array([-np.cos(phi), -np.sin(phi), np.sin(min_theta_no_english)]))
         Ex, Ey, Ez = Cx + m*u[0], Cy + m*u[1], Cz + m*u[2]
 
         # Point where cue contacts blocking ball, no top/bottom english

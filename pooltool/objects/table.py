@@ -448,7 +448,7 @@ class LinearCushionSegment(CushionSegment):
             self.ly = 1
             self.l0 = (p2y - p1y) / (p2x - p1x) * p1x - p1y
 
-        self.normal = utils.unit_vector(np.array([self.lx, self.ly, 0]))
+        self.normal = utils.unit_vector_fast(np.array([self.lx, self.ly, 0]))
 
 
 class CircularCushionSegment(CushionSegment):
@@ -465,7 +465,7 @@ class CircularCushionSegment(CushionSegment):
 
 
     def get_normal(self, rvw):
-        normal = utils.unit_vector(rvw[0,:] - self.center)
+        normal = utils.unit_vector_fast(rvw[0,:] - self.center)
         normal[2] = 0 # remove z-component
         return normal
 
