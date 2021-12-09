@@ -24,7 +24,7 @@ class EvolveShot(ABC):
         }
 
 
-    def simulate(self, name="NA", **kwargs):
+    def simulate(self, name="NA", quiet=False, **kwargs):
         """Run a simulation
 
         Parameters
@@ -42,23 +42,27 @@ class EvolveShot(ABC):
 
         energy_start = self.get_system_energy()
 
-        def progress_update():
-            """Convenience function for updating progress"""
-            energy = self.get_system_energy()
-            msg = f"SIM TIME {self.t:.6f}s | ENERGY {np.round(energy, 2)}J | EVENTS {len(self.events)}"
-            self.progress.update(msg)
-            self.progress.increment(increment_to=int(energy_start - energy))
+        if not quiet:
+            def progress_update():
+                """Convenience function for updating progress"""
+                energy = self.get_system_energy()
+                msg = f"SIM TIME {self.t:.6f}s | ENERGY {np.round(energy, 2)}J | EVENTS {len(self.events)}"
+                self.progress.update(msg)
+                self.progress.increment(increment_to=int(energy_start - energy))
+
+            self.run.warning('', header=name, lc='green')
+            self.run.info('starting energy', f"{np.round(energy_start, 2)}J")
+            self.progress.new("Running", progress_total_items=int(energy_start))
+        else:
+            def progress_update():
+                pass
 
         self.progress_update = progress_update
-
-        self.run.warning('', header=name, lc='green')
-        self.run.info('starting energy', f"{np.round(energy_start, 2)}J")
-
-        self.progress.new("Running", progress_total_items=int(energy_start))
         self.evolution_algorithm(**kwargs)
-        self.progress.end()
 
-        self.run.info('Finished after', self.progress.t.time_elapsed_precise())
+        if not quiet:
+            self.progress.end()
+            self.run.info('Finished after', self.progress.t.time_elapsed_precise())
 
 
     def evolve(self, dt):
