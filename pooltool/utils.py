@@ -208,7 +208,7 @@ def quadratic_fast(a,b,c):
 
 
 def roots(p):
-    """Simultaneously solve polynomial equations
+    """Solve multiple polynomial equations
 
     This is a vectorized implementation of numpy.roots that can solve multiple polynomials in a
     vectorized fashion. The solution is taken from this wonderful stackoverflow answer:
@@ -221,12 +221,35 @@ def roots(p):
         order of the polynomial. If n is 5 (4th order polynomial), the columns are in the order a,
         b, c, d, e, where these coefficients make up the polynomial equation at^4 + bt^3 + ct^2 + dt
         + e = 0
+
+    Notes
+    =====
+    - This function is not amenable to numbaization (0.54.1). There are a couple of hurdles to
+      address. p[...,None,0] needs to be refactored since None/np.newaxis cause compile error. But
+      even bigger an issue is that np.linalg.eigvals is only supported for 2D arrays, but the strategy
+      here is to pass np.lingalg.eigvals a vectorized 3D array.
     """
     n = p.shape[-1]
-    A = np.zeros(p.shape[:1] + (n-1, n-1), float)
+    A = np.zeros(p.shape[:1] + (n-1, n-1), np.float64)
     A[...,1:,:-1] = np.eye(n-2)
     A[...,0,:] = -p[...,1:]/p[...,None,0]
     return np.linalg.eigvals(A)
+
+
+@jit(nopython=True, cache=True)
+def roots_fast(p):
+    """Solve multiple polynomial equations (just-in-time compiled)
+
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/roots.py
+    """
+    M, N = p.shape
+    p = p.astype(np.complex128)
+    roots = np.zeros((M, N-1), np.complex128)
+    for m in range(M):
+        roots[m,:] = np.roots(p[m,:])
+    return roots
 
 
 def min_real_root(p, tol=1e-12):
