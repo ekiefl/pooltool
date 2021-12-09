@@ -274,8 +274,8 @@ def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g,
     return roots.min() if len(roots) else np.inf
 
 
-def get_ball_circular_cushion_collision_time(rvw, s, a, b, r, mu, m, g, R):
-    """Get the time until collision between ball and circular cushion segment
+def get_ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
+    """Get the quartic coeffs required to determine the ball-circular-cushion collision time
 
     Parameters
     ==========
@@ -310,6 +310,28 @@ def get_ball_circular_cushion_collision_time(rvw, s, a, b, r, mu, m, g, R):
     D = bx*(cx-a) + by*(cy-b)
     E = 1/2*(a**2 + b**2 + cx**2 + cy**2 - (r + R)**2) - (cx*a + cy*b)
 
+    return A, B, C, D, E
+
+
+def get_ball_circular_cushion_collision_time(rvw, s, a, b, r, mu, m, g, R):
+    """Get the time until collision between ball and circular cushion segment
+
+    NOTE This is deprecated. Rather than solve the roots of a single polynomial equation,
+    as is done in this function, all roots of a given collision class are solved simultaneously
+    via utils.roots
+
+    Parameters
+    ==========
+    a : float
+        The x-coordinate of the cushion segment's center
+    b : float
+        The y-coordinate of the cushion segment's center
+    r : float
+        The radius of the cushion segment's center
+    mu : float
+        The rolling or sliding coefficient of friction. Should match the value of s
+    """
+    A, B, C, D, E = get_ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R)
     roots = np.roots([A,B,C,D,E])
 
     roots = roots[

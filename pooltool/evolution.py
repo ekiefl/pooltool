@@ -140,9 +140,13 @@ class EvolveShotEventBased(EvolveShot):
         if ball_ball_event.time < event.time:
             event = ball_ball_event
 
-        ball_cushion_event = self.get_min_ball_cushion_event_time()
-        if ball_cushion_event.time < event.time:
-            event = ball_cushion_event
+        ball_linear_cushion_event = self.get_min_ball_linear_cushion_event_time()
+        if ball_linear_cushion_event.time < event.time:
+            event = ball_linear_cushion_event
+
+        ball_circular_cushion_event = self.get_min_ball_circular_cushion_event_time()
+        if ball_circular_cushion_event.time < event.time:
+            event = ball_circular_cushion_event
 
         ball_pocket_event = self.get_min_ball_pocket_event_time()
         if ball_pocket_event.time < event.time:
@@ -165,11 +169,10 @@ class EvolveShotEventBased(EvolveShot):
 
     def get_min_ball_ball_event_time(self):
         """Returns minimum time until next ball-ball collision"""
-
         dtau_E = np.inf
-
         ball_ids = []
         collision_coeffs = []
+
         for i, ball1 in enumerate(self.balls.values()):
             for j, ball2 in enumerate(self.balls.values()):
                 if i >= j:
@@ -212,9 +215,46 @@ class EvolveShotEventBased(EvolveShot):
         return BallBallCollision(ball1, ball2, t=(self.t + dtau_E))
 
 
-    def get_min_ball_cushion_event_time(self):
-        """Returns minimum time until next ball-cushion collision"""
+    def get_min_ball_circular_cushion_event_time(self):
+        dtau_E = np.inf
+        agent_ids = []
+        collision_coeffs = []
 
+        for ball in self.balls.values():
+            if ball.s in c.nontranslating:
+                continue
+
+            for cushion in self.table.cushion_segments['circular'].values():
+                collision_coeffs.append(physics.get_ball_circular_cushion_collision_coeffs(
+                    rvw=ball.rvw,
+                    s=ball.s,
+                    a=cushion.a,
+                    b=cushion.b,
+                    r=cushion.radius,
+                    mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
+                    m=ball.m,
+                    g=ball.g,
+                    R=ball.R
+                ))
+
+                agent_ids.append((ball.id, cushion.id))
+
+        if not len(collision_coeffs):
+            # There are no collisions to test for
+            return BallBallCollision(DummyBall(), NonObject(), t=(self.t + dtau_E))
+
+        dtau_E, index = utils.min_real_root(
+            p = np.array(collision_coeffs),
+            tol = c.tol
+        )
+
+        ball_id, cushion_id = agent_ids[index]
+        ball, cushion = self.balls[ball_id], self.table.cushion_segments['circular'][cushion_id]
+
+        return BallCushionCollision(ball, cushion, t=(self.t + dtau_E))
+
+
+    def get_min_ball_linear_cushion_event_time(self):
         dtau_E_min = np.inf
         involved_agents = tuple([DummyBall(), NonObject()])
 
@@ -231,23 +271,6 @@ class EvolveShotEventBased(EvolveShot):
                     l0=cushion.l0,
                     p1=cushion.p1,
                     p2=cushion.p2,
-                    mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
-                    m=ball.m,
-                    g=ball.g,
-                    R=ball.R
-                )
-
-                if dtau_E < dtau_E_min:
-                    involved_agents = (ball, cushion)
-                    dtau_E_min = dtau_E
-
-            for cushion in self.table.cushion_segments['circular'].values():
-                dtau_E = physics.get_ball_circular_cushion_collision_time(
-                    rvw=ball.rvw,
-                    s=ball.s,
-                    a=cushion.a,
-                    b=cushion.b,
-                    r=cushion.radius,
                     mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
                     m=ball.m,
                     g=ball.g,
