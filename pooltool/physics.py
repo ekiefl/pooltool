@@ -496,7 +496,7 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     rvw_B = np.array([
         np.array([rvw_B0[1,0]*t - 1/2*u_s*g*t**2 * u_0[0], -1/2*u_s*g*t**2 * u_0[1], 0]),
         rvw_B0[1] - u_s*g*t*u_0,
-        rvw_B0[2] - 5/2/R*u_s*g*t * utils.cross(u_0, np.array([0,0,1])),
+        rvw_B0[2] - 5/2/R*u_s*g*t * utils.cross_fast(u_0, np.array([0,0,1])),
     ])
 
     # This transformation governs the z evolution of angular velocity
