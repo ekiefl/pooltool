@@ -189,6 +189,24 @@ def quadratic(a,b,c):
     return u1,u2
 
 
+@jit(nopython=True, cache=True)
+def quadratic_fast(a,b,c):
+    """Solve a quadratic equation At^2 + Bt + C = 0 (just-in-time compiled)
+
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/quadratic.py
+    """
+    if a == 0:
+        u = -c/b
+        return u, u
+    bp=b/2
+    delta=bp*bp-a*c
+    u1=(-bp-delta**.5)/a
+    u2=-u1-b/a
+    return u1,u2
+
+
 def roots(p):
     """Simultaneously solve polynomial equations
 
