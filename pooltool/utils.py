@@ -137,6 +137,15 @@ def wiggle(x, val):
     return x + val*(2*np.random.rand() - 1)
 
 
+def cross(v, u):
+    """Compute cross product v x u, where v and u are 3-dimensional vectors"""
+    return np.array([
+        v[1]*u[2] - v[2]*u[1],
+        v[2]*u[0] - v[0]*u[2],
+        v[0]*u[1] - v[1]*u[0],
+    ])
+
+
 def unit_vector(vector, ord=None, handle_zero=False):
     """Returns the unit vector of the vector.
 
