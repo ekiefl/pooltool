@@ -329,6 +329,22 @@ def angle(v2, v1=(1,0)):
     return ang
 
 
+@jit(nopython=True, cache=True)
+def angle_fast(v2, v1=(1,0)):
+    """Calculates counter-clockwise angle of the projections of v1 and v2 onto the x-y plane (just-in-time compiled)
+
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/angle.py
+    """
+    ang = np.arctan2(v2[1], v2[0]) - np.arctan2(v1[1], v1[0])
+
+    if ang < 0:
+        return 2*np.pi + ang
+
+    return ang
+
+
 def coordinate_rotation(v, phi):
     """Rotate vector/matrix from one frame of reference to another (3D FIXME)"""
 
