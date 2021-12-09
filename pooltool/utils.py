@@ -284,27 +284,39 @@ def min_real_root(p, tol=1e-12):
     return times.min(), times.argmin()
 
 
-def unit_vector(vector, ord=None, handle_zero=False):
+def unit_vector(vector, handle_zero=False):
     """Returns the unit vector of the vector.
 
     Parameters
     ==========
-    ord: None
-        The type of normalization used. See
-        https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html
     handle_zero: bool, False
         If True and vector = <0,0,0>, <0,0,0> is returned.
     """
     if len(vector.shape) > 1:
-        norm = np.linalg.norm(vector, ord=ord, axis=1, keepdims=True)
+        norm = np.linalg.norm(vector, axis=1, keepdims=True)
         if handle_zero:
             norm[(norm == 0).all(axis=1), :] = 1
         return vector / norm
     else:
-        norm = np.linalg.norm(vector, ord=ord)
+        norm = np.linalg.norm(vector)
         if norm == 0 and handle_zero:
             norm = 1
         return vector / norm
+
+
+@jit(nopython=True, cache=True)
+def unit_vector_fast(vector, handle_zero=False):
+    """Returns the unit vector of the vector (just-in-time compiled)
+
+    Notes
+    =====
+    - Unlike unit_vector, this does not support 2D arrays
+    - Speed comparison in pooltool/tests/speed/unit_vector.py
+    """
+    norm = np.sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2)
+    if handle_zero and norm == 0.0:
+        norm = 1.0
+    return vector / norm
 
 
 def angle(v2, v1=(1,0)):
