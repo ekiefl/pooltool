@@ -146,7 +146,6 @@ def cross(v, u):
     ])
 
 
-@jit(nopython=True, cache=True)
 def quadratic(a,b,c):
     """Solve a quadratic equation At^2 + Bt + C = 0"""
     if a == 0:
