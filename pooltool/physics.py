@@ -168,8 +168,8 @@ def get_ball_cushion_friction(rvw, f_c):
     return ans
 
 
-def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
-    """Get the time until collision between 2 balls"""
+def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
+    """Get the quartic coeffs required to determine the ball-ball collision time"""
     c1x, c1y = rvw1[0, 0], rvw1[0, 1]
     c2x, c2y = rvw2[0, 0], rvw2[0, 1]
 
@@ -213,6 +213,17 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
     d = 2*Bx*Cx + 2*By*Cy
     e = Cx**2 + Cy**2 - 4*R**2
 
+    return a, b, c, d, e
+
+
+def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
+    """Get the time until collision between 2 balls
+
+    NOTE This is deprecated. Rather than solve the roots of a single polynomial equation,
+    as is done in this function, all roots of a given collision class are solved simultaneously
+    via utils.roots
+    """
+    a, b, c, d, e = get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R)
     roots = np.roots([a,b,c,d,e])
 
     roots = roots[

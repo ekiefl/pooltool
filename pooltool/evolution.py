@@ -166,9 +166,10 @@ class EvolveShotEventBased(EvolveShot):
     def get_min_ball_ball_event_time(self):
         """Returns minimum time until next ball-ball collision"""
 
-        dtau_E_min = np.inf
-        involved_balls = tuple([DummyBall(), DummyBall()])
+        dtau_E = np.inf
 
+        ball_ids = []
+        collision_coeffs = []
         for i, ball1 in enumerate(self.balls.values()):
             for j, ball2 in enumerate(self.balls.values()):
                 if i >= j:
@@ -180,7 +181,7 @@ class EvolveShotEventBased(EvolveShot):
                 if ball1.s in c.nontranslating and ball2.s in c.nontranslating:
                     continue
 
-                dtau_E = physics.get_ball_ball_collision_time(
+                collision_coeffs.append(physics.get_ball_ball_collision_coeffs(
                     rvw1=ball1.rvw,
                     rvw2=ball2.rvw,
                     s1=ball1.s,
@@ -192,15 +193,23 @@ class EvolveShotEventBased(EvolveShot):
                     g1=ball1.g,
                     g2=ball2.g,
                     R=ball1.R
-                )
+                ))
 
-                if dtau_E < dtau_E_min:
-                    involved_balls = (ball1, ball2)
-                    dtau_E_min = dtau_E
+                ball_ids.append((ball1.id, ball2.id))
 
-        dtau_E = dtau_E_min
+        if not len(collision_coeffs):
+            # There are no collisions to test for
+            return BallBallCollision(DummyBall(), DummyBall(), t=(self.t + dtau_E))
 
-        return BallBallCollision(*involved_balls, t=(self.t + dtau_E))
+        dtau_E, index = utils.min_real_root(
+            p = np.array(collision_coeffs),
+            tol = c.tol
+        )
+
+        ball1_id, ball2_id = ball_ids[index]
+        ball1, ball2 = self.balls[ball1_id], self.balls[ball2_id]
+
+        return BallBallCollision(ball1, ball2, t=(self.t + dtau_E))
 
 
     def get_min_ball_cushion_event_time(self):
