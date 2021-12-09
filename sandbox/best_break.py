@@ -7,7 +7,7 @@ import pooltool.events as e
 import numpy as np
 
 N = 300
-spacing_factor = 0.01
+spacing_factor = 1e-3
 
 interface = pt.ShotViewer()
 best_break = 0
@@ -26,7 +26,7 @@ for n in range(N):
     cue.strike(V0=8)
 
     # Evolve the shot
-    shot = pt.EvolveShotEventBased(cue=cue, table=table, balls=balls)
+    shot = pt.System(cue=cue, table=table, balls=balls)
     try:
         shot.simulate(name=f"factor: {spacing_factor}; n: {n}", continuize=False)
     except KeyboardInterrupt:
@@ -39,16 +39,17 @@ for n in range(N):
 
     # Count how many balls were potted, ignoring cue ball
     numbered_balls = [ball for ball in balls.values() if ball.id != 'cue']
-    pocket_events = shot.\
+    pocket_events = shot.events.\
         filter_type(e.type_ball_pocket).\
         filter_ball(numbered_balls)
-    balls_potted = pocket_events.num_events
+    balls_potted = len(pocket_events)
 
     shot.run.info("Balls potted", balls_potted)
 
+    shot.continuize(dt=0.01)
+    interface.show(shot)
+
     if balls_potted > best_break:
-        shot.continuize(dt=0.01)
-        interface.show(shot)
         best_break = balls_potted
 
 
