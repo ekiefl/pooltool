@@ -137,12 +137,27 @@ def wiggle(x, val):
     return x + val*(2*np.random.rand() - 1)
 
 
-def cross(v, u):
-    """Compute cross product v x u, where v and u are 3-dimensional vectors"""
+def cross(u, v):
+    """Compute cross product u x v, where u and v are 3-dimensional vectors"""
     return np.array([
-        v[1]*u[2] - v[2]*u[1],
-        v[2]*u[0] - v[0]*u[2],
-        v[0]*u[1] - v[1]*u[0],
+        u[1]*v[2] - u[2]*v[1],
+        u[2]*v[0] - u[0]*v[2],
+        u[0]*v[1] - u[1]*v[0],
+    ])
+
+
+@jit(nopython=True, cache=True)
+def cross_fast(u, v):
+    """Compute cross product u x v, where u and v are 3-dimensional vectors (just-in-time compiled)
+
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/cross.py
+    """
+    return np.array([
+        u[1]*v[2] - u[2]*v[1],
+        u[2]*v[0] - u[0]*v[2],
+        u[0]*v[1] - u[1]*v[0],
     ])
 
 
