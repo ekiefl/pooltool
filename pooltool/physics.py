@@ -268,7 +268,7 @@ def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g,
     # All roots beyond this point are real and positive
 
     for i, root in enumerate(roots):
-        rvw_dtau, _ = evolve_state_motion(s, np.copy(rvw), R, m, mu, 1, mu, g, root)
+        rvw_dtau, _ = evolve_state_motion(s, rvw, R, m, mu, 1, mu, g, root)
         s_score = - np.dot(p1 - rvw_dtau[0], p2 - p1) / np.dot(p2 - p1, p2 - p1)
         if not (0 <= s_score <= 1):
             roots[i] = np.inf
