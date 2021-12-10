@@ -429,6 +429,23 @@ def get_spin_time(rvw, R, u_sp, g):
     return np.abs(w[2]) * 2/5*R/u_sp/g
 
 
+@jit(nopython=True, cache=True)
+def get_slide_time_fast(rvw, R, u_s, g):
+    return 2*np.linalg.norm(utils.get_rel_velocity_fast(rvw, R)) / (7*u_s*g)
+
+
+@jit(nopython=True, cache=True)
+def get_roll_time_fast(rvw, u_r, g):
+    _, v, _ = rvw
+    return np.linalg.norm(v) / (u_r*g)
+
+
+@jit(nopython=True, cache=True)
+def get_spin_time_fast(rvw, R, u_sp, g):
+    _, _, w = rvw
+    return np.abs(w[2]) * 2/5*R/u_sp/g
+
+
 def get_ball_energy(rvw, R, m):
     """Rotation and kinetic energy (FIXME potential if z axis is freed)"""
     return (m*np.linalg.norm(rvw[1])**2 + (2/5*m*R**2)*np.linalg.norm(rvw[2])**2)/2
@@ -439,7 +456,7 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
         return rvw, state
 
     if state == const.sliding:
-        dtau_E_slide = get_slide_time(rvw, R, u_s, g)
+        dtau_E_slide = get_slide_time_fast(rvw, R, u_s, g)
 
         if t >= dtau_E_slide:
             rvw = evolve_slide_state(rvw, R, m, u_s, u_sp, g, dtau_E_slide)
@@ -449,7 +466,7 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
             return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), const.sliding
 
     if state == const.rolling:
-        dtau_E_roll = get_roll_time(rvw, u_r, g)
+        dtau_E_roll = get_roll_time_fast(rvw, u_r, g)
 
         if t >= dtau_E_roll:
             rvw = evolve_roll_state(rvw, R, u_r, u_sp, g, dtau_E_roll)
@@ -459,7 +476,7 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
             return evolve_roll_state(rvw, R, u_r, u_sp, g, t), const.rolling
 
     if state == const.spinning:
-        dtau_E_spin = get_spin_time(rvw, R, u_sp, g)
+        dtau_E_spin = get_spin_time_fast(rvw, R, u_sp, g)
 
         if t >= dtau_E_spin:
             return evolve_perpendicular_spin_state(rvw, R, u_sp, g, dtau_E_spin), const.stationary

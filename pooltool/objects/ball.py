@@ -356,12 +356,12 @@ class Ball(Object, BallRender):
             self.next_transition_event = NonEvent(t = np.inf)
 
         elif self.s == c.spinning:
-            dtau_E = physics.get_spin_time(self.rvw, self.R, self.u_sp, self.g)
+            dtau_E = physics.get_spin_time_fast(self.rvw, self.R, self.u_sp, self.g)
             self.next_transition_event = SpinningStationaryTransition(self, t=(self.t + dtau_E))
 
         elif self.s == c.rolling:
-            dtau_E_spin = physics.get_spin_time(self.rvw, self.R, self.u_sp, self.g)
-            dtau_E_roll = physics.get_roll_time(self.rvw, self.u_r, self.g)
+            dtau_E_spin = physics.get_spin_time_fast(self.rvw, self.R, self.u_sp, self.g)
+            dtau_E_roll = physics.get_roll_time_fast(self.rvw, self.u_r, self.g)
 
             if dtau_E_spin > dtau_E_roll:
                 self.next_transition_event = RollingSpinningTransition(self, t=(self.t + dtau_E_roll))
@@ -369,7 +369,7 @@ class Ball(Object, BallRender):
                 self.next_transition_event = RollingStationaryTransition(self, t=(self.t + dtau_E_roll))
 
         elif self.s == c.sliding:
-            dtau_E = physics.get_slide_time(self.rvw, self.R, self.u_s, self.g)
+            dtau_E = physics.get_slide_time_fast(self.rvw, self.R, self.u_s, self.g)
             self.next_transition_event = SlidingRollingTransition(self, t=(self.t + dtau_E))
 
         else:
