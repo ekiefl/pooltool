@@ -338,7 +338,7 @@ class Cue(Object, CueRender):
             A length-3 iterable specifying the x, y, z coordinates of the position to be aimed at
         """
 
-        direction = utils.angle(utils.unit_vector_fast(np.array(pos) - self.cueing_ball.rvw[0]))
+        direction = utils.angle_fast(utils.unit_vector_fast(np.array(pos) - self.cueing_ball.rvw[0]))
         self.set_state(phi = direction * 180/np.pi)
 
 

@@ -53,7 +53,7 @@ def resolve_ball_ball_collision(rvw1, rvw2):
     n = utils.unit_vector_fast(r2 - r1)
     t = utils.coordinate_rotation(n, np.pi/2)
 
-    beta = utils.angle(v_rel, n)
+    beta = utils.angle_fast(v_rel, n)
 
     rvw1[1] = t * v_mag*np.sin(beta) + v2
     rvw2[1] = n * v_mag*np.cos(beta) + v2
@@ -69,11 +69,11 @@ def resolve_ball_cushion_collision(rvw, normal, R, m, h, e_c, f_c):
 
     # Change from the table frame to the cushion frame. The cushion frame is defined by
     # the normal vector is parallel with <1,0,0>.
-    psi = utils.angle(normal)
+    psi = utils.angle_fast(normal)
     rvw_R = utils.coordinate_rotation(rvw.T, -psi).T
 
     # The incidence angle--called theta_0 in paper
-    phi = utils.angle(rvw_R[1]) % (2*np.pi)
+    phi = utils.angle_fast(rvw_R[1]) % (2*np.pi)
 
     # Get mu and e
     e = get_ball_cushion_restitution(rvw_R, e_c)
@@ -154,7 +154,7 @@ def get_ball_cushion_friction(rvw, f_c):
         perpendicular to the cushion, and in the direction away from the table
     """
 
-    ang = utils.angle(rvw[1])
+    ang = utils.angle_fast(rvw[1])
 
     if ang > np.pi:
         ang = np.abs(2*np.pi - ang)
@@ -171,7 +171,7 @@ def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2,
     if s1 in const.nontranslating:
         a1x, a1y, b1x, b1y = 0, 0, 0, 0
     else:
-        phi1 = utils.angle(rvw1[1])
+        phi1 = utils.angle_fast(rvw1[1])
         v1 = np.linalg.norm(rvw1[1])
 
         u1 = (np.array([1,0,0])
@@ -186,7 +186,7 @@ def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2,
     if s2 in const.nontranslating:
         a2x, a2y, b2x, b2y = 0, 0, 0, 0
     else:
-        phi2 = utils.angle(rvw2[1])
+        phi2 = utils.angle_fast(rvw2[1])
         v2 = np.linalg.norm(rvw2[1])
 
         u2 = (np.array([1,0,0])
@@ -234,7 +234,7 @@ def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g,
     if s in const.nontranslating:
         return np.inf
 
-    phi = utils.angle(rvw[1])
+    phi = utils.angle_fast(rvw[1])
     v = np.linalg.norm(rvw[1])
 
     u = (np.array([1,0,0]
@@ -294,7 +294,7 @@ def get_ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     if s in const.nontranslating:
         return np.inf
 
-    phi = utils.angle(rvw[1])
+    phi = utils.angle_fast(rvw[1])
     v = np.linalg.norm(rvw[1])
 
     u = (np.array([1,0,0]
@@ -362,7 +362,7 @@ def get_ball_pocket_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     if s in const.nontranslating:
         return np.inf
 
-    phi = utils.angle(rvw[1])
+    phi = utils.angle_fast(rvw[1])
     v = np.linalg.norm(rvw[1])
 
     u = (np.array([1,0,0]
@@ -482,7 +482,7 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
         return rvw
 
     # Angle of initial velocity in table frame
-    phi = utils.angle(rvw[1])
+    phi = utils.angle_fast(rvw[1])
 
     rvw_B0 = utils.coordinate_rotation(rvw.T, -phi).T
 
