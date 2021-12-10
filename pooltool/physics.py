@@ -51,7 +51,7 @@ def resolve_ball_ball_collision(rvw1, rvw2):
     v_mag = np.linalg.norm(v_rel)
 
     n = utils.unit_vector_fast(r2 - r1)
-    t = utils.coordinate_rotation(n, np.pi/2)
+    t = utils.coordinate_rotation_fast(n, np.pi/2)
 
     beta = utils.angle_fast(v_rel, n)
 
@@ -70,7 +70,7 @@ def resolve_ball_cushion_collision(rvw, normal, R, m, h, e_c, f_c):
     # Change from the table frame to the cushion frame. The cushion frame is defined by
     # the normal vector is parallel with <1,0,0>.
     psi = utils.angle_fast(normal)
-    rvw_R = utils.coordinate_rotation(rvw.T, -psi).T
+    rvw_R = utils.coordinate_rotation_fast(rvw.T, -psi).T
 
     # The incidence angle--called theta_0 in paper
     phi = utils.angle_fast(rvw_R[1]) % (2*np.pi)
@@ -118,7 +118,7 @@ def resolve_ball_cushion_collision(rvw, normal, R, m, h, e_c, f_c):
     rvw_R[2,2] += R/I*PY*np.cos(theta_a)
 
     # Change back to table reference frame
-    rvw = utils.coordinate_rotation(rvw_R.T, psi).T
+    rvw = utils.coordinate_rotation_fast(rvw_R.T, psi).T
 
     return rvw
 
@@ -176,7 +176,7 @@ def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2,
 
         u1 = (np.array([1,0,0])
               if s1 == const.rolling
-              else utils.coordinate_rotation(utils.unit_vector_fast(utils.get_rel_velocity(rvw1, R)), -phi1))
+              else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity(rvw1, R)), -phi1))
 
         a1x = -1/2*mu1*g1*(u1[0]*np.cos(phi1) - u1[1]*np.sin(phi1))
         a1y = -1/2*mu1*g1*(u1[0]*np.sin(phi1) + u1[1]*np.cos(phi1))
@@ -191,7 +191,7 @@ def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2,
 
         u2 = (np.array([1,0,0])
               if s2 == const.rolling
-              else utils.coordinate_rotation(utils.unit_vector_fast(utils.get_rel_velocity(rvw2, R)), -phi2))
+              else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity(rvw2, R)), -phi2))
 
         a2x = -1/2*mu2*g2*(u2[0]*np.cos(phi2) - u2[1]*np.sin(phi2))
         a2y = -1/2*mu2*g2*(u2[0]*np.sin(phi2) + u2[1]*np.cos(phi2))
@@ -239,7 +239,7 @@ def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g,
 
     u = (np.array([1,0,0]
          if s == const.rolling
-         else utils.coordinate_rotation(utils.unit_vector_fast(utils.get_rel_velocity(rvw, R)), -phi)))
+         else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity(rvw, R)), -phi)))
 
     ax = -1/2*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
     ay = -1/2*mu*g*(u[0]*np.sin(phi) + u[1]*np.cos(phi))
@@ -299,7 +299,7 @@ def get_ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
 
     u = (np.array([1,0,0]
          if s == const.rolling
-         else utils.coordinate_rotation(utils.unit_vector_fast(utils.get_rel_velocity(rvw, R)), -phi)))
+         else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity(rvw, R)), -phi)))
 
     ax = -1/2*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
     ay = -1/2*mu*g*(u[0]*np.sin(phi) + u[1]*np.cos(phi))
@@ -367,7 +367,7 @@ def get_ball_pocket_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
 
     u = (np.array([1,0,0]
          if s == const.rolling
-         else utils.coordinate_rotation(utils.unit_vector_fast(utils.get_rel_velocity(rvw, R)), -phi)))
+         else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity(rvw, R)), -phi)))
 
     ax = -1/2*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
     ay = -1/2*mu*g*(u[0]*np.sin(phi) + u[1]*np.cos(phi))
@@ -484,10 +484,10 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     # Angle of initial velocity in table frame
     phi = utils.angle_fast(rvw[1])
 
-    rvw_B0 = utils.coordinate_rotation(rvw.T, -phi).T
+    rvw_B0 = utils.coordinate_rotation_fast(rvw.T, -phi).T
 
     # Relative velocity unit vector in ball frame
-    u_0 = utils.coordinate_rotation(utils.unit_vector_fast(utils.get_rel_velocity(rvw, R)), -phi)
+    u_0 = utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity(rvw, R)), -phi)
 
     # Calculate quantities according to the ball frame. NOTE w_B in this code block
     # is only accurate of the x and y evolution of angular velocity. z evolution of
@@ -504,7 +504,7 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     rvw_B = evolve_perpendicular_spin_state(rvw_B, R, u_sp, g, t)
 
     # Rotate to table reference
-    rvw_T = utils.coordinate_rotation(rvw_B.T, phi).T
+    rvw_T = utils.coordinate_rotation_fast(rvw_B.T, phi).T
     rvw_T[0] += rvw[0] # Add initial ball position
 
     return rvw_T
@@ -520,7 +520,7 @@ def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
 
     r = r_0 + v_0 * t - 1/2*u_r*g*t**2 * v_0_hat
     v = v_0 - u_r*g*t * v_0_hat
-    w = utils.coordinate_rotation(v/R, np.pi/2)
+    w = utils.coordinate_rotation_fast(v/R, np.pi/2)
 
     # Independently evolve the z spin
     temp = evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)
@@ -634,8 +634,8 @@ def cue_strike(m, M, R, V0, phi, theta, a, b):
 
     # Rotate to table reference
     rot_angle = phi + np.pi/2
-    v_T = utils.coordinate_rotation(v_B, rot_angle)
-    w_T = utils.coordinate_rotation(w_B, rot_angle)
+    v_T = utils.coordinate_rotation_fast(v_B, rot_angle)
+    w_T = utils.coordinate_rotation_fast(w_B, rot_angle)
 
     return v_T, w_T
 
