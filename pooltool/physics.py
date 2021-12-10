@@ -651,6 +651,7 @@ def evolve_state_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
         return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), const.spinning
 
 
+@jit(nopython=True, cache=True)
 def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     if t == 0:
         return rvw
@@ -667,11 +668,12 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     # is only accurate of the x and y evolution of angular velocity. z evolution of
     # angular velocity is done in the next block
 
-    rvw_B = np.array([
-        np.array([rvw_B0[1,0]*t - 0.5*u_s*g*t**2 * u_0[0], -0.5*u_s*g*t**2 * u_0[1], 0]),
-        rvw_B0[1] - u_s*g*t*u_0,
-        rvw_B0[2] - 5/2/R*u_s*g*t * utils.cross_fast(u_0, np.array([0,0,1])),
-    ])
+    rvw_B = np.empty((3,3), dtype=np.float64)
+    rvw_B[0,0] = rvw_B0[1,0]*t - 0.5*u_s*g*t**2 * u_0[0]
+    rvw_B[0,1] = -0.5*u_s*g*t**2 * u_0[1]
+    rvw_B[0,2] = 0
+    rvw_B[1,:] = rvw_B0[1] - u_s*g*t*u_0
+    rvw_B[2,:] = rvw_B0[2] - 5/2/R*u_s*g*t * utils.cross_fast(u_0, np.array([0,0,1], dtype=np.float64))
 
     # This transformation governs the z evolution of angular velocity
     rvw_B[2, 2] = rvw_B0[2, 2]
