@@ -38,6 +38,7 @@ All units are SI (https://en.wikipedia.org/wiki/International_System_of_Units)
 import pooltool.utils as utils
 import pooltool.constants as const
 
+import math
 import numpy as np
 
 from numba import jit
@@ -163,6 +164,67 @@ def get_ball_cushion_friction(rvw, f_c):
 
     ans = f_c
     return ans
+
+
+@jit(nopython=True, cache=True)
+def skip_ball_ball_collision(rvw1, rvw2, s1, s2, R1, R2):
+    if (s1 == const.spinning or s1 == const.pocketed or s1 == const.stationary) and \
+       (s2 == const.spinning or s2 == const.pocketed or s2 == const.stationary):
+        # Neither balls are moving. No collision.
+        return True
+
+    if s1 == const.pocketed or s2 == const.pocketed:
+        # One of the balls is pocketed
+        return True
+
+    if s1 == const.rolling and s2 == const.rolling:
+        # Both balls are rolling (straight line trajectories). Here I am checking whether both dot
+        # products face away from the line connecting the two balls. If so, they are guaranteed not
+        # to collide
+        r12 = rvw2[0] - rvw1[0]
+        dot1 = r12[0]*rvw1[1,0] + r12[1]*rvw1[1,1] + r12[2]*rvw1[1,2]
+        if dot1 <= 0:
+            dot2 = r12[0]*rvw2[1,0] + r12[1]*rvw2[1,1] + r12[2]*rvw2[1,2]
+            if dot2 >= 0:
+                return True
+
+    if s1 == const.rolling and (s2 == const.spinning or s2 == const.stationary):
+        # ball1 is rolling, which guarantees a straight-line trajectory. Some assumptions can be
+        # made based on this fact
+        r12 = rvw2[0] - rvw1[0]
+
+        # ball2 is not moving, so we can pinpoint the range of angles ball1 must be headed
+        # in for a collision
+        d = np.linalg.norm(r12)
+        unit_d = r12/d
+        unit_v = utils.unit_vector_fast(rvw1[1])
+
+        # Angles are in radians
+        # Calculate forwards and backwards angles, e.g. 10 and 350, take the min
+        angle = np.arccos(np.dot(unit_d, unit_v))
+        max_hit_angle = 0.5*np.pi - math.acos((R1+R2)/d)
+        if angle > max_hit_angle:
+            return True
+
+    if s2 == const.rolling and (s1 == const.spinning or s1 == const.stationary):
+        # ball2 is rolling, which guarantees a straight-line trajectory. Some assumptions can be
+        # made based on this fact
+        r21 = rvw1[0] - rvw2[0]
+
+        # ball1 is not moving, so we can pinpoint the range of angles ball2 must be headed
+        # in for a collision
+        d = np.linalg.norm(r21)
+        unit_d = r21/d
+        unit_v = utils.unit_vector_fast(rvw2[1])
+
+        # Angles are in radians
+        # Calculate forwards and backwards angles, e.g. 10 and 350, take the min
+        angle = np.arccos(np.dot(unit_d, unit_v))
+        max_hit_angle = 0.5*np.pi - math.acos((R1+R2)/d)
+        if angle > max_hit_angle:
+            return True
+
+    return False
 
 
 def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):

@@ -51,7 +51,7 @@ class EvolveShot(ABC):
                 self.progress.increment(increment_to=int(energy_start - energy))
 
             self.run.warning('', header=name, lc='green')
-            self.run.info('starting energy', f"{np.round(energy_start, 2)}J")
+            self.run.info('Starting energy', f"{np.round(energy_start, 2)}J")
             self.progress.new("Running", progress_total_items=int(energy_start))
         else:
             def progress_update():
@@ -182,10 +182,7 @@ class EvolveShotEventBased(EvolveShot):
                 if i >= j:
                     continue
 
-                if ball1.s == c.pocketed or ball2.s == c.pocketed:
-                    continue
-
-                if ball1.s in c.nontranslating and ball2.s in c.nontranslating:
+                if physics.skip_ball_ball_collision(ball1.rvw, ball2.rvw, ball1.s, ball2.s, ball1.R, ball2.R):
                     continue
 
                 collision_coeffs.append(physics.get_ball_ball_collision_coeffs_fast(
