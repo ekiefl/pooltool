@@ -606,6 +606,7 @@ def get_ball_energy(rvw, R, m):
     return (m*np.linalg.norm(rvw[1])**2 + (2/5*m*R**2)*np.linalg.norm(rvw[2])**2)/2
 
 
+@jit(nopython=True, cache=True)
 def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
     if state == const.stationary or state == const.pocketed:
         return rvw, state
@@ -639,6 +640,7 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
             return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), const.spinning
 
 
+@jit(nopython=True, cache=True)
 def evolve_state_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
     """Variant of evolve_ball_motion that does not respect motion transition events"""
     if state == const.stationary or state == const.pocketed:
