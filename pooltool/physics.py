@@ -684,6 +684,7 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     return rvw_T
 
 
+@jit(nopython=True, cache=True)
 def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
     if t == 0:
         return rvw
@@ -701,9 +702,15 @@ def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
 
     w[2] = temp[2, 2]
 
-    return np.array([r, v, w])
+    new_rvw = np.empty((3,3), dtype=np.float64)
+    new_rvw[0,:] = r
+    new_rvw[1,:] = v
+    new_rvw[2,:] = w
+
+    return new_rvw
 
 
+@jit(nopython=True, cache=True)
 def evolve_perpendicular_spin_component(wz, R, u_sp, g, t):
     if t == 0:
         return wz
@@ -724,9 +731,10 @@ def evolve_perpendicular_spin_component(wz, R, u_sp, g, t):
     return wz_final
 
 
+@jit(nopython=True, cache=True)
 def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
     # Otherwise ball.rvw will be modified and corresponding entry in self.history
-    # FIXME framework has changed, this may not be true
+    # FIXME framework has changed, this may not be true. EDIT This is still true.
     rvw = rvw.copy()
 
     rvw[2, 2] = evolve_perpendicular_spin_component(rvw[2, 2], R, u_sp, g, t)
