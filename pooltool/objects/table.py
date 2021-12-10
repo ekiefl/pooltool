@@ -429,8 +429,8 @@ class LinearCushionSegment(CushionSegment):
     def __init__(self, cushion_id, p1, p2):
         self.id = cushion_id
 
-        self.p1 = np.array(p1)
-        self.p2 = np.array(p2)
+        self.p1 = np.array(p1, dtype=np.float64)
+        self.p2 = np.array(p2, dtype=np.float64)
 
         p1x, p1y, p1z = self.p1
         p2x, p2y, p2z = self.p2

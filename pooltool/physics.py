@@ -351,6 +351,61 @@ def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g,
     return roots.min() if len(roots) else np.inf
 
 
+@jit(nopython=True, cache=True)
+def get_ball_linear_cushion_collision_time_fast(rvw, s, lx, ly, l0, p1, p2, mu, m, g, R):
+    """Get the time until collision between ball and linear cushion segment (just-in-time compiled)
+
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/get_ball_circular_cushion_collision_coeffs.py
+    """
+    if s == const.spinning or s == const.pocketed or s == const.stationary:
+        return np.inf
+
+    phi = utils.angle_fast(rvw[1])
+    v = np.linalg.norm(rvw[1])
+
+    u = (np.array([1,0,0], dtype=np.float64)
+         if s == const.rolling
+         else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity_fast(rvw, R)), -phi))
+
+    K = -0.5*mu*g
+    cos_phi = np.cos(phi)
+    sin_phi = np.sin(phi)
+
+    ax = K*(u[0]*cos_phi - u[1]*sin_phi)
+    ay = K*(u[0]*sin_phi + u[1]*cos_phi)
+    bx, by = v*cos_phi, v*sin_phi
+    cx, cy = rvw[0, 0], rvw[0, 1]
+
+    A = lx*ax + ly*ay
+    B = lx*bx + ly*by
+    C1 = l0 + lx*cx + ly*cy + R*np.sqrt(lx**2 + ly**2)
+    C2 = l0 + lx*cx + ly*cy - R*np.sqrt(lx**2 + ly**2)
+
+    root1, root2 = utils.quadratic_fast(A,B,C1)
+    root3, root4 = utils.quadratic_fast(A,B,C2)
+
+    min_time = np.inf
+    for root in [root1, root2, root3, root4]:
+        if np.abs(root.imag) > const.tol:
+            continue
+
+        if root.real <= const.tol:
+            continue
+
+        rvw_dtau, _ = evolve_state_motion(s, rvw, R, m, mu, 1, mu, g, root)
+        s_score = - np.dot(p1 - rvw_dtau[0], p2 - p1) / np.dot(p2 - p1, p2 - p1)
+
+        if not (0 <= s_score <= 1):
+            continue
+
+        if root.real < min_time:
+            min_time = root.real
+
+    return min_time
+
+
 def get_ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     """Get the quartic coeffs required to determine the ball-circular-cushion collision time
 

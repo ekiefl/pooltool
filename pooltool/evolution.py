@@ -267,7 +267,7 @@ class EvolveShotEventBased(EvolveShot):
                 continue
 
             for cushion in self.table.cushion_segments['linear'].values():
-                dtau_E = physics.get_ball_linear_cushion_collision_time(
+                dtau_E = physics.get_ball_linear_cushion_collision_time_fast(
                     rvw=ball.rvw,
                     s=ball.s,
                     lx=cushion.lx,
