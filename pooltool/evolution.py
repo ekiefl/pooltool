@@ -301,7 +301,7 @@ class EvolveShotEventBased(EvolveShot):
                 continue
 
             for pocket in self.table.pockets.values():
-                collision_coeffs.append(physics.get_ball_pocket_collision_coeffs(
+                collision_coeffs.append(physics.get_ball_pocket_collision_coeffs_fast(
                     rvw=ball.rvw,
                     s=ball.s,
                     a=pocket.a,
