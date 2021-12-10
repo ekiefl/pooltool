@@ -229,7 +229,7 @@ class EvolveShotEventBased(EvolveShot):
                 continue
 
             for cushion in self.table.cushion_segments['circular'].values():
-                collision_coeffs.append(physics.get_ball_circular_cushion_collision_coeffs(
+                collision_coeffs.append(physics.get_ball_circular_cushion_collision_coeffs_fast(
                     rvw=ball.rvw,
                     s=ball.s,
                     a=cushion.a,

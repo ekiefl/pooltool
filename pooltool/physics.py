@@ -215,7 +215,12 @@ def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2,
 
 @jit(nopython=True, cache=True)
 def get_ball_ball_collision_coeffs_fast(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
-    """Get the quartic coeffs required to determine the ball-ball collision time"""
+    """Get the quartic coeffs required to determine the ball-ball collision time (just-in-time compiled)
+
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/get_ball_ball_collision_coeffs.py
+    """
     c1x, c1y = rvw1[0, 0], rvw1[0, 1]
     c2x, c2y = rvw2[0, 0], rvw2[0, 1]
 
@@ -344,7 +349,7 @@ def get_ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     """
 
     if s in const.nontranslating:
-        return np.inf
+        return np.inf, np.inf, np.inf, np.inf, np.inf
 
     phi = utils.angle_fast(rvw[1])
     v = np.linalg.norm(rvw[1])
@@ -352,6 +357,39 @@ def get_ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     u = (np.array([1,0,0]
          if s == const.rolling
          else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity_fast(rvw, R)), -phi)))
+
+    ax = -1/2*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
+    ay = -1/2*mu*g*(u[0]*np.sin(phi) + u[1]*np.cos(phi))
+    bx, by = v*np.cos(phi), v*np.sin(phi)
+    cx, cy = rvw[0, 0], rvw[0, 1]
+
+    A = 1/2 * (ax**2 + ay**2)
+    B = ax*bx + ay*by
+    C = ax*(cx-a) + ay*(cy-b) + 1/2*(bx**2 + by**2)
+    D = bx*(cx-a) + by*(cy-b)
+    E = 1/2*(a**2 + b**2 + cx**2 + cy**2 - (r + R)**2) - (cx*a + cy*b)
+
+    return A, B, C, D, E
+
+
+@jit(nopython=True, cache=True)
+def get_ball_circular_cushion_collision_coeffs_fast(rvw, s, a, b, r, mu, m, g, R):
+    """Get the quartic coeffs required to determine the ball-circular-cushion collision time (just-in-time compiled)
+
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/get_ball_circular_cushion_collision_coeffs.py
+    """
+
+    if s == const.spinning or s == const.pocketed or s == const.stationary:
+        return np.inf, np.inf, np.inf, np.inf, np.inf
+
+    phi = utils.angle_fast(rvw[1])
+    v = np.linalg.norm(rvw[1])
+
+    u = (np.array([1,0,0], dtype=np.float64)
+         if s == const.rolling
+         else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity_fast(rvw, R)), -phi))
 
     ax = -1/2*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
     ay = -1/2*mu*g*(u[0]*np.sin(phi) + u[1]*np.cos(phi))
