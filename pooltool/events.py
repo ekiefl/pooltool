@@ -168,7 +168,7 @@ class StickBallCollision(Collision):
         rvw = np.array([ball.rvw[0], v, w])
 
         s = (c.rolling
-             if abs(np.sum(utils.get_rel_velocity(rvw, ball.R))) <= c.tol
+             if abs(np.sum(utils.get_rel_velocity_fast(rvw, ball.R))) <= c.tol
              else c.sliding)
 
         ball.set(rvw, s)
