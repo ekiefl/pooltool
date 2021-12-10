@@ -40,6 +40,8 @@ import pooltool.constants as const
 
 import numpy as np
 
+from numba import jit
+
 
 def resolve_ball_ball_collision(rvw1, rvw2):
     """FIXME Instantaneous, elastic, equal mass collision"""
@@ -534,14 +536,14 @@ def evolve_perpendicular_spin_component(wz, R, u_sp, g, t):
     if t == 0:
         return wz
 
-    if abs(wz) < const.tol:
+    if np.abs(wz) < const.tol:
         return wz
 
     alpha = 5*u_sp*g/(2*R)
 
-    if t > abs(wz)/alpha:
+    if t > np.abs(wz)/alpha:
         # You can't decay past 0 angular velocity
-        t = abs(wz)/alpha
+        t = np.abs(wz)/alpha
 
     # Always decay towards 0, whether spin is +ve or -ve
     sign = 1 if wz > 0 else -1
@@ -571,7 +573,7 @@ def cue_strike(m, M, R, V0, phi, theta, a, b):
     │           │      ,                    ,
     │           │       ,                  ,
     ◎───────────◎         ,               '
-      bottom cushion           ' - , _ , - 
+      bottom cushion        ' - , _ , - 
                      ______________________________
                               playing surface
     Parameters
