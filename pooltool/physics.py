@@ -180,10 +180,14 @@ def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2,
               if s1 == const.rolling
               else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity_fast(rvw1, R)), -phi1))
 
-        a1x = -1/2*mu1*g1*(u1[0]*np.cos(phi1) - u1[1]*np.sin(phi1))
-        a1y = -1/2*mu1*g1*(u1[0]*np.sin(phi1) + u1[1]*np.cos(phi1))
-        b1x = v1*np.cos(phi1)
-        b1y = v1*np.sin(phi1)
+        K1 = -0.5*mu1*g1
+        cos_phi1 = np.cos(phi1)
+        sin_phi1 = np.sin(phi1)
+
+        a1x = K1*(u1[0]*cos_phi1 - u1[1]*sin_phi1)
+        a1y = K1*(u1[0]*sin_phi1 + u1[1]*cos_phi1)
+        b1x = v1*cos_phi1
+        b1y = v1*sin_phi1
 
     if s2 in const.nontranslating:
         a2x, a2y, b2x, b2y = 0, 0, 0, 0
@@ -195,10 +199,14 @@ def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2,
               if s2 == const.rolling
               else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity_fast(rvw2, R)), -phi2))
 
-        a2x = -1/2*mu2*g2*(u2[0]*np.cos(phi2) - u2[1]*np.sin(phi2))
-        a2y = -1/2*mu2*g2*(u2[0]*np.sin(phi2) + u2[1]*np.cos(phi2))
-        b2x = v2*np.cos(phi2)
-        b2y = v2*np.sin(phi2)
+        K2 = -0.5*mu2*g2
+        cos_phi2 = np.cos(phi2)
+        sin_phi2 = np.sin(phi2)
+
+        a2x = K2*(u2[0]*cos_phi2 - u2[1]*sin_phi2)
+        a2y = K2*(u2[0]*sin_phi2 + u2[1]*cos_phi2)
+        b2x = v2*cos_phi2
+        b2y = v2*sin_phi2
 
     Ax, Ay = a2x-a1x, a2y-a1y
     Bx, By = b2x-b1x, b2y-b1y
@@ -235,10 +243,14 @@ def get_ball_ball_collision_coeffs_fast(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1
               if s1 == const.rolling
               else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity_fast(rvw1, R)), -phi1))
 
-        a1x = -1/2*mu1*g1*(u1[0]*np.cos(phi1) - u1[1]*np.sin(phi1))
-        a1y = -1/2*mu1*g1*(u1[0]*np.sin(phi1) + u1[1]*np.cos(phi1))
-        b1x = v1*np.cos(phi1)
-        b1y = v1*np.sin(phi1)
+        K1 = -0.5*mu1*g1
+        cos_phi1 = np.cos(phi1)
+        sin_phi1 = np.sin(phi1)
+
+        a1x = K1*(u1[0]*cos_phi1 - u1[1]*sin_phi1)
+        a1y = K1*(u1[0]*sin_phi1 + u1[1]*cos_phi1)
+        b1x = v1*cos_phi1
+        b1y = v1*sin_phi1
 
     if s2 == const.spinning or s2 == const.pocketed or s2 == const.stationary:
         a2x, a2y, b2x, b2y = 0., 0., 0., 0.
@@ -250,10 +262,14 @@ def get_ball_ball_collision_coeffs_fast(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1
               if s2 == const.rolling
               else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity_fast(rvw2, R)), -phi2))
 
-        a2x = -1/2*mu2*g2*(u2[0]*np.cos(phi2) - u2[1]*np.sin(phi2))
-        a2y = -1/2*mu2*g2*(u2[0]*np.sin(phi2) + u2[1]*np.cos(phi2))
-        b2x = v2*np.cos(phi2)
-        b2y = v2*np.sin(phi2)
+        K2 = -0.5*mu2*g2
+        cos_phi2 = np.cos(phi2)
+        sin_phi2 = np.sin(phi2)
+
+        a2x = K2*(u2[0]*cos_phi2 - u2[1]*sin_phi2)
+        a2y = K2*(u2[0]*sin_phi2 + u2[1]*cos_phi2)
+        b2x = v2*cos_phi2
+        b2y = v2*sin_phi2
 
     Ax, Ay = a2x-a1x, a2y-a1y
     Bx, By = b2x-b1x, b2y-b1y
@@ -298,8 +314,10 @@ def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g,
          if s == const.rolling
          else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity_fast(rvw, R)), -phi)))
 
-    ax = -1/2*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
-    ay = -1/2*mu*g*(u[0]*np.sin(phi) + u[1]*np.cos(phi))
+    cos_phi = np.cos(phi)
+
+    ax = -0.5*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
+    ay = -0.5*mu*g*(u[0]*np.sin(phi) + u[1]*np.cos(phi))
     bx, by = v*np.cos(phi), v*np.sin(phi)
     cx, cy = rvw[0, 0], rvw[0, 1]
 
@@ -358,16 +376,20 @@ def get_ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
          if s == const.rolling
          else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity_fast(rvw, R)), -phi)))
 
-    ax = -1/2*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
-    ay = -1/2*mu*g*(u[0]*np.sin(phi) + u[1]*np.cos(phi))
-    bx, by = v*np.cos(phi), v*np.sin(phi)
+    K = -0.5*mu*g
+    cos_phi = np.cos(phi)
+    sin_phi = np.sin(phi)
+
+    ax = K*(u[0]*cos_phi - u[1]*sin_phi)
+    ay = K*(u[0]*sin_phi + u[1]*cos_phi)
+    bx, by = v*cos_phi, v*sin_phi
     cx, cy = rvw[0, 0], rvw[0, 1]
 
-    A = 1/2 * (ax**2 + ay**2)
+    A = 0.5 * (ax**2 + ay**2)
     B = ax*bx + ay*by
-    C = ax*(cx-a) + ay*(cy-b) + 1/2*(bx**2 + by**2)
+    C = ax*(cx-a) + ay*(cy-b) + 0.5*(bx**2 + by**2)
     D = bx*(cx-a) + by*(cy-b)
-    E = 1/2*(a**2 + b**2 + cx**2 + cy**2 - (r + R)**2) - (cx*a + cy*b)
+    E = 0.5*(a**2 + b**2 + cx**2 + cy**2 - (r + R)**2) - (cx*a + cy*b)
 
     return A, B, C, D, E
 
@@ -391,16 +413,20 @@ def get_ball_circular_cushion_collision_coeffs_fast(rvw, s, a, b, r, mu, m, g, R
          if s == const.rolling
          else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity_fast(rvw, R)), -phi))
 
-    ax = -1/2*mu*g*(u[0]*np.cos(phi) - u[1]*np.sin(phi))
-    ay = -1/2*mu*g*(u[0]*np.sin(phi) + u[1]*np.cos(phi))
-    bx, by = v*np.cos(phi), v*np.sin(phi)
+    K = -0.5*mu*g
+    cos_phi = np.cos(phi)
+    sin_phi = np.sin(phi)
+
+    ax = K*(u[0]*cos_phi - u[1]*sin_phi)
+    ay = K*(u[0]*sin_phi + u[1]*cos_phi)
+    bx, by = v*cos_phi, v*sin_phi
     cx, cy = rvw[0, 0], rvw[0, 1]
 
-    A = 1/2 * (ax**2 + ay**2)
+    A = 0.5 * (ax**2 + ay**2)
     B = ax*bx + ay*by
-    C = ax*(cx-a) + ay*(cy-b) + 1/2*(bx**2 + by**2)
+    C = ax*(cx-a) + ay*(cy-b) + 0.5*(bx**2 + by**2)
     D = bx*(cx-a) + by*(cy-b)
-    E = 1/2*(a**2 + b**2 + cx**2 + cy**2 - (r + R)**2) - (cx*a + cy*b)
+    E = 0.5*(a**2 + b**2 + cx**2 + cy**2 - (r + R)**2) - (cx*a + cy*b)
 
     return A, B, C, D, E
 
@@ -601,7 +627,7 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     # angular velocity is done in the next block
 
     rvw_B = np.array([
-        np.array([rvw_B0[1,0]*t - 1/2*u_s*g*t**2 * u_0[0], -1/2*u_s*g*t**2 * u_0[1], 0]),
+        np.array([rvw_B0[1,0]*t - 0.5*u_s*g*t**2 * u_0[0], -0.5*u_s*g*t**2 * u_0[1], 0]),
         rvw_B0[1] - u_s*g*t*u_0,
         rvw_B0[2] - 5/2/R*u_s*g*t * utils.cross_fast(u_0, np.array([0,0,1])),
     ])
@@ -625,7 +651,7 @@ def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
 
     v_0_hat = utils.unit_vector_fast(v_0)
 
-    r = r_0 + v_0 * t - 1/2*u_r*g*t**2 * v_0_hat
+    r = r_0 + v_0 * t - 0.5*u_r*g*t**2 * v_0_hat
     v = v_0 - u_r*g*t * v_0_hat
     w = utils.coordinate_rotation_fast(v/R, np.pi/2)
 
