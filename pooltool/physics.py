@@ -213,6 +213,56 @@ def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2,
     return a, b, c, d, e
 
 
+@jit(nopython=True, cache=True)
+def get_ball_ball_collision_coeffs_fast(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
+    """Get the quartic coeffs required to determine the ball-ball collision time"""
+    c1x, c1y = rvw1[0, 0], rvw1[0, 1]
+    c2x, c2y = rvw2[0, 0], rvw2[0, 1]
+
+    if s1 == const.spinning or s1 == const.pocketed or s1 == const.stationary:
+        a1x, a1y, b1x, b1y = 0, 0, 0, 0
+    else:
+        phi1 = utils.angle_fast(rvw1[1])
+        v1 = np.linalg.norm(rvw1[1])
+
+
+        u1 = (np.array([1,0,0], dtype=np.float64)
+              if s1 == const.rolling
+              else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity_fast(rvw1, R)), -phi1))
+
+        a1x = -1/2*mu1*g1*(u1[0]*np.cos(phi1) - u1[1]*np.sin(phi1))
+        a1y = -1/2*mu1*g1*(u1[0]*np.sin(phi1) + u1[1]*np.cos(phi1))
+        b1x = v1*np.cos(phi1)
+        b1y = v1*np.sin(phi1)
+
+    if s2 == const.spinning or s2 == const.pocketed or s2 == const.stationary:
+        a2x, a2y, b2x, b2y = 0., 0., 0., 0.
+    else:
+        phi2 = utils.angle_fast(rvw2[1])
+        v2 = np.linalg.norm(rvw2[1])
+
+        u2 = (np.array([1,0,0], dtype=np.float64)
+              if s2 == const.rolling
+              else utils.coordinate_rotation_fast(utils.unit_vector_fast(utils.get_rel_velocity_fast(rvw2, R)), -phi2))
+
+        a2x = -1/2*mu2*g2*(u2[0]*np.cos(phi2) - u2[1]*np.sin(phi2))
+        a2y = -1/2*mu2*g2*(u2[0]*np.sin(phi2) + u2[1]*np.cos(phi2))
+        b2x = v2*np.cos(phi2)
+        b2y = v2*np.sin(phi2)
+
+    Ax, Ay = a2x-a1x, a2y-a1y
+    Bx, By = b2x-b1x, b2y-b1y
+    Cx, Cy = c2x-c1x, c2y-c1y
+
+    a = Ax**2 + Ay**2
+    b = 2*Ax*Bx + 2*Ay*By
+    c = Bx**2 + 2*Ax*Cx + 2*Ay*Cy + By**2
+    d = 2*Bx*Cx + 2*By*Cy
+    e = Cx**2 + Cy**2 - 4*R**2
+
+    return a, b, c, d, e
+
+
 def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
     """Get the time until collision between 2 balls
 

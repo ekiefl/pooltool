@@ -188,7 +188,7 @@ class EvolveShotEventBased(EvolveShot):
                 if ball1.s in c.nontranslating and ball2.s in c.nontranslating:
                     continue
 
-                collision_coeffs.append(physics.get_ball_ball_collision_coeffs(
+                collision_coeffs.append(physics.get_ball_ball_collision_coeffs_fast(
                     rvw1=ball1.rvw,
                     rvw2=ball2.rvw,
                     s1=ball1.s,
