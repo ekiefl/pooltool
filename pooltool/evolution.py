@@ -182,7 +182,10 @@ class EvolveShotEventBased(EvolveShot):
                 if i >= j:
                     continue
 
-                if physics.skip_ball_ball_collision(ball1.rvw, ball2.rvw, ball1.s, ball2.s, ball1.R, ball2.R):
+                if ball1.s == c.pocketed or ball2.s == c.pocketed:
+                    continue
+
+                if ball1.s in c.nontranslating and ball2.s in c.nontranslating:
                     continue
 
                 collision_coeffs.append(physics.get_ball_ball_collision_coeffs_fast(
@@ -264,19 +267,6 @@ class EvolveShotEventBased(EvolveShot):
                 continue
 
             for cushion in self.table.cushion_segments['linear'].values():
-                skip = physics.skip_ball_linear_cushion_collision(
-                    rvw = ball.rvw,
-                    s = ball.s,
-                    u_r = ball.u_r,
-                    g = ball.g,
-                    R = ball.R,
-                    p1 = cushion.p1,
-                    p2 = cushion.p2,
-                    normal = cushion.normal,
-                )
-                if skip:
-                    continue
-
                 dtau_E = physics.get_ball_linear_cushion_collision_time_fast(
                     rvw=ball.rvw,
                     s=ball.s,
