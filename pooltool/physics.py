@@ -166,7 +166,7 @@ def get_ball_cushion_friction(rvw, f_c):
     return ans
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=const.numba_cache)
 def skip_ball_ball_collision(rvw1, rvw2, s1, s2, R1, R2):
     if (s1 == const.spinning or s1 == const.pocketed or s1 == const.stationary) and \
        (s2 == const.spinning or s2 == const.pocketed or s2 == const.stationary):
@@ -283,7 +283,7 @@ def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2,
     return a, b, c, d, e
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=const.numba_cache)
 def get_ball_ball_collision_coeffs_fast(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
     """Get the quartic coeffs required to determine the ball-ball collision time (just-in-time compiled)
 
@@ -364,7 +364,7 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
     return roots.min() if len(roots) else np.inf
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=const.numba_cache)
 def skip_ball_linear_cushion_collision(rvw, s, u_r, g, R, p1, p2, normal):
     if (s == const.spinning or s == const.pocketed or s == const.stationary):
         # Ball isn't moving. No collision.
@@ -457,7 +457,7 @@ def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g,
     return roots.min() if len(roots) else np.inf
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=const.numba_cache)
 def get_ball_linear_cushion_collision_time_fast(rvw, s, lx, ly, l0, p1, p2, mu, m, g, R):
     """Get the time until collision between ball and linear cushion segment (just-in-time compiled)
 
@@ -555,7 +555,7 @@ def get_ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     return A, B, C, D, E
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=const.numba_cache)
 def get_ball_circular_cushion_collision_coeffs_fast(rvw, s, a, b, r, mu, m, g, R):
     """Get the quartic coeffs required to determine the ball-circular-cushion collision time (just-in-time compiled)
 
@@ -664,7 +664,7 @@ def get_ball_pocket_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     return A, B, C, D, E
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=const.numba_cache)
 def get_ball_pocket_collision_coeffs_fast(rvw, s, a, b, r, mu, m, g, R):
     """Get the quartic coeffs required to determine the ball-pocket collision time (just-in-time compiled)
 
@@ -745,18 +745,18 @@ def get_spin_time(rvw, R, u_sp, g):
     return np.abs(w[2]) * 2/5*R/u_sp/g
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=const.numba_cache)
 def get_slide_time_fast(rvw, R, u_s, g):
     return 2*np.linalg.norm(utils.get_rel_velocity_fast(rvw, R)) / (7*u_s*g)
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=const.numba_cache)
 def get_roll_time_fast(rvw, u_r, g):
     _, v, _ = rvw
     return np.linalg.norm(v) / (u_r*g)
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=const.numba_cache)
 def get_spin_time_fast(rvw, R, u_sp, g):
     _, _, w = rvw
     return np.abs(w[2]) * 2/5*R/u_sp/g
@@ -767,7 +767,7 @@ def get_ball_energy(rvw, R, m):
     return (m*np.linalg.norm(rvw[1])**2 + (2/5*m*R**2)*np.linalg.norm(rvw[2])**2)/2
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=const.numba_cache)
 def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
     if state == const.stationary or state == const.pocketed:
         return rvw, state
@@ -801,7 +801,7 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
             return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), const.spinning
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=const.numba_cache)
 def evolve_state_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
     """Variant of evolve_ball_motion that does not respect motion transition events"""
     if state == const.stationary or state == const.pocketed:
@@ -814,7 +814,7 @@ def evolve_state_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
         return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), const.spinning
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=const.numba_cache)
 def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     if t == 0:
         return rvw
@@ -849,7 +849,7 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     return rvw_T
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=const.numba_cache)
 def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
     if t == 0:
         return rvw
@@ -875,7 +875,7 @@ def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
     return new_rvw
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=const.numba_cache)
 def evolve_perpendicular_spin_component(wz, R, u_sp, g, t):
     if t == 0:
         return wz
@@ -896,7 +896,7 @@ def evolve_perpendicular_spin_component(wz, R, u_sp, g, t):
     return wz_final
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=const.numba_cache)
 def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
     # Otherwise ball.rvw will be modified and corresponding entry in self.history
     # FIXME framework has changed, this may not be true. EDIT This is still true.

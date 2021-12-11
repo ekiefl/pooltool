@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+import pooltool.constants as c
+
 import os
 import numpy as np
 import cmath
@@ -146,7 +148,7 @@ def cross(u, v):
     ])
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=c.numba_cache)
 def cross_fast(u, v):
     """Compute cross product u x v, where u and v are 3-dimensional vectors (just-in-time compiled)
 
@@ -166,7 +168,7 @@ def get_rel_velocity(rvw, R):
     return v + R * cross(np.array([0,0,1]), w)
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=c.numba_cache)
 def get_rel_velocity_fast(rvw, R):
     """
     Notes
@@ -189,7 +191,7 @@ def quadratic(a,b,c):
     return u1,u2
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=c.numba_cache)
 def quadratic_fast(a,b,c):
     """Solve a quadratic equation At^2 + Bt + C = 0 (just-in-time compiled)
 
@@ -236,7 +238,7 @@ def roots(p):
     return np.linalg.eigvals(A)
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=c.numba_cache)
 def roots_fast(p):
     """Solve multiple polynomial equations (just-in-time compiled)
 
@@ -284,7 +286,7 @@ def min_real_root(p, tol=1e-12):
     return times.min(), times.argmin()
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=c.numba_cache)
 def min_real_root_fast(p, tol=1e-12):
     """Given an array of polynomial coefficients, find the minimum real root (just-in-time compiled)
 
@@ -332,7 +334,7 @@ def unit_vector(vector, handle_zero=False):
         return vector / norm
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=c.numba_cache)
 def unit_vector_fast(vector, handle_zero=False):
     """Returns the unit vector of the vector (just-in-time compiled)
 
@@ -357,7 +359,7 @@ def angle(v2, v1=(1,0)):
     return ang
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=c.numba_cache)
 def orientation(p, q, r):
     """Find the orientation of an ordered triplet (p, q, r)
 
@@ -383,7 +385,7 @@ def orientation(p, q, r):
         # Collinear orientation
         return 0
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=c.numba_cache)
 def angle_fast(v2, v1=(1,0)):
     """Calculates counter-clockwise angle of the projections of v1 and v2 onto the x-y plane (just-in-time compiled)
 
@@ -410,7 +412,7 @@ def coordinate_rotation(v, phi):
     return np.dot(rotation, v)
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, cache=c.numba_cache)
 def coordinate_rotation_fast(v, phi):
     """Rotate vector/matrix from one frame of reference to another (3D FIXME) (just-in-time compiled)
 
