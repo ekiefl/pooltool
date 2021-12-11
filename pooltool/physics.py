@@ -364,6 +364,50 @@ def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
     return roots.min() if len(roots) else np.inf
 
 
+@jit(nopython=True, cache=True)
+def skip_ball_linear_cushion_collision(rvw, s, u_r, g, R, p1, p2, normal):
+    if (s == const.spinning or s == const.pocketed or s == const.stationary):
+        # Ball isn't moving. No collision.
+        return True
+
+    if s == const.rolling:
+        # Since the ball is rolling, it is a straight line trajectory. The strategy here is to
+        # see whether the trajectory of the ball is going to intersect with either of the collisions
+        # defined by a linear cushion segment. Let r1 be the position of the ball and r2 be the
+        # final position of the ball (rolling to a stop). Let p11 and p21 be the intersection points
+        # of the first intersection line, and let p12 and p22 be the intersection points of the
+        # second. This code uses orientation to determine if If r1 -> r2 intersects p11 -> p21 or
+        # p12 -> p22
+        p11 = p1 + R*normal
+        p12 = p1 - R*normal
+        p21 = p2 + R*normal
+        p22 = p2 - R*normal
+
+        t = np.linalg.norm(rvw[1]) / (u_r*g)
+        v_0_hat = utils.unit_vector_fast(rvw[1])
+        r1 = rvw[0]
+        r2 = r1 + rvw[1] * t - 0.5*u_r*g*t**2 * v_0_hat
+
+        o1 = utils.orientation(r1, r2, p11)
+        o2 = utils.orientation(r1, r2, p21)
+        o3 = utils.orientation(p11, p21, r1)
+        o4 = utils.orientation(p11, p21, r2)
+        # Whether or not trajectory intersects with first intersection line
+        int1 = ((o1 != o2) and (o3 != o4))
+
+        o1 = utils.orientation(r1, r2, p12)
+        o2 = utils.orientation(r1, r2, p22)
+        o3 = utils.orientation(p12, p22, r1)
+        o4 = utils.orientation(p12, p22, r2)
+        # Whether or not trajectory intersects with first intersection line
+        int2 = ((o1 != o2) and (o3 != o4))
+
+        if not int1 and not int2:
+            return True
+
+    return False
+
+
 def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g, R):
     """Get the time until collision between ball and linear cushion segment"""
     if s in const.nontranslating:

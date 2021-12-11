@@ -264,6 +264,19 @@ class EvolveShotEventBased(EvolveShot):
                 continue
 
             for cushion in self.table.cushion_segments['linear'].values():
+                skip = physics.skip_ball_linear_cushion_collision(
+                    rvw = ball.rvw,
+                    s = ball.s,
+                    u_r = ball.u_r,
+                    g = ball.g,
+                    R = ball.R,
+                    p1 = cushion.p1,
+                    p2 = cushion.p2,
+                    normal = cushion.normal,
+                )
+                if skip:
+                    continue
+
                 dtau_E = physics.get_ball_linear_cushion_collision_time_fast(
                     rvw=ball.rvw,
                     s=ball.s,

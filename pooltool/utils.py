@@ -358,6 +358,32 @@ def angle(v2, v1=(1,0)):
 
 
 @jit(nopython=True, cache=True)
+def orientation(p, q, r):
+    """Find the orientation of an ordered triplet (p, q, r)
+
+    See https://www.geeksforgeeks.org/orientation-3-ordered-points/amp/
+
+    Notes
+    =====
+    - 3D points may be passed but only the x and y components are used
+
+    Returns
+    =======
+    output : int
+        0 : Collinear points, 1 : Clockwise points, 2 : Counterclockwise
+    """
+    val = ((q[1] - p[1]) * (r[0] - q[0])) - ((q[0] - p[0]) * (r[1] - q[1]))
+    if (val > 0):
+        # Clockwise orientation
+        return 1
+    elif (val < 0):
+        # Counterclockwise orientation
+        return 2
+    else:
+        # Collinear orientation
+        return 0
+
+@jit(nopython=True, cache=True)
 def angle_fast(v2, v1=(1,0)):
     """Calculates counter-clockwise angle of the projections of v1 and v2 onto the x-y plane (just-in-time compiled)
 
