@@ -97,6 +97,7 @@ class SystemHistory(object):
           over with any significant amount of time.
         - FIXME This is a very inefficient function that could be radically sped up if
           physics.evolve_ball_motion and/or its functions had vectorized operations for arrays of time values.
+        - FIXME This function doesn't do a good job. Reduce dt to 0.1 and see the results...
         """
 
         for ball in self.balls.values():
