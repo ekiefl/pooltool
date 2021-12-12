@@ -27,7 +27,6 @@ from panda3d.core import *
 from direct.showbase.ShowBase import ShowBase
 
 __all__ = [
-    'Interface',
     'ShotViewer',
     'Play',
 ]
@@ -162,9 +161,11 @@ class Interface(ShowBase, ModeManager, HUD):
         self.table.remove_nodes()
         self.environment.unload_room()
         self.environment.unload_lights()
-        gc.collect()
         self.destroy_hud()
 
+        self.player_cam.has_focus = False
+
+        gc.collect()
 
     def init_system_nodes(self):
         self.init_scene()
@@ -344,11 +345,14 @@ class ShotViewer(Interface):
         self.mouse = Mouse()
         self.init_system_nodes()
         self.init_hud()
+
         params = dict(
             init_animations = True,
             single_instance = True,
         )
         self.change_mode('shot', enter_kwargs=params)
+
+        self.player_cam.load_state('last_scene', ok_if_not_exists=True)
 
         self.taskMgr.run()
 

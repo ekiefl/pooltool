@@ -5,6 +5,7 @@ All units are SI unless otherwise stated.
 """
 
 import numpy as np
+numba_cache = True
 np.set_printoptions(precision=10, suppress=True)
 #tol = np.finfo(np.float).eps * 100
 tol = 1e-12

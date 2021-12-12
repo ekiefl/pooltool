@@ -4,6 +4,7 @@ import pooltool.utils as utils
 import pooltool.physics as physics
 import pooltool.constants as c
 
+from pooltool.error import ConfigError
 from pooltool.evolution import EvolveShotEventBased
 from pooltool.objects.cue import cue_from_dict
 from pooltool.objects.ball import ball_from_dict
@@ -12,6 +13,7 @@ from pooltool.objects.table import table_from_dict
 from pooltool.events import *
 from pooltool.objects.ball import BallHistory
 
+from pathlib import Path
 from panda3d.direct import HideInterval, ShowInterval
 from direct.interval.IntervalGlobal import *
 
@@ -95,6 +97,7 @@ class SystemHistory(object):
           over with any significant amount of time.
         - FIXME This is a very inefficient function that could be radically sped up if
           physics.evolve_ball_motion and/or its functions had vectorized operations for arrays of time values.
+        - FIXME This function doesn't do a good job. Reduce dt to 0.1 and see the results...
         """
 
         for ball in self.balls.values():
@@ -245,14 +248,21 @@ class SystemRender(object):
 
 
 class System(SystemHistory, SystemRender, EvolveShotEventBased):
-    def __init__(self, cue=None, table=None, balls=None):
+    def __init__(self, cue=None, table=None, balls=None, path=None):
         SystemHistory.__init__(self)
         SystemRender.__init__(self)
         EvolveShotEventBased.__init__(self)
 
-        self.cue = cue
-        self.table = table
-        self.balls = balls
+        if path and (cue or table or balls):
+            raise ConfigError("System :: if path provided, cue, table, and balls must be None")
+
+        if path:
+            path = Path(path)
+            self.load(path)
+        else:
+            self.cue = cue
+            self.table = table
+            self.balls = balls
 
         self.t = None
 
@@ -394,13 +404,7 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
 
 
     def copy(self):
-        """Make a fresh copy of this system state
-
-        Notes
-        =====
-        - FIXME continuize() does not work on the fresh copy due to Event data not being stored
-          in System or Ball. The solution is to call simulate() again on the copy and then continuize()
-        """
+        """Make a fresh copy of this system state"""
 
         filepath = utils.get_temp_file_path()
         self.save(filepath)

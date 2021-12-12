@@ -24,7 +24,7 @@ class EvolveShot(ABC):
         }
 
 
-    def simulate(self, name="NA", **kwargs):
+    def simulate(self, name="NA", quiet=False, **kwargs):
         """Run a simulation
 
         Parameters
@@ -42,23 +42,27 @@ class EvolveShot(ABC):
 
         energy_start = self.get_system_energy()
 
-        def progress_update():
-            """Convenience function for updating progress"""
-            energy = self.get_system_energy()
-            msg = f"SIM TIME {self.t:.6f}s | ENERGY {np.round(energy, 2)}J | EVENTS {len(self.events)}"
-            self.progress.update(msg)
-            self.progress.increment(increment_to=int(energy_start - energy))
+        if not quiet:
+            def progress_update():
+                """Convenience function for updating progress"""
+                energy = self.get_system_energy()
+                msg = f"SIM TIME {self.t:.6f}s | ENERGY {np.round(energy, 2)}J | EVENTS {len(self.events)}"
+                self.progress.update(msg)
+                self.progress.increment(increment_to=int(energy_start - energy))
+
+            self.run.warning('', header=name, lc='green')
+            self.run.info('Starting energy', f"{np.round(energy_start, 2)}J")
+            self.progress.new("Running", progress_total_items=int(energy_start))
+        else:
+            def progress_update():
+                pass
 
         self.progress_update = progress_update
-
-        self.run.warning('', header=name, lc='green')
-        self.run.info('starting energy', f"{np.round(energy_start, 2)}J")
-
-        self.progress.new("Running", progress_total_items=int(energy_start))
         self.evolution_algorithm(**kwargs)
-        self.progress.end()
 
-        self.run.info('Finished after', self.progress.t.time_elapsed_precise())
+        if not quiet:
+            self.progress.end()
+            self.run.info('Finished after', self.progress.t.time_elapsed_precise())
 
 
     def evolve(self, dt):
@@ -94,8 +98,11 @@ class EvolveShotEventBased(EvolveShot):
         EvolveShot.__init__(self, *args, **kwargs)
 
 
-    def evolution_algorithm(self, t_final=None, continuize=True, dt=0.01):
+    def evolution_algorithm(self, t_final=None, continuize=True, dt=None):
         """The event-based evolution algorithm"""
+
+        if dt is None:
+            dt = 0.01
 
         # Balls may already have energy. Therefore, it is critical to establish their
         # next transition events.
@@ -137,9 +144,13 @@ class EvolveShotEventBased(EvolveShot):
         if ball_ball_event.time < event.time:
             event = ball_ball_event
 
-        ball_cushion_event = self.get_min_ball_cushion_event_time()
-        if ball_cushion_event.time < event.time:
-            event = ball_cushion_event
+        ball_linear_cushion_event = self.get_min_ball_linear_cushion_event_time()
+        if ball_linear_cushion_event.time < event.time:
+            event = ball_linear_cushion_event
+
+        ball_circular_cushion_event = self.get_min_ball_circular_cushion_event_time()
+        if ball_circular_cushion_event.time < event.time:
+            event = ball_circular_cushion_event
 
         ball_pocket_event = self.get_min_ball_pocket_event_time()
         if ball_pocket_event.time < event.time:
@@ -162,9 +173,9 @@ class EvolveShotEventBased(EvolveShot):
 
     def get_min_ball_ball_event_time(self):
         """Returns minimum time until next ball-ball collision"""
-
-        dtau_E_min = np.inf
-        involved_balls = tuple([DummyBall(), DummyBall()])
+        dtau_E = np.inf
+        ball_ids = []
+        collision_coeffs = []
 
         for i, ball1 in enumerate(self.balls.values()):
             for j, ball2 in enumerate(self.balls.values()):
@@ -177,7 +188,7 @@ class EvolveShotEventBased(EvolveShot):
                 if ball1.s in c.nontranslating and ball2.s in c.nontranslating:
                     continue
 
-                dtau_E = physics.get_ball_ball_collision_time(
+                collision_coeffs.append(physics.get_ball_ball_collision_coeffs_fast(
                     rvw1=ball1.rvw,
                     rvw2=ball2.rvw,
                     s1=ball1.s,
@@ -189,20 +200,65 @@ class EvolveShotEventBased(EvolveShot):
                     g1=ball1.g,
                     g2=ball2.g,
                     R=ball1.R
-                )
+                ))
 
-                if dtau_E < dtau_E_min:
-                    involved_balls = (ball1, ball2)
-                    dtau_E_min = dtau_E
+                ball_ids.append((ball1.id, ball2.id))
 
-        dtau_E = dtau_E_min
+        if not len(collision_coeffs):
+            # There are no collisions to test for
+            return BallBallCollision(DummyBall(), DummyBall(), t=(self.t + dtau_E))
 
-        return BallBallCollision(*involved_balls, t=(self.t + dtau_E))
+        dtau_E, index = utils.min_real_root(
+            p = np.array(collision_coeffs),
+            tol = c.tol
+        )
+
+        ball1_id, ball2_id = ball_ids[index]
+        ball1, ball2 = self.balls[ball1_id], self.balls[ball2_id]
+
+        return BallBallCollision(ball1, ball2, t=(self.t + dtau_E))
 
 
-    def get_min_ball_cushion_event_time(self):
-        """Returns minimum time until next ball-cushion collision"""
+    def get_min_ball_circular_cushion_event_time(self):
+        dtau_E = np.inf
+        agent_ids = []
+        collision_coeffs = []
 
+        for ball in self.balls.values():
+            if ball.s in c.nontranslating:
+                continue
+
+            for cushion in self.table.cushion_segments['circular'].values():
+                collision_coeffs.append(physics.get_ball_circular_cushion_collision_coeffs_fast(
+                    rvw=ball.rvw,
+                    s=ball.s,
+                    a=cushion.a,
+                    b=cushion.b,
+                    r=cushion.radius,
+                    mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
+                    m=ball.m,
+                    g=ball.g,
+                    R=ball.R
+                ))
+
+                agent_ids.append((ball.id, cushion.id))
+
+        if not len(collision_coeffs):
+            # There are no collisions to test for
+            return BallBallCollision(DummyBall(), NonObject(), t=(self.t + dtau_E))
+
+        dtau_E, index = utils.min_real_root(
+            p = np.array(collision_coeffs),
+            tol = c.tol
+        )
+
+        ball_id, cushion_id = agent_ids[index]
+        ball, cushion = self.balls[ball_id], self.table.cushion_segments['circular'][cushion_id]
+
+        return BallCushionCollision(ball, cushion, t=(self.t + dtau_E))
+
+
+    def get_min_ball_linear_cushion_event_time(self):
         dtau_E_min = np.inf
         involved_agents = tuple([DummyBall(), NonObject()])
 
@@ -211,7 +267,7 @@ class EvolveShotEventBased(EvolveShot):
                 continue
 
             for cushion in self.table.cushion_segments['linear'].values():
-                dtau_E = physics.get_ball_linear_cushion_collision_time(
+                dtau_E = physics.get_ball_linear_cushion_collision_time_fast(
                     rvw=ball.rvw,
                     s=ball.s,
                     lx=cushion.lx,
@@ -229,23 +285,6 @@ class EvolveShotEventBased(EvolveShot):
                     involved_agents = (ball, cushion)
                     dtau_E_min = dtau_E
 
-            for cushion in self.table.cushion_segments['circular'].values():
-                dtau_E = physics.get_ball_circular_cushion_collision_time(
-                    rvw=ball.rvw,
-                    s=ball.s,
-                    a=cushion.a,
-                    b=cushion.b,
-                    r=cushion.radius,
-                    mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
-                    m=ball.m,
-                    g=ball.g,
-                    R=ball.R
-                )
-
-                if dtau_E < dtau_E_min:
-                    involved_agents = (ball, cushion)
-                    dtau_E_min = dtau_E
-
         dtau_E = dtau_E_min
 
         return BallCushionCollision(*involved_agents, t=(self.t + dtau_E))
@@ -253,16 +292,16 @@ class EvolveShotEventBased(EvolveShot):
 
     def get_min_ball_pocket_event_time(self):
         """Returns minimum time until next ball-pocket collision"""
-
-        dtau_E_min = np.inf
-        involved_agents = tuple([DummyBall(), NonObject()])
+        dtau_E = np.inf
+        agent_ids = []
+        collision_coeffs = []
 
         for ball in self.balls.values():
             if ball.s in c.nontranslating:
                 continue
 
             for pocket in self.table.pockets.values():
-                dtau_E = physics.get_ball_pocket_collision_time(
+                collision_coeffs.append(physics.get_ball_pocket_collision_coeffs_fast(
                     rvw=ball.rvw,
                     s=ball.s,
                     a=pocket.a,
@@ -272,15 +311,23 @@ class EvolveShotEventBased(EvolveShot):
                     m=ball.m,
                     g=ball.g,
                     R=ball.R
-                )
+                ))
 
-                if dtau_E < dtau_E_min:
-                    involved_agents = (ball, pocket)
-                    dtau_E_min = dtau_E
+                agent_ids.append((ball.id, pocket.id))
 
-        dtau_E = dtau_E_min
+        if not len(collision_coeffs):
+            # There are no collisions to test for
+            return BallBallCollision(DummyBall(), NonObject(), t=(self.t + dtau_E))
 
-        return BallPocketCollision(*involved_agents, t=(self.t + dtau_E))
+        dtau_E, index = utils.min_real_root(
+            p = np.array(collision_coeffs),
+            tol = c.tol
+        )
+
+        ball_id, pocket_id = agent_ids[index]
+        ball, pocket = self.balls[ball_id], self.table.pockets[pocket_id]
+
+        return BallPocketCollision(ball, pocket, t=(self.t + dtau_E))
 
 
 class EvolveShotDiscreteTime(EvolveShot):

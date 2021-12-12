@@ -14,6 +14,7 @@ setup(
     install_requires = [
         'numpy',
         'pandas',
+        'numba',
         'panda3d==1.10.10',
         'panda3d-gltf',
         'panda3d-simplepbr',

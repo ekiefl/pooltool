@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+import pooltool.constants as c
+
 import os
 import numpy as np
 import cmath
@@ -9,8 +11,8 @@ import linecache
 import tracemalloc
 import importlib.util
 
+from numba import jit
 from panda3d.core import Filename
-
 
 def save_pickle(x, path):
     """Save an object `x` to filepath `path`"""
@@ -137,27 +139,214 @@ def wiggle(x, val):
     return x + val*(2*np.random.rand() - 1)
 
 
-def unit_vector(vector, ord=None, handle_zero=False):
+def cross(u, v):
+    """Compute cross product u x v, where u and v are 3-dimensional vectors"""
+    return np.array([
+        u[1]*v[2] - u[2]*v[1],
+        u[2]*v[0] - u[0]*v[2],
+        u[0]*v[1] - u[1]*v[0],
+    ])
+
+
+@jit(nopython=True, cache=c.numba_cache)
+def cross_fast(u, v):
+    """Compute cross product u x v, where u and v are 3-dimensional vectors (just-in-time compiled)
+
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/cross.py
+    """
+    return np.array([
+        u[1]*v[2] - u[2]*v[1],
+        u[2]*v[0] - u[0]*v[2],
+        u[0]*v[1] - u[1]*v[0],
+    ])
+
+
+def get_rel_velocity(rvw, R):
+    _, v, w = rvw
+    return v + R * cross(np.array([0,0,1]), w)
+
+
+@jit(nopython=True, cache=c.numba_cache)
+def get_rel_velocity_fast(rvw, R):
+    """
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/get_rel_velocity.py
+    """
+    _, v, w = rvw
+    return v + R * cross_fast(np.array([0.,0.,1.], dtype=np.float64), w)
+
+
+def quadratic(a,b,c):
+    """Solve a quadratic equation At^2 + Bt + C = 0"""
+    if a == 0:
+        u = -c/b
+        return u, u
+    bp=b/2
+    delta=bp*bp-a*c
+    u1=(-bp-delta**.5)/a
+    u2=-u1-b/a
+    return u1,u2
+
+
+@jit(nopython=True, cache=c.numba_cache)
+def quadratic_fast(a,b,c):
+    """Solve a quadratic equation At^2 + Bt + C = 0 (just-in-time compiled)
+
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/quadratic.py
+    """
+    if a == 0:
+        u = -c/b
+        return u, u
+    bp=b/2
+    delta=bp*bp-a*c
+    u1=(-bp-delta**.5)/a
+    u2=-u1-b/a
+    return u1,u2
+
+
+def roots(p):
+    """Solve multiple polynomial equations
+
+    This is a vectorized implementation of numpy.roots that can solve multiple polynomials in a
+    vectorized fashion. The solution is taken from this wonderful stackoverflow answer:
+    https://stackoverflow.com/a/35853977
+
+    Parameters
+    ==========
+    p : array
+        A mxn array of polynomial coefficients, where m is the number of equations and n-1 is the
+        order of the polynomial. If n is 5 (4th order polynomial), the columns are in the order a,
+        b, c, d, e, where these coefficients make up the polynomial equation at^4 + bt^3 + ct^2 + dt
+        + e = 0
+
+    Notes
+    =====
+    - This function is not amenable to numbaization (0.54.1). There are a couple of hurdles to
+      address. p[...,None,0] needs to be refactored since None/np.newaxis cause compile error. But
+      even bigger an issue is that np.linalg.eigvals is only supported for 2D arrays, but the strategy
+      here is to pass np.lingalg.eigvals a vectorized 3D array.
+    """
+    n = p.shape[-1]
+    A = np.zeros(p.shape[:1] + (n-1, n-1), np.float64)
+    A[...,1:,:-1] = np.eye(n-2)
+    A[...,0,:] = -p[...,1:]/p[...,None,0]
+    return np.linalg.eigvals(A)
+
+
+@jit(nopython=True, cache=c.numba_cache)
+def roots_fast(p):
+    """Solve multiple polynomial equations (just-in-time compiled)
+
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/roots.py
+    """
+    M, N = p.shape
+    p = p.astype(np.complex128)
+    roots = np.zeros((M, N-1), np.complex128)
+    for m in range(M):
+        roots[m,:] = np.roots(p[m,:])
+    return roots
+
+
+def min_real_root(p, tol=1e-12):
+    """Given an array of polynomial coefficients, find the minimum real root
+
+    Parameters
+    ==========
+    p : array
+        A mxn array of polynomial coefficients, where m is the number of equations and n-1 is the
+        order of the polynomial. If n is 5 (4th order polynomial), the columns are in the order a,
+        b, c, d, e, where these coefficients make up the polynomial equation at^4 + bt^3 + ct^2 + dt
+        + e = 0
+    tol : float, 1e-12
+        Roots are considered if they have 
+
+    Returns
+    =======
+    output : (time, index)
+        `time` is the minimum real root from the set of polynomials, and `index` specifies the index
+        of the responsible polynomial. i.e. the polynomial with the root `time` is p[index]
+    """
+    # Get the roots for the polynomials
+    times = roots(p)
+
+    # If the root has a nonzero imaginary component, set to infinity
+    # If the root has a nonpositive real component, set to infinity
+    times[(abs(times.imag) > tol) | (times.real <= tol)] = np.inf
+
+    # now find the minimum time and the index of the responsible polynomial
+    times = np.min(times.real, axis=1)
+
+    return times.min(), times.argmin()
+
+
+@jit(nopython=True, cache=c.numba_cache)
+def min_real_root_fast(p, tol=1e-12):
+    """Given an array of polynomial coefficients, find the minimum real root (just-in-time compiled)
+
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/min_real_root.py
+    """
+    # Get the roots for the polynomials
+    times = roots_fast(p)
+    M, N = times.shape
+
+    min_root, min_index = np.inf, 0
+    for m in range(M):
+        for n in range(N):
+            el = times[m, n]
+            if np.abs(el.imag) > tol:
+                continue
+            elif el.real < tol:
+                continue
+
+            if el.real < min_root:
+                min_root = el.real
+                min_index = m
+
+    return min_root, min_index
+
+
+def unit_vector(vector, handle_zero=False):
     """Returns the unit vector of the vector.
 
     Parameters
     ==========
-    ord: None
-        The type of normalization used. See
-        https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html
     handle_zero: bool, False
         If True and vector = <0,0,0>, <0,0,0> is returned.
     """
     if len(vector.shape) > 1:
-        norm = np.linalg.norm(vector, ord=ord, axis=1, keepdims=True)
+        norm = np.linalg.norm(vector, axis=1, keepdims=True)
         if handle_zero:
             norm[(norm == 0).all(axis=1), :] = 1
         return vector / norm
     else:
-        norm = np.linalg.norm(vector, ord=ord)
+        norm = np.linalg.norm(vector)
         if norm == 0 and handle_zero:
             norm = 1
         return vector / norm
+
+
+@jit(nopython=True, cache=c.numba_cache)
+def unit_vector_fast(vector, handle_zero=False):
+    """Returns the unit vector of the vector (just-in-time compiled)
+
+    Notes
+    =====
+    - Unlike unit_vector, this does not support 2D arrays
+    - Speed comparison in pooltool/tests/speed/unit_vector.py
+    """
+    norm = np.sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2)
+    if handle_zero and norm == 0.0:
+        norm = 1.0
+    return vector / norm
 
 
 def angle(v2, v1=(1,0)):
@@ -170,46 +359,76 @@ def angle(v2, v1=(1,0)):
     return ang
 
 
+@jit(nopython=True, cache=c.numba_cache)
+def orientation(p, q, r):
+    """Find the orientation of an ordered triplet (p, q, r)
+
+    See https://www.geeksforgeeks.org/orientation-3-ordered-points/amp/
+
+    Notes
+    =====
+    - 3D points may be passed but only the x and y components are used
+
+    Returns
+    =======
+    output : int
+        0 : Collinear points, 1 : Clockwise points, 2 : Counterclockwise
+    """
+    val = ((q[1] - p[1]) * (r[0] - q[0])) - ((q[0] - p[0]) * (r[1] - q[1]))
+    if (val > 0):
+        # Clockwise orientation
+        return 1
+    elif (val < 0):
+        # Counterclockwise orientation
+        return 2
+    else:
+        # Collinear orientation
+        return 0
+
+@jit(nopython=True, cache=c.numba_cache)
+def angle_fast(v2, v1=(1,0)):
+    """Calculates counter-clockwise angle of the projections of v1 and v2 onto the x-y plane (just-in-time compiled)
+
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/angle.py
+    """
+    ang = np.arctan2(v2[1], v2[0]) - np.arctan2(v1[1], v1[0])
+
+    if ang < 0:
+        return 2*np.pi + ang
+
+    return ang
+
+
 def coordinate_rotation(v, phi):
     """Rotate vector/matrix from one frame of reference to another (3D FIXME)"""
+    cos_phi = np.cos(phi)
+    sin_phi = np.sin(phi)
+    rotation = np.array([[cos_phi, -sin_phi, 0],
+                         [sin_phi,  cos_phi, 0],
+                         [0      ,  0      , 1]])
 
-    rotation = np.array([[np.cos(phi), -np.sin(phi), 0],
-                         [np.sin(phi),  np.cos(phi), 0],
-                         [0          ,  0          , 1]])
-
-    return np.matmul(rotation, v)
+    return np.dot(rotation, v)
 
 
-def solve_quartic(a, b, c, d, e):
-    """Finds roots to ax**4 + bx**3 + cx**2 + d*x + e = 0
+@jit(nopython=True, cache=c.numba_cache)
+def coordinate_rotation_fast(v, phi):
+    """Rotate vector/matrix from one frame of reference to another (3D FIXME) (just-in-time compiled)
 
-    FIXME broken, compare to np.roots for ground truth
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/coordinate_rotation.py
     """
+    cos_phi = np.cos(phi)
+    sin_phi = np.sin(phi)
+    rotation = np.zeros((3,3), np.float64)
+    rotation[0,0] = cos_phi
+    rotation[0,1] = -sin_phi
+    rotation[1,0] = sin_phi
+    rotation[1,1] = cos_phi
+    rotation[2,2] = 1
 
-    delta0 = c**2 - 3*b*d + 12*a*e
-    delta1 = 2*c**3 - 9*b*c*d + 27*b**2*e + 27*a*d**2 - 72*a*c*e
-    delta = (4*delta0**3 - delta1**2)/27
+    return np.dot(rotation, v)
 
-    if delta != 0 and delta0 == 0:
-        R = cmath.sqrt(-27*delta)
-    else:
-        R = delta1
 
-    p = (8*a*c - 3*b**2)/8/a**2
-    q = (b**3 - 4*a*b*c + 8*a**2*d)/8/a**3
-
-    Q = ((delta1 + R)/2)**(1/3)
-    S = 1/2 * cmath.sqrt(-2*p/3 + (Q + delta0/Q)/3/a)
-
-    assert S != 0
-
-    X = -b/4/a
-    Y = -4*S**2 - 2*p
-    Z = q/S
-
-    return (
-        X - S + 0.5*cmath.sqrt(Y + Z),
-        X - S - 0.5*cmath.sqrt(Y + Z),
-        X + S + 0.5*cmath.sqrt(Y - Z),
-        X + S - 0.5*cmath.sqrt(Y - Z),
-    )
