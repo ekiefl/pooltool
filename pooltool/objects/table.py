@@ -65,7 +65,7 @@ class TableRender(Render):
         if not ani.settings['gameplay']['cue_collision']:
             return
 
-        if self.object_type == 'pocket_table':
+        if self.object_type in ['pocket_table', 'billiard_table']:
             # Make 4 planes
             # For diagram of cushion ids, see https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times
             for cushion_id in ['3', '9', '12', '18']:
@@ -192,7 +192,12 @@ class TableRender(Render):
         raise NotImplementedError("Can't call set_object_state_as_render_state for class 'TableRender'. Call render instead")
 
 
-class PocketTable(Object, TableRender):
+class Table(object):
+    def save(self, path):
+        utils.save_pickle(self.as_dict(), path)
+
+
+class PocketTable(Object, Table, TableRender):
     object_type = 'pocket_table'
 
     def __init__(self, w=None, l=None, cushion_width=None, cushion_height=None, corner_pocket_width=None,
@@ -408,14 +413,75 @@ class PocketTable(Object, TableRender):
         )
 
 
-    def save(self, path):
-        utils.save_pickle(self.as_dict(), path)
-
-
-class BilliardTable(Object, TableRender):
+class BilliardTable(Object, Table, TableRender):
     object_type = 'billiard_table'
-    def __init__(self):
-        pass
+    def __init__(self, w=None, l=None, cushion_width=None, cushion_height=None, height=None, lights_height=None,
+                 has_model=False, model_name='none'):
+
+        self.w = w or c.table_width
+        self.l = l or c.table_length
+        self.cushion_width = cushion_width or c.cushion_width
+        self.cushion_height = cushion_height or c.cushion_height
+        self.height = height or c.table_height # for visualization
+        self.lights_height = lights_height or c.lights_height # for visualization
+        self.has_model = has_model
+
+        self.model_name = model_name
+        if self.model_name != 'none':
+            raise NotImplementedError("model_name not implemented for BilliardTable")
+
+        self.center = (self.w/2, self.l/2)
+        self.cushion_segments = self.get_cushion_segments()
+        self.pockets = {}
+
+        TableRender.__init__(self, name=self.model_name, has_model=self.has_model)
+
+
+    def get_cushion_segments(self):
+        h = self.cushion_height
+        cushion_segments = {
+            'linear' : {
+                # long segments
+                '3': LinearCushionSegment(
+                    '3_edge',
+                    p1 = (0, 0, h),
+                    p2 = (0, self.l, h)
+                ),
+                '12': LinearCushionSegment(
+                    '12_edge',
+                    p1 = (self.w, self.l, h),
+                    p2 = (self.w, 0, h)
+                ),
+                '9': LinearCushionSegment(
+                    '9_edge',
+                    p1 = (0, self.l, h),
+                    p2 = (self.w, self.l, h)
+                ),
+                '18': LinearCushionSegment(
+                    '18_edge',
+                    p1 = (0, 0, h),
+                    p2 = (self.w, 0, h)
+                ),
+            },
+            'circular': {
+            },
+        }
+
+        return cushion_segments
+
+
+    def as_dict(self):
+        return dict(
+            w = self.w,
+            l = self.l,
+            cushion_width = self.cushion_width,
+            cushion_height = self.cushion_height,
+            height = self.height,
+            lights_height = self.lights_height,
+            has_model = self.has_model,
+            model_name = self.model_name,
+            table_type = 'billiard',
+        )
 
 
 class CushionSegment(Object):
