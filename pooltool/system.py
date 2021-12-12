@@ -403,13 +403,7 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
 
 
     def copy(self):
-        """Make a fresh copy of this system state
-
-        Notes
-        =====
-        - FIXME continuize() does not work on the fresh copy due to Event data not being stored
-          in System or Ball. The solution is to call simulate() again on the copy and then continuize()
-        """
+        """Make a fresh copy of this system state"""
 
         filepath = utils.get_temp_file_path()
         self.save(filepath)
