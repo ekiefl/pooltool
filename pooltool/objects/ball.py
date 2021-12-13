@@ -245,6 +245,12 @@ class BallRender(Render):
         ball.setHpr(0, 0, 0)
 
 
+    def teardown(self):
+        if self.playback_sequence is not None:
+            self.playback_sequence.pause()
+        self.remove_nodes()
+
+
     def render(self):
         super().render()
         self.init_sphere()

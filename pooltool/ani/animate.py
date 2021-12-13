@@ -157,12 +157,20 @@ class Interface(ShowBase, ModeManager, HUD):
 
     def close_scene(self):
         for ball in self.balls.values():
-            ball.remove_nodes()
+            ball.teardown()
+
         self.table.remove_nodes()
         self.environment.unload_room()
         self.environment.unload_lights()
         self.destroy_hud()
 
+        if self.shot is not None:
+            if self.shot.shot_animation is not None:
+                self.shot.pause_animation()
+                self.shot.shot_animation = None
+            self.shot = None
+
+        self.player_cam.focus = None
         self.player_cam.has_focus = False
 
         gc.collect()
