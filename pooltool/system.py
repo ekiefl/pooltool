@@ -248,17 +248,23 @@ class SystemRender(object):
 
 
 class System(SystemHistory, SystemRender, EvolveShotEventBased):
-    def __init__(self, cue=None, table=None, balls=None, path=None):
+    def __init__(self, cue=None, table=None, balls=None, path=None, d=None):
         SystemHistory.__init__(self)
         SystemRender.__init__(self)
         EvolveShotEventBased.__init__(self)
 
         if path and (cue or table or balls):
             raise ConfigError("System :: if path provided, cue, table, and balls must be None")
+        if d and (cue or table or balls):
+            raise ConfigError("System :: if d provided, cue, table, and balls must be None")
+        if d and path:
+            raise ConfigError("System :: Preload a system with either `d` or `path`, not both")
 
         if path:
             path = Path(path)
             self.load(path)
+        elif d:
+            self.load_from_dict(d)
         else:
             self.cue = cue
             self.table = table
@@ -401,6 +407,11 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
     def load(self, path):
         """Load a pickle-stored system state"""
         self.balls, self.table, self.cue, self.events = self.from_dict(utils.load_pickle(path))
+
+
+    def load_from_dict(self, d):
+        """Load a pickle-stored system state"""
+        self.balls, self.table, self.cue, self.events = self.from_dict(d)
 
 
     def copy(self):
