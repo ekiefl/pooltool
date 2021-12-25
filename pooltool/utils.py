@@ -8,6 +8,7 @@ import cmath
 import pickle
 import tempfile
 import linecache
+import collections
 import tracemalloc
 import importlib.util
 
@@ -430,5 +431,40 @@ def coordinate_rotation_fast(v, phi):
     rotation[2,2] = 1
 
     return np.dot(rotation, v)
+
+
+class ListLike(collections.abc.MutableSequence):
+    """This is a list-like object. It supports len, del, insert, [], and append"""
+
+    def __init__(self):
+        self._list = list()
+
+
+    def __len__(self):
+        return len(self._list)
+
+
+    def __delitem__(self, index):
+        self._list.__delitem__(index)
+
+
+    def insert(self, index, value):
+        self._list.insert(index, value)
+
+
+    def __setitem__(self, index, value):
+        self._list.__setitem__(index, value)
+
+
+    def __getitem__(self, index):
+        return self._list.__getitem__(index)
+
+
+    def append(self, value):
+        self.insert(len(self) + 1, value)
+
+
+    def __repr__(self):
+        return self._list.__repr__()
 
 

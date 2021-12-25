@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import pooltool.ani as ani
 import pooltool.utils as utils
 import pooltool.physics as physics
 import pooltool.constants as c
@@ -237,6 +238,14 @@ class SystemRender(object):
         self.shot_animation.resume()
 
 
+    def rewind(self):
+        self.offset_time(-ani.fast_forward_dt*self.playback_speed)
+
+
+    def fast_forward(self):
+        self.offset_time(ani.rewind_dt*self.playback_speed)
+
+
     def slow_down(self):
         self.playback_speed *= 0.5
         self.shot_animation.setPlayRate(0.5*self.shot_animation.getPlayRate())
@@ -424,5 +433,70 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
         system = self.__class__(balls=balls, table=table, cue=cue)
         system.events = events
         return system
+
+
+class SystemContainer(utils.ListLike):
+    def __init__(self):
+        self.animation = None
+        self.playback_speed = 1.0
+
+        utils.ListLike.__init__(self)
+
+
+    def init_animation(self, series=False):
+        for shot in self:
+            shot.init_shot_animation()
+
+
+    def loop_animation(self):
+        for shot in self:
+            shot.loop_animation()
+
+
+    def restart_animation(self):
+        for shot in self:
+            shot.shot_animation.set_t(0)
+
+
+    def clear_animation(self):
+        for shot in self:
+            shot.shot_animation.clearToInitial()
+
+
+    def toggle_pause(self):
+        for shot in self:
+            shot.toggle_pause()
+
+
+    def pause_animation(self):
+        for shot in self:
+            shot.pause_animation()
+
+
+    def resume_animation(self):
+        for shot in self:
+            shot.resume_animation()
+
+
+    def slow_down(self):
+        for shot in self:
+            self.playback_speed *= 0.5
+            shot.slow_down()
+
+
+    def speed_up(self):
+        for shot in self:
+            self.playback_speed *= 2.0
+            shot.speed_up()
+
+
+    def rewind(self):
+        for shot in self:
+            shot.rewind()
+
+
+    def fast_forward(self):
+        for shot in self:
+            shot.fast_forward()
 
 

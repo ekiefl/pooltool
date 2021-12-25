@@ -31,8 +31,8 @@ class ShotMode(Mode):
         Parameters
         ==========
         init_animations : bool, False
-            If True, the shot animations are built and looped via self.shot.init_shot_animation()
-            and self.shot.loop_animation()
+            If True, the shot animations are built and looped via SystemContainer.init_animation()
+            and SystemContainer.loop_animation()
 
         single_instance : bool, False
             If True, exiting with `esc` will close the scene. Otherwise, quit_task will be called,
@@ -43,15 +43,15 @@ class ShotMode(Mode):
         self.mouse.track()
 
         if init_animations:
-            self.shot.init_shot_animation()
-            self.shot.loop_animation()
+            self.shots.init_animation()
+            self.shots.loop_animation()
 
-        self.hud_elements.get('english').set(self.shot.cue.a, self.shot.cue.b)
-        self.hud_elements.get('jack').set(self.shot.cue.theta)
+        self.hud_elements.get('english').set(self.cue.a, self.cue.b)
+        self.hud_elements.get('jack').set(self.cue.theta)
 
-        self.accept('space', self.shot.toggle_pause)
-        self.accept('arrow_up', self.shot.speed_up)
-        self.accept('arrow_down', self.shot.slow_down)
+        self.accept('space', self.shots.toggle_pause)
+        self.accept('arrow_up', self.shots.speed_up)
+        self.accept('arrow_down', self.shots.slow_down)
 
         if single_instance:
             self.task_action('escape', action.close_scene, True)
@@ -96,24 +96,24 @@ class ShotMode(Mode):
         assert key in {'end', 'reset', 'soft'}
 
         if key == 'end':
-            self.shot.clear_animation()
-            self.shot.cue.reset_state()
-            self.shot.cue.set_render_state_as_object_state()
+            self.shots.clear_animation()
+            self.cue.reset_state()
+            self.cue.set_render_state_as_object_state()
 
-            _, _, theta, a, b, _ = self.shot.cue.get_render_state()
+            _, _, theta, a, b, _ = self.cue.get_render_state()
             self.hud_elements.get('english').set(a, b)
             self.hud_elements.get('jack').set(theta)
 
-            for ball in self.shot.balls.values():
+            for ball in self.balls.values():
                 ball.reset_angular_integration()
                 ball.set_render_state_as_object_state()
 
-            self.shot.cue.update_focus()
+            self.cue.update_focus()
 
         elif key == 'reset':
-            self.shot.clear_animation()
+            self.shots.clear_animation()
             self.player_cam.load_state('stroke')
-            for ball in self.shot.balls.values():
+            for ball in self.balls.values():
                 if ball.history.is_populated():
                     ball.set(
                         rvw = ball.history.rvw[0],
@@ -124,7 +124,7 @@ class ShotMode(Mode):
                 ball.set_render_state_as_object_state()
                 ball.history.reset()
 
-            self.shot.cue.update_focus()
+            self.cue.update_focus()
 
         self.remove_task('shot_view_task')
         self.remove_task('shot_animation_task')
@@ -137,7 +137,8 @@ class ShotMode(Mode):
             self.end_mode()
             self.stop()
         elif self.keymap[action.aim]:
-            self.game.advance(self.shot)
+            # The first shot in the SystemContainer
+            self.game.advance(self.shots[0])
             if self.game.game_over:
                 self.change_mode('game_over')
             else:
@@ -163,13 +164,13 @@ class ShotMode(Mode):
             import pdb; pdb.set_trace()
 
         if self.keymap[action.restart_ani]:
-            self.shot.restart_animation()
+            self.shots.restart_animation()
 
         if self.keymap[action.rewind]:
-            self.shot.offset_time(-ani.fast_forward_dt*self.shot.playback_speed)
+            self.shots.rewind()
 
         if self.keymap[action.fast_forward]:
-            self.shot.offset_time(ani.rewind_dt*self.shot.playback_speed)
+            self.shots.fast_forward()
 
         if self.keymap[action.undo_shot]:
             self.change_mode(self.mode_stroked_from, exit_kwargs=dict(key='reset'), enter_kwargs=dict(load_prev_cam=True))

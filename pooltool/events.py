@@ -290,43 +290,8 @@ class NonEvent(Event):
         )
 
 
-class Events(collections.abc.MutableSequence):
-    """Stores Event objects
-
-    This is a list-like object. It supports len, del, insert, [], and append
-    """
-
-    def __init__(self):
-        self._events = list()
-
-
-    def __len__(self):
-        return len(self._events)
-
-
-    def __delitem__(self, index):
-        self._events.__delitem__(index)
-
-
-    def insert(self, index, value):
-        self._events.insert(index, value)
-
-
-    def __setitem__(self, index, value):
-        self._events.__setitem__(index, value)
-
-
-    def __getitem__(self, index):
-        return self._events.__getitem__(index)
-
-
-    def append(self, value):
-        self.insert(len(self) + 1, value)
-
-
-    def __repr__(self):
-        return self._events.__repr__()
-
+class Events(utils.ListLike):
+    """Stores Event objects"""
 
     def filter_type(self, types):
         """Return events in chronological order that are of an event type or types
@@ -349,7 +314,7 @@ class Events(collections.abc.MutableSequence):
             types = [types]
 
         events = Events()
-        for event in self._events:
+        for event in self._list:
             if event.event_type in types:
                 events.append(event)
 
@@ -376,7 +341,7 @@ class Events(collections.abc.MutableSequence):
             balls = [balls]
 
         events = Events()
-        for event in self._events:
+        for event in self._list:
             for ball in balls:
                 if ball in event.agents:
                     events.append(event)
@@ -401,26 +366,26 @@ class Events(collections.abc.MutableSequence):
 
         idx = 0
         events = Events()
-        for event in reversed(self._events):
+        for event in reversed(self._list):
             if event.time > t:
                 events.append(event)
             else:
                 break
 
-        events._events = events._events[::-1]
+        events._list = events._list[::-1]
         return events
 
 
     def reset(self):
-        self._events = []
+        self._list = []
 
 
     def as_dict(self):
-        return [event.as_dict() for event in self._events]
+        return [event.as_dict() for event in self._list]
 
 
     def __repr__(self):
-        return '\n'.join([f"{i}: {event.__repr__()}" for i, event in enumerate(self._events)])
+        return '\n'.join([f"{i}: {event.__repr__()}" for i, event in enumerate(self._list)])
 
 
 def get_subclasses(cls):
@@ -460,9 +425,6 @@ def event_from_dict(d):
     event.partial = True
 
     return event
-
-
-
 
 
 

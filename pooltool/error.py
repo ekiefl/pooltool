@@ -8,14 +8,6 @@ import traceback
 
 from pooltool.terminal import tty_colors, color_text
 
-__author__ = "Developers of anvi'o (see AUTHORS.txt)"
-__copyright__ = "Copyleft 2015-2018, the Meren Lab (http://merenlab.org/)"
-__credits__ = []
-__license__ = "GPL 3.0"
-__maintainer__ = "A. Murat Eren"
-__email__ = "a.murat.eren@gmail.com"
-__status__ = "Development"
-
 
 def remove_spaces(text):
     if not text:

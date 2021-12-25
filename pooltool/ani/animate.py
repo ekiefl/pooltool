@@ -6,6 +6,7 @@ import pooltool.games as games
 import pooltool.ani.environment as environment
 
 from pooltool.error import TableConfigError, ConfigError
+from pooltool.system import SystemContainer
 from pooltool.objects.cue import Cue
 from pooltool.objects.ball import Ball
 from pooltool.objects.table import table_types
@@ -110,12 +111,15 @@ class Interface(ShowBase, ModeManager, HUD):
         globalClock.setMode(ClockObject.MLimited)
         globalClock.setFrameRate(ani.settings['graphics']['fps'])
 
-        self.shot = None
+        self.shots = SystemContainer()
         self.balls = None
         self.table = None
         self.cue = None
         if shot:
-            self.set_shot(shot)
+            self.shots.append(shot)
+            self.cue = shot.cue
+            self.balls = shot.balls
+            self.table = shot.table
 
         self.tasks = {}
         self.disableMouse()
@@ -131,13 +135,6 @@ class Interface(ShowBase, ModeManager, HUD):
 
         if monitor:
             self.add_task(self.monitor, 'monitor')
-
-
-    def set_shot(self, shot):
-        self.shot = shot
-        self.balls = self.shot.balls
-        self.table = self.shot.table
-        self.cue = self.shot.cue
 
 
     def add_task(self, *args, **kwargs):
@@ -164,16 +161,20 @@ class Interface(ShowBase, ModeManager, HUD):
         self.environment.unload_lights()
         self.destroy_hud()
 
-        if self.shot is not None:
-            if self.shot.shot_animation is not None:
-                self.shot.pause_animation()
-                self.shot.shot_animation = None
-            self.shot = None
+        if len(self.shots):
+            if self.shots.animation is not None:
+                for shot in self.shots:
+                    shot.pause_animation()
+                    shot.shot_animation = None
+                self.shots.pause_animation()
+                self.shots.animation = None
+            self.shots = SystemContainer()
 
         self.player_cam.focus = None
         self.player_cam.has_focus = False
 
         gc.collect()
+
 
     def init_system_nodes(self):
         self.init_scene()
@@ -339,10 +340,13 @@ class ShotViewer(Interface):
 
     def show(self, shot=None, title=''):
         if shot:
-            self.set_shot(shot)
+            self.shots.append(shot)
+            self.cue = shot.cue
+            self.balls = shot.balls
+            self.table = shot.table
 
-        if self.shot is None:
-            raise ConfigError("ShotViewer.show :: No shot passed and no shot set.")
+        if not len(self.shots):
+            raise ConfigError("ShotViewer.show :: No shots passed and no shots set.")
 
         self.standby_screen.hide()
         self.instructions.show()
