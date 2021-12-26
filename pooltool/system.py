@@ -445,60 +445,118 @@ class SystemContainer(utils.ListLike):
         utils.ListLike.__init__(self)
 
 
+    #def init_animation(self, series=False):
+    #    for shot in self:
+    #        shot.init_shot_animation()
+
+
+    #def loop_animation(self):
+    #    for shot in self:
+    #        shot.loop_animation()
+
+
+    #def restart_animation(self):
+    #    for shot in self:
+    #        shot.shot_animation.set_t(0)
+
+
+    #def clear_animation(self):
+    #    for shot in self:
+    #        shot.shot_animation.clearToInitial()
+
+
+    #def toggle_pause(self):
+    #    for shot in self:
+    #        shot.toggle_pause()
+
+
+    #def pause_animation(self):
+    #    for shot in self:
+    #        shot.pause_animation()
+
+
+    #def resume_animation(self):
+    #    for shot in self:
+    #        shot.resume_animation()
+
+
+    #def slow_down(self):
+    #    for shot in self:
+    #        self.playback_speed *= 0.5
+    #        shot.slow_down()
+
+
+    #def speed_up(self):
+    #    for shot in self:
+    #        self.playback_speed *= 2.0
+    #        shot.speed_up()
+
+
+    #def rewind(self):
+    #    for shot in self:
+    #        shot.rewind()
+
+
+    #def fast_forward(self):
+    #    for shot in self:
+    #        shot.fast_forward()
+
+
     def init_animation(self, series=False):
+        self.shot_animation = Parallel()
         for shot in self:
             shot.init_shot_animation()
+            self.shot_animation.append(shot.shot_animation)
 
 
     def loop_animation(self):
-        for shot in self:
-            shot.loop_animation()
+        self.shot_animation.loop()
 
 
     def restart_animation(self):
-        for shot in self:
-            shot.shot_animation.set_t(0)
+        self.shot_animation.set_t(0)
 
 
     def clear_animation(self):
-        for shot in self:
-            shot.shot_animation.clearToInitial()
+        self.shot_animation.clearToInitial()
 
 
     def toggle_pause(self):
-        for shot in self:
-            shot.toggle_pause()
+        if self.shot_animation.isPlaying():
+            self.pause_animation()
+        else:
+            self.resume_animation()
 
 
     def pause_animation(self):
-        for shot in self:
-            shot.pause_animation()
+        self.shot_animation.pause()
 
 
     def resume_animation(self):
-        for shot in self:
-            shot.resume_animation()
+        self.shot_animation.resume()
 
 
     def slow_down(self):
-        for shot in self:
-            self.playback_speed *= 0.5
-            shot.slow_down()
+        self.playback_speed *= 0.5
+        self.shot_animation.setPlayRate(0.5*self.shot_animation.getPlayRate())
 
 
     def speed_up(self):
-        for shot in self:
-            self.playback_speed *= 2.0
-            shot.speed_up()
+        self.playback_speed *= 2.0
+        self.shot_animation.setPlayRate(2.0*self.shot_animation.getPlayRate())
 
 
     def rewind(self):
-        for shot in self:
-            shot.rewind()
+        self.offset_time(-ani.fast_forward_dt*self.playback_speed)
 
 
     def fast_forward(self):
-        for shot in self:
-            shot.fast_forward()
+        self.offset_time(ani.rewind_dt*self.playback_speed)
+
+
+    def offset_time(self, dt):
+        old_t = self.shot_animation.get_t()
+        new_t = max(0, min(old_t + dt, self.shot_animation.duration))
+        self.shot_animation.set_t(new_t)
 
 
