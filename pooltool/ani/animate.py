@@ -339,14 +339,19 @@ class ShotViewer(Interface):
 
 
     def show(self, shot=None, title=''):
+        if not len(self.shots) and shot is None:
+            raise ConfigError("ShotViewer.show :: No shots passed and no shots set.")
+
         if shot:
             self.shots.append(shot)
-            self.cue = shot.cue
-            self.balls = shot.balls
-            self.table = shot.table
 
-        if not len(self.shots):
-            raise ConfigError("ShotViewer.show :: No shots passed and no shots set.")
+        # Set cue, table, and balls according to first shot in self.shots
+        if self.cue is None:
+            self.cue = self.shots[0].cue
+        if self.table is None:
+            self.table = self.shots[0].table
+        if self.balls is None:
+            self.balls = self.shots[0].balls
 
         self.standby_screen.hide()
         self.instructions.show()
