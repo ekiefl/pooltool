@@ -198,8 +198,8 @@ class BallRender(Render):
 
         self.set_render_state_from_history(0)
         for i in range(len(playback_dts)):
-            x, y, z = xyzs[i+1]
-            Qm, Qx, Qy, Qz = self.quats[i+1]
+            x, y, z = xyzs[i]
+            Qm, Qx, Qy, Qz = self.quats[i]
 
             ball_sequence.append(LerpPosInterval(
                 nodePath = self.nodes['pos'],
