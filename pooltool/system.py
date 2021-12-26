@@ -173,6 +173,8 @@ class SystemRender(object):
 
         self.ball_animations = Parallel()
         for ball in self.balls.values():
+            if not ball.rendered:
+                ball.render()
             ball.set_playback_sequence(playback_speed=self.playback_speed)
             self.ball_animations.append(ball.playback_sequence)
 
