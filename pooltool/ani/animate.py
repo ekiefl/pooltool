@@ -381,7 +381,7 @@ class ShotViewer(Interface):
         base.graphicsEngine.renderFrame()
         base.graphicsEngine.renderFrame()
 
-        self.shot = None
+        self.shots = SystemContainer()
         self.balls = None
         self.table = None
         self.cue = None

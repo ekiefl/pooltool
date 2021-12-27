@@ -19,7 +19,8 @@ from direct.interval.IntervalGlobal import *
 __all__ = ['Ball', 'ball_from_dict', 'ball_from_pickle']
 
 class BallRender(Render):
-    def __init__(self):
+    def __init__(self, model_path=None):
+        self.model_path = model_path
         self.quats = None
         self.playback_sequence = None
         Render.__init__(self)
@@ -29,23 +30,24 @@ class BallRender(Render):
         position = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}_position")
         ball = position.attachNewNode(f"ball_{self.id}")
 
-        fallback_path = ani.model_dir / 'balls' / 'set_1' / '1.glb'
-        expected_path = ani.model_dir / 'balls' / 'set_1' / f'{self.id}.glb'
+        if self.model_path is None:
+            fallback_path = ani.model_dir / 'balls' / 'set_1' / '1.glb'
+            expected_path = ani.model_dir / 'balls' / 'set_1' / f'{self.id}.glb'
+            self.model_path = expected_path if expected_path.exists() else fallback_path
 
-        if expected_path.exists():
-            path = expected_path
+            sphere_node = base.loader.loadModel(panda_path(self.model_path))
+            sphere_node.reparentTo(ball)
+
+            if self.model_path == fallback_path:
+                tex = sphere_node.find_texture(Path(fallback_path).stem)
+            else:
+                tex = sphere_node.find_texture(self.id)
         else:
-            path = fallback_path
-
-        self.model_path = path
-        sphere_node = base.loader.loadModel(panda_path(self.model_path))
-        sphere_node.reparentTo(ball)
+            sphere_node = base.loader.loadModel(panda_path(self.model_path))
+            sphere_node.reparentTo(ball)
+            tex = sphere_node.find_texture(Path(self.model_path).stem)
 
         # https://discourse.panda3d.org/t/visual-artifact-at-poles-of-uv-sphere-gltf-format/27975/8
-        if self.model_path == fallback_path:
-            tex = sphere_node.find_texture(Path(fallback_path).stem)
-        else:
-            tex = sphere_node.find_texture(self.id)
         tex.set_minfilter(SamplerState.FT_linear)
 
         sphere_node.setScale(self.get_scale_factor(sphere_node))
@@ -309,7 +311,8 @@ class BallHistory(object):
 class Ball(Object, BallRender):
     object_type = 'ball'
 
-    def __init__(self, ball_id, m=None, R=None, u_s=None, u_r=None, u_sp=None, g=None, e_c=None, f_c=None):
+    def __init__(self, ball_id, m=None, R=None, u_s=None, u_r=None, u_sp=None, g=None, e_c=None, f_c=None,
+                 model_path=None):
         self.id = ball_id
 
         if not (isinstance(self.id, int) or isinstance(self.id, str)):
@@ -340,7 +343,8 @@ class Ball(Object, BallRender):
         self.history = BallHistory()
         self.events = Events()
 
-        BallRender.__init__(self)
+        self.model_path = model_path
+        BallRender.__init__(self, model_path=self.model_path)
 
 
     def attach_history(self, history):
@@ -432,6 +436,7 @@ class Ball(Object, BallRender):
             s = self.s,
             t = self.t,
             rvw = np.copy(self.rvw),
+            model_path = self.model_path,
             history = dict(
                 rvw = self.history.rvw,
                 s = self.history.s,
@@ -452,7 +457,7 @@ def ball_from_dict(d):
     For dictionary form see return value of Ball.as_dict
     """
 
-    ball = Ball(d['id'])
+    ball = Ball(d['id'], model_path=d['model_path'])
     ball.m = d['m']
     ball.R = d['R']
     ball.I = d['I']
@@ -463,6 +468,7 @@ def ball_from_dict(d):
     ball.s = d['s']
     ball.t = d['t']
     ball.rvw = d['rvw']
+    ball.history = d['rvw']
     ball.history = d['rvw']
 
     ball_history = BallHistory()
