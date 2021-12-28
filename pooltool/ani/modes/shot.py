@@ -31,8 +31,8 @@ class ShotMode(Mode):
         Parameters
         ==========
         init_animations : bool, False
-            If True, the shot animations are built and looped via SystemContainer.init_animation()
-            and SystemContainer.loop_animation()
+            If True, the shot animations are built and looped via SystemCollection.init_animation()
+            and SystemCollection.loop_animation()
 
         single_instance : bool, False
             If True, exiting with `esc` will close the scene. Otherwise, quit_task will be called,
@@ -137,7 +137,7 @@ class ShotMode(Mode):
             self.end_mode()
             self.stop()
         elif self.keymap[action.aim]:
-            # The first shot in the SystemContainer
+            # The first shot in the SystemCollection
             self.game.advance(self.shots[0])
             if self.game.game_over:
                 self.change_mode('game_over')

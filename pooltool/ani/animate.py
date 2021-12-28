@@ -6,7 +6,7 @@ import pooltool.games as games
 import pooltool.ani.environment as environment
 
 from pooltool.error import TableConfigError, ConfigError
-from pooltool.system import SystemContainer
+from pooltool.system import SystemCollection
 from pooltool.objects.cue import Cue
 from pooltool.objects.ball import Ball
 from pooltool.objects.table import table_types
@@ -111,7 +111,7 @@ class Interface(ShowBase, ModeManager, HUD):
         globalClock.setMode(ClockObject.MLimited)
         globalClock.setFrameRate(ani.settings['graphics']['fps'])
 
-        self.shots = SystemContainer()
+        self.shots = SystemCollection()
         self.balls = None
         self.table = None
         self.cue = None
@@ -168,7 +168,7 @@ class Interface(ShowBase, ModeManager, HUD):
                     shot.shot_animation = None
                 self.shots.pause_animation()
                 self.shots.animation = None
-            self.shots = SystemContainer()
+            self.shots = SystemCollection()
 
         self.player_cam.focus = None
         self.player_cam.has_focus = False
@@ -381,7 +381,7 @@ class ShotViewer(Interface):
         base.graphicsEngine.renderFrame()
         base.graphicsEngine.renderFrame()
 
-        self.shots = SystemContainer()
+        self.shots = SystemCollection()
         self.balls = None
         self.table = None
         self.cue = None
