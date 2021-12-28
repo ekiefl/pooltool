@@ -26,6 +26,17 @@ def load_pickle(path):
         return pickle.load(f)
 
 
+def is_pickleable(obj):
+    """https://stackoverflow.com/a/53398070"""
+    try:
+        pickle.dumps(obj)
+    except pickle.PicklingError:
+        return False
+    except TypeError:
+        return False
+    return True
+
+
 def panda_path(path):
     return str(Filename.fromOsSpecific(str(path)))
 
