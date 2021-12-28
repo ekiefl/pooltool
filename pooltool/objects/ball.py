@@ -19,8 +19,8 @@ from direct.interval.IntervalGlobal import *
 __all__ = ['Ball', 'ball_from_dict', 'ball_from_pickle']
 
 class BallRender(Render):
-    def __init__(self, model_path=None):
-        self.model_path = model_path
+    def __init__(self, rel_model_path=None):
+        self.rel_model_path = rel_model_path
         self.quats = None
         self.playback_sequence = None
         Render.__init__(self)
@@ -30,22 +30,34 @@ class BallRender(Render):
         position = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}_position")
         ball = position.attachNewNode(f"ball_{self.id}")
 
-        if self.model_path is None:
+        if self.rel_model_path is None:
             fallback_path = ani.model_dir / 'balls' / 'set_1' / '1.glb'
             expected_path = ani.model_dir / 'balls' / 'set_1' / f'{self.id}.glb'
-            self.model_path = expected_path if expected_path.exists() else fallback_path
+            path = expected_path if expected_path.exists() else fallback_path
 
-            sphere_node = base.loader.loadModel(panda_path(self.model_path))
+            sphere_node = base.loader.loadModel(panda_path(path))
             sphere_node.reparentTo(ball)
 
-            if self.model_path == fallback_path:
+            if path == fallback_path:
                 tex = sphere_node.find_texture(Path(fallback_path).stem)
             else:
                 tex = sphere_node.find_texture(self.id)
+
+            # Here, we define self.rel_model_path based on path. Since rel_model_path is defined relative to
+            # the directory, pooltool/models/balls, some work has to be done to define rel_model_path
+            # relative to this directory. NOTE assumes no child directory is named balls
+            parents = []
+            parent = path.parent
+            while True:
+                if parent.stem == 'balls':
+                    self.rel_model_path = Path('/'.join(parents[::-1])) / path.name
+                    break
+                parents.append(parent.stem)
+                parent = parent.parent
         else:
-            sphere_node = base.loader.loadModel(panda_path(self.model_path))
+            sphere_node = base.loader.loadModel(panda_path(ani.model_dir / 'balls' / self.rel_model_path))
             sphere_node.reparentTo(ball)
-            tex = sphere_node.find_texture(Path(self.model_path).stem)
+            tex = sphere_node.find_texture(Path(self.rel_model_path).stem)
 
         # https://discourse.panda3d.org/t/visual-artifact-at-poles-of-uv-sphere-gltf-format/27975/8
         tex.set_minfilter(SamplerState.FT_linear)
@@ -312,7 +324,14 @@ class Ball(Object, BallRender):
     object_type = 'ball'
 
     def __init__(self, ball_id, m=None, R=None, u_s=None, u_r=None, u_sp=None, g=None, e_c=None, f_c=None,
-                 model_path=None):
+                 rel_model_path=None):
+        """Initialize a ball
+
+        Parameters
+        ==========
+        rel_model_path : str
+            path should be relative to pooltool/models/balls directory
+        """
         self.id = ball_id
 
         if not (isinstance(self.id, int) or isinstance(self.id, str)):
@@ -343,8 +362,8 @@ class Ball(Object, BallRender):
         self.history = BallHistory()
         self.events = Events()
 
-        self.model_path = model_path
-        BallRender.__init__(self, model_path=self.model_path)
+        self.rel_model_path = rel_model_path
+        BallRender.__init__(self, rel_model_path=self.rel_model_path)
 
 
     def attach_history(self, history):
@@ -436,7 +455,7 @@ class Ball(Object, BallRender):
             s = self.s,
             t = self.t,
             rvw = np.copy(self.rvw),
-            model_path = self.model_path,
+            rel_model_path = None if self.rel_model_path is None else str(self.rel_model_path),
             history = dict(
                 rvw = self.history.rvw,
                 s = self.history.s,
@@ -457,7 +476,7 @@ def ball_from_dict(d):
     For dictionary form see return value of Ball.as_dict
     """
 
-    ball = Ball(d['id'], model_path=d['model_path'])
+    ball = Ball(d['id'], rel_model_path=d['rel_model_path'])
     ball.m = d['m']
     ball.R = d['R']
     ball.I = d['I']
