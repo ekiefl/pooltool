@@ -282,6 +282,7 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
             self.balls = balls
 
         self.t = None
+        self.meta = None
 
 
     def set_cue(self, cue):
@@ -294,6 +295,24 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
 
     def set_balls(self, balls):
         self.balls = balls
+
+
+    def set_meta(self, meta):
+        """Define any meta data for the shot
+
+        This method provides the opportunity to associate information to the system. If the
+        system is saved or copied, this information will be retained under the attribute `meta`.
+
+        Parameters
+        ==========
+        meta : pickleable object
+             Any information can be stored, so long as it is pickleable.
+        """
+
+        if not utils.is_pickleable(meta):
+            raise ConfigError("System.set_meta :: Cannot set unpickleable object")
+
+        self.meta = meta
 
 
     def get_system_energy(self):
@@ -344,12 +363,13 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
             d['table'] = self.table.as_dict()
 
         d['events'] = self.events.as_dict()
+        d['meta'] = self.meta
 
         return d
 
 
     def from_dict(self, d):
-        """Return balls, table, cue, and events objects from dictionary"""
+        """Return balls, table, cue, events, and meta objects from dictionary"""
         if 'balls' in d:
             balls = {}
             for ball_id, ball_dict in d['balls'].items():
@@ -406,7 +426,9 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
             event.partial = False
             events.append(event)
 
-        return balls, table, cue, events
+        meta = d['meta']
+
+        return balls, table, cue, events, meta
 
 
     def save(self, path):
@@ -417,12 +439,12 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
 
     def load(self, path):
         """Load a pickle-stored system state"""
-        self.balls, self.table, self.cue, self.events = self.from_dict(utils.load_pickle(path))
+        self.balls, self.table, self.cue, self.events, self.meta = self.from_dict(utils.load_pickle(path))
 
 
     def load_from_dict(self, d):
         """Load a pickle-stored system state"""
-        self.balls, self.table, self.cue, self.events = self.from_dict(d)
+        self.balls, self.table, self.cue, self.events, self.meta = self.from_dict(d)
 
 
     def copy(self):
@@ -430,10 +452,11 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
 
         filepath = utils.get_temp_file_path()
         self.save(filepath)
-        balls, table, cue, events = self.from_dict(utils.load_pickle(filepath))
+        balls, table, cue, events, meta = self.from_dict(utils.load_pickle(filepath))
 
         system = self.__class__(balls=balls, table=table, cue=cue)
         system.events = events
+        system.meta = meta
         return system
 
 
