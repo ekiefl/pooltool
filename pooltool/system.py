@@ -525,8 +525,28 @@ class SystemCollectionRender(object):
 
 
 class SystemCollection(utils.ListLike, SystemCollectionRender):
-    def __init__(self):
+    def __init__(self, path=None):
         utils.ListLike.__init__(self)
         SystemCollectionRender.__init__(self)
+
+        if path:
+            self.load(Path(path))
+
+
+    def as_pickleable_object(self):
+        return [system.as_dict() for system in self]
+
+
+    def save(self, path):
+        for system in self:
+            system.reset_balls()
+        utils.save_pickle(self.as_pickleable_object(), path)
+
+
+    def load(self, path):
+        obj = utils.load_pickle(path)
+        for system_dict in obj:
+            self.append(System(d=system_dict))
+
 
 
