@@ -462,8 +462,21 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
 
 class SystemCollectionRender(object):
     def __init__(self):
+        self.active = None
         self.animation = None
         self.playback_speed = 1.0
+
+
+    def set_active(self, i):
+        if not len(self):
+            return
+
+        for system in self:
+            for ball in system.balls.values():
+                ball.set_alpha(0.4)
+
+        for ball in self[i].balls.values():
+            ball.set_alpha(1.0)
 
 
     def init_animation(self, series=False):
@@ -471,6 +484,8 @@ class SystemCollectionRender(object):
         for shot in self:
             shot.init_shot_animation()
             self.shot_animation.append(shot.shot_animation)
+
+        #self.set_active(-1)
 
 
     def loop_animation(self):

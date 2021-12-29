@@ -248,6 +248,12 @@ class BallRender(Render):
             self.playback_sequence.append(angular_vector_sequence)
 
 
+    def set_alpha(self, alpha):
+        self.get_node('pos').setTransparency(TransparencyAttrib.MAlpha)
+        self.get_node('pos').setAlphaScale(alpha)
+        self.get_node('shadow').setAlphaScale(alpha)
+
+
     def randomize_orientation(self):
         self.get_node('sphere').setHpr(*np.random.uniform(-180, 180, size=3))
 

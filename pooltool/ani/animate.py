@@ -460,7 +460,7 @@ class Play(Interface, Menus):
                 side_pocket_depth = self.setup_options[ani.options_side_pocket_depth],
                 side_pocket_radius = self.setup_options[ani.options_side_pocket_radius],
                 side_jaw_radius = self.setup_options[ani.options_side_jaw_radius],
-                model_name = self.setup_options[ani.options_table]
+                model_name = self.setup_options[ani.options_table],
             )
         table_type = table_params.pop('type')
         try:
