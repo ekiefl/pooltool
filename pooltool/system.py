@@ -542,10 +542,11 @@ class SystemCollectionRender(object):
 class SystemCollection(utils.ListLike, SystemCollectionRender):
     def __init__(self, path=None):
         utils.ListLike.__init__(self)
-        SystemCollectionRender.__init__(self)
 
         if path:
             self.load(Path(path))
+
+        SystemCollectionRender.__init__(self)
 
 
     def as_pickleable_object(self):
