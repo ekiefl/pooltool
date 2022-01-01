@@ -6,6 +6,7 @@ import os
 import numpy as np
 import cmath
 import pickle
+import pprofile
 import tempfile
 import linecache
 import collections
@@ -477,5 +478,16 @@ class ListLike(collections.abc.MutableSequence):
 
     def __repr__(self):
         return self._list.__repr__()
+
+
+class PProfile(pprofile.Profile):
+    """Small wrapper for pprofile that accepts a filepath and outputs cachegrind file"""
+    def __init__(self, path):
+        self.path = path
+        pprofile.Profile.__init__(self)
+
+    def __exit__(self, *args):
+        pprofile.Profile.__exit__(self, *args)
+        self.dump_stats(self.path)
 
 
