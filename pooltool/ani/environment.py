@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+import pooltool.ani as ani
+
 from pooltool.utils import panda_path
 
 from pathlib import Path
@@ -20,13 +22,16 @@ class Environment(object):
         self.slights = {}
         self.plights = {}
 
+        shader = ani.settings['graphics']['shader']
+        lights = ani.settings['graphics']['lights']
+
         self.slight_str = 4
         self.slight_color = (0.8, 0.8, 0.6, 1)
 
         self.plight_str = 4
         self.plight_color = (0.8, 0.8, 0.6, 1)
 
-        self.dlight_str = 3
+        self.dlight_str = 1 if (lights and not shader) else 3
         self.dlight_color = (0.8, 0.8, 0.7, 1)
 
 
