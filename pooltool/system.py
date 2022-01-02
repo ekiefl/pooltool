@@ -455,6 +455,7 @@ class SystemCollectionRender(object):
         self.active = None
         self.shot_animation = None
         self.playback_speed = 1.0
+        self.paused = False
 
 
     def set_active(self, i):
@@ -504,10 +505,12 @@ class SystemCollectionRender(object):
 
 
     def pause_animation(self):
+        self.paused = True
         self.shot_animation.pause()
 
 
     def resume_animation(self):
+        self.paused = False
         self.shot_animation.resume()
 
 
@@ -529,16 +532,19 @@ class SystemCollectionRender(object):
         self.end()
         self.init_animation()
         self.shot_animation.setPlayRate(factor*self.shot_animation.getPlayRate())
-        self.loop_animation()
+
+        if not self.paused:
+            self.loop_animation()
+
         self.shot_animation.set_t(curr_time/factor)
 
 
     def end(self):
         if self.shot_animation is not None:
             for shot in self:
-                shot.pause_animation()
+                self.shot_animation.pause()
                 shot.shot_animation = None
-            self.pause_animation()
+            self.shot_animation.pause()
             self.shot_animation = None
 
 
