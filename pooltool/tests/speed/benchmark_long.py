@@ -3,13 +3,17 @@
 import pprofile
 import pooltool as pt
 
-# Run once to compile all numba functions. By doing this,
-# compilation times will be excluded in the timing.
-system = pt.System(path='benchmark_long.pkl')
-system.simulate(continuize=False, quiet=True)
+from pathlib import Path
+
+path = Path(pt.__file__).parent / 'tests' / 'speed' / 'benchmark_long.pkl'
 
 def main(args):
-    system = pt.System(path='benchmark_long.pkl')
+    # Run once to compile all numba functions. By doing this,
+    # compilation times will be excluded in the timing.
+    system = pt.System(path=path)
+    system.simulate(continuize=False, quiet=True)
+
+    system = pt.System(path=path)
 
     if args.type == 'time':
         with pt.terminal.TimeCode():
