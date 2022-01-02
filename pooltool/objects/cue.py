@@ -265,7 +265,7 @@ class Cue(Object, CueRender):
 
     def __init__(self, M=c.M, length=c.cue_length, tip_radius=c.cue_tip_radius,
                  butt_radius=c.cue_butt_radius, cueing_ball=None, cue_id='cue_stick', brand=None,
-                 V0=0, phi=0, theta=0, a=0, b=0):
+                 V0=0, phi=0, theta=0, a=0, b=1/4):
 
         self.id = cue_id
         self.M = M
@@ -286,7 +286,7 @@ class Cue(Object, CueRender):
 
 
     def reset_state(self):
-        self.set_state(V0=0, phi=0, theta=0, a=0, b=0)
+        self.set_state(V0=0, phi=0, theta=0, a=0, b=1/4)
 
 
     def set_state(self, V0=None, phi=None, theta=None, a=None, b=None, cueing_ball=None):
