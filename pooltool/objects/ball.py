@@ -199,9 +199,16 @@ class BallRender(Render):
         dts = np.diff(self.history.t)
         playback_dts = dts/playback_speed
 
+        xyzs = self.history.rvw[:, 0, :]
+        ws = self.history.rvw[:, 2, :]
+        if (xyzs == xyzs[0,:]).all() and (ws == ws[0,:]).all():
+            # Ball has no motion.
+            self.playback_sequence = Sequence()
+            return
+
         # Get the trajectories
-        xyzs = autils.get_list_of_Vec3s_from_array(self.history.rvw[:, 0, :])
-        self.quats = autils.as_quaternion(self.history.rvw[:, 2, :], self.history.t)
+        xyzs = autils.get_list_of_Vec3s_from_array(xyzs)
+        self.quats = autils.as_quaternion(ws, self.history.t)
 
         # Init the sequences
         ball_sequence = Sequence()
