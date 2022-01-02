@@ -109,6 +109,7 @@ class ShotMode(Mode):
                 ball.set_render_state_as_object_state()
 
             self.cue.update_focus()
+            self.shots.clear()
 
         elif key == 'reset':
             self.shots.clear_animation()
@@ -125,6 +126,7 @@ class ShotMode(Mode):
                 ball.history.reset()
 
             self.cue.update_focus()
+            self.shots.clear()
 
         self.remove_task('shot_view_task')
         self.remove_task('shot_animation_task')
@@ -137,7 +139,6 @@ class ShotMode(Mode):
             self.end_mode()
             self.stop()
         elif self.keymap[action.aim]:
-            # The first shot in the SystemCollection
             self.game.advance(self.shots[0])
             if self.game.game_over:
                 self.change_mode('game_over')

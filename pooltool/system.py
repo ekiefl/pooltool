@@ -565,4 +565,8 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
             self.append(System(d=system_dict))
 
 
+    def clear(self):
+        self._list = []
+
+
 
