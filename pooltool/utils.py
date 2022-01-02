@@ -482,12 +482,22 @@ class ListLike(collections.abc.MutableSequence):
 
 class PProfile(pprofile.Profile):
     """Small wrapper for pprofile that accepts a filepath and outputs cachegrind file"""
-    def __init__(self, path):
+    def __init__(self, path, run=True):
+        self.run = run
         self.path = path
         pprofile.Profile.__init__(self)
 
+
+    def __enter__(self):
+        if self.run:
+            return pprofile.Profile.__enter__(self)
+        else:
+            return self
+
+
     def __exit__(self, *args):
-        pprofile.Profile.__exit__(self, *args)
-        self.dump_stats(self.path)
+        if self.run:
+            pprofile.Profile.__exit__(self, *args)
+            self.dump_stats(self.path)
 
 
