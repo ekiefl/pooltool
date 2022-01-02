@@ -204,6 +204,7 @@ class BallRender(Render):
         if (xyzs == xyzs[0,:]).all() and (ws == ws[0,:]).all():
             # Ball has no motion.
             self.playback_sequence = Sequence()
+            self.quats = autils.as_quaternion(ws, self.history.t)
             return
 
         # Get the trajectories

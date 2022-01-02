@@ -24,6 +24,7 @@ class SystemHistory(object):
         self.t = None
         self.events = Events()
         self.vectorized = False
+        self.continuized = False
 
 
     def init_history(self):
@@ -86,6 +87,8 @@ class SystemHistory(object):
             for ball in self.balls.values():
                 ball.history.vectorize()
 
+        self.vectorized = True
+
 
     def continuize(self, dt=0.01):
         """Create BallHistory for each ball with timepoints _inbetween_ events--attach to respective ball
@@ -106,7 +109,7 @@ class SystemHistory(object):
             cts_history = BallHistory()
 
             # Add t=0
-            cts_history.add(ball.history.rvw[0], ball.history.s[0], 0)
+            cts_history.add(ball.history_event_based.rvw[0], ball.history_event_based.s[0], 0)
 
             for n in range(len(ball.events) - 1):
                 curr_event = ball.events[n]
@@ -117,7 +120,7 @@ class SystemHistory(object):
                     continue
 
                 step = 0
-                rvw, s = ball.history.rvw[n], ball.history.s[n]
+                rvw, s = ball.history_event_based.rvw[n], ball.history_event_based.s[n]
                 while step < dtau_E:
                     rvw, s = physics.evolve_ball_motion(
                         state=s,
@@ -154,10 +157,13 @@ class SystemHistory(object):
                 )
 
                 cts_history.add(rvw, s, next_event.time - c.tol)
-                cts_history.add(ball.history.rvw[n+1], ball.history.s[n+1], next_event.time)
+                cts_history.add(ball.history_event_based.rvw[n+1], ball.history_event_based.s[n+1], next_event.time)
 
             # Attach the newly created history to the ball, overwriting the existing history
             ball.attach_history(cts_history)
+
+        self.vectorized = False
+        self.continuized = True
 
 
 class SystemRender(object):
@@ -169,6 +175,8 @@ class SystemRender(object):
 
 
     def init_shot_animation(self):
+        if not self.continuized:
+            self.continuize(dt=self.playback_speed/ani.settings['graphics']['fps']*2)
         self.vectorize_trajectories()
 
         self.ball_animations = Parallel()
@@ -238,24 +246,6 @@ class SystemRender(object):
 
     def resume_animation(self):
         self.shot_animation.resume()
-
-
-    def rewind(self):
-        self.offset_time(-ani.fast_forward_dt*self.playback_speed)
-
-
-    def fast_forward(self):
-        self.offset_time(ani.rewind_dt*self.playback_speed)
-
-
-    def slow_down(self):
-        self.playback_speed *= 0.5
-        self.shot_animation.setPlayRate(0.5*self.shot_animation.getPlayRate())
-
-
-    def speed_up(self):
-        self.playback_speed *= 2.0
-        self.shot_animation.setPlayRate(2.0*self.shot_animation.getPlayRate())
 
 
 class System(SystemHistory, SystemRender, EvolveShotEventBased):
@@ -522,13 +512,34 @@ class SystemCollectionRender(object):
 
 
     def slow_down(self):
-        self.playback_speed *= 0.5
-        self.shot_animation.setPlayRate(0.5*self.shot_animation.getPlayRate())
+        self.change_speed(0.5)
 
 
     def speed_up(self):
-        self.playback_speed *= 2.0
-        self.shot_animation.setPlayRate(2.0*self.shot_animation.getPlayRate())
+        self.change_speed(2.0)
+
+
+    def change_speed(self, factor):
+        self.playback_speed *= factor
+        for shot in self:
+            shot.playback_speed *= factor
+            shot.continuized = False
+
+        curr_time = self.shot_animation.get_t()
+        self.end()
+        self.init_animation()
+        self.shot_animation.setPlayRate(factor*self.shot_animation.getPlayRate())
+        self.loop_animation()
+        self.shot_animation.set_t(curr_time/factor)
+
+
+    def end(self):
+        if self.shot_animation is not None:
+            for shot in self:
+                shot.pause_animation()
+                shot.shot_animation = None
+            self.pause_animation()
+            self.shot_animation = None
 
 
     def rewind(self):

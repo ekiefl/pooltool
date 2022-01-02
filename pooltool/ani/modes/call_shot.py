@@ -180,7 +180,7 @@ class CallShotMode(Mode):
 
 
     def add_transparent_ball(self):
-        self.trans_ball = base.loader.loadModel(panda_path(self.closest_ball.model_path))
+        self.trans_ball = base.loader.loadModel(panda_path(ani.model_dir / 'balls' / self.closest_ball.rel_model_path))
         self.trans_ball.reparentTo(render.find('scene').find('cloth'))
         self.trans_ball.setTransparency(TransparencyAttrib.MAlpha)
         self.trans_ball.setAlphaScale(0.4)

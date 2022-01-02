@@ -128,6 +128,9 @@ class EvolveShotEventBased(EvolveShot):
             if t_final is not None and self.t >= t_final:
                 break
 
+        for ball in self.balls.values():
+            ball.history_event_based = ball.history
+
         if continuize:
             self.continuize(dt=dt)
 

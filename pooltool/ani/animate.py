@@ -162,12 +162,7 @@ class Interface(ShowBase, ModeManager, HUD):
         self.destroy_hud()
 
         if len(self.shots):
-            if self.shots.shot_animation is not None:
-                for shot in self.shots:
-                    shot.pause_animation()
-                    shot.shot_animation = None
-                self.shots.pause_animation()
-                self.shots.shot_animation = None
+            self.shots.end()
             self.shots = SystemCollection()
 
         self.player_cam.focus = None
