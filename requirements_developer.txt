@@ -7,3 +7,4 @@ panda3d-simplepbr
 psutil
 colored
 ipython
+pprofile
