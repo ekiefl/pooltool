@@ -122,7 +122,7 @@ class EvolveShotEventBased(EvolveShot):
 
             self.update_history(event, update_all=True)
 
-            if (len(self.events) % 10) == 0:
+            if (len(self.events) % 30) == 0:
                 self.progress_update()
 
             if t_final is not None and self.t >= t_final:
