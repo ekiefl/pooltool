@@ -463,7 +463,7 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
 class SystemCollectionRender(object):
     def __init__(self):
         self.active = None
-        self.animation = None
+        self.shot_animation = None
         self.playback_speed = 1.0
 
 
@@ -490,6 +490,12 @@ class SystemCollectionRender(object):
 
     def loop_animation(self):
         self.shot_animation.loop()
+
+
+    def skip_stroke(self):
+        stroke = self[0].stroke_animation
+        if stroke is not None:
+            self.shot_animation.set_t(stroke.get_duration())
 
 
     def restart_animation(self):

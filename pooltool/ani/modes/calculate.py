@@ -27,7 +27,6 @@ class CalculateMode(Mode):
             frame_color = (0,0,0,0.4),
             title_pos = (0,0,-0.2),
         )
-        self.shot_sim_overlay.show()
 
         self.cue.set_object_state_as_render_state()
 
@@ -64,6 +63,9 @@ class CalculateMode(Mode):
             else:
                 # Update mouse positions so there is not a big jump
                 self.mouse.touch()
+
+            if task.time > 0.25:
+                self.shot_sim_overlay.show()
 
         return task.cont
 

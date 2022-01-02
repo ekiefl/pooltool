@@ -45,6 +45,7 @@ class ShotMode(Mode):
         if init_animations:
             self.shots.init_animation()
             self.shots.loop_animation()
+            self.shots.skip_stroke()
 
         self.hud_elements.get('english').set(self.cue.a, self.cue.b)
         self.hud_elements.get('jack').set(self.cue.theta)
