@@ -176,6 +176,9 @@ class SystemRender(object):
 
     def init_shot_animation(self):
         if not self.continuized:
+            # playback speed / fps * 2 is basically the sweetspot for creating smooth interpolations
+            # that capture motion. Any more is wasted computation and any less and the interpolation
+            # starts to fail
             self.continuize(dt=self.playback_speed/ani.settings['graphics']['fps']*2)
         self.vectorize_trajectories()
 
