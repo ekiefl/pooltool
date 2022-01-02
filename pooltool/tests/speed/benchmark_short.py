@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""For some reason, `numba_cache` in pooltool/constants.py must be set to False prior to running this script"""
 
 import pooltool as pt
 import IPython

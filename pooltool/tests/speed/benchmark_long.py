@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+"""For some reason, `numba_cache` in pooltool/constants.py must be set to False prior to running this script"""
 
 import pprofile
 import pooltool as pt
@@ -24,7 +25,7 @@ def main(args):
 
 if __name__ == '__main__':
     import argparse
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(description="For some reason, `numba_cache` in pooltool/constants.py must be set to False prior to running this script")
     ap.add_argument('--type', choices=['time', 'profile'], required=True)
     ap.add_argument('--path', default='cachegrind.out.benchmark')
     args = ap.parse_args()
