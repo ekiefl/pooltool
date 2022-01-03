@@ -25,7 +25,7 @@ state_dict = {
     4: 'pocketed',
 }
 
-nontranslating = [stationary, spinning, pocketed]
+nontranslating = {stationary, spinning, pocketed}
 
 # Taken from https://billiards.colostate.edu/faq/physics/physical-properties/
 g = 9.8 # gravitational constant
