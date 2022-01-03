@@ -26,6 +26,7 @@ state_dict = {
 }
 
 nontranslating = {stationary, spinning, pocketed}
+energetic = {spinning, sliding, rolling}
 
 # Taken from https://billiards.colostate.edu/faq/physics/physical-properties/
 g = 9.8 # gravitational constant

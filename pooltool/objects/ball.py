@@ -197,21 +197,23 @@ class BallRender(Render):
     def set_playback_sequence(self, playback_speed=1):
         """Creates the sequence motions of the ball for a given playback speed"""
         dts = np.diff(self.history.t)
+        motion_states = self.history.s
         playback_dts = dts/playback_speed
 
+        # Get the trajectories
         xyzs = self.history.rvw[:, 0, :]
         ws = self.history.rvw[:, 2, :]
+
         if (xyzs == xyzs[0,:]).all() and (ws == ws[0,:]).all():
-            # Ball has no motion.
+            # Ball has no motion. No need to create Lerp intervals
             self.playback_sequence = Sequence()
             self.quats = autils.as_quaternion(ws, self.history.t)
             return
 
-        # Get the trajectories
         xyzs = autils.get_list_of_Vec3s_from_array(xyzs)
         self.quats = autils.as_quaternion(ws, self.history.t)
 
-        # Init the sequences
+        # Init the animation sequences
         ball_sequence = Sequence()
         rotation_sequence = Sequence()
         shadow_sequence = Sequence()
@@ -219,39 +221,73 @@ class BallRender(Render):
             angular_vector_sequence = Sequence()
 
         self.set_render_state_from_history(0)
+
+        j = 0
+        energetic = False
         for i in range(len(playback_dts)):
             x, y, z = xyzs[i]
             Qm, Qx, Qy, Qz = self.quats[i]
 
-            ball_sequence.append(LerpPosInterval(
-                nodePath = self.nodes['pos'],
-                duration = playback_dts[i],
-                pos = (x, y, z),
-            ))
+            if not energetic and motion_states[i] in c.energetic:
+                # The ball wasn't energetic, but now it is
+                energetic = True
+                xi, yi, zi = xyzs[j]
+                Qmi, Qxi, Qyi, Qzi = self.quats[j]
+                dur = playback_dts[j:i].sum()
 
-            rotation_sequence.append(LerpQuatInterval(
-                nodePath = self.nodes['ball'],
-                duration = playback_dts[i],
-                quat = (Qm, Qx, Qy, Qz),
-            ))
+                ball_sequence.append(LerpPosInterval(
+                    nodePath = self.nodes['pos'],
+                    duration = dur,
+                    startPos = (xi, yi, zi),
+                    pos = (xi, yi, zi),
+                ))
+                shadow_sequence.append(LerpPosInterval(
+                    nodePath = self.nodes['shadow'],
+                    duration = dur,
+                    startPos = (xi, yi, min(0, zi-self.R)),
+                    pos = (xi, yi, min(0, zi-self.R)),
+                ))
+                rotation_sequence.append(LerpQuatInterval(
+                    nodePath = self.nodes['ball'],
+                    duration = dur,
+                    startQuat = (Qmi, Qxi, Qyi, Qzi),
+                    quat = (Qmi, Qxi, Qyi, Qzi),
+                ))
 
-            shadow_sequence.append(LerpPosInterval(
-                nodePath = self.nodes['shadow'],
-                duration = playback_dts[i],
-                pos = (x, y, min(0, z-self.R)),
-            ))
+            if energetic:
+                ball_sequence.append(LerpPosInterval(
+                    nodePath = self.nodes['pos'],
+                    duration = playback_dts[i],
+                    pos = (x, y, z),
+                ))
+                shadow_sequence.append(LerpPosInterval(
+                    nodePath = self.nodes['shadow'],
+                    duration = playback_dts[i],
+                    pos = (x, y, min(0, z-self.R)),
+                ))
+                rotation_sequence.append(LerpQuatInterval(
+                    nodePath = self.nodes['ball'],
+                    duration = playback_dts[i],
+                    quat = (Qm, Qx, Qy, Qz),
+                ))
+
+                if motion_states[i] not in c.energetic:
+                    # The ball was energetic, but now it is not
+                    energetic = False
+                    j = i
 
             if ani.settings['graphics']['angular_vectors']:
                 angular_vector_sequence.append(LerpFunc(
                     self.get_angular_vector,
                     duration = playback_dts[i],
-                    extraArgs = [self.history.rvw[i, 2, :]]
+                    extraArgs = [ws[i, :]],
                 ))
 
-        self.playback_sequence = Parallel()
-        self.playback_sequence.append(ball_sequence)
-        self.playback_sequence.append(rotation_sequence)
-        self.playback_sequence.append(shadow_sequence)
+        self.playback_sequence = Parallel(
+            ball_sequence,
+            rotation_sequence,
+            shadow_sequence,
+        )
         if ani.settings['graphics']['angular_vectors']:
             self.playback_sequence.append(angular_vector_sequence)
 
