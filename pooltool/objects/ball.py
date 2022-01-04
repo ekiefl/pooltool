@@ -215,7 +215,6 @@ class BallRender(Render):
 
         # Init the animation sequences
         ball_sequence = Sequence()
-        rotation_sequence = Sequence()
         shadow_sequence = Sequence()
         if ani.settings['graphics']['angular_vectors']:
             angular_vector_sequence = Sequence()
@@ -235,11 +234,13 @@ class BallRender(Render):
                 Qmi, Qxi, Qyi, Qzi = self.quats[j]
                 dur = playback_dts[j:i].sum()
 
-                ball_sequence.append(LerpPosInterval(
+                ball_sequence.append(LerpPosQuatInterval(
                     nodePath = self.nodes['pos'],
                     duration = dur,
                     startPos = (xi, yi, zi),
                     pos = (xi, yi, zi),
+                    startQuat = (Qmi, Qxi, Qyi, Qzi),
+                    quat = (Qmi, Qxi, Qyi, Qzi),
                 ))
                 shadow_sequence.append(LerpPosInterval(
                     nodePath = self.nodes['shadow'],
@@ -247,28 +248,18 @@ class BallRender(Render):
                     startPos = (xi, yi, min(0, zi-self.R)),
                     pos = (xi, yi, min(0, zi-self.R)),
                 ))
-                rotation_sequence.append(LerpQuatInterval(
-                    nodePath = self.nodes['ball'],
-                    duration = dur,
-                    startQuat = (Qmi, Qxi, Qyi, Qzi),
-                    quat = (Qmi, Qxi, Qyi, Qzi),
-                ))
 
             if energetic:
-                ball_sequence.append(LerpPosInterval(
+                ball_sequence.append(LerpPosQuatInterval(
                     nodePath = self.nodes['pos'],
                     duration = playback_dts[i],
                     pos = (x, y, z),
+                    quat = (Qm, Qx, Qy, Qz),
                 ))
                 shadow_sequence.append(LerpPosInterval(
                     nodePath = self.nodes['shadow'],
                     duration = playback_dts[i],
                     pos = (x, y, min(0, z-self.R)),
-                ))
-                rotation_sequence.append(LerpQuatInterval(
-                    nodePath = self.nodes['ball'],
-                    duration = playback_dts[i],
-                    quat = (Qm, Qx, Qy, Qz),
                 ))
 
                 if motion_states[i] not in c.energetic:
@@ -285,7 +276,6 @@ class BallRender(Render):
 
         self.playback_sequence = Parallel(
             ball_sequence,
-            rotation_sequence,
             shadow_sequence,
         )
         if ani.settings['graphics']['angular_vectors']:
