@@ -19,7 +19,7 @@ def get_list_of_Vec3s_from_array(array):
     return vec3s
 
 
-def as_quaternion(w, t):
+def as_quaternion(w, t, dQ_0=None):
     """Convert angular velocities to quaternions
 
     Notes
@@ -29,7 +29,7 @@ def as_quaternion(w, t):
       Though as pointed out by jrichner, the correct quaternions are produced
       only after reversing the order of multiplication.
     """
-    dquats = get_infinitesimal_quaternions(w, t)
+    dquats = get_infinitesimal_quaternions(w, t, dQ_0)
     dquats = get_quaternion_list_from_array(dquats)
 
     # Begin with identity quaternion
@@ -40,7 +40,7 @@ def as_quaternion(w, t):
     return quats
 
 
-def get_infinitesimal_quaternions(w, t):
+def get_infinitesimal_quaternions(w, t, dQ_0=None):
     w_norm = np.linalg.norm(w, axis=1)
     w_unit = utils.unit_vector(w, handle_zero=True)
 
@@ -55,7 +55,8 @@ def get_infinitesimal_quaternions(w, t):
     # Since the time elapsed is calculated from a difference of timestamps
     # there is one less datapoint than needed. I remedy this by adding the
     # identity quaternion as the first point
-    dQ_0 = np.array([1,0,0,0])
+    if dQ_0 is None:
+        dQ_0 = np.array([1,0,0,0])
     dQ = np.vstack([dQ_0, dQ])
 
     return dQ
