@@ -481,13 +481,7 @@ class Ball(Object, BallRender):
 
 
     def as_dict(self):
-        """Return a pickle-able dictionary of the ball
-
-        Notes
-        =====
-        - FIXME This does not capture self.events
-        """
-
+        """Return a pickle-able dictionary of the ball"""
         return dict(
             id = self.id,
             m = self.m,
