@@ -94,7 +94,6 @@ class SystemHistory(object):
           physics.evolve_ball_motion and/or its functions had vectorized operations for arrays of time values.
         - FIXME This function doesn't do a good job. Reduce dt to 0.1 and see the results...
         """
-
         for ball in self.balls.values():
             # Create a new history
             cts_history = BallHistory()
@@ -102,16 +101,34 @@ class SystemHistory(object):
             # Add t=0
             cts_history.add(ball.history.rvw[0], ball.history.s[0], 0)
 
-            for n in range(len(ball.events) - 1):
-                curr_event = ball.events[n]
-                next_event = ball.events[n+1]
+            events = self.events.filter_ball(ball, keep_nonevent=True)
+            for n in range(len(events) - 1):
+                curr_event = events[n]
+                next_event = events[n+1]
 
                 dtau_E = next_event.time - curr_event.time
                 if not dtau_E:
                     continue
 
+                # The first step is to establish the rvw and s states of the ball at the timepoint of
+                # curr_event, since all calculated timepoints between curr_event and next_event will
+                # be calculated by evolving from this state.
+                if curr_event.event_class == class_transition:
+                    rvw, s = curr_event.agent_state_initial
+                elif curr_event.event_class == class_collision:
+                    if ball == curr_event.agents[0]:
+                        rvw, s = curr_event.agent1_state_final
+                    else:
+                        rvw, s = curr_event.agent2_state_final
+                elif curr_event.event_class == class_none:
+                    # This is a special case that should happen only once. It is the initial event,
+                    # which contains no agents. We therefore grab rvw and s from the ball's history.
+                    rvw, s = ball.history.rvw[0], ball.history.s[0]
+                else:
+                    raise NotImplementedError(f"SystemHistory.continuize :: event class "
+                                              f"'{curr_event.event_class}' is not implemented")
+
                 step = 0
-                rvw, s = ball.history.rvw[n], ball.history.s[n]
                 while step < dtau_E:
                     rvw, s = physics.evolve_ball_motion(
                         state=s,
@@ -131,9 +148,9 @@ class SystemHistory(object):
                 # By this point the history has been populated with equally spaced timesteps `dt`
                 # starting from curr_event.time up until--but not including--next_event.time.
                 # There still exists a `remainder` of time that is strictly less than `dt`. I evolve
-                # the state this additional amount which gives us the state of the system at the
-                # time of the next event, yet _before_ the event has been resolved. Then, I add the
-                # next event, _after_ the event has been resolved.
+                # the state this additional amount which gives the state of the system at the
+                # time of the next event. This makes sure there exists a timepoint precisely at each
+                # event, which is helpful for things like smooth, nonintersecting animations
                 remainder = dtau_E - step
                 rvw, s = physics.evolve_ball_motion(
                     state=s,
@@ -148,7 +165,6 @@ class SystemHistory(object):
                 )
 
                 cts_history.add(rvw, s, next_event.time - c.tol)
-                cts_history.add(ball.history.rvw[n+1], ball.history.s[n+1], next_event.time)
 
             # Attach the newly created history to the ball, overwriting the existing history
             ball.attach_history_cts(cts_history)
@@ -167,10 +183,10 @@ class SystemRender(object):
 
     def init_shot_animation(self):
         if not self.continuized:
-            # playback speed / fps * 2 is basically the sweetspot for creating smooth interpolations
-            # that capture motion. Any more is wasted computation and any less and the interpolation
-            # starts to fail
-            self.continuize(dt=self.playback_speed/ani.settings['graphics']['fps']*2)
+            # playback speed / fps * 2.5 is basically the sweetspot for creating smooth
+            # interpolations that capture motion. Any more is wasted computation and any less and
+            # the interpolation starts to look bad.
+            self.continuize(dt=self.playback_speed/ani.settings['graphics']['fps']*2.5)
 
         self.ball_animations = Parallel()
         for ball in self.balls.values():

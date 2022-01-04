@@ -321,7 +321,7 @@ class Events(utils.ListLike):
         return events
 
 
-    def filter_ball(self, balls):
+    def filter_ball(self, balls, keep_nonevent=False):
         """Return events in chronological order that involve a collection of balls
 
         Parameters
@@ -342,10 +342,13 @@ class Events(utils.ListLike):
 
         events = Events()
         for event in self._list:
-            for ball in balls:
-                if ball in event.agents:
-                    events.append(event)
-                    break
+            if keep_nonevent and event.event_type == type_none:
+                events.append(event)
+            else:
+                for ball in balls:
+                    if ball in event.agents:
+                        events.append(event)
+                        break
 
         return events
 

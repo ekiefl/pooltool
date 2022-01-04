@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import pooltool as pt
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 
