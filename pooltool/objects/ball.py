@@ -196,22 +196,22 @@ class BallRender(Render):
 
     def set_playback_sequence(self, playback_speed=1):
         """Creates the sequence motions of the ball for a given playback speed"""
-        dts = np.diff(self.history.t)
-        motion_states = self.history.s
+        dts = np.diff(self.history_cts.t)
+        motion_states = self.history_cts.s
         playback_dts = dts/playback_speed
 
         # Get the trajectories
-        xyzs = self.history.rvw[:, 0, :]
-        ws = self.history.rvw[:, 2, :]
+        xyzs = self.history_cts.rvw[:, 0, :]
+        ws = self.history_cts.rvw[:, 2, :]
 
         if (xyzs == xyzs[0,:]).all() and (ws == ws[0,:]).all():
             # Ball has no motion. No need to create Lerp intervals
             self.playback_sequence = Sequence()
-            self.quats = autils.as_quaternion(ws, self.history.t)
+            self.quats = autils.as_quaternion(ws, self.history_cts.t)
             return
 
         xyzs = autils.get_list_of_Vec3s_from_array(xyzs)
-        self.quats = autils.as_quaternion(ws, self.history.t)
+        self.quats = autils.as_quaternion(ws, self.history_cts.t)
 
         # Init the animation sequences
         ball_sequence = Sequence()
