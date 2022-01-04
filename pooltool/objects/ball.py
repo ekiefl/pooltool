@@ -400,6 +400,8 @@ class Ball(Object, BallRender):
         self.update_next_transition_event()
 
         self.history = BallHistory()
+        self.history_cts = BallHistory()
+
         self.events = Events()
 
         self.rel_model_path = rel_model_path
@@ -409,6 +411,11 @@ class Ball(Object, BallRender):
     def attach_history(self, history):
         """Sets self.history to an existing BallHistory object"""
         self.history = history
+
+
+    def attach_history_cts(self, history):
+        """Sets self.history_cts to an existing BallHistory object"""
+        self.history_cts = history
 
 
     def update_history(self, event):
@@ -502,6 +509,12 @@ class Ball(Object, BallRender):
                 t = self.history.t,
                 vectorized = self.history.vectorized,
             ),
+            history_cts = dict(
+                rvw = self.history_cts.rvw,
+                s = self.history_cts.s,
+                t = self.history_cts.t,
+                vectorized = self.history_cts.vectorized,
+            ),
             events = self.events.as_dict(),
         )
 
@@ -527,8 +540,6 @@ def ball_from_dict(d):
     ball.s = d['s']
     ball.t = d['t']
     ball.rvw = d['rvw']
-    ball.history = d['rvw']
-    ball.history = d['rvw']
 
     ball_history = BallHistory()
     ball_history.rvw = d['history']['rvw']
@@ -536,6 +547,13 @@ def ball_from_dict(d):
     ball_history.t = d['history']['t']
     ball_history.vectorized = d['history']['vectorized']
     ball.attach_history(ball_history)
+
+    ball_history_cts = BallHistory()
+    ball_history_cts.rvw = d['history_cts']['rvw']
+    ball_history_cts.s = d['history_cts']['s']
+    ball_history_cts.t = d['history_cts']['t']
+    ball_history_cts.vectorized = d['history_cts']['vectorized']
+    ball.attach_history_cts(ball_history_cts)
 
     events = Events()
     for event_dict in d['events']:

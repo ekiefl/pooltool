@@ -23,7 +23,6 @@ class SystemHistory(object):
     def __init__(self):
         self.t = None
         self.events = Events()
-        self.vectorized = False
         self.continuized = False
 
 
@@ -82,14 +81,6 @@ class SystemHistory(object):
         self.events.append(event)
 
 
-    def vectorize_trajectories(self):
-        if not self.vectorized:
-            for ball in self.balls.values():
-                ball.history.vectorize()
-
-        self.vectorized = True
-
-
     def continuize(self, dt=0.01):
         """Create BallHistory for each ball with timepoints _inbetween_ events--attach to respective ball
 
@@ -109,7 +100,7 @@ class SystemHistory(object):
             cts_history = BallHistory()
 
             # Add t=0
-            cts_history.add(ball.history_event_based.rvw[0], ball.history_event_based.s[0], 0)
+            cts_history.add(ball.history.rvw[0], ball.history.s[0], 0)
 
             for n in range(len(ball.events) - 1):
                 curr_event = ball.events[n]
@@ -120,7 +111,7 @@ class SystemHistory(object):
                     continue
 
                 step = 0
-                rvw, s = ball.history_event_based.rvw[n], ball.history_event_based.s[n]
+                rvw, s = ball.history.rvw[n], ball.history.s[n]
                 while step < dtau_E:
                     rvw, s = physics.evolve_ball_motion(
                         state=s,
@@ -157,12 +148,12 @@ class SystemHistory(object):
                 )
 
                 cts_history.add(rvw, s, next_event.time - c.tol)
-                cts_history.add(ball.history_event_based.rvw[n+1], ball.history_event_based.s[n+1], next_event.time)
+                cts_history.add(ball.history.rvw[n+1], ball.history.s[n+1], next_event.time)
 
             # Attach the newly created history to the ball, overwriting the existing history
-            ball.attach_history(cts_history)
+            ball.attach_history_cts(cts_history)
+            ball.history_cts.vectorize()
 
-        self.vectorized = False
         self.continuized = True
 
 
@@ -180,7 +171,6 @@ class SystemRender(object):
             # that capture motion. Any more is wasted computation and any less and the interpolation
             # starts to fail
             self.continuize(dt=self.playback_speed/ani.settings['graphics']['fps']*2)
-        self.vectorize_trajectories()
 
         self.ball_animations = Parallel()
         for ball in self.balls.values():

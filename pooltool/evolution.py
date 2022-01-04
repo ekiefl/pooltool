@@ -98,7 +98,7 @@ class EvolveShotEventBased(EvolveShot):
         EvolveShot.__init__(self, *args, **kwargs)
 
 
-    def evolution_algorithm(self, t_final=None, continuize=True, dt=None):
+    def evolution_algorithm(self, t_final=None, continuize=False, dt=None):
         """The event-based evolution algorithm"""
 
         if dt is None:
@@ -127,9 +127,6 @@ class EvolveShotEventBased(EvolveShot):
 
             if t_final is not None and self.t >= t_final:
                 break
-
-        for ball in self.balls.values():
-            ball.history_event_based = ball.history
 
         if continuize:
             self.continuize(dt=dt)

@@ -14,3 +14,6 @@ def test_trajectories(ref, trial):
         np.testing.assert_allclose(ball_ref.history.rvw, ball_trial.history.rvw)
         np.testing.assert_allclose(ball_ref.history.s, ball_trial.history.s)
         np.testing.assert_allclose(ball_ref.history.t, ball_trial.history.t)
+        np.testing.assert_allclose(ball_ref.history_cts.rvw, ball_trial.history_cts.rvw)
+        np.testing.assert_allclose(ball_ref.history_cts.s, ball_trial.history_cts.s)
+        np.testing.assert_allclose(ball_ref.history_cts.t, ball_trial.history_cts.t)

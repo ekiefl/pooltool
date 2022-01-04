@@ -28,5 +28,8 @@ def test_save(trial):
         np.testing.assert_allclose(ball.history.rvw, pickle_ball.history.rvw)
         np.testing.assert_allclose(ball.history.s, pickle_ball.history.s)
         np.testing.assert_allclose(ball.history.t, pickle_ball.history.t)
+        np.testing.assert_allclose(ball.history_cts.rvw, pickle_ball.history_cts.rvw)
+        np.testing.assert_allclose(ball.history_cts.s, pickle_ball.history_cts.s)
+        np.testing.assert_allclose(ball.history_cts.t, pickle_ball.history_cts.t)
 
 

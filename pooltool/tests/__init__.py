@@ -23,7 +23,7 @@ def ref():
     return shot_ref.copy()
 
 shot_trial = shot_ref.copy()
-shot_trial.simulate(continuize=False)
+shot_trial.simulate(continuize=True, dt=0.01)
 shot_trial.reset_balls()
 
 @pytest.fixture

@@ -27,13 +27,11 @@ def main(args):
 
     # Evolve the shot
     shot = pt.System(cue=cue, table=table, balls=balls)
-    shot.simulate(continuize=False)
+    shot.simulate(continuize=True, dt=0.01)
 
     # Visualize the shot
-    shot_continuized = shot.copy()
-    shot_continuized.continuize(dt=0.005)
     interface = pt.ShotViewer()
-    interface.show(shot_continuized, 'This is the new benchmark.')
+    interface.show(shot, 'This is the new benchmark.')
 
     # Save the shot
     output_dir = Path(pt.__file__).parent / 'tests' / 'data'
