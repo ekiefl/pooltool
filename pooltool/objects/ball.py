@@ -293,7 +293,7 @@ class BallRender(Render):
 
 
     def reset_angular_integration(self):
-        ball, sphere = self.get_node('ball'), self.get_node('sphere')
+        ball, sphere = self.get_node('pos'), self.get_node('sphere')
         sphere.setQuat(sphere.getQuat() * ball.getQuat())
 
         ball.setHpr(0, 0, 0)
