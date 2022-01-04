@@ -28,7 +28,6 @@ class BallRender(Render):
 
     def init_sphere(self):
         position = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}_position")
-        ball = position.attachNewNode(f"ball_{self.id}")
 
         if self.rel_model_path is None:
             fallback_path = ani.model_dir / 'balls' / 'set_1' / '1.glb'
@@ -36,7 +35,7 @@ class BallRender(Render):
             path = expected_path if expected_path.exists() else fallback_path
 
             sphere_node = base.loader.loadModel(panda_path(path))
-            sphere_node.reparentTo(ball)
+            sphere_node.reparentTo(position)
 
             if path == fallback_path:
                 tex = sphere_node.find_texture(Path(fallback_path).stem)
@@ -56,7 +55,7 @@ class BallRender(Render):
                 parent = parent.parent
         else:
             sphere_node = base.loader.loadModel(panda_path(ani.model_dir / 'balls' / self.rel_model_path))
-            sphere_node.reparentTo(ball)
+            sphere_node.reparentTo(position)
             tex = sphere_node.find_texture(Path(self.rel_model_path).stem)
 
         # https://discourse.panda3d.org/t/visual-artifact-at-poles-of-uv-sphere-gltf-format/27975/8
@@ -66,7 +65,6 @@ class BallRender(Render):
         position.setPos(*self.rvw[0,:])
 
         self.nodes['sphere'] = sphere_node
-        self.nodes['ball'] = ball
         self.nodes['pos'] = position
         self.nodes['shadow'] = self.init_shadow()
         if ani.settings['graphics']['angular_vectors']:
@@ -79,7 +77,7 @@ class BallRender(Render):
         if not cue.rendered:
             raise ConfigError("BallRender.init_collision :: `cue` must be rendered")
 
-        collision_node = self.nodes['ball'].attachNewNode(CollisionNode(f"ball_csphere_{self.id}"))
+        collision_node = self.nodes['sphere'].attachNewNode(CollisionNode(f"ball_csphere_{self.id}"))
         collision_node.node().addSolid(CollisionCapsule(0, 0, -self.R, 0, 0, self.R, cue.tip_radius + self.R))
         if ani.settings['graphics']['debug']:
             collision_node.show()
