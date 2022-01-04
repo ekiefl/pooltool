@@ -32,7 +32,6 @@ def as_quaternion(w, t, dQ_0=None):
     dquats = get_infinitesimal_quaternions(w, t, dQ_0)
     dquats = get_quaternion_list_from_array(dquats)
 
-    # Begin with identity quaternion
     quats = [dquats[0]]
     for i in range(1, len(dquats)):
         quats.append(quats[i-1]*dquats[i])
@@ -57,6 +56,10 @@ def get_infinitesimal_quaternions(w, t, dQ_0=None):
     # identity quaternion as the first point
     if dQ_0 is None:
         dQ_0 = np.array([1,0,0,0])
+    else:
+        dQ_0 = np.array(dQ_0)
+    dQ_0 = get_quat_from_vector(dQ_0)
+
     dQ = np.vstack([dQ_0, dQ])
 
     return dQ
