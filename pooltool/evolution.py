@@ -46,13 +46,11 @@ class EvolveShot(ABC):
             def progress_update():
                 """Convenience function for updating progress"""
                 energy = self.get_system_energy()
-                msg = f"SIM TIME {self.t:.6f}s | ENERGY {np.round(energy, 2)}J | EVENTS {len(self.events)}"
+                msg = f"SIM TIME {self.t:.6f}s | EVENTS {len(self.events)}"
                 self.progress.update(msg)
-                self.progress.increment(increment_to=int(energy_start - energy))
 
             self.run.warning('', header=name, lc='green')
-            self.run.info('Starting energy', f"{np.round(energy_start, 2)}J")
-            self.progress.new("Running", progress_total_items=int(energy_start))
+            self.progress.new("Running")
         else:
             def progress_update():
                 pass
