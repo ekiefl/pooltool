@@ -479,6 +479,8 @@ class Play(Interface, Menus):
             u_s = self.setup_options[ani.options_friction_slide],
             u_r = self.setup_options[ani.options_friction_roll],
             u_sp = self.setup_options[ani.options_friction_spin],
+            f_c = self.setup_options[ani.options_friction_cushion],
+            e_c = self.setup_options[ani.options_restitution_cushion],
         )
 
         game_class = games.game_classes[self.setup_options[ani.options_game]]

@@ -389,8 +389,8 @@ class Ball(Object, BallRender):
         self.u_sp = u_sp or c.u_sp
 
         # restitution properties
-        self.e_c = c.e_c
-        self.f_c = c.f_c
+        self.e_c = e_c or c.e_c
+        self.f_c = f_c or c.f_c
 
         self.t = 0
         self.s = c.stationary

@@ -73,7 +73,7 @@ class CalculateMode(Mode):
     def run_simulation(self, task):
         """Run a pool simulation"""
         shot = System(cue=self.cue, table=self.table, balls=self.balls)
-        shot.simulate(continuize=False, quiet=True)
+        shot.simulate(continuize=False, quiet=False)
         self.game.process_shot(shot)
 
         self.shots.append(shot)

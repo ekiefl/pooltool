@@ -96,6 +96,8 @@ class Menus(object):
         m.add_direct_entry(ani.options_friction_roll, initial=f"{c.u_r:.3f}", scale=ani.menu_text_scale_small)
         m.add_direct_entry(ani.options_friction_slide, initial=f"{c.u_s:.3f}", scale=ani.menu_text_scale_small)
         m.add_direct_entry(ani.options_friction_spin, initial=f"{c.u_sp:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_friction_cushion, initial=f"{c.f_c:.3f}", scale=ani.menu_text_scale_small)
+        m.add_direct_entry(ani.options_restitution_cushion, initial=f"{c.e_c:.3f}", scale=ani.menu_text_scale_small)
 
         self.menus['balls'] = m
 

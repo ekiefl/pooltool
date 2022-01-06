@@ -41,6 +41,8 @@ options_ball_diameter = 'Ball diameter'
 options_friction_slide = 'Coeff. sliding friction'
 options_friction_roll = 'Coeff. rolling friction'
 options_friction_spin = 'Coeff. spinning friction'
+options_restitution_cushion = 'Coeff. cushion restitution'
+options_friction_cushion = 'Coeff. cushion friction'
 
 options_table_type = 'Table type'
 options_table_length = 'Play surface length'
