@@ -2,9 +2,11 @@
 
 aim = 'aim'
 exit = 'exit'
+power = 'power'
 elevation = 'elevation'
 english = 'english'
 fine_control = 'fine_control'
+exec_shot = 'exec_shot'
 call_shot = 'call_shot'
 ball_in_hand = 'ball_in_hand'
 adjust_head = 'adjust_head'

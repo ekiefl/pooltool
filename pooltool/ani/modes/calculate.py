@@ -17,18 +17,18 @@ class CalculateMode(Mode):
         action.show_help: False,
     }
 
-    def enter(self):
+    def enter(self, user_stroke=False):
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()
+
+        self.user_stroke = user_stroke
 
         self.shot_sim_overlay = GenericMenu(
             title = 'Calculating shot...',
             frame_color = (0,0,0,0.4),
             title_pos = (0,0,-0.2),
         )
-
-        self.cue.set_object_state_as_render_state()
 
         self.add_task(self.run_simulation, 'run_simulation', taskChain = 'simulation')
 
@@ -73,6 +73,7 @@ class CalculateMode(Mode):
     def run_simulation(self, task):
         """Run a pool simulation"""
         shot = System(cue=self.cue, table=self.table, balls=self.balls)
+        shot.user_stroke = self.user_stroke
         shot.simulate(continuize=False, quiet=False)
         self.game.process_shot(shot)
 

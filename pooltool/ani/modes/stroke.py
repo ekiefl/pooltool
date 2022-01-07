@@ -44,7 +44,7 @@ class StrokeMode(Mode):
                 # The cue stick has contacted the cue ball
                 self.cue.set_object_state_as_render_state()
                 self.cue.strike()
-                self.change_mode('calculate')
+                self.change_mode('calculate', enter_kwargs=dict(user_stroke=True))
                 return
         else:
             self.change_mode('aim')

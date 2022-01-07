@@ -179,6 +179,7 @@ class SystemRender(object):
         self.ball_animations = None
         self.stroke_animation = None
         self.playback_speed = 1
+        self.user_stroke = False
 
 
     def init_shot_animation(self):
@@ -195,7 +196,7 @@ class SystemRender(object):
             ball.set_playback_sequence(playback_speed=self.playback_speed)
             self.ball_animations.append(ball.playback_sequence)
 
-        if len(self.cue.stroke_pos):
+        if self.user_stroke:
             # There exists a stroke trajectory. Create animation sequence
             self.cue.set_stroke_sequence()
             self.stroke_animation = Sequence(

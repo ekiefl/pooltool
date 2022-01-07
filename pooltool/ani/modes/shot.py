@@ -116,7 +116,7 @@ class ShotMode(Mode):
 
         elif key == 'reset':
             self.shots.clear_animation()
-            self.player_cam.load_state('stroke')
+            self.player_cam.load_state(self.mode_stroked_from)
             for ball in self.balls.values():
                 if ball.history.is_populated():
                     ball.set(

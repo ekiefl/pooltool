@@ -17,6 +17,8 @@ class AimMode(Mode, CueAvoid):
         action.stroke: False,
         action.view: False,
         action.zoom: False,
+        action.exec_shot: False,
+        action.power: False,
         action.elevation: False,
         action.english: False,
         action.cam_save: False,
@@ -50,6 +52,8 @@ class AimMode(Mode, CueAvoid):
         if load_prev_cam:
             self.player_cam.load_state('aim')
 
+        self.hud_elements['power'].set(self.cue.V0)
+
         self.task_action('escape', action.quit, True)
         self.task_action('f', action.fine_control, True)
         self.task_action('f-up', action.fine_control, False)
@@ -69,6 +73,10 @@ class AimMode(Mode, CueAvoid):
         self.task_action('b-up', action.elevation, False)
         self.task_action('e', action.english, True)
         self.task_action('e-up', action.english, False)
+        self.task_action('x', action.power, True)
+        self.task_action('x-up', action.power, False)
+        self.task_action('space', action.exec_shot, True)
+        self.task_action('space-up', action.exec_shot, False)
 
         CueAvoid.__init__(self)
 
@@ -105,6 +113,13 @@ class AimMode(Mode, CueAvoid):
             self.elevate_cue()
         elif self.keymap[action.english]:
             self.apply_english()
+        elif self.keymap[action.power]:
+            self.apply_power()
+        elif self.keymap[action.exec_shot]:
+            self.mode_stroked_from = 'aim'
+            self.cue.set_object_state_as_render_state(skip_V0=True)
+            self.cue.strike()
+            self.change_mode('calculate')
         else:
             self.rotate_camera_aim()
 
@@ -152,6 +167,20 @@ class AimMode(Mode, CueAvoid):
         self.cue.get_node('cue_stick_focus').setH(self.player_cam.focus.getH())
 
 
+    def apply_power(self):
+        with self.mouse:
+            dy = self.mouse.get_dy()
+
+        min_V0, max_V0 = self.hud_elements['power'].min_strike, self.hud_elements['power'].max_strike
+
+        V0 = self.cue.V0 + dy*ani.power_sensitivity
+        if V0 < min_V0: V0 = min_V0
+        if V0 > max_V0: V0 = max_V0
+
+        self.cue.set_state(V0=V0)
+        self.hud_elements['power'].set(V0)
+
+
     def elevate_cue(self):
         cue = self.cue.get_node('cue_stick_focus')
 
@@ -176,7 +205,6 @@ class AimMode(Mode, CueAvoid):
 
         # update hud
         self.hud_elements['jack'].set(new_elevation)
-
 
 
     def apply_english(self):

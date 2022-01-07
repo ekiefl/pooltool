@@ -17,6 +17,7 @@ menu_text_scale_small = 0.04
 zoom_sensitivity = 0.3
 min_player_cam = 2
 max_english = 6/10
+power_sensitivity = 2
 elevate_sensitivity = 13
 english_sensitivity = 0.1
 rotate_sensitivity_x = 19

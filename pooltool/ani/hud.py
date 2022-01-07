@@ -268,7 +268,7 @@ class English(HUDElement):
 
 class Power(NodePath, HUDElement):
     """Modified from drwr: https://discourse.panda3d.org/t/health-bars-using-directgui/2098/3"""
-    def __init__(self, min_strike=0.01, max_strike=7):
+    def __init__(self, min_strike=0.05, max_strike=7):
         self.min_strike = min_strike
         self.max_strike = max_strike
 
@@ -293,9 +293,9 @@ class Power(NodePath, HUDElement):
 
         self.setScale(0.3)
 
-        midpoint = (self.min_strike + self.max_strike) / 2
+        start_value = 2
         self.text = OnscreenText(
-            text = f"{midpoint:.2f} m/s",
+            text = f"{start_value:.2f} m/s",
             pos = (0, 0),
             scale = self.text_scale,
             fg = self.text_color,
@@ -306,7 +306,7 @@ class Power(NodePath, HUDElement):
         self.text.setPos(0.5, -0.15)
         self.setPos(0,0,-0.9)
 
-        self.set(midpoint)
+        self.set(start_value)
 
 
     def init(self):

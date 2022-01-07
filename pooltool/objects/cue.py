@@ -239,8 +239,11 @@ class CueRender(Render):
         return V0, phi, theta, a, b, cueing_ball
 
 
-    def set_object_state_as_render_state(self):
-        self.V0, self.phi, self.theta, self.a, self.b, self.cueing_ball = self.get_render_state()
+    def set_object_state_as_render_state(self, skip_V0=False):
+        if skip_V0:
+            _, self.phi, self.theta, self.a, self.b, self.cueing_ball = self.get_render_state()
+        else:
+            self.V0, self.phi, self.theta, self.a, self.b, self.cueing_ball = self.get_render_state()
 
 
     def set_render_state_as_object_state(self):
@@ -265,7 +268,7 @@ class Cue(Object, CueRender):
 
     def __init__(self, M=c.M, length=c.cue_length, tip_radius=c.cue_tip_radius,
                  butt_radius=c.cue_butt_radius, cueing_ball=None, cue_id='cue_stick', brand=None,
-                 V0=0, phi=0, theta=0, a=0, b=1/4):
+                 V0=2, phi=0, theta=0, a=0, b=1/4):
 
         self.id = cue_id
         self.M = M
@@ -286,7 +289,7 @@ class Cue(Object, CueRender):
 
 
     def reset_state(self):
-        self.set_state(V0=0, phi=0, theta=0, a=0, b=1/4)
+        self.set_state(V0=2, phi=0, theta=0, a=0, b=1/4)
 
 
     def set_state(self, V0=None, phi=None, theta=None, a=None, b=None, cueing_ball=None):
