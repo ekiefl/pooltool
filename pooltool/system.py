@@ -187,7 +187,10 @@ class SystemRender(object):
             # playback speed / fps * 2.0 is basically the sweetspot for creating smooth
             # interpolations that capture motion. Any more is wasted computation and any less and
             # the interpolation starts to look bad.
-            self.continuize(dt=self.playback_speed/ani.settings['graphics']['fps']*2.0)
+            if self.playback_speed > 0.99:
+                self.continuize(dt=self.playback_speed/ani.settings['graphics']['fps']*2.5)
+            else:
+                self.continuize(dt=self.playback_speed/ani.settings['graphics']['fps']*1.5)
 
         self.ball_animations = Parallel()
         for ball in self.balls.values():
