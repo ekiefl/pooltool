@@ -27,6 +27,7 @@ class HUD(object):
             'log_win': LogWindow(),
             'english': English(),
             'jack': Jack(),
+            'power': Power(),
             'player_stats': PlayerStats(),
         }
 
@@ -115,7 +116,7 @@ class HUDElement(ABC):
 
 class PlayerStats(HUDElement):
     def __init__(self):
-        self.top_spot = -0.28
+        self.top_spot = -0.18
         self.spacer = 0.05
         self.scale1 = 0.06
         self.scale2 = 0.04
@@ -220,7 +221,7 @@ class English(HUDElement):
         )
         self.circle.setTransparency(TransparencyAttrib.MAlpha)
         autils.alignTo(self.circle, self.dummy_right, autils.CL, autils.C)
-        self.circle.setZ(-0.75)
+        self.circle.setZ(-0.65)
 
         self.crosshairs = OnscreenImage(
             image=panda_path(self.dir / 'crosshairs.png'),
@@ -265,6 +266,67 @@ class English(HUDElement):
         del self.circle
 
 
+class Power(NodePath, HUDElement):
+    """Modified from drwr: https://discourse.panda3d.org/t/health-bars-using-directgui/2098/3"""
+    def __init__(self, min_strike=0.01, max_strike=7):
+        self.min_strike = min_strike
+        self.max_strike = max_strike
+
+        HUDElement.__init__(self)
+        self.text_scale = 0.11
+        self.text_color = (1,1,1,1)
+
+        NodePath.__init__(self, 'powerbar')
+        self.reparentTo(self.dummy_right)
+
+        cmfg = CardMaker('fg')
+        cmfg.setFrame(0, 1, -0.04, 0.04)
+        self.fg = self.attachNewNode(cmfg.generate())
+
+        cmbg = CardMaker('bg')
+        cmbg.setFrame(-1, 0, -0.04, 0.04)
+        self.bg = self.attachNewNode(cmbg.generate())
+        self.bg.setPos(1, 0, 0)
+
+        self.fg.setColor(1, 0, 0, 1)
+        self.bg.setColor(0.5, 0.5, 0.5, 1)
+
+        self.setScale(0.3)
+
+        midpoint = (self.min_strike + self.max_strike) / 2
+        self.setPower(midpoint)
+
+        self.text = OnscreenText(
+            text = f"{midpoint:.2f} m/s",
+            pos = (0, 0),
+            scale = self.text_scale,
+            fg = self.text_color,
+            align = TextNode.ACenter,
+            mayChange = True,
+            parent = self,
+        )
+        self.text.setPos(0.5, -0.15)
+        self.setPos(0,0,-0.9)
+
+
+    def init(self):
+        self.show()
+
+
+    def destroy(self):
+        self.hide()
+        del self.text
+        del self
+
+
+    def setPower(self, value):
+        value = (value - self.min_strike) / (self.max_strike - self.min_strike)
+        if value < 0: value = 0
+        if value > 1: value = 1
+        self.fg.setScale(value, 1, 1)
+        self.bg.setScale(1.0 - value, 1, 1)
+
+
 class Jack(HUDElement):
     def __init__(self):
         HUDElement.__init__(self)
@@ -288,7 +350,7 @@ class Jack(HUDElement):
         )
         self.cue_cartoon.setTransparency(TransparencyAttrib.MAlpha)
         autils.alignTo(self.cue_cartoon, self.dummy_right, autils.CL, autils.C)
-        self.cue_cartoon.setZ(-0.50)
+        self.cue_cartoon.setZ(-0.40)
 
         autils.alignTo(self.arc, self.cue_cartoon, autils.LR, autils.CR)
 
