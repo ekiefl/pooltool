@@ -183,10 +183,10 @@ class SystemRender(object):
 
     def init_shot_animation(self):
         if not self.continuized:
-            # playback speed / fps * 2.5 is basically the sweetspot for creating smooth
+            # playback speed / fps * 2.0 is basically the sweetspot for creating smooth
             # interpolations that capture motion. Any more is wasted computation and any less and
             # the interpolation starts to look bad.
-            self.continuize(dt=self.playback_speed/ani.settings['graphics']['fps']*2.5)
+            self.continuize(dt=self.playback_speed/ani.settings['graphics']['fps']*2.0)
 
         self.ball_animations = Parallel()
         for ball in self.balls.values():
