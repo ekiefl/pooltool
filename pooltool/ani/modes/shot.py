@@ -50,6 +50,7 @@ class ShotMode(Mode):
 
         self.hud_elements.get('english').set(self.cue.a, self.cue.b)
         self.hud_elements.get('jack').set(self.cue.theta)
+        self.hud_elements.get('power').set(self.cue.V0)
 
         self.accept('space', self.shots.toggle_pause)
         self.accept('arrow_up', self.shots.speed_up)

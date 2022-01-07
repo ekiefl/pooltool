@@ -294,8 +294,6 @@ class Power(NodePath, HUDElement):
         self.setScale(0.3)
 
         midpoint = (self.min_strike + self.max_strike) / 2
-        self.setPower(midpoint)
-
         self.text = OnscreenText(
             text = f"{midpoint:.2f} m/s",
             pos = (0, 0),
@@ -308,6 +306,8 @@ class Power(NodePath, HUDElement):
         self.text.setPos(0.5, -0.15)
         self.setPos(0,0,-0.9)
 
+        self.set(midpoint)
+
 
     def init(self):
         self.show()
@@ -319,8 +319,10 @@ class Power(NodePath, HUDElement):
         del self
 
 
-    def setPower(self, value):
-        value = (value - self.min_strike) / (self.max_strike - self.min_strike)
+    def set(self, V0):
+        self.text.setText(f"{V0:.2f} m/s")
+
+        value = (V0 - self.min_strike) / (self.max_strike - self.min_strike)
         if value < 0: value = 0
         if value > 1: value = 1
         self.fg.setScale(value, 1, 1)
