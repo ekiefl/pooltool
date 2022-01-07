@@ -12,7 +12,7 @@ def main(args):
         shot.simulate(quiet=True)
 
     with pt.terminal.TimeCode(success_msg = 'Trajectories continuized in: '):
-        shot.continuize(dt=1/60*2.5)
+        shot.continuize(dt=1/60*2)
 
     class Interface(pt.ShotViewer):
         def __init__(self, *args, **kwargs):
