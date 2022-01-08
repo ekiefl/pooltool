@@ -48,9 +48,9 @@ class ShotMode(Mode):
             self.shots.loop_animation()
             self.shots.skip_stroke()
 
-        self.hud_elements.get('english').set(self.cue.a, self.cue.b)
-        self.hud_elements.get('jack').set(self.cue.theta)
-        self.hud_elements.get('power').set(self.cue.V0)
+        self.hud_elements.get('english').set(self.shots.active.cue.a, self.shots.active.cue.b)
+        self.hud_elements.get('jack').set(self.shots.active.cue.theta)
+        self.hud_elements.get('power').set(self.shots.active.cue.V0)
 
         self.accept('space', self.shots.toggle_pause)
         self.accept('arrow_up', self.shots.speed_up)
@@ -100,24 +100,23 @@ class ShotMode(Mode):
 
         if key == 'end':
             self.shots.clear_animation()
-            self.cue.reset_state()
-            self.cue.set_render_state_as_object_state()
+            self.shots.active.cue.reset_state()
+            self.shots.active.cue.set_render_state_as_object_state()
 
-            _, _, theta, a, b, _ = self.cue.get_render_state()
+            _, _, theta, a, b, _ = self.shots.active.cue.get_render_state()
             self.hud_elements.get('english').set(a, b)
             self.hud_elements.get('jack').set(theta)
 
-            for ball in self.balls.values():
+            for ball in self.shots.active.balls.values():
                 ball.reset_angular_integration()
                 ball.set_render_state_as_object_state()
 
-            self.cue.update_focus()
-            self.shots.clear()
+            self.shots.active.cue.update_focus()
 
         elif key == 'reset':
             self.shots.clear_animation()
             self.player_cam.load_state(self.mode_stroked_from)
-            for ball in self.balls.values():
+            for ball in self.shots.active.balls.values():
                 if ball.history.is_populated():
                     ball.set(
                         rvw = ball.history.rvw[0],
@@ -128,8 +127,7 @@ class ShotMode(Mode):
                 ball.set_render_state_as_object_state()
                 ball.history.reset()
 
-            self.cue.update_focus()
-            self.shots.clear()
+            self.shots.active.cue.update_focus()
 
         self.remove_task('shot_view_task')
         self.remove_task('shot_animation_task')
@@ -142,7 +140,7 @@ class ShotMode(Mode):
             self.end_mode()
             self.stop()
         elif self.keymap[action.aim]:
-            self.game.advance(self.shots[0])
+            self.game.advance(self.shots[-1])
             if self.game.game_over:
                 self.change_mode('game_over')
             else:

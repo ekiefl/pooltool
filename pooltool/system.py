@@ -474,25 +474,11 @@ class SystemCollectionRender(object):
         self.paused = False
 
 
-    def set_active(self, i):
-        if not len(self):
-            return
-
-        for system in self:
-            for ball in system.balls.values():
-                ball.set_alpha(0.4)
-
-        for ball in self[i].balls.values():
-            ball.set_alpha(1.0)
-
-
     def init_animation(self, series=False):
         self.shot_animation = Parallel()
         for shot in self:
             shot.init_shot_animation()
             self.shot_animation.append(shot.shot_animation)
-
-        #self.set_active(-1)
 
 
     def loop_animation(self):
@@ -587,6 +573,28 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
 
         SystemCollectionRender.__init__(self)
 
+        self.active = None
+
+
+    def append(self, system):
+        if len(self):
+            # In order to append a system, the table must be damn-near identical to existing systems
+            # in this collection. Otherwise we raise an error
+            if system.table.as_dict() != self[0].table.as_dict():
+                raise ConfigError(f"Cannot append System '{system}', which has a different table than "
+                                  f"the rest of the SystemCollection")
+
+        utils.ListLike.append(self, system)
+
+
+    def set_active(self, i):
+        if self.active is not None:
+            table = self.active.table
+            self.active = self[i]
+            self.active.table = table
+        else:
+            self.active = self[i]
+
 
     def as_pickleable_object(self):
         return [system.as_dict() for system in self]
@@ -605,6 +613,7 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
 
 
     def clear(self):
+        self.active = None
         self._list = []
 
 
