@@ -49,8 +49,11 @@ class SystemHistory(object):
         """Remove all events, histories, and reset timer"""
 
         self.t = 0
+        self.continuized = False
+
         for ball in self.balls.values():
             ball.history.reset()
+            ball.history_cts.reset()
             ball.events.reset()
             ball.set_time(0)
 
