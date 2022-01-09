@@ -128,6 +128,7 @@ class ShotMode(Mode):
                 ball.history.reset()
 
             self.shots.active.cue.update_focus()
+            self.shots.active.user_stroke = False
 
         self.remove_task('shot_view_task')
         self.remove_task('shot_animation_task')
