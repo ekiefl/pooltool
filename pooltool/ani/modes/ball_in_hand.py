@@ -46,7 +46,7 @@ class BallInHandMode(Mode):
             # FIXME add message
             self.picking = 'ball'
         elif num_options == 1:
-            self.grabbed_ball = self.balls[self.game.active_player.ball_in_hand[0]]
+            self.grabbed_ball = self.shots.active.balls[self.game.active_player.ball_in_hand[0]]
             self.grab_ball_node = self.grabbed_ball.get_node('pos')
             self.grab_ball_shadow_node = self.grabbed_ball.get_node('shadow')
             self.picking = 'placement'
@@ -90,10 +90,11 @@ class BallInHandMode(Mode):
 
             if self.keymap['next']:
                 self.keymap['next'] = False
-                self.picking = 'placement'
-                self.player_cam.update_focus(self.grab_ball_node.getPos())
-                BallInHandMode.remove_grab_selection_highlight(self)
-                BallInHandMode.add_transparent_ball(self)
+                if self.grabbed_ball:
+                    self.picking = 'placement'
+                    self.player_cam.update_focus(self.grab_ball_node.getPos())
+                    BallInHandMode.remove_grab_selection_highlight(self)
+                    BallInHandMode.add_transparent_ball(self)
 
         elif self.picking == 'placement':
             self.move_grabbed_ball()
@@ -115,7 +116,7 @@ class BallInHandMode(Mode):
         """Checks if grabbed ball overlaps with others. If no, places and returns True. If yes, returns False"""
         r, pos = self.grabbed_ball.R, np.array(self.grab_ball_node.getPos())
 
-        for ball in self.balls.values():
+        for ball in self.shots.active.balls.values():
             if ball == self.grabbed_ball:
                 continue
             if np.linalg.norm(ball.rvw[0] - pos) <= (r + ball.R):
@@ -184,7 +185,7 @@ class BallInHandMode(Mode):
         cam_pos = self.player_cam.focus.getPos()
         d_min = np.inf
         closest = None
-        for ball in self.balls.values():
+        for ball in self.shots.active.balls.values():
             if ball.id not in self.game.active_player.ball_in_hand:
                 continue
             if ball.s == c.pocketed:
