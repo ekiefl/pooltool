@@ -54,6 +54,7 @@ class Render(ABC):
             node.removeNode()
 
         self.nodes = {}
+        self.rendered = False
 
 
     def hide_node(self, name):
@@ -100,7 +101,7 @@ class Render(ABC):
     @abstractmethod
     def render(self):
         if self.rendered:
-            self.remove_nodes()
+            return
 
         self.rendered = True
 
