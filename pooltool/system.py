@@ -451,9 +451,18 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
         return balls, table, cue, events, meta
 
 
-    def save(self, path):
-        """Save the system state as a pickle"""
-        self.reset_balls()
+    def save(self, path, set_to_initial=True):
+        """Save the system state as a pickle
+
+        Parameters
+        ==========
+        set_to_initial : bool, True
+            Prior to saving, this method sets the ball states the initial states in the history.
+            However, this can be prevented by setting this to False, causing the ball states to be
+            saved as is.
+        """
+        if set_to_initial:
+            self.reset_balls()
         utils.save_pickle(self.as_dict(), path)
 
 
@@ -467,11 +476,18 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
         self.balls, self.table, self.cue, self.events, self.meta = self.from_dict(d)
 
 
-    def copy(self):
-        """Make a fresh copy of this system state"""
+    def copy(self, set_to_initial=True):
+        """Make a fresh copy of this system state
 
+        Parameters
+        ==========
+        set_to_initial : bool, True
+            Prior to copying, this method sets the ball states the initial states in the history.
+            However, this can be prevented by setting this to False, causing the ball states to be
+            copied as is.
+        """
         filepath = utils.get_temp_file_path()
-        self.save(filepath)
+        self.save(filepath, set_to_initial=set_to_initial)
         balls, table, cue, events, meta = self.from_dict(utils.load_pickle(filepath))
 
         system = self.__class__(balls=balls, table=table, cue=cue)
@@ -609,15 +625,17 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
         utils.ListLike.append(self, system)
 
 
-    def append_copy_of_active(self, state='initial', reset_history=True, as_active=False):
+    def append_copy_of_active(self, state='current', reset_history=True, as_active=False):
         """Append a copy of the active System
 
         Parameters
         ==========
-        state : str, 'initial'
-            The copy state will be set according to this value. If 'initial', the system state will be
-            set according to the active system's state at t=0. If 'final', the system will be set to
-            the final state of the active system.
+        state : str, 'current'
+            Must be any of {'initial', 'final', 'current'}. The copy state will be set according to
+            this value. If 'initial', the system state will be set according to the active system's
+            state at t=0, e.g. balls['cue'].history.rvw[0]. If 'final', the system will be set to
+            the final state of the active system, e.g. balls['cue'].history.rvw[-1]. If 'current',
+            the system will be set to the current state of the active system, e.g. balls['cue'].rvw
 
         reset_history : bool, True
             If True, the history of the copy state will be reset (erased and reinitialized).
@@ -625,9 +643,14 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
         as_active : bool, False
             If True, the newly appended System will be set as the active state
         """
-        new = self.active.copy()
 
-        assert state in {'initial', 'final'}
+        assert state in {'initial', 'final', 'current'}
+
+        if state == 'current':
+            new = self.active.copy(set_to_initial=False)
+        else:
+            new = self.active.copy(set_to_initial=True)
+
         if state == 'initial':
             new.set_from_history(0)
         elif state == 'final':
