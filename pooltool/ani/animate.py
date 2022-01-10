@@ -342,6 +342,9 @@ class ShotViewer(Interface):
             elif issubclass(type(shot_or_shots), SystemCollection):
                 self.shots = shot_or_shots
 
+        if self.shots.active is None:
+            self.shots.set_active(0)
+
         self.standby_screen.hide()
         self.instructions.show()
         self.create_title(title)
