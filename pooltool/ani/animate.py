@@ -176,7 +176,6 @@ class Interface(ShowBase, ModeManager, HUD):
 
         self.shots.active.cue.render()
 
-        # FIXME check that player finds focus after new shot
         self.player_cam.create_focus(
             parent = self.shots.active.table.get_node('cloth'),
             pos = self.shots.active.balls['cue'].get_node('pos').getPos()
@@ -486,12 +485,11 @@ class Play(Interface, Menus):
 
 
     def setup_cue(self):
-        self.shots.active.cue = Cue()
+        self.shots.active.cue = Cue(cueing_ball = self.game.set_initial_cueing_ball(self.shots.active.balls))
 
 
     def setup_balls(self):
         self.shots.active.balls = self.game.balls
-        self.shots.active.cueing_ball = self.game.set_initial_cueing_ball(self.shots.active.balls)
 
 
     def init_collisions(self):

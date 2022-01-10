@@ -56,10 +56,10 @@ class PickBallMode(Mode):
 
         if self.keymap['done']:
             PickBallMode.remove_ball_highlight(self)
-            self.shots.active.cueing_ball = self.closest_ball
-            if self.shots.active.cueing_ball is not None:
-                self.shots.active.cue.init_focus(self.shots.active.cueing_ball)
-                self.game.log.add_msg(f"Now cueing the {self.shots.active.cueing_ball.id} ball", sentiment='neutral')
+            self.shots.active.cue.cueing_ball = self.closest_ball
+            if self.shots.active.cue.cueing_ball is not None:
+                self.shots.active.cue.init_focus(self.shots.active.cue.cueing_ball)
+                self.game.log.add_msg(f"Now cueing the {self.shots.active.cue.cueing_ball.id} ball", sentiment='neutral')
             self.change_mode('aim')
             return task.done
 

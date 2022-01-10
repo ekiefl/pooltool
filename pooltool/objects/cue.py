@@ -485,7 +485,7 @@ class CueAvoid(object):
         min_theta = 0
         ball = self.get_ball(entry)
 
-        if ball == self.shots.active.cueing_ball:
+        if ball == self.shots.active.cue.cueing_ball:
             return 0
 
         scene = render.find('scene')

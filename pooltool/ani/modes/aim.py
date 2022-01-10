@@ -42,13 +42,13 @@ class AimMode(Mode, CueAvoid):
         self.mouse.track()
 
         if not self.shots.active.cue.has_focus:
-            self.shots.active.cue.init_focus(self.shots.active.cueing_ball)
+            self.shots.active.cue.init_focus(self.shots.active.cue.cueing_ball)
         else:
             self.shots.active.cue.update_focus()
 
         self.shots.active.cue.show_nodes(ignore=('cue_cseg',))
         self.shots.active.cue.get_node('cue_stick').setX(0)
-        self.player_cam.update_focus(self.shots.active.cueing_ball.get_node('pos').getPos())
+        self.player_cam.update_focus(self.shots.active.cue.cueing_ball.get_node('pos').getPos())
         if load_prev_cam:
             self.player_cam.load_state('aim')
 
