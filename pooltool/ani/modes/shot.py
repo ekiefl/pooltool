@@ -113,7 +113,7 @@ class ShotMode(Mode):
 
             # This is the new system that will be rendered and simulated upon for the next shot
             self.shots.append_copy_of_active(
-                state = 'final',
+                state = 'current',
                 reset_history = True,
                 as_active = True,
             )
