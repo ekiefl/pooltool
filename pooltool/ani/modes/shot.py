@@ -44,7 +44,7 @@ class ShotMode(Mode):
         self.mouse.track()
 
         if init_animations:
-            self.shots.init_animation()
+            self.shots.set_animation()
             self.shots.loop_animation()
             self.shots.skip_stroke()
 
@@ -91,27 +91,54 @@ class ShotMode(Mode):
         Parameters
         ==========
         key : str, 'soft'
-            Specifies how shot mode should be exited. Can be any of {'end', 'reset', 'soft'}. 'end'
+            Specifies how shot mode should be exited. Can be any of {'advance', 'reset', 'soft'}. 'advance'
             and 'reset' end the animation, whereas 'soft' exits shot mode with the animations still
-            playing. 'end' sets the system state to the end state of the shot, whereas 'reset' returns
+            playing. 'advance' sets the system state to the end state of the shot, whereas 'reset' returns
             the system state to the start state of the shot.
         """
-        assert key in {'end', 'reset', 'soft'}
+        assert key in {'advance', 'reset', 'soft'}
 
-        if key == 'end':
+        if key == 'advance':
             self.shots.clear_animation()
-            self.shots.active.cue.reset_state()
-            self.shots.active.cue.set_render_state_as_object_state()
 
-            _, _, theta, a, b, _ = self.shots.active.cue.get_render_state()
-            self.hud_elements.get('english').set(a, b)
-            self.hud_elements.get('jack').set(theta)
+            # Remove the ball and cue nodes, but store their orientations so they can be applied to the new system
+            orientations = {}
+            for ball in self.shots.active.balls.values():
+                orientations[ball.id] = {
+                    'pos': ball.get_node('pos').getQuat(),
+                    'sphere': ball.get_node('sphere').getQuat(),
+                }
+                ball.remove_nodes()
+            self.shots.active.cue.remove_nodes()
+
+            # This is the new system that will be rendered and simulated upon for the next shot
+            self.shots.append_copy_of_active(
+                state = 'final',
+                reset_history = True,
+                as_active = True,
+            )
 
             for ball in self.shots.active.balls.values():
-                ball.reset_angular_integration()
-                ball.set_render_state_as_object_state()
+                ball.render(randomize_orientation=False)
 
-            self.shots.active.cue.update_focus()
+                # Apply the orientation stored from the final state of the last shot
+                ball.get_node('pos').setQuat(orientations[ball.id]['pos'])
+                ball.get_node('sphere').setQuat(orientations[ball.id]['sphere'])
+                ball.reset_angular_integration()
+
+            self.shots.active.cue.reset_state()
+            self.shots.active.cue.render()
+            self.shots.active.cue.init_focus(self.shots.active.cue.cueing_ball)
+            self.shots.active.cue.set_render_state_as_object_state()
+
+            # Initialize new collision nodes
+            self.init_collisions()
+
+            # Set the HUD
+            V0, _, theta, a, b, _ = self.shots.active.cue.get_render_state()
+            self.hud_elements.get('english').set(a, b)
+            self.hud_elements.get('jack').set(theta)
+            self.hud_elements.get('power').set(self.shots.active.cue.V0)
 
         elif key == 'reset':
             self.shots.clear_animation()
@@ -128,7 +155,7 @@ class ShotMode(Mode):
                 ball.history.reset()
 
             self.shots.active.cue.update_focus()
-            self.shots.active.user_stroke = False
+            self.shots.active.reset_animation()
 
         self.remove_task('shot_view_task')
         self.remove_task('shot_animation_task')
@@ -145,7 +172,7 @@ class ShotMode(Mode):
             if self.game.game_over:
                 self.change_mode('game_over')
             else:
-                self.change_mode('aim', exit_kwargs=dict(key='end'))
+                self.change_mode('aim', exit_kwargs=dict(key='advance'))
         elif self.keymap[action.zoom]:
             self.zoom_camera_shot()
         elif self.keymap[action.move]:

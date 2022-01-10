@@ -26,7 +26,7 @@ class BallRender(Render):
         Render.__init__(self)
 
 
-    def init_sphere(self):
+    def init_sphere(self, randomize_orientation=True):
         position = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}_position")
         ball = position.attachNewNode(f"ball_{self.id}")
 
@@ -72,7 +72,8 @@ class BallRender(Render):
         if ani.settings['graphics']['angular_vectors']:
             self.nodes['vector'] = self.init_angular_vector()
 
-        self.randomize_orientation()
+        if randomize_orientation:
+            self.randomize_orientation()
 
 
     def init_collision(self, cue):
@@ -305,9 +306,9 @@ class BallRender(Render):
         self.remove_nodes()
 
 
-    def render(self):
+    def render(self, randomize_orientation=True):
         super().render()
-        self.init_sphere()
+        self.init_sphere(randomize_orientation=randomize_orientation)
 
 
 class BallHistory(object):

@@ -52,8 +52,6 @@ class AimMode(Mode, CueAvoid):
         if load_prev_cam:
             self.player_cam.load_state('aim')
 
-        self.hud_elements['power'].set(self.shots.active.cue.V0)
-
         self.task_action('escape', action.quit, True)
         self.task_action('f', action.fine_control, True)
         self.task_action('f-up', action.fine_control, False)

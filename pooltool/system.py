@@ -60,6 +60,12 @@ class SystemHistory(object):
         self.events.reset()
 
 
+    def set_from_history(self, i):
+        """Set the ball states according to a history index"""
+        for ball in self.balls.values():
+            ball.set_from_history(i)
+
+
     def update_history(self, event, update_all=False):
         """Updates the history for agents of an event
 
@@ -178,14 +184,14 @@ class SystemHistory(object):
 
 class SystemRender(object):
     def __init__(self):
-        self.shot_animation = None
-        self.ball_animations = None
-        self.stroke_animation = None
-        self.playback_speed = 1
-        self.user_stroke = False
+        self.reset_animation()
 
 
-    def init_shot_animation(self):
+    def init_shot_animation(self, animate_stroke=True):
+        if self.shot_animation is not None:
+            # Animation already initialized
+            return
+
         if not self.continuized:
             # playback speed / fps * 2.0 is basically the sweetspot for creating smooth
             # interpolations that capture motion. Any more is wasted computation and any less and
@@ -202,8 +208,8 @@ class SystemRender(object):
             ball.set_playback_sequence(playback_speed=self.playback_speed)
             self.ball_animations.append(ball.playback_sequence)
 
-        if self.user_stroke:
-            # There exists a stroke trajectory. Create animation sequence
+        if self.user_stroke and animate_stroke:
+            # There exists a stroke trajectory, and animating the stroke has been requested
             self.cue.set_stroke_sequence()
             self.stroke_animation = Sequence(
                 ShowInterval(self.cue.get_node('cue_stick')),
@@ -262,6 +268,14 @@ class SystemRender(object):
 
     def resume_animation(self):
         self.shot_animation.resume()
+
+
+    def reset_animation(self):
+        self.shot_animation = None
+        self.ball_animations = None
+        self.stroke_animation = None
+        self.user_stroke = False
+        self.playback_speed = 1
 
 
 class System(SystemHistory, SystemRender, EvolveShotEventBased):
@@ -471,14 +485,21 @@ class SystemCollectionRender(object):
         self.active = None
         self.shot_animation = None
         self.playback_speed = 1.0
+        self.parallel = False
         self.paused = False
 
 
-    def init_animation(self, series=False):
-        self.shot_animation = Parallel()
-        for shot in self:
-            shot.init_shot_animation()
-            self.shot_animation.append(shot.shot_animation)
+    def set_animation(self):
+        if self.parallel:
+            self.shot_animation = Parallel()
+            for shot in self:
+                shot.init_shot_animation()
+                self.shot_animation.append(shot.shot_animation)
+        else:
+            if not self.active:
+                raise ConfigError("SystemCollectionRender.set_animation :: self.active not set")
+            self.active.init_shot_animation()
+            self.shot_animation = self.active.shot_animation
 
 
     def loop_animation(self):
@@ -486,7 +507,7 @@ class SystemCollectionRender(object):
 
 
     def skip_stroke(self):
-        stroke = self[0].stroke_animation
+        stroke = self.active.stroke_animation
         if stroke is not None:
             self.shot_animation.set_t(stroke.get_duration())
 
@@ -525,6 +546,7 @@ class SystemCollectionRender(object):
 
 
     def change_speed(self, factor):
+        # FIXME DONT MESS THIS UP FOR PARALLEL TRUE/FALSE
         self.playback_speed *= factor
         for shot in self:
             shot.playback_speed *= factor
@@ -532,7 +554,7 @@ class SystemCollectionRender(object):
 
         curr_time = self.shot_animation.get_t()
         self.end()
-        self.init_animation()
+        self.set_animation()
         self.shot_animation.setPlayRate(factor*self.shot_animation.getPlayRate())
 
         if not self.paused:
@@ -551,11 +573,11 @@ class SystemCollectionRender(object):
 
 
     def rewind(self):
-        self.offset_time(-ani.fast_forward_dt*self.playback_speed)
+        self.offset_time(-ani.rewind_dt*self.playback_speed)
 
 
     def fast_forward(self):
-        self.offset_time(ani.rewind_dt*self.playback_speed)
+        self.offset_time(ani.fast_forward_dt*self.playback_speed)
 
 
     def offset_time(self, dt):
@@ -585,6 +607,39 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
                                   f"the rest of the SystemCollection")
 
         utils.ListLike.append(self, system)
+
+
+    def append_copy_of_active(self, state='initial', reset_history=True, as_active=False):
+        """Append a copy of the active System
+
+        Parameters
+        ==========
+        state : str, 'initial'
+            The copy state will be set according to this value. If 'initial', the system state will be
+            set according to the active system's state at t=0. If 'final', the system will be set to
+            the final state of the active system.
+
+        reset_history : bool, True
+            If True, the history of the copy state will be reset (erased and reinitialized).
+
+        as_active : bool, False
+            If True, the newly appended System will be set as the active state
+        """
+        new = self.active.copy()
+
+        assert state in {'initial', 'final'}
+        if state == 'initial':
+            new.set_from_history(0)
+        elif state == 'final':
+            new.set_from_history(-1)
+
+        if reset_history:
+            new.reset_history()
+
+        self.append(new)
+
+        if as_active:
+            self.set_active(-1)
 
 
     def set_active(self, i):
