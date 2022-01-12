@@ -24,6 +24,8 @@ class ShotMode(Mode):
         action.show_help: False,
         action.close_scene: False,
         action.introspect: False,
+        action.next_shot: False,
+        action.prev_shot: False,
     }
 
     def enter(self, init_animations=False, single_instance=False):
@@ -80,6 +82,8 @@ class ShotMode(Mode):
         self.task_action('h', action.show_help, True)
         self.task_action('i', action.introspect, True)
         self.task_action('i-up', action.introspect, False)
+        self.task_action('n-up', action.next_shot, True)
+        self.task_action('p-up', action.prev_shot, True)
 
         self.add_task(self.shot_view_task, 'shot_view_task')
         self.add_task(self.shot_animation_task, 'shot_animation_task')
@@ -197,16 +201,39 @@ class ShotMode(Mode):
         if self.keymap[action.restart_ani]:
             self.shots.restart_animation()
 
-        if self.keymap[action.rewind]:
+        elif self.keymap[action.rewind]:
             self.shots.rewind()
 
-        if self.keymap[action.fast_forward]:
+        elif self.keymap[action.fast_forward]:
             self.shots.fast_forward()
 
-        if self.keymap[action.undo_shot]:
+        elif self.keymap[action.undo_shot]:
             self.change_mode(self.mode_stroked_from, exit_kwargs=dict(key='reset'), enter_kwargs=dict(load_prev_cam=True))
 
+        elif self.keymap[action.prev_shot]:
+            self.keymap[action.prev_shot] = False
+            shot_index = self.shots.active_index-1 if self.shots.active_index != 0 else len(self.shots)-1
+            self.change_animation(shot_index)
+
+        elif self.keymap[action.next_shot]:
+            self.keymap[action.next_shot] = False
+            shot_index = self.shots.active_index+1 if self.shots.active_index != len(self.shots)-1 else 0
+            self.change_animation(shot_index)
+
         return task.cont
+
+
+    def change_animation(self, shot_index):
+        self.shots.change_animation(shot_index)
+
+        if self.is_game:
+            self.init_collisions()
+
+        # Set the HUD
+        V0, _, theta, a, b, _ = self.shots.active.cue.get_render_state()
+        self.hud_elements.get('english').set(a, b)
+        self.hud_elements.get('jack').set(theta)
+        self.hud_elements.get('power').set(self.shots.active.cue.V0)
 
 
     def zoom_camera_shot(self):

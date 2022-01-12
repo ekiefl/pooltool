@@ -535,6 +535,14 @@ class SystemCollectionRender(object):
     def clear_animation(self):
         self.shot_animation.clearToInitial()
 
+        for ball in self.active.balls.values():
+            ball.playback_sequence.pause()
+            ball.playback_sequence = None
+        self.active.shot_animation.pause()
+        self.active.shot_animation = None
+        self.shot_animation.pause()
+        self.shot_animation = None
+
 
     def toggle_pause(self):
         if self.shot_animation.isPlaying():
@@ -602,6 +610,27 @@ class SystemCollectionRender(object):
         self.shot_animation.set_t(new_t)
 
 
+    def change_animation(self, index):
+        # Teardown
+        self.clear_animation()
+        for ball in self.active.balls.values():
+            ball.remove_nodes()
+        self.active.cue.remove_nodes()
+
+        # Switch to desired shot
+        self.set_active(index)
+
+        # Buildup
+        for ball in self.active.balls.values():
+            ball.render()
+        self.active.cue.render()
+        self.active.cue.init_focus(self.active.cue.cueing_ball)
+
+        # Initialize the animation
+        self.set_animation()
+        self.loop_animation()
+
+
 class SystemCollection(utils.ListLike, SystemCollectionRender):
     def __init__(self, path=None):
         utils.ListLike.__init__(self)
@@ -612,6 +641,7 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
         SystemCollectionRender.__init__(self)
 
         self.active = None
+        self.active_index = None
 
 
     def append(self, system):
@@ -672,6 +702,11 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
             self.active.table = table
         else:
             self.active = self[i]
+
+        if i < 0:
+            i = len(self) - 1
+
+        self.active_index = i
 
 
     def as_pickleable_object(self):
