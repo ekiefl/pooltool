@@ -246,7 +246,14 @@ class SystemRender(object):
 
 
     def clear_animation(self):
-        self.shot_animation.clearToInitial()
+        if self.shot_animation is not None:
+            self.shot_animation.clearToInitial()
+            self.shot_animation = None
+
+        for ball in self.balls.values():
+            if ball.playback_sequence is not None:
+                ball.playback_sequence.pause()
+                ball.playback_sequence = None
 
 
     def toggle_pause(self):
@@ -533,15 +540,11 @@ class SystemCollectionRender(object):
 
 
     def clear_animation(self):
-        self.shot_animation.clearToInitial()
-
-        for ball in self.active.balls.values():
-            ball.playback_sequence.pause()
-            ball.playback_sequence = None
-        self.active.shot_animation.pause()
-        self.active.shot_animation = None
-        self.shot_animation.pause()
-        self.shot_animation = None
+        self.active.clear_animation()
+        if self.shot_animation is not None:
+            self.shot_animation.clearToInitial()
+            self.shot_animation.pause()
+            self.shot_animation = None
 
 
     def toggle_pause(self):
@@ -625,6 +628,7 @@ class SystemCollectionRender(object):
             ball.render()
         self.active.cue.render()
         self.active.cue.init_focus(self.active.cue.cueing_ball)
+        self.active.cue.get_node('cue_stick_focus').setR(-self.active.cue.theta)
 
         # Initialize the animation
         self.set_animation()
