@@ -230,9 +230,8 @@ class ShotMode(Mode):
             self.init_collisions()
 
         # Set the HUD
-        V0, _, theta, a, b, _ = self.shots.active.cue.get_render_state()
-        self.hud_elements.get('english').set(a, b)
-        self.hud_elements.get('jack').set(theta)
+        self.hud_elements.get('english').set(self.shots.active.cue.a, self.shots.active.cue.b)
+        self.hud_elements.get('jack').set(self.shots.active.cue.theta)
         self.hud_elements.get('power').set(self.shots.active.cue.V0)
 
 
