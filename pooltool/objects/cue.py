@@ -65,8 +65,8 @@ class CueRender(Render):
 
         bounds = self.get_node('cue_stick').get_tight_bounds()
 
-        x = bounds[0][0]
-        X = bounds[1][0]
+        x = 0
+        X = bounds[1][0] - bounds[0][0]
 
         cnode = CollisionNode(f"cue_cseg")
         cnode.set_into_collide_mask(0)
