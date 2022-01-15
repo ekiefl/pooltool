@@ -103,43 +103,25 @@ class ShotMode(Mode):
         assert key in {'advance', 'reset', 'soft'}
 
         if key == 'advance':
-
-            # We are done with the old animation. Clear it.
-            self.shots.clear_animation()
-
-            # Append a _copy_ of the current shot to the shot collection
             self.shots.append_copy_of_active(
                 state = 'current',
                 reset_history = True,
                 as_active = False,
             )
 
-            # Loop through balls
+            # Set the initial orientations of new shot to final orientations of old shot
             for ball_id in self.shots.active.balls:
                 old_ball = self.shots.active.balls[ball_id]
                 new_ball = self.shots[-1].balls[ball_id]
-
-                # set initial orientation of new ball to final state of old ball
                 new_ball.initial_orientation = old_ball.get_final_orientation()
 
-            # Tear down the old shot
-            for ball in self.shots.active.balls.values():
-                ball.remove_nodes()
-            self.shots.active.cue.remove_nodes()
-
-            # Set the new shot as the active state
+            # Switch shots
+            self.shots.clear_animation()
+            self.shots.active.teardown()
             self.shots.set_active(-1)
+            self.shots.active.buildup()
 
-            # Build up the new shot
-            for ball in self.shots.active.balls.values():
-                ball.render()
-            self.shots.active.cue.render()
-            self.shots.active.cue.init_focus(self.shots.active.cue.cueing_ball)
-
-            # Initialize new collision nodes
             self.init_collisions()
-
-            # Reset the cue and ball states for the next shot
             self.shots.active.cue.reset_state()
             self.shots.active.cue.set_render_state_as_object_state()
             for ball in self.shots.active.balls.values():
@@ -231,10 +213,17 @@ class ShotMode(Mode):
 
 
     def change_animation(self, shot_index):
-        self.shots.change_animation(shot_index)
+        # Switch shots
+        self.shots.clear_animation()
+        self.shots.active.teardown()
+        self.shots.set_active(shot_index)
+        self.shots.active.buildup()
 
-        if self.is_game:
-            self.init_collisions()
+        # Initialize the animation
+        self.shots.set_animation()
+        self.shots.loop_animation()
+
+        self.init_collisions()
 
         # Set the HUD
         self.hud_elements.get('english').set(self.shots.active.cue.a, self.shots.active.cue.b)

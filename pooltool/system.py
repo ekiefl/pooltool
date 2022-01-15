@@ -285,6 +285,21 @@ class SystemRender(object):
         self.playback_speed = 1
 
 
+    def teardown(self):
+        self.clear_animation()
+        for ball in self.balls.values():
+            ball.remove_nodes()
+        self.cue.remove_nodes()
+
+
+    def buildup(self):
+        self.clear_animation()
+        for ball in self.balls.values():
+            ball.render()
+        self.cue.render()
+        self.cue.init_focus(self.cue.cueing_ball)
+
+
 class System(SystemHistory, SystemRender, EvolveShotEventBased):
     def __init__(self, cue=None, table=None, balls=None, path=None, d=None):
         SystemHistory.__init__(self)
