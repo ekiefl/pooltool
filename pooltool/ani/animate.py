@@ -155,7 +155,7 @@ class Interface(ShowBase, ModeManager, HUD):
         self.destroy_hud()
 
         if len(self.shots):
-            self.shots.end()
+            self.shots.clear_animation()
             self.shots.clear()
 
         self.player_cam.focus = None
@@ -508,8 +508,8 @@ class Play(Interface, Menus):
 
         base.cTrav = CollisionTraverser()
         self.collision_handler = CollisionHandlerQueue()
-        self.shots.active.cue.init_collision_handling(self.collision_handler)
 
+        self.shots.active.cue.init_collision_handling(self.collision_handler)
         for ball in self.shots.active.balls.values():
             ball.init_collision(self.shots.active.cue)
 

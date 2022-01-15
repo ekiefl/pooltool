@@ -677,13 +677,10 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
         as_active : bool, False
             If True, the newly appended System will be set as the active state
         """
-
         assert state in {'initial', 'final', 'current'}
 
-        if state == 'current':
-            new = self.active.copy(set_to_initial=False)
-        else:
-            new = self.active.copy(set_to_initial=True)
+        set_to_initial = False if state == 'current' else True
+        new = self.active.copy(set_to_initial=set_to_initial)
 
         if state == 'initial':
             new.set_from_history(0)
@@ -700,6 +697,14 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
 
 
     def set_active(self, i):
+        """Change the active system in the collection
+
+        Parameters
+        ==========
+        i : int
+            The integer index of the shot you would like to make active. Negative indexing is
+            supported, e.g. set_active(-1) sets the last system in the collection as active
+        """
         if self.active is not None:
             table = self.active.table
             self.active = self[i]

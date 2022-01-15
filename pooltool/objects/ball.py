@@ -23,10 +23,12 @@ class BallRender(Render):
         self.rel_model_path = rel_model_path
         self.quats = None
         self.playback_sequence = None
+        self.initial_orientation = {}
         Render.__init__(self)
 
 
-    def init_sphere(self, randomize_orientation=True):
+    def init_sphere(self):
+        """Initialize the ball's nodes"""
         position = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}_position")
         ball = position.attachNewNode(f"ball_{self.id}")
 
@@ -72,8 +74,12 @@ class BallRender(Render):
         if ani.settings['graphics']['angular_vectors']:
             self.nodes['vector'] = self.init_angular_vector()
 
-        if randomize_orientation:
+        if self.initial_orientation:
+            # This ball already has a defined initial orientation, so load it up
+            self.set_orientation(self.initial_orientation)
+        else:
             self.randomize_orientation()
+            self.initial_orientation = self.get_orientation()
 
 
     def init_collision(self, cue):
@@ -293,7 +299,37 @@ class BallRender(Render):
         self.get_node('sphere').setHpr(*np.random.uniform(-180, 180, size=3))
 
 
+    def get_orientation(self):
+        """Get the quaternions required to define the ball's rendered orientation"""
+        return {
+            'pos': [x for x in self.nodes['pos'].getQuat()],
+            'sphere': [x for x in self.nodes['sphere'].getQuat()],
+        }
+
+
+    def get_final_orientation(self):
+        """Get the ball's quaternions of the final state in the history"""
+        return {
+            'pos': [x for x in self.quats[-1]],
+            'sphere': [x for x in self.nodes['sphere'].getQuat()],
+        }
+
+
+    def set_orientation(self, orientation):
+        """Set the orientation of a ball's rendered state from an orientation dict
+
+        Parameters
+        ==========
+        orientation : dict
+            A dictionary of quaternions with keys 'pos' and 'sphere'. Such a dictionary can be
+            generated with `self.get_orientation`.
+        """
+        self.get_node('pos').setQuat(autils.get_quat_from_vector(orientation['pos']))
+        self.get_node('sphere').setQuat(autils.get_quat_from_vector(orientation['sphere']))
+
+
     def reset_angular_integration(self):
+        """Reset rotations applied to 'pos' while retaining rendered orientation"""
         ball, sphere = self.get_node('pos'), self.get_node('sphere')
         sphere.setQuat(sphere.getQuat() * ball.getQuat())
 
@@ -306,9 +342,9 @@ class BallRender(Render):
         self.remove_nodes()
 
 
-    def render(self, randomize_orientation=True):
+    def render(self):
         super().render()
-        self.init_sphere(randomize_orientation=randomize_orientation)
+        self.init_sphere()
 
 
 class BallHistory(object):
@@ -511,6 +547,7 @@ class Ball(Object, BallRender):
                 vectorized = self.history_cts.vectorized,
             ),
             events = self.events.as_dict(),
+            initial_orientation = self.initial_orientation,
         )
 
 
@@ -554,6 +591,8 @@ def ball_from_dict(d):
     for event_dict in d['events']:
         events.append(event_from_dict(event_dict))
     ball.events = events
+
+    ball.initial_orientation = d['initial_orientation']
 
     return ball
 

@@ -103,40 +103,47 @@ class ShotMode(Mode):
         assert key in {'advance', 'reset', 'soft'}
 
         if key == 'advance':
+
+            # We are done with the old animation. Clear it.
             self.shots.clear_animation()
 
-            # Remove the ball and cue nodes, but store their orientations so they can be applied to the new system
-            orientations = {}
-            for ball in self.shots.active.balls.values():
-                orientations[ball.id] = {
-                    'pos': ball.get_node('pos').getQuat(),
-                    'sphere': ball.get_node('sphere').getQuat(),
-                }
-                ball.remove_nodes()
-            self.shots.active.cue.remove_nodes()
-
-            # This is the new system that will be rendered and simulated upon for the next shot
+            # Append a _copy_ of the current shot to the shot collection
             self.shots.append_copy_of_active(
                 state = 'current',
                 reset_history = True,
-                as_active = True,
+                as_active = False,
             )
 
+            # Loop through balls
+            for ball_id in self.shots.active.balls:
+                old_ball = self.shots.active.balls[ball_id]
+                new_ball = self.shots[-1].balls[ball_id]
+
+                # set initial orientation of new ball to final state of old ball
+                new_ball.initial_orientation = old_ball.get_final_orientation()
+
+            # Tear down the old shot
             for ball in self.shots.active.balls.values():
-                ball.render(randomize_orientation=False)
+                ball.remove_nodes()
+            self.shots.active.cue.remove_nodes()
 
-                # Apply the orientation stored from the final state of the last shot
-                ball.get_node('pos').setQuat(orientations[ball.id]['pos'])
-                ball.get_node('sphere').setQuat(orientations[ball.id]['sphere'])
-                ball.reset_angular_integration()
+            # Set the new shot as the active state
+            self.shots.set_active(-1)
 
-            self.shots.active.cue.reset_state()
+            # Build up the new shot
+            for ball in self.shots.active.balls.values():
+                ball.render()
             self.shots.active.cue.render()
             self.shots.active.cue.init_focus(self.shots.active.cue.cueing_ball)
-            self.shots.active.cue.set_render_state_as_object_state()
 
             # Initialize new collision nodes
             self.init_collisions()
+
+            # Reset the cue and ball states for the next shot
+            self.shots.active.cue.reset_state()
+            self.shots.active.cue.set_render_state_as_object_state()
+            for ball in self.shots.active.balls.values():
+                ball.reset_angular_integration()
 
             # Set the HUD
             V0, _, theta, a, b, _ = self.shots.active.cue.get_render_state()
