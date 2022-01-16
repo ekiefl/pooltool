@@ -219,11 +219,20 @@ class ShotMode(Mode):
         self.shots.set_active(shot_index)
         self.shots.active.buildup()
 
+        # A lot of dumb things to make the cue track the initial position of the ball
+        dummy = pt.Ball('dummy')
+        dummy.R = self.shots.active.cue.cueing_ball.R
+        dummy.rvw = self.shots.active.cue.cueing_ball.history.rvw[0]
+        dummy.render()
+        self.shots.active.cue.init_focus(dummy)
+        self.shots.active.cue.set_render_state_as_object_state()
+        self.shots.active.cue.follow = None
+        dummy.remove_nodes()
+        del dummy
+
         # Initialize the animation
         self.shots.set_animation()
         self.shots.loop_animation()
-
-        self.init_collisions()
 
         # Set the HUD
         self.hud_elements.get('english').set(self.shots.active.cue.a, self.shots.active.cue.b)

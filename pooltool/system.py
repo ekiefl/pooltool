@@ -628,28 +628,6 @@ class SystemCollectionRender(object):
         self.shot_animation.set_t(new_t)
 
 
-    def change_animation(self, index):
-        # Teardown
-        self.clear_animation()
-        for ball in self.active.balls.values():
-            ball.remove_nodes()
-        self.active.cue.remove_nodes()
-
-        # Switch to desired shot
-        self.set_active(index)
-
-        # Buildup
-        for ball in self.active.balls.values():
-            ball.render()
-        self.active.cue.render()
-        self.active.cue.init_focus(self.active.cue.cueing_ball)
-        self.active.cue.get_node('cue_stick_focus').setR(-self.active.cue.theta)
-
-        # Initialize the animation
-        self.set_animation()
-        self.loop_animation()
-
-
 class SystemCollection(utils.ListLike, SystemCollectionRender):
     def __init__(self, path=None):
         utils.ListLike.__init__(self)
