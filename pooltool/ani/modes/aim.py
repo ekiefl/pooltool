@@ -116,11 +116,11 @@ class AimMode(Mode, CueAvoid):
         elif self.keymap[action.adjust_head]:
             self.adjust_head_aim()
         elif self.keymap[action.elevation]:
-            self.elevate_cue()
+            self.aim_elevate_cue()
         elif self.keymap[action.english]:
             self.apply_english()
         elif self.keymap[action.power]:
-            self.apply_power()
+            self.aim_apply_power()
         elif self.keymap[action.exec_shot]:
             self.mode_stroked_from = 'aim'
             self.shots.active.cue.set_object_state_as_render_state(skip_V0=True)
@@ -183,7 +183,7 @@ class AimMode(Mode, CueAvoid):
         self.shots.active.cue.get_node('cue_stick_focus').setH(self.player_cam.focus.getH())
 
 
-    def apply_power(self):
+    def aim_apply_power(self):
         with self.mouse:
             dy = self.mouse.get_dy()
 
@@ -197,7 +197,7 @@ class AimMode(Mode, CueAvoid):
         self.hud_elements['power'].set(V0)
 
 
-    def elevate_cue(self):
+    def aim_elevate_cue(self):
         cue = self.shots.active.cue.get_node('cue_stick_focus')
 
         with self.mouse:
