@@ -103,24 +103,35 @@ class ShotMode(Mode):
         assert key in {'advance', 'reset', 'soft'}
 
         if key == 'advance':
-            if self.shots.active_index != len(self.shots) - 1:
-                # Replaying shot that is not most recent. Teardown and then buildup most recent
-                self.shots.clear_animation()
-                self.shots.active.teardown()
-                self.shots.set_active(-1)
-                self.shots.active.buildup()
+            # If we are here, the plan is probably to return to 'aim' mode so another shot can be
+            # taken. This shot needs to be defined by its own system, that has yet to be simulated.
+            # Depending how 'shot' mode was entered, this system may already exist in self.shots.
+            # The following code checks that by seeing whether the latest system has any events. If
+            # not, the system is unsimulated and is perfectly fit for 'aim' mode, but if the system
+            # has events, a fresh system needs to be appended to self.shots.
+            make_new = True if len(self.shots[-1].events) else False
+            if make_new:
+                if self.shots.active_index != len(self.shots) - 1:
+                    # Replaying shot that is not most recent. Teardown and then buildup most recent
+                    self.shots.clear_animation()
+                    self.shots.active.teardown()
+                    self.shots.set_active(-1)
+                    self.shots.active.buildup()
 
-            self.shots.append_copy_of_active(
-                state = 'current',
-                reset_history = True,
-                as_active = False,
-            )
+                self.shots.append_copy_of_active(
+                    state = 'current',
+                    reset_history = True,
+                    as_active = False,
+                )
 
-            # Set the initial orientations of new shot to final orientations of old shot
-            for ball_id in self.shots.active.balls:
-                old_ball = self.shots.active.balls[ball_id]
-                new_ball = self.shots[-1].balls[ball_id]
-                new_ball.initial_orientation = old_ball.get_final_orientation()
+                # Set the initial orientations of new shot to final orientations of old shot
+                for ball_id in self.shots.active.balls:
+                    old_ball = self.shots.active.balls[ball_id]
+                    new_ball = self.shots[-1].balls[ball_id]
+                    new_ball.initial_orientation = old_ball.get_final_orientation()
+            else:
+                # The latest entry in the collection is an unsimulated shot. Perfect
+                pass
 
             # Switch shots
             self.shots.clear_animation()
@@ -129,7 +140,9 @@ class ShotMode(Mode):
             self.shots.active.buildup()
 
             self.init_collisions()
-            self.shots.active.cue.reset_state()
+
+            if make_new:
+                self.shots.active.cue.reset_state()
             self.shots.active.cue.set_render_state_as_object_state()
 
             # Set the HUD
