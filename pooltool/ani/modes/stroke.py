@@ -48,7 +48,9 @@ class StrokeMode(Mode):
                 self.change_mode('calculate')
                 return
         else:
-            self.change_mode('aim')
+            self.shots.active.cue.get_node('cue_stick').setX(0)
+            self.shots.active.cue.hide_nodes(ignore=('cue_cseg',))
+            self.change_mode(self.last_mode)
             return
 
         return task.cont
