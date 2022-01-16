@@ -22,6 +22,7 @@ class ViewMode(Mode):
         action.show_help: False,
         action.pick_ball: False,
         action.ball_in_hand: False,
+        action.introspect: False,
     }
 
 
@@ -49,6 +50,8 @@ class ViewMode(Mode):
         self.task_action('q', action.pick_ball, True)
         self.task_action('g', action.ball_in_hand, True)
         self.task_action('c', action.call_shot, True)
+        self.task_action('i', action.introspect, True)
+        self.task_action('i-up', action.introspect, False)
 
         self.add_task(self.view_task, 'view_task')
 

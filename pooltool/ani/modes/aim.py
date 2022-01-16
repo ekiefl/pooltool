@@ -27,7 +27,8 @@ class AimMode(Mode, CueAvoid):
         action.pick_ball: False,
         action.call_shot: False,
         action.ball_in_hand: False,
-        action.prev_shot: False
+        action.prev_shot: False,
+        action.introspect: False,
     }
 
     def __init__(self):
@@ -77,6 +78,8 @@ class AimMode(Mode, CueAvoid):
         self.task_action('space', action.exec_shot, True)
         self.task_action('space-up', action.exec_shot, False)
         self.task_action('p-up', action.prev_shot, True)
+        self.task_action('i', action.introspect, True)
+        self.task_action('i-up', action.introspect, False)
 
         CueAvoid.__init__(self)
 

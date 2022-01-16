@@ -200,11 +200,6 @@ class ShotMode(Mode):
 
 
     def shot_animation_task(self, task):
-        if self.keymap[action.introspect]:
-            import pooltool as pt
-            shot = self.shots.active
-            import pdb; pdb.set_trace()
-
         if self.keymap[action.restart_ani]:
             self.shots.restart_animation()
 
