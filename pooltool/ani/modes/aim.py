@@ -203,7 +203,7 @@ class AimMode(Mode, CueAvoid):
         if -self.player_cam.focus.getR() < (new_elevation + ani.min_player_cam):
             self.player_cam.focus.setR(-(new_elevation + ani.min_player_cam))
 
-        # update hud
+        self.shots.active.cue.set_state(theta=new_elevation)
         self.hud_elements['jack'].set(new_elevation)
 
 
@@ -236,8 +236,8 @@ class AimMode(Mode, CueAvoid):
         if -self.player_cam.focus.getR() < (-self.shots.active.cue.get_node('cue_stick_focus').getR() + ani.min_player_cam):
             self.player_cam.focus.setR(-(-self.shots.active.cue.get_node('cue_stick_focus').getR() + ani.min_player_cam))
 
-        # update hud
-        a, b = -new_y/R, new_z/R
+        a, b, theta = -new_y/R, new_z/R, -self.shots.active.cue.get_node('cue_stick_focus').getR()
+        self.shots.active.cue.set_state(a=a, b=b, theta=theta)
         self.hud_elements['english'].set(a, b)
-        self.hud_elements['jack'].set(-self.shots.active.cue.get_node('cue_stick_focus').getR())
+        self.hud_elements['jack'].set(theta)
 
