@@ -401,7 +401,7 @@ class Ball(Object, BallRender):
     object_type = 'ball'
 
     def __init__(self, ball_id, m=None, R=None, u_s=None, u_r=None, u_sp=None, g=None, e_c=None, f_c=None,
-                 rel_model_path=None):
+                 rel_model_path=None, xyz=None):
         """Initialize a ball
 
         Parameters
@@ -431,9 +431,10 @@ class Ball(Object, BallRender):
 
         self.t = 0
         self.s = c.stationary
-        self.rvw = np.array([[np.nan, np.nan, np.nan],  # positions (r)
-                             [0,      0,      0     ],  # velocities (v)
-                             [0,      0,      0     ]]) # angular velocities (w)
+        x, y, z = xyz if xyz is not None else (np.nan, np.nan, np.nan)
+        self.rvw = np.array([[x, y, z],  # positions (r)
+                             [0, 0, 0],  # velocities (v)
+                             [0, 0, 0]]) # angular velocities (w)
         self.update_next_transition_event()
 
         self.history = BallHistory()
