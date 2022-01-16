@@ -38,7 +38,7 @@ class SystemHistory(object):
     def end_history(self):
         """Add a final NonEvent that timestamps the final state of each ball"""
 
-        event = NonEvent(t=self.t)
+        event = NonEvent(t=self.t+c.tol)
         for ball in self.balls.values():
             ball.update_history(event)
 
