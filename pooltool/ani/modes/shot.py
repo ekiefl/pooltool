@@ -104,7 +104,7 @@ class ShotMode(Mode):
 
         if key == 'advance':
             # If we are here, the plan is probably to return to 'aim' mode so another shot can be
-            # taken. This shot needs to be defined by its own system, that has yet to be simulated.
+            # taken. This shot needs to be defined by its own system that has yet to be simulated.
             # Depending how 'shot' mode was entered, this system may already exist in self.shots.
             # The following code checks that by seeing whether the latest system has any events. If
             # not, the system is unsimulated and is perfectly fit for 'aim' mode, but if the system
@@ -219,12 +219,24 @@ class ShotMode(Mode):
 
         elif self.keymap[action.prev_shot]:
             self.keymap[action.prev_shot] = False
-            shot_index = self.shots.active_index-1 if self.shots.active_index != 0 else len(self.shots)-1
+            shot_index = self.shots.active_index - 1
+            while True:
+                if shot_index < 0:
+                    shot_index = len(self.shots)-1
+                if len(self.shots[shot_index].events):
+                    break
+                shot_index -= 1
             self.change_animation(shot_index)
 
         elif self.keymap[action.next_shot]:
             self.keymap[action.next_shot] = False
-            shot_index = self.shots.active_index+1 if self.shots.active_index != len(self.shots)-1 else 0
+            shot_index = self.shots.active_index+1# if self.shots.active_index != len(self.shots)-1 else 0
+            while True:
+                if shot_index == len(self.shots):
+                    shot_index = 0
+                if len(self.shots[shot_index].events):
+                    break
+                shot_index += 1
             self.change_animation(shot_index)
 
         return task.cont
