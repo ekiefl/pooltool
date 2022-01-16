@@ -155,6 +155,13 @@ class ShotMode(Mode):
 
         elif key == 'reset':
             self.shots.clear_animation()
+            if self.shots.active_index != len(self.shots) - 1:
+                # Replaying shot that is not most recent. Teardown and then buildup most recent
+                self.shots.active.teardown()
+                self.shots.set_active(-1)
+                self.shots.active.buildup()
+                self.init_collisions()
+
             self.player_cam.load_state(self.mode_stroked_from)
             for ball in self.shots.active.balls.values():
                 if ball.history.is_populated():
@@ -167,8 +174,7 @@ class ShotMode(Mode):
                 ball.set_render_state_as_object_state()
                 ball.history.reset()
 
-            self.shots.active.cue.update_focus()
-            self.shots.active.reset_animation()
+            self.shots.active.cue.init_focus(self.shots.active.cue.cueing_ball)
 
         self.remove_task('shot_view_task')
         self.remove_task('shot_animation_task')
@@ -260,6 +266,8 @@ class ShotMode(Mode):
         # Initialize the animation
         self.shots.set_animation()
         self.shots.loop_animation()
+
+        self.init_collisions()
 
         # Set the HUD
         self.hud_elements.get('english').set(self.shots.active.cue.a, self.shots.active.cue.b)
