@@ -187,11 +187,7 @@ class SystemRender(object):
         self.reset_animation()
 
 
-    def init_shot_animation(self, animate_stroke=True):
-        if self.shot_animation is not None:
-            # Animation already initialized
-            return
-
+    def init_shot_animation(self, animate_stroke=True, trailing_buffer=0, leading_buffer=0):
         if not self.continuized:
             # playback speed / fps * 2.0 is basically the sweetspot for creating smooth
             # interpolations that capture motion. Any more is wasted computation and any less and
@@ -201,12 +197,14 @@ class SystemRender(object):
             else:
                 self.continuize(dt=self.playback_speed/ani.settings['graphics']['fps']*1.5)
 
-        self.ball_animations = Parallel()
-        for ball in self.balls.values():
-            if not ball.rendered:
-                ball.render()
-            ball.set_playback_sequence(playback_speed=self.playback_speed)
-            self.ball_animations.append(ball.playback_sequence)
+        if self.ball_animations is None:
+            # This takes ~90% of this method's execution time
+            self.ball_animations = Parallel()
+            for ball in self.balls.values():
+                if not ball.rendered:
+                    ball.render()
+                ball.set_playback_sequence(playback_speed=self.playback_speed)
+                self.ball_animations.append(ball.playback_sequence)
 
         if self.user_stroke and animate_stroke:
             # There exists a stroke trajectory, and animating the stroke has been requested
@@ -219,6 +217,7 @@ class SystemRender(object):
             self.shot_animation = Sequence(
                 self.stroke_animation,
                 self.ball_animations,
+                Wait(trailing_buffer),
                 Func(self.restart_ball_animations)
             )
         else:
@@ -226,6 +225,7 @@ class SystemRender(object):
             self.stroke_animation = None
             self.shot_animation = Sequence(
                 self.ball_animations,
+                Wait(trailing_buffer),
                 Func(self.restart_ball_animations)
             )
 
@@ -249,6 +249,8 @@ class SystemRender(object):
         if self.shot_animation is not None:
             self.shot_animation.clearToInitial()
             self.shot_animation = None
+            self.ball_animations = None
+            self.stroke_animation = None
 
         for ball in self.balls.values():
             if ball.playback_sequence is not None:
@@ -531,8 +533,19 @@ class SystemCollectionRender(object):
     def set_animation(self):
         if self.parallel:
             self.shot_animation = Parallel()
+
+            # `max_dur` is the shot duration of the longest shot in the collection. All shots beside
+            # this one will have a buffer appended where the balls stay in their final state until
+            # the last shot finishes.
+            max_dur = max([shot.events[-1].time for shot in self])
+
             for shot in self:
-                shot.init_shot_animation()
+                shot_dur = shot.events[-1].time
+                print(max_dur-shot_dur)
+                shot.init_shot_animation(
+                    trailing_buffer = max_dur-shot_dur,
+                    leading_buffer = 0,
+                )
                 self.shot_animation.append(shot.shot_animation)
         else:
             if not self.active:

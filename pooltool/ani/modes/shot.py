@@ -251,7 +251,7 @@ class ShotMode(Mode):
 
         elif self.keymap[action.next_shot]:
             self.keymap[action.next_shot] = False
-            shot_index = self.shots.active_index+1# if self.shots.active_index != len(self.shots)-1 else 0
+            shot_index = self.shots.active_index+1
             while True:
                 if shot_index == len(self.shots):
                     shot_index = 0
