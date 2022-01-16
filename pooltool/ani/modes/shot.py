@@ -26,6 +26,7 @@ class ShotMode(Mode):
         action.introspect: False,
         action.next_shot: False,
         action.prev_shot: False,
+        action.parallel: False,
     }
 
     def enter(self, init_animations=False, single_instance=False):
@@ -86,6 +87,7 @@ class ShotMode(Mode):
         self.task_action('i-up', action.introspect, False)
         self.task_action('n-up', action.next_shot, True)
         self.task_action('p-up', action.prev_shot, True)
+        self.task_action('enter-up', action.parallel, True)
 
         self.add_task(self.shot_view_task, 'shot_view_task')
         self.add_task(self.shot_animation_task, 'shot_animation_task')
@@ -105,6 +107,9 @@ class ShotMode(Mode):
         assert key in {'advance', 'reset', 'soft'}
 
         if key == 'advance':
+            if self.shots.parallel:
+                self.shots.toggle_parallel()
+
             # If we are here, the plan is probably to return to 'aim' mode so another shot can be
             # taken. This shot needs to be defined by its own system that has yet to be simulated.
             # Depending how 'shot' mode was entered, this system may already exist in self.shots.
@@ -154,6 +159,9 @@ class ShotMode(Mode):
             self.hud_elements.get('power').set(self.shots.active.cue.V0)
 
         elif key == 'reset':
+            if self.shots.parallel:
+                self.shots.toggle_parallel()
+
             self.shots.clear_animation()
             if self.shots.active_index != len(self.shots) - 1:
                 # Replaying shot that is not most recent. Teardown and then buildup most recent
@@ -220,6 +228,12 @@ class ShotMode(Mode):
         elif self.keymap[action.undo_shot]:
             self.change_mode(self.mode_stroked_from, exit_kwargs=dict(key='reset'), enter_kwargs=dict(load_prev_cam=True))
 
+        elif self.keymap[action.parallel]:
+            self.keymap[action.parallel] = False
+            self.shots.toggle_parallel()
+            if not self.shots.parallel:
+                self.change_animation(self.shots.active_index)
+
         elif self.keymap[action.prev_shot]:
             self.keymap[action.prev_shot] = False
             shot_index = self.shots.active_index - 1
@@ -229,7 +243,11 @@ class ShotMode(Mode):
                 if len(self.shots[shot_index].events):
                     break
                 shot_index -= 1
-            self.change_animation(shot_index)
+            if not self.shots.parallel:
+                self.change_animation(shot_index)
+            else:
+                # FIXME this change the active shot, which could have some highlight feature
+                pass
 
         elif self.keymap[action.next_shot]:
             self.keymap[action.next_shot] = False
@@ -240,7 +258,11 @@ class ShotMode(Mode):
                 if len(self.shots[shot_index].events):
                     break
                 shot_index += 1
-            self.change_animation(shot_index)
+            if not self.shots.parallel:
+                self.change_animation(shot_index)
+            else:
+                # FIXME this change the active shot, which could have some highlight feature
+                pass
 
         return task.cont
 

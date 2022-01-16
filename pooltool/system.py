@@ -556,11 +556,36 @@ class SystemCollectionRender(object):
 
 
     def clear_animation(self):
-        self.active.clear_animation()
+        if self.parallel:
+            for shot in self:
+                shot.clear_animation()
+        else:
+            self.active.clear_animation()
+
         if self.shot_animation is not None:
             self.shot_animation.clearToInitial()
             self.shot_animation.pause()
             self.shot_animation = None
+
+
+    def toggle_parallel(self):
+        self.clear_animation()
+
+        if self.parallel:
+            for shot in self:
+                shot.teardown()
+            self.active.buildup()
+            self.parallel = False
+            self.set_animation()
+        else:
+            self.active.teardown()
+            for shot in self:
+                shot.buildup()
+            self.parallel = True
+            self.set_animation()
+
+        if not self.paused:
+            self.loop_animation()
 
 
     def toggle_pause(self):
