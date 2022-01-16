@@ -25,6 +25,7 @@ class ViewMode(Mode):
         action.power: False,
         action.elevation: False,
         action.english: False,
+        action.prev_shot: False,
         action.introspect: False,
         action.hide_cue: False,
         action.exec_shot: False,
@@ -35,6 +36,9 @@ class ViewMode(Mode):
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()
+
+        if self.shots.active is not None:
+            self.shots.active.cue.hide_nodes(ignore=('cue_cseg',))
 
         if load_prev_cam:
             self.player_cam.load_state('view')
@@ -63,6 +67,7 @@ class ViewMode(Mode):
         self.task_action('e-up', action.hide_cue, True)
         self.task_action('x', action.power, True)
         self.task_action('x-up', action.hide_cue, True)
+        self.task_action('p-up', action.prev_shot, True)
         self.task_action('space', action.exec_shot, True)
         self.task_action('space-up', action.exec_shot, False)
 
@@ -111,6 +116,12 @@ class ViewMode(Mode):
             self.shots.active.cue.set_object_state_as_render_state(skip_V0=True)
             self.shots.active.cue.strike()
             self.change_mode('calculate')
+        elif self.keymap[action.prev_shot]:
+            self.keymap[action.prev_shot] = False
+            if len(self.shots) > 1:
+                self.change_animation(self.shots.active_index-1) # ShotMode.change_animation
+                self.change_mode('shot', enter_kwargs=dict(init_animations=False))
+                return task.done
         else:
             self.rotate_camera_view()
 

@@ -93,9 +93,6 @@ class AimMode(Mode, CueAvoid):
         if ani.settings['gameplay']['cue_collision']:
             self.remove_task('collision_task')
 
-        if self.shots.active is not None:
-            self.shots.active.cue.hide_nodes(ignore=('cue_cseg',))
-
         self.player_cam.store_state('aim', overwrite=True)
 
 
@@ -129,10 +126,6 @@ class AimMode(Mode, CueAvoid):
         elif self.keymap[action.prev_shot]:
             self.keymap[action.prev_shot] = False
             if len(self.shots) > 1:
-                # FIXME This is problematic for two reasons. First of all, I shouldn't really be
-                # calling `ShotMode.change_animation` from this class, although worse things have
-                # happened. However what's more concerning to me is that entering ShotMode in this
-                # manner causes the cue trajectory to disappear (it exists but is invisible)
                 self.change_animation(self.shots.active_index-1) # ShotMode.change_animation
                 self.change_mode('shot', enter_kwargs=dict(init_animations=False))
                 return task.done
