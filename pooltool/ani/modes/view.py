@@ -27,6 +27,7 @@ class ViewMode(Mode):
         action.english: False,
         action.introspect: False,
         action.hide_cue: False,
+        action.exec_shot: False,
     }
 
 
@@ -62,8 +63,8 @@ class ViewMode(Mode):
         self.task_action('e-up', action.hide_cue, True)
         self.task_action('x', action.power, True)
         self.task_action('x-up', action.hide_cue, True)
-        #self.task_action('space', action.exec_shot, True)
-        #self.task_action('space-up', action.exec_shot, False)
+        self.task_action('space', action.exec_shot, True)
+        self.task_action('space-up', action.exec_shot, False)
 
         self.add_task(self.view_task, 'view_task')
         if ani.settings['gameplay']['cue_collision']:
@@ -105,6 +106,11 @@ class ViewMode(Mode):
             self.view_apply_power()
         elif self.keymap[action.aim]:
             self.change_mode('aim', enter_kwargs=dict(load_prev_cam=True))
+        elif self.keymap[action.exec_shot]:
+            self.mode_stroked_from = 'view'
+            self.shots.active.cue.set_object_state_as_render_state(skip_V0=True)
+            self.shots.active.cue.strike()
+            self.change_mode('calculate')
         else:
             self.rotate_camera_view()
 
