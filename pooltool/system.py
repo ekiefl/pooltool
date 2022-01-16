@@ -626,6 +626,8 @@ class SystemCollectionRender(object):
 
 
     def change_speed(self, factor):
+        # FIXME This messes up the syncing of shots when self.parallel is True. One clear issue is
+        # that trailing_buffer times do not respect self.playback_speed.
         self.playback_speed *= factor
         for shot in self:
             shot.playback_speed *= factor
@@ -639,10 +641,7 @@ class SystemCollectionRender(object):
         if not self.paused:
             self.loop_animation()
 
-        # FIXME this messes up the trailing_buffer times for self.parallel=True, causing shot
-        # restarting to be out of sync between shots
-        if not self.parallel:
-            self.shot_animation.set_t(curr_time/factor)
+        self.shot_animation.set_t(curr_time/factor)
 
 
     def rewind(self):
