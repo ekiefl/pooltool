@@ -203,6 +203,25 @@ class Interface(ShowBase, ModeManager, HUD):
             self.environment.load_lights()
 
 
+    def init_collisions(self):
+        """Setup collision detection for cue stick
+
+        Notes
+        =====
+        - NOTE this Panda3D collision handler is specifically for determining whether the
+          cue stick is intersecting with cushions or balls. All other collisions discussed at
+          https://ekiefl.github.io/2020/12/20/pooltool-alg/#2-what-are-events are unrelated
+          to this.
+        """
+
+        base.cTrav = CollisionTraverser()
+        self.collision_handler = CollisionHandlerQueue()
+
+        self.shots.active.cue.init_collision_handling(self.collision_handler)
+        for ball in self.shots.active.balls.values():
+            ball.init_collision(self.shots.active.cue)
+
+
     def monitor(self, task):
         self.stdout.warning('', header=f"Frame {self.frame}", lc='green', nl_before=1, nl_after=0)
         self.stdout.info('Mode', self.mode)
@@ -493,25 +512,6 @@ class Play(Interface, Menus):
 
     def setup_balls(self):
         self.shots.active.balls = self.game.balls
-
-
-    def init_collisions(self):
-        """Setup collision detection for cue stick
-
-        Notes
-        =====
-        - NOTE this Panda3D collision handler is specifically for determining whether the
-          cue stick is intersecting with cushions or balls. All other collisions discussed at
-          https://ekiefl.github.io/2020/12/20/pooltool-alg/#2-what-are-events are unrelated
-          to this.
-        """
-
-        base.cTrav = CollisionTraverser()
-        self.collision_handler = CollisionHandlerQueue()
-
-        self.shots.active.cue.init_collision_handling(self.collision_handler)
-        for ball in self.shots.active.balls.values():
-            ball.init_collision(self.shots.active.cue)
 
 
     def start(self):
