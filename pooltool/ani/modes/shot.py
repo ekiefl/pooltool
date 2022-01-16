@@ -103,6 +103,13 @@ class ShotMode(Mode):
         assert key in {'advance', 'reset', 'soft'}
 
         if key == 'advance':
+            if self.shots.active_index != len(self.shots) - 1:
+                # Replaying shot that is not most recent. Teardown and then buildup most recent
+                self.shots.clear_animation()
+                self.shots.active.teardown()
+                self.shots.set_active(-1)
+                self.shots.active.buildup()
+
             self.shots.append_copy_of_active(
                 state = 'current',
                 reset_history = True,
