@@ -26,7 +26,7 @@ class PlayerCam(object):
         self.focus_object = loader.loadModel('smiley.egg')
         self.focus_object.setScale(0.005)
         self.focus_object.setTransparency(TransparencyAttrib.MAlpha)
-        self.focus_object.setAlphaScale(0.2)
+        self.focus_object.setAlphaScale(0.4)
         self.focus_object.setH(-90) # Smiley faces away from camera ways
         self.focus.setR(-10) # Move 'head' up so you're not staring at the butt of the cue
         self.focus_object.setColor(1,0,0,1)
