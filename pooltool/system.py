@@ -296,6 +296,7 @@ class SystemRender(object):
         self.clear_animation()
         for ball in self.balls.values():
             ball.render()
+            ball.reset_angular_integration()
         self.cue.render()
         self.cue.init_focus(self.cue.cueing_ball)
 

@@ -124,8 +124,6 @@ class ShotMode(Mode):
             self.init_collisions()
             self.shots.active.cue.reset_state()
             self.shots.active.cue.set_render_state_as_object_state()
-            for ball in self.shots.active.balls.values():
-                ball.reset_angular_integration()
 
             # Set the HUD
             V0, _, theta, a, b, _ = self.shots.active.cue.get_render_state()
