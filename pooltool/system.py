@@ -541,7 +541,6 @@ class SystemCollectionRender(object):
 
             for shot in self:
                 shot_dur = shot.events[-1].time
-                print(max_dur-shot_dur)
                 shot.init_shot_animation(
                     trailing_buffer = max_dur-shot_dur,
                     leading_buffer = 0,
@@ -627,30 +626,23 @@ class SystemCollectionRender(object):
 
 
     def change_speed(self, factor):
-        # FIXME DONT MESS THIS UP FOR PARALLEL TRUE/FALSE
         self.playback_speed *= factor
         for shot in self:
             shot.playback_speed *= factor
             shot.continuized = False
 
         curr_time = self.shot_animation.get_t()
-        self.end()
+        self.clear_animation()
         self.set_animation()
         self.shot_animation.setPlayRate(factor*self.shot_animation.getPlayRate())
 
         if not self.paused:
             self.loop_animation()
 
-        self.shot_animation.set_t(curr_time/factor)
-
-
-    def end(self):
-        if self.shot_animation is not None:
-            for shot in self:
-                self.shot_animation.pause()
-                shot.shot_animation = None
-            self.shot_animation.pause()
-            self.shot_animation = None
+        # FIXME this messes up the trailing_buffer times for self.parallel=True, causing shot
+        # restarting to be out of sync between shots
+        if not self.parallel:
+            self.shot_animation.set_t(curr_time/factor)
 
 
     def rewind(self):
