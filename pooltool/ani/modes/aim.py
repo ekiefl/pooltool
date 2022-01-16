@@ -27,6 +27,7 @@ class AimMode(Mode, CueAvoid):
         action.pick_ball: False,
         action.call_shot: False,
         action.ball_in_hand: False,
+        action.prev_shot: False
     }
 
     def __init__(self):
@@ -75,6 +76,7 @@ class AimMode(Mode, CueAvoid):
         self.task_action('x-up', action.power, False)
         self.task_action('space', action.exec_shot, True)
         self.task_action('space-up', action.exec_shot, False)
+        self.task_action('p-up', action.prev_shot, True)
 
         CueAvoid.__init__(self)
 
@@ -97,6 +99,7 @@ class AimMode(Mode, CueAvoid):
     def aim_task(self, task):
         if self.keymap[action.view]:
             self.change_mode('view', enter_kwargs=dict(move_active=True))
+            return task.done
         elif self.keymap[action.stroke]:
             self.change_mode('stroke')
         elif self.keymap[action.pick_ball]:
@@ -120,6 +123,16 @@ class AimMode(Mode, CueAvoid):
             self.shots.active.cue.set_object_state_as_render_state(skip_V0=True)
             self.shots.active.cue.strike()
             self.change_mode('calculate')
+        elif self.keymap[action.prev_shot]:
+            self.keymap[action.prev_shot] = False
+            if len(self.shots) > 1:
+                # FIXME This is problematic for two reasons. First of all, I shouldn't really be
+                # calling `ShotMode.change_animation` from this class, although worse things have
+                # happened. However what's more concerning to me is that entering ShotMode in this
+                # manner causes the cue trajectory to disappear (it exists but is invisible)
+                self.change_animation(self.shots.active_index-1) # ShotMode.change_animation
+                self.change_mode('shot', enter_kwargs=dict(init_animations=False))
+                return task.done
         else:
             self.rotate_camera_aim()
 
