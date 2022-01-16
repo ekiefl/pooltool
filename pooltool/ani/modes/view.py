@@ -43,6 +43,8 @@ class ViewMode(Mode):
         if load_prev_cam:
             self.player_cam.load_state('view')
 
+        self.scale_focus()
+
         if move_active:
             self.keymap[action.move] = True
 
@@ -128,11 +130,26 @@ class ViewMode(Mode):
         return task.cont
 
 
+    def scale_focus(self):
+        """Scale the camera's focus object
+
+        The focus marker is a small dot to show where the camera is centered, and where it rotates
+        about. This helps a lot in navigating the camera effectively. Here the marker is scaled
+        so that it is always a constant size, regardless of how zoomed in or out the camera is.
+        """
+        # `dist` is the distance from the camera to the focus object and is equivalent to:
+        # cam_pos, focus_pos = self.player_cam.node.getPos(render), self.player_cam.focus_object.getPos(render)
+        # dist = (cam_pos - focus_pos).length()
+        dist = self.player_cam.node.getX()
+        self.player_cam.focus_object.setScale(0.002*dist)
+
+
     def zoom_camera_view(self):
         with self.mouse:
             s = -self.mouse.get_dy()*ani.zoom_sensitivity
 
         self.player_cam.node.setPos(autils.multiply_cw(self.player_cam.node.getPos(), 1-s))
+        self.scale_focus()
 
 
     def move_camera_view(self):

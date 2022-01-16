@@ -50,6 +50,8 @@ class ShotMode(Mode):
             self.shots.loop_animation()
             self.shots.skip_stroke()
 
+        self.scale_focus()
+
         self.hud_elements.get('english').set(self.shots.active.cue.a, self.shots.active.cue.b)
         self.hud_elements.get('jack').set(self.shots.active.cue.theta)
         self.hud_elements.get('power').set(self.shots.active.cue.V0)
@@ -270,6 +272,7 @@ class ShotMode(Mode):
             s = -self.mouse.get_dy()*ani.zoom_sensitivity
 
         self.player_cam.node.setPos(autils.multiply_cw(self.player_cam.node.getPos(), 1-s))
+        self.scale_focus() # ViewMode.scale_focus()
 
 
     def move_camera_shot(self):

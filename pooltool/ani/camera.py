@@ -24,7 +24,7 @@ class PlayerCam(object):
 
         # create visible object
         self.focus_object = loader.loadModel('smiley.egg')
-        self.focus_object.setScale(0.0035)
+        self.focus_object.setScale(0.005)
         self.focus_object.setTransparency(TransparencyAttrib.MAlpha)
         self.focus_object.setAlphaScale(0.2)
         self.focus_object.setH(-90) # Smiley faces away from camera ways
