@@ -616,11 +616,11 @@ class SystemCollectionRender(object):
 
 
     def rewind(self):
-        self.offset_time(-ani.rewind_dt*self.playback_speed)
+        self.offset_time(-ani.rewind_dt)
 
 
     def fast_forward(self):
-        self.offset_time(ani.fast_forward_dt*self.playback_speed)
+        self.offset_time(ani.fast_forward_dt)
 
 
     def offset_time(self, dt):
