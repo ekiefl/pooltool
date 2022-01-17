@@ -23,7 +23,6 @@ class BallRender(Render):
         self.rel_model_path = rel_model_path
         self.quats = None
         self.playback_sequence = None
-        self.initial_orientation = {}
         Render.__init__(self)
 
 
@@ -401,7 +400,7 @@ class Ball(Object, BallRender):
     object_type = 'ball'
 
     def __init__(self, ball_id, m=None, R=None, u_s=None, u_r=None, u_sp=None, g=None, e_c=None, f_c=None,
-                 rel_model_path=None, xyz=None):
+                 rel_model_path=None, xyz=None, initial_orientation=None):
         """Initialize a ball
 
         Parameters
@@ -441,6 +440,9 @@ class Ball(Object, BallRender):
         self.history_cts = BallHistory()
 
         self.events = Events()
+
+        if initial_orientation is None:
+            self.initial_orientation = self.get_random_orientation()
 
         self.rel_model_path = rel_model_path
         BallRender.__init__(self, rel_model_path=self.rel_model_path)
@@ -520,6 +522,13 @@ class Ball(Object, BallRender):
         self.t = t
 
 
+    def get_random_orientation(self):
+        quat1 = [1, 0, 0, 0]
+        quat2 = 2*np.random.rand(4) - 1
+        quat2 /= np.linalg.norm(quat2)
+        return {'pos': quat1, 'sphere': list(quat2)}
+
+
     def as_dict(self):
         """Return a pickle-able dictionary of the ball"""
         return dict(
@@ -562,7 +571,11 @@ def ball_from_dict(d):
     For dictionary form see return value of Ball.as_dict
     """
 
-    ball = Ball(d['id'], rel_model_path=d['rel_model_path'])
+    ball = Ball(
+        d['id'],
+        rel_model_path=d['rel_model_path'],
+        initial_orientation = d['initial_orientation'],
+    )
     ball.m = d['m']
     ball.R = d['R']
     ball.I = d['I']
