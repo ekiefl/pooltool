@@ -246,8 +246,11 @@ class ShotMode(Mode):
             if not self.shots.parallel:
                 self.change_animation(shot_index)
             else:
-                # FIXME this change the active shot, which could have some highlight feature
-                pass
+                self.shots.set_active(shot_index)
+                self.shots.highlight_system(shot_index)
+                self.hud_elements.get('english').set(self.shots.active.cue.a, self.shots.active.cue.b)
+                self.hud_elements.get('jack').set(self.shots.active.cue.theta)
+                self.hud_elements.get('power').set(self.shots.active.cue.V0)
 
         elif self.keymap[action.next_shot]:
             self.keymap[action.next_shot] = False
@@ -261,8 +264,11 @@ class ShotMode(Mode):
             if not self.shots.parallel:
                 self.change_animation(shot_index)
             else:
-                # FIXME this change the active shot, which could have some highlight feature
-                pass
+                self.shots.set_active(shot_index)
+                self.shots.highlight_system(shot_index)
+                self.hud_elements.get('english').set(self.shots.active.cue.a, self.shots.active.cue.b)
+                self.hud_elements.get('jack').set(self.shots.active.cue.theta)
+                self.hud_elements.get('power').set(self.shots.active.cue.V0)
 
         return task.cont
 

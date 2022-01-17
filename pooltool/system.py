@@ -539,6 +539,11 @@ class SystemCollectionRender(object):
             # the last shot finishes.
             max_dur = max([shot.events[-1].time for shot in self])
 
+            # FIXME `leading_buffer` should be utilized here to sync up all shots that have cue
+            # trajectories such that the ball animations all start at the moment of the stick-ball
+            # collision
+            pass
+
             for shot in self:
                 shot_dur = shot.events[-1].time
                 shot.init_shot_animation(
@@ -656,6 +661,15 @@ class SystemCollectionRender(object):
         old_t = self.shot_animation.get_t()
         new_t = max(0, min(old_t + dt, self.shot_animation.duration))
         self.shot_animation.set_t(new_t)
+
+
+    def highlight_system(self, i):
+        for system in self:
+            for ball in system.balls.values():
+                ball.set_alpha(1/len(self))
+
+        for ball in self[i].balls.values():
+            ball.set_alpha(1.0)
 
 
 class SystemCollection(utils.ListLike, SystemCollectionRender):
