@@ -65,8 +65,8 @@ class CueRender(Render):
 
         bounds = self.get_node('cue_stick').get_tight_bounds()
 
-        x = bounds[0][0]
-        X = bounds[1][0]
+        x = 0
+        X = bounds[1][0] - bounds[0][0]
 
         cnode = CollisionNode(f"cue_cseg")
         cnode.set_into_collide_mask(0)
@@ -415,10 +415,10 @@ class CueAvoid(object):
         # Declare frequently used nodes
         self.avoid_nodes = {
             'scene': render.find('scene'),
-            'cue_collision_node': self.cue.get_node('cue_cseg'),
-            'cue_stick_model': self.cue.get_node('cue_stick_model'),
-            'cue_stick': self.cue.get_node('cue_stick'),
-            'cue_stick_focus': self.cue.get_node('cue_stick_focus'),
+            'cue_collision_node': self.shots.active.cue.get_node('cue_cseg'),
+            'cue_stick_model': self.shots.active.cue.get_node('cue_stick_model'),
+            'cue_stick': self.shots.active.cue.get_node('cue_stick'),
+            'cue_stick_focus': self.shots.active.cue.get_node('cue_stick_focus'),
         }
 
 
@@ -485,7 +485,7 @@ class CueAvoid(object):
         min_theta = 0
         ball = self.get_ball(entry)
 
-        if ball == self.cueing_ball:
+        if ball == self.shots.active.cue.cueing_ball:
             return 0
 
         scene = render.find('scene')
@@ -495,12 +495,12 @@ class CueAvoid(object):
         phi = ((self.avoid_nodes['cue_stick_focus'].getH() + 180) % 360) * np.pi/180
         c = np.array([np.cos(phi), np.sin(phi), 0])
         gamma = np.arccos(np.dot(n, c))
-        AB = (ball.R + self.cue.tip_radius)*np.cos(gamma)
+        AB = (ball.R + self.shots.active.cue.tip_radius)*np.cos(gamma)
 
         # Center of blocking ball transect
         Ax, Ay, _ = entry.getSurfacePoint(scene)
-        Ax -= (AB + self.cue.tip_radius)*np.cos(phi)
-        Ay -= (AB + self.cue.tip_radius)*np.sin(phi)
+        Ax -= (AB + self.shots.active.cue.tip_radius)*np.cos(phi)
+        Ay -= (AB + self.shots.active.cue.tip_radius)*np.sin(phi)
         Az = ball.R
 
         # Center of aim, leveled to ball height
@@ -535,11 +535,11 @@ class CueAvoid(object):
     def get_cue_radius(self, l):
         """Returns radius of cue at collision point, given collision point is distance l from cue tip"""
 
-        bounds = self.cue.get_node('cue_stick').get_tight_bounds()
+        bounds = self.shots.active.cue.get_node('cue_stick').get_tight_bounds()
         L = bounds[1][0] - bounds[0][0] # cue length
 
-        r = self.cue.tip_radius
-        R = self.cue.butt_radius
+        r = self.shots.active.cue.tip_radius
+        R = self.shots.active.cue.butt_radius
 
         m = (R - r)/L # rise/run
         b = r # intercept
@@ -552,7 +552,7 @@ class CueAvoid(object):
         into_node_path_name = entry.get_into_node_path().name
         assert into_node_path_name.startswith(expected_suffix)
         cushion_id = into_node_path_name[len(expected_suffix):]
-        return self.table.cushion_segments['linear'][cushion_id]
+        return self.shots.active.table.cushion_segments['linear'][cushion_id]
 
 
     def get_ball(self, entry):
@@ -560,7 +560,7 @@ class CueAvoid(object):
         into_node_path_name = entry.get_into_node_path().name
         assert into_node_path_name.startswith(expected_suffix)
         ball_id = into_node_path_name[len(expected_suffix):]
-        return self.balls[ball_id]
+        return self.shots.active.balls[ball_id]
 
 
 def cue_from_dict(d):

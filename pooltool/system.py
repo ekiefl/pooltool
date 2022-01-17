@@ -38,7 +38,7 @@ class SystemHistory(object):
     def end_history(self):
         """Add a final NonEvent that timestamps the final state of each ball"""
 
-        event = NonEvent(t=self.t)
+        event = NonEvent(t=self.t+c.tol)
         for ball in self.balls.values():
             ball.update_history(event)
 
@@ -49,12 +49,21 @@ class SystemHistory(object):
         """Remove all events, histories, and reset timer"""
 
         self.t = 0
+        self.continuized = False
+
         for ball in self.balls.values():
             ball.history.reset()
+            ball.history_cts.reset()
             ball.events.reset()
             ball.set_time(0)
 
         self.events.reset()
+
+
+    def set_from_history(self, i):
+        """Set the ball states according to a history index"""
+        for ball in self.balls.values():
+            ball.set_from_history(i)
 
 
     def update_history(self, event, update_all=False):
@@ -175,29 +184,30 @@ class SystemHistory(object):
 
 class SystemRender(object):
     def __init__(self):
-        self.shot_animation = None
-        self.ball_animations = None
-        self.stroke_animation = None
-        self.playback_speed = 1
-        self.user_stroke = False
+        self.reset_animation()
 
 
-    def init_shot_animation(self):
+    def init_shot_animation(self, animate_stroke=True, trailing_buffer=0, leading_buffer=0):
         if not self.continuized:
             # playback speed / fps * 2.0 is basically the sweetspot for creating smooth
             # interpolations that capture motion. Any more is wasted computation and any less and
             # the interpolation starts to look bad.
-            self.continuize(dt=self.playback_speed/ani.settings['graphics']['fps']*2.0)
+            if self.playback_speed > 0.99:
+                self.continuize(dt=self.playback_speed/ani.settings['graphics']['fps']*2.5)
+            else:
+                self.continuize(dt=self.playback_speed/ani.settings['graphics']['fps']*1.5)
 
-        self.ball_animations = Parallel()
-        for ball in self.balls.values():
-            if not ball.rendered:
-                ball.render()
-            ball.set_playback_sequence(playback_speed=self.playback_speed)
-            self.ball_animations.append(ball.playback_sequence)
+        if self.ball_animations is None:
+            # This takes ~90% of this method's execution time
+            self.ball_animations = Parallel()
+            for ball in self.balls.values():
+                if not ball.rendered:
+                    ball.render()
+                ball.set_playback_sequence(playback_speed=self.playback_speed)
+                self.ball_animations.append(ball.playback_sequence)
 
-        if self.user_stroke:
-            # There exists a stroke trajectory. Create animation sequence
+        if self.user_stroke and animate_stroke:
+            # There exists a stroke trajectory, and animating the stroke has been requested
             self.cue.set_stroke_sequence()
             self.stroke_animation = Sequence(
                 ShowInterval(self.cue.get_node('cue_stick')),
@@ -207,6 +217,7 @@ class SystemRender(object):
             self.shot_animation = Sequence(
                 self.stroke_animation,
                 self.ball_animations,
+                Wait(trailing_buffer),
                 Func(self.restart_ball_animations)
             )
         else:
@@ -214,6 +225,7 @@ class SystemRender(object):
             self.stroke_animation = None
             self.shot_animation = Sequence(
                 self.ball_animations,
+                Wait(trailing_buffer),
                 Func(self.restart_ball_animations)
             )
 
@@ -234,7 +246,16 @@ class SystemRender(object):
 
 
     def clear_animation(self):
-        self.shot_animation.clearToInitial()
+        if self.shot_animation is not None:
+            self.shot_animation.clearToInitial()
+            self.shot_animation = None
+            self.ball_animations = None
+            self.stroke_animation = None
+
+        for ball in self.balls.values():
+            if ball.playback_sequence is not None:
+                ball.playback_sequence.pause()
+                ball.playback_sequence = None
 
 
     def toggle_pause(self):
@@ -256,6 +277,30 @@ class SystemRender(object):
 
     def resume_animation(self):
         self.shot_animation.resume()
+
+
+    def reset_animation(self):
+        self.shot_animation = None
+        self.ball_animations = None
+        self.stroke_animation = None
+        self.user_stroke = False
+        self.playback_speed = 1
+
+
+    def teardown(self):
+        self.clear_animation()
+        for ball in self.balls.values():
+            ball.remove_nodes()
+        self.cue.remove_nodes()
+
+
+    def buildup(self):
+        self.clear_animation()
+        for ball in self.balls.values():
+            ball.render()
+            ball.reset_angular_integration()
+        self.cue.render()
+        self.cue.init_focus(self.cue.cueing_ball)
 
 
 class System(SystemHistory, SystemRender, EvolveShotEventBased):
@@ -431,9 +476,18 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
         return balls, table, cue, events, meta
 
 
-    def save(self, path):
-        """Save the system state as a pickle"""
-        self.reset_balls()
+    def save(self, path, set_to_initial=True):
+        """Save the system state as a pickle
+
+        Parameters
+        ==========
+        set_to_initial : bool, True
+            Prior to saving, this method sets the ball states the initial states in the history.
+            However, this can be prevented by setting this to False, causing the ball states to be
+            saved as is.
+        """
+        if set_to_initial:
+            self.reset_balls()
         utils.save_pickle(self.as_dict(), path)
 
 
@@ -447,11 +501,18 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
         self.balls, self.table, self.cue, self.events, self.meta = self.from_dict(d)
 
 
-    def copy(self):
-        """Make a fresh copy of this system state"""
+    def copy(self, set_to_initial=True):
+        """Make a fresh copy of this system state
 
+        Parameters
+        ==========
+        set_to_initial : bool, True
+            Prior to copying, this method sets the ball states the initial states in the history.
+            However, this can be prevented by setting this to False, causing the ball states to be
+            copied as is.
+        """
         filepath = utils.get_temp_file_path()
-        self.save(filepath)
+        self.save(filepath, set_to_initial=set_to_initial)
         balls, table, cue, events, meta = self.from_dict(utils.load_pickle(filepath))
 
         system = self.__class__(balls=balls, table=table, cue=cue)
@@ -465,28 +526,36 @@ class SystemCollectionRender(object):
         self.active = None
         self.shot_animation = None
         self.playback_speed = 1.0
+        self.parallel = False
         self.paused = False
 
 
-    def set_active(self, i):
-        if not len(self):
-            return
+    def set_animation(self):
+        if self.parallel:
+            self.shot_animation = Parallel()
 
-        for system in self:
-            for ball in system.balls.values():
-                ball.set_alpha(0.4)
+            # `max_dur` is the shot duration of the longest shot in the collection. All shots beside
+            # this one will have a buffer appended where the balls stay in their final state until
+            # the last shot finishes.
+            max_dur = max([shot.events[-1].time for shot in self])
 
-        for ball in self[i].balls.values():
-            ball.set_alpha(1.0)
+            # FIXME `leading_buffer` should be utilized here to sync up all shots that have cue
+            # trajectories such that the ball animations all start at the moment of the stick-ball
+            # collision
+            pass
 
-
-    def init_animation(self, series=False):
-        self.shot_animation = Parallel()
-        for shot in self:
-            shot.init_shot_animation()
-            self.shot_animation.append(shot.shot_animation)
-
-        #self.set_active(-1)
+            for shot in self:
+                shot_dur = shot.events[-1].time
+                shot.init_shot_animation(
+                    trailing_buffer = max_dur-shot_dur,
+                    leading_buffer = 0,
+                )
+                self.shot_animation.append(shot.shot_animation)
+        else:
+            if not self.active:
+                raise ConfigError("SystemCollectionRender.set_animation :: self.active not set")
+            self.active.init_shot_animation()
+            self.shot_animation = self.active.shot_animation
 
 
     def loop_animation(self):
@@ -494,7 +563,7 @@ class SystemCollectionRender(object):
 
 
     def skip_stroke(self):
-        stroke = self[0].stroke_animation
+        stroke = self.active.stroke_animation
         if stroke is not None:
             self.shot_animation.set_t(stroke.get_duration())
 
@@ -504,7 +573,36 @@ class SystemCollectionRender(object):
 
 
     def clear_animation(self):
-        self.shot_animation.clearToInitial()
+        if self.parallel:
+            for shot in self:
+                shot.clear_animation()
+        else:
+            self.active.clear_animation()
+
+        if self.shot_animation is not None:
+            self.shot_animation.clearToInitial()
+            self.shot_animation.pause()
+            self.shot_animation = None
+
+
+    def toggle_parallel(self):
+        self.clear_animation()
+
+        if self.parallel:
+            for shot in self:
+                shot.teardown()
+            self.active.buildup()
+            self.parallel = False
+            self.set_animation()
+        else:
+            self.active.teardown()
+            for shot in self:
+                shot.buildup()
+            self.parallel = True
+            self.set_animation()
+
+        if not self.paused:
+            self.loop_animation()
 
 
     def toggle_pause(self):
@@ -533,14 +631,16 @@ class SystemCollectionRender(object):
 
 
     def change_speed(self, factor):
+        # FIXME This messes up the syncing of shots when self.parallel is True. One clear issue is
+        # that trailing_buffer times do not respect self.playback_speed.
         self.playback_speed *= factor
         for shot in self:
             shot.playback_speed *= factor
             shot.continuized = False
 
         curr_time = self.shot_animation.get_t()
-        self.end()
-        self.init_animation()
+        self.clear_animation()
+        self.set_animation()
         self.shot_animation.setPlayRate(factor*self.shot_animation.getPlayRate())
 
         if not self.paused:
@@ -549,27 +649,27 @@ class SystemCollectionRender(object):
         self.shot_animation.set_t(curr_time/factor)
 
 
-    def end(self):
-        if self.shot_animation is not None:
-            for shot in self:
-                self.shot_animation.pause()
-                shot.shot_animation = None
-            self.shot_animation.pause()
-            self.shot_animation = None
-
-
     def rewind(self):
-        self.offset_time(-ani.fast_forward_dt*self.playback_speed)
+        self.offset_time(-ani.rewind_dt)
 
 
     def fast_forward(self):
-        self.offset_time(ani.rewind_dt*self.playback_speed)
+        self.offset_time(ani.fast_forward_dt)
 
 
     def offset_time(self, dt):
         old_t = self.shot_animation.get_t()
         new_t = max(0, min(old_t + dt, self.shot_animation.duration))
         self.shot_animation.set_t(new_t)
+
+
+    def highlight_system(self, i):
+        for system in self:
+            for ball in system.balls.values():
+                ball.set_alpha(1/len(self))
+
+        for ball in self[i].balls.values():
+            ball.set_alpha(1.0)
 
 
 class SystemCollection(utils.ListLike, SystemCollectionRender):
@@ -580,6 +680,79 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
             self.load(Path(path))
 
         SystemCollectionRender.__init__(self)
+
+        self.active = None
+        self.active_index = None
+
+
+    def append(self, system):
+        if len(self):
+            # In order to append a system, the table must be damn-near identical to existing systems
+            # in this collection. Otherwise we raise an error
+            if system.table.as_dict() != self[0].table.as_dict():
+                raise ConfigError(f"Cannot append System '{system}', which has a different table than "
+                                  f"the rest of the SystemCollection")
+
+        utils.ListLike.append(self, system)
+
+
+    def append_copy_of_active(self, state='current', reset_history=True, as_active=False):
+        """Append a copy of the active System
+
+        Parameters
+        ==========
+        state : str, 'current'
+            Must be any of {'initial', 'final', 'current'}. The copy state will be set according to
+            this value. If 'initial', the system state will be set according to the active system's
+            state at t=0, e.g. balls['cue'].history.rvw[0]. If 'final', the system will be set to
+            the final state of the active system, e.g. balls['cue'].history.rvw[-1]. If 'current',
+            the system will be set to the current state of the active system, e.g. balls['cue'].rvw
+
+        reset_history : bool, True
+            If True, the history of the copy state will be reset (erased and reinitialized).
+
+        as_active : bool, False
+            If True, the newly appended System will be set as the active state
+        """
+        assert state in {'initial', 'final', 'current'}
+
+        set_to_initial = False if state == 'current' else True
+        new = self.active.copy(set_to_initial=set_to_initial)
+
+        if state == 'initial':
+            new.set_from_history(0)
+        elif state == 'final':
+            new.set_from_history(-1)
+
+        if reset_history:
+            new.reset_history()
+
+        self.append(new)
+
+        if as_active:
+            self.set_active(-1)
+
+
+    def set_active(self, i):
+        """Change the active system in the collection
+
+        Parameters
+        ==========
+        i : int
+            The integer index of the shot you would like to make active. Negative indexing is
+            supported, e.g. set_active(-1) sets the last system in the collection as active
+        """
+        if self.active is not None:
+            table = self.active.table
+            self.active = self[i]
+            self.active.table = table
+        else:
+            self.active = self[i]
+
+        if i < 0:
+            i = len(self) - 1
+
+        self.active_index = i
 
 
     def as_pickleable_object(self):
@@ -599,6 +772,7 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
 
 
     def clear(self):
+        self.active = None
         self._list = []
 
 

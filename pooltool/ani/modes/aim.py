@@ -27,6 +27,8 @@ class AimMode(Mode, CueAvoid):
         action.pick_ball: False,
         action.call_shot: False,
         action.ball_in_hand: False,
+        action.prev_shot: False,
+        action.introspect: False,
     }
 
     def __init__(self):
@@ -41,18 +43,16 @@ class AimMode(Mode, CueAvoid):
         self.mouse.relative()
         self.mouse.track()
 
-        if not self.cue.has_focus:
-            self.cue.init_focus(self.cueing_ball)
+        if not self.shots.active.cue.has_focus:
+            self.shots.active.cue.init_focus(self.shots.active.cue.cueing_ball)
         else:
-            self.cue.update_focus()
+            self.shots.active.cue.update_focus()
 
-        self.cue.show_nodes(ignore=('cue_cseg',))
-        self.cue.get_node('cue_stick').setX(0)
-        self.player_cam.update_focus(self.cueing_ball.get_node('pos').getPos())
+        self.shots.active.cue.show_nodes(ignore=('cue_cseg',))
+        self.shots.active.cue.get_node('cue_stick').setX(0)
+        self.player_cam.update_focus(self.shots.active.cue.cueing_ball.get_node('pos').getPos())
         if load_prev_cam:
             self.player_cam.load_state('aim')
-
-        self.hud_elements['power'].set(self.cue.V0)
 
         self.task_action('escape', action.quit, True)
         self.task_action('f', action.fine_control, True)
@@ -77,6 +77,9 @@ class AimMode(Mode, CueAvoid):
         self.task_action('x-up', action.power, False)
         self.task_action('space', action.exec_shot, True)
         self.task_action('space-up', action.exec_shot, False)
+        self.task_action('p-up', action.prev_shot, True)
+        self.task_action('i', action.introspect, True)
+        self.task_action('i-up', action.introspect, False)
 
         CueAvoid.__init__(self)
 
@@ -90,13 +93,13 @@ class AimMode(Mode, CueAvoid):
         if ani.settings['gameplay']['cue_collision']:
             self.remove_task('collision_task')
 
-        self.cue.hide_nodes(ignore=('cue_cseg',))
         self.player_cam.store_state('aim', overwrite=True)
 
 
     def aim_task(self, task):
         if self.keymap[action.view]:
             self.change_mode('view', enter_kwargs=dict(move_active=True))
+            return task.done
         elif self.keymap[action.stroke]:
             self.change_mode('stroke')
         elif self.keymap[action.pick_ball]:
@@ -110,16 +113,22 @@ class AimMode(Mode, CueAvoid):
         elif self.keymap[action.adjust_head]:
             self.adjust_head_aim()
         elif self.keymap[action.elevation]:
-            self.elevate_cue()
+            self.aim_elevate_cue()
         elif self.keymap[action.english]:
             self.apply_english()
         elif self.keymap[action.power]:
-            self.apply_power()
+            self.aim_apply_power()
         elif self.keymap[action.exec_shot]:
             self.mode_stroked_from = 'aim'
-            self.cue.set_object_state_as_render_state(skip_V0=True)
-            self.cue.strike()
+            self.shots.active.cue.set_object_state_as_render_state(skip_V0=True)
+            self.shots.active.cue.strike()
             self.change_mode('calculate')
+        elif self.keymap[action.prev_shot]:
+            self.keymap[action.prev_shot] = False
+            if len(self.shots) > 1:
+                self.change_animation(self.shots.active_index-1) # ShotMode.change_animation
+                self.change_mode('shot', enter_kwargs=dict(init_animations=False))
+                return task.done
         else:
             self.rotate_camera_aim()
 
@@ -155,34 +164,34 @@ class AimMode(Mode, CueAvoid):
 
         self.fix_cue_stick_to_camera()
 
-        if (-self.cue.get_node('cue_stick_focus').getR() < self.min_theta) or self.magnet_theta:
-            self.cue.get_node('cue_stick_focus').setR(-self.min_theta)
+        if (-self.shots.active.cue.get_node('cue_stick_focus').getR() < self.min_theta) or self.magnet_theta:
+            self.shots.active.cue.get_node('cue_stick_focus').setR(-self.min_theta)
             self.hud_elements['jack'].set(self.min_theta)
 
-        if -self.player_cam.focus.getR() < (-self.cue.get_node('cue_stick_focus').getR() + ani.min_player_cam):
-            self.player_cam.focus.setR(-(-self.cue.get_node('cue_stick_focus').getR() + ani.min_player_cam))
+        if -self.player_cam.focus.getR() < (-self.shots.active.cue.get_node('cue_stick_focus').getR() + ani.min_player_cam):
+            self.player_cam.focus.setR(-(-self.shots.active.cue.get_node('cue_stick_focus').getR() + ani.min_player_cam))
 
 
     def fix_cue_stick_to_camera(self):
-        self.cue.get_node('cue_stick_focus').setH(self.player_cam.focus.getH())
+        self.shots.active.cue.get_node('cue_stick_focus').setH(self.player_cam.focus.getH())
 
 
-    def apply_power(self):
+    def aim_apply_power(self):
         with self.mouse:
             dy = self.mouse.get_dy()
 
         min_V0, max_V0 = self.hud_elements['power'].min_strike, self.hud_elements['power'].max_strike
 
-        V0 = self.cue.V0 + dy*ani.power_sensitivity
+        V0 = self.shots.active.cue.V0 + dy*ani.power_sensitivity
         if V0 < min_V0: V0 = min_V0
         if V0 > max_V0: V0 = max_V0
 
-        self.cue.set_state(V0=V0)
+        self.shots.active.cue.set_state(V0=V0)
         self.hud_elements['power'].set(V0)
 
 
-    def elevate_cue(self):
-        cue = self.cue.get_node('cue_stick_focus')
+    def aim_elevate_cue(self):
+        cue = self.shots.active.cue.get_node('cue_stick_focus')
 
         with self.mouse:
             delta_elevation = self.mouse.get_dy()*ani.elevate_sensitivity
@@ -203,7 +212,7 @@ class AimMode(Mode, CueAvoid):
         if -self.player_cam.focus.getR() < (new_elevation + ani.min_player_cam):
             self.player_cam.focus.setR(-(new_elevation + ani.min_player_cam))
 
-        # update hud
+        self.shots.active.cue.set_state(theta=new_elevation)
         self.hud_elements['jack'].set(new_elevation)
 
 
@@ -211,9 +220,9 @@ class AimMode(Mode, CueAvoid):
         with self.mouse:
             dx, dy = self.mouse.get_dx(), self.mouse.get_dy()
 
-        cue = self.cue.get_node('cue_stick')
-        cue_focus = self.cue.get_node('cue_stick_focus')
-        R = self.cue.follow.R
+        cue = self.shots.active.cue.get_node('cue_stick')
+        cue_focus = self.shots.active.cue.get_node('cue_stick_focus')
+        R = self.shots.active.cue.follow.R
 
         delta_y, delta_z = dx*ani.english_sensitivity, dy*ani.english_sensitivity
 
@@ -233,11 +242,11 @@ class AimMode(Mode, CueAvoid):
         if self.magnet_theta or self.min_theta >= -cue_focus.getR() - self.magnet_threshold:
             cue_focus.setR(-self.min_theta)
 
-        if -self.player_cam.focus.getR() < (-self.cue.get_node('cue_stick_focus').getR() + ani.min_player_cam):
-            self.player_cam.focus.setR(-(-self.cue.get_node('cue_stick_focus').getR() + ani.min_player_cam))
+        if -self.player_cam.focus.getR() < (-self.shots.active.cue.get_node('cue_stick_focus').getR() + ani.min_player_cam):
+            self.player_cam.focus.setR(-(-self.shots.active.cue.get_node('cue_stick_focus').getR() + ani.min_player_cam))
 
-        # update hud
-        a, b = -new_y/R, new_z/R
+        a, b, theta = -new_y/R, new_z/R, -self.shots.active.cue.get_node('cue_stick_focus').getR()
+        self.shots.active.cue.set_state(a=a, b=b, theta=theta)
         self.hud_elements['english'].set(a, b)
-        self.hud_elements['jack'].set(-self.cue.get_node('cue_stick_focus').getR())
+        self.hud_elements['jack'].set(theta)
 

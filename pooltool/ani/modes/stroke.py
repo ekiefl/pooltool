@@ -17,8 +17,8 @@ class StrokeMode(Mode):
         self.mouse.relative()
         self.mouse.track()
 
-        self.cue.track_stroke()
-        self.cue.show_nodes(ignore=('cue_cseg',))
+        self.shots.active.cue.track_stroke()
+        self.shots.active.cue.show_nodes(ignore=('cue_cseg',))
 
         self.task_action('f', action.fine_control, True)
         self.task_action('f-up', action.fine_control, False)
@@ -42,12 +42,15 @@ class StrokeMode(Mode):
 
             if self.stroke_cue_stick():
                 # The cue stick has contacted the cue ball
-                self.cue.set_object_state_as_render_state()
-                self.cue.strike()
-                self.change_mode('calculate', enter_kwargs=dict(user_stroke=True))
+                self.shots.active.cue.set_object_state_as_render_state()
+                self.shots.active.cue.strike()
+                self.shots.active.user_stroke = True
+                self.change_mode('calculate')
                 return
         else:
-            self.change_mode('aim')
+            self.shots.active.cue.get_node('cue_stick').setX(0)
+            self.shots.active.cue.hide_nodes(ignore=('cue_cseg',))
+            self.change_mode(self.last_mode)
             return
 
         return task.cont
@@ -55,7 +58,7 @@ class StrokeMode(Mode):
 
     def stroke_cue_stick(self):
         max_speed_mouse = ani.max_stroke_speed/ani.stroke_sensitivity # [px/s]
-        max_backstroke = self.cue.length*ani.backstroke_fraction # [m]
+        max_backstroke = self.shots.active.cue.length*ani.backstroke_fraction # [m]
 
         with self.mouse:
             dt = self.mouse.get_dt()
@@ -65,17 +68,17 @@ class StrokeMode(Mode):
         if speed_mouse > max_speed_mouse:
             dx *= max_speed_mouse/speed_mouse
 
-        cue_stick_node = self.cue.get_node('cue_stick')
+        cue_stick_node = self.shots.active.cue.get_node('cue_stick')
         newX = min(max_backstroke, cue_stick_node.getX() - dx*ani.stroke_sensitivity)
 
         if newX < 0:
             newX = 0
-            collision = True if self.cue.is_shot() else False
+            collision = True if self.shots.active.cue.is_shot() else False
         else:
             collision = False
 
         cue_stick_node.setX(newX)
-        self.cue.append_stroke_data()
+        self.shots.active.cue.append_stroke_data()
 
         return True if collision else False
 

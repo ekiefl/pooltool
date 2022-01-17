@@ -112,14 +112,6 @@ class Interface(ShowBase, ModeManager, HUD):
         globalClock.setFrameRate(ani.settings['graphics']['fps'])
 
         self.shots = SystemCollection()
-        self.balls = None
-        self.table = None
-        self.cue = None
-        if shot:
-            self.shots.append(shot)
-            self.cue = shot.cue
-            self.balls = shot.balls
-            self.table = shot.table
 
         self.tasks = {}
         self.disableMouse()
@@ -153,17 +145,18 @@ class Interface(ShowBase, ModeManager, HUD):
 
 
     def close_scene(self):
-        for ball in self.balls.values():
-            ball.teardown()
+        for shot in self.shots:
+            shot.table.remove_nodes()
+            for ball in shot.balls.values():
+                ball.teardown()
 
-        self.table.remove_nodes()
         self.environment.unload_room()
         self.environment.unload_lights()
         self.destroy_hud()
 
         if len(self.shots):
-            self.shots.end()
-            self.shots = SystemCollection()
+            self.shots.clear_animation()
+            self.shots.clear()
 
         self.player_cam.focus = None
         self.player_cam.has_focus = False
@@ -173,18 +166,19 @@ class Interface(ShowBase, ModeManager, HUD):
 
     def init_system_nodes(self):
         self.init_scene()
-        self.table.render()
+        self.shots.active.table.render()
         self.init_environment()
 
-        for ball in self.balls.values():
+        # Render the balls of the active shot
+        for ball in self.shots.active.balls.values():
             if not ball.rendered:
                 ball.render()
 
-        self.cue.render()
+        self.shots.active.cue.render()
 
         self.player_cam.create_focus(
-            parent = self.table.get_node('cloth'),
-            pos = self.balls['cue'].get_node('pos').getPos()
+            parent = self.shots.active.table.get_node('cloth'),
+            pos = self.shots.active.balls['cue'].get_node('pos').getPos()
         )
 
 
@@ -200,13 +194,32 @@ class Interface(ShowBase, ModeManager, HUD):
             room_path = pt.utils.panda_path(ani.model_dir / 'room/room.glb')
             floor_path = pt.utils.panda_path(ani.model_dir / 'room/floor.glb')
 
-        self.environment = environment.Environment(self.table)
+        self.environment = environment.Environment(self.shots.active.table)
         if ani.settings['graphics']['room']:
             self.environment.load_room(room_path)
         if ani.settings['graphics']['floor']:
             self.environment.load_floor(floor_path)
         if ani.settings['graphics']['lights']:
             self.environment.load_lights()
+
+
+    def init_collisions(self):
+        """Setup collision detection for cue stick
+
+        Notes
+        =====
+        - NOTE this Panda3D collision handler is specifically for determining whether the
+          cue stick is intersecting with cushions or balls. All other collisions discussed at
+          https://ekiefl.github.io/2020/12/20/pooltool-alg/#2-what-are-events are unrelated
+          to this.
+        """
+
+        base.cTrav = CollisionTraverser()
+        self.collision_handler = CollisionHandlerQueue()
+
+        self.shots.active.cue.init_collision_handling(self.collision_handler)
+        for ball in self.shots.active.balls.values():
+            ball.init_collision(self.shots.active.cue)
 
 
     def monitor(self, task):
@@ -333,20 +346,23 @@ class ShotViewer(Interface):
         )
 
 
-    def show(self, shot=None, title=''):
-        if not len(self.shots) and shot is None:
-            raise ConfigError("ShotViewer.show :: No shots passed and no shots set.")
+    def show(self, shot_or_shots=None, title=''):
 
-        if shot:
-            self.shots.append(shot)
+        if shot_or_shots is None:
+            # No passed shots. This is ok if self.shots has already been defined, but will complain
+            # otherwise
+            if not len(self.shots):
+                raise ConfigError("ShotViewer.show :: No shots passed and no shots set.")
+        else:
+            # Create a new SystemCollection based on type of shot_or_shots
+            if issubclass(type(shot_or_shots), System):
+                self.shots = SystemCollection()
+                self.shots.append(shot_or_shots)
+            elif issubclass(type(shot_or_shots), SystemCollection):
+                self.shots = shot_or_shots
 
-        # Set cue, table, and balls according to first shot in self.shots
-        if self.cue is None:
-            self.cue = self.shots[0].cue
-        if self.table is None:
-            self.table = self.shots[0].table
-        if self.balls is None:
-            self.balls = self.shots[0].balls
+        if self.shots.active is None:
+            self.shots.set_active(0)
 
         self.standby_screen.hide()
         self.instructions.show()
@@ -376,10 +392,7 @@ class ShotViewer(Interface):
         base.graphicsEngine.renderFrame()
         base.graphicsEngine.renderFrame()
 
-        self.shots = SystemCollection()
-        self.balls = None
-        self.table = None
-        self.cue = None
+        self.shots.clear()
 
         self.taskMgr.stop()
 
@@ -410,6 +423,10 @@ class Play(Interface, Menus):
 
 
     def go(self):
+        self.shots = SystemCollection()
+        self.shots.append(System())
+        self.shots.set_active(-1)
+
         self.init_help_page()
         self.setup()
         self.init_system_nodes()
@@ -459,7 +476,7 @@ class Play(Interface, Menus):
             )
         table_type = table_params.pop('type')
         try:
-            self.table = table_types[table_type](**table_params)
+            self.shots.active.table = table_types[table_type](**table_params)
         except TypeError as e:
             raise TableConfigError(f"Something went wrong with your table config file. Probably you "
                                    f"provided a parameter in the table config that's unrecognized by "
@@ -485,36 +502,16 @@ class Play(Interface, Menus):
 
         game_class = games.game_classes[self.setup_options[ani.options_game]]
         self.game = game_class()
-        self.game.init(self.table, ball_kwargs)
+        self.game.init(self.shots.active.table, ball_kwargs)
         self.game.start()
 
 
     def setup_cue(self):
-        self.cue = Cue()
+        self.shots.active.cue = Cue(cueing_ball = self.game.set_initial_cueing_ball(self.shots.active.balls))
 
 
     def setup_balls(self):
-        self.balls = self.game.balls
-        self.cueing_ball = self.game.set_initial_cueing_ball(self.balls)
-
-
-    def init_collisions(self):
-        """Setup collision detection for cue stick
-
-        Notes
-        =====
-        - NOTE this Panda3D collision handler is specifically for determining whether the
-          cue stick is intersecting with cushions or balls. All other collisions discussed at
-          https://ekiefl.github.io/2020/12/20/pooltool-alg/#2-what-are-events are unrelated
-          to this.
-        """
-
-        base.cTrav = CollisionTraverser()
-        self.collision_handler = CollisionHandlerQueue()
-        self.cue.init_collision_handling(self.collision_handler)
-
-        for ball in self.balls.values():
-            ball.init_collision(self.cue)
+        self.shots.active.balls = self.game.balls
 
 
     def start(self):

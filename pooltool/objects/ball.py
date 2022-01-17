@@ -27,6 +27,7 @@ class BallRender(Render):
 
 
     def init_sphere(self):
+        """Initialize the ball's nodes"""
         position = render.find('scene').find('cloth').attachNewNode(f"ball_{self.id}_position")
         ball = position.attachNewNode(f"ball_{self.id}")
 
@@ -72,7 +73,12 @@ class BallRender(Render):
         if ani.settings['graphics']['angular_vectors']:
             self.nodes['vector'] = self.init_angular_vector()
 
-        self.randomize_orientation()
+        if self.initial_orientation:
+            # This ball already has a defined initial orientation, so load it up
+            self.set_orientation(self.initial_orientation)
+        else:
+            self.randomize_orientation()
+            self.initial_orientation = self.get_orientation()
 
 
     def init_collision(self, cue):
@@ -292,7 +298,37 @@ class BallRender(Render):
         self.get_node('sphere').setHpr(*np.random.uniform(-180, 180, size=3))
 
 
+    def get_orientation(self):
+        """Get the quaternions required to define the ball's rendered orientation"""
+        return {
+            'pos': [x for x in self.nodes['pos'].getQuat()],
+            'sphere': [x for x in self.nodes['sphere'].getQuat()],
+        }
+
+
+    def get_final_orientation(self):
+        """Get the ball's quaternions of the final state in the history"""
+        return {
+            'pos': [x for x in self.quats[-1]],
+            'sphere': [x for x in self.nodes['sphere'].getQuat()],
+        }
+
+
+    def set_orientation(self, orientation):
+        """Set the orientation of a ball's rendered state from an orientation dict
+
+        Parameters
+        ==========
+        orientation : dict
+            A dictionary of quaternions with keys 'pos' and 'sphere'. Such a dictionary can be
+            generated with `self.get_orientation`.
+        """
+        self.get_node('pos').setQuat(autils.get_quat_from_vector(orientation['pos']))
+        self.get_node('sphere').setQuat(autils.get_quat_from_vector(orientation['sphere']))
+
+
     def reset_angular_integration(self):
+        """Reset rotations applied to 'pos' while retaining rendered orientation"""
         ball, sphere = self.get_node('pos'), self.get_node('sphere')
         sphere.setQuat(sphere.getQuat() * ball.getQuat())
 
@@ -364,7 +400,7 @@ class Ball(Object, BallRender):
     object_type = 'ball'
 
     def __init__(self, ball_id, m=None, R=None, u_s=None, u_r=None, u_sp=None, g=None, e_c=None, f_c=None,
-                 rel_model_path=None):
+                 rel_model_path=None, xyz=None, initial_orientation=None):
         """Initialize a ball
 
         Parameters
@@ -394,15 +430,19 @@ class Ball(Object, BallRender):
 
         self.t = 0
         self.s = c.stationary
-        self.rvw = np.array([[np.nan, np.nan, np.nan],  # positions (r)
-                             [0,      0,      0     ],  # velocities (v)
-                             [0,      0,      0     ]]) # angular velocities (w)
+        x, y, z = xyz if xyz is not None else (np.nan, np.nan, np.nan)
+        self.rvw = np.array([[x, y, z],  # positions (r)
+                             [0, 0, 0],  # velocities (v)
+                             [0, 0, 0]]) # angular velocities (w)
         self.update_next_transition_event()
 
         self.history = BallHistory()
         self.history_cts = BallHistory()
 
         self.events = Events()
+
+        if initial_orientation is None:
+            self.initial_orientation = self.get_random_orientation()
 
         self.rel_model_path = rel_model_path
         BallRender.__init__(self, rel_model_path=self.rel_model_path)
@@ -482,6 +522,13 @@ class Ball(Object, BallRender):
         self.t = t
 
 
+    def get_random_orientation(self):
+        quat1 = [1, 0, 0, 0]
+        quat2 = 2*np.random.rand(4) - 1
+        quat2 /= np.linalg.norm(quat2)
+        return {'pos': quat1, 'sphere': list(quat2)}
+
+
     def as_dict(self):
         """Return a pickle-able dictionary of the ball"""
         return dict(
@@ -510,6 +557,7 @@ class Ball(Object, BallRender):
                 vectorized = self.history_cts.vectorized,
             ),
             events = self.events.as_dict(),
+            initial_orientation = self.initial_orientation,
         )
 
 
@@ -523,7 +571,11 @@ def ball_from_dict(d):
     For dictionary form see return value of Ball.as_dict
     """
 
-    ball = Ball(d['id'], rel_model_path=d['rel_model_path'])
+    ball = Ball(
+        d['id'],
+        rel_model_path=d['rel_model_path'],
+        initial_orientation = d['initial_orientation'],
+    )
     ball.m = d['m']
     ball.R = d['R']
     ball.I = d['I']
@@ -553,6 +605,8 @@ def ball_from_dict(d):
     for event_dict in d['events']:
         events.append(event_from_dict(event_dict))
     ball.events = events
+
+    ball.initial_orientation = d['initial_orientation']
 
     return ball
 

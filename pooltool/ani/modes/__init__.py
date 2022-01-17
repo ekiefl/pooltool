@@ -19,17 +19,22 @@ class Mode(ABC):
         if self.keymap is None:
             raise NotImplementedError("Child classes of Mode must have 'keymap' attribute")
 
-        self.add_task(self.quit_task, 'quit_task')
+        self.add_task(self.shared_task, 'shared_task')
         self.add_task(self.cam_save_watch, 'cam_save_watch')
         self.add_task(self.cam_load_watch, 'cam_load_watch')
         self.add_task(self.help_watch, 'help_watch')
 
 
-    def quit_task(self, task):
+    def shared_task(self, task):
         if self.keymap.get(action.quit):
             self.keymap[action.quit] = False
             self.close_scene()
             self.change_mode('menu')
+        elif self.keymap.get(action.introspect):
+            self.keymap[action.introspect] = False
+            import pooltool as pt
+            shot = self.shots.active
+            import pdb; pdb.set_trace()
 
         return task.cont
 
