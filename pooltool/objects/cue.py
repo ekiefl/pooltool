@@ -357,6 +357,19 @@ class Cue(Object, CueRender):
         self.aim_at_pos(ball.rvw[0])
 
 
+    def __repr__(self):
+        lines = [
+            f'<{self.__class__.__name__} object at {hex(id(self))}>',
+            f' ├── V0    : {self.V0}',
+            f' ├── phi   : {self.phi}',
+            f' ├── a     : {self.a}',
+            f' ├── b     : {self.b}',
+            f' └── theta : {self.theta}',
+        ]
+
+        return '\n'.join(lines) + '\n'
+
+
     def as_dict(self):
         try:
             # It doesn't make sense to store a dictionary copy of the cueing_ball, since building
