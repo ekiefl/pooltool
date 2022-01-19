@@ -41,7 +41,7 @@ import pooltool.constants as const
 import math
 import numpy as np
 
-from numba import jit
+from numba import jit, prange
 
 
 def resolve_ball_ball_collision(rvw1, rvw2):
@@ -510,6 +510,36 @@ def get_ball_linear_cushion_collision_time_fast(rvw, s, lx, ly, l0, p1, p2, mu, 
             min_time = root.real
 
     return min_time
+
+
+@jit(nopython=True, parallel=True, cache=const.numba_cache)
+def get_min_ball_linear_cushion_collision_time_fast(rvw, s, lx, ly, l0, p1, p2, mu, m, g, R):
+    """Get the time until collision between ball and linear cushion segment (just-in-time compiled)
+
+    Notes
+    =====
+    - Speed comparison in pooltool/tests/speed/get_ball_circular_cushion_collision_coeffs.py
+    """
+
+    L = len(s)
+    idx = 0
+    dtaus = np.empty(L, dtype=np.float64)
+    for i in prange(L):
+        dtaus[i] = get_ball_linear_cushion_collision_time_fast(
+            rvw=rvw[i],
+            s=s[i],
+            lx=lx[i],
+            ly=ly[i],
+            l0=l0[i],
+            p1=p1[i],
+            p2=p2[i],
+            mu=mu[i],
+            m=m[i],
+            g=g[i],
+            R=R[i],
+        )
+
+    return np.min(dtaus), np.argmin(dtaus)
 
 
 def get_ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):

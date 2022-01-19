@@ -288,6 +288,44 @@ class EvolveShotEventBased(EvolveShot):
         return BallCushionCollision(*involved_agents, t=(self.t + dtau_E))
 
 
+    def xget_min_ball_linear_cushion_event_time(self):
+        dtau_E_min = np.inf
+        involved_agents = tuple([DummyBall(), NonObject()])
+
+        params = []
+        ids = []
+        for ball in self.balls.values():
+            if ball.s in c.nontranslating:
+                continue
+            for cushion in self.table.cushion_segments['linear'].values():
+                ids.append((ball.id, cushion.id))
+                params.append((
+                    ball.rvw,
+                    ball.s,
+                    cushion.lx,
+                    cushion.ly,
+                    cushion.l0,
+                    cushion.p1,
+                    cushion.p2,
+                    (ball.u_s if ball.s == c.sliding else ball.u_r),
+                    ball.m,
+                    ball.g,
+                    ball.R
+                ))
+
+        if not len(params):
+            return BallCushionCollision(*involved_agents, t=np.inf)
+
+        rvw, s, lx, ly, l0, p1, p2, mu, m, g, R = [np.array(arg) for arg in zip(*params)]
+        dtau_E, idx = physics.get_min_ball_linear_cushion_collision_time_fast(rvw, s, lx, ly, l0, p1, p2, mu, m, g, R)
+
+        if np.isnan(dtau_E):
+            return BallCushionCollision(*involved_agents, t=np.inf)
+
+        ball, cushion = self.balls[ids[idx][0]], self.table.cushion_segments['linear'][ids[idx][1].strip('_edge')]
+        return BallCushionCollision(ball, cushion, t=(self.t + dtau_E))
+
+
     def get_min_ball_pocket_event_time(self):
         """Returns minimum time until next ball-pocket collision"""
         dtau_E = np.inf
