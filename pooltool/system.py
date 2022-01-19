@@ -304,7 +304,7 @@ class SystemRender(object):
 
 
 class System(SystemHistory, SystemRender, EvolveShotEventBased):
-    def __init__(self, cue=None, table=None, balls=None, path=None, d=None):
+    def __init__(self, path=None, cue=None, table=None, balls=None, d=None):
         SystemHistory.__init__(self)
         SystemRender.__init__(self)
         EvolveShotEventBased.__init__(self)
