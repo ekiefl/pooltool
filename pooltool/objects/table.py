@@ -427,6 +427,12 @@ class BilliardTable(Object, Table, TableRender):
         self.has_model = has_model
 
         self.model_name = model_name
+        if self.model_name != 'none':
+            # User is passing a table with pre-existing parameters. All params explicitly defined by
+            # this preset table will overwrite all other options
+            table_params = ani.table_config[self.model_name]
+            for key, val in table_params.items():
+                setattr(self, key, val)
 
         self.center = (self.w/2, self.l/2)
         self.cushion_segments = self.get_cushion_segments()

@@ -325,9 +325,8 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
             self.cue = cue
             self.table = table
             self.balls = balls
-
-        self.t = None
-        self.meta = None
+            self.t = None
+            self.meta = None
 
 
     def set_cue(self, cue):
