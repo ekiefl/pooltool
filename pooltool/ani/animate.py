@@ -176,9 +176,10 @@ class Interface(ShowBase, ModeManager, HUD):
 
         self.shots.active.cue.render()
 
+        R = max([ball.R for ball in self.shots.active.balls.values()])
         self.player_cam.create_focus(
             parent = self.shots.active.table.get_node('cloth'),
-            pos = self.shots.active.balls['cue'].get_node('pos').getPos()
+            pos = (self.shots.active.table.w/2, self.shots.active.table.l/2, R)
         )
 
 
