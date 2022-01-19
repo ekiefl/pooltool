@@ -427,8 +427,6 @@ class BilliardTable(Object, Table, TableRender):
         self.has_model = has_model
 
         self.model_name = model_name
-        if self.model_name != 'none':
-            raise NotImplementedError("model_name not implemented for BilliardTable")
 
         self.center = (self.w/2, self.l/2)
         self.cushion_segments = self.get_cushion_segments()
