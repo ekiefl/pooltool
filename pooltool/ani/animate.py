@@ -393,8 +393,6 @@ class ShotViewer(Interface):
         base.graphicsEngine.renderFrame()
         base.graphicsEngine.renderFrame()
 
-        self.shots.clear()
-
         self.taskMgr.stop()
 
 
