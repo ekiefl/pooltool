@@ -577,9 +577,8 @@ class CueAvoid(object):
 
 
 def cue_from_dict(d):
-    cueing_ball_id = d.pop('cueing_ball_id')
-    cue = Cue(**d)
-    cue.cueing_ball_id = cueing_ball_id
+    cue = Cue(**{k: v for k, v in d.items() if k != 'cueing_ball_id'})
+    cue.cueing_ball_id = d['cueing_ball_id']
     return cue
 
 

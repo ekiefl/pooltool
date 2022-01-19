@@ -571,8 +571,7 @@ table_types = {
 
 
 def table_from_dict(d):
-    table_type = d.pop('table_type')
-    return table_types[table_type](**d)
+    return table_types[d['table_type']](**{k: v for k, v in d.items() if k != 'table_type'})
 
 
 def table_from_pickle(path):
