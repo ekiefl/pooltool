@@ -571,11 +571,17 @@ def ball_from_dict(d):
     For dictionary form see return value of Ball.as_dict
     """
 
-    ball = Ball(
-        d['id'],
-        rel_model_path=d['rel_model_path'],
-        initial_orientation = d['initial_orientation'],
-    )
+    try:
+        ball = Ball(
+            d['id'],
+            rel_model_path=d['rel_model_path'],
+            initial_orientation = d['initial_orientation'],
+        )
+    except:
+        ball = Ball(
+            d['id'],
+            rel_model_path=d['rel_model_path'],
+        )
     ball.m = d['m']
     ball.R = d['R']
     ball.I = d['I']
@@ -595,10 +601,10 @@ def ball_from_dict(d):
     ball.attach_history(ball_history)
 
     ball_history_cts = BallHistory()
-    ball_history_cts.rvw = d['history_cts']['rvw']
-    ball_history_cts.s = d['history_cts']['s']
-    ball_history_cts.t = d['history_cts']['t']
-    ball_history_cts.vectorized = d['history_cts']['vectorized']
+    ball_history_cts.rvw = d.get('history_cts', {}).get('rvw')
+    ball_history_cts.s = d.get('history_cts', {}).get('s')
+    ball_history_cts.t = d.get('history_cts', {}).get('t')
+    ball_history_cts.vectorized = d.get('history_cts', {}).get('vectorized', False)
     ball.attach_history_cts(ball_history_cts)
 
     events = Events()
@@ -606,7 +612,7 @@ def ball_from_dict(d):
         events.append(event_from_dict(event_dict))
     ball.events = events
 
-    ball.initial_orientation = d['initial_orientation']
+    ball.initial_orientation = d.get('initial_orientation', None)
 
     return ball
 
