@@ -188,6 +188,12 @@ class SystemRender(object):
 
 
     def init_shot_animation(self, animate_stroke=True, trailing_buffer=0, leading_buffer=0):
+        if not len(self.events):
+            try:
+                self.simulate()
+            except:
+                pass
+
         if not self.continuized:
             # playback speed / fps * 2.0 is basically the sweetspot for creating smooth
             # interpolations that capture motion. Any more is wasted computation and any less and
@@ -496,7 +502,7 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
 
 
     def load_from_dict(self, d):
-        """Load a pickle-stored system state"""
+        """Load a dictionary-stored system state"""
         self.balls, self.table, self.cue, self.events, self.meta = self.from_dict(d)
 
 
