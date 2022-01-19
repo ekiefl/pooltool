@@ -31,3 +31,8 @@ has_model = 0
 l = 4
 w = 2
 
+[3_cushion]
+type = billiard
+has_model = 0
+l = 2.84
+w = 1.42

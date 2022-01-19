@@ -34,9 +34,10 @@ rewind_dt = 0.02
 fast_forward_dt = 0.02
 
 options_game = 'Game'
-options_8_ball = '8-ball'
-options_9_ball = '9-ball'
+options_8_ball = '8 ball'
+options_9_ball = '9 ball'
 options_sandbox = 'Sandbox'
+options_3_cushion = '3 cushion'
 options_table = 'Table'
 options_ball_diameter = 'Ball diameter'
 options_friction_slide = 'Coeff. sliding friction'

@@ -146,10 +146,49 @@ class EightBallRack(Rack):
         self.balls[-1].rvw[0] = [table.center[0] + 0.2, table.l/4, self.balls[-1].R]
 
 
+class ThreeCushionRack(Rack):
+    def __init__(self, table, white_to_break=True, **ball_kwargs):
+        self.balls = {
+            'white': Ball('white', **ball_kwargs),
+            'yellow': Ball('yellow', **ball_kwargs),
+            'red': Ball('red', **ball_kwargs),
+        }
+
+        self.white_to_break = white_to_break
+        self.radius = max([ball.R for ball in self.balls.values()])
+
+        Rack.__init__(self, table)
+
+
+    def get_balls_dict(self):
+        return self.balls
+
+
+    def arrange(self):
+        pass
+
+
+    def center_by_table(self, table):
+        """Based on https://www.3cushionbilliards.com/rules/106-official-us-billiard-association-rules-of-play"""
+        if self.white_to_break:
+            self.balls['white'].rvw[0] = [table.w/2 + 0.1825, table.l/4, self.radius]
+            self.balls['yellow'].rvw[0] = [table.w/2, table.l/4, self.radius]
+        else:
+            self.balls['yellow'].rvw[0] = [table.w/2 + 0.1825, table.l/4, self.radius]
+            self.balls['white'].rvw[0] = [table.w/2, table.l/4, self.radius]
+
+        self.balls['red'].rvw[0] = [table.w/2, table.l*3/4, self.radius]
+
+
 def get_nine_ball_rack(*args, **kwargs):
     return NineBallRack(*args, **kwargs).balls
 
 
 def get_eight_ball_rack(*args, **kwargs):
     return EightBallRack(*args, **kwargs).balls
+
+
+def get_three_cushion_rack(*args, **kwargs):
+    return ThreeCushionRack(*args, **kwargs).balls
+
 
