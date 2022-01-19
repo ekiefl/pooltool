@@ -288,7 +288,7 @@ class EvolveShotEventBased(EvolveShot):
         return BallCushionCollision(*involved_agents, t=(self.t + dtau_E))
 
 
-    def xget_min_ball_linear_cushion_event_time(self):
+    def get_min_ball_linear_cushion_event_time(self):
         dtau_E_min = np.inf
         involved_agents = tuple([DummyBall(), NonObject()])
 
@@ -324,46 +324,6 @@ class EvolveShotEventBased(EvolveShot):
 
         ball, cushion = self.balls[ids[idx][0]], self.table.cushion_segments['linear'][ids[idx][1].strip('_edge')]
         return BallCushionCollision(ball, cushion, t=(self.t + dtau_E))
-
-
-    def get_min_ball_pocket_event_time(self):
-        """Returns minimum time until next ball-pocket collision"""
-        dtau_E = np.inf
-        agent_ids = []
-        collision_coeffs = []
-
-        for ball in self.balls.values():
-            if ball.s in c.nontranslating:
-                continue
-
-            for pocket in self.table.pockets.values():
-                collision_coeffs.append(physics.get_ball_pocket_collision_coeffs_fast(
-                    rvw=ball.rvw,
-                    s=ball.s,
-                    a=pocket.a,
-                    b=pocket.b,
-                    r=pocket.radius,
-                    mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
-                    m=ball.m,
-                    g=ball.g,
-                    R=ball.R
-                ))
-
-                agent_ids.append((ball.id, pocket.id))
-
-        if not len(collision_coeffs):
-            # There are no collisions to test for
-            return BallBallCollision(DummyBall(), NonObject(), t=(self.t + dtau_E))
-
-        dtau_E, index = utils.min_real_root(
-            p = np.array(collision_coeffs),
-            tol = c.tol
-        )
-
-        ball_id, pocket_id = agent_ids[index]
-        ball, pocket = self.balls[ball_id], self.table.pockets[pocket_id]
-
-        return BallPocketCollision(ball, pocket, t=(self.t + dtau_E))
 
 
 class EvolveShotDiscreteTime(EvolveShot):
