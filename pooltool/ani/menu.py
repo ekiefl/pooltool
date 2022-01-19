@@ -122,6 +122,8 @@ class Menus(object):
         for option in self.menus['options'].elements + self.menus['table'].elements + self.menus['balls'].elements:
             if option['type'] in ('dropdown', 'direct_entry'):
                 value = option['content'].get()
+                if isinstance(value, str):
+                    value = value.strip()
                 try:
                     value = float(value)
                     if option['convert_factor'] is not None:
