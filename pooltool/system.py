@@ -14,6 +14,8 @@ from pooltool.objects.table import table_from_dict
 from pooltool.events import *
 from pooltool.objects.ball import BallHistory
 
+import tempfile
+
 from pathlib import Path
 from panda3d.direct import HideInterval, ShowInterval
 from direct.interval.IntervalGlobal import *
@@ -516,9 +518,9 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
             However, this can be prevented by setting this to False, causing the ball states to be
             copied as is.
         """
-        filepath = utils.get_temp_file_path()
-        self.save(filepath, set_to_initial=set_to_initial)
-        balls, table, cue, events, meta = self.from_dict(utils.load_pickle(filepath))
+        with tempfile.NamedTemporaryFile(delete=True) as temp:
+            self.save(temp.name, set_to_initial=set_to_initial)
+            balls, table, cue, events, meta = self.from_dict(utils.load_pickle(temp.name))
 
         system = self.__class__(balls=balls, table=table, cue=cue)
         system.events = events
