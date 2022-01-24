@@ -125,6 +125,28 @@ def is_hit(shot, clean=False):
     return True
 
 
+def which_hit_first(shot):
+    # Which ball is in motion?
+    for ball in shot.balls.values():
+        if ball.history.s[0] in (c.rolling, c.sliding):
+            cue = ball.id
+            break
+    else:
+        raise ConfigError("three_cushion.is_hit :: no ball is in motion")
+
+    get_other_agent = lambda event: event.agents[0].id if event.agents[0].id != cue else event.agents[1].id
+    get_agent_ids = lambda event: [agent.id for agent in event.agents]
+
+    for event in shot.events:
+        if event.event_type == 'ball-ball':
+            first_hit_agent = get_other_agent(event)
+            break
+    else:
+        return False
+
+    return first_hit_agent
+
+
 def get_shot_components(shot):
     # Which ball is in motion?
     for ball in shot.balls.values():
