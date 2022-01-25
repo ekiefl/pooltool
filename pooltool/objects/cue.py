@@ -4,6 +4,7 @@ import pooltool.ani as ani
 import pooltool.utils as utils
 import pooltool.constants as c
 
+from pooltool.error import ConfigError
 from pooltool.events import StickBallCollision
 from pooltool.objects import Object, Render
 from pooltool.objects.ball import Ball
@@ -345,16 +346,56 @@ class Cue(Object, CueRender):
         self.set_state(phi = direction * 180/np.pi)
 
 
-    def aim_at_ball(self, ball):
+    def aim_at_ball(self, ball, cut=None):
         """Set phi to aim directly at a ball
 
         Parameters
         ==========
         ball : pooltool.objects.ball.Ball
             A ball
+        cut : float, None
+            The cut angle in degrees, within [-89, 89]
         """
 
         self.aim_at_pos(ball.rvw[0])
+
+        if cut is None:
+            return
+
+        if cut > 89 or cut < -89:
+            raise ConfigError("Cue.aim_at_ball :: cut must be less than 89 and more than -89")
+
+        # Ok a cut angle has been requested. Unfortunately, there exists no analytical function
+        # phi(cut), at least as far as I have been able to calculate. Instead, it is a nasty
+        # transcendental equation that must be solved. The gaol is to make its value 0. To do this,
+        # I sweep from 0 to the max possible angle with 100 values and find where the equation flips
+        # from positive to negative. The dphi that makes the equation lies somewhere between those
+        # two values, so then I do a new parameter sweep between the value that was positive and the
+        # value that was negative. Then I rinse and repeat this a total of 5 times.
+
+        left = True if cut < 0 else False
+        cut = np.abs(cut) * np.pi/180
+        R = ball.R
+        d = np.linalg.norm(ball.rvw[0] - self.cueing_ball.rvw[0])
+
+        lower_bound = 0
+        upper_bound = (np.pi/2 - np.arccos((2*R)/d))
+
+        for _ in range(5):
+            dphis = np.linspace(lower_bound, upper_bound, 100)
+            transcendental = np.arctan(2*R*np.sin(cut - dphis) / (d - 2*R*np.cos(cut - dphis))) - dphis
+            for i in range(len(transcendental)):
+                if transcendental[i] < 0:
+                    lower_bound = dphis[i-1] if i > 0 else 0
+                    upper_bound = dphis[i]
+                    dphi = dphis[i]
+                    break
+            else:
+                raise ConfigError("Cue.aim_at_ball :: Wow this should never happen. The algorithm "
+                                  "that finds the cut angle needs to be looked at again, because "
+                                  "the transcendental equation could not be solved.")
+
+        self.phi = (self.phi + 180/np.pi*(dphi if left else -dphi)) % 360
 
 
     def __repr__(self):
