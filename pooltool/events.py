@@ -120,6 +120,31 @@ class BallBallCollision(Collision):
         self.agent2_state_final = (np.copy(ball2.rvw), ball2.s)
 
 
+    def cut_angle(self):
+        """Get the cut angle of a ball-ball collision
+
+        The conception of a cut angle only makes sense when one ball is non-translating. Therefore,
+        if this condition is not met, None is returned
+        """
+
+        if self.agent1_state_initial[1] in c.nontranslating:
+            v1 = self.agent2_state_initial[0][1]
+            v2 = self.agent1_state_final[0][1]
+        elif self.agent2_state_initial[1] in c.nontranslating:
+            v1 = self.agent1_state_initial[0][1]
+            v2 = self.agent2_state_final[0][1]
+        else:
+            return None
+
+        unit_vector_1 = v1 / np.linalg.norm(v1)
+        unit_vector_2 = v2 / np.linalg.norm(v2)
+        dot_product = np.dot(unit_vector_1, unit_vector_2)
+        angle = np.arccos(dot_product)
+        sign = np.sign(utils.cross_fast(v1, v2)[-1])
+
+        return angle*sign*180/np.pi
+
+
 class BallCushionCollision(Collision):
     event_type = type_ball_cushion
 
