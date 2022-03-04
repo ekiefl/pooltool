@@ -458,7 +458,7 @@ def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g,
 
 
 @jit(nopython=True, cache=const.numba_cache)
-def get_ball_linear_cushion_collision_time_fast(rvw, s, lx, ly, l0, p1, p2, mu, m, g, R):
+def get_ball_linear_cushion_collision_time_fast(rvw, s, lx, ly, l0, p1, p2, valid_direction, mu, m, g, R):
     """Get the time until collision between ball and linear cushion segment (just-in-time compiled)
 
     Notes
@@ -486,14 +486,16 @@ def get_ball_linear_cushion_collision_time_fast(rvw, s, lx, ly, l0, p1, p2, mu, 
 
     A = lx*ax + ly*ay
     B = lx*bx + ly*by
-    C1 = l0 + lx*cx + ly*cy + R*np.sqrt(lx**2 + ly**2)
-    C2 = l0 + lx*cx + ly*cy - R*np.sqrt(lx**2 + ly**2)
 
-    root1, root2 = utils.quadratic_fast(A,B,C1)
-    root3, root4 = utils.quadratic_fast(A,B,C2)
+    if valid_direction == 1:
+        C = l0 + lx * cx + ly * cy - R * np.sqrt(lx ** 2 + ly ** 2)
+    else:
+        C = l0 + lx * cx + ly * cy + R * np.sqrt(lx ** 2 + ly ** 2)
+
+    root1, root2 = utils.quadratic_fast(A,B,C)
 
     min_time = np.inf
-    for root in [root1, root2, root3, root4]:
+    for root in [root1, root2]:
         if np.abs(root.imag) > const.tol:
             continue
 
