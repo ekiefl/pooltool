@@ -8,7 +8,6 @@ import traceback
 
 from pooltool.terminal import tty_colors, color_text
 
-
 def remove_spaces(text):
     if not text:
         return ""
