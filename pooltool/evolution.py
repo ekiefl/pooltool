@@ -273,6 +273,7 @@ class EvolveShotEventBased(EvolveShot):
                     l0=cushion.l0,
                     p1=cushion.p1,
                     p2=cushion.p2,
+                    direction=cushion.direction,
                     mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
                     m=ball.m,
                     g=ball.g,
