@@ -526,11 +526,10 @@ class LinearCushionSegment(CushionSegment):
         direction: 0 or 1, default 2
             For most table geometries, the playing surface only exists on one side of the cushion,
             so collisions only need to be checked for one direction. This direction can be specified
-            with either 0 or 1, where 0 means the playing surface is to the left of the segment, and
-            1 means the playing surface is to the right of the segment. Left and right are defined
-            relative to the vector pointing from p1 to p2. By default, both collision directions are
-            checked, which can be specified explicitly by passing 2, however this makes collision
-            checks twice as slow for event-based shot evolution algorithms.
+            with either 0 or 1. To determine whether 0 or 1 should be used, please experiment
+            (FIXME: determine the rule). By default, both collision directions are checked, which
+            can be specified explicitly by passing 2, however this makes collision checks twice as
+            slow for event-based shot evolution algorithms.
         """
         self.id = cushion_id
 
