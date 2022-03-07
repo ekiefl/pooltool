@@ -468,21 +468,25 @@ class BilliardTable(Object, Table, TableRender):
                     '3_edge',
                     p1 = (0, 0, h),
                     p2 = (0, self.l, h),
+                    direction = 1,
                 ),
                 '12': LinearCushionSegment(
                     '12_edge',
                     p1 = (self.w, self.l, h),
-                    p2 = (self.w, 0, h)
+                    p2 = (self.w, 0, h),
+                    direction = 0,
                 ),
                 '9': LinearCushionSegment(
                     '9_edge',
                     p1 = (0, self.l, h),
-                    p2 = (self.w, self.l, h)
+                    p2 = (self.w, self.l, h),
+                    direction = 0,
                 ),
                 '18': LinearCushionSegment(
                     '18_edge',
                     p1 = (0, 0, h),
-                    p2 = (self.w, 0, h)
+                    p2 = (self.w, 0, h),
+                    direction = 1
                 ),
             },
             'circular': {
