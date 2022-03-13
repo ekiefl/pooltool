@@ -14,9 +14,9 @@ I have blogged about every aspect of this project. Read the detailed account [he
 
 # Installation
 
-Installation instructions vary depending on how you want to interact with pooltool. There are 3 current options: _#1 Installer_, _#2 PIP_, and _#3 Developer_. Read on for descriptions and instructions for each installation method.
+Installation instructions vary depending on how you want to interact with pooltool. There are 3 current options: _(1) Installer_, _(2) PIP_, and _(3) Developer_. Read on for descriptions and instructions for each installation method.
 
-### Install option #1: Installer
+### Install option (1): Installer
 
 | Method    | GUI | API | Develop |
 |-----------|-----|-----|---------|
@@ -26,7 +26,7 @@ This is by far the easiest option. If you want to play and experiment with billi
 
 Unfortunately, I haven't sorted out this step yet, but eventually there will be OS-specific installers available for download here. Until then, please follow the PIP or Developer instructions below.
 
-### Install option #2: PIP
+### Install option (2): PIP
 
 | Method    | GUI | API | Develop |
 |-----------|-----|-----|---------|
@@ -80,7 +80,7 @@ interface.show(shot)
 
 I haven't spent much time on the API yet but hopefully you get the idea.
 
-### Install option #3: Developer
+### Install option (3): Developer
 
 | Method    | GUI | API | Develop |
 |-----------|-----|-----|---------|
