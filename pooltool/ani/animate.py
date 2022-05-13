@@ -268,15 +268,15 @@ class Interface(ShowBase, ModeManager, HUD):
         h = lambda x: 0.06*x
         add_instruction(h(1), "Camera controls", True)
         add_instruction(h(2), "Rotate - [mouse]")
-        add_instruction(h(3), "Pan - [hold v]")
-        add_instruction(h(4), "Zoom - [hold left-click]")
+        add_instruction(h(3), "Pan - [hold v + mouse]")
+        add_instruction(h(4), "Zoom - [hold left-click + mouse]")
 
         add_instruction(h(6), "Aim controls", True)
         add_instruction(h(7), "Enter aim mode - [a]")
-        add_instruction(h(8), "Apply english - [hold e]")
-        add_instruction(h(9), "Elevate cue - [hold b]")
-        add_instruction(h(10), "Precise aiming - [hold f]")
-        add_instruction(h(11), "Raise head - [hold t]")
+        add_instruction(h(8), "Apply english - [hold e + mouse]")
+        add_instruction(h(9), "Elevate cue - [hold b + mouse]")
+        add_instruction(h(10), "Precise aiming - [hold f + mouse]")
+        add_instruction(h(11), "Raise head - [hold t + mouse]")
 
         add_instruction(h(13), "Shot controls", True)
         add_instruction(h(14), "Stroke - [hold s] (move mouse down then up)")
