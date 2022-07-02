@@ -78,7 +78,7 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
 
     def end_mode(self, **kwargs):
         # Stop watching actions related to mode
-        self.ignoreAll()
+        self.reset_event_listeners()
 
         if self.mode is not None:
             self.modes[self.mode].exit(self, **kwargs)
@@ -87,9 +87,26 @@ class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode
         self.mode = None
 
 
+    def reset_event_listeners(self):
+        """Stop watching for events related to the current mode
+
+        Something a bit clunky is happening here. Since the keystrokes assigned to tasks
+        are hardcoded into the `enter` method of each mode, it is not known which event
+        listeners belong to the mode, and which are active regardless of mode.
+        Consequently, the best strategy (besides refactoring) is to wipe all listeners,
+        and then re-instate the global listeners.
+        """
+        # Stop listening for all actions
+        self.ignoreAll()
+
+        # Reinstate the listeners for mode-independent events
+        self.listen_constant_events()
+        
+
     def reset_action_states(self):
         for key in self.keymap:
             self.keymap[key] = self.action_state_defaults[self.mode][key]
+
 
 
 class Interface(ShowBase, ModeManager, HUD):
@@ -159,6 +176,16 @@ class Interface(ShowBase, ModeManager, HUD):
         properties = WindowProperties()
         properties.setSize(int(width), int(height))
         self.win.requestProperties(properties)
+
+
+    def handle_window_event(self, win = None):
+        self.fix_window_resize(win = win)
+
+
+
+    def listen_constant_events(self):
+        """Listen for events that are mode independent"""
+        self.accept('window-event', self.handle_window_event)
 
 
     def add_task(self, *args, **kwargs):

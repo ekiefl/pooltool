@@ -42,7 +42,6 @@ class ShotMode(Mode):
             If True, exiting with `esc` will close the scene. Otherwise, quit_task will be called,
             and user is brought back to main menu.
         """
-        Mode.enter(self)
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()

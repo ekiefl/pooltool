@@ -29,7 +29,6 @@ class CallShotMode(Mode):
 
 
     def enter(self):
-        Mode.enter(self)
         self.ball_highlight_sequence = Parallel()
 
         self.mouse.hide()

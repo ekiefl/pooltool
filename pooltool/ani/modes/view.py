@@ -33,7 +33,6 @@ class ViewMode(Mode):
 
 
     def enter(self, move_active=False, load_prev_cam=False):
-        Mode.enter(self)
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()

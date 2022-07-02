@@ -12,7 +12,6 @@ class MenuMode(Mode):
     }
 
     def enter(self):
-        Mode.enter(self)
         self.mouse.show()
         self.mouse.absolute()
         self.show_menu('main')
