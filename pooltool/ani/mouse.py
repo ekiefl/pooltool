@@ -11,7 +11,7 @@ class Mouse(ClockObject):
         ClockObject.__init__(self)
 
         self.mouse = base.mouseWatcherNode
-        self.tracking = False
+        self.relative_requested = False
         self.touch()
 
 
@@ -40,22 +40,31 @@ class Mouse(ClockObject):
         props.setMouseMode(WindowProperties.M_absolute)
         base.win.requestProperties(props)
 
+        if self.relative_requested:
+            self.relative_requested = False
+
 
     def relative(self):
-        props = WindowProperties()
-        props.setMouseMode(WindowProperties.M_relative)
-        base.win.requestProperties(props)
+        if self.mouse.hasMouse():
+            props = WindowProperties()
+            props.setMouseMode(WindowProperties.M_relative)
+            base.win.requestProperties(props)
+            self.relative_requested = False
+        else:
+            self.relative_requested = True
 
 
     def touch(self):
+        if self.relative_requested:
+           self.relative()
+
         self.last_x, self.last_y = self.get_xy()
         self.last_t = self.getRealTime() - self.getDt()
 
 
     def track(self):
-        if not self.tracking and self.mouse.hasMouse():
+        if self.mouse.hasMouse():
             self.touch()
-            self.tracking = True
 
 
     def get_x(self):
