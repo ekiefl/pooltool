@@ -129,6 +129,38 @@ class Interface(ShowBase, ModeManager, HUD):
             self.add_task(self.monitor, 'monitor')
 
 
+    def fix_window_resize(self, win = None):
+        """Fix aspect ratio of window upon user resizing
+
+        The user can modify the game window to be whatever size they want. Ideally, they
+        would be able to pick arbitrary aspect ratios, however this project has been
+        hardcoded to run at a specific aspect ratio, otherwise it looks
+        stretched/squished.
+
+        With that in mind, this method is called whenever a change to the window occurs,
+        and essentially fixes the aspect ratio. For any given window size chosen by the
+        user, this will override their resizing, and resize the window to one with an
+        area equal to that requested, but at the required aspect ratio.
+        """
+        requested_width, requested_height = base.win.getXSize(), base.win.getYSize()
+
+        if abs(requested_width / requested_height - ani.aspect_ratio)/ani.aspect_ratio < 0.05:
+            # If they are within 5% of the intended ratio, just let them be.
+            return
+
+        requested_area = requested_width*requested_height
+
+        # A = w*h
+        # A = r*h*h
+        # h = (A/r)^(1/2)
+        height = (requested_area/ani.aspect_ratio)**(1/2)
+        width = height*ani.aspect_ratio
+
+        properties = WindowProperties()
+        properties.setSize(int(width), int(height))
+        self.win.requestProperties(properties)
+
+
     def add_task(self, *args, **kwargs):
         task = taskMgr.add(*args, **kwargs)
         self.tasks[task.name] = task

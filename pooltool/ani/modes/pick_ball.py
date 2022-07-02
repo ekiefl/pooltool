@@ -21,6 +21,7 @@ class PickBallMode(Mode):
 
 
     def enter(self):
+        Mode.enter(self)
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()

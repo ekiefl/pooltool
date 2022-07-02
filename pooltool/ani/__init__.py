@@ -12,6 +12,9 @@ from panda3d.core import *
 
 loadPrcFile(panda_path(Path(pt.__file__).parent / 'config' / 'config_panda3d.prc'))
 
+# This is hard-coded. Change it and everything looks bad
+aspect_ratio = 1.6
+
 menu_text_scale = 0.07
 menu_text_scale_small = 0.04
 zoom_sensitivity = 0.3

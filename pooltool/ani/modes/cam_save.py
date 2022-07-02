@@ -12,6 +12,7 @@ class CamSaveMode(Mode):
 
 
     def enter(self):
+        Mode.enter(self)
         self.mouse.show()
         self.mouse.absolute()
         self.mouse.track()

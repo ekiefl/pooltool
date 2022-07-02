@@ -28,6 +28,7 @@ class BallInHandMode(Mode):
 
 
     def enter(self):
+        Mode.enter(self)
         self.grab_selection_highlight_sequence = Parallel()
 
         self.mouse.hide()

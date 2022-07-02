@@ -39,6 +39,7 @@ class AimMode(Mode, CueAvoid):
 
 
     def enter(self, load_prev_cam=False):
+        Mode.enter(self)
         self.mouse.hide()
         self.mouse.relative()
         self.mouse.track()

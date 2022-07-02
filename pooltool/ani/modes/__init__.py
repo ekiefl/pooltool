@@ -66,7 +66,7 @@ class Mode(ABC):
 
     @abstractmethod
     def enter(self):
-        pass
+        self.accept('window-event', self.fix_window_resize)
 
 
     @abstractmethod

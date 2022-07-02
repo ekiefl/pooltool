@@ -12,6 +12,7 @@ class CamLoadMode(Mode):
 
 
     def enter(self):
+        Mode.enter(self)
         if self.last_mode == 'aim':
             self.last_mode = 'view'
         self.mouse.show()

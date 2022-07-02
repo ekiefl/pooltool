@@ -15,6 +15,7 @@ class GameOverMode(Mode):
     }
 
     def enter(self):
+        Mode.enter(self)
         self.mouse.show()
         self.mouse.absolute()
 
