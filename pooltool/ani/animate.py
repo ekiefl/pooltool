@@ -34,7 +34,8 @@ __all__ = [
 
 
 class ModeManager(MenuMode, AimMode, StrokeMode, ViewMode, ShotMode, CamLoadMode, CamSaveMode,
-                  CalculateMode, PickBallMode, GameOverMode, CallShotMode, BallInHandMode):
+                  CalculateMode, PickBallMode, GameOverMode, CallShotMode, BallInHandMode,
+                  PurgatoryMode):
     def __init__(self):
         # Init every Mode class
         self.modes = modes
@@ -181,7 +182,10 @@ class Interface(ShowBase, ModeManager, HUD):
     def handle_window_event(self, win = None):
         self.fix_window_resize(win = win)
 
-
+        is_window_active = base.win.get_properties().foreground
+        if not is_window_active and self.mode != 'purgatory':
+            self.change_mode('purgatory')
+            
 
     def listen_constant_events(self):
         """Listen for events that are mode independent"""
@@ -285,6 +289,7 @@ class Interface(ShowBase, ModeManager, HUD):
     def monitor(self, task):
         self.stdout.warning('', header=f"Frame {self.frame}", lc='green', nl_before=1, nl_after=0)
         self.stdout.info('Mode', self.mode)
+        self.stdout.info('Last', self.last_mode)
         self.stdout.info('Tasks', list(self.tasks.keys()))
         self.stdout.info('Memory', pt.utils.get_total_memory_usage())
         self.stdout.info('Actions', [k for k in self.keymap if self.keymap[k]])
