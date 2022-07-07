@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg8"
+   inkscape:version="1.0.2 (e86c8708, 2021-01-15)"
+   sodipodi:docname="info_button.svg"
+   inkscape:export-filename="/Users/evan/Software/pooltool/info_button.png"
+   inkscape:export-xdpi="298.66"
+   inkscape:export-ydpi="298.66">
+  <defs
+     id="defs2">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 148.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="210 : 148.5 : 1"
+       inkscape:persp3d-origin="105 : 99 : 1"
+       id="perspective1470" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="3.9324403"
+     inkscape:cx="213.91162"
+     inkscape:cy="257.89314"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     inkscape:document-rotation="0"
+     showgrid="false"
+     inkscape:window-width="2560"
+     inkscape:window-height="1395"
+     inkscape:window-x="1680"
+     inkscape:window-y="23"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <circle
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.2;stroke-linecap:round;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+       id="path1464"
+       cx="84.856773"
+       cy="70.936676"
+       r="3.6281912"
+       inkscape:export-xdpi="298.66"
+       inkscape:export-ydpi="298.66" />
+    <ellipse
+       style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.81103;stroke-linecap:round;stroke-opacity:1"
+       id="path1468"
+       cx="110.02737"
+       cy="-3.8710124"
+       rx="0.51741189"
+       ry="2.5401578"
+       transform="matrix(0.70627921,0.70793339,-0.7246773,0.68908839,0,0)"
+       inkscape:export-xdpi="298.66"
+       inkscape:export-ydpi="298.66" />
+    <text
+       xml:space="preserve"
+       style="font-size:6.46001px;line-height:1.25;font-family:'Savoye LET';-inkscape-font-specification:'Savoye LET';stroke-width:0.1615"
+       x="82.931374"
+       y="73.287766"
+       id="text1474"
+       inkscape:export-xdpi="298.66"
+       inkscape:export-ydpi="298.66"><tspan
+         sodipodi:role="line"
+         id="tspan1472"
+         x="82.931374"
+         y="73.287766"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Arial;-inkscape-font-specification:'Arial Bold';stroke-width:0.1615">?</tspan></text>
+  </g>
+</svg>
