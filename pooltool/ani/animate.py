@@ -486,6 +486,8 @@ class Play(Interface, Menus):
 
 
     def go(self):
+        self.hide_menus()
+
         self.shots = SystemCollection()
         self.shots.append(System())
         self.shots.set_active(-1)

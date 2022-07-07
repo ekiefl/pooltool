@@ -25,7 +25,6 @@ class MenuMode(Mode):
 
 
     def exit(self):
-        self.hide_menus()
         self.remove_task('menu_task')
 
 
