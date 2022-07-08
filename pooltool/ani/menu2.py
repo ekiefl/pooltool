@@ -18,7 +18,8 @@ from pathlib import Path
 
 TEXT_COLOR = (0.1, 0.1, 0.1, 1)
 FRAME_COLOR = (0, 0, 0, 1)
-TEXT_SCALE = 0.07
+TEXT_SCALE = 0.04
+BUTTON_TEXT_SCALE = 0.07
 HEADING_SCALE = 0.12
 SUBHEADING_SCALE = 0.09
 MOVE = 0.02
@@ -26,7 +27,7 @@ INFO_SCALE = 0.025
 INFO_TEXT_SCALE = 0.05
 MENU_ASSETS = ani.model_dir / 'menu'
 TITLE_FONT = MENU_ASSETS/'fonts'/'labtop-secundo'/'LABTSECW.ttf'
-FONT = MENU_ASSETS/'fonts'/'labtop-secundo'/'LABTSECW.ttf'
+BUTTON_FONT = MENU_ASSETS/'fonts'/'labtop-secundo'/'LABTSECW.ttf'
 
 
 class XMLMenu(object):
@@ -47,7 +48,7 @@ class Menu(object):
         self.name = self.xml.attrib['name']
 
         self.title_font = loader.loadFont(panda_path(TITLE_FONT))
-        self.font = loader.loadFont(panda_path(FONT))
+        self.button_font = loader.loadFont(panda_path(BUTTON_FONT))
 
         # No idea why this conditional must exist
         if self.title_font.get_num_pages() == 0:
@@ -94,6 +95,7 @@ class Menu(object):
         item_to_method = {
             'title': self.add_title,
             'button': self.add_button,
+            'text': self.add_text,
         }
         for item in self.xml:
             method = item_to_method.get(item.tag)
@@ -174,8 +176,8 @@ class Menu(object):
         button = DirectButton(
             text = name,
             text_align = TextNode.ALeft,
-            text_font = self.font,
-            scale=TEXT_SCALE,
+            text_font = self.button_font,
+            scale=BUTTON_TEXT_SCALE,
             geom=loadImageAsPlane(panda_path(MENU_ASSETS/'button.png')),
             relief=None,
         )
@@ -236,6 +238,49 @@ class Menu(object):
         })
 
         return button_obj
+
+
+    def add_text(self, item):
+        """Add text"""
+
+        text = item.text.strip()
+        max_len = 60
+        new_text = []
+        line, columns = [], 0
+        for word in text.split():
+            if columns + len(word) > max_len:
+                new_text.append(' '.join(line))
+                line, columns = [], 0
+            columns += len(word)
+            line.append(word)
+        new_text.append(' '.join(line))
+        text = '\n'.join(new_text)
+
+        text_obj = DirectLabel(
+            text = text,
+            scale = TEXT_SCALE,
+            parent = self.area.getCanvas(),
+            relief = None,
+            text_fg = TEXT_COLOR,
+            text_align = TextNode.ALeft,
+            text_font = None,
+        )
+
+        if self.last_element:
+            autils.alignTo(text_obj, self.last_element, autils.CT, autils.CB, gap=(1,1))
+        else:
+            text_obj.setPos((-0.7, 0, 0.8))
+        text_obj.setX(-0.7)
+
+        self.last_element = text_obj
+
+        self.elements.append({
+            'type': 'text',
+            'text': text,
+            'content': text_obj,
+        })
+
+        return text_obj
 
 
     def highlight_button(self, button, mouse_watcher):
@@ -352,8 +397,8 @@ class Menus(object):
         sys.exit()
 
 
-    def func_go_new_game(self):
-        print("Starting new game...")
+    def func_go_about(self):
+        self.show_menu('about')
 
 
     def func_go_settings(self):
