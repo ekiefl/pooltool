@@ -5,7 +5,7 @@
         <title>Main Menu</title>
         <button>
             <name>New Game</name>
-            <func>func_go_new_game</func>
+            <func>go</func>
             <description>Play some pool. Shortcut: n</description>
         </button>
         <button>
@@ -16,7 +16,7 @@
         <button>
             <name>Quit</name>
             <func>func_quit_pooltool</func>
-            <description>Closes pooltool.</description>
+            <description>Closes pooltool. Shortcut: esc</description>
         </button>
     </menu>
     <!--############################################################-->
@@ -25,7 +25,7 @@
         <button>
             <name>Back</name>
             <func>func_go_main_menu</func>
-            <description>Defunct placeholder</description>
+            <description>Return to the main menu.</description>
         </button>
     </menu>
     <!--############################################################-->

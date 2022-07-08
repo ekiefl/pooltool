@@ -31,12 +31,12 @@ class Menus(object):
         m.add_button('Options', lambda: self.show_menu('options'), scale=ani.menu_text_scale)
         m.add_button('Quit', sys.exit, scale=ani.menu_text_scale)
 
-        self.menus['main'] = m
+        self.menus['main_menu'] = m
 
 
     def populate_options(self):
         m = GenericMenu(title = 'Options')
-        m.add_button('Back', lambda: self.show_menu('main'), scale=ani.menu_text_scale)
+        m.add_button('Back', lambda: self.show_menu('main_menu'), scale=ani.menu_text_scale)
 
         m.add_dropdown(ani.options_game, options=list(games.game_classes.keys()))
 
@@ -324,24 +324,4 @@ def make_direct_entry(text, command=None, scale=ani.menu_text_scale, initial="No
     )
 
     return entry
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

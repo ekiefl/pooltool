@@ -14,7 +14,11 @@ from pooltool.games.nine_ball import NineBall
 from pooltool.games.eight_ball import EightBall
 
 from pooltool.ani.hud import HUD
-from pooltool.ani.menu import Menus, GenericMenu
+# -------------------------------------------
+#from pooltool.ani.menu import Menus, GenericMenu
+from pooltool.ani.menu import GenericMenu
+from pooltool.ani.menu2 import Menus
+# -------------------------------------------
 from pooltool.ani.modes import *
 from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import PlayerCam
@@ -515,30 +519,33 @@ class Play(Interface, Menus):
 
 
     def setup_table(self):
-        if self.setup_options[ani.options_table] != 'custom':
-            table_params = copy.deepcopy(ani.table_config[self.setup_options[ani.options_table]])
-            table_params['model_name'] = self.setup_options[ani.options_table]
-        else:
-            table_params = dict(
-                type = self.setup_options[ani.options_table_type],
-                l = self.setup_options[ani.options_table_length],
-                w = self.setup_options[ani.options_table_width],
-                height = self.setup_options[ani.options_table_height],
-                lights_height = self.setup_options[ani.options_lights_height],
-                cushion_width = self.setup_options[ani.options_cushion_width],
-                cushion_height = self.setup_options[ani.options_cushion_height],
-                corner_pocket_width = self.setup_options[ani.options_corner_pocket_width],
-                corner_pocket_angle = self.setup_options[ani.options_corner_pocket_angle],
-                corner_pocket_depth = self.setup_options[ani.options_corner_pocket_depth],
-                corner_pocket_radius = self.setup_options[ani.options_corner_pocket_radius],
-                corner_jaw_radius = self.setup_options[ani.options_corner_jaw_radius],
-                side_pocket_width = self.setup_options[ani.options_side_pocket_width],
-                side_pocket_angle = self.setup_options[ani.options_side_pocket_angle],
-                side_pocket_depth = self.setup_options[ani.options_side_pocket_depth],
-                side_pocket_radius = self.setup_options[ani.options_side_pocket_radius],
-                side_jaw_radius = self.setup_options[ani.options_side_jaw_radius],
-                model_name = self.setup_options[ani.options_table],
-            )
+        table_params = copy.deepcopy(ani.table_config['7_foot'])
+        table_params['model_name'] = '7_foot'
+        # FIXME
+        #if self.setup_options[ani.options_table] != 'custom':
+        #    #table_params = copy.deepcopy(ani.table_config[self.setup_options[ani.options_table]])
+        #    #table_params['model_name'] = self.setup_options[ani.options_table]
+        #else:
+        #    table_params = dict(
+        #        type = self.setup_options[ani.options_table_type],
+        #        l = self.setup_options[ani.options_table_length],
+        #        w = self.setup_options[ani.options_table_width],
+        #        height = self.setup_options[ani.options_table_height],
+        #        lights_height = self.setup_options[ani.options_lights_height],
+        #        cushion_width = self.setup_options[ani.options_cushion_width],
+        #        cushion_height = self.setup_options[ani.options_cushion_height],
+        #        corner_pocket_width = self.setup_options[ani.options_corner_pocket_width],
+        #        corner_pocket_angle = self.setup_options[ani.options_corner_pocket_angle],
+        #        corner_pocket_depth = self.setup_options[ani.options_corner_pocket_depth],
+        #        corner_pocket_radius = self.setup_options[ani.options_corner_pocket_radius],
+        #        corner_jaw_radius = self.setup_options[ani.options_corner_jaw_radius],
+        #        side_pocket_width = self.setup_options[ani.options_side_pocket_width],
+        #        side_pocket_angle = self.setup_options[ani.options_side_pocket_angle],
+        #        side_pocket_depth = self.setup_options[ani.options_side_pocket_depth],
+        #        side_pocket_radius = self.setup_options[ani.options_side_pocket_radius],
+        #        side_jaw_radius = self.setup_options[ani.options_side_jaw_radius],
+        #        model_name = self.setup_options[ani.options_table],
+        #    )
         table_type = table_params.pop('type')
         try:
             self.shots.active.table = table_types[table_type](**table_params)
@@ -556,16 +563,28 @@ class Play(Interface, Menus):
         - For reasons of bad design, ball kwargs are defined in this method
         """
 
+        # FIXME
+        #ball_kwargs = dict(
+        #    R = self.setup_options[ani.options_ball_diameter]/2,
+        #    u_s = self.setup_options[ani.options_friction_slide],
+        #    u_r = self.setup_options[ani.options_friction_roll],
+        #    u_sp = self.setup_options[ani.options_friction_spin],
+        #    f_c = self.setup_options[ani.options_friction_cushion],
+        #    e_c = self.setup_options[ani.options_restitution_cushion],
+        #)
+
         ball_kwargs = dict(
-            R = self.setup_options[ani.options_ball_diameter]/2,
-            u_s = self.setup_options[ani.options_friction_slide],
-            u_r = self.setup_options[ani.options_friction_roll],
-            u_sp = self.setup_options[ani.options_friction_spin],
-            f_c = self.setup_options[ani.options_friction_cushion],
-            e_c = self.setup_options[ani.options_restitution_cushion],
+            R = 0.028575, # ball radius
+            u_s = 0.2, # sliding friction
+            u_r = 0.01, # rolling friction
+            u_sp = 10 * 2/5*0.028575/9, # spinning friction
+            f_c = 0.2, # cushion coeffiient of friction
+            e_c = 0.85, # cushion coeffiient of restitution
         )
 
-        game_class = games.game_classes[self.setup_options[ani.options_game]]
+        # FIXME
+        #game_class = games.game_classes[self.setup_options[ani.options_game]]
+        game_class = games.game_classes[ani.options_sandbox]
         self.game = game_class()
         self.game.init(self.shots.active.table, ball_kwargs)
         self.game.start()
