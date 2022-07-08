@@ -43,12 +43,12 @@ class MenuMode(Mode):
 
         if self.keymap[action.scroll_up]:
             scroll_bar = self.current_menu.area.verticalScroll
-            scroll_bar.setValue(scroll_bar.getValue() + scroll_bar['pageSize'])
+            scroll_bar.setValue(scroll_bar.getValue() - scroll_bar['pageSize'])
             self.keymap[action.scroll_up] = False
 
         if self.keymap[action.scroll_down]:
             scroll_bar = self.current_menu.area.verticalScroll
-            scroll_bar.setValue(scroll_bar.getValue() - scroll_bar['pageSize'])
+            scroll_bar.setValue(scroll_bar.getValue() + scroll_bar['pageSize'])
             self.keymap[action.scroll_down] = False
 
         return task.cont
