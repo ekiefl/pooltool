@@ -20,8 +20,9 @@ TEXT_COLOR = (0.1, 0.1, 0.1, 1)
 FRAME_COLOR = (0, 0, 0, 1)
 TEXT_SCALE = 0.04
 BUTTON_TEXT_SCALE = 0.07
+BACKBUTTON_TEXT_SCALE = 0.06
 HEADING_SCALE = 0.12
-SUBHEADING_SCALE = 0.09
+SUBHEADING_SCALE = 0.08
 MOVE = 0.02
 INFO_SCALE = 0.025
 INFO_TEXT_SCALE = 0.05
@@ -94,7 +95,9 @@ class Menu(object):
         # to the menu using the corresponding method. Complain if the tag is unknown
         item_to_method = {
             'title': self.add_title,
+            'subtitle': self.add_subtitle,
             'button': self.add_button,
+            'backbutton': self.add_backbutton,
             'text': self.add_text,
         }
         for item in self.xml:
@@ -127,7 +130,6 @@ class Menu(object):
 
         # Underscore
         title_x, title_y, title_z = title.getPos()
-        title_x, title_y, title_z = title.getPos()
         lines = LineSegs()
         lines.setColor(TEXT_COLOR)
         lines.moveTo(title_x, 0, title_z - HEADING_SCALE*0.2)
@@ -157,6 +159,63 @@ class Menu(object):
 
         self.elements.append({
             'type': 'title',
+            'name': item.text,
+            'content': title_obj,
+        })
+
+        return title_obj
+
+
+    def add_subtitle(self, item):
+        """Add a subtitle"""
+
+        title = DirectLabel(
+            text = item.text,
+            scale = SUBHEADING_SCALE,
+            parent = self.area.getCanvas(),
+            relief = None,
+            text_fg = TEXT_COLOR,
+            text_align = TextNode.ALeft,
+            text_font = self.title_font,
+        )
+
+        if self.last_element:
+            autils.alignTo(title, self.last_element, autils.CT, autils.CB, gap=(1,1))
+        else:
+            title.setPos((-0.77, 0, 0.8))
+        title.setX(-0.77)
+
+        # Underscore
+        title_x, title_y, title_z = title.getPos()
+        lines = LineSegs()
+        lines.setColor(TEXT_COLOR)
+        lines.moveTo(title_x, 0, title_z - HEADING_SCALE*0.2)
+        lines.drawTo(0.8, 0, title_z - HEADING_SCALE*0.2)
+        lines.setThickness(1)
+        node = lines.create()
+        underscore = NodePath(node)
+        underscore.reparentTo(self.area.getCanvas())
+
+        # Invisible line for white space
+        lines = LineSegs()
+        lines.setColor((0,0,0,0))
+        lines.moveTo(title_x, 0, title_z - HEADING_SCALE*0.5)
+        lines.drawTo(0.8, 0, title_z - HEADING_SCALE*0.5)
+        lines.setThickness(1)
+        node = lines.create()
+        whitespace = NodePath(node)
+        whitespace.reparentTo(self.area.getCanvas())
+
+        # Create a parent for all the nodes
+        title_obj = self.area.getCanvas().attachNewNode(f"title_{self.name}")
+        title.reparentTo(title_obj)
+        underscore.reparentTo(title_obj)
+        whitespace.reparentTo(title_obj)
+
+        self.last_element = title_obj
+
+        self.elements.append({
+            'type': 'subtitle',
             'name': item.text,
             'content': title_obj,
         })
@@ -238,6 +297,50 @@ class Menu(object):
         })
 
         return button_obj
+
+
+    def add_backbutton(self, item):
+        """Add a back button"""
+
+        func_name = item[0].text
+
+        # This is the button you click. NOTE `command` is assigned ad hoc. See
+        # Menus.populate_menus
+        button = DirectButton(
+            scale=BACKBUTTON_TEXT_SCALE,
+            geom=(
+                loadImageAsPlane(panda_path(MENU_ASSETS/'backbutton.png')),
+                loadImageAsPlane(panda_path(MENU_ASSETS/'backbutton.png')),
+                loadImageAsPlane(panda_path(MENU_ASSETS/'backbutton_hover.png')),
+                loadImageAsPlane(panda_path(MENU_ASSETS/'backbutton.png')),
+            ),
+            relief=None,
+        )
+
+        button_np = NodePath(button)
+        # functional_button-<menu_name>-<button_text>
+        button_id = f"functional_button-{self.name}-back"
+        button_np.setName(button_id)
+        button_np.reparentTo(self.area)
+
+        button_np.setPos(-0.92, 0, 0.22)
+
+        ## Create a parent for all the nodes
+        #button_id = 'button_' + item.text.replace(' ', '_')
+        #button_obj = self.area.getCanvas().attachNewNode(button_id)
+        #button_np.reparentTo(button_obj)
+        #info_button.reparentTo(button_obj)
+
+        #self.last_element = button_np
+
+        self.elements.append({
+            'type': 'backbutton',
+            'content': button_np,
+            'object': button,
+            'func_name': func_name,
+        })
+
+        return button_np
 
 
     def add_text(self, item):
@@ -399,6 +502,10 @@ class Menus(object):
 
     def func_go_about(self):
         self.show_menu('about')
+
+
+    def func_go_game_setup(self):
+        self.show_menu('game_setup')
 
 
     def func_go_settings(self):
