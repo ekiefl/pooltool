@@ -243,6 +243,19 @@ class Menu(object):
         except ValueError:
             func_name = None
 
+        title = DirectLabel(
+            text = name + ":",
+            scale = BUTTON_TEXT_SCALE,
+            parent = self.area.getCanvas(),
+            relief = None,
+            text_fg = TEXT_COLOR,
+            text_align = TextNode.ALeft,
+            text_font = self.title_font,
+        )
+        title.reparentTo(self.area.getCanvas())
+        title_np = NodePath(title)
+        title_np.reparentTo(self.area.getCanvas())
+
         dropdown = DirectOptionMenu(
             scale=BUTTON_TEXT_SCALE,
             items=options,
@@ -256,10 +269,7 @@ class Menu(object):
             popupMarker_relief=None,
             item_pad=(0.2,0.2),
         )
-
-        # Background of dropdown
         dropdown['frameColor'] = (1, 1, 1, 0.1)
-
         dropdown.reparentTo(self.area.getCanvas())
 
         dropdown_np = NodePath(dropdown)
@@ -269,11 +279,18 @@ class Menu(object):
         dropdown_np.reparentTo(self.area.getCanvas())
 
         if self.last_element:
-            autils.alignTo(dropdown_np, self.last_element, autils.CT, autils.CB)
+            autils.alignTo(title_np, self.last_element, autils.CT, autils.CB)
         else:
-            dropdown_np.setPos(-0.63, 0, 0.8)
-        dropdown_np.setX(-0.63)
-        dropdown_np.setZ(dropdown_np.getZ() - MOVE)
+            title_np.setPos(-0.63, 0, 0.8)
+        title_np.setX(-0.63)
+        title_np.setZ(title_np.getZ() - MOVE)
+
+        # Align the dropdown next to the title that refers to it
+        autils.alignTo(dropdown_np, title_np, autils.CL, autils.CR)
+        # Then shift it over just a bit to give some space
+        dropdown_np.setX(dropdown_np.getX() + 0.02)
+        # Then shift it down a little to align the text
+        dropdown_np.setZ(dropdown_np.getZ() - 0.005)
 
         # This is the info button you hover over
         info_button = DirectButton(
@@ -292,13 +309,14 @@ class Menu(object):
         info_button.reparentTo(self.area.getCanvas())
 
         # Align the info button next to the button it refers to
-        autils.alignTo(info_button, dropdown_np, autils.CR, autils.CL)
+        autils.alignTo(info_button, title_np, autils.CR, autils.CL)
         # Then shift it over just a bit to give some space
         info_button.setX(info_button.getX() - 0.02)
 
         # Create a parent for all the nodes
         dropdown_id = 'dropdown_' + item.text.replace(' ', '_')
         dropdown_obj = self.area.getCanvas().attachNewNode(dropdown_id)
+        title_np.reparentTo(dropdown_obj)
         dropdown_np.reparentTo(dropdown_obj)
         info_button.reparentTo(dropdown_obj)
 
