@@ -96,6 +96,7 @@ class Menu(object):
         item_to_method = {
             'title': self.add_title,
             'subtitle': self.add_subtitle,
+            'dropdown': self.add_dropdown,
             'button': self.add_button,
             'backbutton': self.add_backbutton,
             'text': self.add_text,
@@ -107,6 +108,15 @@ class Menu(object):
             method(item)
 
         self.hide()
+
+
+    def search_child_tag(self, item, tag):
+        """Return first child within xml item with given tag. Error if absent"""
+        for subitem in item:
+            if subitem.tag == tag:
+                return subitem
+        else:
+            raise ValueError(f"{item} has no child with tag '{tag}'")
 
 
     def add_title(self, item):
@@ -223,12 +233,93 @@ class Menu(object):
         return title_obj
 
 
+    def add_dropdown(self, item):
+        name = self.search_child_tag(item, 'name').text
+        desc = self.search_child_tag(item, 'description').text
+        options = [subitem.text for subitem in item if subitem.tag == 'option']
+
+        try:
+            func_name = self.search_child_tag(item, 'func').text
+        except ValueError:
+            func_name = None
+
+        dropdown = DirectOptionMenu(
+            scale=BUTTON_TEXT_SCALE,
+            items=options,
+            highlightColor=(0.65, 0.65, 0.65, 1),
+            textMayChange=1,
+            text_align = TextNode.ALeft,
+            text_font = self.button_font,
+            relief=DGG.RIDGE,
+            popupMarker_scale=0.6,
+            popupMarker_image=loadImageAsPlane(panda_path(MENU_ASSETS/'dropdown_marker.png')),
+            popupMarker_relief=None,
+            item_pad=(0.2,0.2),
+        )
+
+        # Background of dropdown
+        dropdown['frameColor'] = (1, 1, 1, 0.1)
+
+        dropdown.reparentTo(self.area.getCanvas())
+
+        dropdown_np = NodePath(dropdown)
+        # functional_dropdown-<menu_name>-<dropdown_text>
+        dropdown_id = f"functional_dropdown-{self.name}-{name.replace(' ','_')}"
+        dropdown_np.setName(dropdown_id)
+        dropdown_np.reparentTo(self.area.getCanvas())
+
+        if self.last_element:
+            autils.alignTo(dropdown_np, self.last_element, autils.CT, autils.CB)
+        else:
+            dropdown_np.setPos(-0.63, 0, 0.8)
+        dropdown_np.setX(-0.63)
+        dropdown_np.setZ(dropdown_np.getZ() - MOVE)
+
+        # This is the info button you hover over
+        info_button = DirectButton(
+            text = '',
+            text_align = TextNode.ALeft,
+            scale=INFO_SCALE,
+            image=panda_path(MENU_ASSETS/'info_button.png'),
+            relief=None,
+        )
+
+        # Bind mouse hover to displaying button info
+        info_button.bind(DGG.ENTER, self.display_button_info, extraArgs = [desc])
+        info_button.bind(DGG.EXIT, self.destroy_button_info)
+
+        info_button = NodePath(info_button)
+        info_button.reparentTo(self.area.getCanvas())
+
+        # Align the info button next to the button it refers to
+        autils.alignTo(info_button, dropdown_np, autils.CR, autils.CL)
+        # Then shift it over just a bit to give some space
+        info_button.setX(info_button.getX() - 0.02)
+
+        # Create a parent for all the nodes
+        dropdown_id = 'dropdown_' + item.text.replace(' ', '_')
+        dropdown_obj = self.area.getCanvas().attachNewNode(dropdown_id)
+        dropdown_np.reparentTo(dropdown_obj)
+        info_button.reparentTo(dropdown_obj)
+
+        self.last_element = dropdown_np
+
+        self.elements.append({
+            'type': 'dropdown',
+            'name': name,
+            'content': dropdown_obj,
+            'object': dropdown,
+            'convert_factor': None,
+            'func_name': func_name,
+        })
+
+
     def add_button(self, item):
         """Add a button"""
 
-        name = item[0].text
-        func_name = item[1].text
-        desc = item[2].text
+        name = self.search_child_tag(item, 'name').text
+        func_name = self.search_child_tag(item, 'func').text
+        desc = self.search_child_tag(item, 'description').text
 
         # This is the button you click. NOTE `command` is assigned ad hoc. See
         # Menus.populate_menus
@@ -412,7 +503,7 @@ class Menu(object):
         a2d = aspect2d.getRelativePoint(render2d, r2d)
         self.hover_msg.setPos(a2d)
         # Now shift it up so the mouse doesn't get in the way
-        self.hover_msg.setZ(self.hover_msg.getZ() + INFO_SCALE)
+        self.hover_msg.setZ(self.hover_msg.getZ() + INFO_SCALE*2)
 
 
     def destroy_button_info(self, coords):
@@ -492,7 +583,7 @@ class Menus(object):
         return {}
 
 
-    def func_null(self):
+    def func_null(self, *args):
         return
 
 

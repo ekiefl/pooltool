@@ -31,11 +31,14 @@
             <func>func_go_main_menu</func>
         </backbutton>
         <subtitle>Type</subtitle>
-        <button>
-            <name>About</name>
-            <func>func_go_about</func>
-            <description>Learn more about the project.</description>
-        </button>
+        <dropdown name="game_type">
+            <name>Game</name>
+            <option>8-ball</option>
+            <option>9-ball</option>
+            <option>Sandbox</option>
+            <description>What kind of billiards game do you want to play?</description>
+            <func>func_null</func>
+        </dropdown>
         <!--<subtitle>Table</subtitle>
         <button>
             <name>About</name>
