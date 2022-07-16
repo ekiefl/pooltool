@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import sys
+import configparser
 from panda3d.core import *
 from direct.gui.DirectGui import *
 import xml.etree.ElementTree as ET
@@ -18,7 +19,7 @@ from pathlib import Path
 
 TEXT_COLOR = (0.1, 0.1, 0.1, 1)
 FRAME_COLOR = (0, 0, 0, 1)
-TEXT_SCALE = 0.04
+TEXT_SCALE = 0.05
 BUTTON_TEXT_SCALE = 0.07
 BACKBUTTON_TEXT_SCALE = 0.06
 HEADING_SCALE = 0.12
@@ -76,7 +77,7 @@ class Menu(object):
 
         self.area = DirectScrolledFrame(
             frameColor = (1, 1, 1, 0.2), # alpha == 0
-            canvasSize=(-1, 1, -2, 1),
+            canvasSize=(-1, 1, -3, 1),
             frameSize=(-1, 1, -0.9, 0.3),
             scrollBarWidth=0.04,
             horizontalScroll_frameSize=(0, 0, 0, 0),
@@ -101,6 +102,7 @@ class Menu(object):
             'button': self.add_button,
             'backbutton': self.add_backbutton,
             'text': self.add_text,
+            'entry': self.add_entry,
         }
         for item in self.xml:
             method = item_to_method.get(item.tag)
@@ -237,7 +239,16 @@ class Menu(object):
     def add_dropdown(self, item):
         name = self.search_child_tag(item, 'name').text
         desc = self.search_child_tag(item, 'description').text
-        options = [subitem.text for subitem in item if subitem.tag == 'option']
+
+        if item.attrib.get('from_yaml'):
+            # Populate the options from a YAML
+            path = Path(pooltool.__file__).parent / item.attrib.get('from_yaml')
+            config_obj = configparser.ConfigParser()
+            config_obj.read(path)
+            options = [option for option in config_obj.sections()]
+        else:
+            # Read the options directly from the XML
+            options = [subitem.text for subitem in item if subitem.tag == 'option']
 
         try:
             func_name = self.search_child_tag(item, 'func').text
@@ -258,12 +269,12 @@ class Menu(object):
         title_np.reparentTo(self.area.getCanvas())
 
         dropdown = DirectOptionMenu(
-            scale=BUTTON_TEXT_SCALE,
+            scale=BUTTON_TEXT_SCALE*0.8,
             items=options,
             highlightColor=(0.65, 0.65, 0.65, 1),
             textMayChange=1,
             text_align = TextNode.ALeft,
-            text_font = self.button_font,
+            #text_font = self.button_font,
             relief=DGG.RIDGE,
             popupMarker_scale=0.6,
             popupMarker_image=loadImageAsPlane(panda_path(MENU_ASSETS/'dropdown_marker.png')),
@@ -421,6 +432,104 @@ class Menu(object):
         })
 
 
+    def add_entry(self, item):
+        name = self.search_child_tag(item, 'name').text
+        desc = self.search_child_tag(item, 'description').text
+
+        try:
+            initial = item.attrib['initial']
+        except KeyError:
+            initial = ''
+
+        try:
+            width = int(item.attrib['width'])
+        except KeyError:
+            width = 4
+
+        title = DirectLabel(
+            text = name + ":",
+            scale = BUTTON_TEXT_SCALE,
+            parent = self.area.getCanvas(),
+            relief = None,
+            text_fg = TEXT_COLOR,
+            text_align = TextNode.ALeft,
+            text_font = self.title_font,
+        )
+        title.reparentTo(self.area.getCanvas())
+        title_np = NodePath(title)
+        title_np.reparentTo(self.area.getCanvas())
+
+        entry = DirectEntry(
+            text = "",
+            scale = BUTTON_TEXT_SCALE*0.7,
+            initialText = initial,
+            relief=DGG.RIDGE,
+            numLines = 1,
+            width = width,
+            focus = 0,
+            focusInCommand = lambda: entry.enterText('')
+        )
+        entry['frameColor'] = (1, 1, 1, 0.3)
+
+        entry_np = NodePath(entry)
+        # functional_entry-<menu_name>-<entry_text>
+        entry_id = f"functional_entry-{self.name}-{name.replace(' ','_')}"
+        entry_np.setName(entry_id)
+        entry_np.reparentTo(self.area.getCanvas())
+
+        if self.last_element:
+            autils.alignTo(title_np, self.last_element, autils.CT, autils.CB)
+        else:
+            title_np.setPos(-0.63, 0, 0.8)
+        title_np.setX(-0.63)
+        title_np.setZ(title_np.getZ() - MOVE)
+
+        # Align the entry next to the title that refers to it
+        autils.alignTo(entry_np, title_np, autils.CL, autils.CR)
+        # Then shift it over just a bit to give some space
+        entry_np.setX(entry_np.getX() + 0.02)
+        # Then shift it down a little to align the text
+        entry_np.setZ(entry_np.getZ() - 0.005)
+
+        # This is the info button you hover over
+        info_button = DirectButton(
+            text = '',
+            text_align = TextNode.ALeft,
+            scale=INFO_SCALE,
+            image=panda_path(MENU_ASSETS/'info_button.png'),
+            relief=None,
+        )
+
+        # Bind mouse hover to displaying button info
+        info_button.bind(DGG.ENTER, self.display_button_info, extraArgs = [desc])
+        info_button.bind(DGG.EXIT, self.destroy_button_info)
+
+        info_button = NodePath(info_button)
+        info_button.reparentTo(self.area.getCanvas())
+
+        # Align the info button next to the button it refers to
+        autils.alignTo(info_button, title_np, autils.CR, autils.CL)
+        # Then shift it over just a bit to give some space
+        info_button.setX(info_button.getX() - 0.02)
+
+        # Create a parent for all the nodes
+        entry_id = 'entry_' + item.text.replace(' ', '_')
+        entry_obj = self.area.getCanvas().attachNewNode(entry_id)
+        title_np.reparentTo(entry_obj)
+        entry_np.reparentTo(entry_obj)
+        info_button.reparentTo(entry_obj)
+
+        self.last_element = entry_np
+
+        self.elements.append({
+            'type': 'entry',
+            'name': name,
+            'content': entry_obj,
+            'object': entry,
+            'convert_factor': None,
+        })
+
+
     def add_button(self, item):
         """Add a button"""
 
@@ -545,7 +654,7 @@ class Menu(object):
         """Add text"""
 
         text = item.text.strip()
-        max_len = 60
+        max_len = 55
         new_text = []
         line, columns = [], 0
         for word in text.split():
@@ -698,12 +807,21 @@ class Menus(object):
         sys.exit()
 
 
+    def func_save_table(self):
+        # FIXME
+        print('Table saved!')
+
+
     def func_go_about(self):
         self.show_menu('about')
 
 
     def func_go_game_setup(self):
         self.show_menu('game_setup')
+
+
+    def func_go_new_table(self):
+        self.show_menu('new_table')
 
 
     def func_go_settings(self):

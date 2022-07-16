@@ -31,29 +31,116 @@
             <func>func_go_main_menu</func>
         </backbutton>
         <subtitle>Type</subtitle>
-        <dropdown name="game_type">
-            <name>Game</name>
-            <option>8-ball</option>
-            <option>9-ball</option>
-            <description>What kind of billiards game do you want to play?</description>
-            <func>func_null</func>
+            <dropdown name="game_type">
+                <name>Game</name>
+                <option>8-ball</option>
+                <option>9-ball</option>
+                <description>What kind of billiards game do you want to play?</description>
+                <func>func_null</func>
+            </dropdown>
+            <checkbox name="sandbox">
+                <name>Sandbox</name>
+                <description>If selected, no rules are enforced and full control is given</description>
+            </checkbox>
+        <subtitle>Table</subtitle>
+            <text>Either pick an existing table or create a new table.</text>
+            <dropdown name="table_type" from_yaml="config/tables">
+                <name>Table</name>
+                <description>Choose from an existing table</description>
+            </dropdown>
+            <button>
+                <name>New</name>
+                <func>func_go_new_table</func>
+                <description>Don't like the options? Create a new table</description>
+            </button>
+    </menu>
+    <!--____________________________________________________________-->
+    <menu name="new_table">
+        <title>Define New Table</title>
+        <backbutton>
+            <func>func_go_game_setup</func>
+        </backbutton>
+        <text>
+            All units are defined using SI units (meters, kilograms, etc). The defaults
+            define my 7-foot table. 
+        </text>
+        <text>
+            If you pick a pocketless table type, you can ignore all pocket-related parameters.
+        </text>
+        <subtitle>General</subtitle>
+        <dropdown name="table_type">
+            <name>Type</name>
+            <option>Pocket</option>
+            <option>Billiard</option>
+            <description>Let's start simple. What kind of table are we talking? Pockets or no pockets?</description>
         </dropdown>
-        <checkbox name="sandbox">
-            <name>Sandbox</name>
-            <description>If selected, no rules are enforced and full control is given</description>
-        </checkbox>
-        <!--<subtitle>Table</subtitle>
+        <entry initial="1.9812">
+            <name>length</name>
+            <description>The length of the table</description>
+        </entry>
+        <entry initial="0.708">
+            <name>width</name>
+            <description>The width of the table</description>
+        </entry>
+        <entry initial="0.64">
+            <name>cushion height fraction</name>
+            <description>The height of the cushion, measured as a fraction of the ball diameter</description>
+        </entry>
+        <subtitle>Corner pockets</subtitle>
+        <entry initial="0.118">
+            <name>corner pocket width</name>
+            <description>The point-to-point distance defining the mouth of the pocket</description>
+        </entry>
+        <entry initial="5.3">
+            <name>corner pocket angle</name>
+            <description>The opening angle of the pocket. When 0, the pocket walls run parallel.</description>
+        </entry>
+        <entry initial="0.0398">
+            <name>corner pocket depth</name>
+            <description>The shelf depth of the pocket</description>
+        </entry>
+        <entry initial="0.62">
+            <name>corner pocket radius</name>
+            <description>The radius of the corner pocket holes</description>
+        </entry>
+        <entry initial="0.0210">
+            <name>corner jaw radius</name>
+            <description>How rounded the corner pocket jaws? Make larger to resemble snooker/chinese billiards</description>
+        </entry>
+        <subtitle>Side pockets</subtitle>
+        <entry initial="0.137">
+            <name>side pocket width</name>
+            <description>The point-to-point distance defining the mouth of the pocket</description>
+        </entry>
+        <entry initial="7.14">
+            <name>side pocket angle</name>
+            <description>The opening angle of the pocket. When 0, the pocket walls run parallel.</description>
+        </entry>
+        <entry initial="0.00437">
+            <name>side pocket depth</name>
+            <description>The shelf depth of the pocket</description>
+        </entry>
+        <entry initial="0.645">
+            <name>side pocket radius</name>
+            <description>The radius of the side pocket holes</description>
+        </entry>
+        <entry initial="0.008">
+            <name>side jaw radius</name>
+            <description>How rounded the side pocket jaws? Make larger to resemble snooker/chinese billiards</description>
+        </entry>
+        <subtitle>Save</subtitle>
+        <entry>
+            <name>Name</name>
+            <description>Give a unique name to this table</description>
+        </entry>
         <button>
-            <name>About</name>
-            <func>func_go_about</func>
-            <description>Learn more about the project.</description>
+            <name>Save</name>
+            <description>Save this table</description>
+            <func>func_save_table</func>
         </button>
-        <subtitle>Ball</subtitle>
-        <button>
-            <name>About</name>
-            <func>func_go_about</func>
-            <description>Learn more about the project.</description>
-        </button>-->
+        <text>
+            After clicking "Save", go to the previous menu and select your new table.
+        </text>
     </menu>
     <!--____________________________________________________________-->
     <menu name="settings">
