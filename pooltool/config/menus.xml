@@ -35,10 +35,13 @@
             <name>Game</name>
             <option>8-ball</option>
             <option>9-ball</option>
-            <option>Sandbox</option>
             <description>What kind of billiards game do you want to play?</description>
             <func>func_null</func>
         </dropdown>
+        <checkbox name="sandbox">
+            <name>Sandbox</name>
+            <description>If selected, no rules are enforced and full control is given</description>
+        </checkbox>
         <!--<subtitle>Table</subtitle>
         <button>
             <name>About</name>

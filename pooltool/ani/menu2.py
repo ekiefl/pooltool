@@ -97,6 +97,7 @@ class Menu(object):
             'title': self.add_title,
             'subtitle': self.add_subtitle,
             'dropdown': self.add_dropdown,
+            'checkbox': self.add_checkbox,
             'button': self.add_button,
             'backbutton': self.add_backbutton,
             'text': self.add_text,
@@ -269,7 +270,7 @@ class Menu(object):
             popupMarker_relief=None,
             item_pad=(0.2,0.2),
         )
-        dropdown['frameColor'] = (1, 1, 1, 0.1)
+        dropdown['frameColor'] = (1, 1, 1, 0.3)
         dropdown.reparentTo(self.area.getCanvas())
 
         dropdown_np = NodePath(dropdown)
@@ -329,6 +330,94 @@ class Menu(object):
             'object': dropdown,
             'convert_factor': None,
             'func_name': func_name,
+        })
+
+
+    def add_checkbox(self, item):
+        name = self.search_child_tag(item, 'name').text
+        desc = self.search_child_tag(item, 'description').text
+
+        title = DirectLabel(
+            text = name + ":",
+            scale = BUTTON_TEXT_SCALE,
+            parent = self.area.getCanvas(),
+            relief = None,
+            text_fg = TEXT_COLOR,
+            text_align = TextNode.ALeft,
+            text_font = self.title_font,
+        )
+        title.reparentTo(self.area.getCanvas())
+        title_np = NodePath(title)
+        title_np.reparentTo(self.area.getCanvas())
+
+        checkbox = DirectCheckButton(
+            scale=BUTTON_TEXT_SCALE*0.5,
+            boxImage=(
+              panda_path(MENU_ASSETS/'unchecked.png'),  
+              panda_path(MENU_ASSETS/'checked.png'),  
+              None,  
+            ),
+            text="",
+            relief=None,
+            boxRelief=None,
+        )
+
+        checkbox_np = NodePath(checkbox)
+        # functional_checkbox-<menu_name>-<checkbox_text>
+        checkbox_id = f"functional_checkbox-{self.name}-{name.replace(' ','_')}"
+        checkbox_np.setName(checkbox_id)
+        checkbox_np.reparentTo(self.area.getCanvas())
+
+        if self.last_element:
+            autils.alignTo(title_np, self.last_element, autils.CT, autils.CB)
+        else:
+            title_np.setPos(-0.63, 0, 0.8)
+        title_np.setX(-0.63)
+        title_np.setZ(title_np.getZ() - MOVE)
+
+        # Align the checkbox next to the title that refers to it
+        autils.alignTo(checkbox_np, title_np, autils.CL, autils.CR)
+        # Then shift it over just a bit to give some space
+        checkbox_np.setX(checkbox_np.getX() + 0.02)
+        # Then shift it down a little to align the text
+        checkbox_np.setZ(checkbox_np.getZ() - 0.005)
+
+        # This is the info button you hover over
+        info_button = DirectButton(
+            text = '',
+            text_align = TextNode.ALeft,
+            scale=INFO_SCALE,
+            image=panda_path(MENU_ASSETS/'info_button.png'),
+            relief=None,
+        )
+
+        # Bind mouse hover to displaying button info
+        info_button.bind(DGG.ENTER, self.display_button_info, extraArgs = [desc])
+        info_button.bind(DGG.EXIT, self.destroy_button_info)
+
+        info_button = NodePath(info_button)
+        info_button.reparentTo(self.area.getCanvas())
+
+        # Align the info button next to the button it refers to
+        autils.alignTo(info_button, title_np, autils.CR, autils.CL)
+        # Then shift it over just a bit to give some space
+        info_button.setX(info_button.getX() - 0.02)
+
+        # Create a parent for all the nodes
+        checkbox_id = 'checkbox_' + item.text.replace(' ', '_')
+        checkbox_obj = self.area.getCanvas().attachNewNode(checkbox_id)
+        title_np.reparentTo(checkbox_obj)
+        checkbox_np.reparentTo(checkbox_obj)
+        info_button.reparentTo(checkbox_obj)
+
+        self.last_element = checkbox_np
+
+        self.elements.append({
+            'type': 'checkbox',
+            'name': name,
+            'content': checkbox_obj,
+            'object': checkbox,
+            'convert_factor': None,
         })
 
 
