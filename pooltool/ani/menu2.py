@@ -470,10 +470,10 @@ class Menu(object):
             numLines = 1,
             width = width,
             focus = 0,
-            focusInCommand = self.set_entry_focus,
+            focusInCommand = self.entry_buildup,
             focusInExtraArgs = [True, name],
-            #focusOutCommand = self.set_entry_focus,
-            #focusOutExtraArgs = [False, name],
+            focusOutCommand = self.entry_teardown,
+            focusOutExtraArgs = [name, initial],
             suppressKeys = True,
         )
         entry['frameColor'] = (1, 1, 1, 0.3)
@@ -534,6 +534,7 @@ class Menu(object):
 
         self.elements.append({
             'type': 'entry',
+            'initial': initial,
             'name': name,
             'content': entry_obj,
             'object': entry,
@@ -555,18 +556,31 @@ class Menu(object):
         self.hovered_entry = name
 
 
-    def set_entry_focus(self, value, name):
-        """Set DirectEntry __dict__ value 'focus' to True if it has focus
+    def entry_buildup(self, value, name):
+        """Build up operations for entering DirectEntry
 
         While the focus of a DirectEntry can be set programmatically by updating
         DirectEntry['focus'], when the focus is via the user (clicking), this dictionary
         is not updated. This undesirable behavior is ironed out here. Whenever a
         DirectEntry is given focus, this method is called, which updates the dictionary.
         """
+
         for element in self.elements:
             if element['type'] == 'entry' and element['name'] == name:
                 element['object']['focus'] = value
+                element['object'].enterText('')
                 return
+
+
+    def entry_teardown(self, name, initial):
+        """Teardown up operations for leaving DirectEntry"""
+
+        # If the entry has been left blank, replace it with the initial value
+        for element in self.elements:
+            if element['type'] == 'entry' and element['name'] == name:
+                if element['object'].get().strip() is '':
+                    element['object'].enterText(initial)
+                    return
 
 
     def add_button(self, item):
