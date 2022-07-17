@@ -21,6 +21,7 @@ TEXT_COLOR = (0.1, 0.1, 0.1, 1)
 FRAME_COLOR = (0, 0, 0, 1)
 TEXT_SCALE = 0.05
 BUTTON_TEXT_SCALE = 0.07
+AUX_TEXT_SCALE = BUTTON_TEXT_SCALE*1.0
 BACKBUTTON_TEXT_SCALE = 0.06
 HEADING_SCALE = 0.12
 SUBHEADING_SCALE = 0.08
@@ -88,6 +89,8 @@ class Menu(object):
 
         # 0.05 means you scroll from top to bottom in 20 discrete steps
         self.area.verticalScroll['pageSize'] = 0.05
+
+        self.hovered_entry = None
 
 
     def populate(self):
@@ -257,7 +260,7 @@ class Menu(object):
 
         title = DirectLabel(
             text = name + ":",
-            scale = BUTTON_TEXT_SCALE,
+            scale = AUX_TEXT_SCALE,
             parent = self.area.getCanvas(),
             relief = None,
             text_fg = TEXT_COLOR,
@@ -350,7 +353,7 @@ class Menu(object):
 
         title = DirectLabel(
             text = name + ":",
-            scale = BUTTON_TEXT_SCALE,
+            scale = AUX_TEXT_SCALE,
             parent = self.area.getCanvas(),
             relief = None,
             text_fg = TEXT_COLOR,
@@ -448,7 +451,7 @@ class Menu(object):
 
         title = DirectLabel(
             text = name + ":",
-            scale = BUTTON_TEXT_SCALE,
+            scale = AUX_TEXT_SCALE,
             parent = self.area.getCanvas(),
             relief = None,
             text_fg = TEXT_COLOR,
@@ -467,9 +470,17 @@ class Menu(object):
             numLines = 1,
             width = width,
             focus = 0,
-            focusInCommand = lambda: entry.enterText('')
+            focusInCommand = self.set_entry_focus,
+            focusInExtraArgs = [True, name],
+            #focusOutCommand = self.set_entry_focus,
+            #focusOutExtraArgs = [False, name],
+            suppressKeys = True,
         )
         entry['frameColor'] = (1, 1, 1, 0.3)
+
+        # If the mouse hovers over a direct entry, update self.hovered_entry
+        entry.bind(DGG.ENTER, self.update_hovered_entry, extraArgs = [name])
+        entry.bind(DGG.EXIT, self.update_hovered_entry, extraArgs = [None])
 
         entry_np = NodePath(entry)
         # functional_entry-<menu_name>-<entry_text>
@@ -528,6 +539,34 @@ class Menu(object):
             'object': entry,
             'convert_factor': None,
         })
+
+
+    def update_hovered_entry(self, name, mouse_watcher):
+        """Set self.hovered_entry
+
+        By default, the focus of a DirectEntry can only be unset by pressing 'enter'.
+        It feels more natural to unfocus a DirectEntry by clicking outside of the entry,
+        so I created an event listener that unfocuses buttons if a click is made. But a
+        side effect of this is that any clicks on the entry or undone by this event
+        listener. To solve this, I created self.hovered_entry, which is updated every
+        time a mouse is over a DirectEntry. The event listener skips over this
+        DirectEntry, so that one can click a DirectEntry to gain focus.
+        """
+        self.hovered_entry = name
+
+
+    def set_entry_focus(self, value, name):
+        """Set DirectEntry __dict__ value 'focus' to True if it has focus
+
+        While the focus of a DirectEntry can be set programmatically by updating
+        DirectEntry['focus'], when the focus is via the user (clicking), this dictionary
+        is not updated. This undesirable behavior is ironed out here. Whenever a
+        DirectEntry is given focus, this method is called, which updates the dictionary.
+        """
+        for element in self.elements:
+            if element['type'] == 'entry' and element['name'] == name:
+                element['object']['focus'] = value
+                return
 
 
     def add_button(self, item):
@@ -631,14 +670,6 @@ class Menu(object):
         button_np.reparentTo(self.area)
 
         button_np.setPos(-0.92, 0, 0.22)
-
-        ## Create a parent for all the nodes
-        #button_id = 'button_' + item.text.replace(' ', '_')
-        #button_obj = self.area.getCanvas().attachNewNode(button_id)
-        #button_np.reparentTo(button_obj)
-        #info_button.reparentTo(button_obj)
-
-        #self.last_element = button_np
 
         self.elements.append({
             'type': 'backbutton',

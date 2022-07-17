@@ -11,6 +11,7 @@ class MenuMode(Mode):
         action.new_game: False,
         action.scroll_up: False,
         action.scroll_down: False,
+        'click': False,
     }
 
     def enter(self):
@@ -24,6 +25,7 @@ class MenuMode(Mode):
         self.task_action('n-up', action.new_game, False)
         self.task_action('wheel_up', action.scroll_up, True)
         self.task_action('wheel_down', action.scroll_down, True)
+        self.task_action('mouse1-up', 'click', True)
 
         self.add_task(self.menu_task, 'menu_task')
 
@@ -50,6 +52,16 @@ class MenuMode(Mode):
             scroll_bar = self.current_menu.area.verticalScroll
             scroll_bar.setValue(scroll_bar.getValue() + scroll_bar['pageSize'])
             self.keymap[action.scroll_down] = False
+
+        if self.keymap['click']:
+            self.keymap['click'] = False
+            for element in self.current_menu.elements:
+                if (
+                    element['type'] == 'entry'
+                    and element['object']['focus']
+                    and element['name'] != self.current_menu.hovered_entry
+                ):
+                    element['object']['focus'] = False
 
         return task.cont
 
