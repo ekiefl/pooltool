@@ -22,6 +22,8 @@ FRAME_COLOR = (0, 0, 0, 1)
 TEXT_SCALE = 0.05
 BUTTON_TEXT_SCALE = 0.07
 AUX_TEXT_SCALE = BUTTON_TEXT_SCALE*1.0
+ERROR_TEXT_SCALE = BUTTON_TEXT_SCALE*0.6
+ERROR_COLOR = (0.9, 0.4, 0.4, 1)
 BACKBUTTON_TEXT_SCALE = 0.06
 HEADING_SCALE = 0.12
 SUBHEADING_SCALE = 0.08
@@ -439,6 +441,15 @@ class Menu(object):
         name = self.search_child_tag(item, 'name').text
         desc = self.search_child_tag(item, 'description').text
 
+        validator = item.attrib.get('validator')
+        if validator is None:
+            validator = lambda value: True
+        else:
+            try:
+                validator = getattr(self, validator)
+            except AttributeError:
+                raise AttributeError(f"Unknown validator string '{validator}' for element with name '{name}'")
+
         try:
             initial = item.attrib['initial']
         except KeyError:
@@ -523,12 +534,36 @@ class Menu(object):
         # Then shift it over just a bit to give some space
         info_button.setX(info_button.getX() - 0.02)
 
+        # This text is shown if an error is detected in the user input
+        error = DirectLabel(
+            text = "",
+            textMayChange=1,
+            text_fg=ERROR_COLOR,
+            text_bg=(0,0,0,0.3),
+            scale = ERROR_TEXT_SCALE,
+            parent = self.area.getCanvas(),
+            relief = None,
+            text_align = TextNode.ALeft,
+        )
+        error.reparentTo(self.area.getCanvas())
+        error_np = NodePath(error)
+        error_np.reparentTo(self.area.getCanvas())
+        error_np.hide()
+
+        # Align the error msg next to the entry it refers to
+        autils.alignTo(error, entry_np, autils.CL, autils.CR)
+        # Then shift it over just a bit to give some space
+        error_np.setX(error_np.getX() + 0.02)
+        # And shift it down a little too
+        error_np.setZ(error_np.getZ() - 0.01)
+
         # Create a parent for all the nodes
         entry_id = 'entry_' + item.text.replace(' ', '_')
         entry_obj = self.area.getCanvas().attachNewNode(entry_id)
         title_np.reparentTo(entry_obj)
         entry_np.reparentTo(entry_obj)
         info_button.reparentTo(entry_obj)
+        error_np.reparentTo(entry_obj)
 
         self.last_element = entry_np
 
@@ -538,6 +573,8 @@ class Menu(object):
             'name': name,
             'content': entry_obj,
             'object': entry,
+            'error_msg': error,
+            'validator': validator,
             'convert_factor': None,
         })
 
@@ -567,8 +604,10 @@ class Menu(object):
 
         for element in self.elements:
             if element['type'] == 'entry' and element['name'] == name:
-                element['object']['focus'] = value
+                # Clear the entry so user may type on a clean slate
                 element['object'].enterText('')
+
+                element['object']['focus'] = value
                 return
 
 
@@ -578,9 +617,36 @@ class Menu(object):
         # If the entry has been left blank, replace it with the initial value
         for element in self.elements:
             if element['type'] == 'entry' and element['name'] == name:
-                if element['object'].get().strip() is '':
+                value = element['object'].get()
+
+                if value.strip() == '':
+                    # The value is empty. Return to initial value
                     element['object'].enterText(initial)
-                    return
+                
+                valid, reason = element['validator'](value)
+                if not valid:
+                    element['error_msg'].setText(reason)
+                    element['error_msg'].show()
+                else:
+                    element['error_msg'].setText('')
+                    element['error_msg'].hide()
+
+
+    def is_entry_floatable(self, value):
+        try:
+            float(value)
+        except:
+            return False, "Error: must be a number"
+        else:
+            return True, ""
+
+
+    def is_table_name_valid(self, value):
+        table_names = ani.table_config.keys()
+        if value.strip() in table_names:
+            return False, "Error: Table name already exists"
+        else:
+            return True, ""
 
 
     def add_button(self, item):
@@ -854,6 +920,8 @@ class Menus(object):
 
     def func_save_table(self):
         # FIXME
+        #table_names = ani.table_config.keys()
+        #config_obj = configparser.ConfigParser()
         print('Table saved!')
 
 

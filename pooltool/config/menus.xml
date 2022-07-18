@@ -74,62 +74,62 @@
             <option>Billiard</option>
             <description>Let's start simple. What kind of table are we talking? Pockets or no pockets?</description>
         </dropdown>
-        <entry initial="1.9812">
+        <entry initial="1.9812" validator="is_entry_floatable">
             <name>length</name>
             <description>The length of the table</description>
         </entry>
-        <entry initial="0.708">
+        <entry initial="0.708" validator="is_entry_floatable">
             <name>width</name>
             <description>The width of the table</description>
         </entry>
-        <entry initial="0.64">
+        <entry initial="0.64" validator="is_entry_floatable">
             <name>cushion height fraction</name>
             <description>The height of the cushion, measured as a fraction of the ball diameter</description>
         </entry>
         <subtitle>Corner pockets</subtitle>
-        <entry initial="0.118">
+        <entry initial="0.118" validator="is_entry_floatable">
             <name>corner pocket width</name>
             <description>The point-to-point distance defining the mouth of the pocket</description>
         </entry>
-        <entry initial="5.3">
+        <entry initial="5.3" validator="is_entry_floatable">
             <name>corner pocket angle</name>
-            <description>The opening angle of the pocket. When 0, the pocket walls run parallel.</description>
+            <description>The opening angle of the pocket (degrees). When 0, the pocket walls run parallel.</description>
         </entry>
-        <entry initial="0.0398">
+        <entry initial="0.0398" validator="is_entry_floatable">
             <name>corner pocket depth</name>
             <description>The shelf depth of the pocket</description>
         </entry>
-        <entry initial="0.62">
+        <entry initial="0.62" validator="is_entry_floatable">
             <name>corner pocket radius</name>
             <description>The radius of the corner pocket holes</description>
         </entry>
-        <entry initial="0.0210">
+        <entry initial="0.0210" validator="is_entry_floatable">
             <name>corner jaw radius</name>
             <description>How rounded the corner pocket jaws? Make larger to resemble snooker/chinese billiards</description>
         </entry>
         <subtitle>Side pockets</subtitle>
-        <entry initial="0.137">
+        <entry initial="0.137" validator="is_entry_floatable">
             <name>side pocket width</name>
             <description>The point-to-point distance defining the mouth of the pocket</description>
         </entry>
-        <entry initial="7.14">
+        <entry initial="7.14" validator="is_entry_floatable">
             <name>side pocket angle</name>
-            <description>The opening angle of the pocket. When 0, the pocket walls run parallel.</description>
+            <description>The opening angle of the pocket (degrees). When 0, the pocket walls run parallel.</description>
         </entry>
-        <entry initial="0.00437">
+        <entry initial="0.00437" validator="is_entry_floatable">
             <name>side pocket depth</name>
             <description>The shelf depth of the pocket</description>
         </entry>
-        <entry initial="0.645">
+        <entry initial="0.645" validator="is_entry_floatable">
             <name>side pocket radius</name>
             <description>The radius of the side pocket holes</description>
         </entry>
-        <entry initial="0.008">
+        <entry initial="0.008" validator="is_entry_floatable">
             <name>side jaw radius</name>
             <description>How rounded the side pocket jaws? Make larger to resemble snooker/chinese billiards</description>
         </entry>
         <subtitle>Save</subtitle>
-        <entry>
+        <entry validator="is_table_name_valid">
             <name>Name</name>
             <description>Give a unique name to this table</description>
         </entry>
