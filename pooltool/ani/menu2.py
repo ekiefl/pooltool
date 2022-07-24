@@ -276,10 +276,12 @@ class Menu(object):
             # Read the options directly from the XML
             options = [subitem.text for subitem in item if subitem.tag == 'option']
 
+        initial_option = item.attrib['selection']
+
         try:
             func_name = self.search_child_tag(item, 'func').text
         except ValueError:
-            func_name = 'func_null'
+            func_name = 'func_update_dropdown_xml'
 
         title = DirectLabel(
             text = name + ":",
@@ -300,14 +302,15 @@ class Menu(object):
             highlightColor=(0.65, 0.65, 0.65, 1),
             textMayChange=1,
             text_align = TextNode.ALeft,
-            #text_font = self.button_font,
             relief=DGG.RIDGE,
+            initialitem=options.index(initial_option),
             popupMarker_scale=0.6,
             popupMarker_image=loadImageAsPlane(panda_path(MENU_ASSETS/'dropdown_marker.png')),
             popupMarker_relief=None,
             item_pad=(0.2,0.2),
         )
         dropdown['frameColor'] = (1, 1, 1, 0.3)
+        dropdown['extraArgs'] = [item.attrib['name']]
         dropdown.reparentTo(self.area.getCanvas())
 
         dropdown_np = NodePath(dropdown)
@@ -362,7 +365,7 @@ class Menu(object):
 
         self.elements.append({
             'type': 'dropdown',
-            'name': name,
+            'name': item.attrib['name'],
             'content': dropdown_obj,
             'object': dropdown,
             'convert_factor': None,
@@ -405,7 +408,7 @@ class Menu(object):
             relief=None,
             boxRelief=None,
         )
-        checkbox['extraArgs'] = [name]
+        checkbox['extraArgs'] = [item.attrib['name']]
 
         checkbox_np = NodePath(checkbox)
         # functional_checkbox-<menu_name>-<checkbox_text>
@@ -459,7 +462,7 @@ class Menu(object):
 
         self.elements.append({
             'type': 'checkbox',
-            'name': name,
+            'name': item.attrib['name'],
             'content': checkbox_obj,
             'object': checkbox,
             'func_name': func_name,
@@ -962,6 +965,14 @@ class Menus(object):
         element['xml'].set('checked', 'true' if value == 1 else 'false')
 
 
+    @_update_xml
+    def func_update_dropdown_xml(self, value, name):
+        for element in self.current_menu.elements:
+            if element.get('name') == name:
+                break
+        element['xml'].set('selection', value)
+
+
     def func_null(self, *args):
         return
 
@@ -972,8 +983,15 @@ class Menus(object):
 
     def func_save_table(self):
         # FIXME
-        #table_names = ani.table_config.keys()
-        #config_obj = configparser.ConfigParser()
+        import ipdb; ipdb.set_trace() 
+        table_entry = {}
+
+        # populate new entry
+        # write using configparser.ConfigParser()
+
+        ani.table_config
+        config_obj = configparser.ConfigParser()
+
         print('Table saved!')
 
 

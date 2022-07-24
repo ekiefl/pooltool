@@ -30,12 +30,11 @@
             <func>func_go_main_menu</func>
         </backbutton>
         <subtitle>Type</subtitle>
-            <dropdown name="game_type">
+            <dropdown name="game_type" selection="9-ball">
                 <name>Game</name>
                 <option>8-ball</option>
                 <option>9-ball</option>
                 <description>What kind of billiards game do you want to play?</description>
-                <func>func_null</func>
             </dropdown>
             <checkbox name="sandbox" checked="false">
                 <name>Sandbox</name>
@@ -43,15 +42,15 @@
             </checkbox>
         <subtitle>Table</subtitle>
             <text>Either pick an existing table or create a new table.</text>
-            <dropdown name="table_type" from_yaml="config/tables">
-                <name>Table</name>
-                <description>Choose from an existing table</description>
-            </dropdown>
-            <button>
-                <name>New</name>
-                <func>func_go_new_table</func>
-                <description>Don't like the options? Create a new table</description>
-            </button>
+        <dropdown name="table_type" from_yaml="config/tables" selection="tight">
+            <name>Table</name>
+            <description>Choose from an existing table</description>
+        </dropdown>
+        <button>
+            <name>New</name>
+            <func>func_go_new_table</func>
+            <description>Don't like the options? Create a new table</description>
+        </button>
     </menu>
     
     <menu name="new_table">
@@ -67,7 +66,7 @@
             If you pick a pocketless table type, you can ignore all pocket-related parameters.
         </text>
         <subtitle>General</subtitle>
-        <dropdown name="table_type">
+        <dropdown name="table_type" selection="Billiard">
             <name>Type</name>
             <option>Pocket</option>
             <option>Billiard</option>
