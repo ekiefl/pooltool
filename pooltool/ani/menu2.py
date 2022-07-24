@@ -37,20 +37,28 @@ BUTTON_FONT = MENU_ASSETS/'fonts'/'labtop-secundo'/'LABTSECW.ttf'
 
 class XMLMenu(object):
     def __init__(self, path):
-        self.path = panda_path(path)
+        self.path = Path(path)
         self.tree = ET.parse(path)
         self.root = self.tree.getroot()
 
 
     def iterate_menus(self):
-        for menu in self.root:
+        for menu in self.root.findall('menu'):
             yield menu
 
 
+    def write(self, path=None):
+        if path is None:
+            path = self.path
+
+        self.tree.write(path)
+
+
 class Menu(object):
-    def __init__(self, xml):
+    def __init__(self, xml, name):
         self.xml = xml
-        self.name = self.xml.attrib['name']
+        self.name = name
+        self.menu_xml = self.get_menu_xml()
 
         self.title_font = loader.loadFont(panda_path(TITLE_FONT))
         self.button_font = loader.loadFont(panda_path(BUTTON_FONT))
@@ -95,6 +103,16 @@ class Menu(object):
         self.hovered_entry = None
 
 
+    def get_menu_xml(self):
+        for menu in self.xml.iterate_menus():
+            if menu.attrib['name'] == self.name:
+                break
+        else:
+            raise ValueError(f"Can't get XML for menu name '{self.name}'")
+
+        return menu
+
+
     def populate(self):
         """Populate a menu and hide it"""
         # Loop through each item in the menu's XML, and based on the item's tag, add it
@@ -109,7 +127,8 @@ class Menu(object):
             'text': self.add_text,
             'entry': self.add_entry,
         }
-        for item in self.xml:
+
+        for item in self.menu_xml:
             method = item_to_method.get(item.tag)
             if method is None:
                 raise ValueError(f"Unknown tag '{item.tag}'")
@@ -179,6 +198,7 @@ class Menu(object):
             'type': 'title',
             'name': item.text,
             'content': title_obj,
+            'xml': item,
         })
 
         return title_obj
@@ -236,6 +256,7 @@ class Menu(object):
             'type': 'subtitle',
             'name': item.text,
             'content': title_obj,
+            'xml': item,
         })
 
         return title_obj
@@ -258,7 +279,7 @@ class Menu(object):
         try:
             func_name = self.search_child_tag(item, 'func').text
         except ValueError:
-            func_name = None
+            func_name = 'func_null'
 
         title = DirectLabel(
             text = name + ":",
@@ -346,12 +367,18 @@ class Menu(object):
             'object': dropdown,
             'convert_factor': None,
             'func_name': func_name,
+            'xml': item,
         })
 
 
     def add_checkbox(self, item):
         name = self.search_child_tag(item, 'name').text
         desc = self.search_child_tag(item, 'description').text
+
+        try:
+            func_name = self.search_child_tag(item, 'func').text
+        except ValueError:
+            func_name = 'func_update_checkbox_xml'
 
         title = DirectLabel(
             text = name + ":",
@@ -374,9 +401,11 @@ class Menu(object):
               None,  
             ),
             text="",
+            indicatorValue=1 if item.attrib['checked'] == 'true' else 0,
             relief=None,
             boxRelief=None,
         )
+        checkbox['extraArgs'] = [name]
 
         checkbox_np = NodePath(checkbox)
         # functional_checkbox-<menu_name>-<checkbox_text>
@@ -433,6 +462,8 @@ class Menu(object):
             'name': name,
             'content': checkbox_obj,
             'object': checkbox,
+            'func_name': func_name,
+            'xml': item,
             'convert_factor': None,
         })
 
@@ -575,6 +606,7 @@ class Menu(object):
             'object': entry,
             'error_msg': error,
             'validator': validator,
+            'xml': item,
             'convert_factor': None,
         })
 
@@ -719,6 +751,7 @@ class Menu(object):
             'content': button_obj,
             'object': button,
             'convert_factor': None,
+            'xml': item,
             'func_name': func_name,
         })
 
@@ -756,6 +789,7 @@ class Menu(object):
             'content': button_np,
             'object': button,
             'func_name': func_name,
+            'xml': item,
         })
 
         return button_np
@@ -799,6 +833,7 @@ class Menu(object):
             'type': 'text',
             'text': text,
             'content': text_obj,
+            'xml': item,
         })
 
         return text_obj
@@ -868,10 +903,19 @@ class Menus(object):
         self.show_menu('main_menu')
 
 
+    def _update_xml(func):
+        def inner(self, *args, **kwargs):
+            output = func(self, *args, **kwargs)
+            self.xml.write()
+            return output
+        return inner
+
+
     def populate_menus(self):
         """Populate all menus"""
         for menu_xml in self.xml.iterate_menus():
-            menu = Menu(menu_xml)
+            name = menu_xml.attrib['name']
+            menu = Menu(self.xml, name)
             menu.populate()
             self.menus[menu.name] = menu
 
@@ -908,6 +952,14 @@ class Menus(object):
     def get_menu_options(self):
         # FIXME
         return {}
+
+
+    @_update_xml
+    def func_update_checkbox_xml(self, value, name):
+        for element in self.current_menu.elements:
+            if element.get('name') == name:
+                break
+        element['xml'].set('checked', 'true' if value == 1 else 'false')
 
 
     def func_null(self, *args):

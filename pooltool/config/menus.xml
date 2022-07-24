@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <data>
-    <!--____________________________________________________________-->
+    
     <menu name="main_menu">
         <title>Main Menu</title>
         <button>
@@ -24,7 +23,7 @@
             <description>Closes pooltool. Shortcut: esc</description>
         </button>
     </menu>
-    <!--____________________________________________________________-->
+    
     <menu name="game_setup">
         <title>Game Setup</title>
         <backbutton>
@@ -38,7 +37,7 @@
                 <description>What kind of billiards game do you want to play?</description>
                 <func>func_null</func>
             </dropdown>
-            <checkbox name="sandbox">
+            <checkbox name="sandbox" checked="false">
                 <name>Sandbox</name>
                 <description>If selected, no rules are enforced and full control is given</description>
             </checkbox>
@@ -54,7 +53,7 @@
                 <description>Don't like the options? Create a new table</description>
             </button>
     </menu>
-    <!--____________________________________________________________-->
+    
     <menu name="new_table">
         <title>Define New Table</title>
         <backbutton>
@@ -142,14 +141,14 @@
             After clicking "Save", go to the previous menu and select your new table.
         </text>
     </menu>
-    <!--____________________________________________________________-->
+    
     <menu name="settings">
         <title>Settings</title>
         <backbutton>
             <func>func_go_main_menu</func>
         </backbutton>
     </menu>
-    <!--____________________________________________________________-->
+    
     <menu name="about">
         <title>About</title>
         <backbutton>
