@@ -227,7 +227,7 @@ class PocketTable(Object, Table, TableRender):
         if self.model_name != 'none':
             # User is passing a table with pre-existing parameters. All params explicitly defined by
             # this preset table will overwrite all other options
-            table_params = ani.table_config[self.model_name]
+            table_params = ani.load_config('tables')[self.model_name]
             for key, val in table_params.items():
                 setattr(self, key, val)
 
@@ -448,7 +448,7 @@ class BilliardTable(Object, Table, TableRender):
         if self.model_name != 'none':
             # User is passing a table with pre-existing parameters. All params explicitly defined by
             # this preset table will overwrite all other options
-            table_params = ani.table_config[self.model_name]
+            table_params = ani.load_config('tables')[self.model_name]
             for key, val in table_params.items():
                 setattr(self, key, val)
 

@@ -41,13 +41,6 @@ class PoolToolError(Exception, object):
         return self.e
 
 
-class TableConfigError(PoolToolError):
-    def __init__(self, e=None):
-        self.e = remove_spaces(e)
-        self.error_type = 'Table Config Error'
-        PoolToolError.__init__(self)
-
-
 class ConfigError(PoolToolError):
     def __init__(self, e=None):
         self.e = remove_spaces(e)

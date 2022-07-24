@@ -5,7 +5,7 @@ import pooltool.ani as ani
 import pooltool.games as games
 import pooltool.ani.environment as environment
 
-from pooltool.error import TableConfigError, ConfigError
+from pooltool.error import ConfigError
 from pooltool.system import SystemCollection
 from pooltool.objects.cue import Cue
 from pooltool.objects.ball import Ball
@@ -520,7 +520,8 @@ class Play(Interface, Menus):
 
 
     def setup_table(self):
-        table_params = copy.deepcopy(ani.table_config['7_foot'])
+        table_config = ani.load_config('tables')
+        table_params = table_config['7_foot']
         table_params['model_name'] = '7_foot'
         # FIXME
         #if self.setup_options[ani.options_table] != 'custom':
@@ -548,12 +549,7 @@ class Play(Interface, Menus):
         #        model_name = self.setup_options[ani.options_table],
         #    )
         table_type = table_params.pop('type')
-        try:
-            self.shots.active.table = table_types[table_type](**table_params)
-        except TypeError as e:
-            raise TableConfigError(f"Something went wrong with your table config file. Probably you "
-                                   f"provided a parameter in the table config that's unrecognized by "
-                                   f"pooltool. Here is the error: {e}")
+        self.shots.active.table = table_types[table_type](**table_params)
 
 
     def setup_game(self):

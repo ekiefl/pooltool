@@ -5,7 +5,7 @@ import pooltool as pt
 import configparser
 
 from pooltool.utils import panda_path
-from pooltool.error import ConfigError, TableConfigError
+from pooltool.error import ConfigError
 
 from pathlib import Path
 from panda3d.core import *
@@ -90,13 +90,10 @@ logo_paths = {
 }
 
 
-def load_config(name, exception_type=Exception, exception_msg="Something went wrong. Here is what we know: {}"):
+def load_config(name):
     config_path = Path(__file__).parent.parent / 'config' / name
     config_obj = configparser.ConfigParser()
-    try:
-        config_obj.read(config_path)
-    except Exception as e:
-        raise exception_type(f"Something went wrong with your table config file. Here is the reported issue: {e}")
+    config_obj.read(config_path)
     config = {}
     for section in config_obj.sections():
         config[section] = {}
@@ -107,7 +104,4 @@ def load_config(name, exception_type=Exception, exception_msg="Something went wr
                 config[section][k] = v
     return config
 
-table_config = load_config('tables', TableConfigError)
-settings = load_config('settings', ConfigError)
-
-
+settings = load_config('settings')
