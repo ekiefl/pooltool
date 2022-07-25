@@ -103,6 +103,14 @@ class Menu(object):
         self.hovered_entry = None
 
 
+    def _update_xml(func):
+        def inner(self, *args, **kwargs):
+            output = func(self, *args, **kwargs)
+            self.xml.write()
+            return output
+        return inner
+
+
     def get_menu_xml(self):
         for menu in self.xml.iterate_menus():
             if menu.attrib['name'] == self.name:
@@ -646,10 +654,10 @@ class Menu(object):
                 return
 
 
+    @_update_xml
     def entry_teardown(self, name, initial):
         """Teardown up operations for leaving DirectEntry"""
 
-        # If the entry has been left blank, replace it with the initial value
         for element in self.elements:
             if element['type'] == 'entry' and element['name'] == name:
                 value = element['object'].get()
@@ -657,7 +665,9 @@ class Menu(object):
                 if value.strip() == '':
                     # The value is empty. Return to initial value
                     element['object'].enterText(initial)
+                    value = initial
                 
+                # Hide or show error message based on value validity
                 valid, reason = element['validator'](value)
                 if not valid:
                     element['error_msg'].setText(reason)
@@ -665,6 +675,9 @@ class Menu(object):
                 else:
                     element['error_msg'].setText('')
                     element['error_msg'].hide()
+
+                # Update XML object
+                element['xml'].set('value', value)
 
 
     def is_entry_floatable(self, value):
@@ -982,9 +995,10 @@ class Menus(object):
 
 
     def func_save_table(self):
-        # FIXME
         import ipdb; ipdb.set_trace() 
         table_entry = {}
+
+        self.xml.root.findall(".//*[@name='new_table']/entry")
 
         # populate new entry
         # write using configparser.ConfigParser()
