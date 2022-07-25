@@ -42,7 +42,7 @@
             </checkbox>
         <subtitle>Table</subtitle>
             <text>Either pick an existing table or create a new table.</text>
-        <dropdown name="table_type" from_yaml="config/tables" selection="my_table">
+        <dropdown name="table_type" from_yaml="config/tables" selection="tight">
             <name>Table</name>
             <description>Choose from an existing table</description>
         </dropdown>

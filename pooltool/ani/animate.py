@@ -515,34 +515,10 @@ class Play(Interface, Menus):
 
 
     def setup_table(self):
+        selected_table = self.setup_options['table_type']
         table_config = ani.load_config('tables')
-        table_params = table_config['7_foot']
-        table_params['model_name'] = '7_foot'
-        # FIXME
-        #if self.setup_options[ani.options_table] != 'custom':
-        #    #table_params = copy.deepcopy(ani.table_config[self.setup_options[ani.options_table]])
-        #    #table_params['model_name'] = self.setup_options[ani.options_table]
-        #else:
-        #    table_params = dict(
-        #        type = self.setup_options[ani.options_table_type],
-        #        l = self.setup_options[ani.options_table_length],
-        #        w = self.setup_options[ani.options_table_width],
-        #        height = self.setup_options[ani.options_table_height],
-        #        lights_height = self.setup_options[ani.options_lights_height],
-        #        cushion_width = self.setup_options[ani.options_cushion_width],
-        #        cushion_height = self.setup_options[ani.options_cushion_height],
-        #        corner_pocket_width = self.setup_options[ani.options_corner_pocket_width],
-        #        corner_pocket_angle = self.setup_options[ani.options_corner_pocket_angle],
-        #        corner_pocket_depth = self.setup_options[ani.options_corner_pocket_depth],
-        #        corner_pocket_radius = self.setup_options[ani.options_corner_pocket_radius],
-        #        corner_jaw_radius = self.setup_options[ani.options_corner_jaw_radius],
-        #        side_pocket_width = self.setup_options[ani.options_side_pocket_width],
-        #        side_pocket_angle = self.setup_options[ani.options_side_pocket_angle],
-        #        side_pocket_depth = self.setup_options[ani.options_side_pocket_depth],
-        #        side_pocket_radius = self.setup_options[ani.options_side_pocket_radius],
-        #        side_jaw_radius = self.setup_options[ani.options_side_jaw_radius],
-        #        model_name = self.setup_options[ani.options_table],
-        #    )
+        table_params = table_config[selected_table]
+        table_params['model_name'] = selected_table
         table_type = table_params.pop('type')
         self.shots.active.table = table_types[table_type](**table_params)
 

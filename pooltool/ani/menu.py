@@ -975,8 +975,9 @@ class Menus(object):
 
 
     def get_menu_options(self):
-        # FIXME
-        return {}
+        return {
+            'table_type': self.xml.root.find(".//*[@name='table_type']").attrib['selection']
+        }
 
 
     @_update_xml
