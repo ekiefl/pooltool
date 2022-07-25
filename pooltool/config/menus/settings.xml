@@ -1,0 +1,6 @@
+<menu name="settings">
+    <title>Settings</title>
+    <backbutton>
+        <func>func_go_main_menu</func>
+    </backbutton>
+</menu>

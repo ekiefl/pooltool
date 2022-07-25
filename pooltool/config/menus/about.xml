@@ -1,0 +1,30 @@
+<menu name="about">
+    <title>About</title>
+    <backbutton>
+        <func>func_go_main_menu</func>
+    </backbutton>
+    <text>
+        I started this project in April 2020, during the COVID-19 lockdown. I
+        wanted to play pool but couldn't, so I turned to simulation. There are some
+        really good pool simulators out there, but none existed that gave me
+        freedom to simulate billiards shots with tunable physics and table settings.
+    </text>
+    <text>
+        pooltool is my attempt to fill this niche, so that pool players, gamers,
+        researchers, and programmers alike could experiment with billiards in a
+        computational playground.
+    </text>
+    <text>
+        pooltool is an open source project under a GNU General Public License. The
+        source code is available at https://github.com/ekiefl/pooltool. If you are
+        interested in the development of pooltool, I have blogged extensively
+        about the physics, algorithms, and progress I have made over the years. You
+        can check that out at my website: https://ekiefl.github.io/projects/pooltool/
+    </text>
+    <text>
+        Thanks for checking out the project.
+    </text>
+    <text>
+        - Evan Kiefl
+    </text>
+</menu>

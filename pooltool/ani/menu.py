@@ -38,22 +38,31 @@ BUTTON_FONT = MENU_ASSETS/'fonts'/'labtop-secundo'/'LABTSECW.ttf'
 
 
 class XMLMenu(object):
-    def __init__(self, path):
-        self.path = Path(path)
-        self.tree = ET.parse(path)
-        self.root = self.tree.getroot()
+    def __init__(self):
+        menu_dir = Path(pooltool.__file__).parent / 'config' / 'menus'
+
+        self.paths = {}
+        self.trees = {}
+        self.roots = {}
+
+        for xml_path in menu_dir.glob("*.xml"):
+            tree = ET.parse(xml_path)
+            root = tree.getroot()
+            name = root.attrib['name']
+
+            self.paths[name] = xml_path
+            self.trees[name] = tree
+            self.roots[name] = root
 
 
     def iterate_menus(self):
-        for menu in self.root.findall('menu'):
+        for menu in self.roots.values():
             yield menu
 
 
     def write(self, path=None):
-        if path is None:
-            path = self.path
-
-        self.tree.write(path)
+        for name in self.paths:
+            self.trees[name].write(self.paths[name])
 
 
 class Menu(object):
@@ -920,8 +929,7 @@ class Menu(object):
 class Menus(object):
     def __init__(self):
         self.menus = {}
-        menu_xml_path = Path(pooltool.__file__).parent / 'config' / 'menus.xml'
-        self.xml = XMLMenu(path=menu_xml_path)
+        self.xml = XMLMenu()
         self.current_menu = None
         self.populate_menus()
 

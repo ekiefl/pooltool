@@ -1,0 +1,28 @@
+<menu name="game_setup">
+    <title>Game Setup</title>
+    <backbutton>
+        <func>func_go_main_menu</func>
+    </backbutton>
+    <subtitle>Type</subtitle>
+        <dropdown name="game_type" selection="9-ball">
+            <name>Game</name>
+            <option>8-ball</option>
+            <option>9-ball</option>
+            <description>What kind of billiards game do you want to play?</description>
+        </dropdown>
+        <checkbox name="sandbox" checked="false">
+            <name>Sandbox</name>
+            <description>If selected, no rules are enforced and full control is given</description>
+        </checkbox>
+    <subtitle>Table</subtitle>
+        <text>Either pick an existing table or create a new table.</text>
+    <dropdown name="table_type" from_yaml="config/tables" selection="big">
+        <name>Table</name>
+        <description>Choose from an existing table</description>
+    </dropdown>
+    <button>
+        <name>New</name>
+        <func>func_go_new_table</func>
+        <description>Don't like the options? Create a new table</description>
+    </button>
+</menu>
