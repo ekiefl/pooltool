@@ -38,36 +38,10 @@ rotate_downtime = 0.3 # number of seconds that camera rotation is disabled when 
 rewind_dt = 0.02
 fast_forward_dt = 0.02
 
-options_game = 'Game'
 options_8_ball = '8 ball'
 options_9_ball = '9 ball'
 options_sandbox = 'Sandbox'
 options_3_cushion = '3 cushion'
-options_table = 'Table'
-options_ball_diameter = 'Ball diameter'
-options_friction_slide = 'Coeff. sliding friction'
-options_friction_roll = 'Coeff. rolling friction'
-options_friction_spin = 'Coeff. spinning friction'
-options_restitution_cushion = 'Coeff. cushion restitution'
-options_friction_cushion = 'Coeff. cushion friction'
-
-options_table_type = 'Table type'
-options_table_length = 'Play surface length'
-options_table_width = 'Play surface width'
-options_table_height = 'Table height'
-options_lights_height = 'Light height'
-options_cushion_width = 'Cushion width'
-options_cushion_height = 'Cushion height'
-options_corner_pocket_width = 'Pocket width (corner)'
-options_corner_pocket_angle = 'Pocket opening angle (corner)'
-options_corner_pocket_depth = 'Pocket depth (corner)'
-options_corner_pocket_radius = 'Pocket radius (corner)'
-options_corner_jaw_radius = 'Jaw radius (corner)'
-options_side_pocket_width = 'Pocket width (side)'
-options_side_pocket_angle = 'Pocket opening angle (side)'
-options_side_pocket_depth = 'Pocket depth (side)'
-options_side_pocket_radius = 'Pocket radius (side)'
-options_side_jaw_radius = 'Jaw radius (side)'
 
 ball_highlight = {
     'ball_offset': 0.12,
