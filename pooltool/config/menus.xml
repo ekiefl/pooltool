@@ -42,7 +42,7 @@
             </checkbox>
         <subtitle>Table</subtitle>
             <text>Either pick an existing table or create a new table.</text>
-        <dropdown name="table_type" from_yaml="config/tables" selection="tight">
+        <dropdown name="table_type" from_yaml="config/tables" selection="my_table">
             <name>Table</name>
             <description>Choose from an existing table</description>
         </dropdown>
@@ -66,68 +66,69 @@
             If you pick a pocketless table type, you can ignore all pocket-related parameters.
         </text>
         <subtitle>General</subtitle>
-        <dropdown name="table_type" selection="Billiard">
+        <dropdown name="type" selection="billiard">
             <name>Type</name>
-            <option>Pocket</option>
-            <option>Billiard</option>
+            <option>pocket</option>
+            <option>billiard</option>
             <description>Let's start simple. What kind of table are we talking? Pockets or no pockets?</description>
         </dropdown>
-        <entry initial="1.9812" value="1.9812" validator="is_entry_floatable">
+        <entry name="l" initial="1.9812" value="1.9812" validator="is_entry_floatable">
             <name>length</name>
             <description>The length of the table</description>
         </entry>
-        <entry initial="0.708" value="0.708" validator="is_entry_floatable">
+        <entry name="w" initial="0.708" value="0.708" validator="is_entry_floatable">
             <name>width</name>
             <description>The width of the table</description>
         </entry>
-        <entry initial="0.64" value="0.64" validator="is_entry_floatable">
-            <name>cushion height fraction</name>
-            <description>The height of the cushion, measured as a fraction of the ball diameter</description>
+        <entry name="cushion_height" initial="0.036576" value="0.036576" validator="is_entry_floatable">
+            <name>cushion height</name>
+            <description>The height of where the ball contacts the cushion, measured from the table surface</description>
         </entry>
         <subtitle>Corner pockets</subtitle>
-        <entry initial="0.118" value="0.118" validator="is_entry_floatable">
+        <entry name="corner_pocket_width" initial="0.118" value="0.118" validator="is_entry_floatable">
             <name>corner pocket width</name>
             <description>The point-to-point distance defining the mouth of the pocket</description>
         </entry>
-        <entry initial="5.3" value="5.3" validator="is_entry_floatable">
+        <entry name="corner_pocket_angle" initial="5.3" value="5.3" validator="is_entry_floatable">
             <name>corner pocket angle</name>
             <description>The opening angle of the pocket (degrees). When 0, the pocket walls run parallel.</description>
         </entry>
-        <entry initial="0.0398" value="0.0398" validator="is_entry_floatable">
+        <entry name="corner_pocket_depth" initial="0.0398" value="0.0398" validator="is_entry_floatable">
             <name>corner pocket depth</name>
             <description>The shelf depth of the pocket</description>
         </entry>
-        <entry initial="0.62" value="0.62" validator="is_entry_floatable">
+        <entry name="corner_pocket_radius" initial="0.62" value="0.62" validator="is_entry_floatable">
             <name>corner pocket radius</name>
             <description>The radius of the corner pocket holes</description>
         </entry>
-        <entry initial="0.0210" value="0.0210" validator="is_entry_floatable">
+        <entry name="corner_jaw_radius" initial="0.0210" value="0.0210" validator="is_entry_floatable">
             <name>corner jaw radius</name>
             <description>How rounded the corner pocket jaws? Make larger to resemble snooker/chinese billiards</description>
         </entry>
         <subtitle>Side pockets</subtitle>
-        <entry initial="0.137" value="0.137" validator="is_entry_floatable">
+        <entry name="side_pocket_width" initial="0.137" value="0.137" validator="is_entry_floatable">
             <name>side pocket width</name>
             <description>The point-to-point distance defining the mouth of the pocket</description>
         </entry>
-        <entry initial="7.14" value="7.14" validator="is_entry_floatable">
+        <entry name="side_pocket_angle" initial="7.14" value="7.14" validator="is_entry_floatable">
             <name>side pocket angle</name>
             <description>The opening angle of the pocket (degrees). When 0, the pocket walls run parallel.</description>
         </entry>
-        <entry initial="0.00437" value="0.00437" validator="is_entry_floatable">
+        <entry name="side_pocket_depth" initial="0.00437" value="0.00437" validator="is_entry_floatable">
             <name>side pocket depth</name>
             <description>The shelf depth of the pocket</description>
         </entry>
-        <entry initial="0.645" value="0.645" validator="is_entry_floatable">
+        <entry name="side_pocket_radius" initial="0.645" value="0.645" validator="is_entry_floatable">
             <name>side pocket radius</name>
             <description>The radius of the side pocket holes</description>
         </entry>
-        <entry initial="0.008" value="0.008" validator="is_entry_floatable">
+        <entry name="side_jaw_radius" initial="0.008" value="0.008" validator="is_entry_floatable">
             <name>side jaw radius</name>
             <description>How rounded the side pocket jaws? Make larger to resemble snooker/chinese billiards</description>
         </entry>
         <subtitle>Save</subtitle>
-        <entry initial="my_table" validator="is_table_name_valid">
+        <text>Enter a name, then hit ENTER</text>
+        <entry name="table_name" initial="" validator="is_table_name_valid" value="">
             <name>Name</name>
             <description>Give a unique name to this table</description>
         </entry>
@@ -136,9 +137,7 @@
             <description>Save this table</description>
             <func>func_save_table</func>
         </button>
-        <text>
-            After clicking "Save", go to the previous menu and select your new table.
-        </text>
+        <text>Now go back and select your new table</text>
     </menu>
     
     <menu name="settings">

@@ -2,20 +2,22 @@
 
 import sys
 import configparser
+import xml.etree.ElementTree as ET
+
+from typing import Tuple
+from pathlib import Path
 from panda3d.core import *
 from direct.gui.DirectGui import *
-import xml.etree.ElementTree as ET
+from direct.gui.OnscreenText import OnscreenText
+from direct.gui.OnscreenImage import OnscreenImage
 from direct.showbase.ShowBase import ShowBase
 
-from pooltool.utils import panda_path
 import pooltool
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
-from direct.gui.OnscreenText import OnscreenText
-from direct.gui.OnscreenImage import OnscreenImage
-from panda3d.core import TransparencyAttrib
 
-from pathlib import Path
+from pooltool.utils import panda_path
+
 
 TEXT_COLOR = (0.1, 0.1, 0.1, 1)
 FRAME_COLOR = (0, 0, 0, 1)
@@ -497,6 +499,8 @@ class Menu(object):
         except KeyError:
             initial = ''
 
+        item.attrib['value'] = initial
+
         try:
             width = int(item.attrib['width'])
         except KeyError:
@@ -621,6 +625,9 @@ class Menu(object):
             'convert_factor': None,
         })
 
+        # Call entry teardown for validation
+        self.entry_teardown(name, initial)
+
 
     def update_hovered_entry(self, name, mouse_watcher):
         """Set self.hovered_entry
@@ -680,7 +687,7 @@ class Menu(object):
                 element['xml'].set('value', value)
 
 
-    def is_entry_floatable(self, value):
+    def is_entry_floatable(self, value) -> Tuple[bool, str]:
         try:
             float(value)
         except:
@@ -689,8 +696,10 @@ class Menu(object):
             return True, ""
 
 
-    def is_table_name_valid(self, value):
-        table_names = ani.table_config.keys()
+    def is_table_name_valid(self, value) -> Tuple[bool, str]:
+        table_names = ani.load_config('tables').keys()
+        if value.strip() == "":
+            return False, "Error: No name provided"
         if value.strip() in table_names:
             return False, "Error: Table name already exists"
         else:
@@ -995,18 +1004,36 @@ class Menus(object):
 
 
     def func_save_table(self):
-        import ipdb; ipdb.set_trace() 
-        table_entry = {}
+        new_table = {}
 
-        self.xml.root.findall(".//*[@name='new_table']/entry")
+        # Add all dropdowns
+        for dropdown in self.xml.root.findall(".//*[@name='new_table']/dropdown"):
+            new_table[dropdown.attrib['name']] = dropdown.attrib['selection']
 
-        # populate new entry
-        # write using configparser.ConfigParser()
+        # Add the entries
+        for entry in self.xml.root.findall(".//*[@name='new_table']/entry"):
+            name = entry.attrib['name']
+            value = entry.attrib['value']
+            validator = getattr(self.current_menu, entry.attrib['validator'])
 
-        ani.table_config
-        config_obj = configparser.ConfigParser()
+            is_valid, reason = validator(value)
+            if not is_valid:
+                print(f"{name}: invalid value. {reason}")
+                return
 
-        print('Table saved!')
+            new_table[name] = value
+
+        table_name = new_table.pop('table_name')
+        table_config = ani.load_config('tables')
+        table_config[table_name] = new_table
+        ani.save_config('tables', table_config, overwrite=True)
+
+        # Add new table as option to table
+        for element in self.menus['game_setup'].elements:
+            if element['type'] == 'dropdown' and element['name'] == 'table_type':
+                tmp_options = element['object']['items']
+                tmp_options.insert(-1, table_name)
+                element['object']['items'] = tmp_options
 
 
     def func_go_about(self):

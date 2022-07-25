@@ -7,6 +7,8 @@ import configparser
 from pooltool.utils import panda_path
 from pooltool.error import ConfigError
 
+from typing import Dict
+
 from pathlib import Path
 from panda3d.core import *
 
@@ -103,5 +105,19 @@ def load_config(name):
             except:
                 config[section][k] = v
     return config
+
+
+def save_config(name, config: Dict, overwrite=False):
+    config_path = Path(__file__).parent.parent / 'config' / name
+
+    if config_path.exists() and not overwrite:
+        raise ValueError(f"pass overwrite=True to overwrite existing config: '{config_path}'")
+
+    config_obj = configparser.ConfigParser()
+    config_obj.read_dict(config)
+
+    with open(config_path, 'w') as configfile:
+        config_obj.write(configfile)
+
 
 settings = load_config('settings')
