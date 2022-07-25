@@ -14,12 +14,7 @@ from pooltool.games.nine_ball import NineBall
 from pooltool.games.eight_ball import EightBall
 
 from pooltool.ani.hud import HUD
-# -------------------------------------------
-#from pooltool.ani.menu import Menus, GenericMenu
-from pooltool.ani.menu import GenericMenu
-from pooltool.ani.menu2 import Menus
-#from pooltool.ani.menu import Menus
-# -------------------------------------------
+from pooltool.ani.menu import Menus, GenericMenu
 from pooltool.ani.modes import *
 from pooltool.ani.mouse import Mouse
 from pooltool.ani.camera import PlayerCam
