@@ -226,6 +226,8 @@ class Menu(object):
     def add_subtitle(self, item):
         """Add a subtitle"""
 
+        name = item.attrib.get('name', '')
+
         title = DirectLabel(
             text = item.text,
             scale = SUBHEADING_SCALE,
@@ -273,8 +275,9 @@ class Menu(object):
 
         self.elements.append({
             'type': 'subtitle',
-            'name': item.text,
-            'content': title_obj,
+            'name': name,
+            'object': title_obj,
+            'content': title,
             'xml': item,
         })
 
@@ -832,6 +835,8 @@ class Menu(object):
     def add_text(self, item):
         """Add text"""
 
+        name = item.attrib.get('name', '')
+
         text = item.text.strip()
         max_len = 55
         new_text = []
@@ -865,6 +870,7 @@ class Menu(object):
 
         self.elements.append({
             'type': 'text',
+            'name': name,
             'text': text,
             'content': text_obj,
             'xml': item,
@@ -984,9 +990,8 @@ class Menus(object):
 
     def get_menu_options(self):
         return {
-            'table_type': self.xml.root.find(".//*[@name='table_type']").attrib['selection']
+            'table_type': self.xml.roots['game_setup'].find(".//*[@name='table_type']").attrib['selection']
         }
-
 
     @_update_xml
     def func_update_checkbox_xml(self, value, name):
@@ -1015,6 +1020,7 @@ class Menus(object):
     def func_save_table(self):
         new_table = {}
 
+        # FIXME https://github.com/ekiefl/pooltool/issues/38
         # Add all dropdowns
         for dropdown in self.xml.root.findall(".//*[@name='new_table']/dropdown"):
             new_table[dropdown.attrib['name']] = dropdown.attrib['selection']
@@ -1056,6 +1062,22 @@ class Menus(object):
     def func_go_new_table(self):
         self.show_menu('new_table')
 
+    def func_go_view_table(self):
+        for element in self.menus['view_table'].elements:
+            if element.get('name') == 'table_params_name':
+                xml = self.menus['game_setup'].xml.roots['game_setup']
+                table_name = xml.find(".//*[@name='table_type']").attrib['selection']
+                element['content'].setText(f"Parameters for '{table_name}'")
+            if element.get('name') == 'table_params':
+                table_dict = ani.load_config('tables')[table_name]
+                longest_key = max([len(key) for key in table_dict])
+                string = []
+                for key, val in table_dict.items():
+                    buffer = longest_key - len(key)
+                    string.append(key + ' '*(buffer+4) + str(val))
+                element['content'].setText('\n'.join(string))
+
+        self.show_menu('view_table')
 
     def func_go_settings(self):
         self.show_menu('settings')

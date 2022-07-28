@@ -15,13 +15,18 @@
             <description>If selected, no rules are enforced and full control is given</description>
         </checkbox>
     <subtitle>Table</subtitle>
-        <text>Either pick an existing table or create a new table.</text>
-    <dropdown name="table_type" from_yaml="config/tables" selection="big">
+        <text>Pick an existing table, view the table parameters, or create a new table.</text>
+    <dropdown name="table_type" from_yaml="config/tables" selection="7_foot">
         <name>Table</name>
         <description>Choose from an existing table</description>
     </dropdown>
     <button>
-        <name>New</name>
+        <name>View selected</name>
+        <func>func_go_view_table</func>
+        <description>View the parameters of the selected table</description>
+    </button>
+    <button>
+        <name>New table</name>
         <func>func_go_new_table</func>
         <description>Don't like the options? Create a new table</description>
     </button>
