@@ -3,8 +3,9 @@
 import numpy as np
 
 import pooltool.ani as ani
+import pooltool.ani.action as action
 import pooltool.ani.utils as autils
-from pooltool.ani.modes import Mode, action
+from pooltool.ani.modes.datatypes import Mode
 
 
 class ViewMode(Mode):

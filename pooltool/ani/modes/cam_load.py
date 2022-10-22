@@ -2,8 +2,9 @@
 
 from direct.gui.DirectGui import *
 
+import pooltool.ani.action as action
 from pooltool.ani.menu import GenericMenu
-from pooltool.ani.modes import Mode, action
+from pooltool.ani.modes.datatypes import Mode
 
 
 class CamLoadMode(Mode):

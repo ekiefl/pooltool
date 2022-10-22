@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-import copy
 import gc
 
 import gltf
@@ -18,9 +17,6 @@ from pooltool.ani.menu import GenericMenu, Menus
 from pooltool.ani.modes import *
 from pooltool.ani.mouse import Mouse
 from pooltool.error import ConfigError
-from pooltool.games.eight_ball import EightBall
-from pooltool.games.nine_ball import NineBall
-from pooltool.objects.ball import Ball
 from pooltool.objects.cue import Cue
 from pooltool.objects.table import table_types
 from pooltool.system import SystemCollection

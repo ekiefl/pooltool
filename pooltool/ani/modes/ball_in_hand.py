@@ -5,8 +5,9 @@ from direct.interval.IntervalGlobal import *
 from panda3d.core import TransparencyAttrib
 
 import pooltool.ani as ani
+import pooltool.ani.action as action
 import pooltool.constants as c
-from pooltool.ani.modes import Mode, action
+from pooltool.ani.modes.datatypes import Mode
 from pooltool.utils import panda_path
 
 

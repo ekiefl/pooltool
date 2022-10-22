@@ -4,8 +4,9 @@ import numpy as np
 
 import pooltool as pt
 import pooltool.ani as ani
+import pooltool.ani.action as action
 from pooltool.ani.menu import GenericMenu
-from pooltool.ani.modes import Mode, action
+from pooltool.ani.modes.datatypes import Mode
 from pooltool.system import System
 
 

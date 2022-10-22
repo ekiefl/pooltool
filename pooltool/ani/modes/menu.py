@@ -2,7 +2,8 @@
 
 import sys
 
-from pooltool.ani.modes import Mode, action
+import pooltool.ani.action as action
+from pooltool.ani.modes.datatypes import Mode
 
 
 class MenuMode(Mode):
