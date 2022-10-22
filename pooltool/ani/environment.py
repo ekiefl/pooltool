@@ -1,8 +1,12 @@
 #! /usr/bin/env python
 
-from pathlib import Path
-
-from panda3d.core import *
+from panda3d.core import (
+    AmbientLight,
+    DirectionalLight,
+    PerspectiveLens,
+    PointLight,
+    Spotlight,
+)
 
 import pooltool.ani as ani
 from pooltool.utils import panda_path
@@ -10,6 +14,9 @@ from pooltool.utils import panda_path
 
 class Environment(object):
     def __init__(self, table):
+        # Panda pollutes the global namespace, appease linters
+        self.global_render = __builtins__["render"]
+        self.loader = __builtins__["loader"]
 
         self.set_table_offset(table)
         self.room = None
@@ -72,7 +79,7 @@ class Environment(object):
             if frustum:
                 slight.showFrustum()
 
-        slnp = render.attachNewNode(slight)
+        slnp = self.global_render.attachNewNode(slight)
         slnp.setPos(
             (self.offset[0] + pos[0], self.offset[1] + pos[1], self.offset[2] + pos[2])
         )
@@ -96,7 +103,7 @@ class Environment(object):
         plight.setColor(color)
         plight.attenuation = (1, 0, 1)
 
-        plnp = render.attachNewNode(plight)
+        plnp = self.global_render.attachNewNode(plight)
         plnp.setPos(
             (self.offset[0] + pos[0], self.offset[1] + pos[1], self.offset[2] + pos[2])
         )
@@ -123,7 +130,7 @@ class Environment(object):
         if shadows:
             dlight.setShadowCaster(True, 512, 512)
 
-        dlnp = render.attachNewNode(dlight)
+        dlnp = self.global_render.attachNewNode(dlight)
         dlnp.setHpr(hpr)
 
         for illuminated in illuminates:
@@ -136,8 +143,8 @@ class Environment(object):
         a_str = 0.1
         alight = AmbientLight("alight")
         alight.setColor((a_str, a_str, a_str, 1))
-        alnp = render.attachNewNode(alight)
-        render.setLight(alnp)
+        alnp = self.global_render.attachNewNode(alight)
+        self.global_render.setLight(alnp)
 
         self.slights = {
             # under bar #1
@@ -203,24 +210,24 @@ class Environment(object):
             8: self.get_plight(
                 light_id=2,
                 pos=(4.0877 - 0.08, 3.5745, 2.2042),
-                illuminates=(render.find("scene"),),
+                illuminates=(self.global_render.find("scene"),),
             ),
             # above bar #1
             5: self.get_plight(
                 light_id=0,
                 pos=(-4.1358 + 0.08, 1.9538, 2.2042),
-                illuminates=(render.find("scene"),),
+                illuminates=(self.global_render.find("scene"),),
             ),
             6: self.get_plight(
                 light_id=1,
                 pos=(-4.1358 + 0.08, -1.281, 2.2042),
-                illuminates=(render.find("scene"),),
+                illuminates=(self.global_render.find("scene"),),
             ),
             # above bar # 2
             7: self.get_plight(
                 light_id=3,
                 pos=(2.1875, -4.811 + 0.08, 2.1823),
-                illuminates=(render.find("scene"),),
+                illuminates=(self.global_render.find("scene"),),
             ),
         }
 
@@ -229,7 +236,7 @@ class Environment(object):
             0: self.get_dlight(
                 light_id=0,
                 hpr=(0, -90, 0),
-                illuminates=(render.find("scene").find("cloth"),),
+                illuminates=(self.global_render.find("scene").find("cloth"),),
                 shadows=False,
             ),
         }
@@ -243,8 +250,8 @@ class Environment(object):
         self.lights_height = table.lights_height + table.height
 
     def load_room(self, path):
-        self.room = loader.loadModel(panda_path(path))
-        self.room.reparentTo(render.find("scene"))
+        self.room = self.loader.loadModel(panda_path(path))
+        self.room.reparentTo(self.global_render.find("scene"))
         self.room.setPos(self.offset)
         self.room.setName("room")
 
@@ -253,8 +260,8 @@ class Environment(object):
         return self.room
 
     def load_floor(self, path):
-        self.floor = loader.loadModel(panda_path(path))
-        self.floor.reparentTo(render.find("scene"))
+        self.floor = self.loader.loadModel(panda_path(path))
+        self.floor.reparentTo(self.global_render.find("scene"))
         self.floor.setPos(self.offset)
         self.floor.setName("floor")
 
@@ -281,7 +288,7 @@ class Environment(object):
         self.floor_loaded = False
 
     def unload_lights(self):
-        render.clearLight()
+        self.global_render.clearLight()
 
         if not self.lights_loaded:
             return
