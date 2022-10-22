@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-import collections.abc
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -41,10 +40,11 @@ class Event(ABC):
             )
 
     def __repr__(self):
+        agents = [(agent.id if agent is not None else None) for agent in self.agents]
         lines = [
             f"<{self.__class__.__name__} object at {hex(id(self))}>",
             f" ├── time   : {self.time}",
-            f" └── agents : {[(agent.id if agent is not None else None) for agent in self.agents]}",
+            f" └── agents : {agents}",
         ]
 
         return "\n".join(lines) + "\n"
@@ -52,7 +52,8 @@ class Event(ABC):
     def is_partial(self):
         if self.partial:
             raise ConfigError(
-                f"Cannot call `{self.__class__.__name__}.resolve` when event is partial. Add agent objects."
+                f"Cannot call `{self.__class__.__name__}.resolve` when event is "
+                f"partial. Add agent objects."
             )
 
     @abstractmethod
@@ -119,8 +120,8 @@ class BallBallCollision(Collision):
     def cut_angle(self):
         """Get the cut angle of a ball-ball collision
 
-        The conception of a cut angle only makes sense when one ball is non-translating. Therefore,
-        if this condition is not met, None is returned
+        The conception of a cut angle only makes sense when one ball is non-translating.
+        Therefore, if this condition is not met, None is returned
         """
 
         if self.agent1_state_initial[1] in c.nontranslating:
@@ -388,7 +389,6 @@ class Events(utils.ListLike):
             A subset Events object containing events only after specified time
         """
 
-        idx = 0
         events = Events()
         for event in reversed(self._list):
             if event.time > t:
