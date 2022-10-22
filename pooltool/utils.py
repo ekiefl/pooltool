@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-import cmath
 import collections
 import importlib.util
 import linecache
@@ -56,8 +55,8 @@ def get_total_memory_usage(keep_raw=False):
     Parameters
     ==========
     keep_raw : bool, False
-        A human readable format is returned, e.g. "1.41 GB". If keep_raw, the raw number is
-        returned, e.g. 1515601920
+        A human readable format is returned, e.g. "1.41 GB". If keep_raw, the raw number
+        is returned, e.g. 1515601920
     """
     if importlib.util.find_spec("psutil") is None:
         # psutil does not exist in this distribution
@@ -70,7 +69,7 @@ def get_total_memory_usage(keep_raw=False):
     for child in current_process.children(recursive=True):
         try:
             mem += child.memory_info().rss
-        except:
+        except Exception:
             pass
 
     return mem if keep_raw else human_readable_file_size(mem)
@@ -170,7 +169,9 @@ def cross(u, v):
 
 @jit(nopython=True, cache=c.numba_cache)
 def cross_fast(u, v):
-    """Compute cross product u x v, where u and v are 3-dimensional vectors (just-in-time compiled)
+    """Compute cross product u x v, where u and v are 3-dimensional vectors
+
+    (just-in-time compiled)
 
     Notes
     =====
@@ -234,24 +235,25 @@ def quadratic_fast(a, b, c):
 def roots(p):
     """Solve multiple polynomial equations
 
-    This is a vectorized implementation of numpy.roots that can solve multiple polynomials in a
-    vectorized fashion. The solution is taken from this wonderful stackoverflow answer:
-    https://stackoverflow.com/a/35853977
+    This is a vectorized implementation of numpy.roots that can solve multiple
+    polynomials in a vectorized fashion. The solution is taken from this wonderful
+    stackoverflow answer: https://stackoverflow.com/a/35853977
 
     Parameters
     ==========
     p : array
-        A mxn array of polynomial coefficients, where m is the number of equations and n-1 is the
-        order of the polynomial. If n is 5 (4th order polynomial), the columns are in the order a,
-        b, c, d, e, where these coefficients make up the polynomial equation at^4 + bt^3 + ct^2 + dt
-        + e = 0
+        A mxn array of polynomial coefficients, where m is the number of equations and
+        n-1 is the order of the polynomial. If n is 5 (4th order polynomial), the
+        columns are in the order a, b, c, d, e, where these coefficients make up the
+        polynomial equation at^4 + bt^3 + ct^2 + dt + e = 0
 
     Notes
     =====
-    - This function is not amenable to numbaization (0.54.1). There are a couple of hurdles to
-      address. p[...,None,0] needs to be refactored since None/np.newaxis cause compile error. But
-      even bigger an issue is that np.linalg.eigvals is only supported for 2D arrays, but the strategy
-      here is to pass np.lingalg.eigvals a vectorized 3D array.
+    - This function is not amenable to numbaization (0.54.1). There are a couple of
+      hurdles to address. p[...,None,0] needs to be refactored since None/np.newaxis
+      cause compile error. But even bigger an issue is that np.linalg.eigvals is only
+      supported for 2D arrays, but the strategy here is to pass np.lingalg.eigvals a
+      vectorized 3D array.
     """
     n = p.shape[-1]
     A = np.zeros(p.shape[:1] + (n - 1, n - 1), np.float64)
@@ -282,18 +284,19 @@ def min_real_root(p, tol=1e-12):
     Parameters
     ==========
     p : array
-        A mxn array of polynomial coefficients, where m is the number of equations and n-1 is the
-        order of the polynomial. If n is 5 (4th order polynomial), the columns are in the order a,
-        b, c, d, e, where these coefficients make up the polynomial equation at^4 + bt^3 + ct^2 + dt
-        + e = 0
+        A mxn array of polynomial coefficients, where m is the number of equations and
+        n-1 is the order of the polynomial. If n is 5 (4th order polynomial), the
+        columns are in the order a, b, c, d, e, where these coefficients make up the
+        polynomial equation at^4 + bt^3 + ct^2 + dt + e = 0
     tol : float, 1e-12
         Roots are considered if they have
 
     Returns
     =======
     output : (time, index)
-        `time` is the minimum real root from the set of polynomials, and `index` specifies the index
-        of the responsible polynomial. i.e. the polynomial with the root `time` is p[index]
+        `time` is the minimum real root from the set of polynomials, and `index`
+        specifies the index of the responsible polynomial. i.e. the polynomial with the
+        root `time` is p[index]
     """
     # Get the roots for the polynomials
     times = roots(p)
@@ -310,7 +313,9 @@ def min_real_root(p, tol=1e-12):
 
 @jit(nopython=True, cache=c.numba_cache)
 def min_real_root_fast(p, tol=1e-12):
-    """Given an array of polynomial coefficients, find the minimum real root (just-in-time compiled)
+    """Given an array of polynomial coefficients, find the minimum real root
+
+    (just-in-time compiled)
 
     Notes
     =====
@@ -372,7 +377,7 @@ def unit_vector_fast(vector, handle_zero=False):
 
 
 def angle(v2, v1=(1, 0)):
-    """Calculates counter-clockwise angle of the projections of v1 and v2 onto the x-y plane"""
+    """Returns counter-clockwise angle of projections of v1 and v2 onto the x-y plane"""
     ang = np.arctan2(v2[1], v2[0]) - np.arctan2(v1[1], v1[0])
 
     if ang < 0:
@@ -410,7 +415,9 @@ def orientation(p, q, r):
 
 @jit(nopython=True, cache=c.numba_cache)
 def angle_fast(v2, v1=(1, 0)):
-    """Calculates counter-clockwise angle of the projections of v1 and v2 onto the x-y plane (just-in-time compiled)
+    """Returns counter-clockwise angle of projections of v1 and v2 onto the x-y plane
+
+    (just-in-time compiled)
 
     Notes
     =====
@@ -435,7 +442,9 @@ def coordinate_rotation(v, phi):
 
 @jit(nopython=True, cache=c.numba_cache)
 def coordinate_rotation_fast(v, phi):
-    """Rotate vector/matrix from one frame of reference to another (3D FIXME) (just-in-time compiled)
+    """Rotate vector/matrix from one frame of reference to another (3D FIXME)
+
+    (just-in-time compiled)
 
     Notes
     =====
