@@ -5,10 +5,9 @@ import configparser
 from pathlib import Path
 from typing import Dict
 
-from panda3d.core import *
+from panda3d.core import loadPrcFile
 
 import pooltool as pt
-from pooltool.error import ConfigError
 from pooltool.utils import panda_path
 
 loadPrcFile(panda_path(Path(pt.__file__).parent / "config" / "config_panda3d.prc"))
@@ -31,9 +30,12 @@ rotate_fine_sensitivity_y = 0
 move_sensitivity = 0.6
 stroke_sensitivity = 0.4
 max_stroke_speed = 7  # m/s
-backstroke_fraction = 0.5  # max backstroke length, as fraction of cue stick length
-max_elevate = 80  # max masse angle
-rotate_downtime = 0.3  # number of seconds that camera rotation is disabled when shot is being calculated
+# max backstroke length, as fraction of cue stick length
+backstroke_fraction = 0.5
+# max masse angle
+max_elevate = 80
+# number of seconds that camera rotation is disabled when shot is being calculated
+rotate_downtime = 0.3
 rewind_dt = 0.02
 fast_forward_dt = 0.02
 
@@ -75,7 +77,7 @@ def load_config(name):
         for k, v in config_obj[section].items():
             try:
                 config[section][k] = ast.literal_eval(v)
-            except:
+            except Exception:
                 config[section][k] = v
     return config
 
