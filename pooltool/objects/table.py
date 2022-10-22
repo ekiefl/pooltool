@@ -1,12 +1,9 @@
 #! /usr/bin/env python
 
-from pathlib import Path
-
 import numpy as np
 from panda3d.core import *
 
 import pooltool.ani as ani
-import pooltool.ani.utils as autils
 import pooltool.constants as c
 import pooltool.utils as utils
 from pooltool.error import ConfigError
@@ -29,12 +26,16 @@ class TableRender(Render):
         self.has_model = has_model
         Render.__init__(self)
 
+        # Panda pollutes the global namespace, appease linters
+        self.loader = __builtins__["loader"]
+        self.global_render = __builtins__["render"]
+
     def init_cloth(self):
         if not self.has_model or not ani.settings["graphics"]["table"]:
-            node = render.find("scene").attachNewNode("cloth")
+            node = self.global_render.find("scene").attachNewNode("cloth")
             path = ani.model_dir / "table" / "custom" / "custom.glb"
 
-            model = loader.loadModel(panda_path(path))
+            model = self.loader.loadModel(panda_path(path))
             model.reparentTo(node)
             model.setScale(self.w, self.l, 1)
         else:
@@ -53,8 +54,8 @@ class TableRender(Render):
                     f"Couldn't find table model at {standard_path} or {pbr_path}"
                 )
 
-            node = loader.loadModel(panda_path(path))
-            node.reparentTo(render.find("scene"))
+            node = self.loader.loadModel(panda_path(path))
+            node.reparentTo(self.global_render.find("scene"))
             node.setName("cloth")
 
         self.nodes["cloth"] = node
@@ -102,7 +103,7 @@ class TableRender(Render):
         self.cushion_drawer.moveTo(cushion.p1[0], cushion.p1[1], cushion.p1[2])
         self.cushion_drawer.drawTo(cushion.p2[0], cushion.p2[1], cushion.p2[2])
         node = (
-            render.find("scene")
+            self.global_render.find("scene")
             .find("cloth")
             .attachNewNode(self.cushion_drawer.create())
         )
@@ -120,7 +121,7 @@ class TableRender(Render):
         circle = self.draw_circle(
             self.cushion_drawer, (center_x, center_y, height), radius, 30
         )
-        node = render.find("scene").find("cloth").attachNewNode(circle)
+        node = self.global_render.find("scene").find("cloth").attachNewNode(circle)
         node.set_shader_auto(True)
         self.nodes[f"cushion_{cushion_id}"] = node
 
@@ -134,7 +135,7 @@ class TableRender(Render):
     def init_pocket(self, pocket_id):
         pocket = self.pockets[pocket_id]
         circle = self.draw_circle(self.pocket_drawer, pocket.center, pocket.radius, 100)
-        node = render.find("scene").find("cloth").attachNewNode(circle)
+        node = self.global_render.find("scene").find("cloth").attachNewNode(circle)
         node.set_shader_auto(True)
         self.nodes[f"pocket_{pocket_id}"] = node
 
