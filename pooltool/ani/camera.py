@@ -1,14 +1,17 @@
 #! /usr/bin/env python
 
-from panda3d.core import *
-
-import pooltool.terminal as terminal
+from panda3d.core import TransparencyAttrib
 
 
-class PlayerCam(object):
+class PlayerCam:
     def __init__(self):
-        self.node = base.camera
-        self.lens = base.camLens
+        # Panda pollutes the global namespace, appease linters
+        self.base = __builtins__["base"]
+        self.global_render = __builtins__["render"]
+        self.loader = __builtins__["loader"]
+
+        self.node = self.base.camera
+        self.lens = self.base.camLens
         self.lens.setNear(0.02)
 
         self.states = {}
@@ -17,13 +20,13 @@ class PlayerCam(object):
 
     def create_focus(self, parent=None, pos=None):
         if parent is None:
-            parent = render
+            parent = self.global_render
 
         self.focus = parent.attachNewNode("camera_focus")
         self.focus.setH(-90)
 
         # create visible object
-        self.focus_object = loader.loadModel("smiley.egg")
+        self.focus_object = self.loader.loadModel("smiley.egg")
         self.focus_object.setScale(0.005)
         self.focus_object.setTransparency(TransparencyAttrib.MAlpha)
         self.focus_object.setAlphaScale(0.4)
