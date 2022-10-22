@@ -1,0 +1,8 @@
+psutil
+colored
+ipython
+pprofile
+pytest
+pre-commit
+black
+isort
