@@ -2,11 +2,9 @@
 
 """Borrowed from https://github.com/merenlab/anvio/blob/master/anvio/errors.py"""
 
-import sys
 import textwrap
-import traceback
 
-from pooltool.terminal import color_text, tty_colors
+from pooltool.terminal import color_text
 
 
 def remove_spaces(text):
@@ -22,16 +20,16 @@ def remove_spaces(text):
     return text
 
 
-class PoolToolError(Exception, object):
+class PoolToolError(Exception):
     def __init__(self, e=None):
         Exception.__init__(self)
         return
 
     def __str__(self):
-        max_len = max([len(l) for l in textwrap.fill(self.e, 80).split("\n")])
+        max_len = max([len(line) for line in textwrap.fill(self.e, 80).split("\n")])
         error_lines = [
-            "%s%s" % (l, " " * (max_len - len(l)))
-            for l in textwrap.fill(self.e, 80).split("\n")
+            "%s%s" % (line, " " * (max_len - len(line)))
+            for line in textwrap.fill(self.e, 80).split("\n")
         ]
 
         error_message = [
