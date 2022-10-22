@@ -2,7 +2,7 @@
 
 import gc
 
-import gltf
+import gltf  # FIXME at first glance this does nothing?
 import simplepbr
 from direct.gui.OnscreenText import OnscreenText
 from direct.showbase.ShowBase import ShowBase
