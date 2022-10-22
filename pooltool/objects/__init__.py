@@ -36,14 +36,14 @@ class Render(ABC):
     def __init__(self):
         """A base class for rendering physical pool objects
 
-        This class stores base operations on panda3d nodes that are associated with any pool objects
-        such as cues, tables, and balls.
+        This class stores base operations on panda3d nodes that are associated with any
+        pool objects such as cues, tables, and balls.
 
         Notes
         =====
         - All nodes for a given object (e.g. table) are stored in self.nodes.
-        - Each method decorated with 'abstractmethod' must be defined by the child class. The
-          decorator _ensures_ this happens.
+        - Each method decorated with 'abstractmethod' must be defined by the child
+          class. The decorator _ensures_ this happens.
         """
 
         self.nodes = {}

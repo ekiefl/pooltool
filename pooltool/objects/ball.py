@@ -3,15 +3,36 @@
 from pathlib import Path
 
 import numpy as np
-from direct.interval.IntervalGlobal import *
-from panda3d.core import *
+from direct.interval.IntervalGlobal import (
+    LerpFunc,
+    LerpPosInterval,
+    LerpPosQuatInterval,
+    Parallel,
+    Sequence,
+)
+from panda3d.core import (
+    CollisionCapsule,
+    CollisionNode,
+    LineSegs,
+    SamplerState,
+    TransparencyAttrib,
+)
 
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 import pooltool.constants as c
 import pooltool.physics as physics
+import pooltool.utils as utils
 from pooltool.error import ConfigError
-from pooltool.events import *
+from pooltool.events import (
+    Events,
+    NonEvent,
+    RollingSpinningTransition,
+    RollingStationaryTransition,
+    SlidingRollingTransition,
+    SpinningStationaryTransition,
+    event_from_dict,
+)
 from pooltool.objects import Object, Render
 from pooltool.utils import panda_path
 
@@ -25,10 +46,16 @@ class BallRender(Render):
         self.playback_sequence = None
         Render.__init__(self)
 
+        # Panda pollutes the global namespace, appease linters
+        self.global_render = __builtins__["render"]
+        self.base = __builtins__["base"]
+
     def init_sphere(self):
         """Initialize the ball's nodes"""
         position = (
-            render.find("scene").find("cloth").attachNewNode(f"ball_{self.id}_position")
+            self.global_render.find("scene")
+            .find("cloth")
+            .attachNewNode(f"ball_{self.id}_position")
         )
         ball = position.attachNewNode(f"ball_{self.id}")
 
@@ -37,7 +64,7 @@ class BallRender(Render):
             expected_path = ani.model_dir / "balls" / "set_1" / f"{self.id}.glb"
             path = expected_path if expected_path.exists() else fallback_path
 
-            sphere_node = base.loader.loadModel(panda_path(path))
+            sphere_node = self.base.loader.loadModel(panda_path(path))
             sphere_node.reparentTo(position)
 
             if path == fallback_path:
@@ -45,9 +72,10 @@ class BallRender(Render):
             else:
                 tex = sphere_node.find_texture(self.id)
 
-            # Here, we define self.rel_model_path based on path. Since rel_model_path is defined relative to
-            # the directory, pooltool/models/balls, some work has to be done to define rel_model_path
-            # relative to this directory. NOTE assumes no child directory is named balls
+            # Here, we define self.rel_model_path based on path. Since rel_model_path is
+            # defined relative to the directory, pooltool/models/balls, some work has to
+            # be done to define rel_model_path relative to this directory. NOTE assumes
+            # no child directory is named balls
             parents = []
             parent = path.parent
             while True:
@@ -57,7 +85,7 @@ class BallRender(Render):
                 parents.append(parent.stem)
                 parent = parent.parent
         else:
-            sphere_node = base.loader.loadModel(
+            sphere_node = self.base.loader.loadModel(
                 panda_path(ani.model_dir / "balls" / self.rel_model_path)
             )
             sphere_node.reparentTo(position)
@@ -104,9 +132,11 @@ class BallRender(Render):
         z_offset = 0.0005
         scales = np.linspace(start, stop, N)
 
-        shadow_path = ani.model_dir / "balls" / "set_1" / f"shadow.glb"
+        shadow_path = ani.model_dir / "balls" / "set_1" / "shadow.glb"
         shadow_node = (
-            render.find("scene").find("cloth").attachNewNode(f"shadow_{self.id}")
+            self.global_render.find("scene")
+            .find("cloth")
+            .attachNewNode(f"shadow_{self.id}")
         )
         shadow_node.setPos(self.rvw[0, 0], self.rvw[0, 1], 0)
 
@@ -114,7 +144,7 @@ class BallRender(Render):
         shadow_node.setTransparency(TransparencyAttrib.MAlpha)
 
         for i, scale in enumerate(scales):
-            shadow_layer = base.loader.loadModel(panda_path(shadow_path))
+            shadow_layer = self.base.loader.loadModel(panda_path(shadow_path))
             shadow_layer.reparentTo(shadow_node)
             shadow_layer.setScale(self.get_scale_factor(shadow_layer) * scale)
             shadow_layer.setZ(z_offset * (1 - i / N))
@@ -147,13 +177,13 @@ class BallRender(Render):
         self.vector_drawer.moveTo(0, 0, 0)
         self.vector_drawer.drawTo(*(arrow_len * unit))
         try:
-            # It is possible that this function is ran after scene is closed, in which case
-            # self.nodes['pos'] does not exist.
+            # It is possible that this function is ran after scene is closed, in which
+            # case self.nodes['pos'] does not exist.
             self.nodes["vector"] = self.nodes["pos"].attachNewNode(
                 self.vector_drawer.create()
             )
             self.nodes["vector"].set_shader_auto(True)
-        except:
+        except Exception:
             pass
 
     def get_scale_factor(self, node):
@@ -194,7 +224,8 @@ class BallRender(Render):
         Parameters
         ==========
         i : int
-            An index from the history. e.g. 0 refers to initial state, -1 refers to final state
+            An index from the history. e.g. 0 refers to initial state, -1 refers to
+            final state
         """
 
         rvw, _, _ = self.history.get_state(i)
@@ -325,8 +356,8 @@ class BallRender(Render):
         Parameters
         ==========
         orientation : dict
-            A dictionary of quaternions with keys 'pos' and 'sphere'. Such a dictionary can be
-            generated with `self.get_orientation`.
+            A dictionary of quaternions with keys 'pos' and 'sphere'. Such a dictionary
+            can be generated with `self.get_orientation`.
         """
         self.get_node("pos").setQuat(autils.get_quat_from_vector(orientation["pos"]))
         self.get_node("sphere").setQuat(
@@ -591,7 +622,7 @@ def ball_from_dict(d):
             rel_model_path=d["rel_model_path"],
             initial_orientation=d["initial_orientation"],
         )
-    except:
+    except Exception:
         ball = Ball(
             d["id"],
             rel_model_path=d["rel_model_path"],
