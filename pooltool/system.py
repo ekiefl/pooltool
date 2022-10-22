@@ -3,7 +3,6 @@
 import tempfile
 from pathlib import Path
 
-from direct.interval.IntervalGlobal import *
 from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
 

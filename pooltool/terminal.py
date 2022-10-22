@@ -19,14 +19,16 @@ import pandas as pd
 def get_color_objects():
     """Get objects for coloring the progress bar
 
-    `colored` is a module used for coloring the progress bar, however this module does not create
-    wheels for all platform tags.  Therefore not all pooltool distributions will have colored. This
-    code imports `colored` if it exists, and provides colorless functionality if it does not
+    `colored` is a module used for coloring the progress bar, however this module does
+    not create wheels for all platform tags.  Therefore not all pooltool distributions
+    will have colored. This code imports `colored` if it exists, and provides colorless
+    functionality if it does not
 
     Notes
     =====
     - Rather than using fore, back, and style, the progress bar should use the
-      pooltool.terminal.tty_colors dictionary so that `colored` can be removed as a module altogether
+      pooltool.terminal.tty_colors dictionary so that `colored` can be removed as a
+      module altogether
     """
 
     if importlib.util.find_spec("colored") is not None:
@@ -57,7 +59,11 @@ fore, back, style = get_color_objects()
 # clean garbage garbage:
 ansi_escape = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
 non_ascii_escape = re.compile(r"[^\x00-\x7F]+")
-CLEAR = lambda line: ansi_escape.sub("", non_ascii_escape.sub("", line.strip()))
+
+
+def CLEAR(line):
+    return ansi_escape.sub("", non_ascii_escape.sub("", line.strip()))
+
 
 tty_colors = {
     "gray": {"normal": "\033[1;30m%s\033[1m", "bold": "\033[0;30m%s\033[0m"},
@@ -110,7 +116,7 @@ class Progress:
         # FIXME Program flow here is not clear. When does try fail?
         try:
             self.terminal_width = max(get_terminal_size()[0], 100)
-        except:
+        except Exception:
             self.terminal_width = 100
 
     def new(self, pid, discard_previous_if_exists=False, progress_total_items=None):
@@ -119,8 +125,8 @@ class Progress:
                 self.end()
             else:
                 raise Exception(
-                    "Progress.new() can't be called before ending the previous one (Existing: '%s', Competing: '%s')."
-                    % (self.pid, pid)
+                    f"Progress.new() can't be called before ending the previous one "
+                    f"(Existing: '{self.pid}', Competing: '{pid}')."
                 )
 
         if not self.verbose:
@@ -277,8 +283,9 @@ class Progress:
         Parameters
         ==========
         timing_filepath : str, None
-            Store the timings of this progress to the filepath `timing_filepath`. File will only be
-            made if a progress_total_items parameter was made during self.new()
+            Store the timings of this progress to the filepath `timing_filepath`. File
+            will only be made if a progress_total_items parameter was made during
+            self.new()
         """
 
         if timing_filepath and self.progress_total_items is not None:
@@ -318,7 +325,7 @@ class Run:
         if (self.verbose and not quiet) or overwrite_verbose:
             try:
                 sys.stderr.write(line)
-            except:
+            except Exception:
                 sys.stderr.write(line.encode("utf-8"))
 
     def info(
@@ -377,8 +384,8 @@ class Run:
 
         if level not in self.single_line_prefixes:
             raise Exception(
-                "the `info_single` function does not know how to deal with a level of %d :/"
-                % level
+                f"the `info_single` function does not know how to deal with a level "
+                f"of {level} :/"
             )
 
         if cut_after:
@@ -439,7 +446,7 @@ class Run:
 
 
 class Timer:
-    """Manages an ordered dictionary, where each key is a checkpoint name and value is a timestamp.
+    """Manages ordered dictionary, key is checkpoint name and value is a timestamp.
 
     Examples
     ========
@@ -583,9 +590,9 @@ class Timer:
         return time_remaining_estimate
 
     def eta(self, fmt=None, zero_padding=0):
-        # Calling format_time hundreds or thousands of times per second is expensive. Therefore if
-        # eta was called within the last half second, the previous ETA is returned without further
-        # calculation.
+        # Calling format_time hundreds or thousands of times per second is expensive.
+        # Therefore if eta was called within the last half second, the previous ETA is
+        # returned without further calculation.
         eta_timestamp = self.timestamp()
         if (
             eta_timestamp - self.last_eta_timestamp < datetime.timedelta(seconds=0.5)
@@ -634,7 +641,8 @@ class Timer:
         }
 
         if not fmt:
-            # use the highest two non-zero units, e.g. if it is 7200s, use {hours}h{minutes}m
+            # use the highest two non-zero units, e.g. if it is 7200s, use
+            # {hours}h{minutes}m
             seconds = int(timedelta.total_seconds())
             if seconds < 60:
                 fmt = "{seconds}s"
