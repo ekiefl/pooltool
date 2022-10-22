@@ -1,21 +1,23 @@
 #! /usr/bin/env python
 """Unit testing for physics.py
 
-Most of the unit tests in this module work differently than one might expect. Rather than feed each
-physics equation a series of carefully crafted examples where the expected answer is calculated by
-hand, instead I search for existing examples of the physics equation being used within the benchmark
-shot.  Since the benchmark shot is assumed to be the truth, I can test whether the function in the
-current codebase returns the identical output to that in the benchmark shot.
+Most of the unit tests in this module work differently than one might expect. Rather
+than feed each physics equation a series of carefully crafted examples where the
+expected answer is calculated by hand, instead I search for existing examples of the
+physics equation being used within the benchmark shot.  Since the benchmark shot is
+assumed to be the truth, I can test whether the function in the current codebase returns
+the identical output to that in the benchmark shot.
 
-The advantages of this approach is that (1) the tests require very little upkeep and (2) a large
-breadth of circumstances are tested for each physics equation. For example, at the time of writing
-this, the benchmark shot contains 18 ball-ball collisions, so physics.resolve_ball_ball_collision is
-tested under 18 non-trivial circumstances.
+The advantages of this approach is that (1) the tests require very little upkeep and (2)
+a large breadth of circumstances are tested for each physics equation. For example, at
+the time of writing this, the benchmark shot contains 18 ball-ball collisions, so
+physics.resolve_ball_ball_collision is tested under 18 non-trivial circumstances.
 
-The disadvantage to this approach is that truth is defined relative to the benchmark shot. If the
-benchmark shot contains incorrect functionality, then these tests serve no purpose in ensuring
-absolute truth. With this in mind, these unit tests are not designed to prove correctness, but
-rather to preserve functionality in the face of any refactoring that takes place.
+The disadvantage to this approach is that truth is defined relative to the benchmark
+shot. If the benchmark shot contains incorrect functionality, then these tests serve no
+purpose in ensuring absolute truth. With this in mind, these unit tests are not designed
+to prove correctness, but rather to preserve functionality in the face of any
+refactoring that takes place.
 """
 
 import numpy as np

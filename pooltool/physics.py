@@ -1,14 +1,16 @@
 #! /usr/bin/env python
 """Compilation of physics equations implemented as functions.
 
-A convention is upheld for the input and output variable names that is consistent across functions.
-All units are SI (https://en.wikipedia.org/wiki/International_System_of_Units)
+A convention is upheld for the input and output variable names that is consistent across
+functions.  All units are SI
+(https://en.wikipedia.org/wiki/International_System_of_Units)
 
 `rvw` : numpy.array
-    The ball state (https://ekiefl.github.io/2020/12/20/pooltool-alg/#what-is-the-system-state).  It
-    is a 3x3 numpy array where rvw[0, :] is the displacement vector (r), rvw[1, :] is the velocity
-    vector (v), and rvw[2, :] is the angular velocity vector (w). For example, rvw[1, 1] refers to
-    the y-component of the velocity vector.
+    The ball state
+    (https://ekiefl.github.io/2020/12/20/pooltool-alg/#what-is-the-system-state).  It is
+    a 3x3 numpy array where rvw[0, :] is the displacement vector (r), rvw[1, :] is the
+    velocity vector (v), and rvw[2, :] is the angular velocity vector (w). For example,
+    rvw[1, 1] refers to the y-component of the velocity vector.
 `R` : float
     The radius of the ball.
 `m` : float
@@ -18,9 +20,9 @@ All units are SI (https://en.wikipedia.org/wiki/International_System_of_Units)
 `s` : int
     The motion state of the ball. Definitions are found in pooltool.state_dict
 `mu` : float
-    The coefficient of friction. If ball motion state is sliding, assume coefficient of sliding
-    friction. If rolling, assume coefficient of rolling friction. If spinning, assume coefficient of
-    spinning friction
+    The coefficient of friction. If ball motion state is sliding, assume coefficient of
+    sliding friction. If rolling, assume coefficient of rolling friction. If spinning,
+    assume coefficient of spinning friction
 `u_s` : float
     The sliding coefficient of friction.
 `u_sp` : float
@@ -38,7 +40,7 @@ All units are SI (https://en.wikipedia.org/wiki/International_System_of_Units)
 import math
 
 import numpy as np
-from numba import jit, prange
+from numba import jit
 
 import pooltool.constants as const
 import pooltool.utils as utils
@@ -145,7 +147,8 @@ def get_ball_cushion_restitution(rvw, e_c):
 
     Notes
     =====
-    - https://essay.utwente.nl/59134/1/scriptie_J_van_Balen.pdf suggests a constant value of 0.85
+    - https://essay.utwente.nl/59134/1/scriptie_J_van_Balen.pdf suggests a constant
+      value of 0.85
     """
 
     return e_c
@@ -184,9 +187,9 @@ def skip_ball_ball_collision(rvw1, rvw2, s1, s2, R1, R2):
         return True
 
     if s1 == const.rolling and s2 == const.rolling:
-        # Both balls are rolling (straight line trajectories). Here I am checking whether both dot
-        # products face away from the line connecting the two balls. If so, they are guaranteed not
-        # to collide
+        # Both balls are rolling (straight line trajectories). Here I am checking
+        # whether both dot products face away from the line connecting the two balls. If
+        # so, they are guaranteed not to collide
         r12 = rvw2[0] - rvw1[0]
         dot1 = r12[0] * rvw1[1, 0] + r12[1] * rvw1[1, 1] + r12[2] * rvw1[1, 2]
         if dot1 <= 0:
@@ -195,12 +198,12 @@ def skip_ball_ball_collision(rvw1, rvw2, s1, s2, R1, R2):
                 return True
 
     if s1 == const.rolling and (s2 == const.spinning or s2 == const.stationary):
-        # ball1 is rolling, which guarantees a straight-line trajectory. Some assumptions can be
-        # made based on this fact
+        # ball1 is rolling, which guarantees a straight-line trajectory. Some
+        # assumptions can be made based on this fact
         r12 = rvw2[0] - rvw1[0]
 
-        # ball2 is not moving, so we can pinpoint the range of angles ball1 must be headed
-        # in for a collision
+        # ball2 is not moving, so we can pinpoint the range of angles ball1 must be
+        # headed in for a collision
         d = np.linalg.norm(r12)
         unit_d = r12 / d
         unit_v = utils.unit_vector_fast(rvw1[1])
@@ -213,12 +216,12 @@ def skip_ball_ball_collision(rvw1, rvw2, s1, s2, R1, R2):
             return True
 
     if s2 == const.rolling and (s1 == const.spinning or s1 == const.stationary):
-        # ball2 is rolling, which guarantees a straight-line trajectory. Some assumptions can be
-        # made based on this fact
+        # ball2 is rolling, which guarantees a straight-line trajectory. Some
+        # assumptions can be made based on this fact
         r21 = rvw1[0] - rvw2[0]
 
-        # ball1 is not moving, so we can pinpoint the range of angles ball2 must be headed
-        # in for a collision
+        # ball1 is not moving, so we can pinpoint the range of angles ball2 must be
+        # headed in for a collision
         d = np.linalg.norm(r21)
         unit_d = r21 / d
         unit_v = utils.unit_vector_fast(rvw2[1])
@@ -301,7 +304,9 @@ def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2,
 def get_ball_ball_collision_coeffs_fast(
     rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
 ):
-    """Get the quartic coeffs required to determine the ball-ball collision time (just-in-time compiled)
+    """Get quartic coeffs required to determine the ball-ball collision time
+
+    (just-in-time compiled)
 
     Notes
     =====
@@ -372,9 +377,9 @@ def get_ball_ball_collision_coeffs_fast(
 def get_ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
     """Get the time until collision between 2 balls
 
-    NOTE This is deprecated. Rather than solve the roots of a single polynomial equation,
-    as is done in this function, all roots of a given collision class are solved simultaneously
-    via utils.roots
+    NOTE This is deprecated. Rather than solve the roots of a single polynomial
+    equation, as is done in this function, all roots of a given collision class are
+    solved simultaneously via utils.roots
     """
     a, b, c, d, e = get_ball_ball_collision_coeffs(
         rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
@@ -393,13 +398,13 @@ def skip_ball_linear_cushion_collision(rvw, s, u_r, g, R, p1, p2, normal):
         return True
 
     if s == const.rolling:
-        # Since the ball is rolling, it is a straight line trajectory. The strategy here is to
-        # see whether the trajectory of the ball is going to intersect with either of the collisions
-        # defined by a linear cushion segment. Let r1 be the position of the ball and r2 be the
-        # final position of the ball (rolling to a stop). Let p11 and p21 be the intersection points
-        # of the first intersection line, and let p12 and p22 be the intersection points of the
-        # second. This code uses orientation to determine if If r1 -> r2 intersects p11 -> p21 or
-        # p12 -> p22
+        # Since the ball is rolling, it is a straight line trajectory. The strategy here
+        # is to see whether the trajectory of the ball is going to intersect with either
+        # of the collisions defined by a linear cushion segment. Let r1 be the position
+        # of the ball and r2 be the final position of the ball (rolling to a stop). Let
+        # p11 and p21 be the intersection points of the first intersection line, and let
+        # p12 and p22 be the intersection points of the second. This code uses
+        # orientation to determine if If r1 -> r2 intersects p11 -> p21 or p12 -> p22
         p11 = p1 + R * normal
         p12 = p1 - R * normal
         p21 = p2 + R * normal
@@ -446,8 +451,6 @@ def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g,
         )
     )
 
-    cos_phi = np.cos(phi)
-
     ax = -0.5 * mu * g * (u[0] * np.cos(phi) - u[1] * np.sin(phi))
     ay = -0.5 * mu * g * (u[0] * np.sin(phi) + u[1] * np.cos(phi))
     bx, by = v * np.cos(phi), v * np.sin(phi)
@@ -486,11 +489,14 @@ def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g,
 def get_ball_linear_cushion_collision_time_fast(
     rvw, s, lx, ly, l0, p1, p2, direction, mu, m, g, R
 ):
-    """Get the time until collision between ball and linear cushion segment (just-in-time compiled)
+    """Get time until collision between ball and linear cushion segment
+
+    (just-in-time compiled)
 
     Notes
     =====
-    - Speed comparison in pooltool/tests/speed/get_ball_circular_cushion_collision_coeffs.py
+    - Speed comparison in
+      pooltool/tests/speed/get_ball_circular_cushion_collision_coeffs.py
     """
     if s == const.spinning or s == const.pocketed or s == const.stationary:
         return np.inf
@@ -554,7 +560,7 @@ def get_ball_linear_cushion_collision_time_fast(
 
 
 def get_ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
-    """Get the quartic coeffs required to determine the ball-circular-cushion collision time
+    """Get quartic coeffs required to determine the ball-circular-cushion collision time
 
     Parameters
     ==========
@@ -602,11 +608,14 @@ def get_ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
 
 @jit(nopython=True, cache=const.numba_cache)
 def get_ball_circular_cushion_collision_coeffs_fast(rvw, s, a, b, r, mu, m, g, R):
-    """Get the quartic coeffs required to determine the ball-circular-cushion collision time (just-in-time compiled)
+    """Get quartic coeffs required to determine the ball-circular-cushion collision time
+
+    (just-in-time compiled)
 
     Notes
     =====
-    - Speed comparison in pooltool/tests/speed/get_ball_circular_cushion_collision_coeffs.py
+    - Speed comparison in
+      pooltool/tests/speed/get_ball_circular_cushion_collision_coeffs.py
     """
 
     if s == const.spinning or s == const.pocketed or s == const.stationary:
@@ -644,9 +653,9 @@ def get_ball_circular_cushion_collision_coeffs_fast(rvw, s, a, b, r, mu, m, g, R
 def get_ball_circular_cushion_collision_time(rvw, s, a, b, r, mu, m, g, R):
     """Get the time until collision between ball and circular cushion segment
 
-    NOTE This is deprecated. Rather than solve the roots of a single polynomial equation,
-    as is done in this function, all roots of a given collision class are solved simultaneously
-    via utils.roots
+    NOTE This is deprecated. Rather than solve the roots of a single polynomial
+    equation, as is done in this function, all roots of a given collision class are
+    solved simultaneously via utils.roots
 
     Parameters
     ==========
@@ -718,11 +727,14 @@ def get_ball_pocket_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
 
 @jit(nopython=True, cache=const.numba_cache)
 def get_ball_pocket_collision_coeffs_fast(rvw, s, a, b, r, mu, m, g, R):
-    """Get the quartic coeffs required to determine the ball-pocket collision time (just-in-time compiled)
+    """Get quartic coeffs required to determine the ball-pocket collision time
+
+    (just-in-time compiled)
 
     Notes
     =====
-    - Speed comparison in pooltool/tests/speed/get_ball_circular_cushion_collision_coeffs.py
+    - Speed comparison in
+      pooltool/tests/speed/get_ball_circular_cushion_collision_coeffs.py
     """
 
     if s == const.spinning or s == const.pocketed or s == const.stationary:
@@ -760,9 +772,9 @@ def get_ball_pocket_collision_coeffs_fast(rvw, s, a, b, r, mu, m, g, R):
 def get_ball_pocket_collision_time(rvw, s, a, b, r, mu, m, g, R):
     """Get the time until collision between ball and pocket
 
-    NOTE This is deprecated. Rather than solve the roots of a single polynomial equation,
-    as is done in this function, all roots of a given collision class are solved simultaneously
-    via utils.roots
+    NOTE This is deprecated. Rather than solve the roots of a single polynomial
+    equation, as is done in this function, all roots of a given collision class are
+    solved simultaneously via utils.roots
 
     Parameters
     ==========
@@ -816,11 +828,19 @@ def get_spin_time_fast(rvw, R, u_sp, g):
 
 
 def get_ball_energy(rvw, R, m):
-    """Rotation and kinetic energy (FIXME potential if z axis is freed)"""
-    return (
-        m * np.linalg.norm(rvw[1]) ** 2
-        + (2 / 5 * m * R**2) * np.linalg.norm(rvw[2]) ** 2
-    ) / 2
+    """Get the energy of a ball
+
+    Currently calculating linear and rotational kinetic energy. Need to add potential
+    energy if z-axis is freed
+    """
+    # Linear
+    LKE = m * np.linalg.norm(rvw[1]) ** 2 / 2
+
+    # Rotational
+    I = 2 / 5 * m * R**2
+    RKE = I * np.linalg.norm(rvw[2]) ** 2 / 2
+
+    return LKE + RKE
 
 
 @jit(nopython=True, cache=const.numba_cache)
@@ -1006,17 +1026,18 @@ def cue_strike(m, M, R, V0, phi, theta, a, b):
         How elevated is the cue from the playing surface, in degrees?
 
     a : float
-        How much side english should be put on? -1 being rightmost side of ball, +1 being
-        leftmost side of ball
+        How much side english should be put on? -1 being rightmost side of ball, +1
+        being leftmost side of ball
 
     b : float
-        How much vertical english should be put on? -1 being bottom-most side of ball, +1 being
-        topmost side of ball
+        How much vertical english should be put on? -1 being bottom-most side of ball,
+        +1 being topmost side of ball
 
     Notes
     =====
-    - This function creates unrealistic magnitudes of spin. To compensate, I've got a fake factor
-      that scales down the passed a and b values, called pooltool.english_fraction
+    - This function creates unrealistic magnitudes of spin. To compensate, I've got a
+      fake factor that scales down the passed a and b values, called
+      pooltool.english_fraction
 
     """
 
@@ -1030,11 +1051,10 @@ def cue_strike(m, M, R, V0, phi, theta, a, b):
 
     c = np.sqrt(R**2 - a**2 - b**2)
 
-    # Calculate impact force F
-    numerator = (
-        2 * M * V0
-    )  # In Leckie & Greenspan, the mass term in numerator is ball mass,
-    # which seems wrong. See https://billiards.colostate.edu/faq/cue-tip/force/
+    # Calculate impact force F.  In Leckie & Greenspan, the mass term in numerator is
+    # ball mass, which seems wrong.  See
+    # https://billiards.colostate.edu/faq/cue-tip/force/
+    numerator = 2 * M * V0
     temp = (
         a**2
         + (b * np.cos(theta)) ** 2
@@ -1047,17 +1067,13 @@ def cue_strike(m, M, R, V0, phi, theta, a, b):
     # 3D FIXME
     # v_B = -F/m * np.array([0, np.cos(theta), np.sin(theta)])
     v_B = -F / m * np.array([0, np.cos(theta), 0])
-    w_B = (
-        F
-        / I
-        * np.array(
-            [
-                -c * np.sin(theta) + b * np.cos(theta),
-                a * np.sin(theta),
-                -a * np.cos(theta),
-            ]
-        )
-    )
+
+    vec_x = -c * np.sin(theta) + b * np.cos(theta)
+    vec_y = a * np.sin(theta)
+    vec_z = -a * np.cos(theta)
+
+    vec = np.array([vec_x, vec_y, vec_z])
+    w_B = F / I * vec
 
     # Rotate to table reference
     rot_angle = phi + np.pi / 2
