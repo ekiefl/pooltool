@@ -2,20 +2,23 @@
 
 from abc import ABC, abstractmethod
 from collections import deque
-from pathlib import Path
 
-import numpy as np
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.gui.OnscreenText import OnscreenText
-from direct.interval.IntervalGlobal import *
-from panda3d.core import *
+from direct.interval.IntervalGlobal import (
+    LerpFunctionInterval,
+    Parallel,
+    Sequence,
+    Wait,
+)
+from panda3d.core import CardMaker, NodePath, TextNode, TransparencyAttrib
 
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 from pooltool.utils import panda_path
 
 
-class HUD(object):
+class HUD:
     def __init__(self):
         pass
 
@@ -88,8 +91,12 @@ class HUD(object):
 
 class HUDElement(ABC):
     def __init__(self):
+        # Panda pollutes the global namespace, appease linters
+        self.aspect2d = __builtins__["aspect2d"]
+        self.render2d = __builtins__["render2d"]
+
         self.dummy_right = NodePath("right_panel_hud")
-        self.dummy_right.reparentTo(aspect2d)
+        self.dummy_right.reparentTo(self.aspect2d)
         self.dummy_right.setPos(1.25, 0, 0)
 
     @abstractmethod
@@ -173,7 +180,7 @@ class Logo(HUDElement):
         self.img = OnscreenImage(
             image=ani.logo_paths["pt_smaller"],
             pos=(0.94, 0, 0.89),
-            parent=render2d,
+            parent=self.render2d,
             scale=(0.08 * 0.49, 1, 0.08),
         )
         self.img.setTransparency(TransparencyAttrib.MAlpha)
@@ -247,7 +254,11 @@ class English(HUDElement):
 
 
 class Power(NodePath, HUDElement):
-    """Modified from drwr: https://discourse.panda3d.org/t/health-bars-using-directgui/2098/3"""
+    """Power meter indicating strength of shot
+
+    Modified from drwr:
+    https://discourse.panda3d.org/t/health-bars-using-directgui/2098/3
+    """
 
     def __init__(self, min_strike=0.05, max_strike=7):
         self.min_strike = min_strike
@@ -319,14 +330,14 @@ class Jack(HUDElement):
         self.arc = OnscreenImage(
             image=panda_path(self.dir / "arc.png"),
             pos=(1.4, 0, -0.45),
-            parent=aspect2d,
+            parent=self.aspect2d,
             scale=0.075,
         )
         self.arc.setTransparency(TransparencyAttrib.MAlpha)
 
         self.cue_cartoon = OnscreenImage(
             image=panda_path(self.dir / "cue.png"),
-            parent=aspect2d,
+            parent=self.aspect2d,
             pos=(0, 0, 0),
             scale=(0.15, 1, 0.01),
         )
