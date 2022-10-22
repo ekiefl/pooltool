@@ -1,12 +1,22 @@
 #! /usr/bin/env python
 
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import numpy as np
 
 import pooltool.constants as c
+import pooltool.physics as physics
 import pooltool.terminal as terminal
-from pooltool.events import *
+import pooltool.utils as utils
+from pooltool.events import (
+    BallBallCollision,
+    BallCushionCollision,
+    BallPocketCollision,
+    NonEvent,
+    type_ball_ball,
+    type_ball_cushion,
+    type_ball_pocket,
+)
 from pooltool.objects import DummyBall, NonObject
 
 
@@ -28,8 +38,8 @@ class EvolveShot(ABC):
         Parameters
         ==========
         t_final : float, None
-            The simulation will run until the time is greater than this value. If None, simulation
-            is ran until the next event occurs at np.inf
+            The simulation will run until the time is greater than this value. If None,
+            simulation is ran until the next event occurs at np.inf
 
         name : str, 'NA'
             A name for the simulated shot
@@ -38,13 +48,10 @@ class EvolveShot(ABC):
         self.reset_history()
         self.init_history()
 
-        energy_start = self.get_system_energy()
-
         if not quiet:
 
             def progress_update():
                 """Convenience function for updating progress"""
-                energy = self.get_system_energy()
                 msg = f"SIM TIME {self.t:.6f}s | EVENTS {len(self.events)}"
                 self.progress.update(msg)
 
@@ -65,9 +72,9 @@ class EvolveShot(ABC):
     def evolve(self, dt):
         """Evolves current ball an amount of time dt
 
-        FIXME This is very inefficent. each ball should store its natural trajectory thereby avoid a
-        call to the clunky evolve_ball_motion. It could even be a partial function so parameters don't
-        continuously need to be passed
+        FIXME This is very inefficent. each ball should store its natural trajectory
+        thereby avoid a call to the clunky evolve_ball_motion. It could even be a
+        partial function so parameters don't continuously need to be passed
         """
 
         for ball_id, ball in self.balls.items():
@@ -418,7 +425,8 @@ def get_shot_evolver(algorithm):
 
     if evolver is None:
         raise ValueError(
-            f"'{algorithm}' is not a valid shot evolution algorithm. Please choose from: {list(shot_evolver.keys())}"
+            f"'{algorithm}' is not a valid shot evolution algorithm. Please choose "
+            f"from: {list(shot_evolver.keys())}"
         )
 
     return evolver
