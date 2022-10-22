@@ -1,15 +1,19 @@
 #! /usr/bin/env python
 
-import pooltool as pt
 import IPython
 
+import pooltool as pt
+
 ipython = IPython.get_ipython()
+
 
 def old():
     pt.utils.cross(np.random.rand(3), np.random.rand(3))
 
+
 def new():
     pt.utils.cross_fast(np.random.rand(3), np.random.rand(3))
+
 
 new()
 

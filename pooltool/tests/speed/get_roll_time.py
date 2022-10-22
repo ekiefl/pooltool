@@ -1,17 +1,21 @@
 #! /usr/bin/env python
 
-import pooltool as pt
 import IPython
+
+import pooltool as pt
 
 ipython = IPython.get_ipython()
 
-get_args = lambda: [np.random.rand(9).reshape((3,3)), 0.18, 9.8]
+get_args = lambda: [np.random.rand(9).reshape((3, 3)), 0.18, 9.8]
+
 
 def old():
     pt.physics.get_roll_time(*get_args())
 
+
 def new():
     pt.physics.get_roll_time_fast(*get_args())
+
 
 new()
 

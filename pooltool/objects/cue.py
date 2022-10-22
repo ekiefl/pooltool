@@ -1,21 +1,21 @@
 #! /usr/bin/env python
 
-import pooltool.ani as ani
-import pooltool.utils as utils
-import pooltool.constants as c
+from pathlib import Path
 
+import numpy as np
+from direct.interval.IntervalGlobal import *
+from panda3d.core import *
+
+import pooltool.ani as ani
+import pooltool.constants as c
+import pooltool.utils as utils
 from pooltool.error import ConfigError
 from pooltool.events import StickBallCollision
 from pooltool.objects import Object, Render
 from pooltool.objects.ball import Ball
 
-import numpy as np
+__all__ = ["Cue", "cue_from_dict", "cue_from_pickle"]
 
-from pathlib import Path
-from panda3d.core import *
-from direct.interval.IntervalGlobal import *
-
-__all__ = ['Cue', 'cue_from_dict', 'cue_from_pickle']
 
 class CueRender(Render):
     def __init__(self):
@@ -29,64 +29,61 @@ class CueRender(Render):
         self.stroke_pos = []
         self.stroke_time = []
 
-
     def init_model(self, R=c.R):
-        path = utils.panda_path(ani.model_dir / 'cue' / 'cue.glb')
+        path = utils.panda_path(ani.model_dir / "cue" / "cue.glb")
         cue_stick_model = loader.loadModel(path)
-        cue_stick_model.setName('cue_stick_model')
+        cue_stick_model.setName("cue_stick_model")
 
-        cue_stick = render.find('scene').find('cloth').attachNewNode('cue_stick')
+        cue_stick = render.find("scene").find("cloth").attachNewNode("cue_stick")
         cue_stick_model.reparentTo(cue_stick)
 
-        self.nodes['cue_stick'] = cue_stick
-        self.nodes['cue_stick_model'] = cue_stick_model
-
+        self.nodes["cue_stick"] = cue_stick
+        self.nodes["cue_stick_model"] = cue_stick_model
 
     def init_focus(self, ball):
         self.follow = ball
 
-        self.get_node('cue_stick_model').setPos(ball.R, 0, 0)
+        self.get_node("cue_stick_model").setPos(ball.R, 0, 0)
 
-        cue_stick_focus = render.find('scene').find('cloth').attachNewNode("cue_stick_focus")
-        self.nodes['cue_stick_focus'] = cue_stick_focus
+        cue_stick_focus = (
+            render.find("scene").find("cloth").attachNewNode("cue_stick_focus")
+        )
+        self.nodes["cue_stick_focus"] = cue_stick_focus
 
         self.update_focus()
-        self.get_node('cue_stick').reparentTo(cue_stick_focus)
+        self.get_node("cue_stick").reparentTo(cue_stick_focus)
 
         self.has_focus = True
 
-
     def init_collision_handling(self, collision_handler):
-        if not ani.settings['gameplay']['cue_collision']:
+        if not ani.settings["gameplay"]["cue_collision"]:
             return
 
         if not self.rendered:
-            raise ConfigError("Cue.init_collision_handling :: Cue has not been rendered, "
-                              "so collision handling cannot be initialized.")
+            raise ConfigError(
+                "Cue.init_collision_handling :: Cue has not been rendered, "
+                "so collision handling cannot be initialized."
+            )
 
-        bounds = self.get_node('cue_stick').get_tight_bounds()
+        bounds = self.get_node("cue_stick").get_tight_bounds()
 
         x = 0
         X = bounds[1][0] - bounds[0][0]
 
         cnode = CollisionNode(f"cue_cseg")
         cnode.set_into_collide_mask(0)
-        collision_node = self.get_node('cue_stick_model').attachNewNode(cnode)
-        collision_node.node().addSolid(
-            CollisionSegment(x, 0, 0, X, 0, 0)
-        )
+        collision_node = self.get_node("cue_stick_model").attachNewNode(cnode)
+        collision_node.node().addSolid(CollisionSegment(x, 0, 0, X, 0, 0))
 
-        self.nodes['cue_cseg'] = collision_node
+        self.nodes["cue_cseg"] = collision_node
         base.cTrav.addCollider(collision_node, collision_handler)
 
-        if ani.settings['graphics']['debug']:
+        if ani.settings["graphics"]["debug"]:
             collision_node.show()
 
-
     def get_length(self):
-        bounds = self.get_node('cue_stick').get_tight_bounds()
+        bounds = self.get_node("cue_stick").get_tight_bounds()
         return bounds[1][0] - bounds[0][0]
-
 
     def track_stroke(self):
         """Initialize variables for storing cue position during stroke"""
@@ -94,26 +91,27 @@ class CueRender(Render):
         self.stroke_time = []
         self.stroke_clock.reset()
 
-
     def append_stroke_data(self):
         """Append current cue position and timestamp to the cue tracking data"""
-        cue_stick = self.get_node('cue_stick')
+        cue_stick = self.get_node("cue_stick")
 
-        self.stroke_pos.append(self.get_node('cue_stick').getX())
+        self.stroke_pos.append(self.get_node("cue_stick").getX())
         self.stroke_time.append(self.stroke_clock.getRealTime())
-
 
     def set_stroke_sequence(self):
         """Initiate a stroke sequence based off of self.stroke_pos and self.stroke_time"""
 
-        cue_stick = self.get_node('cue_stick')
+        cue_stick = self.get_node("cue_stick")
         self.stroke_sequence = Sequence()
 
         # If the stroke is longer than max_time seconds, truncate to max_time
         max_time = 1.0
         backstroke_time, apex_time, strike_time = self.get_stroke_times()
         if strike_time > max_time:
-            idx = min(range(len(self.stroke_pos)), key=lambda i: abs(self.stroke_pos[i] - (strike_time - max_time)))
+            idx = min(
+                range(len(self.stroke_pos)),
+                key=lambda i: abs(self.stroke_pos[i] - (strike_time - max_time)),
+            )
             self.stroke_pos = self.stroke_pos[idx:]
             self.stroke_time = self.stroke_time[idx:]
 
@@ -123,12 +121,11 @@ class CueRender(Render):
         y, z = cue_stick.getY(), cue_stick.getZ()
 
         for i in range(len(dts)):
-            self.stroke_sequence.append(LerpPosInterval(
-                nodePath = cue_stick,
-                duration = dts[i],
-                pos = Vec3(xs[i+1], y, z)
-            ))
-
+            self.stroke_sequence.append(
+                LerpPosInterval(
+                    nodePath=cue_stick, duration=dts[i], pos=Vec3(xs[i + 1], y, z)
+                )
+            )
 
     def get_stroke_times(self, as_index=False):
         """Get key moments in the trajectory of the stroke
@@ -154,7 +151,7 @@ class CueRender(Render):
             apex_pos = pos
         apex_index = len(self.stroke_pos) - i
         while True:
-            if apex_pos == self.stroke_pos[apex_index+1]:
+            if apex_pos == self.stroke_pos[apex_index + 1]:
                 apex_index += 1
             else:
                 break
@@ -167,7 +164,7 @@ class CueRender(Render):
             backstroke_pos = pos
         backstroke_index = len(self.stroke_pos) - (i + j)
         while True:
-            if backstroke_pos == self.stroke_pos[backstroke_index+1]:
+            if backstroke_pos == self.stroke_pos[backstroke_index + 1]:
                 backstroke_index += 1
             else:
                 break
@@ -176,8 +173,11 @@ class CueRender(Render):
         strike_time = self.stroke_time[-1]
         strike_index = len(self.stroke_time) - 1
 
-        return (backstroke_index, apex_index, strike_index) if as_index else (backstroke_time, apex_time, strike_time)
-
+        return (
+            (backstroke_index, apex_index, strike_index)
+            if as_index
+            else (backstroke_time, apex_time, strike_time)
+        )
 
     def is_shot(self):
         if len(self.stroke_time) < 10:
@@ -196,7 +196,6 @@ class CueRender(Render):
 
         return True
 
-
     def calc_V0_from_stroke(self):
         """Calculates V0 from the stroke sequence
 
@@ -209,24 +208,22 @@ class CueRender(Render):
 
         max_time = 0.1
         if (strike_time - apex_time) < max_time:
-            return self.stroke_pos[apex_index]/apex_time
+            return self.stroke_pos[apex_index] / apex_time
 
         for i, t in enumerate(self.stroke_time[::-1]):
             if strike_time - t > max_time:
                 return self.stroke_pos[::-1][i] / max_time
 
-
     def update_focus(self):
-        self.get_node('cue_stick_focus').setPos(self.follow.get_node('pos').getPos())
-
+        self.get_node("cue_stick_focus").setPos(self.follow.get_node("pos").getPos())
 
     def get_render_state(self):
         """Return phi, theta, V0, a, and b as determined by the cue_stick node"""
 
-        cue_stick = self.get_node('cue_stick')
-        cue_stick_focus = self.get_node('cue_stick_focus')
+        cue_stick = self.get_node("cue_stick")
+        cue_stick_focus = self.get_node("cue_stick_focus")
 
-        phi = ((cue_stick_focus.getH() + 180) % 360)
+        phi = (cue_stick_focus.getH() + 180) % 360
         try:
             # FIXME short strokes give NameError: name 'apex_index' is not defined
             V0 = self.calc_V0_from_stroke()
@@ -234,30 +231,41 @@ class CueRender(Render):
             V0 = 1
         cueing_ball = self.follow
         theta = -cue_stick_focus.getR()
-        a = -cue_stick.getY()/self.follow.R
-        b = cue_stick.getZ()/self.follow.R
+        a = -cue_stick.getY() / self.follow.R
+        b = cue_stick.getZ() / self.follow.R
 
         return V0, phi, theta, a, b, cueing_ball
 
-
     def set_object_state_as_render_state(self, skip_V0=False):
         if skip_V0:
-            _, self.phi, self.theta, self.a, self.b, self.cueing_ball = self.get_render_state()
+            (
+                _,
+                self.phi,
+                self.theta,
+                self.a,
+                self.b,
+                self.cueing_ball,
+            ) = self.get_render_state()
         else:
-            self.V0, self.phi, self.theta, self.a, self.b, self.cueing_ball = self.get_render_state()
-
+            (
+                self.V0,
+                self.phi,
+                self.theta,
+                self.a,
+                self.b,
+                self.cueing_ball,
+            ) = self.get_render_state()
 
     def set_render_state_as_object_state(self):
         self.update_focus()
 
-        cue_stick = self.get_node('cue_stick')
-        cue_stick_focus = self.get_node('cue_stick_focus')
+        cue_stick = self.get_node("cue_stick")
+        cue_stick_focus = self.get_node("cue_stick_focus")
 
-        cue_stick_focus.setH(self.phi + 180) # phi
-        cue_stick_focus.setR(-self.theta) # theta
-        cue_stick.setY(-self.a * self.follow.R) # a
-        cue_stick.setZ(self.b * self.follow.R) # b
-
+        cue_stick_focus.setH(self.phi + 180)  # phi
+        cue_stick_focus.setR(-self.theta)  # theta
+        cue_stick.setY(-self.a * self.follow.R)  # a
+        cue_stick.setZ(self.b * self.follow.R)  # b
 
     def render(self):
         super().render()
@@ -265,11 +273,23 @@ class CueRender(Render):
 
 
 class Cue(Object, CueRender):
-    object_type = 'cue_stick'
+    object_type = "cue_stick"
 
-    def __init__(self, M=c.M, length=c.cue_length, tip_radius=c.cue_tip_radius,
-                 butt_radius=c.cue_butt_radius, cueing_ball=None, cue_id='cue_stick', brand=None,
-                 V0=2, phi=0, theta=0, a=0, b=1/4):
+    def __init__(
+        self,
+        M=c.M,
+        length=c.cue_length,
+        tip_radius=c.cue_tip_radius,
+        butt_radius=c.cue_butt_radius,
+        cueing_ball=None,
+        cue_id="cue_stick",
+        brand=None,
+        V0=2,
+        phi=0,
+        theta=0,
+        a=0,
+        b=1 / 4,
+    ):
 
         self.id = cue_id
         self.M = M
@@ -288,12 +308,12 @@ class Cue(Object, CueRender):
 
         CueRender.__init__(self)
 
-
     def reset_state(self):
-        self.set_state(V0=2, phi=0, theta=0, a=0, b=1/4)
+        self.set_state(V0=2, phi=0, theta=0, a=0, b=1 / 4)
 
-
-    def set_state(self, V0=None, phi=None, theta=None, a=None, b=None, cueing_ball=None):
+    def set_state(
+        self, V0=None, phi=None, theta=None, a=None, b=None, cueing_ball=None
+    ):
         """Set the cueing parameters
 
         Notes
@@ -301,13 +321,18 @@ class Cue(Object, CueRender):
         - If any parameters are None, they will be left untouched--they will not be set to None
         """
 
-        if V0 is not None: self.V0 = V0
-        if phi is not None: self.phi = phi
-        if theta is not None: self.theta = theta
-        if a is not None: self.a = a
-        if b is not None: self.b = b
-        if cueing_ball is not None: self.cueing_ball = cueing_ball
-
+        if V0 is not None:
+            self.V0 = V0
+        if phi is not None:
+            self.phi = phi
+        if theta is not None:
+            self.theta = theta
+        if a is not None:
+            self.a = a
+        if b is not None:
+            self.b = b
+        if cueing_ball is not None:
+            self.cueing_ball = cueing_ball
 
     def strike(self, t=None, **state_kwargs):
         """Strike the cue ball
@@ -324,14 +349,19 @@ class Cue(Object, CueRender):
 
         self.set_state(**state_kwargs)
 
-        if (self.V0 is None or self.phi is None or self.theta is None or self.a is None or self.b is None):
+        if (
+            self.V0 is None
+            or self.phi is None
+            or self.theta is None
+            or self.a is None
+            or self.b is None
+        ):
             raise ValueError("Cue.strike :: Must set V0, phi, theta, a, and b")
 
         event = StickBallCollision(self, self.cueing_ball, t=t)
         event.resolve()
 
         return event
-
 
     def aim_at_pos(self, pos):
         """Set phi to aim at a 3D position
@@ -342,9 +372,10 @@ class Cue(Object, CueRender):
             A length-3 iterable specifying the x, y, z coordinates of the position to be aimed at
         """
 
-        direction = utils.angle_fast(utils.unit_vector_fast(np.array(pos) - self.cueing_ball.rvw[0]))
-        self.set_state(phi = direction * 180/np.pi)
-
+        direction = utils.angle_fast(
+            utils.unit_vector_fast(np.array(pos) - self.cueing_ball.rvw[0])
+        )
+        self.set_state(phi=direction * 180 / np.pi)
 
     def aim_at_ball(self, ball, cut=None):
         """Set phi to aim directly at a ball
@@ -363,7 +394,9 @@ class Cue(Object, CueRender):
             return
 
         if cut > 89 or cut < -89:
-            raise ConfigError("Cue.aim_at_ball :: cut must be less than 89 and more than -89")
+            raise ConfigError(
+                "Cue.aim_at_ball :: cut must be less than 89 and more than -89"
+            )
 
         # Ok a cut angle has been requested. Unfortunately, there exists no analytical function
         # phi(cut), at least as far as I have been able to calculate. Instead, it is a nasty
@@ -374,42 +407,47 @@ class Cue(Object, CueRender):
         # value that was negative. Then I rinse and repeat this a total of 5 times.
 
         left = True if cut < 0 else False
-        cut = np.abs(cut) * np.pi/180
+        cut = np.abs(cut) * np.pi / 180
         R = ball.R
         d = np.linalg.norm(ball.rvw[0] - self.cueing_ball.rvw[0])
 
         lower_bound = 0
-        upper_bound = (np.pi/2 - np.arccos((2*R)/d))
+        upper_bound = np.pi / 2 - np.arccos((2 * R) / d)
 
         for _ in range(5):
             dphis = np.linspace(lower_bound, upper_bound, 100)
-            transcendental = np.arctan(2*R*np.sin(cut - dphis) / (d - 2*R*np.cos(cut - dphis))) - dphis
+            transcendental = (
+                np.arctan(
+                    2 * R * np.sin(cut - dphis) / (d - 2 * R * np.cos(cut - dphis))
+                )
+                - dphis
+            )
             for i in range(len(transcendental)):
                 if transcendental[i] < 0:
-                    lower_bound = dphis[i-1] if i > 0 else 0
+                    lower_bound = dphis[i - 1] if i > 0 else 0
                     upper_bound = dphis[i]
                     dphi = dphis[i]
                     break
             else:
-                raise ConfigError("Cue.aim_at_ball :: Wow this should never happen. The algorithm "
-                                  "that finds the cut angle needs to be looked at again, because "
-                                  "the transcendental equation could not be solved.")
+                raise ConfigError(
+                    "Cue.aim_at_ball :: Wow this should never happen. The algorithm "
+                    "that finds the cut angle needs to be looked at again, because "
+                    "the transcendental equation could not be solved."
+                )
 
-        self.phi = (self.phi + 180/np.pi*(dphi if left else -dphi)) % 360
-
+        self.phi = (self.phi + 180 / np.pi * (dphi if left else -dphi)) % 360
 
     def __repr__(self):
         lines = [
-            f'<{self.__class__.__name__} object at {hex(id(self))}>',
-            f' ├── V0    : {self.V0}',
-            f' ├── phi   : {self.phi}',
-            f' ├── a     : {self.a}',
-            f' ├── b     : {self.b}',
-            f' └── theta : {self.theta}',
+            f"<{self.__class__.__name__} object at {hex(id(self))}>",
+            f" ├── V0    : {self.V0}",
+            f" ├── phi   : {self.phi}",
+            f" ├── a     : {self.a}",
+            f" ├── b     : {self.b}",
+            f" └── theta : {self.theta}",
         ]
 
-        return '\n'.join(lines) + '\n'
-
+        return "\n".join(lines) + "\n"
 
     def as_dict(self):
         try:
@@ -423,20 +461,19 @@ class Cue(Object, CueRender):
             cueing_ball_id = None
 
         return dict(
-            cue_id = self.id,
-            M = self.M,
-            length = self.length,
-            tip_radius = self.tip_radius,
-            butt_radius = self.butt_radius,
-            brand = self.brand,
-            V0 = self.V0,
-            phi = self.phi,
-            theta = self.theta,
-            a = self.a,
-            b = self.b,
-            cueing_ball_id = cueing_ball_id,
+            cue_id=self.id,
+            M=self.M,
+            length=self.length,
+            tip_radius=self.tip_radius,
+            butt_radius=self.butt_radius,
+            brand=self.brand,
+            V0=self.V0,
+            phi=self.phi,
+            theta=self.theta,
+            a=self.a,
+            b=self.b,
+            cueing_ball_id=cueing_ball_id,
         )
-
 
     def save(self, path):
         utils.save_pickle(self.as_dict(), path)
@@ -463,24 +500,25 @@ class CueAvoid(object):
 
         self.min_theta = 0
 
-        if not ani.settings['gameplay']['cue_collision']:
+        if not ani.settings["gameplay"]["cue_collision"]:
             return
 
         # Declare frequently used nodes
         self.avoid_nodes = {
-            'scene': render.find('scene'),
-            'cue_collision_node': self.shots.active.cue.get_node('cue_cseg'),
-            'cue_stick_model': self.shots.active.cue.get_node('cue_stick_model'),
-            'cue_stick': self.shots.active.cue.get_node('cue_stick'),
-            'cue_stick_focus': self.shots.active.cue.get_node('cue_stick_focus'),
+            "scene": render.find("scene"),
+            "cue_collision_node": self.shots.active.cue.get_node("cue_cseg"),
+            "cue_stick_model": self.shots.active.cue.get_node("cue_stick_model"),
+            "cue_stick": self.shots.active.cue.get_node("cue_stick"),
+            "cue_stick_focus": self.shots.active.cue.get_node("cue_stick_focus"),
         }
-
 
     def collision_task(self, task):
         max_min_theta = 0
 
         # Lay cue collision segment flat
-        self.avoid_nodes['cue_collision_node'].setR(-self.avoid_nodes['cue_stick_focus'].getR())
+        self.avoid_nodes["cue_collision_node"].setR(
+            -self.avoid_nodes["cue_stick_focus"].getR()
+        )
 
         for entry in self.collision_handler.entries:
             min_theta = self.process_collision(entry)
@@ -490,50 +528,53 @@ class CueAvoid(object):
         self.min_theta = max_min_theta
         return task.cont
 
-
     def process_collision(self, entry):
         if not entry.has_surface_point():
             # Not a collision we care about
             return 0
-        elif entry.into_node.name.startswith('cushion'):
+        elif entry.into_node.name.startswith("cushion"):
             return self.process_cushion_collision(entry)
-        elif entry.into_node.name.startswith('ball'):
+        elif entry.into_node.name.startswith("ball"):
             return self.process_ball_collision(entry)
         else:
-            raise NotImplementedError(f"CueAvoid :: no collision solver for node {entry.into_node.name}")
-
+            raise NotImplementedError(
+                f"CueAvoid :: no collision solver for node {entry.into_node.name}"
+            )
 
     def process_cushion_collision(self, entry):
         cushion = self.get_cushion(entry)
         cushion_height = cushion.p1[2]
 
         # Point where cue center contacts collision plane
-        Px, Py, Pz = entry.getSurfacePoint(self.avoid_nodes['scene'])
+        Px, Py, Pz = entry.getSurfacePoint(self.avoid_nodes["scene"])
 
         # The tip of the cue stick
-        Ex, Ey, Ez = self.avoid_nodes['cue_stick_model'].getPos(self.avoid_nodes['scene'])
+        Ex, Ey, Ez = self.avoid_nodes["cue_stick_model"].getPos(
+            self.avoid_nodes["scene"]
+        )
 
         # Center ofthe cueing ball
-        Bx, By, Bz = self.avoid_nodes['cue_stick_focus'].getPos(self.avoid_nodes['scene'])
+        Bx, By, Bz = self.avoid_nodes["cue_stick_focus"].getPos(
+            self.avoid_nodes["scene"]
+        )
 
         # The desired point where cue contacts collision plane, excluding cue width
         Dx, Dy, Dz = Px, Py, cushion_height
 
         # Center of aim
-        v = np.array([Ex-Px, Ey-Py, Ez-Pz])
-        u = utils.unit_vector_fast(v)*self.avoid_nodes['cue_stick_model'].getX()
+        v = np.array([Ex - Px, Ey - Py, Ez - Pz])
+        u = utils.unit_vector_fast(v) * self.avoid_nodes["cue_stick_model"].getX()
         Fx, Fy, Fz = Ex + u[0], Ey + u[1], Ez + u[2]
 
-        min_theta = np.arctan2(Dz-Fz, np.sqrt((Dx-Fx)**2 + (Dy-Fy)**2))
+        min_theta = np.arctan2(Dz - Fz, np.sqrt((Dx - Fx) ** 2 + (Dy - Fy) ** 2))
 
         # Correct for cue's cylindrical radius at collision point
         # distance from cue tip (E) to desired collision point (D)
-        l = np.sqrt((Dx-Ex)**2 + (Dy-Ey)**2 + (Dz-Ez)**2)
+        l = np.sqrt((Dx - Ex) ** 2 + (Dy - Ey) ** 2 + (Dz - Ez) ** 2)
         cue_radius = self.get_cue_radius(l)
         min_theta += np.arctan2(cue_radius, l)
 
-        return max(0, min_theta) * 180/np.pi
-
+        return max(0, min_theta) * 180 / np.pi
 
     def process_ball_collision(self, entry):
         min_theta = 0
@@ -542,89 +583,86 @@ class CueAvoid(object):
         if ball == self.shots.active.cue.cueing_ball:
             return 0
 
-        scene = render.find('scene')
+        scene = render.find("scene")
 
         # Radius of transect
-        n = np.array(entry.get_surface_normal(render.find('scene')))
-        phi = ((self.avoid_nodes['cue_stick_focus'].getH() + 180) % 360) * np.pi/180
+        n = np.array(entry.get_surface_normal(render.find("scene")))
+        phi = ((self.avoid_nodes["cue_stick_focus"].getH() + 180) % 360) * np.pi / 180
         c = np.array([np.cos(phi), np.sin(phi), 0])
         gamma = np.arccos(np.dot(n, c))
-        AB = (ball.R + self.shots.active.cue.tip_radius)*np.cos(gamma)
+        AB = (ball.R + self.shots.active.cue.tip_radius) * np.cos(gamma)
 
         # Center of blocking ball transect
         Ax, Ay, _ = entry.getSurfacePoint(scene)
-        Ax -= (AB + self.shots.active.cue.tip_radius)*np.cos(phi)
-        Ay -= (AB + self.shots.active.cue.tip_radius)*np.sin(phi)
+        Ax -= (AB + self.shots.active.cue.tip_radius) * np.cos(phi)
+        Ay -= (AB + self.shots.active.cue.tip_radius) * np.sin(phi)
         Az = ball.R
 
         # Center of aim, leveled to ball height
-        Cx, Cy, Cz = self.avoid_nodes['cue_stick_focus'].getPos(scene)
-        axR = -self.avoid_nodes['cue_stick'].getY()
-        Cx += -axR*np.sin(phi)
-        Cy += axR*np.cos(phi)
+        Cx, Cy, Cz = self.avoid_nodes["cue_stick_focus"].getPos(scene)
+        axR = -self.avoid_nodes["cue_stick"].getY()
+        Cx += -axR * np.sin(phi)
+        Cy += axR * np.cos(phi)
 
-        AC = np.sqrt((Ax-Cx)**2 + (Ay-Cy)**2 + (Az-Cz)**2)
+        AC = np.sqrt((Ax - Cx) ** 2 + (Ay - Cy) ** 2 + (Az - Cz) ** 2)
         BC = np.sqrt(AC**2 - AB**2)
-        min_theta_no_english = np.arcsin(AB/AC)
+        min_theta_no_english = np.arcsin(AB / AC)
 
         # Cue tip point, no top/bottom english
-        m = self.avoid_nodes['cue_stick_model'].getX()
-        u = utils.unit_vector_fast(np.array([-np.cos(phi), -np.sin(phi), np.sin(min_theta_no_english)]))
-        Ex, Ey, Ez = Cx + m*u[0], Cy + m*u[1], Cz + m*u[2]
+        m = self.avoid_nodes["cue_stick_model"].getX()
+        u = utils.unit_vector_fast(
+            np.array([-np.cos(phi), -np.sin(phi), np.sin(min_theta_no_english)])
+        )
+        Ex, Ey, Ez = Cx + m * u[0], Cy + m * u[1], Cz + m * u[2]
 
         # Point where cue contacts blocking ball, no top/bottom english
-        Bx, By, Bz = Cx + BC*u[0], Cy + BC*u[1], Cz + BC*u[2]
+        Bx, By, Bz = Cx + BC * u[0], Cy + BC * u[1], Cz + BC * u[2]
 
         # Extra angle due to top/bottom english
-        BE = np.sqrt((Bx-Ex)**2 + (By-Ey)**2 + (Bz-Ez)**2)
-        bxR = self.avoid_nodes['cue_stick'].getZ()
+        BE = np.sqrt((Bx - Ex) ** 2 + (By - Ey) ** 2 + (Bz - Ez) ** 2)
+        bxR = self.avoid_nodes["cue_stick"].getZ()
         beta = -np.arctan2(bxR, BE)
         if beta < 0:
-            beta += 10*np.pi/180*(np.exp(bxR/BE)**2 - 1)
+            beta += 10 * np.pi / 180 * (np.exp(bxR / BE) ** 2 - 1)
 
         min_theta = min_theta_no_english + beta
-        return max(0, min_theta) * 180/np.pi
-
+        return max(0, min_theta) * 180 / np.pi
 
     def get_cue_radius(self, l):
         """Returns radius of cue at collision point, given collision point is distance l from cue tip"""
 
-        bounds = self.shots.active.cue.get_node('cue_stick').get_tight_bounds()
-        L = bounds[1][0] - bounds[0][0] # cue length
+        bounds = self.shots.active.cue.get_node("cue_stick").get_tight_bounds()
+        L = bounds[1][0] - bounds[0][0]  # cue length
 
         r = self.shots.active.cue.tip_radius
         R = self.shots.active.cue.butt_radius
 
-        m = (R - r)/L # rise/run
-        b = r # intercept
+        m = (R - r) / L  # rise/run
+        b = r  # intercept
 
-        return m*l + b
-
+        return m * l + b
 
     def get_cushion(self, entry):
-        expected_suffix = 'cushion_cplane_'
+        expected_suffix = "cushion_cplane_"
         into_node_path_name = entry.get_into_node_path().name
         assert into_node_path_name.startswith(expected_suffix)
-        cushion_id = into_node_path_name[len(expected_suffix):]
-        return self.shots.active.table.cushion_segments['linear'][cushion_id]
-
+        cushion_id = into_node_path_name[len(expected_suffix) :]
+        return self.shots.active.table.cushion_segments["linear"][cushion_id]
 
     def get_ball(self, entry):
-        expected_suffix = 'ball_csphere_'
+        expected_suffix = "ball_csphere_"
         into_node_path_name = entry.get_into_node_path().name
         assert into_node_path_name.startswith(expected_suffix)
-        ball_id = into_node_path_name[len(expected_suffix):]
+        ball_id = into_node_path_name[len(expected_suffix) :]
         return self.shots.active.balls[ball_id]
 
 
 def cue_from_dict(d):
-    cue = Cue(**{k: v for k, v in d.items() if k != 'cueing_ball_id'})
-    cue.cueing_ball_id = d['cueing_ball_id']
+    cue = Cue(**{k: v for k, v in d.items() if k != "cueing_ball_id"})
+    cue.cueing_ball_id = d["cueing_ball_id"]
     return cue
 
 
 def cue_from_pickle(path):
     d = utils.load_pickle(path)
     return cue_from_dict(d)
-
-

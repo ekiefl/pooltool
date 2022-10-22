@@ -1,18 +1,16 @@
 #! /usr/bin/env python
 
-import pooltool.utils as utils
-
-from pooltool.events import BallPocketCollision
-from pooltool.layouts import NineBallRack
-from pooltool.evolution import get_shot_evolver
-from pooltool.objects.cue import Cue
-from pooltool.ani.animate import ShotViewer
-from pooltool.objects.ball import Ball
-from pooltool.objects.table import PocketTable
-
+import matplotlib.pyplot as plt
 import numpy as np
 
-import matplotlib.pyplot as plt
+import pooltool.utils as utils
+from pooltool.ani.animate import ShotViewer
+from pooltool.events import BallPocketCollision
+from pooltool.evolution import get_shot_evolver
+from pooltool.layouts import NineBallRack
+from pooltool.objects.ball import Ball
+from pooltool.objects.cue import Cue
+from pooltool.objects.table import PocketTable
 
 N = 300
 
@@ -22,7 +20,11 @@ spacing_factors = np.logspace(-4, 0, 10, base=10)
 score_means = np.zeros(len(spacing_factors)).astype(int)
 score_stds = np.zeros(len(spacing_factors)).astype(int)
 
-get_cue_pos = lambda cue, table: [cue.R + np.random.rand()*(table.w - 2*cue.R), table.l/4, cue.R]
+get_cue_pos = lambda cue, table: [
+    cue.R + np.random.rand() * (table.w - 2 * cue.R),
+    table.l / 4,
+    cue.R,
+]
 
 interface = ShotViewer()
 
@@ -34,23 +36,23 @@ for i, spacing_factor in enumerate(spacing_factors):
         # setup table, cue, and cue ball
         cue = Cue()
         table = PocketTable()
-        cue_ball = Ball('cue')
+        cue_ball = Ball("cue")
         cue_ball.rvw[0] = get_cue_pos(cue_ball, table)
 
         # Create a rack with specified spacing factor
         diamond = NineBallRack(spacing_factor=spacing_factor, ordered=True)
         diamond.center_by_table(table)
         balls = {ball.id: ball for ball in diamond.balls}
-        balls['cue'] = cue_ball
-        #balls = {key: val for key, val in balls.items() if key in {'1', '2', '3', 'cue'}}
+        balls["cue"] = cue_ball
+        # balls = {key: val for key, val in balls.items() if key in {'1', '2', '3', 'cue'}}
 
         # Aim at the head ball then strike the cue ball
-        cue.set_state(V0=8, theta=0, a=0, b=0, cueing_ball=balls['cue'])
-        cue.aim_at(balls['1'].rvw[0])
+        cue.set_state(V0=8, theta=0, a=0, b=0, cueing_ball=balls["cue"])
+        cue.aim_at(balls["1"].rvw[0])
         cue.strike()
 
         # Evolve the shot
-        evolver = get_shot_evolver('event')
+        evolver = get_shot_evolver("event")
         shot = evolver(cue=cue, table=table, balls=balls)
         try:
             shot.simulate(name=f"factor: {spacing_factor}; n: {n}", continuize=False)
@@ -59,9 +61,12 @@ for i, spacing_factor in enumerate(spacing_factors):
             continue
 
         # Count how many balls were potted, ignoring cue ball
-        balls_potted = sum([isinstance(event, BallPocketCollision)
-                            and event.agents[0].id != 'cue'
-                            for event in shot.events])
+        balls_potted = sum(
+            [
+                isinstance(event, BallPocketCollision) and event.agents[0].id != "cue"
+                for event in shot.events
+            ]
+        )
 
         shot.run.info("Balls potted", balls_potted)
         score[n] = balls_potted
@@ -75,8 +80,6 @@ for i, spacing_factor in enumerate(spacing_factors):
     score_means[i] = np.mean(score)
     score_stds[i] = np.std(score)
 
-import ipdb; ipdb.set_trace()
+import ipdb
 
-
-
-
+ipdb.set_trace()

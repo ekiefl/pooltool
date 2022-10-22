@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 
 import pooltool.ani as ani
-
 from pooltool.ani.modes import Mode, action
+
 
 class PurgatoryMode(Mode):
     """A transitionary mode when the window has become inactive
@@ -21,6 +21,7 @@ class PurgatoryMode(Mode):
     In purgatory, the window can either be active or inactive. When inactive, a low
     frame rate is engaged. When active, the standard frame rate is used.
     """
+
     keymap = {
         action.regain_control: False,
     }
@@ -28,23 +29,20 @@ class PurgatoryMode(Mode):
     def __init__(self):
         self.is_window_active = None
 
-
     def enter(self):
         self.mouse.show()
         self.mouse.absolute()
 
-        self.task_action('mouse1-up', action.regain_control, True)
-        self.task_action('mouse1-down', action.regain_control, False)
+        self.task_action("mouse1-up", action.regain_control, True)
+        self.task_action("mouse1-down", action.regain_control, False)
 
-        self.add_task(self.purgatory_task, 'purgatory_task')
-
+        self.add_task(self.purgatory_task, "purgatory_task")
 
     def exit(self):
-        self.remove_task('purgatory_task')
+        self.remove_task("purgatory_task")
 
         # Set the framerate to pre-purgatory levels
-        globalClock.setFrameRate(ani.settings['graphics']['fps'])
-
+        globalClock.setFrameRate(ani.settings["graphics"]["fps"])
 
     def purgatory_task(self, task):
         if self.keymap[action.regain_control]:
@@ -56,13 +54,11 @@ class PurgatoryMode(Mode):
             # The state of the window has changed. Time to update the FPS
 
             if is_window_active:
-                globalClock.setFrameRate(ani.settings['graphics']['fps'])
+                globalClock.setFrameRate(ani.settings["graphics"]["fps"])
             else:
-                globalClock.setFrameRate(ani.settings['graphics']['fps_inactive'])
+                globalClock.setFrameRate(ani.settings["graphics"]["fps_inactive"])
 
             # Update status
             self.is_window_active = is_window_active
 
         return task.cont
-
-

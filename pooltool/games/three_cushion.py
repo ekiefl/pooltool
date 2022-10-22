@@ -1,10 +1,9 @@
 #! /usr/bin/env python
 
-import pooltool.events as e
 import pooltool.constants as c
-
+import pooltool.events as e
 from pooltool.error import ConfigError
-from pooltool.games import Player, Game
+from pooltool.games import Game, Player
 from pooltool.layouts import ThreeCushionRack
 
 
@@ -16,46 +15,38 @@ class ThreeCushion(Game):
         Game.__init__(self)
         self.create_players(2)
 
-
     def start(self):
-        self.players[0].can_cue = ['white']
-        self.players[0].target_balls = ['yellow', 'red']
-        self.players[1].can_cue = ['yellow']
-        self.players[1].target_balls = ['white', 'red']
-
+        self.players[0].can_cue = ["white"]
+        self.players[0].target_balls = ["yellow", "red"]
+        self.players[1].can_cue = ["yellow"]
+        self.players[1].target_balls = ["white", "red"]
 
     def setup_initial_layout(self, table, ball_kwargs={}):
         self.balls = ThreeCushionRack(table=table, **ball_kwargs).balls
 
-
     def set_initial_cueing_ball(self, balls):
-        return balls['white']
-
+        return balls["white"]
 
     def award_points(self, shot):
-        self.shot_info['points'] = {player: 0 for player in self.players}
+        self.shot_info["points"] = {player: 0 for player in self.players}
 
-        if not self.shot_info['is_legal']:
+        if not self.shot_info["is_legal"]:
             return
 
         if is_hit(shot):
-            self.shot_info['points'][self.active_player] = 1
-
+            self.shot_info["points"][self.active_player] = 1
 
     def decide_winner(self, shot):
         self.winner = self.active_player
 
-
     def award_ball_in_hand(self, shot):
-        self.shot_info['ball_in_hand'] = None
-
+        self.shot_info["ball_in_hand"] = None
 
     def respot_balls(self, shot):
         pass
 
-
     def is_turn_over(self, shot):
-        if not self.shot_info['is_legal']:
+        if not self.shot_info["is_legal"]:
             return True
 
         if is_hit(shot):
@@ -63,18 +54,15 @@ class ThreeCushion(Game):
 
         return True
 
-
     def is_game_over(self, shot):
         for player in self.players:
             if player.points == self.points_to_win:
                 return True
         return False
 
-
     def legality(self, shot):
         """Returns whether or not a shot is legal, and the reason"""
         return (True, None)
-
 
     def advance(self, shot):
         super().advance(shot)
@@ -89,22 +77,26 @@ def is_hit(shot, clean=False):
     else:
         raise ConfigError("three_cushion.is_hit :: no ball is in motion")
 
-    get_other_agent = lambda event: event.agents[0].id if event.agents[0].id != cue else event.agents[1].id
+    get_other_agent = (
+        lambda event: event.agents[0].id
+        if event.agents[0].id != cue
+        else event.agents[1].id
+    )
     get_agent_ids = lambda event: [agent.id for agent in event.agents]
 
     first_hit = False
     second_hit = False
     cushion_count = 0
     for event in shot.events:
-        if event.event_type == 'ball-cushion' and event.agents[0].id == cue:
+        if event.event_type == "ball-cushion" and event.agents[0].id == cue:
             cushion_count += 1
 
-        if not first_hit and event.event_type == 'ball-ball':
+        if not first_hit and event.event_type == "ball-ball":
             first_hit_agent = get_other_agent(event)
             first_hit = True
             continue
 
-        if not second_hit and event.event_type == 'ball-ball':
+        if not second_hit and event.event_type == "ball-ball":
             agents = get_agent_ids(event)
             if cue not in agents:
                 if clean:
@@ -134,11 +126,15 @@ def which_hit_first(shot):
     else:
         raise ConfigError("three_cushion.is_hit :: no ball is in motion")
 
-    get_other_agent = lambda event: event.agents[0].id if event.agents[0].id != cue else event.agents[1].id
+    get_other_agent = (
+        lambda event: event.agents[0].id
+        if event.agents[0].id != cue
+        else event.agents[1].id
+    )
     get_agent_ids = lambda event: [agent.id for agent in event.agents]
 
     for event in shot.events:
-        if event.event_type == 'ball-ball':
+        if event.event_type == "ball-ball":
             first_hit_agent = get_other_agent(event)
             break
     else:
@@ -156,25 +152,29 @@ def get_shot_components(shot):
     else:
         raise ConfigError("three_cushion.get_shot_components :: no ball is in motion")
 
-    get_other_agent = lambda event: event.agents[0].id if event.agents[0].id != cue else event.agents[1].id
+    get_other_agent = (
+        lambda event: event.agents[0].id
+        if event.agents[0].id != cue
+        else event.agents[1].id
+    )
     get_agent_ids = lambda event: [agent.id for agent in event.agents]
 
     first_hit, second_hit = False, False
     shot_components = []
     for event in shot.events:
-        if event.event_type == 'ball-cushion':
+        if event.event_type == "ball-cushion":
             ball, cushion = event.agents
             if ball.id != cue:
                 continue
             shot_components.append(cushion.id)
 
-        if not first_hit and event.event_type == 'ball-ball':
+        if not first_hit and event.event_type == "ball-ball":
             first_hit_agent = get_other_agent(event)
             shot_components.append(first_hit_agent)
             first_hit = True
             continue
 
-        if not second_hit and event.event_type == 'ball-ball':
+        if not second_hit and event.event_type == "ball-ball":
             agents = get_agent_ids(event)
             if cue not in agents:
                 continue

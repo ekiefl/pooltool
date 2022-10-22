@@ -18,16 +18,15 @@ absolute truth. With this in mind, these unit tests are not designed to prove co
 rather to preserve functionality in the face of any refactoring that takes place.
 """
 
-import pooltool.physics as p
-import pooltool.constants as c
-
-from pooltool.tests import trial, ref
-
 import numpy as np
+
+import pooltool.constants as c
+import pooltool.physics as p
+from pooltool.tests import ref, trial
 
 
 def test_resolve_ball_ball_collision(ref):
-    collision_events = ref.events.filter_type('ball-ball')
+    collision_events = ref.events.filter_type("ball-ball")
 
     for col in collision_events:
         ball1, ball2 = col.agents
@@ -39,8 +38,14 @@ def test_resolve_ball_ball_collision(ref):
         # Store the expected post-resolved states. These were the values
         # calculated from the reference benchmark, which we assume to be
         # the correct values
-        ball1_rvw_expected, ball1_s_expected = np.copy(col.agent1_state_final[0]), col.agent1_state_final[1]
-        ball2_rvw_expected, ball2_s_expected = np.copy(col.agent2_state_final[0]), col.agent2_state_final[1]
+        ball1_rvw_expected, ball1_s_expected = (
+            np.copy(col.agent1_state_final[0]),
+            col.agent1_state_final[1],
+        )
+        ball2_rvw_expected, ball2_s_expected = (
+            np.copy(col.agent2_state_final[0]),
+            col.agent2_state_final[1],
+        )
 
         # Now resolve the event with the current codebase
         col.resolve()
@@ -55,7 +60,7 @@ def test_resolve_ball_ball_collision(ref):
 
 
 def test_resolve_ball_cushion_collision(ref):
-    collision_events = ref.events.filter_type('ball-cushion')
+    collision_events = ref.events.filter_type("ball-cushion")
 
     for col in collision_events:
         ball, cushion = col.agents
@@ -66,7 +71,10 @@ def test_resolve_ball_cushion_collision(ref):
         # Store the expected post-resolved states. These were the values
         # calculated from the reference benchmark, which we assume to be
         # the correct values
-        ball_rvw_expected, ball_s_expected = np.copy(col.agent1_state_final[0]), col.agent1_state_final[1]
+        ball_rvw_expected, ball_s_expected = (
+            np.copy(col.agent1_state_final[0]),
+            col.agent1_state_final[1],
+        )
 
         # Now resolve the event with the current codebase
         col.resolve()
@@ -78,29 +86,29 @@ def test_resolve_ball_cushion_collision(ref):
 
 def test_get_ball_ball_collision_time(ref):
     for i, event in enumerate(ref.events):
-        if event.event_type == 'ball-ball':
-            prev_event = ref.events[i-1]
+        if event.event_type == "ball-ball":
+            prev_event = ref.events[i - 1]
 
             t_expected = event.time - prev_event.time
 
             # Set ball states to previous event state
             ball1, ball2 = event.agents
-            ball1.set_from_history(i-1)
-            ball2.set_from_history(i-1)
+            ball1.set_from_history(i - 1)
+            ball2.set_from_history(i - 1)
 
             # Calculate time until collision
             t = p.get_ball_ball_collision_time(
-                rvw1 = ball1.rvw,
-                rvw2 = ball2.rvw,
-                s1 = ball1.s,
-                s2 = ball2.s,
-                mu1 = ball1.u_s if ball1.s == c.sliding else ball1.u_r,
-                mu2 = ball2.u_s if ball2.s == c.sliding else ball2.u_r,
-                m1 = ball1.m,
-                m2 = ball2.m,
-                g1 = ball1.g,
-                g2 = ball2.g,
-                R = ball1.R
+                rvw1=ball1.rvw,
+                rvw2=ball2.rvw,
+                s1=ball1.s,
+                s2=ball2.s,
+                mu1=ball1.u_s if ball1.s == c.sliding else ball1.u_r,
+                mu2=ball2.u_s if ball2.s == c.sliding else ball2.u_r,
+                m1=ball1.m,
+                m2=ball2.m,
+                g1=ball1.g,
+                g2=ball2.g,
+                R=ball1.R,
             )
 
             np.testing.assert_allclose(t, t_expected)
@@ -108,16 +116,16 @@ def test_get_ball_ball_collision_time(ref):
 
 def test_get_ball_linear_cushion_collision_time(ref):
     for i, event in enumerate(ref.events):
-        if event.event_type == 'ball-cushion':
+        if event.event_type == "ball-cushion":
             ball, cushion = event.agents
 
-            if cushion.object_type != 'linear_cushion_segment':
+            if cushion.object_type != "linear_cushion_segment":
                 continue
 
-            prev_event = ref.events[i-1]
+            prev_event = ref.events[i - 1]
             t_expected = event.time - prev_event.time
 
-            ball.set_from_history(i-1)
+            ball.set_from_history(i - 1)
 
             t = p.get_ball_linear_cushion_collision_time(
                 rvw=ball.rvw,
@@ -130,7 +138,7 @@ def test_get_ball_linear_cushion_collision_time(ref):
                 mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
                 m=ball.m,
                 g=ball.g,
-                R=ball.R
+                R=ball.R,
             )
 
             np.testing.assert_allclose(t, t_expected)
@@ -138,16 +146,16 @@ def test_get_ball_linear_cushion_collision_time(ref):
 
 def test_get_ball_circular_cushion_collision_time(ref):
     for i, event in enumerate(ref.events):
-        if event.event_type == 'ball-cushion':
+        if event.event_type == "ball-cushion":
             ball, cushion = event.agents
 
-            if cushion.object_type != 'circular_cushion_segment':
+            if cushion.object_type != "circular_cushion_segment":
                 continue
 
-            prev_event = ref.events[i-1]
+            prev_event = ref.events[i - 1]
             t_expected = event.time - prev_event.time
 
-            ball.set_from_history(i-1)
+            ball.set_from_history(i - 1)
 
             t = p.get_ball_circular_cushion_collision_time(
                 rvw=ball.rvw,
@@ -158,7 +166,7 @@ def test_get_ball_circular_cushion_collision_time(ref):
                 mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
                 m=ball.m,
                 g=ball.g,
-                R=ball.R
+                R=ball.R,
             )
 
             np.testing.assert_allclose(t, t_expected)
@@ -166,13 +174,13 @@ def test_get_ball_circular_cushion_collision_time(ref):
 
 def test_get_ball_pocket_collision_time(ref):
     for i, event in enumerate(ref.events):
-        if event.event_type == 'ball-pocket':
+        if event.event_type == "ball-pocket":
             ball, pocket = event.agents
 
-            prev_event = ref.events[i-1]
+            prev_event = ref.events[i - 1]
             t_expected = event.time - prev_event.time
 
-            ball.set_from_history(i-1)
+            ball.set_from_history(i - 1)
 
             t = p.get_ball_pocket_collision_time(
                 rvw=ball.rvw,
@@ -183,16 +191,16 @@ def test_get_ball_pocket_collision_time(ref):
                 mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
                 m=ball.m,
                 g=ball.g,
-                R=ball.R
+                R=ball.R,
             )
 
             np.testing.assert_allclose(t, t_expected)
 
 
 def test_evolve_ball_motion(ref):
-    for i in range(len(ref.events)-1):
+    for i in range(len(ref.events) - 1):
         event = ref.events[i]
-        next_event = ref.events[i+1]
+        next_event = ref.events[i + 1]
 
         dt = next_event.time - event.time
 
@@ -209,12 +217,20 @@ def test_evolve_ball_motion(ref):
                 # other dat to gather, I opt to move on instead.
                 continue
 
-            rvw_expected, s_expected = ball.history.rvw[i+1], ball.history.s[i+1]
+            rvw_expected, s_expected = ball.history.rvw[i + 1], ball.history.s[i + 1]
 
             ball.set_from_history(i)
-            rvw, s = p.evolve_ball_motion(ball.s, ball.rvw, ball.R, ball.m, ball.u_s, ball.u_sp, ball.u_r, ball.g, dt)
+            rvw, s = p.evolve_ball_motion(
+                ball.s,
+                ball.rvw,
+                ball.R,
+                ball.m,
+                ball.u_s,
+                ball.u_sp,
+                ball.u_r,
+                ball.g,
+                dt,
+            )
 
             np.testing.assert_allclose(rvw, rvw_expected)
             np.testing.assert_allclose(s, s_expected)
-
-

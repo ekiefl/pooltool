@@ -1,17 +1,21 @@
 #! /usr/bin/env python
 
-import pooltool as pt
 import IPython
+
+import pooltool as pt
 
 ipython = IPython.get_ipython()
 
-get_vec = lambda: 10*np.random.rand(3) - 5
+get_vec = lambda: 10 * np.random.rand(3) - 5
+
 
 def old():
     pt.utils.unit_vector(get_vec())
 
+
 def new():
     pt.utils.unit_vector_fast(get_vec())
+
 
 new()
 

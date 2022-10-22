@@ -6,7 +6,8 @@ import sys
 import textwrap
 import traceback
 
-from pooltool.terminal import tty_colors, color_text
+from pooltool.terminal import color_text, tty_colors
+
 
 def remove_spaces(text):
     if not text:
@@ -27,15 +28,21 @@ class PoolToolError(Exception, object):
         return
 
     def __str__(self):
-        max_len = max([len(l) for l in textwrap.fill(self.e, 80).split('\n')])
-        error_lines = ['%s%s' % (l, ' ' * (max_len - len(l))) for l in textwrap.fill(self.e, 80).split('\n')]
+        max_len = max([len(l) for l in textwrap.fill(self.e, 80).split("\n")])
+        error_lines = [
+            "%s%s" % (l, " " * (max_len - len(l)))
+            for l in textwrap.fill(self.e, 80).split("\n")
+        ]
 
-        error_message = ['%s: %s' % (color_text(self.error_type, 'red'), error_lines[0])]
+        error_message = [
+            "%s: %s" % (color_text(self.error_type, "red"), error_lines[0])
+        ]
         for error_line in error_lines[1:]:
-            error_message.append('%s%s' % (' ' * (len(self.error_type) + 2), error_line))
+            error_message.append(
+                "%s%s" % (" " * (len(self.error_type) + 2), error_line)
+            )
 
-        return '\n\n' + '\n'.join(error_message) + '\n\n'
-
+        return "\n\n" + "\n".join(error_message) + "\n\n"
 
     def clear_text(self):
         return self.e
@@ -44,7 +51,5 @@ class PoolToolError(Exception, object):
 class ConfigError(PoolToolError):
     def __init__(self, e=None):
         self.e = remove_spaces(e)
-        self.error_type = 'Config Error'
+        self.error_type = "Config Error"
         PoolToolError.__init__(self)
-
-

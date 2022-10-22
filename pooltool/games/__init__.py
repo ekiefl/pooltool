@@ -1,13 +1,11 @@
 #! /usr/bin/env python
 
+import uuid
+from abc import ABC, abstractmethod
+
 import pooltool.ani as ani
 import pooltool.constants as c
-
 from pooltool.terminal import Timer
-
-import uuid
-
-from abc import ABC, abstractmethod
 
 
 class Log(object):
@@ -15,16 +13,17 @@ class Log(object):
         self.timer = Timer()
         self.msgs = []
 
-
-    def add_msg(self, msg, sentiment='neutral', quiet=False):
-        self.msgs.append({
-            'time': self.timer.timestamp(),
-            'elapsed': self.timer.time_elapsed(fmt="{minutes}:{seconds}"),
-            'msg': msg,
-            'quiet': quiet,
-            'sentiment': sentiment,
-            'broadcast': False
-        })
+    def add_msg(self, msg, sentiment="neutral", quiet=False):
+        self.msgs.append(
+            {
+                "time": self.timer.timestamp(),
+                "elapsed": self.timer.time_elapsed(fmt="{minutes}:{seconds}"),
+                "msg": msg,
+                "quiet": quiet,
+                "sentiment": sentiment,
+                "broadcast": False,
+            }
+        )
 
         if not quiet:
             self.update = True
@@ -53,15 +52,12 @@ class Game(ABC):
 
         self.log = Log()
 
-
-
     def create_players(self, num_players):
         self.players = []
-        for n in range(1, num_players+1):
+        for n in range(1, num_players + 1):
             player = Player()
             player.set_name(f"Player {n}")
             self.players.append(player)
-
 
     def init(self, table, ball_kwargs={}):
         self.shot_number = 0
@@ -72,11 +68,9 @@ class Game(ABC):
         self.tie = False
         self.setup_initial_layout(table, ball_kwargs)
 
-
     def player_order(self):
         for i in range(len(self.players)):
             yield self.players[(self.turn_number + i) % len(self.players)]
-
 
     def set_next_player(self):
         next_player = self.players[self.turn_number % len(self.players)]
@@ -86,22 +80,22 @@ class Game(ABC):
             if self.last_player:
                 self.last_player.is_shooting = False
 
-            self.log.add_msg(f"{self.active_player.name} is up", sentiment='neutral')
-
+            self.log.add_msg(f"{self.active_player.name} is up", sentiment="neutral")
 
     def process_shot(self, shot):
         self.shot_info = {}
-        self.shot_info['is_legal'], self.shot_info['reason'] = self.legality(shot)
-        if self.shot_info['is_legal']:
+        self.shot_info["is_legal"], self.shot_info["reason"] = self.legality(shot)
+        if self.shot_info["is_legal"]:
             self.log.add_msg("The shot was legal.", quiet=True)
         else:
-            self.log.add_msg(f"Illegal shot! {self.shot_info['reason']}", sentiment='bad')
-        self.shot_info['is_turn_over'] = self.is_turn_over(shot)
+            self.log.add_msg(
+                f"Illegal shot! {self.shot_info['reason']}", sentiment="bad"
+            )
+        self.shot_info["is_turn_over"] = self.is_turn_over(shot)
 
         self.award_points(shot)
         self.award_ball_in_hand(shot)
         self.respot_balls(shot)
-
 
     def respot(self, shot, ball_id, x, y, z):
         """Move cue ball to head spot
@@ -113,52 +107,46 @@ class Game(ABC):
         shot.balls[ball_id].rvw[0] = [x, y, z]
         shot.balls[ball_id].s = c.stationary
 
-
     def advance(self, shot):
         for player in self.players:
-            player.points += self.shot_info['points'][player]
+            player.points += self.shot_info["points"][player]
             self.log.add_msg(f"{player.name} points: {player.points}", quiet=True)
 
         if self.is_game_over(shot):
             self.game_over = True
             self.decide_winner(shot)
-            self.log.add_msg(f"Game over! {self.winner.name} wins!", sentiment='good')
+            self.log.add_msg(f"Game over! {self.winner.name} wins!", sentiment="good")
             return
 
-        if self.shot_info['is_turn_over']:
+        if self.shot_info["is_turn_over"]:
             self.turn_number += 1
         self.shot_number += 1
 
         self.active_player.ball_in_hand = []
         self.set_next_player()
-        if self.shot_info['ball_in_hand'] is not None:
-            self.active_player.ball_in_hand = self.shot_info['ball_in_hand']
+        if self.shot_info["ball_in_hand"] is not None:
+            self.active_player.ball_in_hand = self.shot_info["ball_in_hand"]
 
         self.update_player_stats = True
 
         self.ball_call = None
         self.pocket_call = None
 
-
     @abstractmethod
     def legality(self, shot):
         pass
-
 
     @abstractmethod
     def award_points(self, shot):
         pass
 
-
     @abstractmethod
     def respot_balls(self, shot):
         pass
 
-
     @abstractmethod
     def is_game_over(self, shot):
         pass
-
 
     @abstractmethod
     def award_ball_in_hand(self, shot):
@@ -168,21 +156,17 @@ class Game(ABC):
     def is_turn_over(self, shot):
         pass
 
-
     @abstractmethod
     def decide_winner(self, shot):
         pass
-
 
     @abstractmethod
     def setup_initial_layout(self):
         pass
 
-
     @abstractmethod
     def set_initial_cueing_ball(self, balls):
         pass
-
 
     @abstractmethod
     def start(self):
@@ -197,34 +181,20 @@ class Player(object):
         self.points = 0
         self.target_balls = []
         self.ball_in_hand = []
-        self.can_cue = ['cue']
-
+        self.can_cue = ["cue"]
 
     def set_name(self, name):
         self.name = name
 
 
-from pooltool.games.nine_ball import NineBall
 from pooltool.games.eight_ball import EightBall
+from pooltool.games.nine_ball import NineBall
 from pooltool.games.sandbox import Sandbox
 from pooltool.games.three_cushion import ThreeCushion
 
 game_classes = {
-    ani.options_sandbox : Sandbox,
-    ani.options_9_ball : NineBall,
-    ani.options_8_ball : EightBall,
-    ani.options_3_cushion : ThreeCushion,
+    ani.options_sandbox: Sandbox,
+    ani.options_9_ball: NineBall,
+    ani.options_8_ball: EightBall,
+    ani.options_3_cushion: ThreeCushion,
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

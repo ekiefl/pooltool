@@ -1,8 +1,9 @@
 #! /usr/bin/env python
 
+import numpy as np
+
 from pooltool.tests import ref, trial
 
-import numpy as np
 
 def test_trajectories(ref, trial):
     for ball_ref in ref.balls.values():

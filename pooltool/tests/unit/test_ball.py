@@ -1,14 +1,14 @@
 #! /usr/bin/env python
 
-import pooltool as pt
+import tempfile
 
-from pooltool.tests import trial, ref
+import numpy as np
+import pytest
+
+import pooltool as pt
 from pooltool.error import ConfigError
 from pooltool.objects.ball import Ball
-
-import pytest
-import numpy as np
-import tempfile
+from pooltool.tests import ref, trial
 
 
 def test_bad_id():
@@ -31,5 +31,3 @@ def test_save(trial):
         np.testing.assert_allclose(ball.history_cts.rvw, pickle_ball.history_cts.rvw)
         np.testing.assert_allclose(ball.history_cts.s, pickle_ball.history_cts.s)
         np.testing.assert_allclose(ball.history_cts.t, pickle_ball.history_cts.t)
-
-
