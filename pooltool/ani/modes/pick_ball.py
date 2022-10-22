@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python, ModeName
 """A mode to for picking which ball to cue"""
 
 import numpy as np
@@ -6,10 +6,11 @@ import numpy as np
 import pooltool.ani as ani
 import pooltool.ani.action as action
 import pooltool.constants as c
-from pooltool.ani.modes.datatypes import Mode
+from pooltool.ani.modes.datatypes import Mode, ModeName
 
 
 class PickBallMode(Mode):
+    name = ModeName.pick_ball
     keymap = {
         action.quit: False,
         action.pick_ball: True,

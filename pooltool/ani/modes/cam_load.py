@@ -1,13 +1,14 @@
-#! /usr/bin/env python
+#! /usr/bin/env python, ModeName
 
 from direct.gui.DirectGui import *
 
 import pooltool.ani.action as action
 from pooltool.ani.menu import GenericMenu
-from pooltool.ani.modes.datatypes import Mode
+from pooltool.ani.modes.datatypes import Mode, ModeName
 
 
 class CamLoadMode(Mode):
+    name = ModeName.cam_load
     keymap = {
         action.quit: False,
         action.cam_load: True,

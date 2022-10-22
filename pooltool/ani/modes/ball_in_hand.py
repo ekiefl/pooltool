@@ -7,11 +7,12 @@ from panda3d.core import TransparencyAttrib
 import pooltool.ani as ani
 import pooltool.ani.action as action
 import pooltool.constants as c
-from pooltool.ani.modes.datatypes import Mode
+from pooltool.ani.modes.datatypes import Mode, ModeName
 from pooltool.utils import panda_path
 
 
 class BallInHandMode(Mode):
+    name = ModeName.ball_in_hand
     keymap = {
         action.quit: False,
         action.ball_in_hand: True,

@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python, ModeName
 
 import numpy as np
 
@@ -6,10 +6,11 @@ import pooltool as pt
 import pooltool.ani as ani
 import pooltool.ani.action as action
 import pooltool.ani.utils as autils
-from pooltool.ani.modes.datatypes import Mode
+from pooltool.ani.modes.datatypes import Mode, ModeName
 
 
 class ShotMode(Mode):
+    name = ModeName.shot
     keymap = {
         action.aim: False,
         action.move: False,

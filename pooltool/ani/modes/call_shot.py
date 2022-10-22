@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python, ModeName
 
 import numpy as np
 from direct.interval.IntervalGlobal import *
@@ -7,11 +7,12 @@ from panda3d.core import TransparencyAttrib
 import pooltool.ani as ani
 import pooltool.ani.action as action
 import pooltool.constants as c
-from pooltool.ani.modes.datatypes import Mode
+from pooltool.ani.modes.datatypes import Mode, ModeName
 from pooltool.utils import panda_path
 
 
 class CallShotMode(Mode):
+    name = ModeName.call_shot
     keymap = {
         action.quit: False,
         action.call_shot: True,

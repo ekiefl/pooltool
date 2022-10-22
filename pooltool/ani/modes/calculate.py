@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python, ModeName
 
 import numpy as np
 
@@ -6,11 +6,12 @@ import pooltool as pt
 import pooltool.ani as ani
 import pooltool.ani.action as action
 from pooltool.ani.menu import GenericMenu
-from pooltool.ani.modes.datatypes import Mode
+from pooltool.ani.modes.datatypes import Mode, ModeName
 from pooltool.system import System
 
 
 class CalculateMode(Mode):
+    name = ModeName.calculate
     keymap = {
         action.move: False,
         action.quit: False,

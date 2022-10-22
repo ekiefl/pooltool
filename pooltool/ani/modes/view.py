@@ -1,14 +1,15 @@
-#! /usr/bin/env python
+#! /usr/bin/env python, ModeName
 
 import numpy as np
 
 import pooltool.ani as ani
 import pooltool.ani.action as action
 import pooltool.ani.utils as autils
-from pooltool.ani.modes.datatypes import Mode
+from pooltool.ani.modes.datatypes import Mode, ModeName
 
 
 class ViewMode(Mode):
+    name = ModeName.view
     keymap = {
         action.aim: False,
         action.call_shot: False,

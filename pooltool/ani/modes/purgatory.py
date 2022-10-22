@@ -1,8 +1,8 @@
-#! /usr/bin/env python
+#! /usr/bin/env python, ModeName
 
 import pooltool.ani as ani
 import pooltool.ani.action as action
-from pooltool.ani.modes.datatypes import Mode
+from pooltool.ani.modes.datatypes import Mode, ModeName
 
 
 class PurgatoryMode(Mode):
@@ -23,6 +23,7 @@ class PurgatoryMode(Mode):
     frame rate is engaged. When active, the standard frame rate is used.
     """
 
+    name = ModeName.purgatory
     keymap = {
         action.regain_control: False,
     }

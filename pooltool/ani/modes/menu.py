@@ -1,12 +1,13 @@
-#! /usr/bin/env python
+#! /usr/bin/env python, ModeName
 
 import sys
 
 import pooltool.ani.action as action
-from pooltool.ani.modes.datatypes import Mode
+from pooltool.ani.modes.datatypes import Mode, ModeName
 
 
 class MenuMode(Mode):
+    name = ModeName.menu
     keymap = {
         action.exit: False,
         action.new_game: False,

@@ -1,11 +1,12 @@
-#! /usr/bin/env python
+#! /usr/bin/env python, ModeName
 
 import pooltool.ani as ani
 import pooltool.ani.action as action
-from pooltool.ani.modes.datatypes import Mode
+from pooltool.ani.modes.datatypes import Mode, ModeName
 
 
 class StrokeMode(Mode):
+    name = ModeName.stroke
     keymap = {
         action.fine_control: False,
         action.stroke: True,

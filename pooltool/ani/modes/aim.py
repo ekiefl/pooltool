@@ -5,11 +5,12 @@ import numpy as np
 import pooltool.ani as ani
 import pooltool.ani.action as action
 import pooltool.ani.utils as autils
-from pooltool.ani.modes.datatypes import Mode
+from pooltool.ani.modes.datatypes import Mode, ModeName
 from pooltool.objects.cue import CueAvoid
 
 
 class AimMode(Mode, CueAvoid):
+    name = ModeName.aim
     keymap = {
         action.fine_control: False,
         action.adjust_head: False,

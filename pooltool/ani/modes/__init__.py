@@ -1,29 +1,34 @@
 #! /usr/bin/env python
 
-import re
-from importlib import import_module
-from inspect import isclass
-from pathlib import Path
-from pkgutil import iter_modules
-
+from pooltool.ani.modes.aim import AimMode
+from pooltool.ani.modes.ball_in_hand import BallInHandMode
+from pooltool.ani.modes.calculate import CalculateMode
+from pooltool.ani.modes.call_shot import CallShotMode
+from pooltool.ani.modes.cam_load import CamLoadMode
+from pooltool.ani.modes.cam_save import CamSaveMode
 from pooltool.ani.modes.datatypes import Mode
+from pooltool.ani.modes.game_over import GameOverMode
+from pooltool.ani.modes.menu import MenuMode
+from pooltool.ani.modes.pick_ball import PickBallMode
+from pooltool.ani.modes.purgatory import PurgatoryMode
+from pooltool.ani.modes.shot import ShotMode
+from pooltool.ani.modes.stroke import StrokeMode
+from pooltool.ani.modes.view import ViewMode
 
-# https://julienharbulot.com/python-dynamical-import.html
-package_dir = str(Path(__file__).resolve().parent)
-for (_, module_name, _) in iter_modules([package_dir]):
-    if module_name == "datatypes":
-        continue
+modes = {cls.name: cls for cls in Mode.__subclasses__()}
 
-    module = import_module(f"{__name__}.{module_name}")
-    for attribute_name in dir(module):
-        attribute = getattr(module, attribute_name)
-
-        if isclass(attribute):
-            globals()[attribute_name] = attribute
-
-
-def _get_mode_name(mode):
-    return re.sub(r"(?<!^)(?=[A-Z])", "_", mode.__name__[:-4]).lower()
-
-
-modes = {_get_mode_name(cls): cls for cls in Mode.__subclasses__()}
+__all__ = [
+    "AimMode",
+    "BallInHandMode",
+    "CalculateMode",
+    "CallShotMode",
+    "CamLoadMode",
+    "CamSaveMode",
+    "GameOverMode",
+    "MenuMode",
+    "PickBallMode",
+    "PurgatoryMode",
+    "ShotMode",
+    "StrokeMode",
+    "ViewMode",
+]
