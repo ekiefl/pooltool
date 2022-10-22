@@ -4,8 +4,15 @@ import gc
 
 import gltf
 import simplepbr
+from direct.gui.OnscreenText import OnscreenText
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import *
+from panda3d.core import (
+    ClockObject,
+    CollisionHandlerQueue,
+    CollisionTraverser,
+    TextNode,
+    WindowProperties,
+)
 
 import pooltool as pt
 import pooltool.ani as ani
@@ -14,12 +21,27 @@ import pooltool.games as games
 from pooltool.ani.camera import PlayerCam
 from pooltool.ani.hud import HUD
 from pooltool.ani.menu import GenericMenu, Menus
-from pooltool.ani.modes import *
+from pooltool.ani.modes import (
+    AimMode,
+    BallInHandMode,
+    CalculateMode,
+    CallShotMode,
+    CamLoadMode,
+    CamSaveMode,
+    GameOverMode,
+    MenuMode,
+    PickBallMode,
+    PurgatoryMode,
+    ShotMode,
+    StrokeMode,
+    ViewMode,
+    modes,
+)
 from pooltool.ani.mouse import Mouse
 from pooltool.error import ConfigError
 from pooltool.objects.cue import Cue
 from pooltool.objects.table import table_types
-from pooltool.system import SystemCollection
+from pooltool.system import System, SystemCollection
 
 __all__ = [
     "ShotViewer",
@@ -119,17 +141,25 @@ class Interface(ShowBase, ModeManager, HUD):
         self.stdout = pt.terminal.Run()
 
         super().__init__(self)
+
+        # Panda pollutes the global namespace, appease linters
+        self.global_clock = __builtins__["globalClock"]
+        self.global_render = __builtins__["render"]
+        self.aspect2d = __builtins__["aspect2d"]
+        self.task_mgr = __builtins__["taskMgr"]
+        self.base = __builtins__["base"]
+
         HUD.__init__(self)
-        base.setBackgroundColor(0.04, 0.04, 0.04)
+        self.base.setBackgroundColor(0.04, 0.04, 0.04)
         simplepbr.init(
             enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
         )
 
         if not ani.settings["graphics"]["shader"]:
-            render.set_shader_off()
+            self.global_render.set_shader_off()
 
-        globalClock.setMode(ClockObject.MLimited)
-        globalClock.setFrameRate(ani.settings["graphics"]["fps"])
+        self.global_clock.setMode(ClockObject.MLimited)
+        self.global_clock.setFrameRate(ani.settings["graphics"]["fps"])
 
         self.shots = SystemCollection()
 
@@ -161,7 +191,8 @@ class Interface(ShowBase, ModeManager, HUD):
         user, this will override their resizing, and resize the window to one with an
         area equal to that requested, but at the required aspect ratio.
         """
-        requested_width, requested_height = base.win.getXSize(), base.win.getYSize()
+        requested_width = self.base.win.getXSize()
+        requested_height = self.base.win.getYSize()
 
         if (
             abs(requested_width / requested_height - ani.aspect_ratio)
@@ -186,7 +217,7 @@ class Interface(ShowBase, ModeManager, HUD):
     def handle_window_event(self, win=None):
         self.fix_window_resize(win=win)
 
-        is_window_active = base.win.get_properties().foreground
+        is_window_active = self.base.win.get_properties().foreground
         if not is_window_active and self.mode != "purgatory":
             self.change_mode("purgatory")
 
@@ -195,15 +226,15 @@ class Interface(ShowBase, ModeManager, HUD):
         self.accept("window-event", self.handle_window_event)
 
     def add_task(self, *args, **kwargs):
-        task = taskMgr.add(*args, **kwargs)
+        task = self.task_mgr.add(*args, **kwargs)
         self.tasks[task.name] = task
 
     def add_task_later(self, *args, **kwargs):
-        task = taskMgr.doMethodLater(*args, **kwargs)
+        task = self.task_mgr.doMethodLater(*args, **kwargs)
         self.tasks[task.name] = task
 
     def remove_task(self, name):
-        taskMgr.remove(name)
+        self.task_mgr.remove(name)
         del self.tasks[name]
 
     def close_scene(self):
@@ -244,7 +275,7 @@ class Interface(ShowBase, ModeManager, HUD):
         )
 
     def init_scene(self):
-        self.scene = render.attachNewNode("scene")
+        self.scene = self.global_render.attachNewNode("scene")
 
     def init_environment(self):
         if ani.settings["graphics"]["physical_based_rendering"]:
@@ -267,13 +298,14 @@ class Interface(ShowBase, ModeManager, HUD):
 
         Notes
         =====
-        - NOTE this Panda3D collision handler is specifically for determining whether the
-          cue stick is intersecting with cushions or balls. All other collisions discussed at
-          https://ekiefl.github.io/2020/12/20/pooltool-alg/#2-what-are-events are unrelated
-          to this.
+        - NOTE this Panda3D collision handler is specifically for determining whether
+          the cue stick is intersecting with cushions or balls. All other collisions
+          discussed at
+          https://ekiefl.github.io/2020/12/20/pooltool-alg/#2-what-are-events are
+          unrelated to this.
         """
 
-        base.cTrav = CollisionTraverser()
+        self.base.cTrav = CollisionTraverser()
         self.collision_handler = CollisionHandlerQueue()
 
         self.shots.active.cue.init_collision_handling(self.collision_handler)
@@ -305,56 +337,59 @@ class Interface(ShowBase, ModeManager, HUD):
             scale=ani.menu_text_scale * 0.9,
             fg=(1, 1, 1, 1),
             align=TextNode.ALeft,
-            parent=aspect2d,
+            parent=self.aspect2d,
         )
         self.help_hint.show()
 
-        self.help_node = aspect2d.attachNewNode("help")
+        self.help_node = self.aspect2d.attachNewNode("help")
 
         def add_instruction(pos, msg, title=False):
             text = OnscreenText(
                 text=msg,
                 style=1,
                 fg=(1, 1, 1, 1),
-                parent=base.a2dTopLeft,
+                parent=self.base.a2dTopLeft,
                 align=TextNode.ALeft,
                 pos=(-1.45 if not title else -1.55, 0.85 - pos),
                 scale=ani.menu_text_scale if title else 0.7 * ani.menu_text_scale,
             )
             text.reparentTo(self.help_node)
 
-        h = lambda x: 0.06 * x
-        add_instruction(h(1), "Camera controls", True)
-        add_instruction(h(2), "Rotate - [mouse]")
-        add_instruction(h(3), "Pan - [hold v + mouse]")
-        add_instruction(h(4), "Zoom - [hold left-click + mouse]")
+        def hrow(x):
+            return 0.06 * x
 
-        add_instruction(h(6), "Aim controls", True)
-        add_instruction(h(7), "Enter aim mode - [a]")
-        add_instruction(h(8), "Apply english - [hold e + mouse]")
-        add_instruction(h(9), "Elevate cue - [hold b + mouse]")
-        add_instruction(h(10), "Precise aiming - [hold f + mouse]")
-        add_instruction(h(11), "Raise head - [hold t + mouse]")
+        add_instruction(hrow(1), "Camera controls", True)
+        add_instruction(hrow(2), "Rotate - [mouse]")
+        add_instruction(hrow(3), "Pan - [hold v + mouse]")
+        add_instruction(hrow(4), "Zoom - [hold left-click + mouse]")
 
-        add_instruction(h(13), "Shot controls", True)
-        add_instruction(h(14), "Stroke - [hold s] (move mouse down then up)")
-        add_instruction(h(15), "Take next shot - [a]")
-        add_instruction(h(16), "Undo shot - [z]")
-        add_instruction(h(17), "Replay shot - [r]")
-        add_instruction(h(18), "Pause shot - [space]")
-        add_instruction(h(19), "Rewind - [hold left-arrow]")
-        add_instruction(h(20), "Fast forward - [hold right-arrow]")
-        add_instruction(h(21), "Slow down - [down-arrow]")
-        add_instruction(h(22), "Speed up - [up-arrow]")
+        add_instruction(hrow(6), "Aim controls", True)
+        add_instruction(hrow(7), "Enter aim mode - [a]")
+        add_instruction(hrow(8), "Apply english - [hold e + mouse]")
+        add_instruction(hrow(9), "Elevate cue - [hold b + mouse]")
+        add_instruction(hrow(10), "Precise aiming - [hold f + mouse]")
+        add_instruction(hrow(11), "Raise head - [hold t + mouse]")
 
-        add_instruction(h(24), "Other controls", True)
+        add_instruction(hrow(13), "Shot controls", True)
+        add_instruction(hrow(14), "Stroke - [hold s] (move mouse down then up)")
+        add_instruction(hrow(15), "Take next shot - [a]")
+        add_instruction(hrow(16), "Undo shot - [z]")
+        add_instruction(hrow(17), "Replay shot - [r]")
+        add_instruction(hrow(18), "Pause shot - [space]")
+        add_instruction(hrow(19), "Rewind - [hold left-arrow]")
+        add_instruction(hrow(20), "Fast forward - [hold right-arrow]")
+        add_instruction(hrow(21), "Slow down - [down-arrow]")
+        add_instruction(hrow(22), "Speed up - [up-arrow]")
+
+        add_instruction(hrow(24), "Other controls", True)
         add_instruction(
-            h(25),
+            hrow(25),
             "Cue different ball - [hold q]\n    (select with mouse, click to confirm)",
         )
         add_instruction(
-            h(27),
-            "Move ball - [hold g]\n    (click once to select ball, move with mouse, then click to confirm move",
+            hrow(27),
+            "Move ball - [hold g]\n    (click once to select ball, move with mouse, "
+            "then click to confirm move",
         )
 
         self.help_node.hide()
@@ -378,7 +413,7 @@ class ShotViewer(Interface):
             scale=ani.menu_text_scale * 0.7,
             fg=(1, 1, 1, 1),
             align=TextNode.ALeft,
-            parent=aspect2d,
+            parent=self.aspect2d,
         )
         self.title_node.hide()
 
@@ -389,7 +424,7 @@ class ShotViewer(Interface):
             scale=ani.menu_text_scale * 0.7,
             fg=(1, 1, 1, 1),
             align=TextNode.ALeft,
-            parent=aspect2d,
+            parent=self.aspect2d,
         )
         self.instructions.hide()
 
@@ -399,7 +434,7 @@ class ShotViewer(Interface):
             ani.logo_paths["default"], pos=(0, 0, 0), scale=(0.5, 1, 0.44)
         )
 
-        text = OnscreenText(
+        OnscreenText(
             text="GUI standing by...",
             style=1,
             fg=(1, 1, 1, 1),
@@ -412,8 +447,8 @@ class ShotViewer(Interface):
     def show(self, shot_or_shots=None, title=""):
 
         if shot_or_shots is None:
-            # No passed shots. This is ok if self.shots has already been defined, but will complain
-            # otherwise
+            # No passed shots. This is ok if self.shots has already been defined, but
+            # will complain otherwise
             if not len(self.shots):
                 raise ConfigError(
                     "ShotViewer.show :: No shots passed and no shots set."
@@ -453,8 +488,8 @@ class ShotViewer(Interface):
         self.standby_screen.show()
         self.instructions.hide()
         self.title_node.hide()
-        base.graphicsEngine.renderFrame()
-        base.graphicsEngine.renderFrame()
+        self.base.graphicsEngine.renderFrame()
+        self.base.graphicsEngine.renderFrame()
 
         self.taskMgr.stop()
 
@@ -472,7 +507,7 @@ class Play(Interface, Menus):
         self.change_mode("menu")
 
         # This task chain allows simulations to be run in parallel to the game processes
-        taskMgr.setupTaskChain(
+        self.task_mgr.setupTaskChain(
             "simulation",
             numThreads=1,
             tickClock=None,
