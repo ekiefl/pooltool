@@ -1,10 +1,8 @@
 #! /usr/bin/env python
 
-from pathlib import Path
-
 import numpy as np
-from direct.interval.IntervalGlobal import *
-from panda3d.core import *
+from direct.interval.IntervalGlobal import LerpPosInterval, Sequence
+from panda3d.core import ClockObject, CollisionNode, CollisionSegment, Vec3
 
 import pooltool.ani as ani
 import pooltool.constants as c
@@ -12,7 +10,6 @@ import pooltool.utils as utils
 from pooltool.error import ConfigError
 from pooltool.events import StickBallCollision
 from pooltool.objects import Object, Render
-from pooltool.objects.ball import Ball
 
 __all__ = ["Cue", "cue_from_dict", "cue_from_pickle"]
 
@@ -20,6 +17,11 @@ __all__ = ["Cue", "cue_from_dict", "cue_from_pickle"]
 class CueRender(Render):
     def __init__(self):
         Render.__init__(self)
+
+        # Panda pollutes the global namespace, appease linters
+        self.loader = __builtins__["loader"]
+        self.global_render = __builtins__["render"]
+        self.base = __builtins__["base"]
 
         self.follow = None
         self.stroke_sequence = None
@@ -31,10 +33,12 @@ class CueRender(Render):
 
     def init_model(self, R=c.R):
         path = utils.panda_path(ani.model_dir / "cue" / "cue.glb")
-        cue_stick_model = loader.loadModel(path)
+        cue_stick_model = self.loader.loadModel(path)
         cue_stick_model.setName("cue_stick_model")
 
-        cue_stick = render.find("scene").find("cloth").attachNewNode("cue_stick")
+        cue_stick = (
+            self.global_render.find("scene").find("cloth").attachNewNode("cue_stick")
+        )
         cue_stick_model.reparentTo(cue_stick)
 
         self.nodes["cue_stick"] = cue_stick
@@ -46,7 +50,9 @@ class CueRender(Render):
         self.get_node("cue_stick_model").setPos(ball.R, 0, 0)
 
         cue_stick_focus = (
-            render.find("scene").find("cloth").attachNewNode("cue_stick_focus")
+            self.global_render.find("scene")
+            .find("cloth")
+            .attachNewNode("cue_stick_focus")
         )
         self.nodes["cue_stick_focus"] = cue_stick_focus
 
@@ -70,13 +76,13 @@ class CueRender(Render):
         x = 0
         X = bounds[1][0] - bounds[0][0]
 
-        cnode = CollisionNode(f"cue_cseg")
+        cnode = CollisionNode("cue_cseg")
         cnode.set_into_collide_mask(0)
         collision_node = self.get_node("cue_stick_model").attachNewNode(cnode)
         collision_node.node().addSolid(CollisionSegment(x, 0, 0, X, 0, 0))
 
         self.nodes["cue_cseg"] = collision_node
-        base.cTrav.addCollider(collision_node, collision_handler)
+        self.base.cTrav.addCollider(collision_node, collision_handler)
 
         if ani.settings["graphics"]["debug"]:
             collision_node.show()
@@ -93,13 +99,11 @@ class CueRender(Render):
 
     def append_stroke_data(self):
         """Append current cue position and timestamp to the cue tracking data"""
-        cue_stick = self.get_node("cue_stick")
-
         self.stroke_pos.append(self.get_node("cue_stick").getX())
         self.stroke_time.append(self.stroke_clock.getRealTime())
 
     def set_stroke_sequence(self):
-        """Initiate a stroke sequence based off of self.stroke_pos and self.stroke_time"""
+        """Init a stroke sequence based off of self.stroke_pos and self.stroke_time"""
 
         cue_stick = self.get_node("cue_stick")
         self.stroke_sequence = Sequence()
@@ -138,10 +142,10 @@ class CueRender(Render):
         Returns
         =======
         output : (backstroke, apex, strike)
-            Returns a 3-ple of times (or indices of the lists self.stroke_time and self.stroke_pos
-            if as_index is True) that describe three critical moments in the cue stick. backstroke is
-            start of the backswing, apex is when the cue is at the peak of the backswing, and strike is
-            when the cue makes contact.
+            Returns a 3-ple of times (or indices of the lists self.stroke_time and
+            self.stroke_pos if as_index is True) that describe three critical moments in
+            the cue stick. backstroke is start of the backswing, apex is when the cue is
+            at the peak of the backswing, and strike is when the cue makes contact.
         """
 
         apex_pos = 0
@@ -199,9 +203,9 @@ class CueRender(Render):
     def calc_V0_from_stroke(self):
         """Calculates V0 from the stroke sequence
 
-        Takes the average velocity calculated over the 0.1 seconds preceding the shot. If the time
-        between the cue strike and apex of the stroke is less than 0.1 seconds, calculate the average
-        velocity since the apex
+        Takes the average velocity calculated over the 0.1 seconds preceding the shot.
+        If the time between the cue strike and apex of the stroke is less than 0.1
+        seconds, calculate the average velocity since the apex
         """
 
         backstroke_time, apex_time, strike_time = self.get_stroke_times()
@@ -318,7 +322,8 @@ class Cue(Object, CueRender):
 
         Notes
         =====
-        - If any parameters are None, they will be left untouched--they will not be set to None
+        - If any parameters are None, they will be left untouched--they will not be set
+          to None
         """
 
         if V0 is not None:
@@ -343,8 +348,8 @@ class Cue(Object, CueRender):
             The time that the collision occurs at
 
         state_kwargs: **kwargs
-            Pass state parameters to be updated before the cue strike. Any parameters accepted by Cue.set_state
-            are permissible.
+            Pass state parameters to be updated before the cue strike. Any parameters
+            accepted by Cue.set_state are permissible.
         """
 
         self.set_state(**state_kwargs)
@@ -369,7 +374,8 @@ class Cue(Object, CueRender):
         Parameters
         ==========
         pos : array-like
-            A length-3 iterable specifying the x, y, z coordinates of the position to be aimed at
+            A length-3 iterable specifying the x, y, z coordinates of the position to be
+            aimed at
         """
 
         direction = utils.angle_fast(
@@ -398,13 +404,14 @@ class Cue(Object, CueRender):
                 "Cue.aim_at_ball :: cut must be less than 89 and more than -89"
             )
 
-        # Ok a cut angle has been requested. Unfortunately, there exists no analytical function
-        # phi(cut), at least as far as I have been able to calculate. Instead, it is a nasty
-        # transcendental equation that must be solved. The gaol is to make its value 0. To do this,
-        # I sweep from 0 to the max possible angle with 100 values and find where the equation flips
-        # from positive to negative. The dphi that makes the equation lies somewhere between those
-        # two values, so then I do a new parameter sweep between the value that was positive and the
-        # value that was negative. Then I rinse and repeat this a total of 5 times.
+        # Ok a cut angle has been requested. Unfortunately, there exists no analytical
+        # function phi(cut), at least as far as I have been able to calculate. Instead,
+        # it is a nasty transcendental equation that must be solved. The gaol is to make
+        # its value 0. To do this, I sweep from 0 to the max possible angle with 100
+        # values and find where the equation flips from positive to negative. The dphi
+        # that makes the equation lies somewhere between those two values, so then I do
+        # a new parameter sweep between the value that was positive and the value that
+        # was negative. Then I rinse and repeat this a total of 5 times.
 
         left = True if cut < 0 else False
         cut = np.abs(cut) * np.pi / 180
@@ -451,11 +458,12 @@ class Cue(Object, CueRender):
 
     def as_dict(self):
         try:
-            # It doesn't make sense to store a dictionary copy of the cueing_ball, since building
-            # the ball from Ball.from_dict will lead to an object that is unreferenced elsewhere.
-            # Instead, I store the cueing_ball.id, if it exists. This way, if a system state is
-            # loaded from dictionary, the balls and cue can be built, and then set the cueing_ball
-            # can be directly set by referencing the newly built Ball
+            # It doesn't make sense to store a dictionary copy of the cueing_ball, since
+            # building the ball from Ball.from_dict will lead to an object that is
+            # unreferenced elsewhere.  Instead, I store the cueing_ball.id, if it
+            # exists. This way, if a system state is loaded from dictionary, the balls
+            # and cue can be built, and then set the cueing_ball can be directly set by
+            # referencing the newly built Ball
             cueing_ball_id = self.cueing_ball.id
         except AttributeError:
             cueing_ball_id = None
@@ -481,22 +489,27 @@ class Cue(Object, CueRender):
 
 class CueAvoid(object):
     def __init__(self):
-        """Calculates minimum elevation required by cue stick to avoid colliding with balls and cushions
+        """Calculates min elevation required to avoid colliding with balls and cushions
 
-        This class uses Panda3D collision detection to determine when the cue stick is intersecting
-        with a ball or cushion. Rather than use the built in collision solving (e.g.
-        https://docs.panda3d.org/1.10/python/reference/panda3d.core.CollisionHandlerPusher), which
-        tended to push the cue off of objects in arbitrary ways (such that the cue no longer pointed
-        at the cueing ball), I instead rely on geometry to solve the minimum angle that the cue
-        stick must be raised in order to avoid all collisions. At each step in AimMode.aim_task, if
-        the cue elevation is less than this angle, the elevation is automatically set to this
-        minimum.
+        This class uses Panda3D collision detection to determine when the cue stick is
+        intersecting with a ball or cushion. Rather than use the built in collision
+        solving (e.g.
+        https://docs.panda3d.org/1.10/python/reference/panda3d.core.CollisionHandlerPusher),
+        which tended to push the cue off of objects in arbitrary ways (such that the cue
+        no longer pointed at the cueing ball), I instead rely on geometry to solve the
+        minimum angle that the cue stick must be raised in order to avoid all
+        collisions. At each step in AimMode.aim_task, if the cue elevation is less than
+        this angle, the elevation is automatically set to this minimum.
 
         Notes
         =====
-        - This class has nothing to do with collisions that occurr during the shot evolution, e.g.
-          ball-ball collisions, ball-cushion collisions, etc. All of those are handled in events.py
+        - This class has nothing to do with collisions that occurr during the shot
+          evolution, e.g.  ball-ball collisions, ball-cushion collisions, etc. All of
+          those are handled in events.py
         """
+
+        # Panda pollutes the global namespace, appease linters
+        self.global_render = __builtins__["render"]
 
         self.min_theta = 0
 
@@ -505,7 +518,7 @@ class CueAvoid(object):
 
         # Declare frequently used nodes
         self.avoid_nodes = {
-            "scene": render.find("scene"),
+            "scene": self.global_render.find("scene"),
             "cue_collision_node": self.shots.active.cue.get_node("cue_cseg"),
             "cue_stick_model": self.shots.active.cue.get_node("cue_stick_model"),
             "cue_stick": self.shots.active.cue.get_node("cue_stick"),
@@ -583,10 +596,10 @@ class CueAvoid(object):
         if ball == self.shots.active.cue.cueing_ball:
             return 0
 
-        scene = render.find("scene")
+        scene = self.global_render.find("scene")
 
         # Radius of transect
-        n = np.array(entry.get_surface_normal(render.find("scene")))
+        n = np.array(entry.get_surface_normal(self.global_render.find("scene")))
         phi = ((self.avoid_nodes["cue_stick_focus"].getH() + 180) % 360) * np.pi / 180
         c = np.array([np.cos(phi), np.sin(phi), 0])
         gamma = np.arccos(np.dot(n, c))
@@ -629,7 +642,7 @@ class CueAvoid(object):
         return max(0, min_theta) * 180 / np.pi
 
     def get_cue_radius(self, l):
-        """Returns radius of cue at collision point, given collision point is distance l from cue tip"""
+        """Returns cue radius at collision point, given point is distance l from tip"""
 
         bounds = self.shots.active.cue.get_node("cue_stick").get_tight_bounds()
         L = bounds[1][0] - bounds[0][0]  # cue length
