@@ -10,7 +10,6 @@ import pooltool.utils as utils
 from pooltool.error import ConfigError
 from pooltool.objects import NonObject
 
-class_one = "one"
 class_none = "none"
 class_collision = "collision"
 class_transition = "transition"

@@ -4,6 +4,7 @@ import tempfile
 from pathlib import Path
 
 from direct.interval.IntervalGlobal import *
+from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
 
 import pooltool.ani as ani
@@ -11,7 +12,18 @@ import pooltool.constants as c
 import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.error import ConfigError
-from pooltool.events import *
+from pooltool.events import (
+    Events,
+    NonEvent,
+    class_collision,
+    class_none,
+    class_transition,
+    event_from_dict,
+    type_ball_ball,
+    type_ball_cushion,
+    type_ball_pocket,
+    type_stick_ball,
+)
 from pooltool.evolution import EvolveShotEventBased
 from pooltool.objects.ball import BallHistory, ball_from_dict
 from pooltool.objects.cue import cue_from_dict
@@ -68,8 +80,9 @@ class SystemHistory(object):
         event : class with base events.Event
             An event
         update_all : bool, False
-            By default, this method updates only the histories of balls that are agents of the
-            event. However, if update_all is True, each ball's history will be updated.
+            By default, this method updates only the histories of balls that are agents
+            of the event. However, if update_all is True, each ball's history will be
+            updated.
         """
         self.t = event.time
 
@@ -84,17 +97,22 @@ class SystemHistory(object):
         self.events.append(event)
 
     def continuize(self, dt=0.01):
-        """Create BallHistory for each ball with timepoints _inbetween_ events--attach to respective ball
+        """Create BallHistory for each ball with timepoints _inbetween_ events
+
+        Attaches BallHistory to respective ball
 
         Notes
         =====
-        - This does not create uniform time spacings between shots. For example, all events are
-          sandwiched between two time points, one immediately before the event, and one immediately after.
-          This ensures that during lerp (linear interpolation) operations, the event is never interpolated
-          over with any significant amount of time.
+        - This does not create uniform time spacings between shots. For example, all
+          events are sandwiched between two time points, one immediately before the
+          event, and one immediately after.  This ensures that during lerp (linear
+          interpolation) operations, the event is never interpolated over with any
+          significant amount of time.
         - FIXME This is a very inefficient function that could be radically sped up if
-          physics.evolve_ball_motion and/or its functions had vectorized operations for arrays of time values.
-        - FIXME This function doesn't do a good job. Reduce dt to 0.1 and see the results...
+          physics.evolve_ball_motion and/or its functions had vectorized operations for
+          arrays of time values.
+        - FIXME This function doesn't do a good job. Reduce dt to 0.1 and see the
+          results...
         """
         for ball in self.balls.values():
             # Create a new history
@@ -112,9 +130,10 @@ class SystemHistory(object):
                 if not dtau_E:
                     continue
 
-                # The first step is to establish the rvw and s states of the ball at the timepoint of
-                # curr_event, since all calculated timepoints between curr_event and next_event will
-                # be calculated by evolving from this state.
+                # The first step is to establish the rvw and s states of the ball at the
+                # timepoint of curr_event, since all calculated timepoints between
+                # curr_event and next_event will be calculated by evolving from this
+                # state.
                 if curr_event.event_class == class_transition:
                     rvw, s = curr_event.agent_state_initial
                 elif curr_event.event_class == class_collision:
@@ -123,8 +142,9 @@ class SystemHistory(object):
                     else:
                         rvw, s = curr_event.agent2_state_final
                 elif curr_event.event_class == class_none:
-                    # This is a special case that should happen only once. It is the initial event,
-                    # which contains no agents. We therefore grab rvw and s from the ball's history.
+                    # This is a special case that should happen only once. It is the
+                    # initial event, which contains no agents. We therefore grab rvw and
+                    # s from the ball's history.
                     rvw, s = ball.history.rvw[0], ball.history.s[0]
                 else:
                     raise NotImplementedError(
@@ -149,12 +169,14 @@ class SystemHistory(object):
                     cts_history.add(rvw, s, curr_event.time + step)
                     step += dt
 
-                # By this point the history has been populated with equally spaced timesteps `dt`
-                # starting from curr_event.time up until--but not including--next_event.time.
-                # There still exists a `remainder` of time that is strictly less than `dt`. I evolve
-                # the state this additional amount which gives the state of the system at the
-                # time of the next event. This makes sure there exists a timepoint precisely at each
-                # event, which is helpful for things like smooth, nonintersecting animations
+                # By this point the history has been populated with equally spaced
+                # timesteps `dt` starting from curr_event.time up until--but not
+                # including--next_event.time.  There still exists a `remainder` of time
+                # that is strictly less than `dt`. I evolve the state this additional
+                # amount which gives the state of the system at the time of the next
+                # event. This makes sure there exists a timepoint precisely at each
+                # event, which is helpful for things like smooth, nonintersecting
+                # animations
                 remainder = dtau_E - step
                 rvw, s = physics.evolve_ball_motion(
                     state=s,
@@ -170,7 +192,8 @@ class SystemHistory(object):
 
                 cts_history.add(rvw, s, next_event.time - c.tol)
 
-            # Attach the newly created history to the ball, overwriting the existing history
+            # Attach the newly created history to the ball, overwriting the existing
+            # history
             ball.attach_history_cts(cts_history)
             ball.history_cts.vectorize()
 
@@ -187,13 +210,17 @@ class SystemRender(object):
         if not len(self.events):
             try:
                 self.simulate()
-            except:
+            except Exception:
+                raise ValueError(
+                    "FIXME This exception needs to be caught and `pass`ed, but it "
+                    "needs to be caught with a non-bare except."
+                )
                 pass
 
         if not self.continuized:
             # playback speed / fps * 2.0 is basically the sweetspot for creating smooth
-            # interpolations that capture motion. Any more is wasted computation and any less and
-            # the interpolation starts to look bad.
+            # interpolations that capture motion. Any more is wasted computation and any
+            # less and the interpolation starts to look bad.
             if self.playback_speed > 0.99:
                 self.continuize(
                     dt=self.playback_speed / ani.settings["graphics"]["fps"] * 2.5
@@ -213,7 +240,8 @@ class SystemRender(object):
                 self.ball_animations.append(ball.playback_sequence)
 
         if self.user_stroke and animate_stroke:
-            # There exists a stroke trajectory, and animating the stroke has been requested
+            # There exists a stroke trajectory, and animating the stroke has been
+            # requested
             self.cue.set_stroke_sequence()
             self.stroke_animation = Sequence(
                 ShowInterval(self.cue.get_node("cue_stick")),
@@ -341,8 +369,9 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
     def set_meta(self, meta):
         """Define any meta data for the shot
 
-        This method provides the opportunity to associate information to the system. If the
-        system is saved or copied, this information will be retained under the attribute `meta`.
+        This method provides the opportunity to associate information to the system. If
+        the system is saved or copied, this information will be retained under the
+        attribute `meta`.
 
         Parameters
         ==========
@@ -430,10 +459,10 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
         for event_dict in d["events"]:
             event = event_from_dict(event_dict)
 
-            # The agents of this event are NonObjects, since they came from a pickleable dictionary.
-            # We attempt to change that by associating the proper agents based on object IDs. So if
-            # the NonObject agent has an id 'cue', We replace this agent with a proper instantiation
-            # of 'cue', i.e. balls['cue']
+            # The agents of this event are NonObjects, since they came from a pickleable
+            # dictionary.  We attempt to change that by associating the proper agents
+            # based on object IDs. So if the NonObject agent has an id 'cue', We replace
+            # this agent with a proper instantiation of 'cue', i.e. balls['cue']
             if event.event_type == type_ball_ball:
                 agent1, agent2 = event.agents
                 event.agents = (balls[agent1.id], balls[agent2.id])
@@ -458,8 +487,8 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
                 agent = event.agents[0]
                 event.agents = (balls[agent.id],)
 
-            # The event now has no NonObject agents, so it is not longer 'partial'. For example,
-            # event.resolve may not be called
+            # The event now has no NonObject agents, so it is not longer 'partial'. For
+            # example, event.resolve may not be called
             event.partial = False
             events.append(event)
 
@@ -473,9 +502,9 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
         Parameters
         ==========
         set_to_initial : bool, True
-            Prior to saving, this method sets the ball states the initial states in the history.
-            However, this can be prevented by setting this to False, causing the ball states to be
-            saved as is.
+            Prior to saving, this method sets the ball states the initial states in the
+            history.  However, this can be prevented by setting this to False, causing
+            the ball states to be saved as is.
         """
         if set_to_initial:
             self.reset_balls()
@@ -497,9 +526,9 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
         Parameters
         ==========
         set_to_initial : bool, True
-            Prior to copying, this method sets the ball states the initial states in the history.
-            However, this can be prevented by setting this to False, causing the ball states to be
-            copied as is.
+            Prior to copying, this method sets the ball states the initial states in the
+            history.  However, this can be prevented by setting this to False, causing
+            the ball states to be copied as is.
         """
         with tempfile.NamedTemporaryFile(delete=True) as temp:
             self.save(temp.name, set_to_initial=set_to_initial)
@@ -525,14 +554,14 @@ class SystemCollectionRender(object):
         if self.parallel:
             self.shot_animation = Parallel()
 
-            # `max_dur` is the shot duration of the longest shot in the collection. All shots beside
-            # this one will have a buffer appended where the balls stay in their final state until
-            # the last shot finishes.
+            # `max_dur` is the shot duration of the longest shot in the collection. All
+            # shots beside this one will have a buffer appended where the balls stay in
+            # their final state until the last shot finishes.
             max_dur = max([shot.events[-1].time for shot in self])
 
-            # FIXME `leading_buffer` should be utilized here to sync up all shots that have cue
-            # trajectories such that the ball animations all start at the moment of the stick-ball
-            # collision
+            # FIXME `leading_buffer` should be utilized here to sync up all shots that
+            # have cue trajectories such that the ball animations all start at the
+            # moment of the stick-ball collision
             pass
 
             for shot in self:
@@ -613,8 +642,8 @@ class SystemCollectionRender(object):
         self.change_speed(2.0)
 
     def change_speed(self, factor):
-        # FIXME This messes up the syncing of shots when self.parallel is True. One clear issue is
-        # that trailing_buffer times do not respect self.playback_speed.
+        # FIXME This messes up the syncing of shots when self.parallel is True. One
+        # clear issue is that trailing_buffer times do not respect self.playback_speed.
         self.playback_speed *= factor
         for shot in self:
             shot.playback_speed *= factor
@@ -664,12 +693,12 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
 
     def append(self, system):
         if len(self):
-            # In order to append a system, the table must be damn-near identical to existing systems
-            # in this collection. Otherwise we raise an error
+            # In order to append a system, the table must be damn-near identical to
+            # existing systems in this collection. Otherwise we raise an error
             if system.table.as_dict() != self[0].table.as_dict():
                 raise ConfigError(
-                    f"Cannot append System '{system}', which has a different table than "
-                    f"the rest of the SystemCollection"
+                    f"Cannot append System '{system}', which has a different table "
+                    f"than the rest of the SystemCollection"
                 )
 
         utils.ListLike.append(self, system)
@@ -682,14 +711,17 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
         Parameters
         ==========
         state : str, 'current'
-            Must be any of {'initial', 'final', 'current'}. The copy state will be set according to
-            this value. If 'initial', the system state will be set according to the active system's
-            state at t=0, e.g. balls['cue'].history.rvw[0]. If 'final', the system will be set to
-            the final state of the active system, e.g. balls['cue'].history.rvw[-1]. If 'current',
-            the system will be set to the current state of the active system, e.g. balls['cue'].rvw
+            Must be any of {'initial', 'final', 'current'}. The copy state will be set
+            according to this value. If 'initial', the system state will be set
+            according to the active system's state at t=0, e.g.
+            balls['cue'].history.rvw[0]. If 'final', the system will be set to the final
+            state of the active system, e.g. balls['cue'].history.rvw[-1]. If 'current',
+            the system will be set to the current state of the active system, e.g.
+            balls['cue'].rvw
 
         reset_history : bool, True
-            If True, the history of the copy state will be reset (erased and reinitialized).
+            If True, the history of the copy state will be reset (erased and
+            reinitialized).
 
         as_active : bool, False
             If True, the newly appended System will be set as the active state
@@ -718,8 +750,9 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
         Parameters
         ==========
         i : int
-            The integer index of the shot you would like to make active. Negative indexing is
-            supported, e.g. set_active(-1) sets the last system in the collection as active
+            The integer index of the shot you would like to make active. Negative
+            indexing is supported, e.g. set_active(-1) sets the last system in the
+            collection as active
         """
         if self.active is not None:
             table = self.active.table
