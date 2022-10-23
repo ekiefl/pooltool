@@ -3,11 +3,11 @@
 import sys
 
 import pooltool.ani.action as action
-from pooltool.ani.modes.datatypes import Mode, ModeName
+from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
-class MenuMode(Mode):
-    name = ModeName.menu
+class MenuMode(BaseMode):
+    name = Mode.menu
     keymap = {
         action.exit: False,
         action.new_game: False,

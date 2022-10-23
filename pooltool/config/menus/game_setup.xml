@@ -10,13 +10,13 @@
             <option>9-ball</option>
             <description>What kind of billiards game do you want to play?</description>
         </dropdown>
-        <checkbox name="sandbox" checked="false">
+        <checkbox checked="false" name="sandbox">
             <name>Sandbox</name>
             <description>If selected, no rules are enforced and full control is given</description>
         </checkbox>
     <subtitle>Table</subtitle>
         <text>Pick an existing table, view the table parameters, or create a new table.</text>
-    <dropdown name="table_type" from_yaml="config/tables" selection="7_foot">
+    <dropdown from_yaml="config/tables" name="table_type" selection="7_foot">
         <name>Table</name>
         <description>Choose from an existing table</description>
     </dropdown>

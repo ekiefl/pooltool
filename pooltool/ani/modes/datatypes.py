@@ -4,7 +4,7 @@ import pooltool.ani.action as action
 from pooltool.utils.strenum import StrEnum, auto
 
 
-class ModeName(StrEnum):
+class Mode(StrEnum):
     aim = auto()
     ball_in_hand = auto()
     calculate = auto()
@@ -21,16 +21,20 @@ class ModeName(StrEnum):
     none = auto()
 
 
-class Mode(ABC):
+class BaseMode(ABC):
     keymap = None
     name = None
 
     def __init__(self):
         if self.keymap is None:
-            raise NotImplementedError("Subclasses of Mode must have 'keymap' attribute")
+            raise NotImplementedError(
+                "Subclasses of BaseMode must have 'keymap' attribute"
+            )
 
         if self.name is None:
-            raise NotImplementedError("Subclasses of Mode must have 'name' attribute")
+            raise NotImplementedError(
+                "Subclasses of BaseMode must have 'name' attribute"
+            )
 
         self.add_task(self.shared_task, "shared_task")
         self.add_task(self.cam_save_watch, "cam_save_watch")
@@ -41,7 +45,7 @@ class Mode(ABC):
         if self.keymap.get(action.quit):
             self.keymap[action.quit] = False
             self.close_scene()
-            self.change_mode("menu")
+            self.change_mode(Mode.menu)
         elif self.keymap.get(action.introspect):
             self.keymap[action.introspect] = False
             import pooltool as pt
@@ -54,14 +58,14 @@ class Mode(ABC):
         return task.cont
 
     def cam_save_watch(self, task):
-        if self.keymap.get(action.cam_save) and self.mode != "cam_save":
-            self.change_mode("cam_save")
+        if self.keymap.get(action.cam_save) and self.mode != Mode.cam_save:
+            self.change_mode(Mode.cam_save)
 
         return task.cont
 
     def cam_load_watch(self, task):
-        if self.keymap.get(action.cam_load) and self.mode != "cam_load":
-            self.change_mode("cam_load")
+        if self.keymap.get(action.cam_load) and self.mode != Mode.cam_load:
+            self.change_mode(Mode.cam_load)
 
         return task.cont
 

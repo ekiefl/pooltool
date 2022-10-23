@@ -7,12 +7,12 @@ from panda3d.core import TransparencyAttrib
 import pooltool.ani as ani
 import pooltool.ani.action as action
 import pooltool.constants as c
-from pooltool.ani.modes.datatypes import Mode, ModeName
+from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.utils import panda_path
 
 
-class CallShotMode(Mode):
-    name = ModeName.call_shot
+class CallShotMode(BaseMode):
+    name = Mode.call_shot
     keymap = {
         action.quit: False,
         action.call_shot: True,

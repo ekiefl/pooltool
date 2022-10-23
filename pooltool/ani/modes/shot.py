@@ -6,11 +6,11 @@ import pooltool as pt
 import pooltool.ani as ani
 import pooltool.ani.action as action
 import pooltool.ani.utils as autils
-from pooltool.ani.modes.datatypes import Mode, ModeName
+from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
-class ShotMode(Mode):
-    name = ModeName.shot
+class ShotMode(BaseMode):
+    name = Mode.shot
     keymap = {
         action.aim: False,
         action.move: False,
@@ -204,9 +204,9 @@ class ShotMode(Mode):
         elif self.keymap[action.aim]:
             self.game.advance(self.shots[-1])
             if self.game.game_over:
-                self.change_mode("game_over")
+                self.change_mode(Mode.game_over)
             else:
-                self.change_mode("aim", exit_kwargs=dict(key="advance"))
+                self.change_mode(Mode.aim, exit_kwargs=dict(key="advance"))
         elif self.keymap[action.zoom]:
             self.zoom_camera_shot()
         elif self.keymap[action.move]:

@@ -4,11 +4,11 @@ from direct.gui.DirectGui import OnscreenText
 
 import pooltool.ani.action as action
 from pooltool.ani.menu import GenericMenu
-from pooltool.ani.modes.datatypes import Mode, ModeName
+from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
-class GameOverMode(Mode):
-    name = ModeName.game_over
+class GameOverMode(BaseMode):
+    name = Mode.game_over
     col_spacing = 0.25
     row_spacing = 0.04
     stat_font_size = 0.04

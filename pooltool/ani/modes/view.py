@@ -5,11 +5,11 @@ import numpy as np
 import pooltool.ani as ani
 import pooltool.ani.action as action
 import pooltool.ani.utils as autils
-from pooltool.ani.modes.datatypes import Mode, ModeName
+from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
-class ViewMode(Mode):
-    name = ModeName.view
+class ViewMode(BaseMode):
+    name = Mode.view
     keymap = {
         action.aim: False,
         action.call_shot: False,
@@ -41,7 +41,7 @@ class ViewMode(Mode):
             self.shots.active.cue.hide_nodes(ignore=("cue_cseg",))
 
         if load_prev_cam:
-            self.player_cam.load_state("view")
+            self.player_cam.load_state(Mode.view)
 
         self.scale_focus()
 
@@ -81,17 +81,17 @@ class ViewMode(Mode):
         self.remove_task("view_task")
         if ani.settings["gameplay"]["cue_collision"]:
             self.remove_task("collision_task")
-        self.player_cam.store_state("view", overwrite=True)
+        self.player_cam.store_state(Mode.view, overwrite=True)
 
     def view_task(self, task):
         if self.keymap[action.stroke]:
-            self.change_mode("stroke")
+            self.change_mode(Mode.stroke)
         elif self.keymap[action.pick_ball]:
-            self.change_mode("pick_ball")
+            self.change_mode(Mode.pick_ball)
         elif self.keymap[action.call_shot]:
-            self.change_mode("call_shot")
+            self.change_mode(Mode.call_shot)
         elif self.keymap[action.ball_in_hand]:
-            self.change_mode("ball_in_hand")
+            self.change_mode(Mode.ball_in_hand)
         elif self.keymap[action.zoom]:
             self.zoom_camera_view()
         elif self.keymap[action.move]:
@@ -110,19 +110,19 @@ class ViewMode(Mode):
         elif self.keymap[action.power]:
             self.view_apply_power()
         elif self.keymap[action.aim]:
-            self.change_mode("aim", enter_kwargs=dict(load_prev_cam=True))
+            self.change_mode(Mode.aim, enter_kwargs=dict(load_prev_cam=True))
         elif self.keymap[action.exec_shot]:
-            self.mode_stroked_from = "view"
+            self.mode_stroked_from = Mode.view
             self.shots.active.cue.set_object_state_as_render_state(skip_V0=True)
             self.shots.active.cue.strike()
-            self.change_mode("calculate")
+            self.change_mode(Mode.calculate)
         elif self.keymap[action.prev_shot]:
             self.keymap[action.prev_shot] = False
             if len(self.shots) > 1:
                 self.change_animation(
                     self.shots.active_index - 1
                 )  # ShotMode.change_animation
-                self.change_mode("shot", enter_kwargs=dict(init_animations=False))
+                self.change_mode(Mode.shot, enter_kwargs=dict(init_animations=False))
                 return task.done
         else:
             self.rotate_camera_view()
@@ -132,13 +132,15 @@ class ViewMode(Mode):
     def scale_focus(self):
         """Scale the camera's focus object
 
-        The focus marker is a small dot to show where the camera is centered, and where it rotates
-        about. This helps a lot in navigating the camera effectively. Here the marker is scaled
-        so that it is always a constant size, regardless of how zoomed in or out the camera is.
+        The focus marker is a small dot to show where the camera is centered, and where
+        it rotates about. This helps a lot in navigating the camera effectively. Here
+        the marker is scaled so that it is always a constant size, regardless of how
+        zoomed in or out the camera is.
         """
-        # `dist` is the distance from the camera to the focus object and is equivalent to:
-        # cam_pos, focus_pos = self.player_cam.node.getPos(render), self.player_cam.focus_object.getPos(render)
-        # dist = (cam_pos - focus_pos).length()
+        # `dist` is the distance from the camera to the focus object and is equivalent
+        # to: cam_pos, focus_pos = self.player_cam.node.getPos(render),
+        # self.player_cam.focus_object.getPos(render) dist = (cam_pos -
+        # focus_pos).length()
         dist = self.player_cam.node.getX()
         self.player_cam.focus_object.setScale(0.002 * dist)
 
