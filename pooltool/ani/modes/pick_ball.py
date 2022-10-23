@@ -4,16 +4,16 @@
 import numpy as np
 
 import pooltool.ani as ani
-import pooltool.ani.action as action
 import pooltool.constants as c
+from pooltool.ani.action import Action
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
 class PickBallMode(BaseMode):
     name = Mode.pick_ball
     keymap = {
-        action.quit: False,
-        action.pick_ball: True,
+        Action.quit: False,
+        Action.pick_ball: True,
         "done": False,
     }
 
@@ -27,9 +27,9 @@ class PickBallMode(BaseMode):
 
         self.closest_ball = None
 
-        self.task_action("escape", action.quit, True)
-        self.task_action("q", action.pick_ball, True)
-        self.task_action("q-up", action.pick_ball, False)
+        self.task_action("escape", Action.quit, True)
+        self.task_action("q", Action.pick_ball, True)
+        self.task_action("q-up", Action.pick_ball, False)
         self.task_action("mouse1-up", "done", True)
 
         self.add_task(self.pick_ball_task, "pick_ball_task")
@@ -39,7 +39,7 @@ class PickBallMode(BaseMode):
         self.remove_task("pick_ball_task")
 
     def pick_ball_task(self, task):
-        if not self.keymap[action.pick_ball]:
+        if not self.keymap[Action.pick_ball]:
             self.change_mode(Mode.aim)
             return task.done
 

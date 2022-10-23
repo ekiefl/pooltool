@@ -2,7 +2,7 @@
 
 from direct.gui.DirectGui import DGG
 
-import pooltool.ani.action as action
+from pooltool.ani.action import Action
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 
@@ -10,8 +10,8 @@ from pooltool.ani.modes.datatypes import BaseMode, Mode
 class CamSaveMode(BaseMode):
     name = Mode.cam_save
     keymap = {
-        action.quit: False,
-        action.cam_save: True,
+        Action.quit: False,
+        Action.cam_save: True,
     }
 
     def enter(self):
@@ -20,9 +20,9 @@ class CamSaveMode(BaseMode):
         self.mouse.track()
         self.selection = None
 
-        self.task_action("escape", action.quit, True)
-        self.task_action("1", action.cam_save, True)
-        self.task_action("1-up", action.cam_save, False)
+        self.task_action("escape", Action.quit, True)
+        self.task_action("1", Action.cam_save, True)
+        self.task_action("1-up", Action.cam_save, False)
 
         self.render_camera_save_buttons()
         self.add_task(self.cam_save_task, "cam_save_task")
@@ -70,7 +70,7 @@ class CamSaveMode(BaseMode):
         del self.selection
 
     def cam_save_task(self, task):
-        if not self.keymap[action.cam_save]:
+        if not self.keymap[Action.cam_save]:
             enter_kwargs = (
                 dict(load_prev_cam=True) if self.last_mode == Mode.aim else dict()
             )

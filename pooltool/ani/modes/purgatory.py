@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 import pooltool.ani as ani
-import pooltool.ani.action as action
+from pooltool.ani.action import Action
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
@@ -25,7 +25,7 @@ class PurgatoryMode(BaseMode):
 
     name = Mode.purgatory
     keymap = {
-        action.regain_control: False,
+        Action.regain_control: False,
     }
 
     def __init__(self):
@@ -39,8 +39,8 @@ class PurgatoryMode(BaseMode):
         self.mouse.show()
         self.mouse.absolute()
 
-        self.task_action("mouse1-up", action.regain_control, True)
-        self.task_action("mouse1-down", action.regain_control, False)
+        self.task_action("mouse1-up", Action.regain_control, True)
+        self.task_action("mouse1-down", Action.regain_control, False)
 
         self.add_task(self.purgatory_task, "purgatory_task")
 
@@ -51,7 +51,7 @@ class PurgatoryMode(BaseMode):
         self.global_clock.setFrameRate(ani.settings["graphics"]["fps"])
 
     def purgatory_task(self, task):
-        if self.keymap[action.regain_control]:
+        if self.keymap[Action.regain_control]:
             self.change_mode(self.last_mode)
 
         is_window_active = self.base.win.get_properties().foreground
