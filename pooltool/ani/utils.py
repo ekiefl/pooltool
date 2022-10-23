@@ -3,7 +3,7 @@
 import numpy as np
 from direct.gui.DirectGui import DGG
 from direct.gui.DirectGuiBase import DirectGuiWidget
-from panda3d.core import *
+from panda3d.core import LVector3, Quat, Vec3
 from pandac.PandaModules import NodePath, PGItem, Vec4
 
 import pooltool.utils as utils
