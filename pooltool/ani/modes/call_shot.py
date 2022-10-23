@@ -5,8 +5,8 @@ from direct.interval.IntervalGlobal import LerpFunc, Parallel
 from panda3d.core import TransparencyAttrib
 
 import pooltool.ani as ani
-import pooltool.ani.action as action
 import pooltool.constants as c
+from pooltool.ani.action import Action
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.utils import panda_path
 
@@ -14,8 +14,8 @@ from pooltool.utils import panda_path
 class CallShotMode(BaseMode):
     name = Mode.call_shot
     keymap = {
-        action.quit: False,
-        action.call_shot: True,
+        Action.quit: False,
+        Action.call_shot: True,
         "next": False,
     }
 
@@ -38,9 +38,9 @@ class CallShotMode(BaseMode):
         self.closest_pocket = None
         self.closest_ball = None
 
-        self.task_action("escape", action.quit, True)
-        self.task_action("c", action.call_shot, True)
-        self.task_action("c-up", action.call_shot, False)
+        self.task_action("escape", Action.quit, True)
+        self.task_action("c", Action.call_shot, True)
+        self.task_action("c-up", Action.call_shot, False)
         self.task_action("mouse1-up", "next", True)
 
         self.picking = "ball"
@@ -56,7 +56,7 @@ class CallShotMode(BaseMode):
         self.player_cam.focus.setR(self.player_cam.focus.getR() + self.head_raise)
 
     def call_shot_task(self, task):
-        if not self.keymap[action.call_shot]:
+        if not self.keymap[Action.call_shot]:
             self.change_mode(self.last_mode)
             return task.done
 

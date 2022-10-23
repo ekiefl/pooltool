@@ -3,33 +3,33 @@
 import numpy as np
 
 import pooltool.ani as ani
-import pooltool.ani.action as action
 import pooltool.ani.utils as autils
+from pooltool.ani.action import Action
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
 class ViewMode(BaseMode):
     name = Mode.view
     keymap = {
-        action.aim: False,
-        action.call_shot: False,
-        action.fine_control: False,
-        action.move: False,
-        action.stroke: False,
-        action.quit: False,
-        action.zoom: False,
-        action.cam_save: False,
-        action.cam_load: False,
-        action.show_help: False,
-        action.pick_ball: False,
-        action.ball_in_hand: False,
-        action.power: False,
-        action.elevation: False,
-        action.english: False,
-        action.prev_shot: False,
-        action.introspect: False,
-        action.hide_cue: False,
-        action.exec_shot: False,
+        Action.aim: False,
+        Action.call_shot: False,
+        Action.fine_control: False,
+        Action.move: False,
+        Action.stroke: False,
+        Action.quit: False,
+        Action.zoom: False,
+        Action.cam_save: False,
+        Action.cam_load: False,
+        Action.show_help: False,
+        Action.pick_ball: False,
+        Action.ball_in_hand: False,
+        Action.power: False,
+        Action.elevation: False,
+        Action.english: False,
+        Action.prev_shot: False,
+        Action.introspect: False,
+        Action.hide_cue: False,
+        Action.exec_shot: False,
     }
 
     def enter(self, move_active=False, load_prev_cam=False):
@@ -46,32 +46,32 @@ class ViewMode(BaseMode):
         self.scale_focus()
 
         if move_active:
-            self.keymap[action.move] = True
+            self.keymap[Action.move] = True
 
-        self.task_action("escape", action.quit, True)
-        self.task_action("mouse1", action.zoom, True)
-        self.task_action("mouse1-up", action.zoom, False)
-        self.task_action("a", action.aim, True)
-        self.task_action("v", action.move, True)
-        self.task_action("s", action.stroke, True)
-        self.task_action("v-up", action.move, False)
-        self.task_action("1", action.cam_save, True)
-        self.task_action("2", action.cam_load, True)
-        self.task_action("h", action.show_help, True)
-        self.task_action("q", action.pick_ball, True)
-        self.task_action("g", action.ball_in_hand, True)
-        self.task_action("c", action.call_shot, True)
-        self.task_action("i", action.introspect, True)
-        self.task_action("i-up", action.introspect, False)
-        self.task_action("b", action.elevation, True)
-        self.task_action("b-up", action.hide_cue, True)
-        self.task_action("e", action.english, True)
-        self.task_action("e-up", action.hide_cue, True)
-        self.task_action("x", action.power, True)
-        self.task_action("x-up", action.hide_cue, True)
-        self.task_action("p-up", action.prev_shot, True)
-        self.task_action("space", action.exec_shot, True)
-        self.task_action("space-up", action.exec_shot, False)
+        self.task_action("escape", Action.quit, True)
+        self.task_action("mouse1", Action.zoom, True)
+        self.task_action("mouse1-up", Action.zoom, False)
+        self.task_action("a", Action.aim, True)
+        self.task_action("v", Action.move, True)
+        self.task_action("s", Action.stroke, True)
+        self.task_action("v-up", Action.move, False)
+        self.task_action("1", Action.cam_save, True)
+        self.task_action("2", Action.cam_load, True)
+        self.task_action("h", Action.show_help, True)
+        self.task_action("q", Action.pick_ball, True)
+        self.task_action("g", Action.ball_in_hand, True)
+        self.task_action("c", Action.call_shot, True)
+        self.task_action("i", Action.introspect, True)
+        self.task_action("i-up", Action.introspect, False)
+        self.task_action("b", Action.elevation, True)
+        self.task_action("b-up", Action.hide_cue, True)
+        self.task_action("e", Action.english, True)
+        self.task_action("e-up", Action.hide_cue, True)
+        self.task_action("x", Action.power, True)
+        self.task_action("x-up", Action.hide_cue, True)
+        self.task_action("p-up", Action.prev_shot, True)
+        self.task_action("space", Action.exec_shot, True)
+        self.task_action("space-up", Action.exec_shot, False)
 
         self.add_task(self.view_task, "view_task")
         if ani.settings["gameplay"]["cue_collision"]:
@@ -84,40 +84,40 @@ class ViewMode(BaseMode):
         self.player_cam.store_state(Mode.view, overwrite=True)
 
     def view_task(self, task):
-        if self.keymap[action.stroke]:
+        if self.keymap[Action.stroke]:
             self.change_mode(Mode.stroke)
-        elif self.keymap[action.pick_ball]:
+        elif self.keymap[Action.pick_ball]:
             self.change_mode(Mode.pick_ball)
-        elif self.keymap[action.call_shot]:
+        elif self.keymap[Action.call_shot]:
             self.change_mode(Mode.call_shot)
-        elif self.keymap[action.ball_in_hand]:
+        elif self.keymap[Action.ball_in_hand]:
             self.change_mode(Mode.ball_in_hand)
-        elif self.keymap[action.zoom]:
+        elif self.keymap[Action.zoom]:
             self.zoom_camera_view()
-        elif self.keymap[action.move]:
+        elif self.keymap[Action.move]:
             self.move_camera_view()
-        elif self.keymap[action.hide_cue]:
-            self.keymap[action.hide_cue] = False
-            self.keymap[action.english] = False
-            self.keymap[action.elevation] = False
-            self.keymap[action.power] = False
+        elif self.keymap[Action.hide_cue]:
+            self.keymap[Action.hide_cue] = False
+            self.keymap[Action.english] = False
+            self.keymap[Action.elevation] = False
+            self.keymap[Action.power] = False
             if self.shots.active is not None:
                 self.shots.active.cue.hide_nodes(ignore=("cue_cseg",))
-        elif self.keymap[action.elevation]:
+        elif self.keymap[Action.elevation]:
             self.view_elevate_cue()
-        elif self.keymap[action.english]:
+        elif self.keymap[Action.english]:
             self.view_apply_english()
-        elif self.keymap[action.power]:
+        elif self.keymap[Action.power]:
             self.view_apply_power()
-        elif self.keymap[action.aim]:
+        elif self.keymap[Action.aim]:
             self.change_mode(Mode.aim, enter_kwargs=dict(load_prev_cam=True))
-        elif self.keymap[action.exec_shot]:
+        elif self.keymap[Action.exec_shot]:
             self.mode_stroked_from = Mode.view
             self.shots.active.cue.set_object_state_as_render_state(skip_V0=True)
             self.shots.active.cue.strike()
             self.change_mode(Mode.calculate)
-        elif self.keymap[action.prev_shot]:
-            self.keymap[action.prev_shot] = False
+        elif self.keymap[Action.prev_shot]:
+            self.keymap[Action.prev_shot] = False
             if len(self.shots) > 1:
                 self.change_animation(
                     self.shots.active_index - 1
@@ -170,7 +170,7 @@ class ViewMode(BaseMode):
         )
 
     def rotate_camera_view(self):
-        if self.keymap[action.fine_control]:
+        if self.keymap[Action.fine_control]:
             fx, fy = ani.rotate_fine_sensitivity_x, ani.rotate_fine_sensitivity_y
         else:
             fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y

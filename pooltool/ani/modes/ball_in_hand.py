@@ -5,8 +5,8 @@ from direct.interval.IntervalGlobal import Parallel
 from panda3d.core import TransparencyAttrib
 
 import pooltool.ani as ani
-import pooltool.ani.action as action
 import pooltool.constants as c
+from pooltool.ani.action import Action
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.utils import panda_path
 
@@ -14,8 +14,8 @@ from pooltool.utils import panda_path
 class BallInHandMode(BaseMode):
     name = Mode.ball_in_hand
     keymap = {
-        action.quit: False,
-        action.ball_in_hand: True,
+        Action.quit: False,
+        Action.ball_in_hand: True,
         "next": False,
     }
 
@@ -34,9 +34,9 @@ class BallInHandMode(BaseMode):
 
         self.grabbed_ball = None
 
-        self.task_action("escape", action.quit, True)
-        self.task_action("g", action.ball_in_hand, True)
-        self.task_action("g-up", action.ball_in_hand, False)
+        self.task_action("escape", Action.quit, True)
+        self.task_action("g", Action.ball_in_hand, True)
+        self.task_action("g-up", Action.ball_in_hand, False)
         self.task_action("mouse1-up", "next", True)
 
         num_options = len(self.game.active_player.ball_in_hand)
@@ -68,7 +68,7 @@ class BallInHandMode(BaseMode):
         self.grab_selection_highlight_sequence.pause()
 
     def ball_in_hand_task(self, task):
-        if not self.keymap[action.ball_in_hand]:
+        if not self.keymap[Action.ball_in_hand]:
             self.change_mode(
                 self.last_mode,
                 enter_kwargs=dict(load_prev_cam=False),

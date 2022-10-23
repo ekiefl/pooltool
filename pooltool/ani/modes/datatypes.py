@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-import pooltool.ani.action as action
+from pooltool.ani.action import Action
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -42,12 +42,12 @@ class BaseMode(ABC):
         self.add_task(self.help_watch, "help_watch")
 
     def shared_task(self, task):
-        if self.keymap.get(action.quit):
-            self.keymap[action.quit] = False
+        if self.keymap.get(Action.quit):
+            self.keymap[Action.quit] = False
             self.close_scene()
             self.change_mode(Mode.menu)
-        elif self.keymap.get(action.introspect):
-            self.keymap[action.introspect] = False
+        elif self.keymap.get(Action.introspect):
+            self.keymap[Action.introspect] = False
             import pooltool as pt
 
             shot = self.shots.active
@@ -58,20 +58,20 @@ class BaseMode(ABC):
         return task.cont
 
     def cam_save_watch(self, task):
-        if self.keymap.get(action.cam_save) and self.mode != Mode.cam_save:
+        if self.keymap.get(Action.cam_save) and self.mode != Mode.cam_save:
             self.change_mode(Mode.cam_save)
 
         return task.cont
 
     def cam_load_watch(self, task):
-        if self.keymap.get(action.cam_load) and self.mode != Mode.cam_load:
+        if self.keymap.get(Action.cam_load) and self.mode != Mode.cam_load:
             self.change_mode(Mode.cam_load)
 
         return task.cont
 
     def help_watch(self, task):
-        if self.keymap.get(action.show_help):
-            self.keymap[action.show_help] = False
+        if self.keymap.get(Action.show_help):
+            self.keymap[Action.show_help] = False
             if self.help_node.is_hidden():
                 self.help_node.show()
             else:

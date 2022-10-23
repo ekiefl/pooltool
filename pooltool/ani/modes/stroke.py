@@ -1,15 +1,15 @@
 #! /usr/bin/env python
 
 import pooltool.ani as ani
-import pooltool.ani.action as action
+from pooltool.ani.action import Action
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
 class StrokeMode(BaseMode):
     name = Mode.stroke
     keymap = {
-        action.fine_control: False,
-        action.stroke: True,
+        Action.fine_control: False,
+        Action.stroke: True,
     }
 
     def enter(self):
@@ -21,10 +21,10 @@ class StrokeMode(BaseMode):
         self.shots.active.cue.track_stroke()
         self.shots.active.cue.show_nodes(ignore=("cue_cseg",))
 
-        self.task_action("f", action.fine_control, True)
-        self.task_action("f-up", action.fine_control, False)
-        self.task_action("s", action.stroke, True)
-        self.task_action("s-up", action.stroke, False)
+        self.task_action("f", Action.fine_control, True)
+        self.task_action("f-up", Action.fine_control, False)
+        self.task_action("s", Action.stroke, True)
+        self.task_action("s-up", Action.stroke, False)
 
         self.add_task(self.stroke_task, "stroke_task")
 
@@ -33,7 +33,7 @@ class StrokeMode(BaseMode):
         self.player_cam.store_state(Mode.stroke, overwrite=True)
 
     def stroke_task(self, task):
-        if self.keymap[action.stroke]:
+        if self.keymap[Action.stroke]:
             if self.game.is_call_pocket and self.game.pocket_call is None:
                 return task.cont
             if self.game.is_call_ball and self.game.ball_call is None:

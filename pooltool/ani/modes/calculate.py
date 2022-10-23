@@ -4,7 +4,7 @@ import numpy as np
 
 import pooltool as pt
 import pooltool.ani as ani
-import pooltool.ani.action as action
+from pooltool.ani.action import Action
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 
@@ -12,10 +12,10 @@ from pooltool.ani.modes.datatypes import BaseMode, Mode
 class CalculateMode(BaseMode):
     name = Mode.calculate
     keymap = {
-        action.move: False,
-        action.quit: False,
-        action.zoom: False,
-        action.show_help: False,
+        Action.move: False,
+        Action.quit: False,
+        Action.zoom: False,
+        Action.show_help: False,
     }
 
     def enter(self):
@@ -31,13 +31,13 @@ class CalculateMode(BaseMode):
 
         self.add_task(self.run_simulation, "run_simulation", taskChain="simulation")
 
-        self.task_action("escape", action.quit, True)
-        self.task_action("mouse1", action.zoom, True)
-        self.task_action("mouse1-up", action.zoom, False)
-        self.task_action("a", action.aim, True)
-        self.task_action("v", action.move, True)
-        self.task_action("v-up", action.move, False)
-        self.task_action("h", action.show_help, True)
+        self.task_action("escape", Action.quit, True)
+        self.task_action("mouse1", Action.zoom, True)
+        self.task_action("mouse1-up", Action.zoom, False)
+        self.task_action("a", Action.aim, True)
+        self.task_action("v", Action.move, True)
+        self.task_action("v-up", Action.move, False)
+        self.task_action("h", Action.show_help, True)
 
         self.add_task(self.calculate_view_task, "calculate_view_task")
 
@@ -49,9 +49,9 @@ class CalculateMode(BaseMode):
         if "run_simulation" not in self.tasks:
             # simulation calculation is finished
             self.change_mode(Mode.shot, enter_kwargs=dict(init_animations=True))
-        elif self.keymap[action.zoom]:
+        elif self.keymap[Action.zoom]:
             self.zoom_camera_calculate()
-        elif self.keymap[action.move]:
+        elif self.keymap[Action.move]:
             self.move_camera_calculate()
         else:
             if task.time > ani.rotate_downtime:

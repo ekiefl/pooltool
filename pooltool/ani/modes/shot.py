@@ -4,31 +4,31 @@ import numpy as np
 
 import pooltool as pt
 import pooltool.ani as ani
-import pooltool.ani.action as action
 import pooltool.ani.utils as autils
+from pooltool.ani.action import Action
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
 class ShotMode(BaseMode):
     name = Mode.shot
     keymap = {
-        action.aim: False,
-        action.move: False,
-        action.toggle_pause: False,
-        action.undo_shot: False,
-        action.restart_ani: False,
-        action.quit: False,
-        action.zoom: False,
-        action.rewind: False,
-        action.fast_forward: False,
-        action.cam_save: False,
-        action.cam_load: False,
-        action.show_help: False,
-        action.close_scene: False,
-        action.introspect: False,
-        action.next_shot: False,
-        action.prev_shot: False,
-        action.parallel: False,
+        Action.aim: False,
+        Action.move: False,
+        Action.toggle_pause: False,
+        Action.undo_shot: False,
+        Action.restart_ani: False,
+        Action.quit: False,
+        Action.zoom: False,
+        Action.rewind: False,
+        Action.fast_forward: False,
+        Action.cam_save: False,
+        Action.cam_load: False,
+        Action.show_help: False,
+        Action.close_scene: False,
+        Action.introspect: False,
+        Action.next_shot: False,
+        Action.prev_shot: False,
+        Action.parallel: False,
     }
 
     def enter(self, init_animations=False, single_instance=False):
@@ -66,32 +66,32 @@ class ShotMode(BaseMode):
         self.accept("arrow_down", self.shots.slow_down)
 
         if single_instance:
-            self.task_action("escape", action.close_scene, True)
-            self.task_action("escape-up", action.close_scene, False)
+            self.task_action("escape", Action.close_scene, True)
+            self.task_action("escape-up", Action.close_scene, False)
         else:
-            self.task_action("escape", action.quit, True)
-            self.task_action("a", action.aim, True)
-            self.task_action("z", action.undo_shot, True)
-            self.task_action("z-up", action.undo_shot, False)
+            self.task_action("escape", Action.quit, True)
+            self.task_action("a", Action.aim, True)
+            self.task_action("z", Action.undo_shot, True)
+            self.task_action("z-up", Action.undo_shot, False)
 
-        self.task_action("mouse1", action.zoom, True)
-        self.task_action("mouse1-up", action.zoom, False)
-        self.task_action("v", action.move, True)
-        self.task_action("v-up", action.move, False)
-        self.task_action("r", action.restart_ani, True)
-        self.task_action("r-up", action.restart_ani, False)
-        self.task_action("arrow_left", action.rewind, True)
-        self.task_action("arrow_left-up", action.rewind, False)
-        self.task_action("arrow_right", action.fast_forward, True)
-        self.task_action("arrow_right-up", action.fast_forward, False)
-        self.task_action("1", action.cam_save, True)
-        self.task_action("2", action.cam_load, True)
-        self.task_action("h", action.show_help, True)
-        self.task_action("i", action.introspect, True)
-        self.task_action("i-up", action.introspect, False)
-        self.task_action("n-up", action.next_shot, True)
-        self.task_action("p-up", action.prev_shot, True)
-        self.task_action("enter-up", action.parallel, True)
+        self.task_action("mouse1", Action.zoom, True)
+        self.task_action("mouse1-up", Action.zoom, False)
+        self.task_action("v", Action.move, True)
+        self.task_action("v-up", Action.move, False)
+        self.task_action("r", Action.restart_ani, True)
+        self.task_action("r-up", Action.restart_ani, False)
+        self.task_action("arrow_left", Action.rewind, True)
+        self.task_action("arrow_left-up", Action.rewind, False)
+        self.task_action("arrow_right", Action.fast_forward, True)
+        self.task_action("arrow_right-up", Action.fast_forward, False)
+        self.task_action("1", Action.cam_save, True)
+        self.task_action("2", Action.cam_load, True)
+        self.task_action("h", Action.show_help, True)
+        self.task_action("i", Action.introspect, True)
+        self.task_action("i-up", Action.introspect, False)
+        self.task_action("n-up", Action.next_shot, True)
+        self.task_action("p-up", Action.prev_shot, True)
+        self.task_action("enter-up", Action.parallel, True)
 
         self.add_task(self.shot_view_task, "shot_view_task")
         self.add_task(self.shot_animation_task, "shot_animation_task")
@@ -196,20 +196,20 @@ class ShotMode(BaseMode):
         self.remove_task("shot_animation_task")
 
     def shot_view_task(self, task):
-        if self.keymap[action.close_scene]:
+        if self.keymap[Action.close_scene]:
             self.player_cam.store_state("last_scene", overwrite=True)
             self.close_scene()
             self.end_mode()
             self.stop()
-        elif self.keymap[action.aim]:
+        elif self.keymap[Action.aim]:
             self.game.advance(self.shots[-1])
             if self.game.game_over:
                 self.change_mode(Mode.game_over)
             else:
                 self.change_mode(Mode.aim, exit_kwargs=dict(key="advance"))
-        elif self.keymap[action.zoom]:
+        elif self.keymap[Action.zoom]:
             self.zoom_camera_shot()
-        elif self.keymap[action.move]:
+        elif self.keymap[Action.move]:
             self.move_camera_shot()
         else:
             if task.time > ani.rotate_downtime:
@@ -222,30 +222,30 @@ class ShotMode(BaseMode):
         return task.cont
 
     def shot_animation_task(self, task):
-        if self.keymap[action.restart_ani]:
+        if self.keymap[Action.restart_ani]:
             self.shots.restart_animation()
 
-        elif self.keymap[action.rewind]:
+        elif self.keymap[Action.rewind]:
             self.shots.rewind()
 
-        elif self.keymap[action.fast_forward]:
+        elif self.keymap[Action.fast_forward]:
             self.shots.fast_forward()
 
-        elif self.keymap[action.undo_shot]:
+        elif self.keymap[Action.undo_shot]:
             self.change_mode(
                 self.mode_stroked_from,
                 exit_kwargs=dict(key="reset"),
                 enter_kwargs=dict(load_prev_cam=True),
             )
 
-        elif self.keymap[action.parallel]:
-            self.keymap[action.parallel] = False
+        elif self.keymap[Action.parallel]:
+            self.keymap[Action.parallel] = False
             self.shots.toggle_parallel()
             if not self.shots.parallel:
                 self.change_animation(self.shots.active_index)
 
-        elif self.keymap[action.prev_shot]:
-            self.keymap[action.prev_shot] = False
+        elif self.keymap[Action.prev_shot]:
+            self.keymap[Action.prev_shot] = False
             shot_index = self.shots.active_index - 1
             while True:
                 if shot_index < 0:
@@ -267,8 +267,8 @@ class ShotMode(BaseMode):
                 self.hud_elements.get("jack").set(self.shots.active.cue.theta)
                 self.hud_elements.get("power").set(self.shots.active.cue.V0)
 
-        elif self.keymap[action.next_shot]:
-            self.keymap[action.next_shot] = False
+        elif self.keymap[Action.next_shot]:
+            self.keymap[Action.next_shot] = False
             shot_index = self.shots.active_index + 1
             while True:
                 if shot_index == len(self.shots):
