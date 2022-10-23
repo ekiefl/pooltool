@@ -23,6 +23,8 @@ class HUD:
         pass
 
     def init_hud(self):
+        """Initialize HUD elements and return HUD update task"""
+
         self.hud_elements = {
             "logo": Logo(),
             "log_win": LogWindow(),
@@ -35,12 +37,9 @@ class HUD:
         for element in self.hud_elements.values():
             element.init()
 
-        self.add_task(self.update_hud, "update_hud")
+        return self.update_hud
 
     def destroy_hud(self):
-        self.remove_task("update_hud")
-
-        # remove log messages
         for element in self.hud_elements.values():
             element.destroy()
 

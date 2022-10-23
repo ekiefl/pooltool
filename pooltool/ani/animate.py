@@ -242,7 +242,9 @@ class Interface(ShowBase, ModeManager, HUD):
 
         self.environment.unload_room()
         self.environment.unload_lights()
+
         self.destroy_hud()
+        self.remove_task("update_hud")
 
         if len(self.shots):
             self.shots.clear_animation()
@@ -469,7 +471,9 @@ class ShotViewer(Interface):
         self.help_hint.hide()
         self.mouse = Mouse()
         self.init_system_nodes()
-        self.init_hud()
+
+        hud_task = self.init_hud()
+        self.add_task(hud_task, "update_hud")
 
         params = dict(
             init_animations=True,
@@ -538,7 +542,8 @@ class Play(Interface, Menus):
         self.setup_balls()
         self.setup_cue()
 
-        self.init_hud()
+        hud_task = self.init_hud()
+        self.add_task(hud_task, "update_hud")
 
     def setup_table(self):
         selected_table = self.setup_options["table_type"]
