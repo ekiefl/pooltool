@@ -128,12 +128,7 @@ class ModeManager(
 
 
 class Interface(ShowBase, ModeManager):
-    is_game = None
-
     def __init__(self, shot=None, monitor=False):
-        if self.is_game is None:
-            raise Exception(f"'{self.__class__.__name__}' must set 'is_game' attribute")
-
         self.stdout = pt.terminal.Run()
 
         super().__init__(self)
@@ -394,8 +389,6 @@ class Interface(ShowBase, ModeManager):
 
 
 class ShotViewer(Interface):
-    is_game = False
-
     def __init__(self, *args, **kwargs):
         Interface.__init__(self, *args, **kwargs)
         self.create_standby_screen()
@@ -498,8 +491,6 @@ class ShotViewer(Interface):
 
 
 class Play(Interface, Menus):
-    is_game = True
-
     def __init__(self, *args, **kwargs):
         Interface.__init__(self, *args, **kwargs)
         Menus.__init__(self)
