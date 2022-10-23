@@ -204,9 +204,9 @@ class ShotMode(Mode):
         elif self.keymap[action.aim]:
             self.game.advance(self.shots[-1])
             if self.game.game_over:
-                self.change_mode("game_over")
+                self.change_mode(ModeName.game_over)
             else:
-                self.change_mode("aim", exit_kwargs=dict(key="advance"))
+                self.change_mode(ModeName.aim, exit_kwargs=dict(key="advance"))
         elif self.keymap[action.zoom]:
             self.zoom_camera_shot()
         elif self.keymap[action.move]:

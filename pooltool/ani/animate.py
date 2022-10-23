@@ -37,6 +37,7 @@ from pooltool.ani.modes import (
     ViewMode,
     modes,
 )
+from pooltool.ani.modes.datatypes import ModeName
 from pooltool.ani.mouse import Mouse
 from pooltool.error import ConfigError
 from pooltool.objects.cue import Cue
@@ -62,8 +63,8 @@ class ModeManager(
     def __init__(self):
         # Init every Mode class
         self.modes = modes
-        for mode in modes.values():
-            mode.__init__(self)
+        for mode_cls in modes.values():
+            mode_cls.__init__(self)
 
         # Store the above as default states
         self.action_state_defaults = {}
@@ -85,7 +86,7 @@ class ModeManager(
         self.accept(keystroke, self.update_keymap, [action_name, action_state])
 
     def change_mode(self, mode, exit_kwargs={}, enter_kwargs={}):
-        assert mode in self.modes
+        assert mode in ModeName
 
         # Teardown operations for the old mode
         self.last_mode = self.mode
@@ -213,8 +214,8 @@ class Interface(ShowBase, ModeManager, HUD):
         self.fix_window_resize(win=win)
 
         is_window_active = self.base.win.get_properties().foreground
-        if not is_window_active and self.mode != "purgatory":
-            self.change_mode("purgatory")
+        if not is_window_active and self.mode != ModeName.purgatory:
+            self.change_mode(ModeName.purgatory)
 
     def listen_constant_events(self):
         """Listen for events that are mode independent"""
@@ -473,7 +474,7 @@ class ShotViewer(Interface):
             init_animations=True,
             single_instance=True,
         )
-        self.change_mode("shot", enter_kwargs=params)
+        self.change_mode(ModeName.shot, enter_kwargs=params)
 
         self.player_cam.load_state("last_scene", ok_if_not_exists=True)
 
@@ -499,7 +500,7 @@ class Play(Interface, Menus):
         Interface.__init__(self, *args, **kwargs)
         Menus.__init__(self)
 
-        self.change_mode("menu")
+        self.change_mode(ModeName.menu)
 
         # This task chain allows simulations to be run in parallel to the game processes
         self.task_mgr.setupTaskChain(
@@ -523,7 +524,7 @@ class Play(Interface, Menus):
         self.setup()
         self.init_system_nodes()
         self.init_collisions()
-        self.change_mode("aim")
+        self.change_mode(ModeName.aim)
 
     def close_scene(self):
         Interface.close_scene(self)

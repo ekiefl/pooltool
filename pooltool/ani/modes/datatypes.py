@@ -41,7 +41,7 @@ class Mode(ABC):
         if self.keymap.get(action.quit):
             self.keymap[action.quit] = False
             self.close_scene()
-            self.change_mode("menu")
+            self.change_mode(ModeName.menu)
         elif self.keymap.get(action.introspect):
             self.keymap[action.introspect] = False
             import pooltool as pt
@@ -54,14 +54,14 @@ class Mode(ABC):
         return task.cont
 
     def cam_save_watch(self, task):
-        if self.keymap.get(action.cam_save) and self.mode != "cam_save":
-            self.change_mode("cam_save")
+        if self.keymap.get(action.cam_save) and self.mode != ModeName.cam_save:
+            self.change_mode(ModeName.cam_save)
 
         return task.cont
 
     def cam_load_watch(self, task):
-        if self.keymap.get(action.cam_load) and self.mode != "cam_load":
-            self.change_mode("cam_load")
+        if self.keymap.get(action.cam_load) and self.mode != ModeName.cam_load:
+            self.change_mode(ModeName.cam_load)
 
         return task.cont
 

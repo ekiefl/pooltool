@@ -71,7 +71,9 @@ class CamSaveMode(Mode):
 
     def cam_save_task(self, task):
         if not self.keymap[action.cam_save]:
-            enter_kwargs = dict(load_prev_cam=True) if self.last_mode == "aim" else {}
+            enter_kwargs = (
+                dict(load_prev_cam=True) if self.last_mode == ModeName.aim else dict()
+            )
             self.change_mode(self.last_mode, enter_kwargs=enter_kwargs)
 
         return task.cont

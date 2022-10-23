@@ -30,7 +30,7 @@ class StrokeMode(Mode):
 
     def exit(self):
         self.remove_task("stroke_task")
-        self.player_cam.store_state("stroke", overwrite=True)
+        self.player_cam.store_state(ModeName.stroke, overwrite=True)
 
     def stroke_task(self, task):
         if self.keymap[action.stroke]:
@@ -44,7 +44,7 @@ class StrokeMode(Mode):
                 self.shots.active.cue.set_object_state_as_render_state()
                 self.shots.active.cue.strike()
                 self.shots.active.user_stroke = True
-                self.change_mode("calculate")
+                self.change_mode(ModeName.calculate)
                 return
         else:
             self.shots.active.cue.get_node("cue_stick").setX(0)

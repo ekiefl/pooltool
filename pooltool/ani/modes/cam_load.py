@@ -15,8 +15,8 @@ class CamLoadMode(Mode):
     }
 
     def enter(self):
-        if self.last_mode == "aim":
-            self.last_mode = "view"
+        if self.last_mode == ModeName.aim:
+            self.last_mode = ModeName.view
         self.mouse.show()
         self.mouse.absolute()
         self.mouse.track()
@@ -69,7 +69,9 @@ class CamLoadMode(Mode):
 
     def cam_load_task(self, task):
         if not self.keymap[action.cam_load]:
-            enter_kwargs = dict(load_prev_cam=True) if self.last_mode == "aim" else {}
+            enter_kwargs = (
+                dict(load_prev_cam=True) if self.last_mode == ModeName.aim else dict()
+            )
             self.change_mode(self.last_mode, enter_kwargs=enter_kwargs)
 
         return task.cont

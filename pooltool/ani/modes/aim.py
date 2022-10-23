@@ -55,7 +55,7 @@ class AimMode(Mode, CueAvoid):
             self.shots.active.cue.cueing_ball.get_node("pos").getPos()
         )
         if load_prev_cam:
-            self.player_cam.load_state("aim")
+            self.player_cam.load_state(ModeName.aim)
 
         self.task_action("escape", action.quit, True)
         self.task_action("f", action.fine_control, True)
@@ -95,20 +95,20 @@ class AimMode(Mode, CueAvoid):
         if ani.settings["gameplay"]["cue_collision"]:
             self.remove_task("collision_task")
 
-        self.player_cam.store_state("aim", overwrite=True)
+        self.player_cam.store_state(ModeName.aim, overwrite=True)
 
     def aim_task(self, task):
         if self.keymap[action.view]:
-            self.change_mode("view", enter_kwargs=dict(move_active=True))
+            self.change_mode(ModeName.view, enter_kwargs=dict(move_active=True))
             return task.done
         elif self.keymap[action.stroke]:
-            self.change_mode("stroke")
+            self.change_mode(ModeName.stroke)
         elif self.keymap[action.pick_ball]:
-            self.change_mode("pick_ball")
+            self.change_mode(ModeName.pick_ball)
         elif self.keymap[action.call_shot]:
-            self.change_mode("call_shot")
+            self.change_mode(ModeName.call_shot)
         elif self.keymap[action.ball_in_hand]:
-            self.change_mode("ball_in_hand")
+            self.change_mode(ModeName.ball_in_hand)
         elif self.keymap[action.zoom]:
             self.zoom_camera_aim()
         elif self.keymap[action.adjust_head]:
@@ -120,17 +120,19 @@ class AimMode(Mode, CueAvoid):
         elif self.keymap[action.power]:
             self.aim_apply_power()
         elif self.keymap[action.exec_shot]:
-            self.mode_stroked_from = "aim"
+            self.mode_stroked_from = ModeName.aim
             self.shots.active.cue.set_object_state_as_render_state(skip_V0=True)
             self.shots.active.cue.strike()
-            self.change_mode("calculate")
+            self.change_mode(ModeName.calculate)
         elif self.keymap[action.prev_shot]:
             self.keymap[action.prev_shot] = False
             if len(self.shots) > 1:
                 self.change_animation(
                     self.shots.active_index - 1
                 )  # ShotMode.change_animation
-                self.change_mode("shot", enter_kwargs=dict(init_animations=False))
+                self.change_mode(
+                    ModeName.shot, enter_kwargs=dict(init_animations=False)
+                )
                 return task.done
         else:
             self.rotate_camera_aim()
