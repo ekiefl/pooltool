@@ -242,7 +242,7 @@ class Interface(ShowBase, ModeManager):
         self.environment.unload_room()
         self.environment.unload_lights()
 
-        hud.destroy_hud()
+        hud.destroy()
         self.remove_task("update_hud")
 
         if len(self.shots):
@@ -471,7 +471,7 @@ class ShotViewer(Interface):
         self.mouse = Mouse()
         self.init_system_nodes()
 
-        hud_task = hud.init_hud()
+        hud_task = hud.init()
         self.add_task(hud_task, "update_hud")
 
         params = dict(
@@ -542,7 +542,7 @@ class Play(Interface, Menus):
         self.setup_cue()
 
         hud.attach_game(self.game)
-        hud_task = hud.init_hud()
+        hud_task = hud.init()
         self.add_task(hud_task, "update_hud")
 
     def setup_table(self):

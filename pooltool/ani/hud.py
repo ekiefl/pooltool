@@ -16,43 +16,54 @@ from panda3d.core import CardMaker, NodePath, TextNode, TransparencyAttrib
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 from pooltool.utils import panda_path
+from pooltool.utils.strenum import StrEnum, auto
+
+
+class HUDElement(StrEnum):
+    logo = auto()
+    log_win = auto()
+    english = auto()
+    jack = auto()
+    power = auto()
+    player_stats = auto()
 
 
 class HUD:
     def __init__(self):
         self.game = None
+        self.elements = None
 
     def attach_game(self, game):
         self.game = game
 
-    def init_hud(self):
+    def init(self):
         """Initialize HUD elements and return HUD update task"""
 
-        self.hud_elements = {
-            "logo": Logo(),
-            "log_win": LogWindow(),
-            "english": English(),
-            "jack": Jack(),
-            "power": Power(),
-            "player_stats": PlayerStats(),
+        self.elements = {
+            HUDElement.logo: Logo(),
+            HUDElement.log_win: LogWindow(),
+            HUDElement.english: English(),
+            HUDElement.jack: Jack(),
+            HUDElement.power: Power(),
+            HUDElement.player_stats: PlayerStats(),
         }
 
-        for element in self.hud_elements.values():
+        for element in self.elements.values():
             element.init()
 
         return self.update_hud
 
-    def destroy_hud(self):
-        for element in self.hud_elements.values():
+    def destroy(self):
+        for element in self.elements.values():
             element.destroy()
 
     def hide_hud_element(self, element):
-        assert element in self.hud_elements
-        self.hud_elements["element"].hide()
+        assert element in self.elements
+        self.elements["element"].hide()
 
     def show_hud_element(self, element):
-        assert element in self.hud_elements
-        self.hud_elements["element"].show()
+        assert element in self.elements
+        self.elements["element"].show()
 
     def update_hud(self, task):
         if self.game:
@@ -65,7 +76,7 @@ class HUD:
         if not self.game.update_player_stats:
             return
 
-        self.hud_elements["player_stats"].update(self.game)
+        self.elements["player_stats"].update(self.game)
         self.game.update_player_stats = False
 
     def update_log_window(self):
@@ -80,9 +91,9 @@ class HUD:
                         msg["msg"],
                         msg["sentiment"],
                     )
-                    self.hud_elements["log_win"].broadcast_msg(
+                    self.elements["log_win"].broadcast_msg(
                         f"({timestamp}) {msg_txt}",
-                        color=self.hud_elements["log_win"].colors[sentiment],
+                        color=self.elements["log_win"].colors[sentiment],
                     )
                     msg["broadcast"] = True
                 else:
@@ -91,10 +102,7 @@ class HUD:
         self.game.log.update = False
 
 
-hud = HUD()
-
-
-class HUDElement(ABC):
+class BaseHUDElement(ABC):
     def __init__(self):
         # Panda pollutes the global namespace, appease linters
         self.aspect2d = __builtins__["aspect2d"]
@@ -121,7 +129,7 @@ class HUDElement(ABC):
         pass
 
 
-class PlayerStats(HUDElement):
+class PlayerStats(BaseHUDElement):
     def __init__(self):
         self.top_spot = -0.18
         self.spacer = 0.05
@@ -178,9 +186,9 @@ class PlayerStats(HUDElement):
             self.on_screen.append(self.init_text_object(i, msg, color=color))
 
 
-class Logo(HUDElement):
+class Logo(BaseHUDElement):
     def __init__(self):
-        HUDElement.__init__(self)
+        BaseHUDElement.__init__(self)
 
         self.img = OnscreenImage(
             image=ani.logo_paths["pt_smaller"],
@@ -204,9 +212,9 @@ class Logo(HUDElement):
         del self.img
 
 
-class English(HUDElement):
+class English(BaseHUDElement):
     def __init__(self):
-        HUDElement.__init__(self)
+        BaseHUDElement.__init__(self)
         self.dir = ani.model_dir / "hud" / "english"
         self.text_scale = 0.2
         self.text_color = (1, 1, 1, 1)
@@ -258,7 +266,7 @@ class English(HUDElement):
         del self.circle
 
 
-class Power(NodePath, HUDElement):
+class Power(NodePath, BaseHUDElement):
     """Power meter indicating strength of shot
 
     Modified from drwr:
@@ -269,7 +277,7 @@ class Power(NodePath, HUDElement):
         self.min_strike = min_strike
         self.max_strike = max_strike
 
-        HUDElement.__init__(self)
+        BaseHUDElement.__init__(self)
         self.text_scale = 0.11
         self.text_color = (1, 1, 1, 1)
 
@@ -325,9 +333,9 @@ class Power(NodePath, HUDElement):
         self.bg.setScale(1.0 - value, 1, 1)
 
 
-class Jack(HUDElement):
+class Jack(BaseHUDElement):
     def __init__(self):
-        HUDElement.__init__(self)
+        BaseHUDElement.__init__(self)
         self.dir = ani.model_dir / "hud" / "jack"
         self.text_scale = 0.4
         self.text_color = (1, 1, 1, 1)
@@ -392,7 +400,7 @@ class Jack(HUDElement):
         del self.arc
 
 
-class LogWindow(HUDElement):
+class LogWindow(BaseHUDElement):
     def __init__(self):
         self.top_spot = -0.95
         self.spacer = 0.05
@@ -501,3 +509,6 @@ class LogWindow(HUDElement):
                 )
             animation.append(sequence)
         animation.start()
+
+
+hud = HUD()

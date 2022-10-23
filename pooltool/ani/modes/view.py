@@ -5,7 +5,7 @@ import numpy as np
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
-from pooltool.ani.hud import hud
+from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
@@ -192,8 +192,8 @@ class ViewMode(BaseMode):
             dy = self.mouse.get_dy()
 
         min_V0, max_V0 = (
-            hud.hud_elements["power"].min_strike,
-            hud.hud_elements["power"].max_strike,
+            hud.elements[HUDElement.power].min_strike,
+            hud.elements[HUDElement.power].max_strike,
         )
 
         V0 = self.shots.active.cue.V0 + dy * ani.power_sensitivity
@@ -203,7 +203,7 @@ class ViewMode(BaseMode):
             V0 = max_V0
 
         self.shots.active.cue.set_state(V0=V0)
-        hud.hud_elements["power"].set(V0)
+        hud.elements[HUDElement.power].set(V0)
 
     def view_elevate_cue(self):
         self.shots.active.cue.show_nodes(ignore=("cue_cseg",))
@@ -227,7 +227,7 @@ class ViewMode(BaseMode):
         cue.setR(-new_elevation)
 
         self.shots.active.cue.set_state(theta=new_elevation)
-        hud.hud_elements["jack"].set(new_elevation)
+        hud.elements[HUDElement.jack].set(new_elevation)
 
     def view_apply_english(self):
         self.shots.active.cue.show_nodes(ignore=("cue_cseg",))
@@ -267,5 +267,5 @@ class ViewMode(BaseMode):
             -self.shots.active.cue.get_node("cue_stick_focus").getR(),
         )
         self.shots.active.cue.set_state(a=a, b=b, theta=theta)
-        hud.hud_elements["english"].set(a, b)
-        hud.hud_elements["jack"].set(theta)
+        hud.elements[HUDElement.english].set(a, b)
+        hud.elements[HUDElement.jack].set(theta)
