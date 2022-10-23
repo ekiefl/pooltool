@@ -37,7 +37,10 @@ class HUD:
         self.game = game
 
     def init(self):
-        """Initialize HUD elements and return HUD update task"""
+        """Initialize HUD elements and return HUD update task
+
+        It is assumed that if this is being called, ShowBase has been initialized.
+        """
 
         self.elements = {
             HUDElement.logo: Logo(),
