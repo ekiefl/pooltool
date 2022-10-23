@@ -20,7 +20,10 @@ from pooltool.utils import panda_path
 
 class HUD:
     def __init__(self):
-        pass
+        self.game = None
+
+    def attach_game(self, game):
+        self.game = game
 
     def init_hud(self):
         """Initialize HUD elements and return HUD update task"""
@@ -52,7 +55,7 @@ class HUD:
         self.hud_elements["element"].show()
 
     def update_hud(self, task):
-        if self.is_game:
+        if self.game:
             self.update_log_window()
             self.update_player_stats()
 
@@ -86,6 +89,9 @@ class HUD:
                     break
 
         self.game.log.update = False
+
+
+hud = HUD()
 
 
 class HUDElement(ABC):

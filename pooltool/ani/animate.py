@@ -19,7 +19,7 @@ import pooltool.ani as ani
 import pooltool.ani.environment as environment
 import pooltool.games as games
 from pooltool.ani.camera import PlayerCam
-from pooltool.ani.hud import HUD
+from pooltool.ani.hud import hud
 from pooltool.ani.menu import GenericMenu, Menus
 from pooltool.ani.modes import (
     AimMode,
@@ -127,7 +127,7 @@ class ModeManager(
             self.keymap[key] = self.action_state_defaults[self.mode][key]
 
 
-class Interface(ShowBase, ModeManager, HUD):
+class Interface(ShowBase, ModeManager):
     is_game = None
 
     def __init__(self, shot=None, monitor=False):
@@ -145,7 +145,6 @@ class Interface(ShowBase, ModeManager, HUD):
         self.task_mgr = __builtins__["taskMgr"]
         self.base = __builtins__["base"]
 
-        HUD.__init__(self)
         self.base.setBackgroundColor(0.04, 0.04, 0.04)
         simplepbr.init(
             enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
@@ -243,7 +242,7 @@ class Interface(ShowBase, ModeManager, HUD):
         self.environment.unload_room()
         self.environment.unload_lights()
 
-        self.destroy_hud()
+        hud.destroy_hud()
         self.remove_task("update_hud")
 
         if len(self.shots):
@@ -472,7 +471,7 @@ class ShotViewer(Interface):
         self.mouse = Mouse()
         self.init_system_nodes()
 
-        hud_task = self.init_hud()
+        hud_task = hud.init_hud()
         self.add_task(hud_task, "update_hud")
 
         params = dict(
@@ -542,7 +541,8 @@ class Play(Interface, Menus):
         self.setup_balls()
         self.setup_cue()
 
-        hud_task = self.init_hud()
+        hud.attach_game(self.game)
+        hud_task = hud.init_hud()
         self.add_task(hud_task, "update_hud")
 
     def setup_table(self):

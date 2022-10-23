@@ -5,6 +5,7 @@ import numpy as np
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
+from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.objects.cue import CueAvoid
 
@@ -179,7 +180,7 @@ class AimMode(BaseMode, CueAvoid):
             -self.shots.active.cue.get_node("cue_stick_focus").getR() < self.min_theta
         ) or self.magnet_theta:
             self.shots.active.cue.get_node("cue_stick_focus").setR(-self.min_theta)
-            self.hud_elements["jack"].set(self.min_theta)
+            hud.hud_elements["jack"].set(self.min_theta)
 
         if -self.player_cam.focus.getR() < (
             -self.shots.active.cue.get_node("cue_stick_focus").getR()
@@ -202,8 +203,8 @@ class AimMode(BaseMode, CueAvoid):
             dy = self.mouse.get_dy()
 
         min_V0, max_V0 = (
-            self.hud_elements["power"].min_strike,
-            self.hud_elements["power"].max_strike,
+            hud.hud_elements["power"].min_strike,
+            hud.hud_elements["power"].max_strike,
         )
 
         V0 = self.shots.active.cue.V0 + dy * ani.power_sensitivity
@@ -213,7 +214,7 @@ class AimMode(BaseMode, CueAvoid):
             V0 = max_V0
 
         self.shots.active.cue.set_state(V0=V0)
-        self.hud_elements["power"].set(V0)
+        hud.hud_elements["power"].set(V0)
 
     def aim_elevate_cue(self):
         cue = self.shots.active.cue.get_node("cue_stick_focus")
@@ -238,7 +239,7 @@ class AimMode(BaseMode, CueAvoid):
             self.player_cam.focus.setR(-(new_elevation + ani.min_player_cam))
 
         self.shots.active.cue.set_state(theta=new_elevation)
-        self.hud_elements["jack"].set(new_elevation)
+        hud.hud_elements["jack"].set(new_elevation)
 
     def apply_english(self):
         with self.mouse:
@@ -287,5 +288,5 @@ class AimMode(BaseMode, CueAvoid):
             -self.shots.active.cue.get_node("cue_stick_focus").getR(),
         )
         self.shots.active.cue.set_state(a=a, b=b, theta=theta)
-        self.hud_elements["english"].set(a, b)
-        self.hud_elements["jack"].set(theta)
+        hud.hud_elements["english"].set(a, b)
+        hud.hud_elements["jack"].set(theta)

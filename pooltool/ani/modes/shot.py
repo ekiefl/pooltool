@@ -6,6 +6,7 @@ import pooltool as pt
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
+from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
@@ -55,11 +56,11 @@ class ShotMode(BaseMode):
 
         self.scale_focus()
 
-        self.hud_elements.get("english").set(
+        hud.hud_elements.get("english").set(
             self.shots.active.cue.a, self.shots.active.cue.b
         )
-        self.hud_elements.get("jack").set(self.shots.active.cue.theta)
-        self.hud_elements.get("power").set(self.shots.active.cue.V0)
+        hud.hud_elements.get("jack").set(self.shots.active.cue.theta)
+        hud.hud_elements.get("power").set(self.shots.active.cue.V0)
 
         self.accept("space", self.shots.toggle_pause)
         self.accept("arrow_up", self.shots.speed_up)
@@ -161,9 +162,9 @@ class ShotMode(BaseMode):
 
             # Set the HUD
             V0, _, theta, a, b, _ = self.shots.active.cue.get_render_state()
-            self.hud_elements.get("english").set(a, b)
-            self.hud_elements.get("jack").set(theta)
-            self.hud_elements.get("power").set(self.shots.active.cue.V0)
+            hud.hud_elements.get("english").set(a, b)
+            hud.hud_elements.get("jack").set(theta)
+            hud.hud_elements.get("power").set(self.shots.active.cue.V0)
 
         elif key == "reset":
             if self.shots.parallel:
@@ -261,11 +262,11 @@ class ShotMode(BaseMode):
             else:
                 self.shots.set_active(shot_index)
                 self.shots.highlight_system(shot_index)
-                self.hud_elements.get("english").set(
+                hud.hud_elements.get("english").set(
                     self.shots.active.cue.a, self.shots.active.cue.b
                 )
-                self.hud_elements.get("jack").set(self.shots.active.cue.theta)
-                self.hud_elements.get("power").set(self.shots.active.cue.V0)
+                hud.hud_elements.get("jack").set(self.shots.active.cue.theta)
+                hud.hud_elements.get("power").set(self.shots.active.cue.V0)
 
         elif self.keymap[Action.next_shot]:
             self.keymap[Action.next_shot] = False
@@ -284,11 +285,11 @@ class ShotMode(BaseMode):
             else:
                 self.shots.set_active(shot_index)
                 self.shots.highlight_system(shot_index)
-                self.hud_elements.get("english").set(
+                hud.hud_elements.get("english").set(
                     self.shots.active.cue.a, self.shots.active.cue.b
                 )
-                self.hud_elements.get("jack").set(self.shots.active.cue.theta)
-                self.hud_elements.get("power").set(self.shots.active.cue.V0)
+                hud.hud_elements.get("jack").set(self.shots.active.cue.theta)
+                hud.hud_elements.get("power").set(self.shots.active.cue.V0)
 
         return task.cont
 
@@ -317,11 +318,11 @@ class ShotMode(BaseMode):
         self.init_collisions()
 
         # Set the HUD
-        self.hud_elements.get("english").set(
+        hud.hud_elements.get("english").set(
             self.shots.active.cue.a, self.shots.active.cue.b
         )
-        self.hud_elements.get("jack").set(self.shots.active.cue.theta)
-        self.hud_elements.get("power").set(self.shots.active.cue.V0)
+        hud.hud_elements.get("jack").set(self.shots.active.cue.theta)
+        hud.hud_elements.get("power").set(self.shots.active.cue.V0)
 
     def zoom_camera_shot(self):
         with self.mouse:
