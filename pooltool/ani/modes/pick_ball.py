@@ -67,9 +67,8 @@ class PickBallMode(BaseMode):
         return task.cont
 
     def remove_ball_highlight(self):
-        if (
-            self.closest_ball is not None
-            and "pick_ball_highlight_animation" in self.tasks
+        if self.closest_ball is not None and self.has_task(
+            "pick_ball_highlight_animation"
         ):
             node = self.closest_ball.get_node("pos")
             node.setScale(node.getScale() / ani.ball_highlight["ball_factor"])

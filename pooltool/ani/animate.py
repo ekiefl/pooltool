@@ -159,7 +159,6 @@ class Interface(ShowBase, ModeManager, HUD):
 
         self.shots = SystemCollection()
 
-        self.tasks = {}
         self.disableMouse()
         self.mouse = Mouse()
         self.player_cam = PlayerCam()
@@ -221,17 +220,19 @@ class Interface(ShowBase, ModeManager, HUD):
         """Listen for events that are mode independent"""
         self.accept("window-event", self.handle_window_event)
 
-    def add_task(self, *args, **kwargs):
-        task = self.task_mgr.add(*args, **kwargs)
-        self.tasks[task.name] = task
+    def add_task(self, func, name, *args, **kwargs):
+        if not self.has_task(name):
+            # If the task already exists, don't add it again
+            self.task_mgr.add(func, name, *args, **kwargs)
 
     def add_task_later(self, *args, **kwargs):
-        task = self.task_mgr.doMethodLater(*args, **kwargs)
-        self.tasks[task.name] = task
+        self.task_mgr.doMethodLater(*args, **kwargs)
 
     def remove_task(self, name):
         self.task_mgr.remove(name)
-        del self.tasks[name]
+
+    def has_task(self, name):
+        return self.task_mgr.hasTaskNamed(name)
 
     def close_scene(self):
         for shot in self.shots:
@@ -314,7 +315,7 @@ class Interface(ShowBase, ModeManager, HUD):
         )
         self.stdout.info("Mode", self.mode)
         self.stdout.info("Last", self.last_mode)
-        self.stdout.info("Tasks", list(self.tasks.keys()))
+        self.stdout.info("Tasks", [task.name for task in self.task_mgr.getAllTasks()])
         self.stdout.info("Memory", pt.utils.get_total_memory_usage())
         self.stdout.info("Actions", [k for k in self.keymap if self.keymap[k]])
         self.stdout.info("Keymap", self.keymap)

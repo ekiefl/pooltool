@@ -46,7 +46,7 @@ class CalculateMode(BaseMode):
         self.shot_sim_overlay.hide()
 
     def calculate_view_task(self, task):
-        if "run_simulation" not in self.tasks:
+        if not self.has_task("run_simulation"):
             # simulation calculation is finished
             self.change_mode(Mode.shot, enter_kwargs=dict(init_animations=True))
         elif self.keymap[Action.zoom]:
