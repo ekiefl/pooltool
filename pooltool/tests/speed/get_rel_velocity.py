@@ -1,17 +1,21 @@
 #! /usr/bin/env python
 
-import pooltool as pt
 import IPython
+
+import pooltool as pt
 
 ipython = IPython.get_ipython()
 
-get_rvw = lambda: np.random.rand(9).reshape((3,3))
+get_rvw = lambda: np.random.rand(9).reshape((3, 3))
+
 
 def old():
     pt.utils.get_rel_velocity(get_rvw(), 0.0285)
 
+
 def new():
     pt.utils.get_rel_velocity_fast(get_rvw(), 0.0285)
+
 
 new()
 

@@ -3,61 +3,78 @@
 
 Taken from https://github.com/merenlab/anvio/blob/master/anvio/terminal.py"""
 
+import datetime
+import importlib.util
 import os
 import re
-import sys
-import time
 import struct
-import pandas as pd
-import datetime
+import sys
 import textwrap
-import importlib.util
-
+import time
 from collections import OrderedDict
+
+import pandas as pd
+
 
 def get_color_objects():
     """Get objects for coloring the progress bar
 
-    `colored` is a module used for coloring the progress bar, however this module does not create
-    wheels for all platform tags.  Therefore not all pooltool distributions will have colored. This
-    code imports `colored` if it exists, and provides colorless functionality if it does not
+    `colored` is a module used for coloring the progress bar, however this module does
+    not create wheels for all platform tags.  Therefore not all pooltool distributions
+    will have colored. This code imports `colored` if it exists, and provides colorless
+    functionality if it does not
 
     Notes
     =====
     - Rather than using fore, back, and style, the progress bar should use the
-      pooltool.terminal.tty_colors dictionary so that `colored` can be removed as a module altogether
+      pooltool.terminal.tty_colors dictionary so that `colored` can be removed as a
+      module altogether
     """
 
-    if importlib.util.find_spec('colored') is not None:
-        from colored import fore, back, style
+    if importlib.util.find_spec("colored") is not None:
+        from colored import back, fore, style
     else:
+
         class NoColored(object):
-            def __getattr__(self, attr): return ''
-        class Fore(NoColored): pass
-        class Back(NoColored): pass
-        class Style(NoColored): pass
+            def __getattr__(self, attr):
+                return ""
+
+        class Fore(NoColored):
+            pass
+
+        class Back(NoColored):
+            pass
+
+        class Style(NoColored):
+            pass
+
         fore = Fore()
         back = Back()
         style = Style()
     return fore, back, style
 
+
 fore, back, style = get_color_objects()
 
 # clean garbage garbage:
-ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
-non_ascii_escape = re.compile(r'[^\x00-\x7F]+')
-CLEAR = lambda line: ansi_escape.sub('', non_ascii_escape.sub('', line.strip()))
+ansi_escape = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
+non_ascii_escape = re.compile(r"[^\x00-\x7F]+")
+
+
+def CLEAR(line):
+    return ansi_escape.sub("", non_ascii_escape.sub("", line.strip()))
+
 
 tty_colors = {
-    'gray'    :{'normal': '\033[1;30m%s\033[1m', 'bold': '\033[0;30m%s\033[0m'},
-    'red'     :{'normal': '\033[1;31m%s\033[1m', 'bold': '\033[0;31m%s\033[0m'},
-    'green'   :{'normal': '\033[1;32m%s\033[1m', 'bold': '\033[0;32m%s\033[0m'},
-    'yellow'  :{'normal': '\033[1;33m%s\033[1m', 'bold': '\033[0;33m%s\033[0m'},
-    'blue'    :{'normal': '\033[1;34m%s\033[1m', 'bold': '\033[0;34m%s\033[0m'},
-    'magenta' :{'normal': '\033[1;35m%s\033[1m', 'bold': '\033[0;35m%s\033[0m'},
-    'cyan'    :{'normal': '\033[1;36m%s\033[1m', 'bold': '\033[0;36m%s\033[0m'},
-    'white'   :{'normal': '\033[1;37m%s\033[1m', 'bold': '\033[0;37m%s\033[0m'},
-    'crimson' :{'normal': '\033[1;38m%s\033[1m', 'bold': '\033[0;38m%s\033[0m'}
+    "gray": {"normal": "\033[1;30m%s\033[1m", "bold": "\033[0;30m%s\033[0m"},
+    "red": {"normal": "\033[1;31m%s\033[1m", "bold": "\033[0;31m%s\033[0m"},
+    "green": {"normal": "\033[1;32m%s\033[1m", "bold": "\033[0;32m%s\033[0m"},
+    "yellow": {"normal": "\033[1;33m%s\033[1m", "bold": "\033[0;33m%s\033[0m"},
+    "blue": {"normal": "\033[1;34m%s\033[1m", "bold": "\033[0;34m%s\033[0m"},
+    "magenta": {"normal": "\033[1;35m%s\033[1m", "bold": "\033[0;35m%s\033[0m"},
+    "cyan": {"normal": "\033[1;36m%s\033[1m", "bold": "\033[0;36m%s\033[0m"},
+    "white": {"normal": "\033[1;37m%s\033[1m", "bold": "\033[0;37m%s\033[0m"},
+    "crimson": {"normal": "\033[1;38m%s\033[1m", "bold": "\033[0;38m%s\033[0m"},
 }
 
 
@@ -93,28 +110,29 @@ class Progress:
         self.progress_current_item = 0
         self.t = Timer(self.progress_total_items)
 
-        self.LEN = lambda s: len(s.encode('utf-16-le')) // 2
-
+        self.LEN = lambda s: len(s.encode("utf-16-le")) // 2
 
     def get_terminal_width(self):
         # FIXME Program flow here is not clear. When does try fail?
         try:
             self.terminal_width = max(get_terminal_size()[0], 100)
-        except:
+        except Exception:
             self.terminal_width = 100
-
 
     def new(self, pid, discard_previous_if_exists=False, progress_total_items=None):
         if self.pid:
             if discard_previous_if_exists:
                 self.end()
             else:
-                raise Exception("Progress.new() can't be called before ending the previous one (Existing: '%s', Competing: '%s')." % (self.pid, pid))
+                raise Exception(
+                    f"Progress.new() can't be called before ending the previous one "
+                    f"(Existing: '{self.pid}', Competing: '{pid}')."
+                )
 
         if not self.verbose:
             return
 
-        self.pid = '%s %s' % (get_date(), pid)
+        self.pid = "%s %s" % (get_date(), pid)
         self.get_terminal_width()
         self.current = None
         self.step = None
@@ -122,10 +140,8 @@ class Progress:
         self.progress_current_item = 0
         self.t = Timer(self.progress_total_items)
 
-
     def update_pid(self, pid):
-        self.pid = '%s %s' % (get_date(), pid)
-
+        self.pid = "%s %s" % (get_date(), pid)
 
     def increment(self, increment_to=None):
         if increment_to:
@@ -133,71 +149,88 @@ class Progress:
         else:
             self.progress_current_item += 1
 
-        self.t.make_checkpoint(increment_to = increment_to)
-
+        self.t.make_checkpoint(increment_to=increment_to)
 
     def write(self, c, dont_update_current=False):
-        eta_c = ' ETA: %s' % str(self.t.eta()) if self.progress_total_items else ''
+        eta_c = " ETA: %s" % str(self.t.eta()) if self.progress_total_items else ""
         surpass = self.terminal_width - self.LEN(c) - self.LEN(eta_c)
 
         if surpass < 0:
-            c = c[0:-(-surpass + 6)] + ' (...)'
+            c = c[0 : -(-surpass + 6)] + " (...)"
         else:
             if not dont_update_current:
                 self.current = c
 
-            c += ' ' * surpass
+            c += " " * surpass
 
         c += eta_c
 
         if self.verbose:
             if self.progress_total_items and self.is_tty:
-                p_text = ''
+                p_text = ""
                 p_length = self.LEN(p_text)
 
                 end_point = self.LEN(c) - self.LEN(eta_c)
-                break_point = round(end_point * self.progress_current_item / self.progress_total_items)
+                break_point = round(
+                    end_point * self.progress_current_item / self.progress_total_items
+                )
 
                 # see a full list of color codes: https://gitlab.com/dslackw/colored
                 if p_length >= break_point:
-                    sys.stderr.write(back.CYAN + fore.BLACK + c[:break_point] + \
-                                     back.GREY_30 + fore.WHITE + c[break_point:end_point] + \
-                                     back.CYAN + fore.CYAN + c[end_point] + \
-                                     back.GREY_50 + fore.LIGHT_CYAN + c[end_point:] + \
-                                     style.RESET)
+                    sys.stderr.write(
+                        back.CYAN
+                        + fore.BLACK
+                        + c[:break_point]
+                        + back.GREY_30
+                        + fore.WHITE
+                        + c[break_point:end_point]
+                        + back.CYAN
+                        + fore.CYAN
+                        + c[end_point]
+                        + back.GREY_50
+                        + fore.LIGHT_CYAN
+                        + c[end_point:]
+                        + style.RESET
+                    )
                 else:
-                    sys.stderr.write(back.CYAN + fore.BLACK + c[:break_point - p_length] + \
-                                     back.SALMON_1 + fore.BLACK + p_text + \
-                                     back.GREY_30 + fore.WHITE + c[break_point:end_point] + \
-                                     back.GREY_50 + fore.LIGHT_CYAN + c[end_point:] + \
-                                     style.RESET)
+                    sys.stderr.write(
+                        back.CYAN
+                        + fore.BLACK
+                        + c[: break_point - p_length]
+                        + back.SALMON_1
+                        + fore.BLACK
+                        + p_text
+                        + back.GREY_30
+                        + fore.WHITE
+                        + c[break_point:end_point]
+                        + back.GREY_50
+                        + fore.LIGHT_CYAN
+                        + c[end_point:]
+                        + style.RESET
+                    )
                 sys.stderr.flush()
             else:
                 sys.stderr.write(back.CYAN + fore.BLACK + c + style.RESET)
                 sys.stderr.flush()
 
-
     def reset(self):
         self.clear()
-
 
     def clear(self):
         if not self.verbose:
             return
 
-        null = '\r' + ' ' * (self.terminal_width)
+        null = "\r" + " " * (self.terminal_width)
         sys.stderr.write(null)
-        sys.stderr.write('\r')
+        sys.stderr.write("\r")
         sys.stderr.flush()
         self.current = None
         self.step = None
 
-
     def append(self, msg):
         if not self.verbose:
             return
-        self.write('%s%s' % (self.current, msg))
-
+        self.write("%s%s" % (self.current, msg))
 
     def step_start(self, step, symbol="⚙ "):
         if not self.pid:
@@ -207,7 +240,9 @@ class Progress:
             raise Exception("You don't have a current progress bad :(")
 
         if self.step:
-            raise Exception("You already have an unfinished step :( Here it is: '%s'." % self.step)
+            raise Exception(
+                "You already have an unfinished step :( Here it is: '%s'." % self.step
+            )
 
         if not self.verbose:
             return
@@ -215,7 +250,6 @@ class Progress:
         self.step = " / %s " % (step)
 
         self.write(self.current + self.step + symbol, dont_update_current=True)
-
 
     def step_end(self, symbol="👍"):
         if not self.step:
@@ -227,7 +261,6 @@ class Progress:
         self.write(self.current + self.step + symbol)
 
         self.step = None
-
 
     def update(self, msg, increment=False):
         self.msg = msg
@@ -242,8 +275,7 @@ class Progress:
             self.increment()
 
         self.clear()
-        self.write('\r[%s] %s' % (self.pid, msg))
-
+        self.write("\r[%s] %s" % (self.pid, msg))
 
     def end(self, timing_filepath=None):
         """End the current progress
@@ -251,8 +283,9 @@ class Progress:
         Parameters
         ==========
         timing_filepath : str, None
-            Store the timings of this progress to the filepath `timing_filepath`. File will only be
-            made if a progress_total_items parameter was made during self.new()
+            Store the timings of this progress to the filepath `timing_filepath`. File
+            will only be made if a progress_total_items parameter was made during
+            self.new()
         """
 
         if timing_filepath and self.progress_total_items is not None:
@@ -272,19 +305,18 @@ class Run:
         self.verbose = verbose
         self.width = width
 
-        self.single_line_prefixes = {1: '* ',
-                                     2: '    - ',
-                                     3: '        > '}
-
+        self.single_line_prefixes = {1: "* ", 2: "    - ", 3: "        > "}
 
     def log(self, line):
         if not self.log_file_path:
-            self.warning("The run object got a logging request, but it was not inherited with "
-                         "a log file path :(")
+            self.warning(
+                "The run object got a logging request, but it was not inherited with "
+                "a log file path :("
+            )
             return
 
-        with open(self.log_file_path, "a") as log_file: log_file.write('[%s] %s\n' % (get_date(), CLEAR(line)))
-
+        with open(self.log_file_path, "a") as log_file:
+            log_file.write("[%s] %s\n" % (get_date(), CLEAR(line)))
 
     def write(self, line, quiet=False, overwrite_verbose=False):
         if self.log_file_path:
@@ -293,11 +325,22 @@ class Run:
         if (self.verbose and not quiet) or overwrite_verbose:
             try:
                 sys.stderr.write(line)
-            except:
-                sys.stderr.write(line.encode('utf-8'))
+            except Exception:
+                sys.stderr.write(line.encode("utf-8"))
 
-
-    def info(self, key, value, quiet=False, display_only=False, overwrite_verbose=False, nl_before=0, nl_after=0, lc='cyan', mc='yellow', progress=None):
+    def info(
+        self,
+        key,
+        value,
+        quiet=False,
+        display_only=False,
+        overwrite_verbose=False,
+        nl_before=0,
+        nl_after=0,
+        lc="cyan",
+        mc="yellow",
+        progress=None,
+    ):
         if not display_only:
             self.info_dict[key] = value
 
@@ -310,9 +353,13 @@ class Run:
 
         label = key
 
-        info_line = "%s%s %s: %s\n%s" % ('\n' * nl_before, color_text(label, lc),
-                                         '.' * (self.width - len(label)),
-                                         color_text(str(value), mc), '\n' * nl_after)
+        info_line = "%s%s %s: %s\n%s" % (
+            "\n" * nl_before,
+            color_text(label, lc),
+            "." * (self.width - len(label)),
+            color_text(str(value), mc),
+            "\n" * nl_after,
+        )
 
         if progress:
             progress.clear()
@@ -321,20 +368,41 @@ class Run:
         else:
             self.write(info_line, quiet=quiet, overwrite_verbose=overwrite_verbose)
 
-
-    def info_single(self, message, overwrite_verbose=False, mc='yellow', nl_before=0, nl_after=0, cut_after=80, level=1, progress=None):
+    def info_single(
+        self,
+        message,
+        overwrite_verbose=False,
+        mc="yellow",
+        nl_before=0,
+        nl_after=0,
+        cut_after=80,
+        level=1,
+        progress=None,
+    ):
         if isinstance(message, str):
             message = remove_spaces(message)
 
         if level not in self.single_line_prefixes:
-            raise Exception("the `info_single` function does not know how to deal with a level of %d :/" % level)
+            raise Exception(
+                f"the `info_single` function does not know how to deal with a level "
+                f"of {level} :/"
+            )
 
         if cut_after:
-            message_line = color_text("%s%s\n" % (self.single_line_prefixes[level], textwrap.fill(str(message), cut_after)), mc)
+            message_line = color_text(
+                "%s%s\n"
+                % (
+                    self.single_line_prefixes[level],
+                    textwrap.fill(str(message), cut_after),
+                ),
+                mc,
+            )
         else:
-            message_line = color_text("%s%s\n" % (self.single_line_prefixes[level], str(message)), mc)
+            message_line = color_text(
+                "%s%s\n" % (self.single_line_prefixes[level], str(message)), mc
+            )
 
-        message_line = ('\n' * nl_before) + message_line + ('\n' * nl_after)
+        message_line = ("\n" * nl_before) + message_line + ("\n" * nl_after)
 
         if progress:
             progress.clear()
@@ -343,29 +411,42 @@ class Run:
         else:
             self.write(message_line, overwrite_verbose=False)
 
-
-    def warning(self, message, header='WARNING', lc='red', raw=False, overwrite_verbose=False, nl_before=0, nl_after=0):
+    def warning(
+        self,
+        message,
+        header="WARNING",
+        lc="red",
+        raw=False,
+        overwrite_verbose=False,
+        nl_before=0,
+        nl_after=0,
+    ):
         if isinstance(message, str):
             message = remove_spaces(message)
 
-        message_line = ''
-        header_line = color_text("%s\n%s\n%s\n" % (('\n' * nl_before), header,
-                                          '=' * (self.width + 2)), lc)
+        message_line = ""
+        header_line = color_text(
+            "%s\n%s\n%s\n" % (("\n" * nl_before), header, "=" * (self.width + 2)), lc
+        )
         if raw:
-            message_line = color_text("%s\n\n%s" % ((message), '\n' * nl_after), lc)
+            message_line = color_text("%s\n\n%s" % ((message), "\n" * nl_after), lc)
         else:
-            message_line = color_text("%s\n\n%s" % (textwrap.fill(str(message), 80), '\n' * nl_after), lc)
+            message_line = color_text(
+                "%s\n\n%s" % (textwrap.fill(str(message), 80), "\n" * nl_after), lc
+            )
 
-        self.write((header_line + message_line) if message else header_line, overwrite_verbose=overwrite_verbose)
-
+        self.write(
+            (header_line + message_line) if message else header_line,
+            overwrite_verbose=overwrite_verbose,
+        )
 
     def quit(self):
         if self.log_file_path:
-            self.log('Bye.')
+            self.log("Bye.")
 
 
 class Timer:
-    """Manages an ordered dictionary, where each key is a checkpoint name and value is a timestamp.
+    """Manages ordered dictionary, key is checkpoint name and value is a timestamp.
 
     Examples
     ========
@@ -392,7 +473,10 @@ class Timer:
     complete: True
     ETA: 00 seconds
     """
-    def __init__(self, required_completion_score=None, initial_checkpoint_key=0, score=0):
+
+    def __init__(
+        self, required_completion_score=None, initial_checkpoint_key=0, score=0
+    ):
         self.timer_start = self.timestamp()
         self.initial_checkpoint_key = initial_checkpoint_key
         self.last_checkpoint_key = self.initial_checkpoint_key
@@ -408,24 +492,24 @@ class Timer:
 
         self.scores = {self.initial_checkpoint_key: self.score}
 
-
     def timestamp(self):
         return datetime.datetime.fromtimestamp(time.time())
 
-
     def timedelta_to_checkpoint(self, timestamp, checkpoint_key=None):
-        if not checkpoint_key: checkpoint_key = self.initial_checkpoint_key
+        if not checkpoint_key:
+            checkpoint_key = self.initial_checkpoint_key
         timedelta = timestamp - self.checkpoints[checkpoint_key]
         return timedelta
 
-
-    def make_checkpoint(self, checkpoint_key = None, increment_to = None):
+    def make_checkpoint(self, checkpoint_key=None, increment_to=None):
         if not checkpoint_key:
             checkpoint_key = self.num_checkpoints + 1
 
         if checkpoint_key in self.checkpoints:
-            raise Exception('Timer.make_checkpoint :: %s already exists as a checkpoint key. '
-                                'All keys must be unique' % (str(checkpoint_key)))
+            raise Exception(
+                "Timer.make_checkpoint :: %s already exists as a checkpoint key. "
+                "All keys must be unique" % (str(checkpoint_key))
+            )
 
         checkpoint = self.timestamp()
 
@@ -441,48 +525,59 @@ class Timer:
 
         self.scores[checkpoint_key] = self.score
 
-        if self.required_completion_score and self.score >= self.required_completion_score:
+        if (
+            self.required_completion_score
+            and self.score >= self.required_completion_score
+        ):
             self.complete = True
 
         return checkpoint
 
-
-    def gen_report(self, title='Time Report', run=Run()):
+    def gen_report(self, title="Time Report", run=Run()):
         checkpoint_last = self.initial_checkpoint_key
 
-        run.warning('', header=title, lc='yellow', nl_before=1, nl_after=0)
+        run.warning("", header=title, lc="yellow", nl_before=1, nl_after=0)
 
         for checkpoint_key, checkpoint in self.checkpoints.items():
             if checkpoint_key == self.initial_checkpoint_key:
                 continue
 
-            run.info(str(checkpoint_key), '+%s' % self.timedelta_to_checkpoint(checkpoint, checkpoint_key=checkpoint_last))
+            run.info(
+                str(checkpoint_key),
+                "+%s"
+                % self.timedelta_to_checkpoint(
+                    checkpoint, checkpoint_key=checkpoint_last
+                ),
+            )
             checkpoint_last = checkpoint_key
 
-        run.info('Total elapsed', '=%s' % self.timedelta_to_checkpoint(checkpoint, checkpoint_key=self.initial_checkpoint_key))
-
+        run.info(
+            "Total elapsed",
+            "=%s"
+            % self.timedelta_to_checkpoint(
+                checkpoint, checkpoint_key=self.initial_checkpoint_key
+            ),
+        )
 
     def gen_dataframe_report(self):
         """Returns a dataframe"""
 
-        d = {'key': [], 'time': [], 'score': []}
+        d = {"key": [], "time": [], "score": []}
         for checkpoint_key, checkpoint in self.checkpoints.items():
-            d['key'].append(checkpoint_key)
-            d['time'].append(checkpoint)
-            d['score'].append(self.scores[checkpoint_key])
+            d["key"].append(checkpoint_key)
+            d["time"].append(checkpoint)
+            d["score"].append(self.scores[checkpoint_key])
 
         return pd.DataFrame(d)
-
 
     def gen_file_report(self, filepath):
         """Writes to filepath, will overwrite"""
 
-        self.gen_dataframe_report().to_csv(filepath, sep='\t', index=False)
+        self.gen_dataframe_report().to_csv(filepath, sep="\t", index=False)
 
-
-    def calculate_time_remaining(self, infinite_default = '∞:∞:∞'):
+    def calculate_time_remaining(self, infinite_default="∞:∞:∞"):
         if self.complete:
-            return datetime.timedelta(seconds = 0)
+            return datetime.timedelta(seconds=0)
         if not self.required_completion_score:
             return None
         if not self.score:
@@ -494,33 +589,38 @@ class Timer:
 
         return time_remaining_estimate
 
-
     def eta(self, fmt=None, zero_padding=0):
-        # Calling format_time hundreds or thousands of times per second is expensive. Therefore if
-        # eta was called within the last half second, the previous ETA is returned without further
-        # calculation.
+        # Calling format_time hundreds or thousands of times per second is expensive.
+        # Therefore if eta was called within the last half second, the previous ETA is
+        # returned without further calculation.
         eta_timestamp = self.timestamp()
-        if eta_timestamp - self.last_eta_timestamp < datetime.timedelta(seconds = 0.5) and self.num_checkpoints > 0:
+        if (
+            eta_timestamp - self.last_eta_timestamp < datetime.timedelta(seconds=0.5)
+            and self.num_checkpoints > 0
+        ):
             return self.last_eta
 
         eta = self.calculate_time_remaining()
-        eta = self.format_time(eta, fmt, zero_padding) if isinstance(eta, datetime.timedelta) else str(eta)
+        eta = (
+            self.format_time(eta, fmt, zero_padding)
+            if isinstance(eta, datetime.timedelta)
+            else str(eta)
+        )
 
         self.last_eta = eta
         self.last_eta_timestamp = eta_timestamp
 
         return eta
 
-
     def time_elapsed(self, fmt=None):
-        return self.format_time(self.timedelta_to_checkpoint(self.timestamp(), checkpoint_key = 0), fmt=fmt)
-
+        return self.format_time(
+            self.timedelta_to_checkpoint(self.timestamp(), checkpoint_key=0), fmt=fmt
+        )
 
     def time_elapsed_precise(self):
-        return self.timedelta_to_checkpoint(self.timestamp(), checkpoint_key = 0)
+        return self.timedelta_to_checkpoint(self.timestamp(), checkpoint_key=0)
 
-
-    def format_time(self, timedelta, fmt = '{hours}:{minutes}:{seconds}', zero_padding = 2):
+    def format_time(self, timedelta, fmt="{hours}:{minutes}:{seconds}", zero_padding=2):
         """Formats time
 
         Examples of `fmt`. Suppose the timedelta is seconds = 1, minutes = 1, hours = 1.
@@ -531,28 +631,39 @@ class Timer:
             {hours}h {seconds}s             --> 1h 61s
         """
 
-        unit_hierarchy = ['seconds', 'minutes', 'hours', 'days', 'weeks']
-        unit_denominations = {'weeks': 7, 'days': 24, 'hours': 60, 'minutes': 60, 'seconds': 1}
+        unit_hierarchy = ["seconds", "minutes", "hours", "days", "weeks"]
+        unit_denominations = {
+            "weeks": 7,
+            "days": 24,
+            "hours": 60,
+            "minutes": 60,
+            "seconds": 1,
+        }
 
         if not fmt:
-            # use the highest two non-zero units, e.g. if it is 7200s, use {hours}h{minutes}m
+            # use the highest two non-zero units, e.g. if it is 7200s, use
+            # {hours}h{minutes}m
             seconds = int(timedelta.total_seconds())
             if seconds < 60:
-                fmt = '{seconds}s'
+                fmt = "{seconds}s"
             else:
                 m = 1
                 for i, unit in enumerate(unit_hierarchy):
                     if not seconds // (m * unit_denominations[unit]) >= 1:
-                        fmt = '{%s}%s{%s}%s' % (unit_hierarchy[i-1],
-                                                unit_hierarchy[i-1][0],
-                                                unit_hierarchy[i-2],
-                                                unit_hierarchy[i-2][0])
+                        fmt = "{%s}%s{%s}%s" % (
+                            unit_hierarchy[i - 1],
+                            unit_hierarchy[i - 1][0],
+                            unit_hierarchy[i - 2],
+                            unit_hierarchy[i - 2][0],
+                        )
                         break
                     elif unit == unit_hierarchy[-1]:
-                        fmt = '{%s}%s{%s}%s' % (unit_hierarchy[i],
-                                                unit_hierarchy[i][0],
-                                                unit_hierarchy[i-1],
-                                                unit_hierarchy[i-1][0])
+                        fmt = "{%s}%s{%s}%s" % (
+                            unit_hierarchy[i],
+                            unit_hierarchy[i][0],
+                            unit_hierarchy[i - 1],
+                            unit_hierarchy[i - 1][0],
+                        )
                         break
                     else:
                         m *= unit_denominations[unit]
@@ -560,37 +671,52 @@ class Timer:
         # parse units present in fmt
         format_order = []
         for i, x in enumerate(fmt):
-            if x == '{':
+            if x == "{":
                 for j, k in enumerate(fmt[i:]):
-                    if k == '}':
-                        unit = fmt[i+1:i+j]
+                    if k == "}":
+                        unit = fmt[i + 1 : i + j]
                         format_order.append(unit)
                         break
 
         if not format_order:
-            raise Exception('Timer.format_time :: fmt = \'%s\' contains no time units.' % (fmt))
+            raise Exception(
+                "Timer.format_time :: fmt = '%s' contains no time units." % (fmt)
+            )
 
         for unit in format_order:
             if unit not in unit_hierarchy:
-                raise Exception('Timer.format_time :: \'%s\' is not a valid unit. Use any of %s.'\
-                                     % (unit, ', '.join(unit_hierarchy)))
+                raise Exception(
+                    "Timer.format_time :: '%s' is not a valid unit. Use any of %s."
+                    % (unit, ", ".join(unit_hierarchy))
+                )
 
         # calculate the value for each unit (e.g. 'seconds', 'days', etc) found in fmt
         format_values_dict = {}
-        smallest_unit = unit_hierarchy[[unit in format_order for unit in unit_hierarchy].index(True)]
-        units_less_than_or_equal_to_smallest_unit = unit_hierarchy[::-1][unit_hierarchy[::-1].index(smallest_unit):]
+        smallest_unit = unit_hierarchy[
+            [unit in format_order for unit in unit_hierarchy].index(True)
+        ]
+        units_less_than_or_equal_to_smallest_unit = unit_hierarchy[::-1][
+            unit_hierarchy[::-1].index(smallest_unit) :
+        ]
         seconds_in_base_unit = 1
-        for a in [v for k, v in unit_denominations.items() if k in units_less_than_or_equal_to_smallest_unit]:
+        for a in [
+            v
+            for k, v in unit_denominations.items()
+            if k in units_less_than_or_equal_to_smallest_unit
+        ]:
             seconds_in_base_unit *= a
         r = int(timedelta.total_seconds()) // seconds_in_base_unit
 
         for i, lower_unit in enumerate(unit_hierarchy):
             if lower_unit in format_order:
                 m = 1
-                for upper_unit in unit_hierarchy[i+1:]:
+                for upper_unit in unit_hierarchy[i + 1 :]:
                     m *= unit_denominations[upper_unit]
                     if upper_unit in format_order:
-                        format_values_dict[upper_unit], format_values_dict[lower_unit] = divmod(r, m)
+                        (
+                            format_values_dict[upper_unit],
+                            format_values_dict[lower_unit],
+                        ) = divmod(r, m)
                         break
                 else:
                     format_values_dict[lower_unit] = r
@@ -599,23 +725,22 @@ class Timer:
 
         format_values = [format_values_dict[unit] for unit in format_order]
 
-        style_str = '0' + str(zero_padding) if zero_padding else ''
+        style_str = "0" + str(zero_padding) if zero_padding else ""
         for unit in format_order:
-            fmt = fmt.replace('{%s}' % unit, '%' + '%s' % (style_str) + 'd')
+            fmt = fmt.replace("{%s}" % unit, "%" + "%s" % (style_str) + "d")
         formatted_time = fmt % (*[format_value for format_value in format_values],)
 
         return formatted_time
-
 
     def _test_format_time(self):
         """Run this and visually inspect its working"""
 
         run = Run()
         for exponent in range(1, 7):
-            seconds = 10 ** exponent
-            td = datetime.timedelta(seconds = seconds)
+            seconds = 10**exponent
+            td = datetime.timedelta(seconds=seconds)
 
-            run.warning('', header='TESTING %s' % td, lc='yellow')
+            run.warning("", header="TESTING %s" % td, lc="yellow")
             fmts = [
                 None,
                 "SECONDS {seconds}",
@@ -623,7 +748,6 @@ class Timer:
                 "HOURS   {hours}",
                 "DAYS    {days}",
                 "WEEKS   {weeks}",
-
                 "MINUTES {minutes} SECONDS {seconds}",
                 "SECONDS {seconds} MINUTES {minutes}",
                 "HOURS   {hours}   MINUTES {minutes}",
@@ -633,7 +757,6 @@ class Timer:
                 "WEEKS   {weeks}   MINUTES {minutes}",
                 "DAYS    {days}    MINUTES {minutes}",
                 "HOURS   {hours}   SECONDS {seconds}",
-
                 "DAYS    {days}    MINUTES {minutes} SECONDS {seconds}",
                 "WEEKS   {weeks}   HOURS {hours}     DAYS    {days}    SECONDS {seconds} MINUTES {minutes}",
             ]
@@ -688,23 +811,30 @@ class TimeCode(object):
     0:00:05.000477
     """
 
-    def __init__(self, success_msg=None, sc='green', fc='red', failure_msg=None, run=Run(), quiet=False, suppress_first=0):
+    def __init__(
+        self,
+        success_msg=None,
+        sc="green",
+        fc="red",
+        failure_msg=None,
+        run=Run(),
+        quiet=False,
+        suppress_first=0,
+    ):
         self.run = run
-        self.run.single_line_prefixes = {0: '✓ ', 1: '✖ '}
+        self.run.single_line_prefixes = {0: "✓ ", 1: "✖ "}
 
         self.quiet = quiet
         self.suppress_first = suppress_first
         self.sc, self.fc = sc, fc
         self.s_msg, self.f_msg = success_msg, failure_msg
 
-        self.s_msg = self.s_msg if self.s_msg else 'Code finished after '
-        self.f_msg = self.f_msg if self.f_msg else 'Code encountered error after '
-
+        self.s_msg = self.s_msg if self.s_msg else "Code finished after "
+        self.f_msg = self.f_msg if self.f_msg else "Code encountered error after "
 
     def __enter__(self):
         self.timer = Timer()
         return self
-
 
     def __exit__(self, exception_type, exception_value, traceback):
         self.time = self.timer.timedelta_to_checkpoint(self.timer.timestamp())
@@ -715,7 +845,9 @@ class TimeCode(object):
         return_code = 0 if exception_type is None else 1
 
         msg, color = (self.s_msg, self.sc) if not return_code else (self.f_msg, self.fc)
-        self.run.info_single(msg + str(self.time), nl_before=1, mc=color, level=return_code)
+        self.run.info_single(
+            msg + str(self.time), nl_before=1, mc=color, level=return_code
+        )
 
 
 def pretty_print(n):
@@ -728,9 +860,9 @@ def pretty_print(n):
     for i in range(len(n) - 1, -1, -1):
         ret.append(n[i])
         if (len(n) - i) % 3 == 0:
-            ret.append(',')
+            ret.append(",")
     ret.reverse()
-    return ''.join(ret[1:]) if ret[0] == ',' else ''.join(ret)
+    return "".join(ret[1:]) if ret[0] == "," else "".join(ret)
 
 
 def get_date():
@@ -745,10 +877,12 @@ def get_terminal_size():
             # These imports are Windows incompatible
             import fcntl
             import termios
-            cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
+
+            cr = struct.unpack("hh", fcntl.ioctl(fd, termios.TIOCGWINSZ, "1234"))
         except:
             return None
         return cr
+
     cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
     if not cr:
         try:
@@ -759,9 +893,7 @@ def get_terminal_size():
             pass
     if not cr:
         try:
-            cr = (os.environ['LINES'], os.environ['COLUMNS'])
+            cr = (os.environ["LINES"], os.environ["COLUMNS"])
         except:
             cr = (25, 80)
     return int(cr[1]), int(cr[0])
-
-

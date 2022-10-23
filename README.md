@@ -122,10 +122,11 @@ cd pooltool
 **(iii)** install the dependencies:
 
 ```bash
-pip install -r requirements_developer.txt
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
-In contrast to `requirements.txt`, `requirements_developer.txt` includes some additional convenience modules.
+In addition to `requirements.txt`, `requirements-dev.txt` includes some modules required for developement.
 
 **(iv)** test out your installation:
 

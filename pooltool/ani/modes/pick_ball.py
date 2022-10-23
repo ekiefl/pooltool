@@ -1,24 +1,24 @@
 #! /usr/bin/env python
 """A mode to for picking which ball to cue"""
 
-import pooltool.ani as ani
-import pooltool.constants as c
-
-from pooltool.ani.modes import Mode, action
-
 import numpy as np
+
+import pooltool.ani as ani
+import pooltool.ani.action as action
+import pooltool.constants as c
+from pooltool.ani.modes.datatypes import Mode, ModeName
 
 
 class PickBallMode(Mode):
+    name = ModeName.pick_ball
     keymap = {
         action.quit: False,
         action.pick_ball: True,
-        'done': False,
+        "done": False,
     }
 
     def __init__(self):
         pass
-
 
     def enter(self):
         self.mouse.hide()
@@ -27,22 +27,20 @@ class PickBallMode(Mode):
 
         self.closest_ball = None
 
-        self.task_action('escape', action.quit, True)
-        self.task_action('q', action.pick_ball, True)
-        self.task_action('q-up', action.pick_ball, False)
-        self.task_action('mouse1-up', 'done', True)
+        self.task_action("escape", action.quit, True)
+        self.task_action("q", action.pick_ball, True)
+        self.task_action("q-up", action.pick_ball, False)
+        self.task_action("mouse1-up", "done", True)
 
-        self.add_task(self.pick_ball_task, 'pick_ball_task')
-
+        self.add_task(self.pick_ball_task, "pick_ball_task")
 
     def exit(self):
         PickBallMode.remove_ball_highlight(self)
-        self.remove_task('pick_ball_task')
-
+        self.remove_task("pick_ball_task")
 
     def pick_ball_task(self, task):
         if not self.keymap[action.pick_ball]:
-            self.change_mode('aim')
+            self.change_mode("aim")
             return task.done
 
         self.move_camera_pick_ball()
@@ -51,51 +49,61 @@ class PickBallMode(Mode):
         if closest != self.closest_ball:
             PickBallMode.remove_ball_highlight(self)
             self.closest_ball = closest
-            self.ball_highlight = self.closest_ball.get_node('pos')
+            self.ball_highlight = self.closest_ball.get_node("pos")
             PickBallMode.add_ball_highlight(self)
 
-        if self.keymap['done']:
+        if self.keymap["done"]:
             PickBallMode.remove_ball_highlight(self)
             self.shots.active.cue.cueing_ball = self.closest_ball
             if self.shots.active.cue.cueing_ball is not None:
                 self.shots.active.cue.init_focus(self.shots.active.cue.cueing_ball)
-                self.game.log.add_msg(f"Now cueing the {self.shots.active.cue.cueing_ball.id} ball", sentiment='neutral')
-            self.change_mode('aim')
+                self.game.log.add_msg(
+                    f"Now cueing the {self.shots.active.cue.cueing_ball.id} ball",
+                    sentiment="neutral",
+                )
+            self.change_mode("aim")
             return task.done
 
         return task.cont
 
-
     def remove_ball_highlight(self):
-        if self.closest_ball is not None and 'pick_ball_highlight_animation' in self.tasks:
-            node = self.closest_ball.get_node('pos')
-            node.setScale(node.getScale()/ani.ball_highlight['ball_factor'])
-            self.closest_ball.get_node('shadow').setAlphaScale(1)
-            self.closest_ball.get_node('shadow').setScale(1)
+        if (
+            self.closest_ball is not None
+            and "pick_ball_highlight_animation" in self.tasks
+        ):
+            node = self.closest_ball.get_node("pos")
+            node.setScale(node.getScale() / ani.ball_highlight["ball_factor"])
+            self.closest_ball.get_node("shadow").setAlphaScale(1)
+            self.closest_ball.get_node("shadow").setScale(1)
             self.closest_ball.set_render_state_as_object_state()
-            self.remove_task('pick_ball_highlight_animation')
-
+            self.remove_task("pick_ball_highlight_animation")
 
     def add_ball_highlight(self):
         if self.closest_ball is not None:
-            self.add_task(self.pick_ball_highlight_animation, 'pick_ball_highlight_animation')
-            node = self.closest_ball.get_node('pos')
-            node.setScale(node.getScale()*ani.ball_highlight['ball_factor'])
-
+            self.add_task(
+                self.pick_ball_highlight_animation, "pick_ball_highlight_animation"
+            )
+            node = self.closest_ball.get_node("pos")
+            node.setScale(node.getScale() * ani.ball_highlight["ball_factor"])
 
     def pick_ball_highlight_animation(self, task):
-        phase = task.time * ani.ball_highlight['ball_frequency']
+        phase = task.time * ani.ball_highlight["ball_frequency"]
 
-        new_height = ani.ball_highlight['ball_offset'] + ani.ball_highlight['ball_amplitude'] * np.sin(phase)
+        new_height = ani.ball_highlight["ball_offset"] + ani.ball_highlight[
+            "ball_amplitude"
+        ] * np.sin(phase)
         self.ball_highlight.setZ(new_height)
 
-        new_alpha = ani.ball_highlight['shadow_alpha_offset'] + ani.ball_highlight['shadow_alpha_amplitude'] * np.sin(-phase)
-        new_scale = ani.ball_highlight['shadow_scale_offset'] + ani.ball_highlight['shadow_scale_amplitude'] * np.sin(phase)
-        self.closest_ball.get_node('shadow').setAlphaScale(new_alpha)
-        self.closest_ball.get_node('shadow').setScale(new_scale)
+        new_alpha = ani.ball_highlight["shadow_alpha_offset"] + ani.ball_highlight[
+            "shadow_alpha_amplitude"
+        ] * np.sin(-phase)
+        new_scale = ani.ball_highlight["shadow_scale_offset"] + ani.ball_highlight[
+            "shadow_scale_amplitude"
+        ] * np.sin(phase)
+        self.closest_ball.get_node("shadow").setAlphaScale(new_alpha)
+        self.closest_ball.get_node("shadow").setScale(new_scale)
 
         return task.cont
-
 
     def find_closest_ball(self):
         cam_pos = self.player_cam.focus.getPos()
@@ -112,16 +120,17 @@ class PickBallMode(Mode):
 
         return closest
 
-
     def move_camera_pick_ball(self):
         with self.mouse:
             dxp, dyp = self.mouse.get_dx(), self.mouse.get_dy()
 
-        h = self.player_cam.focus.getH() * np.pi/180 + np.pi/2
+        h = self.player_cam.focus.getH() * np.pi / 180 + np.pi / 2
         dx = dxp * np.cos(h) - dyp * np.sin(h)
         dy = dxp * np.sin(h) + dyp * np.cos(h)
 
-        self.player_cam.focus.setX(self.player_cam.focus.getX() + dx*ani.move_sensitivity)
-        self.player_cam.focus.setY(self.player_cam.focus.getY() + dy*ani.move_sensitivity)
-
-
+        self.player_cam.focus.setX(
+            self.player_cam.focus.getX() + dx * ani.move_sensitivity
+        )
+        self.player_cam.focus.setY(
+            self.player_cam.focus.getY() + dy * ani.move_sensitivity
+        )

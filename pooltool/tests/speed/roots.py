@@ -1,17 +1,21 @@
 #! /usr/bin/env python
 
-import pooltool as pt
 import IPython
 
+import pooltool as pt
+
 ipython = IPython.get_ipython()
+
 
 def old():
     p = np.random.rand(250).reshape((50, 5))
     pt.utils.roots(p)
 
+
 def new():
     p = np.random.rand(250).reshape((50, 5))
     pt.utils.roots_fast(p)
+
 
 new()
 

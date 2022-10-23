@@ -1,29 +1,29 @@
 #! /usr/bin/env python
 
-import pooltool.constants as c
-
-import os
-import numpy as np
-import cmath
-import pickle
-import pprofile
-import tempfile
-import linecache
 import collections
-import tracemalloc
 import importlib.util
+import linecache
+import os
+import pickle
+import tempfile
+import tracemalloc
 
+import numpy as np
+import pprofile
 from numba import jit
 from panda3d.core import Filename
 
+import pooltool.constants as c
+
+
 def save_pickle(x, path):
     """Save an object `x` to filepath `path`"""
-    with open(path, 'wb') as f:
+    with open(path, "wb") as f:
         pickle.dump(x, f)
 
 
 def load_pickle(path):
-    with open(path, 'rb') as f:
+    with open(path, "rb") as f:
         return pickle.load(f)
 
 
@@ -55,12 +55,12 @@ def get_total_memory_usage(keep_raw=False):
     Parameters
     ==========
     keep_raw : bool, False
-        A human readable format is returned, e.g. "1.41 GB". If keep_raw, the raw number is
-        returned, e.g. 1515601920
+        A human readable format is returned, e.g. "1.41 GB". If keep_raw, the raw number
+        is returned, e.g. 1515601920
     """
-    if importlib.util.find_spec('psutil') is None:
+    if importlib.util.find_spec("psutil") is None:
         # psutil does not exist in this distribution
-        return '??'
+        return "??"
     else:
         import psutil
 
@@ -69,13 +69,13 @@ def get_total_memory_usage(keep_raw=False):
     for child in current_process.children(recursive=True):
         try:
             mem += child.memory_info().rss
-        except:
+        except Exception:
             pass
 
     return mem if keep_raw else human_readable_file_size(mem)
 
 
-def display_top_memory_usage(snapshot, key_type='lineno', limit=10):
+def display_top_memory_usage(snapshot, key_type="lineno", limit=10):
     """A pretty-print for the tracemalloc memory usage module
 
     Modified from https://docs.python.org/3/library/tracemalloc.html
@@ -111,10 +111,12 @@ def display_top_memory_usage(snapshot, key_type='lineno', limit=10):
     Total allocated size: 15179.4 KiB
     """
 
-    snapshot = snapshot.filter_traces((
-        tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
-        tracemalloc.Filter(False, "<unknown>"),
-    ))
+    snapshot = snapshot.filter_traces(
+        (
+            tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+            tracemalloc.Filter(False, "<unknown>"),
+        )
+    )
     top_stats = snapshot.statistics(key_type)
 
     print("Top %s lines" % limit)
@@ -122,11 +124,12 @@ def display_top_memory_usage(snapshot, key_type='lineno', limit=10):
         frame = stat.traceback[0]
         # replace "/path/to/module/file.py" with "module/file.py"
         filename = os.sep.join(frame.filename.split(os.sep)[-2:])
-        print("#%s: %s:%s: %.1f KiB"
-              % (index, filename, frame.lineno, stat.size / 1024))
+        print(
+            "#%s: %s:%s: %.1f KiB" % (index, filename, frame.lineno, stat.size / 1024)
+        )
         line = linecache.getline(frame.filename, frame.lineno).strip()
         if line:
-            print('    %s' % line)
+            print("    %s" % line)
 
     other = top_stats[limit:]
     if other:
@@ -137,48 +140,55 @@ def display_top_memory_usage(snapshot, key_type='lineno', limit=10):
 
 
 def human_readable_file_size(nbytes):
-    suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
-    if nbytes == 0: return '0 B'
+    suffixes = ["B", "KB", "MB", "GB", "TB", "PB"]
+    if nbytes == 0:
+        return "0 B"
     i = 0
-    while nbytes >= 1024 and i < len(suffixes)-1:
-        nbytes /= 1024.
+    while nbytes >= 1024 and i < len(suffixes) - 1:
+        nbytes /= 1024.0
         i += 1
-    f = ('%.2f' % nbytes).rstrip('0').rstrip('.')
-    return '%s %s' % (f, suffixes[i])
+    f = ("%.2f" % nbytes).rstrip("0").rstrip(".")
+    return "%s %s" % (f, suffixes[i])
 
 
 def wiggle(x, val):
     """Vary a float or int x by +- val according to a uniform distribution"""
-    return x + val*(2*np.random.rand() - 1)
+    return x + val * (2 * np.random.rand() - 1)
 
 
 def cross(u, v):
     """Compute cross product u x v, where u and v are 3-dimensional vectors"""
-    return np.array([
-        u[1]*v[2] - u[2]*v[1],
-        u[2]*v[0] - u[0]*v[2],
-        u[0]*v[1] - u[1]*v[0],
-    ])
+    return np.array(
+        [
+            u[1] * v[2] - u[2] * v[1],
+            u[2] * v[0] - u[0] * v[2],
+            u[0] * v[1] - u[1] * v[0],
+        ]
+    )
 
 
 @jit(nopython=True, cache=c.numba_cache)
 def cross_fast(u, v):
-    """Compute cross product u x v, where u and v are 3-dimensional vectors (just-in-time compiled)
+    """Compute cross product u x v, where u and v are 3-dimensional vectors
+
+    (just-in-time compiled)
 
     Notes
     =====
     - Speed comparison in pooltool/tests/speed/cross.py
     """
-    return np.array([
-        u[1]*v[2] - u[2]*v[1],
-        u[2]*v[0] - u[0]*v[2],
-        u[0]*v[1] - u[1]*v[0],
-    ])
+    return np.array(
+        [
+            u[1] * v[2] - u[2] * v[1],
+            u[2] * v[0] - u[0] * v[2],
+            u[0] * v[1] - u[1] * v[0],
+        ]
+    )
 
 
 def get_rel_velocity(rvw, R):
     _, v, w = rvw
-    return v + R * cross(np.array([0,0,1]), w)
+    return v + R * cross(np.array([0, 0, 1]), w)
 
 
 @jit(nopython=True, cache=c.numba_cache)
@@ -189,23 +199,23 @@ def get_rel_velocity_fast(rvw, R):
     - Speed comparison in pooltool/tests/speed/get_rel_velocity.py
     """
     _, v, w = rvw
-    return v + R * cross_fast(np.array([0.,0.,1.], dtype=np.float64), w)
+    return v + R * cross_fast(np.array([0.0, 0.0, 1.0], dtype=np.float64), w)
 
 
-def quadratic(a,b,c):
+def quadratic(a, b, c):
     """Solve a quadratic equation At^2 + Bt + C = 0"""
     if a == 0:
-        u = -c/b
+        u = -c / b
         return u, u
-    bp=b/2
-    delta=bp*bp-a*c
-    u1=(-bp-delta**.5)/a
-    u2=-u1-b/a
-    return u1,u2
+    bp = b / 2
+    delta = bp * bp - a * c
+    u1 = (-bp - delta**0.5) / a
+    u2 = -u1 - b / a
+    return u1, u2
 
 
 @jit(nopython=True, cache=c.numba_cache)
-def quadratic_fast(a,b,c):
+def quadratic_fast(a, b, c):
     """Solve a quadratic equation At^2 + Bt + C = 0 (just-in-time compiled)
 
     Notes
@@ -213,41 +223,42 @@ def quadratic_fast(a,b,c):
     - Speed comparison in pooltool/tests/speed/quadratic.py
     """
     if a == 0:
-        u = -c/b
+        u = -c / b
         return u, u
-    bp=b/2
-    delta=bp*bp-a*c
-    u1=(-bp-delta**.5)/a
-    u2=-u1-b/a
-    return u1,u2
+    bp = b / 2
+    delta = bp * bp - a * c
+    u1 = (-bp - delta**0.5) / a
+    u2 = -u1 - b / a
+    return u1, u2
 
 
 def roots(p):
     """Solve multiple polynomial equations
 
-    This is a vectorized implementation of numpy.roots that can solve multiple polynomials in a
-    vectorized fashion. The solution is taken from this wonderful stackoverflow answer:
-    https://stackoverflow.com/a/35853977
+    This is a vectorized implementation of numpy.roots that can solve multiple
+    polynomials in a vectorized fashion. The solution is taken from this wonderful
+    stackoverflow answer: https://stackoverflow.com/a/35853977
 
     Parameters
     ==========
     p : array
-        A mxn array of polynomial coefficients, where m is the number of equations and n-1 is the
-        order of the polynomial. If n is 5 (4th order polynomial), the columns are in the order a,
-        b, c, d, e, where these coefficients make up the polynomial equation at^4 + bt^3 + ct^2 + dt
-        + e = 0
+        A mxn array of polynomial coefficients, where m is the number of equations and
+        n-1 is the order of the polynomial. If n is 5 (4th order polynomial), the
+        columns are in the order a, b, c, d, e, where these coefficients make up the
+        polynomial equation at^4 + bt^3 + ct^2 + dt + e = 0
 
     Notes
     =====
-    - This function is not amenable to numbaization (0.54.1). There are a couple of hurdles to
-      address. p[...,None,0] needs to be refactored since None/np.newaxis cause compile error. But
-      even bigger an issue is that np.linalg.eigvals is only supported for 2D arrays, but the strategy
-      here is to pass np.lingalg.eigvals a vectorized 3D array.
+    - This function is not amenable to numbaization (0.54.1). There are a couple of
+      hurdles to address. p[...,None,0] needs to be refactored since None/np.newaxis
+      cause compile error. But even bigger an issue is that np.linalg.eigvals is only
+      supported for 2D arrays, but the strategy here is to pass np.lingalg.eigvals a
+      vectorized 3D array.
     """
     n = p.shape[-1]
-    A = np.zeros(p.shape[:1] + (n-1, n-1), np.float64)
-    A[...,1:,:-1] = np.eye(n-2)
-    A[...,0,:] = -p[...,1:]/p[...,None,0]
+    A = np.zeros(p.shape[:1] + (n - 1, n - 1), np.float64)
+    A[..., 1:, :-1] = np.eye(n - 2)
+    A[..., 0, :] = -p[..., 1:] / p[..., None, 0]
     return np.linalg.eigvals(A)
 
 
@@ -261,9 +272,9 @@ def roots_fast(p):
     """
     M, N = p.shape
     p = p.astype(np.complex128)
-    roots = np.zeros((M, N-1), np.complex128)
+    roots = np.zeros((M, N - 1), np.complex128)
     for m in range(M):
-        roots[m,:] = np.roots(p[m,:])
+        roots[m, :] = np.roots(p[m, :])
     return roots
 
 
@@ -273,18 +284,19 @@ def min_real_root(p, tol=1e-12):
     Parameters
     ==========
     p : array
-        A mxn array of polynomial coefficients, where m is the number of equations and n-1 is the
-        order of the polynomial. If n is 5 (4th order polynomial), the columns are in the order a,
-        b, c, d, e, where these coefficients make up the polynomial equation at^4 + bt^3 + ct^2 + dt
-        + e = 0
+        A mxn array of polynomial coefficients, where m is the number of equations and
+        n-1 is the order of the polynomial. If n is 5 (4th order polynomial), the
+        columns are in the order a, b, c, d, e, where these coefficients make up the
+        polynomial equation at^4 + bt^3 + ct^2 + dt + e = 0
     tol : float, 1e-12
-        Roots are considered if they have 
+        Roots are considered if they have
 
     Returns
     =======
     output : (time, index)
-        `time` is the minimum real root from the set of polynomials, and `index` specifies the index
-        of the responsible polynomial. i.e. the polynomial with the root `time` is p[index]
+        `time` is the minimum real root from the set of polynomials, and `index`
+        specifies the index of the responsible polynomial. i.e. the polynomial with the
+        root `time` is p[index]
     """
     # Get the roots for the polynomials
     times = roots(p)
@@ -301,7 +313,9 @@ def min_real_root(p, tol=1e-12):
 
 @jit(nopython=True, cache=c.numba_cache)
 def min_real_root_fast(p, tol=1e-12):
-    """Given an array of polynomial coefficients, find the minimum real root (just-in-time compiled)
+    """Given an array of polynomial coefficients, find the minimum real root
+
+    (just-in-time compiled)
 
     Notes
     =====
@@ -356,18 +370,18 @@ def unit_vector_fast(vector, handle_zero=False):
     - Unlike unit_vector, this does not support 2D arrays
     - Speed comparison in pooltool/tests/speed/unit_vector.py
     """
-    norm = np.sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2)
+    norm = np.sqrt(vector[0] ** 2 + vector[1] ** 2 + vector[2] ** 2)
     if handle_zero and norm == 0.0:
         norm = 1.0
     return vector / norm
 
 
-def angle(v2, v1=(1,0)):
-    """Calculates counter-clockwise angle of the projections of v1 and v2 onto the x-y plane"""
+def angle(v2, v1=(1, 0)):
+    """Returns counter-clockwise angle of projections of v1 and v2 onto the x-y plane"""
     ang = np.arctan2(v2[1], v2[0]) - np.arctan2(v1[1], v1[0])
 
     if ang < 0:
-        return 2*np.pi + ang
+        return 2 * np.pi + ang
 
     return ang
 
@@ -388,19 +402,22 @@ def orientation(p, q, r):
         0 : Collinear points, 1 : Clockwise points, 2 : Counterclockwise
     """
     val = ((q[1] - p[1]) * (r[0] - q[0])) - ((q[0] - p[0]) * (r[1] - q[1]))
-    if (val > 0):
+    if val > 0:
         # Clockwise orientation
         return 1
-    elif (val < 0):
+    elif val < 0:
         # Counterclockwise orientation
         return 2
     else:
         # Collinear orientation
         return 0
 
+
 @jit(nopython=True, cache=c.numba_cache)
-def angle_fast(v2, v1=(1,0)):
-    """Calculates counter-clockwise angle of the projections of v1 and v2 onto the x-y plane (just-in-time compiled)
+def angle_fast(v2, v1=(1, 0)):
+    """Returns counter-clockwise angle of projections of v1 and v2 onto the x-y plane
+
+    (just-in-time compiled)
 
     Notes
     =====
@@ -409,7 +426,7 @@ def angle_fast(v2, v1=(1,0)):
     ang = np.arctan2(v2[1], v2[0]) - np.arctan2(v1[1], v1[0])
 
     if ang < 0:
-        return 2*np.pi + ang
+        return 2 * np.pi + ang
 
     return ang
 
@@ -418,16 +435,16 @@ def coordinate_rotation(v, phi):
     """Rotate vector/matrix from one frame of reference to another (3D FIXME)"""
     cos_phi = np.cos(phi)
     sin_phi = np.sin(phi)
-    rotation = np.array([[cos_phi, -sin_phi, 0],
-                         [sin_phi,  cos_phi, 0],
-                         [0      ,  0      , 1]])
+    rotation = np.array([[cos_phi, -sin_phi, 0], [sin_phi, cos_phi, 0], [0, 0, 1]])
 
     return np.dot(rotation, v)
 
 
 @jit(nopython=True, cache=c.numba_cache)
 def coordinate_rotation_fast(v, phi):
-    """Rotate vector/matrix from one frame of reference to another (3D FIXME) (just-in-time compiled)
+    """Rotate vector/matrix from one frame of reference to another (3D FIXME)
+
+    (just-in-time compiled)
 
     Notes
     =====
@@ -435,12 +452,12 @@ def coordinate_rotation_fast(v, phi):
     """
     cos_phi = np.cos(phi)
     sin_phi = np.sin(phi)
-    rotation = np.zeros((3,3), np.float64)
-    rotation[0,0] = cos_phi
-    rotation[0,1] = -sin_phi
-    rotation[1,0] = sin_phi
-    rotation[1,1] = cos_phi
-    rotation[2,2] = 1
+    rotation = np.zeros((3, 3), np.float64)
+    rotation[0, 0] = cos_phi
+    rotation[0, 1] = -sin_phi
+    rotation[1, 0] = sin_phi
+    rotation[1, 1] = cos_phi
+    rotation[2, 2] = 1
 
     return np.dot(rotation, v)
 
@@ -451,30 +468,23 @@ class ListLike(collections.abc.MutableSequence):
     def __init__(self):
         self._list = list()
 
-
     def __len__(self):
         return len(self._list)
-
 
     def __delitem__(self, index):
         self._list.__delitem__(index)
 
-
     def insert(self, index, value):
         self._list.insert(index, value)
-
 
     def __setitem__(self, index, value):
         self._list.__setitem__(index, value)
 
-
     def __getitem__(self, index):
         return self._list.__getitem__(index)
 
-
     def append(self, value):
         self.insert(len(self) + 1, value)
-
 
     def __repr__(self):
         return self._list.__repr__()
@@ -482,11 +492,11 @@ class ListLike(collections.abc.MutableSequence):
 
 class PProfile(pprofile.Profile):
     """Small wrapper for pprofile that accepts a filepath and outputs cachegrind file"""
+
     def __init__(self, path, run=True):
         self.run = run
         self.path = path
         pprofile.Profile.__init__(self)
-
 
     def __enter__(self):
         if self.run:
@@ -494,10 +504,7 @@ class PProfile(pprofile.Profile):
         else:
             return self
 
-
     def __exit__(self, *args):
         if self.run:
             pprofile.Profile.__exit__(self, *args)
             self.dump_stats(self.path)
-
-
