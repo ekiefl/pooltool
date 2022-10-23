@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 import numpy as np
-from direct.interval.IntervalGlobal import *
+from direct.interval.IntervalGlobal import Parallel
 from panda3d.core import TransparencyAttrib
 
 import pooltool.ani as ani
@@ -110,7 +110,10 @@ class BallInHandMode(Mode):
         return task.cont
 
     def try_placement(self):
-        """Checks if grabbed ball overlaps with others. If no, places and returns True. If yes, returns False"""
+        """Checks if grabbed ball overlaps with others
+
+        If no, places and returns True. If yes, returns False
+        """
         r, pos = self.grabbed_ball.R, np.array(self.grab_ball_node.getPos())
 
         for ball in self.shots.active.balls.values():
@@ -168,10 +171,14 @@ class BallInHandMode(Mode):
         return task.cont
 
     def add_transparent_ball(self):
+        # Panda pollutes the global namespace, appease linters
+        global_render = __builtins__["render"]
+        base = __builtins__["base"]
+
         self.trans_ball = base.loader.loadModel(
             panda_path(ani.model_dir / "balls" / self.grabbed_ball.rel_model_path)
         )
-        self.trans_ball.reparentTo(render.find("scene").find("cloth"))
+        self.trans_ball.reparentTo(global_render.find("scene").find("cloth"))
         self.trans_ball.setTransparency(TransparencyAttrib.MAlpha)
         self.trans_ball.setAlphaScale(0.4)
         self.trans_ball.setPos(self.grabbed_ball.get_node("pos").getPos())

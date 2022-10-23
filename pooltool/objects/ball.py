@@ -36,8 +36,6 @@ from pooltool.events import (
 from pooltool.objects import Object, Render
 from pooltool.utils import panda_path
 
-__all__ = ["Ball", "ball_from_dict", "ball_from_pickle"]
-
 
 class BallRender(Render):
     def __init__(self, rel_model_path=None):
@@ -45,10 +43,6 @@ class BallRender(Render):
         self.quats = None
         self.playback_sequence = None
         Render.__init__(self)
-
-        # Panda pollutes the global namespace, appease linters
-        self.global_render = __builtins__["render"]
-        self.base = __builtins__["base"]
 
     def init_sphere(self):
         """Initialize the ball's nodes"""

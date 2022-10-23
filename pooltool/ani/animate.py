@@ -43,11 +43,6 @@ from pooltool.objects.cue import Cue
 from pooltool.objects.table import table_types
 from pooltool.system import System, SystemCollection
 
-__all__ = [
-    "ShotViewer",
-    "Play",
-]
-
 
 class ModeManager(
     MenuMode,

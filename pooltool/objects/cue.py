@@ -11,17 +11,10 @@ from pooltool.error import ConfigError
 from pooltool.events import StickBallCollision
 from pooltool.objects import Object, Render
 
-__all__ = ["Cue", "cue_from_dict", "cue_from_pickle"]
-
 
 class CueRender(Render):
     def __init__(self):
         Render.__init__(self)
-
-        # Panda pollutes the global namespace, appease linters
-        self.loader = __builtins__["loader"]
-        self.global_render = __builtins__["render"]
-        self.base = __builtins__["base"]
 
         self.follow = None
         self.stroke_sequence = None

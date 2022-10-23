@@ -1,4 +1,4 @@
-#! /usr/bin/env python, ModeName
+#! /usr/bin/env python
 
 import numpy as np
 
@@ -7,7 +7,6 @@ import pooltool.ani as ani
 import pooltool.ani.action as action
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import Mode, ModeName
-from pooltool.system import System
 
 
 class CalculateMode(Mode):
@@ -47,7 +46,7 @@ class CalculateMode(Mode):
         self.shot_sim_overlay.hide()
 
     def calculate_view_task(self, task):
-        if not "run_simulation" in self.tasks:
+        if "run_simulation" not in self.tasks:
             # simulation calculation is finished
             self.change_mode("shot", enter_kwargs=dict(init_animations=True))
         elif self.keymap[action.zoom]:

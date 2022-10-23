@@ -1,6 +1,6 @@
-#! /usr/bin/env python, ModeName
+#! /usr/bin/env python
 
-from direct.gui.DirectGui import *
+from direct.gui.DirectGui import DGG
 
 import pooltool.ani.action as action
 from pooltool.ani.menu import GenericMenu

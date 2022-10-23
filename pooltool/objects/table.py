@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 import numpy as np
-from panda3d.core import *
+from panda3d.core import CollisionNode, CollisionPlane, LineSegs, Plane, Point3, Vec3
 
 import pooltool.ani as ani
 import pooltool.constants as c
@@ -10,14 +10,6 @@ from pooltool.error import ConfigError
 from pooltool.objects import Object, Render
 from pooltool.utils import panda_path
 
-__all__ = [
-    "PocketTable",
-    "BilliardTable",
-    "table_types",
-    "table_from_dict",
-    "table_from_pickle",
-]
-
 
 class TableRender(Render):
     def __init__(self, name, has_model):
@@ -25,10 +17,6 @@ class TableRender(Render):
         self.name = name
         self.has_model = has_model
         Render.__init__(self)
-
-        # Panda pollutes the global namespace, appease linters
-        self.loader = __builtins__["loader"]
-        self.global_render = __builtins__["render"]
 
     def init_cloth(self):
         if not self.has_model or not ani.settings["graphics"]["table"]:
@@ -67,7 +55,8 @@ class TableRender(Render):
 
         if self.object_type in ["pocket_table", "billiard_table"]:
             # Make 4 planes
-            # For diagram of cushion ids, see https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times
+            # For diagram of cushion ids, see
+            # https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times
             for cushion_id in ["3", "9", "12", "18"]:
                 cushion = self.cushion_segments["linear"][cushion_id]
 
@@ -92,7 +81,8 @@ class TableRender(Render):
                     collision_node.show()
         else:
             raise NotImplementedError(
-                f"TableRender.init_collisions :: has no routine for table type '{self.object_type}'"
+                f"TableRender.init_collisions :: has no routine for table type "
+                f"'{self.object_type}'"
             )
 
         return collision_node
@@ -192,7 +182,8 @@ class TableRender(Render):
 
     def set_render_state_as_object_state(self):
         raise NotImplementedError(
-            "Can't call set_object_state_as_render_state for class 'TableRender'. Call render instead"
+            "Can't call set_object_state_as_render_state for class 'TableRender'. Call "
+            "render instead"
         )
 
 
@@ -246,8 +237,8 @@ class PocketTable(Object, Table, TableRender):
 
         self.model_name = model_name
         if self.model_name != "none":
-            # User is passing a table with pre-existing parameters. All params explicitly defined by
-            # this preset table will overwrite all other options
+            # User is passing a table with pre-existing parameters. All params
+            # explicitly defined by this preset table will overwrite all other options
             table_params = ani.load_config("tables")[self.model_name]
             for key, val in table_params.items():
                 setattr(self, key, val)
@@ -259,7 +250,8 @@ class PocketTable(Object, Table, TableRender):
         TableRender.__init__(self, name=self.model_name, has_model=self.has_model)
 
     def get_cushion_segments(self):
-        # https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times for diagram
+        # https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times
+        # for diagram
         cw = self.cushion_width
         ca = (self.corner_pocket_angle + 45) * np.pi / 180
         sa = self.side_pocket_angle * np.pi / 180
@@ -559,8 +551,8 @@ class BilliardTable(Object, Table, TableRender):
 
         self.model_name = model_name
         if self.model_name != "none":
-            # User is passing a table with pre-existing parameters. All params explicitly defined by
-            # this preset table will overwrite all other options
+            # User is passing a table with pre-existing parameters. All params
+            # explicitly defined by this preset table will overwrite all other options
             table_params = ani.load_config("tables")[self.model_name]
             for key, val in table_params.items():
                 setattr(self, key, val)
@@ -631,16 +623,19 @@ class LinearCushionSegment(CushionSegment):
         Parameters
         ==========
         p1 : tuple
-            A length-3 tuple that defines a 3D point in space where the cushion segment starts
+            A length-3 tuple that defines a 3D point in space where the cushion segment
+            starts
         p2 : tuple
-            A length-3 tuple that defines a 3D point in space where the cushion segment ends
+            A length-3 tuple that defines a 3D point in space where the cushion segment
+            ends
         direction: 0 or 1, default 2
-            For most table geometries, the playing surface only exists on one side of the cushion,
-            so collisions only need to be checked for one direction. This direction can be specified
-            with either 0 or 1. To determine whether 0 or 1 should be used, please experiment
-            (FIXME: determine the rule). By default, both collision directions are checked, which
-            can be specified explicitly by passing 2, however this makes collision checks twice as
-            slow for event-based shot evolution algorithms.
+            For most table geometries, the playing surface only exists on one side of
+            the cushion, so collisions only need to be checked for one direction. This
+            direction can be specified with either 0 or 1. To determine whether 0 or 1
+            should be used, please experiment (FIXME: determine the rule). By default,
+            both collision directions are checked, which can be specified explicitly by
+            passing 2, however this makes collision checks twice as slow for event-based
+            shot evolution algorithms.
         """
         self.id = cushion_id
 
@@ -652,7 +647,8 @@ class LinearCushionSegment(CushionSegment):
 
         if p1z != p2z:
             raise ValueError(
-                f"LinearCushionSegment with id '{self.id}' has points p1 and p2 with different cushion heights (h)"
+                f"LinearCushionSegment with id '{self.id}' has points p1 and p2 with "
+                f"different cushion heights (h)"
             )
         self.height = p1z
 

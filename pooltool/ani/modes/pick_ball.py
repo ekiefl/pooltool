@@ -1,4 +1,4 @@
-#! /usr/bin/env python, ModeName
+#! /usr/bin/env python
 """A mode to for picking which ball to cue"""
 
 import numpy as np

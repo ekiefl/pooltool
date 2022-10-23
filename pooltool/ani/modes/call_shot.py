@@ -1,7 +1,7 @@
-#! /usr/bin/env python, ModeName
+#! /usr/bin/env python
 
 import numpy as np
-from direct.interval.IntervalGlobal import *
+from direct.interval.IntervalGlobal import LerpFunc, Parallel
 from panda3d.core import TransparencyAttrib
 
 import pooltool.ani as ani
@@ -184,10 +184,14 @@ class CallShotMode(Mode):
         return task.cont
 
     def add_transparent_ball(self):
+        # Panda pollutes the global namespace, appease linters
+        global_render = __builtins__["render"]
+        base = __builtins__["base"]
+
         self.trans_ball = base.loader.loadModel(
             panda_path(ani.model_dir / "balls" / self.closest_ball.rel_model_path)
         )
-        self.trans_ball.reparentTo(render.find("scene").find("cloth"))
+        self.trans_ball.reparentTo(global_render.find("scene").find("cloth"))
         self.trans_ball.setTransparency(TransparencyAttrib.MAlpha)
         self.trans_ball.setAlphaScale(0.4)
         self.trans_ball.setPos(self.closest_ball.get_node("pos").getPos())

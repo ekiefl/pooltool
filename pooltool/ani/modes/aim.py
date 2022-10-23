@@ -35,7 +35,8 @@ class AimMode(Mode, CueAvoid):
     def __init__(self):
         # In this state, the cue sticks to the self.min_theta
         self.magnet_theta = True
-        # if cue angle is within this many degrees from self.min_theta, it sticks to self.min_theta
+        # if cue angle is within this many degrees from self.min_theta, it sticks to
+        # self.min_theta
         self.magnet_threshold = 0.2
 
     def enter(self, load_prev_cam=False):
@@ -261,7 +262,8 @@ class AimMode(Mode, CueAvoid):
         cue.setY(new_y)
         cue.setZ(new_z)
 
-        # if application of english increases min_theta beyond current elevation, increase elevation
+        # if application of english increases min_theta beyond current elevation,
+        # increase elevation
         if (
             self.magnet_theta
             or self.min_theta >= -cue_focus.getR() - self.magnet_threshold

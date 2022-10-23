@@ -1,4 +1,4 @@
-#! /usr/bin/env python, ModeName
+#! /usr/bin/env python
 
 import sys
 

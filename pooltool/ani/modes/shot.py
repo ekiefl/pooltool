@@ -1,4 +1,4 @@
-#! /usr/bin/env python, ModeName
+#! /usr/bin/env python
 
 import numpy as np
 
@@ -37,12 +37,12 @@ class ShotMode(Mode):
         Parameters
         ==========
         init_animations : bool, False
-            If True, the shot animations are built and looped via SystemCollection.init_animation()
-            and SystemCollection.loop_animation()
+            If True, the shot animations are built and looped via
+            SystemCollection.init_animation() and SystemCollection.loop_animation()
 
         single_instance : bool, False
-            If True, exiting with `esc` will close the scene. Otherwise, quit_task will be called,
-            and user is brought back to main menu.
+            If True, exiting with `esc` will close the scene. Otherwise, quit_task will
+            be called, and user is brought back to main menu.
         """
         self.mouse.hide()
         self.mouse.relative()
@@ -102,10 +102,11 @@ class ShotMode(Mode):
         Parameters
         ==========
         key : str, 'soft'
-            Specifies how shot mode should be exited. Can be any of {'advance', 'reset', 'soft'}. 'advance'
-            and 'reset' end the animation, whereas 'soft' exits shot mode with the animations still
-            playing. 'advance' sets the system state to the end state of the shot, whereas 'reset' returns
-            the system state to the start state of the shot.
+            Specifies how shot mode should be exited. Can be any of {'advance', 'reset',
+            'soft'}. 'advance' and 'reset' end the animation, whereas 'soft' exits shot
+            mode with the animations still playing. 'advance' sets the system state to
+            the end state of the shot, whereas 'reset' returns the system state to the
+            start state of the shot.
         """
         assert key in {"advance", "reset", "soft"}
 
@@ -113,16 +114,18 @@ class ShotMode(Mode):
             if self.shots.parallel:
                 self.shots.toggle_parallel()
 
-            # If we are here, the plan is probably to return to 'aim' mode so another shot can be
-            # taken. This shot needs to be defined by its own system that has yet to be simulated.
-            # Depending how 'shot' mode was entered, this system may already exist in self.shots.
-            # The following code checks that by seeing whether the latest system has any events. If
-            # not, the system is unsimulated and is perfectly fit for 'aim' mode, but if the system
-            # has events, a fresh system needs to be appended to self.shots.
+            # If we are here, the plan is probably to return to 'aim' mode so another
+            # shot can be taken. This shot needs to be defined by its own system that
+            # has yet to be simulated.  Depending how 'shot' mode was entered, this
+            # system may already exist in self.shots.  The following code checks that by
+            # seeing whether the latest system has any events. If not, the system is
+            # unsimulated and is perfectly fit for 'aim' mode, but if the system has
+            # events, a fresh system needs to be appended to self.shots.
             make_new = True if len(self.shots[-1].events) else False
             if make_new:
                 if self.shots.active_index != len(self.shots) - 1:
-                    # Replaying shot that is not most recent. Teardown and then buildup most recent
+                    # Replaying shot that is not most recent. Teardown and then buildup
+                    # most recent
                     self.shots.clear_animation()
                     self.shots.active.teardown()
                     self.shots.set_active(-1)
@@ -134,7 +137,8 @@ class ShotMode(Mode):
                     as_active=False,
                 )
 
-                # Set the initial orientations of new shot to final orientations of old shot
+                # Set the initial orientations of new shot to final orientations of old
+                # shot
                 for ball_id in self.shots.active.balls:
                     old_ball = self.shots.active.balls[ball_id]
                     new_ball = self.shots[-1].balls[ball_id]
@@ -167,7 +171,8 @@ class ShotMode(Mode):
 
             self.shots.clear_animation()
             if self.shots.active_index != len(self.shots) - 1:
-                # Replaying shot that is not most recent. Teardown and then buildup most recent
+                # Replaying shot that is not most recent. Teardown and then buildup most
+                # recent
                 self.shots.active.teardown()
                 self.shots.set_active(-1)
                 self.shots.active.buildup()
