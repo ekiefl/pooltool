@@ -6,11 +6,27 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Tuple
 
-from direct.gui.DirectGui import *
+from direct.gui.DirectGui import (
+    DGG,
+    DirectButton,
+    DirectCheckButton,
+    DirectEntry,
+    DirectFrame,
+    DirectLabel,
+    DirectOptionMenu,
+    DirectScrolledFrame,
+)
 from direct.gui.OnscreenImage import OnscreenImage
-from direct.gui.OnscreenText import OnscreenText
-from direct.showbase.ShowBase import ShowBase
-from panda3d.core import *
+from panda3d.core import (
+    CardMaker,
+    LineSegs,
+    NodePath,
+    Point3,
+    TextNode,
+    Texture,
+    TransparencyAttrib,
+    Vec4,
+)
 
 import pooltool
 import pooltool.ani as ani
@@ -35,7 +51,7 @@ TITLE_FONT = MENU_ASSETS / "fonts" / "labtop-secundo" / "LABTSECW.ttf"
 BUTTON_FONT = MENU_ASSETS / "fonts" / "labtop-secundo" / "LABTSECW.ttf"
 
 
-class XMLMenu(object):
+class XMLMenu:
     def __init__(self):
         menu_dir = Path(pooltool.__file__).parent / "config" / "menus"
 
@@ -61,14 +77,19 @@ class XMLMenu(object):
             self.trees[name].write(self.paths[name])
 
 
-class Menu(object):
+class Menu:
     def __init__(self, xml, name):
+        # Panda pollutes the global namespace, appease linters
+        self.aspect2d = __builtins__["aspect2d"]
+        self.render2d = __builtins__["render2d"]
+        self.loader = __builtins__["loader"]
+
         self.xml = xml
         self.name = name
         self.menu_xml = self.get_menu_xml()
 
-        self.title_font = loader.loadFont(panda_path(TITLE_FONT))
-        self.button_font = loader.loadFont(panda_path(BUTTON_FONT))
+        self.title_font = self.loader.loadFont(panda_path(TITLE_FONT))
+        self.button_font = self.loader.loadFont(panda_path(BUTTON_FONT))
 
         # No idea why this conditional must exist
         if self.title_font.get_num_pages() == 0:
@@ -81,7 +102,7 @@ class Menu(object):
         self.area_backdrop = DirectFrame(
             frameColor=FRAME_COLOR,
             frameSize=(-1, 1, -1, 1),
-            parent=render2d,
+            parent=self.render2d,
         )
 
         self.area_backdrop.setImage(panda_path(MENU_ASSETS / "menu_background.jpeg"))
@@ -99,7 +120,7 @@ class Menu(object):
             frameSize=(-1, 1, -0.9, 0.3),
             scrollBarWidth=0.04,
             horizontalScroll_frameSize=(0, 0, 0, 0),
-            parent=aspect2d,
+            parent=self.aspect2d,
         )
         self.area.setPos(0, 0, 0)
         self.area.setTransparency(TransparencyAttrib.MAlpha)
@@ -497,13 +518,17 @@ class Menu(object):
 
         validator = item.attrib.get("validator")
         if validator is None:
-            validator = lambda value: True
+
+            def validator(value):
+                return True
+
         else:
             try:
                 validator = getattr(self, validator)
             except AttributeError:
                 raise AttributeError(
-                    f"Unknown validator string '{validator}' for element with name '{name}'"
+                    f"Unknown validator string '{validator}' for element with name "
+                    f"'{name}'"
                 )
 
         try:
@@ -700,7 +725,7 @@ class Menu(object):
     def is_entry_floatable(self, value) -> Tuple[bool, str]:
         try:
             float(value)
-        except:
+        except Exception:
             return False, "Error: must be a number"
         else:
             return True, ""
@@ -896,7 +921,7 @@ class Menu(object):
             frameColor=(1, 1, 0.9, 1),
             text=msg,
             scale=INFO_TEXT_SCALE,
-            parent=aspect2d,
+            parent=self.aspect2d,
             text_fg=TEXT_COLOR,
             text_align=TextNode.ALeft,
             pad=(0.2, 0.2),
@@ -905,7 +930,7 @@ class Menu(object):
         # Position the hover message at the mouse
         coords = mouse_watcher.getMouse()
         r2d = Point3(coords[0], 0, coords[1])
-        a2d = aspect2d.getRelativePoint(render2d, r2d)
+        a2d = self.aspect2d.getRelativePoint(self.render2d, r2d)
         self.hover_msg.setPos(a2d)
         # Now shift it up so the mouse doesn't get in the way
         self.hover_msg.setZ(self.hover_msg.getZ() + INFO_SCALE * 2)
@@ -930,7 +955,7 @@ class Menu(object):
         self.area.show()
 
 
-class Menus(object):
+class Menus:
     def __init__(self):
         self.menus = {}
         self.xml = XMLMenu()
@@ -1084,6 +1109,9 @@ def loadImageAsPlane(filepath, yresolution=600):
     yresolution -- pixel-perfect width resolution
     """
 
+    # Panda pollutes the global namespace, appease linters
+    loader = __builtins__["loader"]
+
     tex = loader.loadTexture(filepath)
     tex.setBorderColor(Vec4(0, 0, 0, 0))
     tex.setWrapU(Texture.WMBorderColor)
@@ -1104,8 +1132,8 @@ def loadImageAsPlane(filepath, yresolution=600):
 
 # -----------------------------------------------------------------------------------
 
-# FIXME any code using functions below this line should refactored. Those culprits are
-# as follows:
+# FIXME The plan is to remove GenericMenu. It's legacy. GenericMenu should be removed
+# and those using GenericMenu should be refactored:
 #
 # ▶ grep -r "GenericMenu" pooltool/ --exclude="*models*"
 #     pooltool//ani/animate.py:from pooltool.ani.menu import GenericMenu
@@ -1120,12 +1148,15 @@ def loadImageAsPlane(filepath, yresolution=600):
 #     pooltool//ani/modes/cam_load.py:        self.cam_load_slots = GenericMenu(
 
 
-class GenericMenu(object):
+class GenericMenu:
     def __init__(self, title="", frame_color=(1, 1, 1, 1), title_pos=(0, 0, 0.8)):
+        # Panda pollutes the global namespace, appease linters
+        self.render2d = __builtins__["render2d"]
+
         self.titleMenuBackdrop = DirectFrame(
             frameColor=frame_color,
             frameSize=(-1, 1, -1, 1),
-            parent=render2d,
+            parent=self.render2d,
         )
 
         self.text_scale = 0.07
@@ -1181,8 +1212,8 @@ class GenericMenu(object):
 
         Notes
         =====
-        - images are parented to self.titleMenuBackdrop (as opposed self.titleMenu) in order to
-          preserve their aspect ratios.
+        - images are parented to self.titleMenuBackdrop (as opposed self.titleMenu) in
+          order to preserve their aspect ratios.
         """
 
         img = OnscreenImage(
@@ -1283,7 +1314,7 @@ def make_dropdown(text, options=["None"], command=None, scale=ani.menu_text_scal
         text_align=TextNode.ALeft,
     )
 
-    label = DirectLabel(
+    DirectLabel(
         text=text + ":",
         relief=None,
         text_fg=(0, 0, 0, 1),
@@ -1307,7 +1338,7 @@ def make_direct_entry(text, command=None, scale=ani.menu_text_scale, initial="No
         focusInCommand=lambda: entry.enterText(""),
     )
 
-    label = DirectLabel(
+    DirectLabel(
         text=text + ":",
         relief=None,
         text_fg=(0, 0, 0, 1),
