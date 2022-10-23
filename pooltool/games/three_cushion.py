@@ -1,9 +1,8 @@
 #! /usr/bin/env python
 
 import pooltool.constants as c
-import pooltool.events as e
 from pooltool.error import ConfigError
-from pooltool.games import Game, Player
+from pooltool.games.datatypes import Game
 from pooltool.layouts import ThreeCushionRack
 
 
@@ -82,7 +81,9 @@ def is_hit(shot, clean=False):
         if event.agents[0].id != cue
         else event.agents[1].id
     )
-    get_agent_ids = lambda event: [agent.id for agent in event.agents]
+
+    def get_agent_ids(event):
+        return [agent.id for agent in event.agents]
 
     first_hit = False
     second_hit = False
@@ -105,7 +106,6 @@ def is_hit(shot, clean=False):
                 if clean:
                     return False
             else:
-                second_hit_agent = get_other_agent(event)
                 second_hit = True
                 break
     else:
@@ -131,7 +131,9 @@ def which_hit_first(shot):
         if event.agents[0].id != cue
         else event.agents[1].id
     )
-    get_agent_ids = lambda event: [agent.id for agent in event.agents]
+
+    def get_agent_ids(event):
+        return [agent.id for agent in event.agents]
 
     for event in shot.events:
         if event.event_type == "ball-ball":
@@ -157,7 +159,9 @@ def get_shot_components(shot):
         if event.agents[0].id != cue
         else event.agents[1].id
     )
-    get_agent_ids = lambda event: [agent.id for agent in event.agents]
+
+    def get_agent_ids(event):
+        return [agent.id for agent in event.agents]
 
     first_hit, second_hit = False, False
     shot_components = []

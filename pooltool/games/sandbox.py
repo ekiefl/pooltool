@@ -1,15 +1,8 @@
 #! /usr/bin/env python
 
-from direct.gui.OnscreenText import OnscreenText
-from direct.interval.IntervalGlobal import *
-from panda3d.core import *
-
-import pooltool.ani as ani
 import pooltool.constants as c
-import pooltool.events as e
-from pooltool.games import Game, Player
+from pooltool.games.datatypes import Game
 from pooltool.layouts import NineBallRack
-from pooltool.objects import DummyBall
 
 
 class Sandbox(Game):

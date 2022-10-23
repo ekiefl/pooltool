@@ -2,7 +2,7 @@
 
 import pooltool.constants as c
 import pooltool.events as e
-from pooltool.games import Game, Player
+from pooltool.games.datatypes import Game
 from pooltool.layouts import NineBallRack
 from pooltool.objects import DummyBall
 
