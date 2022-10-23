@@ -6,11 +6,11 @@ import pooltool as pt
 import pooltool.ani as ani
 import pooltool.ani.action as action
 from pooltool.ani.menu import GenericMenu
-from pooltool.ani.modes.datatypes import Mode, ModeName
+from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
-class CalculateMode(Mode):
-    name = ModeName.calculate
+class CalculateMode(BaseMode):
+    name = Mode.calculate
     keymap = {
         action.move: False,
         action.quit: False,
@@ -48,7 +48,7 @@ class CalculateMode(Mode):
     def calculate_view_task(self, task):
         if "run_simulation" not in self.tasks:
             # simulation calculation is finished
-            self.change_mode(ModeName.shot, enter_kwargs=dict(init_animations=True))
+            self.change_mode(Mode.shot, enter_kwargs=dict(init_animations=True))
         elif self.keymap[action.zoom]:
             self.zoom_camera_calculate()
         elif self.keymap[action.move]:

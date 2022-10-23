@@ -4,19 +4,19 @@ from direct.gui.DirectGui import DGG
 
 import pooltool.ani.action as action
 from pooltool.ani.menu import GenericMenu
-from pooltool.ani.modes.datatypes import Mode, ModeName
+from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
-class CamLoadMode(Mode):
-    name = ModeName.cam_load
+class CamLoadMode(BaseMode):
+    name = Mode.cam_load
     keymap = {
         action.quit: False,
         action.cam_load: True,
     }
 
     def enter(self):
-        if self.last_mode == ModeName.aim:
-            self.last_mode = ModeName.view
+        if self.last_mode == Mode.aim:
+            self.last_mode = Mode.view
         self.mouse.show()
         self.mouse.absolute()
         self.mouse.track()
@@ -70,7 +70,7 @@ class CamLoadMode(Mode):
     def cam_load_task(self, task):
         if not self.keymap[action.cam_load]:
             enter_kwargs = (
-                dict(load_prev_cam=True) if self.last_mode == ModeName.aim else dict()
+                dict(load_prev_cam=True) if self.last_mode == Mode.aim else dict()
             )
             self.change_mode(self.last_mode, enter_kwargs=enter_kwargs)
 

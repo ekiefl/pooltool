@@ -4,11 +4,11 @@ from direct.gui.DirectGui import DGG
 
 import pooltool.ani.action as action
 from pooltool.ani.menu import GenericMenu
-from pooltool.ani.modes.datatypes import Mode, ModeName
+from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
-class CamSaveMode(Mode):
-    name = ModeName.cam_save
+class CamSaveMode(BaseMode):
+    name = Mode.cam_save
     keymap = {
         action.quit: False,
         action.cam_save: True,
@@ -72,7 +72,7 @@ class CamSaveMode(Mode):
     def cam_save_task(self, task):
         if not self.keymap[action.cam_save]:
             enter_kwargs = (
-                dict(load_prev_cam=True) if self.last_mode == ModeName.aim else dict()
+                dict(load_prev_cam=True) if self.last_mode == Mode.aim else dict()
             )
             self.change_mode(self.last_mode, enter_kwargs=enter_kwargs)
 

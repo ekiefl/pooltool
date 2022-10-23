@@ -6,11 +6,11 @@ import numpy as np
 import pooltool.ani as ani
 import pooltool.ani.action as action
 import pooltool.constants as c
-from pooltool.ani.modes.datatypes import Mode, ModeName
+from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
-class PickBallMode(Mode):
-    name = ModeName.pick_ball
+class PickBallMode(BaseMode):
+    name = Mode.pick_ball
     keymap = {
         action.quit: False,
         action.pick_ball: True,
@@ -40,7 +40,7 @@ class PickBallMode(Mode):
 
     def pick_ball_task(self, task):
         if not self.keymap[action.pick_ball]:
-            self.change_mode(ModeName.aim)
+            self.change_mode(Mode.aim)
             return task.done
 
         self.move_camera_pick_ball()
@@ -61,7 +61,7 @@ class PickBallMode(Mode):
                     f"Now cueing the {self.shots.active.cue.cueing_ball.id} ball",
                     sentiment="neutral",
                 )
-            self.change_mode(ModeName.aim)
+            self.change_mode(Mode.aim)
             return task.done
 
         return task.cont

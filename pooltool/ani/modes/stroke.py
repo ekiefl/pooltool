@@ -2,11 +2,11 @@
 
 import pooltool.ani as ani
 import pooltool.ani.action as action
-from pooltool.ani.modes.datatypes import Mode, ModeName
+from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
-class StrokeMode(Mode):
-    name = ModeName.stroke
+class StrokeMode(BaseMode):
+    name = Mode.stroke
     keymap = {
         action.fine_control: False,
         action.stroke: True,
@@ -30,7 +30,7 @@ class StrokeMode(Mode):
 
     def exit(self):
         self.remove_task("stroke_task")
-        self.player_cam.store_state(ModeName.stroke, overwrite=True)
+        self.player_cam.store_state(Mode.stroke, overwrite=True)
 
     def stroke_task(self, task):
         if self.keymap[action.stroke]:
@@ -44,7 +44,7 @@ class StrokeMode(Mode):
                 self.shots.active.cue.set_object_state_as_render_state()
                 self.shots.active.cue.strike()
                 self.shots.active.user_stroke = True
-                self.change_mode(ModeName.calculate)
+                self.change_mode(Mode.calculate)
                 return
         else:
             self.shots.active.cue.get_node("cue_stick").setX(0)

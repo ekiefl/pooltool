@@ -2,10 +2,10 @@
 
 import pooltool.ani as ani
 import pooltool.ani.action as action
-from pooltool.ani.modes.datatypes import Mode, ModeName
+from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
-class PurgatoryMode(Mode):
+class PurgatoryMode(BaseMode):
     """A transitionary mode when the window has become inactive
 
     Purgatory mode should be enetered when the pooltool window inactive. Opening an app,
@@ -23,7 +23,7 @@ class PurgatoryMode(Mode):
     frame rate is engaged. When active, the standard frame rate is used.
     """
 
-    name = ModeName.purgatory
+    name = Mode.purgatory
     keymap = {
         action.regain_control: False,
     }
