@@ -7,9 +7,12 @@ from pandac.PandaModules import WindowProperties
 
 class Mouse(ClockObject):
     def __init__(self):
+        # Panda pollutes the global namespace, appease linters
+        self.base = __builtins__["base"]
+
         ClockObject.__init__(self)
 
-        self.mouse = base.mouseWatcherNode
+        self.mouse = self.base.mouseWatcherNode
         self.relative_requested = False
         self.touch()
 
@@ -22,17 +25,17 @@ class Mouse(ClockObject):
     def hide(self):
         props = WindowProperties()
         props.setCursorHidden(True)
-        base.win.requestProperties(props)
+        self.base.win.requestProperties(props)
 
     def show(self):
         props = WindowProperties()
         props.setCursorHidden(False)
-        base.win.requestProperties(props)
+        self.base.win.requestProperties(props)
 
     def absolute(self):
         props = WindowProperties()
         props.setMouseMode(WindowProperties.M_absolute)
-        base.win.requestProperties(props)
+        self.base.win.requestProperties(props)
 
         if self.relative_requested:
             self.relative_requested = False
@@ -41,7 +44,7 @@ class Mouse(ClockObject):
         if self.mouse.hasMouse():
             props = WindowProperties()
             props.setMouseMode(WindowProperties.M_relative)
-            base.win.requestProperties(props)
+            self.base.win.requestProperties(props)
             self.relative_requested = False
         else:
             self.relative_requested = True
