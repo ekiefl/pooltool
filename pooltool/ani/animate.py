@@ -20,7 +20,7 @@ import pooltool.ani.environment as environment
 import pooltool.games as games
 from pooltool.ani.camera import PlayerCam
 from pooltool.ani.hud import hud
-from pooltool.ani.menu import GenericMenu, Menus
+from pooltool.ani.menu import GenericMenu, Menus, menus
 from pooltool.ani.modes import (
     AimMode,
     BallInHandMode,
@@ -490,11 +490,11 @@ class ShotViewer(Interface):
         self.stop()
 
 
-class Play(Interface, Menus):
+class Play(Interface):
     def __init__(self, *args, **kwargs):
         Interface.__init__(self, *args, **kwargs)
-        Menus.__init__(self)
 
+        menus.populate()
         self.change_mode(Mode.menu)
 
         # This task chain allows simulations to be run in parallel to the game processes
@@ -509,7 +509,7 @@ class Play(Interface, Menus):
         )
 
     def go(self):
-        self.hide_menus()
+        menus.hide_all()
 
         self.shots = SystemCollection()
         self.shots.append(System())
@@ -525,7 +525,7 @@ class Play(Interface, Menus):
         Interface.close_scene(self)
 
     def setup(self):
-        self.setup_options = self.get_menu_options()
+        self.setup_options = menus.get_options()
 
         self.setup_table()
         self.setup_game()

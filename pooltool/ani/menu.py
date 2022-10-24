@@ -86,7 +86,7 @@ class Menu:
 
         self.xml = xml
         self.name = name
-        self.menu_xml = self.get_menu_xml()
+        self.menu_xml = self.get_xml()
 
         self.title_font = self.loader.loadFont(panda_path(TITLE_FONT))
         self.button_font = self.loader.loadFont(panda_path(BUTTON_FONT))
@@ -138,7 +138,7 @@ class Menu:
 
         return inner
 
-    def get_menu_xml(self):
+    def get_xml(self):
         for menu in self.xml.iterate_menus():
             if menu.attrib["name"] == self.name:
                 break
@@ -747,7 +747,7 @@ class Menu:
         desc = self.search_child_tag(item, "description").text
 
         # This is the button you click. NOTE `command` is assigned ad hoc. See
-        # Menus.populate_menus
+        # Menus.populate
         button = DirectButton(
             text=name,
             text_align=TextNode.ALeft,
@@ -823,7 +823,7 @@ class Menu:
         func_name = item[0].text
 
         # This is the button you click. NOTE `command` is assigned ad hoc. See
-        # Menus.populate_menus
+        # Menus.populate
         button = DirectButton(
             scale=BACKBUTTON_TEXT_SCALE,
             geom=(
@@ -959,10 +959,7 @@ class Menus:
     def __init__(self):
         self.menus = {}
         self.xml = XMLMenu()
-        self.current_menu = None
-        self.populate_menus()
-
-        self.show_menu("main_menu")
+        self.current = None
 
     def _update_xml(func):
         def inner(self, *args, **kwargs):
@@ -972,7 +969,7 @@ class Menus:
 
         return inner
 
-    def populate_menus(self):
+    def populate(self):
         """Populate all menus"""
         for menu_xml in self.xml.iterate_menus():
             name = menu_xml.attrib["name"]
@@ -996,18 +993,18 @@ class Menus:
                     # the function and attribute it to the element.
                     element["object"]["command"] = getattr(self, func_name)
 
-    def show_menu(self, name):
-        self.hide_menus()
+    def show(self, name):
+        self.hide_all()
         self.menus[name].show()
-        self.current_menu = self.menus[name]
+        self.current = self.menus[name]
 
-    def hide_menus(self):
+    def hide_all(self):
         for menu_name, menu in self.menus.items():
             self.menus[menu_name].hide()
 
-        self.current_menu = None
+        self.current = None
 
-    def get_menu_options(self):
+    def get_options(self):
         return {
             "table_type": self.xml.roots["game_setup"]
             .find(".//*[@name='table_type']")
@@ -1016,14 +1013,14 @@ class Menus:
 
     @_update_xml
     def func_update_checkbox_xml(self, value, name):
-        for element in self.current_menu.elements:
+        for element in self.current.elements:
             if element.get("name") == name:
                 break
         element["xml"].set("checked", "true" if value == 1 else "false")
 
     @_update_xml
     def func_update_dropdown_xml(self, value, name):
-        for element in self.current_menu.elements:
+        for element in self.current.elements:
             if element.get("name") == name:
                 break
         element["xml"].set("selection", value)
@@ -1046,7 +1043,7 @@ class Menus:
         for entry in self.xml.root.findall(".//*[@name='new_table']/entry"):
             name = entry.attrib["name"]
             value = entry.attrib["value"]
-            validator = getattr(self.current_menu, entry.attrib["validator"])
+            validator = getattr(self.current, entry.attrib["validator"])
 
             is_valid, reason = validator(value)
             if not is_valid:
@@ -1068,13 +1065,13 @@ class Menus:
                 element["object"]["items"] = tmp_options
 
     def func_go_about(self):
-        self.show_menu("about")
+        self.show("about")
 
     def func_go_game_setup(self):
-        self.show_menu("game_setup")
+        self.show("game_setup")
 
     def func_go_new_table(self):
-        self.show_menu("new_table")
+        self.show("new_table")
 
     def func_go_view_table(self):
         for element in self.menus["view_table"].elements:
@@ -1091,13 +1088,13 @@ class Menus:
                     string.append(key + " " * (buffer + 4) + str(val))
                 element["content"].setText("\n".join(string))
 
-        self.show_menu("view_table")
+        self.show("view_table")
 
     def func_go_settings(self):
-        self.show_menu("settings")
+        self.show("settings")
 
     def func_go_main_menu(self):
-        self.show_menu("main_menu")
+        self.show("main_menu")
 
 
 def loadImageAsPlane(filepath, yresolution=600):
@@ -1129,6 +1126,8 @@ def loadImageAsPlane(filepath, yresolution=600):
     card.flattenLight()  # apply scale
     return card
 
+
+menus = Menus()
 
 # -----------------------------------------------------------------------------------
 

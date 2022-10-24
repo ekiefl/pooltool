@@ -3,6 +3,7 @@
 import sys
 
 from pooltool.ani.action import Action
+from pooltool.ani.menu import menus
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 
 
@@ -19,7 +20,7 @@ class MenuMode(BaseMode):
     def enter(self):
         self.mouse.show()
         self.mouse.absolute()
-        self.show_menu("main_menu")
+        menus.show("main_menu")
 
         self.task_action("escape", Action.exit, True)
         self.task_action("escape-up", Action.exit, False)
@@ -44,22 +45,22 @@ class MenuMode(BaseMode):
             return task.done
 
         if self.keymap[Action.scroll_up]:
-            scroll_bar = self.current_menu.area.verticalScroll
+            scroll_bar = menus.current.area.verticalScroll
             scroll_bar.setValue(scroll_bar.getValue() - scroll_bar["pageSize"])
             self.keymap[Action.scroll_up] = False
 
         if self.keymap[Action.scroll_down]:
-            scroll_bar = self.current_menu.area.verticalScroll
+            scroll_bar = menus.current.area.verticalScroll
             scroll_bar.setValue(scroll_bar.getValue() + scroll_bar["pageSize"])
             self.keymap[Action.scroll_down] = False
 
         if self.keymap["click"]:
             self.keymap["click"] = False
-            for element in self.current_menu.elements:
+            for element in menus.current.elements:
                 if (
                     element["type"] == "entry"
                     and element["object"]["focus"]
-                    and element["name"] != self.current_menu.hovered_entry
+                    and element["name"] != self.current.hovered_entry
                 ):
                     element["object"]["focus"] = False
 
