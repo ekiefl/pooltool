@@ -100,8 +100,7 @@ class BallInHandMode(BaseMode):
             if self.keymap["next"]:
                 self.keymap["next"] = False
                 if self.try_placement():
-                    BallInHandMode.exit(self, success=True)
-                    BallInHandMode.enter(self)
+                    self.change_mode(self.last_mode)
                     return task.done
                 else:
                     # FIXME add error sound and message
