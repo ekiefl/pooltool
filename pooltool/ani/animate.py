@@ -20,7 +20,7 @@ import pooltool.ani.environment as environment
 import pooltool.games as games
 from pooltool.ani.camera import PlayerCam
 from pooltool.ani.hud import hud
-from pooltool.ani.menu import GenericMenu, Menus, menus
+from pooltool.ani.menu import GenericMenu, menus
 from pooltool.ani.modes import (
     AimMode,
     BallInHandMode,
@@ -38,7 +38,7 @@ from pooltool.ani.modes import (
     modes,
 )
 from pooltool.ani.modes.datatypes import Mode
-from pooltool.ani.mouse import Mouse
+from pooltool.ani.mouse import Mouse, mouse
 from pooltool.error import ConfigError
 from pooltool.objects.cue import Cue
 from pooltool.objects.table import table_types
@@ -153,8 +153,8 @@ class Interface(ShowBase, ModeManager):
 
         self.shots = SystemCollection()
 
-        self.disableMouse()
-        self.mouse = Mouse()
+        mouse.init()
+
         self.player_cam = PlayerCam()
 
         ModeManager.__init__(self)
@@ -461,7 +461,9 @@ class ShotViewer(Interface):
         self.title_node.show()
         self.init_help_page()
         self.help_hint.hide()
-        self.mouse = Mouse()
+
+        mouse.init()
+
         self.init_system_nodes()
 
         hud_task = hud.init()

@@ -5,6 +5,7 @@ from direct.gui.DirectGui import DGG
 from pooltool.ani.action import Action
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 
 
 class CamLoadMode(BaseMode):
@@ -16,10 +17,12 @@ class CamLoadMode(BaseMode):
 
     def enter(self):
         if self.last_mode == Mode.aim:
+            # FIXME Justification for this lie?
             self.last_mode = Mode.view
-        self.mouse.show()
-        self.mouse.absolute()
-        self.mouse.track()
+
+        mouse.show()
+        mouse.absolute()
+        mouse.track()
         self.selection = None
 
         self.task_action("escape", Action.quit, True)
@@ -64,7 +67,7 @@ class CamLoadMode(BaseMode):
             )
 
         self.remove_task("cam_load_task")
-        self.mouse.touch()
+        mouse.touch()
         self.cam_load_slots.hide()
 
     def cam_load_task(self, task):

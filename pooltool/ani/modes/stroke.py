@@ -3,6 +3,7 @@
 import pooltool.ani as ani
 from pooltool.ani.action import Action
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 
 
 class StrokeMode(BaseMode):
@@ -14,9 +15,9 @@ class StrokeMode(BaseMode):
 
     def enter(self):
         self.mode_stroked_from = self.last_mode
-        self.mouse.hide()
-        self.mouse.relative()
-        self.mouse.track()
+        mouse.hide()
+        mouse.relative()
+        mouse.track()
 
         self.shots.active.cue.track_stroke()
         self.shots.active.cue.show_nodes(ignore=("cue_cseg",))
@@ -58,9 +59,9 @@ class StrokeMode(BaseMode):
         max_speed_mouse = ani.max_stroke_speed / ani.stroke_sensitivity  # [px/s]
         max_backstroke = self.shots.active.cue.length * ani.backstroke_fraction  # [m]
 
-        with self.mouse:
-            dt = self.mouse.get_dt()
-            dx = self.mouse.get_dy()
+        with mouse:
+            dt = mouse.get_dt()
+            dx = mouse.get_dy()
 
         speed_mouse = dx / dt
         if speed_mouse > max_speed_mouse:

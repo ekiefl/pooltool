@@ -8,6 +8,7 @@ import pooltool.ani as ani
 import pooltool.constants as c
 from pooltool.ani.action import Action
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 from pooltool.utils import panda_path
 
 
@@ -20,6 +21,8 @@ class BallInHandMode(BaseMode):
     }
 
     def __init__(self):
+        super().__init__()
+
         self.trans_ball = None
         self.grab_ball_node = None
         self.grab_ball_shadow_node = None
@@ -28,9 +31,9 @@ class BallInHandMode(BaseMode):
     def enter(self):
         self.grab_selection_highlight_sequence = Parallel()
 
-        self.mouse.hide()
-        self.mouse.relative()
-        self.mouse.track()
+        mouse.hide()
+        mouse.relative()
+        mouse.track()
 
         self.grabbed_ball = None
 
@@ -204,8 +207,8 @@ class BallInHandMode(BaseMode):
         return closest
 
     def move_camera_ball_in_hand(self):
-        with self.mouse:
-            dxp, dyp = self.mouse.get_dx(), self.mouse.get_dy()
+        with mouse:
+            dxp, dyp = mouse.get_dx(), mouse.get_dy()
 
         h = self.player_cam.focus.getH() * np.pi / 180 + np.pi / 2
         dx = dxp * np.cos(h) - dyp * np.sin(h)

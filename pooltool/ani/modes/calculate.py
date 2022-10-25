@@ -7,6 +7,7 @@ import pooltool.ani as ani
 from pooltool.ani.action import Action
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 
 
 class CalculateMode(BaseMode):
@@ -19,9 +20,9 @@ class CalculateMode(BaseMode):
     }
 
     def enter(self):
-        self.mouse.hide()
-        self.mouse.relative()
-        self.mouse.track()
+        mouse.hide()
+        mouse.relative()
+        mouse.track()
 
         self.shot_sim_overlay = GenericMenu(
             title="Calculating shot...",
@@ -59,7 +60,7 @@ class CalculateMode(BaseMode):
                 self.rotate_camera_calculate()
             else:
                 # Update mouse positions so there is not a big jump
-                self.mouse.touch()
+                mouse.touch()
 
             if task.time > 0.25:
                 self.shot_sim_overlay.show()
@@ -76,16 +77,16 @@ class CalculateMode(BaseMode):
         return task.done
 
     def zoom_camera_calculate(self):
-        with self.mouse:
-            s = -self.mouse.get_dy() * ani.zoom_sensitivity
+        with mouse:
+            s = -mouse.get_dy() * ani.zoom_sensitivity
 
         self.player_cam.node.setPos(
             pt.autils.multiply_cw(self.player_cam.node.getPos(), 1 - s)
         )
 
     def move_camera_calculate(self):
-        with self.mouse:
-            dxp, dyp = self.mouse.get_dx(), self.mouse.get_dy()
+        with mouse:
+            dxp, dyp = mouse.get_dx(), mouse.get_dy()
 
         h = self.player_cam.focus.getH() * np.pi / 180 + np.pi / 2
         dx = dxp * np.cos(h) - dyp * np.sin(h)
@@ -101,10 +102,10 @@ class CalculateMode(BaseMode):
     def rotate_camera_calculate(self):
         fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
 
-        with self.mouse:
-            alpha_x = self.player_cam.focus.getH() - fx * self.mouse.get_dx()
+        with mouse:
+            alpha_x = self.player_cam.focus.getH() - fx * mouse.get_dx()
             alpha_y = max(
-                min(0, self.player_cam.focus.getR() + fy * self.mouse.get_dy()), -90
+                min(0, self.player_cam.focus.getR() + fy * mouse.get_dy()), -90
             )
 
         self.player_cam.focus.setH(alpha_x)  # Move view laterally

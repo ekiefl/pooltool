@@ -7,19 +7,21 @@ from pandac.PandaModules import WindowProperties
 
 class Mouse(ClockObject):
     def __init__(self):
-        # Panda pollutes the global namespace, appease linters
-        self.base = __builtins__["base"]
-
         ClockObject.__init__(self)
-
-        self.mouse = self.base.mouseWatcherNode
         self.relative_requested = False
-        self.touch()
 
     def __enter__(self):
         return self
 
     def __exit__(self, *args):
+        self.touch()
+
+    def init(self):
+        # Panda pollutes the global namespace, appease linters
+        self.base = __builtins__["base"]
+
+        self.base.disableMouse()
+        self.mouse = self.base.mouseWatcherNode
         self.touch()
 
     def hide(self):
@@ -93,3 +95,6 @@ class Mouse(ClockObject):
 
     def get_dt(self):
         return self.getRealTime() - self.last_t
+
+
+mouse = Mouse()

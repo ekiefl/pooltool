@@ -5,6 +5,7 @@ from direct.gui.DirectGui import DGG
 from pooltool.ani.action import Action
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 
 
 class CamSaveMode(BaseMode):
@@ -15,9 +16,9 @@ class CamSaveMode(BaseMode):
     }
 
     def enter(self):
-        self.mouse.show()
-        self.mouse.absolute()
-        self.mouse.track()
+        mouse.show()
+        mouse.absolute()
+        mouse.track()
         self.selection = None
 
         self.task_action("escape", Action.quit, True)
@@ -65,7 +66,7 @@ class CamSaveMode(BaseMode):
             self.player_cam.store_state(name=f"save_{self.selection}", overwrite=True)
 
         self.remove_task("cam_save_task")
-        self.mouse.touch()
+        mouse.touch()
         self.cam_save_slots.hide()
         del self.selection
 

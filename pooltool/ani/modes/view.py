@@ -7,6 +7,7 @@ import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 
 
 class ViewMode(BaseMode):
@@ -34,9 +35,9 @@ class ViewMode(BaseMode):
     }
 
     def enter(self, move_active=False, load_prev_cam=False):
-        self.mouse.hide()
-        self.mouse.relative()
-        self.mouse.track()
+        mouse.hide()
+        mouse.relative()
+        mouse.track()
 
         if self.shots.active is not None:
             self.shots.active.cue.hide_nodes(ignore=("cue_cseg",))
@@ -146,8 +147,8 @@ class ViewMode(BaseMode):
         self.player_cam.focus_object.setScale(0.002 * dist)
 
     def zoom_camera_view(self):
-        with self.mouse:
-            s = -self.mouse.get_dy() * ani.zoom_sensitivity
+        with mouse:
+            s = -mouse.get_dy() * ani.zoom_sensitivity
 
         self.player_cam.node.setPos(
             autils.multiply_cw(self.player_cam.node.getPos(), 1 - s)
@@ -155,8 +156,8 @@ class ViewMode(BaseMode):
         self.scale_focus()
 
     def move_camera_view(self):
-        with self.mouse:
-            dxp, dyp = self.mouse.get_dx(), self.mouse.get_dy()
+        with mouse:
+            dxp, dyp = mouse.get_dx(), mouse.get_dy()
 
         # NOTE This conversion _may_ depend on how I initialized self.player_cam.focus
         h = self.player_cam.focus.getH() * np.pi / 180 + np.pi / 2
@@ -176,10 +177,10 @@ class ViewMode(BaseMode):
         else:
             fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
 
-        with self.mouse:
-            alpha_x = self.player_cam.focus.getH() - fx * self.mouse.get_dx()
+        with mouse:
+            alpha_x = self.player_cam.focus.getH() - fx * mouse.get_dx()
             alpha_y = max(
-                min(0, self.player_cam.focus.getR() + fy * self.mouse.get_dy()), -90
+                min(0, self.player_cam.focus.getR() + fy * mouse.get_dy()), -90
             )
 
         self.player_cam.focus.setH(alpha_x)  # Move view laterally
@@ -188,8 +189,8 @@ class ViewMode(BaseMode):
     def view_apply_power(self):
         self.shots.active.cue.show_nodes(ignore=("cue_cseg",))
 
-        with self.mouse:
-            dy = self.mouse.get_dy()
+        with mouse:
+            dy = mouse.get_dy()
 
         min_V0, max_V0 = (
             hud.elements[HUDElement.power].min_strike,
@@ -210,8 +211,8 @@ class ViewMode(BaseMode):
 
         cue = self.shots.active.cue.get_node("cue_stick_focus")
 
-        with self.mouse:
-            delta_elevation = self.mouse.get_dy() * ani.elevate_sensitivity
+        with mouse:
+            delta_elevation = mouse.get_dy() * ani.elevate_sensitivity
 
         old_elevation = -cue.getR()
         new_elevation = max(0, min(ani.max_elevate, old_elevation + delta_elevation))
@@ -232,8 +233,8 @@ class ViewMode(BaseMode):
     def view_apply_english(self):
         self.shots.active.cue.show_nodes(ignore=("cue_cseg",))
 
-        with self.mouse:
-            dx, dy = self.mouse.get_dx(), self.mouse.get_dy()
+        with mouse:
+            dx, dy = mouse.get_dx(), mouse.get_dy()
 
         cue = self.shots.active.cue.get_node("cue_stick")
         cue_focus = self.shots.active.cue.get_node("cue_stick_focus")

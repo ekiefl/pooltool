@@ -5,6 +5,7 @@ import sys
 from pooltool.ani.action import Action
 from pooltool.ani.menu import menus
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 
 
 class MenuMode(BaseMode):
@@ -18,8 +19,8 @@ class MenuMode(BaseMode):
     }
 
     def enter(self):
-        self.mouse.show()
-        self.mouse.absolute()
+        mouse.show()
+        mouse.absolute()
         menus.show("main_menu")
 
         self.task_action("escape", Action.exit, True)

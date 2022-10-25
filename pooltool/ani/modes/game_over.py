@@ -5,6 +5,7 @@ from direct.gui.DirectGui import OnscreenText
 from pooltool.ani.action import Action
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 
 
 class GameOverMode(BaseMode):
@@ -19,8 +20,8 @@ class GameOverMode(BaseMode):
     }
 
     def enter(self):
-        self.mouse.show()
-        self.mouse.absolute()
+        mouse.show()
+        mouse.absolute()
 
         self.task_action("escape", Action.quit, True)
         self.render_game_over_screen()

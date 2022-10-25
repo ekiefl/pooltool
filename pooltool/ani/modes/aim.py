@@ -7,6 +7,7 @@ import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 from pooltool.objects.cue import CueAvoid
 
 
@@ -34,6 +35,8 @@ class AimMode(BaseMode, CueAvoid):
     }
 
     def __init__(self):
+        super().__init__()
+
         # In this state, the cue sticks to the self.min_theta
         self.magnet_theta = True
         # if cue angle is within this many degrees from self.min_theta, it sticks to
@@ -41,9 +44,9 @@ class AimMode(BaseMode, CueAvoid):
         self.magnet_threshold = 0.2
 
     def enter(self, load_prev_cam=False):
-        self.mouse.hide()
-        self.mouse.relative()
-        self.mouse.track()
+        mouse.hide()
+        mouse.relative()
+        mouse.track()
 
         if not self.shots.active.cue.has_focus:
             self.shots.active.cue.init_focus(self.shots.active.cue.cueing_ball)
@@ -139,20 +142,20 @@ class AimMode(BaseMode, CueAvoid):
         return task.cont
 
     def zoom_camera_aim(self):
-        with self.mouse:
-            s = -self.mouse.get_dy() * ani.zoom_sensitivity
+        with mouse:
+            s = -mouse.get_dy() * ani.zoom_sensitivity
 
         self.player_cam.node.setPos(
             autils.multiply_cw(self.player_cam.node.getPos(), 1 - s)
         )
 
     def adjust_head_aim(self):
-        with self.mouse:
+        with mouse:
             alpha_y = max(
                 min(
                     0,
                     self.player_cam.focus.getR()
-                    + ani.rotate_sensitivity_y * self.mouse.get_dy(),
+                    + ani.rotate_sensitivity_y * mouse.get_dy(),
                 ),
                 -90,
             )
@@ -165,10 +168,10 @@ class AimMode(BaseMode, CueAvoid):
         else:
             fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
 
-        with self.mouse:
-            alpha_x = self.player_cam.focus.getH() - fx * self.mouse.get_dx()
+        with mouse:
+            alpha_x = self.player_cam.focus.getH() - fx * mouse.get_dx()
             alpha_y = max(
-                min(0, self.player_cam.focus.getR() + fy * self.mouse.get_dy()), -90
+                min(0, self.player_cam.focus.getR() + fy * mouse.get_dy()), -90
             )
 
         self.player_cam.focus.setH(alpha_x)  # Move view laterally
@@ -199,8 +202,8 @@ class AimMode(BaseMode, CueAvoid):
         )
 
     def aim_apply_power(self):
-        with self.mouse:
-            dy = self.mouse.get_dy()
+        with mouse:
+            dy = mouse.get_dy()
 
         min_V0, max_V0 = (
             hud.elements[HUDElement.power].min_strike,
@@ -219,8 +222,8 @@ class AimMode(BaseMode, CueAvoid):
     def aim_elevate_cue(self):
         cue = self.shots.active.cue.get_node("cue_stick_focus")
 
-        with self.mouse:
-            delta_elevation = self.mouse.get_dy() * ani.elevate_sensitivity
+        with mouse:
+            delta_elevation = mouse.get_dy() * ani.elevate_sensitivity
 
         old_elevation = -cue.getR()
         new_elevation = max(0, min(ani.max_elevate, old_elevation + delta_elevation))
@@ -242,8 +245,8 @@ class AimMode(BaseMode, CueAvoid):
         hud.elements[HUDElement.jack].set(new_elevation)
 
     def apply_english(self):
-        with self.mouse:
-            dx, dy = self.mouse.get_dx(), self.mouse.get_dy()
+        with mouse:
+            dx, dy = mouse.get_dx(), mouse.get_dy()
 
         cue = self.shots.active.cue.get_node("cue_stick")
         cue_focus = self.shots.active.cue.get_node("cue_stick_focus")

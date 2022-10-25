@@ -7,6 +7,7 @@ import pooltool.ani as ani
 import pooltool.constants as c
 from pooltool.ani.action import Action
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 
 
 class PickBallMode(BaseMode):
@@ -17,13 +18,10 @@ class PickBallMode(BaseMode):
         "done": False,
     }
 
-    def __init__(self):
-        pass
-
     def enter(self):
-        self.mouse.hide()
-        self.mouse.relative()
-        self.mouse.track()
+        mouse.hide()
+        mouse.relative()
+        mouse.track()
 
         self.closest_ball = None
 
@@ -120,8 +118,8 @@ class PickBallMode(BaseMode):
         return closest
 
     def move_camera_pick_ball(self):
-        with self.mouse:
-            dxp, dyp = self.mouse.get_dx(), self.mouse.get_dy()
+        with mouse:
+            dxp, dyp = mouse.get_dx(), mouse.get_dy()
 
         h = self.player_cam.focus.getH() * np.pi / 180 + np.pi / 2
         dx = dxp * np.cos(h) - dyp * np.sin(h)

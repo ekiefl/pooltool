@@ -3,6 +3,7 @@
 import pooltool.ani as ani
 from pooltool.ani.action import Action
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 
 
 class PurgatoryMode(BaseMode):
@@ -29,6 +30,8 @@ class PurgatoryMode(BaseMode):
     }
 
     def __init__(self):
+        super().__init__()
+
         # Panda pollutes the global namespace, appease linters
         self.global_clock = __builtins__["globalClock"]
         self.base = __builtins__["base"]
@@ -36,8 +39,8 @@ class PurgatoryMode(BaseMode):
         self.is_window_active = None
 
     def enter(self):
-        self.mouse.show()
-        self.mouse.absolute()
+        mouse.show()
+        mouse.absolute()
 
         self.task_action("mouse1-up", Action.regain_control, True)
         self.task_action("mouse1-down", Action.regain_control, False)

@@ -8,6 +8,7 @@ import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 
 
 class ShotMode(BaseMode):
@@ -45,9 +46,9 @@ class ShotMode(BaseMode):
             If True, exiting with `esc` will close the scene. Otherwise, quit_task will
             be called, and user is brought back to main menu.
         """
-        self.mouse.hide()
-        self.mouse.relative()
-        self.mouse.track()
+        mouse.hide()
+        mouse.relative()
+        mouse.track()
 
         if init_animations:
             self.shots.set_animation()
@@ -218,7 +219,7 @@ class ShotMode(BaseMode):
                 self.rotate_camera_shot()
             else:
                 # Update mouse positions so there is not a big jump
-                self.mouse.touch()
+                mouse.touch()
 
         return task.cont
 
@@ -325,8 +326,8 @@ class ShotMode(BaseMode):
         hud.elements.get(HUDElement.power).set(self.shots.active.cue.V0)
 
     def zoom_camera_shot(self):
-        with self.mouse:
-            s = -self.mouse.get_dy() * ani.zoom_sensitivity
+        with mouse:
+            s = -mouse.get_dy() * ani.zoom_sensitivity
 
         self.player_cam.node.setPos(
             autils.multiply_cw(self.player_cam.node.getPos(), 1 - s)
@@ -334,8 +335,8 @@ class ShotMode(BaseMode):
         self.scale_focus()  # ViewMode.scale_focus()
 
     def move_camera_shot(self):
-        with self.mouse:
-            dxp, dyp = self.mouse.get_dx(), self.mouse.get_dy()
+        with mouse:
+            dxp, dyp = mouse.get_dx(), mouse.get_dy()
 
         h = self.player_cam.focus.getH() * np.pi / 180 + np.pi / 2
         dx = dxp * np.cos(h) - dyp * np.sin(h)
@@ -351,10 +352,10 @@ class ShotMode(BaseMode):
     def rotate_camera_shot(self):
         fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
 
-        with self.mouse:
-            alpha_x = self.player_cam.focus.getH() - fx * self.mouse.get_dx()
+        with mouse:
+            alpha_x = self.player_cam.focus.getH() - fx * mouse.get_dx()
             alpha_y = max(
-                min(0, self.player_cam.focus.getR() + fy * self.mouse.get_dy()), -90
+                min(0, self.player_cam.focus.getR() + fy * mouse.get_dy()), -90
             )
 
         self.player_cam.focus.setH(alpha_x)  # Move view laterally
