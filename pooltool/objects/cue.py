@@ -480,7 +480,7 @@ class Cue(Object, CueRender):
         utils.save_pickle(self.as_dict(), path)
 
 
-class CueAvoid(object):
+class CueAvoid:
     def __init__(self):
         """Calculates min elevation required to avoid colliding with balls and cushions
 

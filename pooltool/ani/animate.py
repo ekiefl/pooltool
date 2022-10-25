@@ -38,7 +38,7 @@ from pooltool.ani.modes import (
     modes,
 )
 from pooltool.ani.modes.datatypes import Mode
-from pooltool.ani.mouse import Mouse, mouse
+from pooltool.ani.mouse import mouse
 from pooltool.error import ConfigError
 from pooltool.objects.cue import Cue
 from pooltool.objects.table import table_types
@@ -62,15 +62,14 @@ class ModeManager(
 ):
     def __init__(self):
         # Init every Mode class
-        self.modes = modes
         for mode_cls in modes.values():
             mode_cls.__init__(self)
 
         # Store the above as default states
         self.action_state_defaults = {}
-        for mode in self.modes:
+        for mode in modes:
             self.action_state_defaults[mode] = {}
-            for a, default_state in self.modes[mode].keymap.items():
+            for a, default_state in modes[mode].keymap.items():
                 self.action_state_defaults[mode][a] = default_state
 
         self.last_mode = None
@@ -94,15 +93,15 @@ class ModeManager(
 
         # Build up operations for the new mode
         self.mode = mode
-        self.keymap = self.modes[mode].keymap
-        self.modes[mode].enter(self, **enter_kwargs)
+        self.keymap = modes[mode].keymap
+        modes[mode].enter(self, **enter_kwargs)
 
     def end_mode(self, **kwargs):
         # Stop watching actions related to mode
         self.reset_event_listeners()
 
         if self.mode is not None:
-            self.modes[self.mode].exit(self, **kwargs)
+            modes[self.mode].exit(self, **kwargs)
             self.reset_action_states()
 
         self.mode = None
