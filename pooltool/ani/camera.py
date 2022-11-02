@@ -4,7 +4,7 @@ from panda3d.core import TransparencyAttrib
 
 
 class PlayerCam:
-    def __init__(self):
+    def init(self):
         # Panda pollutes the global namespace, appease linters
         self.base = __builtins__["base"]
         self.global_render = __builtins__["render"]
@@ -90,3 +90,6 @@ class PlayerCam:
 
     def has_state(self, name):
         return True if name in self.states else False
+
+
+player_cam = PlayerCam()

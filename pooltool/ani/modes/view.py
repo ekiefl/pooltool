@@ -5,6 +5,7 @@ import numpy as np
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
+from pooltool.ani.camera import player_cam
 from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import mouse
@@ -43,7 +44,7 @@ class ViewMode(BaseMode):
             self.shots.active.cue.hide_nodes(ignore=("cue_cseg",))
 
         if load_prev_cam:
-            self.player_cam.load_state(Mode.view)
+            player_cam.load_state(Mode.view)
 
         self.scale_focus()
 
@@ -83,7 +84,7 @@ class ViewMode(BaseMode):
         self.remove_task("view_task")
         if ani.settings["gameplay"]["cue_collision"]:
             self.remove_task("collision_task")
-        self.player_cam.store_state(Mode.view, overwrite=True)
+        player_cam.store_state(Mode.view, overwrite=True)
 
     def view_task(self, task):
         if self.keymap[Action.stroke]:
@@ -140,36 +141,30 @@ class ViewMode(BaseMode):
         zoomed in or out the camera is.
         """
         # `dist` is the distance from the camera to the focus object and is equivalent
-        # to: cam_pos, focus_pos = self.player_cam.node.getPos(render),
-        # self.player_cam.focus_object.getPos(render) dist = (cam_pos -
+        # to: cam_pos, focus_pos = player_cam.node.getPos(render),
+        # player_cam.focus_object.getPos(render) dist = (cam_pos -
         # focus_pos).length()
-        dist = self.player_cam.node.getX()
-        self.player_cam.focus_object.setScale(0.002 * dist)
+        dist = player_cam.node.getX()
+        player_cam.focus_object.setScale(0.002 * dist)
 
     def zoom_camera_view(self):
         with mouse:
             s = -mouse.get_dy() * ani.zoom_sensitivity
 
-        self.player_cam.node.setPos(
-            autils.multiply_cw(self.player_cam.node.getPos(), 1 - s)
-        )
+        player_cam.node.setPos(autils.multiply_cw(player_cam.node.getPos(), 1 - s))
         self.scale_focus()
 
     def move_camera_view(self):
         with mouse:
             dxp, dyp = mouse.get_dx(), mouse.get_dy()
 
-        # NOTE This conversion _may_ depend on how I initialized self.player_cam.focus
-        h = self.player_cam.focus.getH() * np.pi / 180 + np.pi / 2
+        # NOTE This conversion _may_ depend on how I initialized player_cam.focus
+        h = player_cam.focus.getH() * np.pi / 180 + np.pi / 2
         dx = dxp * np.cos(h) - dyp * np.sin(h)
         dy = dxp * np.sin(h) + dyp * np.cos(h)
 
-        self.player_cam.focus.setX(
-            self.player_cam.focus.getX() + dx * ani.move_sensitivity
-        )
-        self.player_cam.focus.setY(
-            self.player_cam.focus.getY() + dy * ani.move_sensitivity
-        )
+        player_cam.focus.setX(player_cam.focus.getX() + dx * ani.move_sensitivity)
+        player_cam.focus.setY(player_cam.focus.getY() + dy * ani.move_sensitivity)
 
     def rotate_camera_view(self):
         if self.keymap[Action.fine_control]:
@@ -178,13 +173,11 @@ class ViewMode(BaseMode):
             fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
 
         with mouse:
-            alpha_x = self.player_cam.focus.getH() - fx * mouse.get_dx()
-            alpha_y = max(
-                min(0, self.player_cam.focus.getR() + fy * mouse.get_dy()), -90
-            )
+            alpha_x = player_cam.focus.getH() - fx * mouse.get_dx()
+            alpha_y = max(min(0, player_cam.focus.getR() + fy * mouse.get_dy()), -90)
 
-        self.player_cam.focus.setH(alpha_x)  # Move view laterally
-        self.player_cam.focus.setR(alpha_y)  # Move view vertically
+        player_cam.focus.setH(alpha_x)  # Move view laterally
+        player_cam.focus.setR(alpha_y)  # Move view vertically
 
     def view_apply_power(self):
         self.shots.active.cue.show_nodes(ignore=("cue_cseg",))

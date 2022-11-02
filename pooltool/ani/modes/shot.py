@@ -6,6 +6,7 @@ import pooltool as pt
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
+from pooltool.ani.camera import player_cam
 from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import mouse
@@ -180,7 +181,7 @@ class ShotMode(BaseMode):
                 self.shots.active.buildup()
                 self.init_collisions()
 
-            self.player_cam.load_state(self.mode_stroked_from)
+            player_cam.load_state(self.mode_stroked_from)
             for ball in self.shots.active.balls.values():
                 if ball.history.is_populated():
                     ball.set(
@@ -199,7 +200,7 @@ class ShotMode(BaseMode):
 
     def shot_view_task(self, task):
         if self.keymap[Action.close_scene]:
-            self.player_cam.store_state("last_scene", overwrite=True)
+            player_cam.store_state("last_scene", overwrite=True)
             self.close_scene()
             self.end_mode()
             self.stop()
@@ -329,34 +330,26 @@ class ShotMode(BaseMode):
         with mouse:
             s = -mouse.get_dy() * ani.zoom_sensitivity
 
-        self.player_cam.node.setPos(
-            autils.multiply_cw(self.player_cam.node.getPos(), 1 - s)
-        )
+        player_cam.node.setPos(autils.multiply_cw(player_cam.node.getPos(), 1 - s))
         self.scale_focus()  # ViewMode.scale_focus()
 
     def move_camera_shot(self):
         with mouse:
             dxp, dyp = mouse.get_dx(), mouse.get_dy()
 
-        h = self.player_cam.focus.getH() * np.pi / 180 + np.pi / 2
+        h = player_cam.focus.getH() * np.pi / 180 + np.pi / 2
         dx = dxp * np.cos(h) - dyp * np.sin(h)
         dy = dxp * np.sin(h) + dyp * np.cos(h)
 
-        self.player_cam.focus.setX(
-            self.player_cam.focus.getX() + dx * ani.move_sensitivity
-        )
-        self.player_cam.focus.setY(
-            self.player_cam.focus.getY() + dy * ani.move_sensitivity
-        )
+        player_cam.focus.setX(player_cam.focus.getX() + dx * ani.move_sensitivity)
+        player_cam.focus.setY(player_cam.focus.getY() + dy * ani.move_sensitivity)
 
     def rotate_camera_shot(self):
         fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
 
         with mouse:
-            alpha_x = self.player_cam.focus.getH() - fx * mouse.get_dx()
-            alpha_y = max(
-                min(0, self.player_cam.focus.getR() + fy * mouse.get_dy()), -90
-            )
+            alpha_x = player_cam.focus.getH() - fx * mouse.get_dx()
+            alpha_y = max(min(0, player_cam.focus.getR() + fy * mouse.get_dy()), -90)
 
-        self.player_cam.focus.setH(alpha_x)  # Move view laterally
-        self.player_cam.focus.setR(alpha_y)  # Move view vertically
+        player_cam.focus.setH(alpha_x)  # Move view laterally
+        player_cam.focus.setR(alpha_y)  # Move view vertically

@@ -7,6 +7,7 @@ from panda3d.core import TransparencyAttrib
 import pooltool.ani as ani
 import pooltool.constants as c
 from pooltool.ani.action import Action
+from pooltool.ani.camera import player_cam
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import mouse
 from pooltool.utils import panda_path
@@ -36,7 +37,7 @@ class CallShotMode(BaseMode):
         mouse.relative()
         mouse.track()
 
-        self.player_cam.focus.setR(self.player_cam.focus.getR() - self.head_raise)
+        player_cam.focus.setR(player_cam.focus.getR() - self.head_raise)
 
         self.closest_pocket = None
         self.closest_ball = None
@@ -56,7 +57,7 @@ class CallShotMode(BaseMode):
             CallShotMode.remove_ball_highlight(self)
         CallShotMode.remove_transparent_ball(self)
         self.ball_highlight_sequence.pause()
-        self.player_cam.focus.setR(self.player_cam.focus.getR() + self.head_raise)
+        player_cam.focus.setR(player_cam.focus.getR() + self.head_raise)
 
     def call_shot_task(self, task):
         if not self.keymap[Action.call_shot]:
@@ -138,7 +139,7 @@ class CallShotMode(BaseMode):
             self.ball_highlight_sequence.start()
 
     def find_closest_pocket(self):
-        cam_pos = self.player_cam.focus.getPos()
+        cam_pos = player_cam.focus.getPos()
         d_min = np.inf
         closest = None
         for pocket in self.shots.active.table.pockets.values():
@@ -206,7 +207,7 @@ class CallShotMode(BaseMode):
         self.trans_ball = None
 
     def find_closest_ball(self):
-        cam_pos = self.player_cam.focus.getPos()
+        cam_pos = player_cam.focus.getPos()
         d_min = np.inf
         closest = None
         for ball in self.shots.active.balls.values():
@@ -224,13 +225,9 @@ class CallShotMode(BaseMode):
         with mouse:
             dxp, dyp = mouse.get_dx(), mouse.get_dy()
 
-        h = self.player_cam.focus.getH() * np.pi / 180 + np.pi / 2
+        h = player_cam.focus.getH() * np.pi / 180 + np.pi / 2
         dx = dxp * np.cos(h) - dyp * np.sin(h)
         dy = dxp * np.sin(h) + dyp * np.cos(h)
 
-        self.player_cam.focus.setX(
-            self.player_cam.focus.getX() + dx * ani.move_sensitivity
-        )
-        self.player_cam.focus.setY(
-            self.player_cam.focus.getY() + dy * ani.move_sensitivity
-        )
+        player_cam.focus.setX(player_cam.focus.getX() + dx * ani.move_sensitivity)
+        player_cam.focus.setY(player_cam.focus.getY() + dy * ani.move_sensitivity)

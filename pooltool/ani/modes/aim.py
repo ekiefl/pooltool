@@ -5,6 +5,7 @@ import numpy as np
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
+from pooltool.ani.camera import player_cam
 from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import mouse
@@ -55,11 +56,11 @@ class AimMode(BaseMode, CueAvoid):
 
         self.shots.active.cue.show_nodes(ignore=("cue_cseg",))
         self.shots.active.cue.get_node("cue_stick").setX(0)
-        self.player_cam.update_focus(
+        player_cam.update_focus(
             self.shots.active.cue.cueing_ball.get_node("pos").getPos()
         )
         if load_prev_cam:
-            self.player_cam.load_state(Mode.aim)
+            player_cam.load_state(Mode.aim)
 
         self.task_action("escape", Action.quit, True)
         self.task_action("f", Action.fine_control, True)
@@ -99,7 +100,7 @@ class AimMode(BaseMode, CueAvoid):
         if ani.settings["gameplay"]["cue_collision"]:
             self.remove_task("collision_task")
 
-        self.player_cam.store_state(Mode.aim, overwrite=True)
+        player_cam.store_state(Mode.aim, overwrite=True)
 
     def aim_task(self, task):
         if self.keymap[Action.view]:
@@ -145,22 +146,19 @@ class AimMode(BaseMode, CueAvoid):
         with mouse:
             s = -mouse.get_dy() * ani.zoom_sensitivity
 
-        self.player_cam.node.setPos(
-            autils.multiply_cw(self.player_cam.node.getPos(), 1 - s)
-        )
+        player_cam.node.setPos(autils.multiply_cw(player_cam.node.getPos(), 1 - s))
 
     def adjust_head_aim(self):
         with mouse:
             alpha_y = max(
                 min(
                     0,
-                    self.player_cam.focus.getR()
-                    + ani.rotate_sensitivity_y * mouse.get_dy(),
+                    player_cam.focus.getR() + ani.rotate_sensitivity_y * mouse.get_dy(),
                 ),
                 -90,
             )
 
-        self.player_cam.focus.setR(alpha_y)  # Move view vertically
+        player_cam.focus.setR(alpha_y)  # Move view vertically
 
     def rotate_camera_aim(self):
         if self.keymap[Action.fine_control]:
@@ -169,13 +167,11 @@ class AimMode(BaseMode, CueAvoid):
             fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
 
         with mouse:
-            alpha_x = self.player_cam.focus.getH() - fx * mouse.get_dx()
-            alpha_y = max(
-                min(0, self.player_cam.focus.getR() + fy * mouse.get_dy()), -90
-            )
+            alpha_x = player_cam.focus.getH() - fx * mouse.get_dx()
+            alpha_y = max(min(0, player_cam.focus.getR() + fy * mouse.get_dy()), -90)
 
-        self.player_cam.focus.setH(alpha_x)  # Move view laterally
-        self.player_cam.focus.setR(alpha_y)  # Move view vertically
+        player_cam.focus.setH(alpha_x)  # Move view laterally
+        player_cam.focus.setR(alpha_y)  # Move view vertically
 
         self.fix_cue_stick_to_camera()
 
@@ -185,11 +181,11 @@ class AimMode(BaseMode, CueAvoid):
             self.shots.active.cue.get_node("cue_stick_focus").setR(-self.min_theta)
             hud.elements[HUDElement.jack].set(self.min_theta)
 
-        if -self.player_cam.focus.getR() < (
+        if -player_cam.focus.getR() < (
             -self.shots.active.cue.get_node("cue_stick_focus").getR()
             + ani.min_player_cam
         ):
-            self.player_cam.focus.setR(
+            player_cam.focus.setR(
                 -(
                     -self.shots.active.cue.get_node("cue_stick_focus").getR()
                     + ani.min_player_cam
@@ -197,9 +193,7 @@ class AimMode(BaseMode, CueAvoid):
             )
 
     def fix_cue_stick_to_camera(self):
-        self.shots.active.cue.get_node("cue_stick_focus").setH(
-            self.player_cam.focus.getH()
-        )
+        self.shots.active.cue.get_node("cue_stick_focus").setH(player_cam.focus.getH())
 
     def aim_apply_power(self):
         with mouse:
@@ -238,8 +232,8 @@ class AimMode(BaseMode, CueAvoid):
 
         cue.setR(-new_elevation)
 
-        if -self.player_cam.focus.getR() < (new_elevation + ani.min_player_cam):
-            self.player_cam.focus.setR(-(new_elevation + ani.min_player_cam))
+        if -player_cam.focus.getR() < (new_elevation + ani.min_player_cam):
+            player_cam.focus.setR(-(new_elevation + ani.min_player_cam))
 
         self.shots.active.cue.set_state(theta=new_elevation)
         hud.elements[HUDElement.jack].set(new_elevation)
@@ -274,11 +268,11 @@ class AimMode(BaseMode, CueAvoid):
         ):
             cue_focus.setR(-self.min_theta)
 
-        if -self.player_cam.focus.getR() < (
+        if -player_cam.focus.getR() < (
             -self.shots.active.cue.get_node("cue_stick_focus").getR()
             + ani.min_player_cam
         ):
-            self.player_cam.focus.setR(
+            player_cam.focus.setR(
                 -(
                     -self.shots.active.cue.get_node("cue_stick_focus").getR()
                     + ani.min_player_cam

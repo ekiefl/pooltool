@@ -33,9 +33,6 @@ class HUD:
         self.game = None
         self.elements = None
 
-    def attach_game(self, game):
-        self.game = game
-
     def init(self):
         """Initialize HUD elements and return HUD update task
 
@@ -55,6 +52,9 @@ class HUD:
             element.init()
 
         return self.update_hud
+
+    def attach_game(self, game):
+        self.game = game
 
     def destroy(self):
         for element in self.elements.values():

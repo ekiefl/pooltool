@@ -18,7 +18,7 @@ import pooltool as pt
 import pooltool.ani as ani
 import pooltool.ani.environment as environment
 import pooltool.games as games
-from pooltool.ani.camera import PlayerCam
+from pooltool.ani.camera import player_cam
 from pooltool.ani.hud import hud
 from pooltool.ani.menu import GenericMenu, menus
 from pooltool.ani.modes import (
@@ -153,8 +153,7 @@ class Interface(ShowBase, ModeManager):
         self.shots = SystemCollection()
 
         mouse.init()
-
-        self.player_cam = PlayerCam()
+        player_cam.init()
 
         ModeManager.__init__(self)
 
@@ -243,8 +242,8 @@ class Interface(ShowBase, ModeManager):
             self.shots.clear_animation()
             self.shots.clear()
 
-        self.player_cam.focus = None
-        self.player_cam.has_focus = False
+        player_cam.focus = None
+        player_cam.has_focus = False
 
         gc.collect()
 
@@ -261,7 +260,7 @@ class Interface(ShowBase, ModeManager):
         self.shots.active.cue.render()
 
         R = max([ball.R for ball in self.shots.active.balls.values()])
-        self.player_cam.create_focus(
+        player_cam.create_focus(
             parent=self.shots.active.table.get_node("cloth"),
             pos=(self.shots.active.table.w / 2, self.shots.active.table.l / 2, R),
         )
@@ -474,7 +473,7 @@ class ShotViewer(Interface):
         )
         self.change_mode(Mode.shot, enter_kwargs=params)
 
-        self.player_cam.load_state("last_scene", ok_if_not_exists=True)
+        player_cam.load_state("last_scene", ok_if_not_exists=True)
 
         self.taskMgr.run()
 

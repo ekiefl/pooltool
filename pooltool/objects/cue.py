@@ -496,7 +496,7 @@ class CueAvoid:
 
         Notes
         =====
-        - This class has nothing to do with collisions that occurr during the shot
+        - This class has nothing to do with collisions that occur during the shot
           evolution, e.g.  ball-ball collisions, ball-cushion collisions, etc. All of
           those are handled in events.py
         """

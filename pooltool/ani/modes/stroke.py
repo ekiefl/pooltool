@@ -2,6 +2,7 @@
 
 import pooltool.ani as ani
 from pooltool.ani.action import Action
+from pooltool.ani.camera import player_cam
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import mouse
 
@@ -31,7 +32,7 @@ class StrokeMode(BaseMode):
 
     def exit(self):
         self.remove_task("stroke_task")
-        self.player_cam.store_state(Mode.stroke, overwrite=True)
+        player_cam.store_state(Mode.stroke, overwrite=True)
 
     def stroke_task(self, task):
         if self.keymap[Action.stroke]:
