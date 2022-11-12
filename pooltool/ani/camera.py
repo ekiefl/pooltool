@@ -2,16 +2,13 @@
 
 from panda3d.core import TransparencyAttrib
 
+from pooltool.ani.globals import Global
+
 
 class PlayerCam:
     def init(self):
-        # Panda pollutes the global namespace, appease linters
-        self.base = __builtins__["base"]
-        self.global_render = __builtins__["render"]
-        self.loader = __builtins__["loader"]
-
-        self.node = self.base.camera
-        self.lens = self.base.camLens
+        self.node = Global.base.camera
+        self.lens = Global.base.camLens
         self.lens.setNear(0.02)
 
         self.states = {}
@@ -20,13 +17,13 @@ class PlayerCam:
 
     def create_focus(self, parent=None, pos=None):
         if parent is None:
-            parent = self.global_render
+            parent = Global.base.render
 
         self.focus = parent.attachNewNode("camera_focus")
         self.focus.setH(-90)
 
         # create visible object
-        self.focus_object = self.loader.loadModel("smiley.egg")
+        self.focus_object = Global.base.loader.loadModel("smiley.egg")
         self.focus_object.setScale(0.005)
         self.focus_object.setTransparency(TransparencyAttrib.MAlpha)
         self.focus_object.setAlphaScale(0.4)
