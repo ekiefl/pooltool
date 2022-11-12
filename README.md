@@ -18,15 +18,17 @@ Installation instructions vary depending on how you want to interact with poolto
 
 ### Install option (1): Installer
 
+**NOTE**: I haven't sorted out this step yet, but eventually there will be OS-specific installers available for download here. Until then, please follow the PIP or Developer instructions below.
+
 | Method    | GUI | API | Develop |
 |-----------|-----|-----|---------|
 | Installer | ✅   | ❌   | ❌       |
 
 This is by far the easiest option. If you want to play and experiment with billiards using the graphical user interface (GUI), this option is for you. You won't have access to the python API, or be able to edit the source code. In other words, this is the non-coding option.
 
-Unfortunately, I haven't sorted out this step yet, but eventually there will be OS-specific installers available for download here. Until then, please follow the PIP or Developer instructions below.
-
 ### Install option (2): PIP
+
+**NOTE**: This option doesn't work on Windows, and might not work on other machines too. With any luck, this will be resolved when the next version (0.2) is released.
 
 | Method    | GUI | API | Develop |
 |-----------|-----|-----|---------|
