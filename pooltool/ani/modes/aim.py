@@ -7,6 +7,7 @@ import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
+from pooltool.ani.globals import Global
 from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import mouse
@@ -50,15 +51,15 @@ class AimMode(BaseMode, CueAvoid):
         mouse.relative()
         mouse.track()
 
-        if not self.shots.active.cue.has_focus:
-            self.shots.active.cue.init_focus(self.shots.active.cue.cueing_ball)
+        if not Global.shots.active.cue.has_focus:
+            Global.shots.active.cue.init_focus(Global.shots.active.cue.cueing_ball)
         else:
-            self.shots.active.cue.update_focus()
+            Global.shots.active.cue.update_focus()
 
-        self.shots.active.cue.show_nodes(ignore=("cue_cseg",))
-        self.shots.active.cue.get_node("cue_stick").setX(0)
+        Global.shots.active.cue.show_nodes(ignore=("cue_cseg",))
+        Global.shots.active.cue.get_node("cue_stick").setX(0)
         player_cam.update_focus(
-            self.shots.active.cue.cueing_ball.get_node("pos").getPos()
+            Global.shots.active.cue.cueing_ball.get_node("pos").getPos()
         )
         if load_prev_cam:
             player_cam.load_state(Mode.aim)
@@ -127,14 +128,14 @@ class AimMode(BaseMode, CueAvoid):
             self.aim_apply_power()
         elif self.keymap[Action.exec_shot]:
             self.mode_stroked_from = Mode.aim
-            self.shots.active.cue.set_object_state_as_render_state(skip_V0=True)
-            self.shots.active.cue.strike()
+            Global.shots.active.cue.set_object_state_as_render_state(skip_V0=True)
+            Global.shots.active.cue.strike()
             self.change_mode(Mode.calculate)
         elif self.keymap[Action.prev_shot]:
             self.keymap[Action.prev_shot] = False
-            if len(self.shots) > 1:
+            if len(Global.shots) > 1:
                 self.change_animation(
-                    self.shots.active_index - 1
+                    Global.shots.active_index - 1
                 )  # ShotMode.change_animation
                 self.change_mode(Mode.shot, enter_kwargs=dict(init_animations=False))
                 return task.done
@@ -177,24 +178,26 @@ class AimMode(BaseMode, CueAvoid):
         self.fix_cue_stick_to_camera()
 
         if (
-            -self.shots.active.cue.get_node("cue_stick_focus").getR() < self.min_theta
+            -Global.shots.active.cue.get_node("cue_stick_focus").getR() < self.min_theta
         ) or self.magnet_theta:
-            self.shots.active.cue.get_node("cue_stick_focus").setR(-self.min_theta)
+            Global.shots.active.cue.get_node("cue_stick_focus").setR(-self.min_theta)
             hud.elements[HUDElement.jack].set(self.min_theta)
 
         if -player_cam.focus.getR() < (
-            -self.shots.active.cue.get_node("cue_stick_focus").getR()
+            -Global.shots.active.cue.get_node("cue_stick_focus").getR()
             + ani.min_player_cam
         ):
             player_cam.focus.setR(
                 -(
-                    -self.shots.active.cue.get_node("cue_stick_focus").getR()
+                    -Global.shots.active.cue.get_node("cue_stick_focus").getR()
                     + ani.min_player_cam
                 )
             )
 
     def fix_cue_stick_to_camera(self):
-        self.shots.active.cue.get_node("cue_stick_focus").setH(player_cam.focus.getH())
+        Global.shots.active.cue.get_node("cue_stick_focus").setH(
+            player_cam.focus.getH()
+        )
 
     def aim_apply_power(self):
         with mouse:
@@ -205,17 +208,17 @@ class AimMode(BaseMode, CueAvoid):
             hud.elements[HUDElement.power].max_strike,
         )
 
-        V0 = self.shots.active.cue.V0 + dy * ani.power_sensitivity
+        V0 = Global.shots.active.cue.V0 + dy * ani.power_sensitivity
         if V0 < min_V0:
             V0 = min_V0
         if V0 > max_V0:
             V0 = max_V0
 
-        self.shots.active.cue.set_state(V0=V0)
+        Global.shots.active.cue.set_state(V0=V0)
         hud.elements[HUDElement.power].set(V0)
 
     def aim_elevate_cue(self):
-        cue = self.shots.active.cue.get_node("cue_stick_focus")
+        cue = Global.shots.active.cue.get_node("cue_stick_focus")
 
         with mouse:
             delta_elevation = mouse.get_dy() * ani.elevate_sensitivity
@@ -236,16 +239,16 @@ class AimMode(BaseMode, CueAvoid):
         if -player_cam.focus.getR() < (new_elevation + ani.min_player_cam):
             player_cam.focus.setR(-(new_elevation + ani.min_player_cam))
 
-        self.shots.active.cue.set_state(theta=new_elevation)
+        Global.shots.active.cue.set_state(theta=new_elevation)
         hud.elements[HUDElement.jack].set(new_elevation)
 
     def apply_english(self):
         with mouse:
             dx, dy = mouse.get_dx(), mouse.get_dy()
 
-        cue = self.shots.active.cue.get_node("cue_stick")
-        cue_focus = self.shots.active.cue.get_node("cue_stick_focus")
-        R = self.shots.active.cue.follow.R
+        cue = Global.shots.active.cue.get_node("cue_stick")
+        cue_focus = Global.shots.active.cue.get_node("cue_stick_focus")
+        R = Global.shots.active.cue.follow.R
 
         delta_y, delta_z = dx * ani.english_sensitivity, dy * ani.english_sensitivity
 
@@ -270,12 +273,12 @@ class AimMode(BaseMode, CueAvoid):
             cue_focus.setR(-self.min_theta)
 
         if -player_cam.focus.getR() < (
-            -self.shots.active.cue.get_node("cue_stick_focus").getR()
+            -Global.shots.active.cue.get_node("cue_stick_focus").getR()
             + ani.min_player_cam
         ):
             player_cam.focus.setR(
                 -(
-                    -self.shots.active.cue.get_node("cue_stick_focus").getR()
+                    -Global.shots.active.cue.get_node("cue_stick_focus").getR()
                     + ani.min_player_cam
                 )
             )
@@ -283,8 +286,8 @@ class AimMode(BaseMode, CueAvoid):
         a, b, theta = (
             -new_y / R,
             new_z / R,
-            -self.shots.active.cue.get_node("cue_stick_focus").getR(),
+            -Global.shots.active.cue.get_node("cue_stick_focus").getR(),
         )
-        self.shots.active.cue.set_state(a=a, b=b, theta=theta)
+        Global.shots.active.cue.set_state(a=a, b=b, theta=theta)
         hud.elements[HUDElement.english].set(a, b)
         hud.elements[HUDElement.jack].set(theta)

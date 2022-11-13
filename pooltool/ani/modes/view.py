@@ -41,8 +41,8 @@ class ViewMode(BaseMode):
         mouse.relative()
         mouse.track()
 
-        if self.shots.active is not None:
-            self.shots.active.cue.hide_nodes(ignore=("cue_cseg",))
+        if Global.shots.active is not None:
+            Global.shots.active.cue.hide_nodes(ignore=("cue_cseg",))
 
         if load_prev_cam:
             player_cam.load_state(Mode.view)
@@ -105,8 +105,8 @@ class ViewMode(BaseMode):
             self.keymap[Action.english] = False
             self.keymap[Action.elevation] = False
             self.keymap[Action.power] = False
-            if self.shots.active is not None:
-                self.shots.active.cue.hide_nodes(ignore=("cue_cseg",))
+            if Global.shots.active is not None:
+                Global.shots.active.cue.hide_nodes(ignore=("cue_cseg",))
         elif self.keymap[Action.elevation]:
             self.view_elevate_cue()
         elif self.keymap[Action.english]:
@@ -117,14 +117,14 @@ class ViewMode(BaseMode):
             self.change_mode(Mode.aim, enter_kwargs=dict(load_prev_cam=True))
         elif self.keymap[Action.exec_shot]:
             self.mode_stroked_from = Mode.view
-            self.shots.active.cue.set_object_state_as_render_state(skip_V0=True)
-            self.shots.active.cue.strike()
+            Global.shots.active.cue.set_object_state_as_render_state(skip_V0=True)
+            Global.shots.active.cue.strike()
             self.change_mode(Mode.calculate)
         elif self.keymap[Action.prev_shot]:
             self.keymap[Action.prev_shot] = False
-            if len(self.shots) > 1:
+            if len(Global.shots) > 1:
                 self.change_animation(
-                    self.shots.active_index - 1
+                    Global.shots.active_index - 1
                 )  # ShotMode.change_animation
                 self.change_mode(Mode.shot, enter_kwargs=dict(init_animations=False))
                 return task.done
@@ -181,7 +181,7 @@ class ViewMode(BaseMode):
         player_cam.focus.setR(alpha_y)  # Move view vertically
 
     def view_apply_power(self):
-        self.shots.active.cue.show_nodes(ignore=("cue_cseg",))
+        Global.shots.active.cue.show_nodes(ignore=("cue_cseg",))
 
         with mouse:
             dy = mouse.get_dy()
@@ -191,19 +191,19 @@ class ViewMode(BaseMode):
             hud.elements[HUDElement.power].max_strike,
         )
 
-        V0 = self.shots.active.cue.V0 + dy * ani.power_sensitivity
+        V0 = Global.shots.active.cue.V0 + dy * ani.power_sensitivity
         if V0 < min_V0:
             V0 = min_V0
         if V0 > max_V0:
             V0 = max_V0
 
-        self.shots.active.cue.set_state(V0=V0)
+        Global.shots.active.cue.set_state(V0=V0)
         hud.elements[HUDElement.power].set(V0)
 
     def view_elevate_cue(self):
-        self.shots.active.cue.show_nodes(ignore=("cue_cseg",))
+        Global.shots.active.cue.show_nodes(ignore=("cue_cseg",))
 
-        cue = self.shots.active.cue.get_node("cue_stick_focus")
+        cue = Global.shots.active.cue.get_node("cue_stick_focus")
 
         with mouse:
             delta_elevation = mouse.get_dy() * ani.elevate_sensitivity
@@ -221,18 +221,18 @@ class ViewMode(BaseMode):
 
         cue.setR(-new_elevation)
 
-        self.shots.active.cue.set_state(theta=new_elevation)
+        Global.shots.active.cue.set_state(theta=new_elevation)
         hud.elements[HUDElement.jack].set(new_elevation)
 
     def view_apply_english(self):
-        self.shots.active.cue.show_nodes(ignore=("cue_cseg",))
+        Global.shots.active.cue.show_nodes(ignore=("cue_cseg",))
 
         with mouse:
             dx, dy = mouse.get_dx(), mouse.get_dy()
 
-        cue = self.shots.active.cue.get_node("cue_stick")
-        cue_focus = self.shots.active.cue.get_node("cue_stick_focus")
-        R = self.shots.active.cue.follow.R
+        cue = Global.shots.active.cue.get_node("cue_stick")
+        cue_focus = Global.shots.active.cue.get_node("cue_stick_focus")
+        R = Global.shots.active.cue.follow.R
 
         delta_y, delta_z = dx * ani.english_sensitivity, dy * ani.english_sensitivity
 
@@ -259,8 +259,8 @@ class ViewMode(BaseMode):
         a, b, theta = (
             -new_y / R,
             new_z / R,
-            -self.shots.active.cue.get_node("cue_stick_focus").getR(),
+            -Global.shots.active.cue.get_node("cue_stick_focus").getR(),
         )
-        self.shots.active.cue.set_state(a=a, b=b, theta=theta)
+        Global.shots.active.cue.set_state(a=a, b=b, theta=theta)
         hud.elements[HUDElement.english].set(a, b)
         hud.elements[HUDElement.jack].set(theta)

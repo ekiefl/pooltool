@@ -7,6 +7,7 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
+from pooltool.ani.globals import Global
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import mouse
@@ -71,8 +72,8 @@ class CalculateMode(BaseMode):
 
     def run_simulation(self, task):
         """Run a pool simulation"""
-        self.shots.active.simulate(continuize=False, quiet=False)
-        self.game.process_shot(self.shots.active)
+        Global.shots.active.simulate(continuize=False, quiet=False)
+        self.game.process_shot(Global.shots.active)
 
         tasks.remove("run_simulation")
 

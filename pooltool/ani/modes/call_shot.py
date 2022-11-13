@@ -144,7 +144,7 @@ class CallShotMode(BaseMode):
         cam_pos = player_cam.focus.getPos()
         d_min = np.inf
         closest = None
-        for pocket in self.shots.active.table.pockets.values():
+        for pocket in Global.shots.active.table.pockets.values():
             d = np.linalg.norm(pocket.center - cam_pos)
             if d < d_min:
                 d_min, closest = d, pocket
@@ -208,7 +208,7 @@ class CallShotMode(BaseMode):
         cam_pos = player_cam.focus.getPos()
         d_min = np.inf
         closest = None
-        for ball in self.shots.active.balls.values():
+        for ball in Global.shots.active.balls.values():
             if ball.id not in self.game.active_player.target_balls:
                 continue
             if ball.s == c.pocketed:

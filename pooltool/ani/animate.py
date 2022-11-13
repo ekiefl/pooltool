@@ -137,7 +137,9 @@ class Interface(ShowBase, ModeManager):
         Global.clock.setMode(ClockObject.MLimited)
         Global.clock.setFrameRate(ani.settings["graphics"]["fps"])
 
-        self.shots = SystemCollection()
+        # We register a new shot collection under the "Global" namespace so it can be
+        # accessed from any object
+        Global.register("shots", SystemCollection())
 
         mouse.init()
         player_cam.init()
@@ -200,7 +202,7 @@ class Interface(ShowBase, ModeManager):
         tasks.register_event("window-event", self.handle_window_event)
 
     def close_scene(self):
-        for shot in self.shots:
+        for shot in Global.shots:
             shot.table.remove_nodes()
             for ball in shot.balls.values():
                 ball.teardown()
@@ -211,9 +213,9 @@ class Interface(ShowBase, ModeManager):
         hud.destroy()
         tasks.remove("update_hud")
 
-        if len(self.shots):
-            self.shots.clear_animation()
-            self.shots.clear()
+        if len(Global.shots):
+            Global.shots.clear_animation()
+            Global.shots.clear()
 
         player_cam.focus = None
         player_cam.has_focus = False
@@ -222,20 +224,20 @@ class Interface(ShowBase, ModeManager):
 
     def init_system_nodes(self):
         self.init_scene()
-        self.shots.active.table.render()
+        Global.shots.active.table.render()
         self.init_environment()
 
         # Render the balls of the active shot
-        for ball in self.shots.active.balls.values():
+        for ball in Global.shots.active.balls.values():
             if not ball.rendered:
                 ball.render()
 
-        self.shots.active.cue.render()
+        Global.shots.active.cue.render()
 
-        R = max([ball.R for ball in self.shots.active.balls.values()])
+        R = max([ball.R for ball in Global.shots.active.balls.values()])
         player_cam.create_focus(
-            parent=self.shots.active.table.get_node("cloth"),
-            pos=(self.shots.active.table.w / 2, self.shots.active.table.l / 2, R),
+            parent=Global.shots.active.table.get_node("cloth"),
+            pos=(Global.shots.active.table.w / 2, Global.shots.active.table.l / 2, R),
         )
 
     def init_scene(self):
@@ -249,7 +251,7 @@ class Interface(ShowBase, ModeManager):
             room_path = pt.utils.panda_path(ani.model_dir / "room/room.glb")
             floor_path = pt.utils.panda_path(ani.model_dir / "room/floor.glb")
 
-        self.environment = environment.Environment(self.shots.active.table)
+        self.environment = environment.Environment(Global.shots.active.table)
         if ani.settings["graphics"]["room"]:
             self.environment.load_room(room_path)
         if ani.settings["graphics"]["floor"]:
@@ -272,9 +274,9 @@ class Interface(ShowBase, ModeManager):
         Global.base.cTrav = CollisionTraverser()
         self.collision_handler = CollisionHandlerQueue()
 
-        self.shots.active.cue.init_collision_handling(self.collision_handler)
-        for ball in self.shots.active.balls.values():
-            ball.init_collision(self.shots.active.cue)
+        Global.shots.active.cue.init_collision_handling(self.collision_handler)
+        for ball in Global.shots.active.balls.values():
+            ball.init_collision(Global.shots.active.cue)
 
     def monitor(self, task):
         self.stdout.warning(
@@ -409,22 +411,27 @@ class ShotViewer(Interface):
     def show(self, shot_or_shots=None, title=""):
 
         if shot_or_shots is None:
-            # No passed shots. This is ok if self.shots has already been defined, but
+            # No passed shots. This is ok if Global.shots has already been defined, but
             # will complain otherwise
-            if not len(self.shots):
+            if not len(Global.shots):
                 raise ConfigError(
                     "ShotViewer.show :: No shots passed and no shots set."
                 )
         else:
             # Create a new SystemCollection based on type of shot_or_shots
             if issubclass(type(shot_or_shots), System):
-                self.shots = SystemCollection()
-                self.shots.append(shot_or_shots)
-            elif issubclass(type(shot_or_shots), SystemCollection):
-                self.shots = shot_or_shots
+                # We register a new shot collection under the "Global" namespace so it
+                # can be accessed from any object
+                Global.register("shots", SystemCollection())
 
-        if self.shots.active is None:
-            self.shots.set_active(0)
+                Global.shots.append(shot_or_shots)
+            elif issubclass(type(shot_or_shots), SystemCollection):
+                # We register a new shot collection under the "Global" namespace so it
+                # can be accessed from any object
+                Global.register("shots", shot_or_shots)
+
+        if Global.shots.active is None:
+            Global.shots.set_active(0)
 
         self.standby_screen.hide()
         self.instructions.show()
@@ -484,9 +491,12 @@ class Play(Interface):
     def go(self):
         menus.hide_all()
 
-        self.shots = SystemCollection()
-        self.shots.append(System())
-        self.shots.set_active(-1)
+        # We register a new shot collection under the "Global" namespace so it can be
+        # accessed from any object
+        Global.register("shots", SystemCollection())
+
+        Global.shots.append(System())
+        Global.shots.set_active(-1)
 
         self.init_help_page()
         self.setup()
@@ -515,7 +525,7 @@ class Play(Interface):
         table_params = table_config[selected_table]
         table_params["model_name"] = selected_table
         table_type = table_params.pop("type")
-        self.shots.active.table = table_types[table_type](**table_params)
+        Global.shots.active.table = table_types[table_type](**table_params)
 
     def setup_game(self):
         """Setup the game class from pooltool.games
@@ -544,20 +554,24 @@ class Play(Interface):
             e_c=0.85,  # cushion coeffiient of restitution
         )
 
-        # FIXME
-        # game_class = games.game_classes[self.setup_options[ani.options_game]]
+        # FIXME use what use to be self.setup_options[ani.options_game] to determine the
+        # game type, instead of hardcoding ani.options_sandbox
         game_class = games.game_classes[ani.options_sandbox]
+
+        # Register the game under the Global namespace
+        Global.register("game", game_class())
+
         self.game = game_class()
-        self.game.init(self.shots.active.table, ball_kwargs)
+        self.game.init(Global.shots.active.table, ball_kwargs)
         self.game.start()
 
     def setup_cue(self):
-        self.shots.active.cue = Cue(
-            cueing_ball=self.game.set_initial_cueing_ball(self.shots.active.balls)
+        Global.shots.active.cue = Cue(
+            cueing_ball=self.game.set_initial_cueing_ball(Global.shots.active.balls)
         )
 
     def setup_balls(self):
-        self.shots.active.balls = self.game.balls
+        Global.shots.active.balls = self.game.balls
 
     def start(self):
         self.run()

@@ -51,7 +51,7 @@ class BaseMode(ABC):
             self.keymap[Action.introspect] = False
             import pooltool as pt
 
-            shot = self.shots.active
+            shot = Global.shots.active
             import pdb
 
             pdb.set_trace()

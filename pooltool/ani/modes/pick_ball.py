@@ -54,11 +54,11 @@ class PickBallMode(BaseMode):
 
         if self.keymap["done"]:
             PickBallMode.remove_ball_highlight(self)
-            self.shots.active.cue.cueing_ball = self.closest_ball
-            if self.shots.active.cue.cueing_ball is not None:
-                self.shots.active.cue.init_focus(self.shots.active.cue.cueing_ball)
+            Global.shots.active.cue.cueing_ball = self.closest_ball
+            if Global.shots.active.cue.cueing_ball is not None:
+                Global.shots.active.cue.init_focus(Global.shots.active.cue.cueing_ball)
                 self.game.log.add_msg(
-                    f"Now cueing the {self.shots.active.cue.cueing_ball.id} ball",
+                    f"Now cueing the {Global.shots.active.cue.cueing_ball.id} ball",
                     sentiment="neutral",
                 )
             self.change_mode(Mode.aim)
@@ -106,7 +106,7 @@ class PickBallMode(BaseMode):
         cam_pos = player_cam.focus.getPos()
         d_min = np.inf
         closest = None
-        for ball in self.shots.active.balls.values():
+        for ball in Global.shots.active.balls.values():
             if ball.id not in self.game.active_player.can_cue:
                 continue
             if ball.s == c.pocketed:
