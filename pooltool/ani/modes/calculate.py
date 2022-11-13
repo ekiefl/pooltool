@@ -73,7 +73,7 @@ class CalculateMode(BaseMode):
     def run_simulation(self, task):
         """Run a pool simulation"""
         Global.shots.active.simulate(continuize=False, quiet=False)
-        self.game.process_shot(Global.shots.active)
+        Global.game.process_shot(Global.shots.active)
 
         tasks.remove("run_simulation")
 

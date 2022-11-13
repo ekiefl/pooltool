@@ -515,7 +515,6 @@ class Play(Interface):
         self.setup_balls()
         self.setup_cue()
 
-        hud.attach_game(self.game)
         hud_task = hud.init()
         tasks.add(hud_task, "update_hud")
 
@@ -561,17 +560,16 @@ class Play(Interface):
         # Register the game under the Global namespace
         Global.register("game", game_class())
 
-        self.game = game_class()
-        self.game.init(Global.shots.active.table, ball_kwargs)
-        self.game.start()
+        Global.game.init(Global.shots.active.table, ball_kwargs)
+        Global.game.start()
 
     def setup_cue(self):
         Global.shots.active.cue = Cue(
-            cueing_ball=self.game.set_initial_cueing_ball(Global.shots.active.balls)
+            cueing_ball=Global.game.set_initial_cueing_ball(Global.shots.active.balls)
         )
 
     def setup_balls(self):
-        Global.shots.active.balls = self.game.balls
+        Global.shots.active.balls = Global.game.balls
 
     def start(self):
         self.run()

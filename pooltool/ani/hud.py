@@ -31,7 +31,6 @@ class HUDElement(StrEnum):
 
 class HUD:
     def __init__(self):
-        self.game = None
         self.elements = None
 
     def init(self):
@@ -54,9 +53,6 @@ class HUD:
 
         return self.update_hud
 
-    def attach_game(self, game):
-        self.game = game
-
     def destroy(self):
         for element in self.elements.values():
             element.destroy()
@@ -70,24 +66,24 @@ class HUD:
         self.elements["element"].show()
 
     def update_hud(self, task):
-        if self.game:
+        if hasattr(Global, "game"):
             self.update_log_window()
             self.update_player_stats()
 
         return task.cont
 
     def update_player_stats(self):
-        if not self.game.update_player_stats:
+        if not Global.game.update_player_stats:
             return
 
-        self.elements["player_stats"].update(self.game)
-        self.game.update_player_stats = False
+        self.elements["player_stats"].update(Global.game)
+        Global.game.update_player_stats = False
 
     def update_log_window(self):
-        if not self.game.log.update:
+        if not Global.game.log.update:
             return
 
-        for msg in reversed(self.game.log.msgs):
+        for msg in reversed(Global.game.log.msgs):
             if not msg["quiet"]:
                 if not msg["broadcast"]:
                     timestamp, msg_txt, sentiment = (
@@ -103,7 +99,7 @@ class HUD:
                 else:
                     break
 
-        self.game.log.update = False
+        Global.game.log.update = False
 
 
 class BaseHUDElement(ABC):

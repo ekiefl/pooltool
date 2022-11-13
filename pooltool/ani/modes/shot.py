@@ -207,8 +207,8 @@ class ShotMode(BaseMode):
             self.end_mode()
             self.stop()
         elif self.keymap[Action.aim]:
-            self.game.advance(Global.shots[-1])
-            if self.game.game_over:
+            Global.game.advance(Global.shots[-1])
+            if Global.game.game_over:
                 self.change_mode(Mode.game_over)
             else:
                 self.change_mode(Mode.aim, exit_kwargs=dict(key="advance"))

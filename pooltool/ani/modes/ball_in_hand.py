@@ -45,13 +45,13 @@ class BallInHandMode(BaseMode):
         self.register_keymap_event("g-up", Action.ball_in_hand, False)
         self.register_keymap_event("mouse1-up", "next", True)
 
-        num_options = len(self.game.active_player.ball_in_hand)
+        num_options = len(Global.game.active_player.ball_in_hand)
         if num_options == 0:
             # FIXME add message
             self.picking = "ball"
         elif num_options == 1:
             self.grabbed_ball = Global.shots.active.balls[
-                self.game.active_player.ball_in_hand[0]
+                Global.game.active_player.ball_in_hand[0]
             ]
             self.grab_ball_node = self.grabbed_ball.get_node("pos")
             self.grab_ball_shadow_node = self.grabbed_ball.get_node("shadow")
@@ -195,7 +195,7 @@ class BallInHandMode(BaseMode):
         d_min = np.inf
         closest = None
         for ball in Global.shots.active.balls.values():
-            if ball.id not in self.game.active_player.ball_in_hand:
+            if ball.id not in Global.game.active_player.ball_in_hand:
                 continue
             if ball.s == c.pocketed:
                 continue

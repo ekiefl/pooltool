@@ -36,7 +36,7 @@ class GameOverMode(BaseMode):
 
     def render_game_over_screen(self):
         self.game_over_menu = GenericMenu(
-            title=f"Game over! {self.game.winner.name} wins!",
+            title=f"Game over! {Global.game.winner.name} wins!",
             frame_color=(0, 0, 0, 0.5),
             title_pos=(0, 0, 0.55),
         )
@@ -52,7 +52,7 @@ class GameOverMode(BaseMode):
                 scale=self.stat_font_size,
             ),
         }
-        for i, player in enumerate(self.game.players):
+        for i, player in enumerate(Global.game.players):
             self.text[player.name] = OnscreenText(
                 text=f"{player.name}\n{player.points}",
                 style=1,

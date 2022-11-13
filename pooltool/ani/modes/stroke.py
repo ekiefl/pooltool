@@ -38,9 +38,9 @@ class StrokeMode(BaseMode):
 
     def stroke_task(self, task):
         if self.keymap[Action.stroke]:
-            if self.game.is_call_pocket and self.game.pocket_call is None:
+            if Global.game.is_call_pocket and Global.game.pocket_call is None:
                 return task.cont
-            if self.game.is_call_ball and self.game.ball_call is None:
+            if Global.game.is_call_ball and Global.game.ball_call is None:
                 return task.cont
 
             if self.stroke_cue_stick():

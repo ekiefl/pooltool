@@ -78,9 +78,9 @@ class CallShotMode(BaseMode):
 
             if self.keymap["next"]:
                 self.keymap["next"] = False
-                self.game.ball_call = self.closest_ball
+                Global.game.ball_call = self.closest_ball
                 if self.closest_ball is not None:
-                    self.game.log.add_msg(
+                    Global.game.log.add_msg(
                         f"Calling the {self.closest_ball.id} ball", sentiment="neutral"
                     )
                 self.picking = "pocket"
@@ -94,9 +94,9 @@ class CallShotMode(BaseMode):
 
             if self.keymap["next"]:
                 self.keymap["next"] = False
-                self.game.pocket_call = self.closest_pocket
+                Global.game.pocket_call = self.closest_pocket
                 if self.closest_pocket is not None:
-                    self.game.log.add_msg(
+                    Global.game.log.add_msg(
                         f"Calling the {self.closest_pocket.id} pocket",
                         sentiment="neutral",
                     )
@@ -209,7 +209,7 @@ class CallShotMode(BaseMode):
         d_min = np.inf
         closest = None
         for ball in Global.shots.active.balls.values():
-            if ball.id not in self.game.active_player.target_balls:
+            if ball.id not in Global.game.active_player.target_balls:
                 continue
             if ball.s == c.pocketed:
                 continue

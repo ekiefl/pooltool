@@ -8,6 +8,7 @@ import pooltool.ani.tasks as tasks
 import pooltool.constants as c
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
+from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import mouse
 
@@ -57,7 +58,7 @@ class PickBallMode(BaseMode):
             Global.shots.active.cue.cueing_ball = self.closest_ball
             if Global.shots.active.cue.cueing_ball is not None:
                 Global.shots.active.cue.init_focus(Global.shots.active.cue.cueing_ball)
-                self.game.log.add_msg(
+                Global.game.log.add_msg(
                     f"Now cueing the {Global.shots.active.cue.cueing_ball.id} ball",
                     sentiment="neutral",
                 )
@@ -107,7 +108,7 @@ class PickBallMode(BaseMode):
         d_min = np.inf
         closest = None
         for ball in Global.shots.active.balls.values():
-            if ball.id not in self.game.active_player.can_cue:
+            if ball.id not in Global.game.active_player.can_cue:
                 continue
             if ball.s == c.pocketed:
                 continue
