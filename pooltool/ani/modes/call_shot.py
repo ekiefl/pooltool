@@ -44,10 +44,10 @@ class CallShotMode(BaseMode):
         self.closest_pocket = None
         self.closest_ball = None
 
-        self.task_action("escape", Action.quit, True)
-        self.task_action("c", Action.call_shot, True)
-        self.task_action("c-up", Action.call_shot, False)
-        self.task_action("mouse1-up", "next", True)
+        self.register_keymap_event("escape", Action.quit, True)
+        self.register_keymap_event("c", Action.call_shot, True)
+        self.register_keymap_event("c-up", Action.call_shot, False)
+        self.register_keymap_event("mouse1-up", "next", True)
 
         self.picking = "ball"
 

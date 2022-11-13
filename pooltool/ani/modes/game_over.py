@@ -23,7 +23,7 @@ class GameOverMode(BaseMode):
         mouse.show()
         mouse.absolute()
 
-        self.task_action("escape", Action.quit, True)
+        self.register_keymap_event("escape", Action.quit, True)
         self.render_game_over_screen()
 
     def exit(self):

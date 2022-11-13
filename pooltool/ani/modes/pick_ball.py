@@ -27,10 +27,10 @@ class PickBallMode(BaseMode):
 
         self.closest_ball = None
 
-        self.task_action("escape", Action.quit, True)
-        self.task_action("q", Action.pick_ball, True)
-        self.task_action("q-up", Action.pick_ball, False)
-        self.task_action("mouse1-up", "done", True)
+        self.register_keymap_event("escape", Action.quit, True)
+        self.register_keymap_event("q", Action.pick_ball, True)
+        self.register_keymap_event("q-up", Action.pick_ball, False)
+        self.register_keymap_event("mouse1-up", "done", True)
 
         tasks.add(self.pick_ball_task, "pick_ball_task")
 

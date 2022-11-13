@@ -78,14 +78,6 @@ class ModeManager(
         self.mode = None
         self.keymap = None
 
-    def update_keymap(self, action_name, action_state):
-        self.keymap[action_name] = action_state
-
-    def task_action(self, keystroke, action_name, action_state):
-        """Add action to keymap to be handled by tasks"""
-
-        self.accept(keystroke, self.update_keymap, [action_name, action_state])
-
     def change_mode(self, mode, exit_kwargs={}, enter_kwargs={}):
         assert mode in Mode
 
@@ -118,7 +110,7 @@ class ModeManager(
         and then re-instate the global listeners.
         """
         # Stop listening for all actions
-        self.ignoreAll()
+        Global.base.ignoreAll()
 
         # Reinstate the listeners for mode-independent events
         self.listen_constant_events()
@@ -205,7 +197,7 @@ class Interface(ShowBase, ModeManager):
 
     def listen_constant_events(self):
         """Listen for events that are mode independent"""
-        self.accept("window-event", self.handle_window_event)
+        tasks.register_event("window-event", self.handle_window_event)
 
     def close_scene(self):
         for shot in self.shots:

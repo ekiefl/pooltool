@@ -23,9 +23,9 @@ class CamSaveMode(BaseMode):
         mouse.track()
         self.selection = None
 
-        self.task_action("escape", Action.quit, True)
-        self.task_action("1", Action.cam_save, True)
-        self.task_action("1-up", Action.cam_save, False)
+        self.register_keymap_event("escape", Action.quit, True)
+        self.register_keymap_event("1", Action.cam_save, True)
+        self.register_keymap_event("1-up", Action.cam_save, False)
 
         self.render_camera_save_buttons()
         tasks.add(self.cam_save_task, "cam_save_task")

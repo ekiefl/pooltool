@@ -40,8 +40,8 @@ class PurgatoryMode(BaseMode):
         mouse.show()
         mouse.absolute()
 
-        self.task_action("mouse1-up", Action.regain_control, True)
-        self.task_action("mouse1-down", Action.regain_control, False)
+        self.register_keymap_event("mouse1-up", Action.regain_control, True)
+        self.register_keymap_event("mouse1-down", Action.regain_control, False)
 
         tasks.add(self.purgatory_task, "purgatory_task")
 

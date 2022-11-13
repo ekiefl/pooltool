@@ -40,10 +40,10 @@ class BallInHandMode(BaseMode):
 
         self.grabbed_ball = None
 
-        self.task_action("escape", Action.quit, True)
-        self.task_action("g", Action.ball_in_hand, True)
-        self.task_action("g-up", Action.ball_in_hand, False)
-        self.task_action("mouse1-up", "next", True)
+        self.register_keymap_event("escape", Action.quit, True)
+        self.register_keymap_event("g", Action.ball_in_hand, True)
+        self.register_keymap_event("g-up", Action.ball_in_hand, False)
+        self.register_keymap_event("mouse1-up", "next", True)
 
         num_options = len(self.game.active_player.ball_in_hand)
         if num_options == 0:

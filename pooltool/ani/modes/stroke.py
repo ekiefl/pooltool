@@ -24,10 +24,10 @@ class StrokeMode(BaseMode):
         self.shots.active.cue.track_stroke()
         self.shots.active.cue.show_nodes(ignore=("cue_cseg",))
 
-        self.task_action("f", Action.fine_control, True)
-        self.task_action("f-up", Action.fine_control, False)
-        self.task_action("s", Action.stroke, True)
-        self.task_action("s-up", Action.stroke, False)
+        self.register_keymap_event("f", Action.fine_control, True)
+        self.register_keymap_event("f-up", Action.fine_control, False)
+        self.register_keymap_event("s", Action.stroke, True)
+        self.register_keymap_event("s-up", Action.stroke, False)
 
         tasks.add(self.stroke_task, "stroke_task")
 

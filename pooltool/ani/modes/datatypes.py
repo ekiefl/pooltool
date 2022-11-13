@@ -80,6 +80,13 @@ class BaseMode(ABC):
 
         return task.cont
 
+    def update_keymap(self, action_name, action_state):
+        self.keymap[action_name] = action_state
+
+    def register_keymap_event(self, keystroke, action_name, action_state):
+        """Register an event that updates the mode's keymap"""
+        tasks.register_event(keystroke, self.update_keymap, [action_name, action_state])
+
     @abstractmethod
     def enter(self):
         pass

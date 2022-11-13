@@ -34,13 +34,13 @@ class CalculateMode(BaseMode):
 
         tasks.add(self.run_simulation, "run_simulation", taskChain="simulation")
 
-        self.task_action("escape", Action.quit, True)
-        self.task_action("mouse1", Action.zoom, True)
-        self.task_action("mouse1-up", Action.zoom, False)
-        self.task_action("a", Action.aim, True)
-        self.task_action("v", Action.move, True)
-        self.task_action("v-up", Action.move, False)
-        self.task_action("h", Action.show_help, True)
+        self.register_keymap_event("escape", Action.quit, True)
+        self.register_keymap_event("mouse1", Action.zoom, True)
+        self.register_keymap_event("mouse1-up", Action.zoom, False)
+        self.register_keymap_event("a", Action.aim, True)
+        self.register_keymap_event("v", Action.move, True)
+        self.register_keymap_event("v-up", Action.move, False)
+        self.register_keymap_event("h", Action.show_help, True)
 
         tasks.add(self.calculate_view_task, "calculate_view_task")
 

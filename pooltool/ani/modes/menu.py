@@ -24,13 +24,13 @@ class MenuMode(BaseMode):
         mouse.absolute()
         menus.show("main_menu")
 
-        self.task_action("escape", Action.exit, True)
-        self.task_action("escape-up", Action.exit, False)
-        self.task_action("n", Action.new_game, True)
-        self.task_action("n-up", Action.new_game, False)
-        self.task_action("wheel_up", Action.scroll_up, True)
-        self.task_action("wheel_down", Action.scroll_down, True)
-        self.task_action("mouse1-up", "click", True)
+        self.register_keymap_event("escape", Action.exit, True)
+        self.register_keymap_event("escape-up", Action.exit, False)
+        self.register_keymap_event("n", Action.new_game, True)
+        self.register_keymap_event("n-up", Action.new_game, False)
+        self.register_keymap_event("wheel_up", Action.scroll_up, True)
+        self.register_keymap_event("wheel_down", Action.scroll_down, True)
+        self.register_keymap_event("mouse1-up", "click", True)
 
         tasks.add(self.menu_task, "menu_task")
 

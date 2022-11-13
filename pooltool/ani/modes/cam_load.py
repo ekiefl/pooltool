@@ -27,9 +27,9 @@ class CamLoadMode(BaseMode):
         mouse.track()
         self.selection = None
 
-        self.task_action("escape", Action.quit, True)
-        self.task_action("2", Action.cam_load, True)
-        self.task_action("2-up", Action.cam_load, False)
+        self.register_keymap_event("escape", Action.quit, True)
+        self.register_keymap_event("2", Action.cam_load, True)
+        self.register_keymap_event("2-up", Action.cam_load, False)
 
         self.render_camera_load_buttons()
         tasks.add(self.cam_load_task, "cam_load_task")
