@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import pooltool.ani as ani
+import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
 from pooltool.ani.modes.datatypes import BaseMode, Mode
@@ -28,10 +29,10 @@ class StrokeMode(BaseMode):
         self.task_action("s", Action.stroke, True)
         self.task_action("s-up", Action.stroke, False)
 
-        self.add_task(self.stroke_task, "stroke_task")
+        tasks.add(self.stroke_task, "stroke_task")
 
     def exit(self):
-        self.remove_task("stroke_task")
+        tasks.remove("stroke_task")
         player_cam.store_state(Mode.stroke, overwrite=True)
 
     def stroke_task(self, task):

@@ -3,6 +3,7 @@
 import numpy as np
 
 import pooltool.ani as ani
+import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
@@ -92,13 +93,13 @@ class AimMode(BaseMode, CueAvoid):
         CueAvoid.__init__(self)
 
         if ani.settings["gameplay"]["cue_collision"]:
-            self.add_task(self.collision_task, "collision_task")
-        self.add_task(self.aim_task, "aim_task")
+            tasks.add(self.collision_task, "collision_task")
+        tasks.add(self.aim_task, "aim_task")
 
     def exit(self):
-        self.remove_task("aim_task")
+        tasks.remove("aim_task")
         if ani.settings["gameplay"]["cue_collision"]:
-            self.remove_task("collision_task")
+            tasks.remove("collision_task")
 
         player_cam.store_state(Mode.aim, overwrite=True)
 

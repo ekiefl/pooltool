@@ -17,6 +17,7 @@ from panda3d.core import (
 import pooltool as pt
 import pooltool.ani as ani
 import pooltool.ani.environment as environment
+import pooltool.ani.tasks as tasks
 import pooltool.games as games
 from pooltool.ani.camera import player_cam
 from pooltool.ani.globals import Global
@@ -154,10 +155,10 @@ class Interface(ShowBase, ModeManager):
         self.scene = None
 
         self.frame = 0
-        self.add_task(self.increment_frame, "increment_frame")
+        tasks.add(self.increment_frame, "increment_frame")
 
         if monitor:
-            self.add_task(self.monitor, "monitor")
+            tasks.add(self.monitor, "monitor")
 
     def fix_window_resize(self, win=None):
         """Fix aspect ratio of window upon user resizing
@@ -206,20 +207,6 @@ class Interface(ShowBase, ModeManager):
         """Listen for events that are mode independent"""
         self.accept("window-event", self.handle_window_event)
 
-    def add_task(self, func, name, *args, **kwargs):
-        if not self.has_task(name):
-            # If the task already exists, don't add it again
-            Global.task_mgr.add(func, name, *args, **kwargs)
-
-    def add_task_later(self, *args, **kwargs):
-        Global.task_mgr.doMethodLater(*args, **kwargs)
-
-    def remove_task(self, name):
-        Global.task_mgr.remove(name)
-
-    def has_task(self, name):
-        return Global.task_mgr.hasTaskNamed(name)
-
     def close_scene(self):
         for shot in self.shots:
             shot.table.remove_nodes()
@@ -230,7 +217,7 @@ class Interface(ShowBase, ModeManager):
         self.environment.unload_lights()
 
         hud.destroy()
-        self.remove_task("update_hud")
+        tasks.remove("update_hud")
 
         if len(self.shots):
             self.shots.clear_animation()
@@ -459,7 +446,7 @@ class ShotViewer(Interface):
         self.init_system_nodes()
 
         hud_task = hud.init()
-        self.add_task(hud_task, "update_hud")
+        tasks.add(hud_task, "update_hud")
 
         params = dict(
             init_animations=True,
@@ -528,7 +515,7 @@ class Play(Interface):
 
         hud.attach_game(self.game)
         hud_task = hud.init()
-        self.add_task(hud_task, "update_hud")
+        tasks.add(hud_task, "update_hud")
 
     def setup_table(self):
         selected_table = self.setup_options["table_type"]

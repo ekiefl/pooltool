@@ -4,6 +4,7 @@ import numpy as np
 
 import pooltool as pt
 import pooltool.ani as ani
+import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
@@ -96,8 +97,8 @@ class ShotMode(BaseMode):
         self.task_action("p-up", Action.prev_shot, True)
         self.task_action("enter-up", Action.parallel, True)
 
-        self.add_task(self.shot_view_task, "shot_view_task")
-        self.add_task(self.shot_animation_task, "shot_animation_task")
+        tasks.add(self.shot_view_task, "shot_view_task")
+        tasks.add(self.shot_animation_task, "shot_animation_task")
 
     def exit(self, key="soft"):
         """Exit shot mode
@@ -195,8 +196,8 @@ class ShotMode(BaseMode):
 
             self.shots.active.cue.init_focus(self.shots.active.cue.cueing_ball)
 
-        self.remove_task("shot_view_task")
-        self.remove_task("shot_animation_task")
+        tasks.remove("shot_view_task")
+        tasks.remove("shot_animation_task")
 
     def shot_view_task(self, task):
         if self.keymap[Action.close_scene]:

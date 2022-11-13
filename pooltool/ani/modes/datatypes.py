@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -36,10 +37,10 @@ class BaseMode(ABC):
                 "Subclasses of BaseMode must have 'name' attribute"
             )
 
-        self.add_task(self.shared_task, "shared_task")
-        self.add_task(self.cam_save_watch, "cam_save_watch")
-        self.add_task(self.cam_load_watch, "cam_load_watch")
-        self.add_task(self.help_watch, "help_watch")
+        tasks.add(self.shared_task, "shared_task")
+        tasks.add(self.cam_save_watch, "cam_save_watch")
+        tasks.add(self.cam_load_watch, "cam_load_watch")
+        tasks.add(self.help_watch, "help_watch")
 
     def shared_task(self, task):
         if self.keymap.get(Action.quit):

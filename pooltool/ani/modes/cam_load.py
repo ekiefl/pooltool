@@ -2,6 +2,7 @@
 
 from direct.gui.DirectGui import DGG
 
+import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
 from pooltool.ani.menu import GenericMenu
@@ -31,7 +32,7 @@ class CamLoadMode(BaseMode):
         self.task_action("2-up", Action.cam_load, False)
 
         self.render_camera_load_buttons()
-        self.add_task(self.cam_load_task, "cam_load_task")
+        tasks.add(self.cam_load_task, "cam_load_task")
 
     def render_camera_load_buttons(self):
         self.cam_load_slots = GenericMenu(
@@ -65,7 +66,7 @@ class CamLoadMode(BaseMode):
         if self.selection:
             player_cam.load_state(name=f"save_{self.selection}", ok_if_not_exists=True)
 
-        self.remove_task("cam_load_task")
+        tasks.remove("cam_load_task")
         mouse.touch()
         self.cam_load_slots.hide()
 

@@ -3,6 +3,7 @@
 import numpy as np
 
 import pooltool.ani as ani
+import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
@@ -76,14 +77,14 @@ class ViewMode(BaseMode):
         self.task_action("space", Action.exec_shot, True)
         self.task_action("space-up", Action.exec_shot, False)
 
-        self.add_task(self.view_task, "view_task")
+        tasks.add(self.view_task, "view_task")
         if ani.settings["gameplay"]["cue_collision"]:
-            self.add_task(self.collision_task, "collision_task")
+            tasks.add(self.collision_task, "collision_task")
 
     def exit(self):
-        self.remove_task("view_task")
+        tasks.remove("view_task")
         if ani.settings["gameplay"]["cue_collision"]:
-            self.remove_task("collision_task")
+            tasks.remove("collision_task")
         player_cam.store_state(Mode.view, overwrite=True)
 
     def view_task(self, task):

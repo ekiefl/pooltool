@@ -5,6 +5,7 @@ from direct.interval.IntervalGlobal import Parallel
 from panda3d.core import TransparencyAttrib
 
 import pooltool.ani as ani
+import pooltool.ani.tasks as tasks
 import pooltool.constants as c
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
@@ -58,10 +59,10 @@ class BallInHandMode(BaseMode):
         else:
             self.picking = "ball"
 
-        self.add_task(self.ball_in_hand_task, "ball_in_hand_task")
+        tasks.add(self.ball_in_hand_task, "ball_in_hand_task")
 
     def exit(self, success=False):
-        self.remove_task("ball_in_hand_task")
+        tasks.remove("ball_in_hand_task")
         BallInHandMode.remove_transparent_ball(self)
 
         if self.picking == "ball":
@@ -144,11 +145,11 @@ class BallInHandMode(BaseMode):
             self.grab_ball_shadow_node.setAlphaScale(1)
             self.grab_ball_shadow_node.setScale(1)
             self.grabbed_ball.set_render_state_as_object_state()
-            self.remove_task("grab_selection_highlight_animation")
+            tasks.remove("grab_selection_highlight_animation")
 
     def add_grab_selection_highlight(self):
         if self.grabbed_ball is not None:
-            self.add_task(
+            tasks.add(
                 self.grab_selection_highlight_animation,
                 "grab_selection_highlight_animation",
             )

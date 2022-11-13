@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import pooltool.ani as ani
+import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
@@ -42,10 +43,10 @@ class PurgatoryMode(BaseMode):
         self.task_action("mouse1-up", Action.regain_control, True)
         self.task_action("mouse1-down", Action.regain_control, False)
 
-        self.add_task(self.purgatory_task, "purgatory_task")
+        tasks.add(self.purgatory_task, "purgatory_task")
 
     def exit(self):
-        self.remove_task("purgatory_task")
+        tasks.remove("purgatory_task")
 
         # Set the framerate to pre-purgatory levels
         Global.clock.setFrameRate(ani.settings["graphics"]["fps"])

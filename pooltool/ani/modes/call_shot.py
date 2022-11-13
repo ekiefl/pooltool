@@ -5,6 +5,7 @@ from direct.interval.IntervalGlobal import LerpFunc, Parallel
 from panda3d.core import TransparencyAttrib
 
 import pooltool.ani as ani
+import pooltool.ani.tasks as tasks
 import pooltool.constants as c
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
@@ -50,10 +51,10 @@ class CallShotMode(BaseMode):
 
         self.picking = "ball"
 
-        self.add_task(self.call_shot_task, "call_shot_task")
+        tasks.add(self.call_shot_task, "call_shot_task")
 
     def exit(self):
-        self.remove_task("call_shot_task")
+        tasks.remove("call_shot_task")
         if self.picking in ("ball", "pocket"):
             CallShotMode.remove_ball_highlight(self)
         CallShotMode.remove_transparent_ball(self)
@@ -157,13 +158,13 @@ class CallShotMode(BaseMode):
             self.closest_ball.get_node("shadow").setAlphaScale(1)
             self.closest_ball.get_node("shadow").setScale(1)
             self.closest_ball.set_render_state_as_object_state()
-            self.remove_task("call_shot_ball_highlight_animation")
+            tasks.remove("call_shot_ball_highlight_animation")
 
     def add_ball_highlight(self):
         if self.closest_ball is not None:
             CallShotMode.add_transparent_ball(self)
             self.trans_ball.hide()
-            self.add_task(
+            tasks.add(
                 self.call_shot_ball_highlight_animation,
                 "call_shot_ball_highlight_animation",
             )

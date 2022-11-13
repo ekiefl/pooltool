@@ -2,6 +2,7 @@
 
 import sys
 
+import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.menu import menus
 from pooltool.ani.modes.datatypes import BaseMode, Mode
@@ -31,10 +32,10 @@ class MenuMode(BaseMode):
         self.task_action("wheel_down", Action.scroll_down, True)
         self.task_action("mouse1-up", "click", True)
 
-        self.add_task(self.menu_task, "menu_task")
+        tasks.add(self.menu_task, "menu_task")
 
     def exit(self):
-        self.remove_task("menu_task")
+        tasks.remove("menu_task")
 
     def menu_task(self, task):
         if self.keymap[Action.exit]:

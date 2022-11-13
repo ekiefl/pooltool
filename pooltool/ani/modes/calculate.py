@@ -4,6 +4,7 @@ import numpy as np
 
 import pooltool as pt
 import pooltool.ani as ani
+import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
 from pooltool.ani.menu import GenericMenu
@@ -31,7 +32,7 @@ class CalculateMode(BaseMode):
             title_pos=(0, 0, -0.2),
         )
 
-        self.add_task(self.run_simulation, "run_simulation", taskChain="simulation")
+        tasks.add(self.run_simulation, "run_simulation", taskChain="simulation")
 
         self.task_action("escape", Action.quit, True)
         self.task_action("mouse1", Action.zoom, True)
@@ -41,14 +42,14 @@ class CalculateMode(BaseMode):
         self.task_action("v-up", Action.move, False)
         self.task_action("h", Action.show_help, True)
 
-        self.add_task(self.calculate_view_task, "calculate_view_task")
+        tasks.add(self.calculate_view_task, "calculate_view_task")
 
     def exit(self):
-        self.remove_task("calculate_view_task")
+        tasks.remove("calculate_view_task")
         self.shot_sim_overlay.hide()
 
     def calculate_view_task(self, task):
-        if not self.has_task("run_simulation"):
+        if not tasks.has("run_simulation"):
             # simulation calculation is finished
             self.change_mode(Mode.shot, enter_kwargs=dict(init_animations=True))
         elif self.keymap[Action.zoom]:
@@ -73,7 +74,7 @@ class CalculateMode(BaseMode):
         self.shots.active.simulate(continuize=False, quiet=False)
         self.game.process_shot(self.shots.active)
 
-        self.remove_task("run_simulation")
+        tasks.remove("run_simulation")
 
         return task.done
 

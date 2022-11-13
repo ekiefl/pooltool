@@ -4,6 +4,7 @@
 import numpy as np
 
 import pooltool.ani as ani
+import pooltool.ani.tasks as tasks
 import pooltool.constants as c
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
@@ -31,11 +32,11 @@ class PickBallMode(BaseMode):
         self.task_action("q-up", Action.pick_ball, False)
         self.task_action("mouse1-up", "done", True)
 
-        self.add_task(self.pick_ball_task, "pick_ball_task")
+        tasks.add(self.pick_ball_task, "pick_ball_task")
 
     def exit(self):
         PickBallMode.remove_ball_highlight(self)
-        self.remove_task("pick_ball_task")
+        tasks.remove("pick_ball_task")
 
     def pick_ball_task(self, task):
         if not self.keymap[Action.pick_ball]:
@@ -66,19 +67,17 @@ class PickBallMode(BaseMode):
         return task.cont
 
     def remove_ball_highlight(self):
-        if self.closest_ball is not None and self.has_task(
-            "pick_ball_highlight_animation"
-        ):
+        if self.closest_ball is not None and tasks.has("pick_ball_highlight_animation"):
             node = self.closest_ball.get_node("pos")
             node.setScale(node.getScale() / ani.ball_highlight["ball_factor"])
             self.closest_ball.get_node("shadow").setAlphaScale(1)
             self.closest_ball.get_node("shadow").setScale(1)
             self.closest_ball.set_render_state_as_object_state()
-            self.remove_task("pick_ball_highlight_animation")
+            tasks.remove("pick_ball_highlight_animation")
 
     def add_ball_highlight(self):
         if self.closest_ball is not None:
-            self.add_task(
+            tasks.add(
                 self.pick_ball_highlight_animation, "pick_ball_highlight_animation"
             )
             node = self.closest_ball.get_node("pos")
