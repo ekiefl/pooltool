@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
+from pooltool.ani.globals import Global
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -44,16 +45,19 @@ class BaseMode(ABC):
 
     def shared_task(self, task):
         if self.keymap.get(Action.quit):
+            Global.base.messenger.send("close-scene")
+
             self.keymap[Action.quit] = False
-            self.close_scene()
             self.change_mode(Mode.menu)
+
         elif self.keymap.get(Action.introspect):
             self.keymap[Action.introspect] = False
+
+            import pdb
+
             import pooltool as pt
 
             shot = Global.shots.active
-            import pdb
-
             pdb.set_trace()
 
         return task.cont

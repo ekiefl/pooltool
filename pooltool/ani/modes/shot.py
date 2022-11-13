@@ -203,7 +203,9 @@ class ShotMode(BaseMode):
     def shot_view_task(self, task):
         if self.keymap[Action.close_scene]:
             player_cam.store_state("last_scene", overwrite=True)
-            self.close_scene()
+
+            Global.base.messenger.send("close-scene")
+
             self.end_mode()
             self.stop()
         elif self.keymap[Action.aim]:

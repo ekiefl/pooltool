@@ -127,6 +127,7 @@ class Interface(ShowBase, ModeManager):
         super().__init__(self)
 
         Global.base.setBackgroundColor(0.04, 0.04, 0.04)
+
         simplepbr.init(
             enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
         )
@@ -200,6 +201,7 @@ class Interface(ShowBase, ModeManager):
     def listen_constant_events(self):
         """Listen for events that are mode independent"""
         tasks.register_event("window-event", self.handle_window_event)
+        tasks.register_event("close-scene", self.close_scene)
 
     def close_scene(self):
         for shot in Global.shots:
@@ -503,9 +505,6 @@ class Play(Interface):
         self.init_system_nodes()
         self.init_collisions()
         self.change_mode(Mode.aim)
-
-    def close_scene(self):
-        Interface.close_scene(self)
 
     def setup(self):
         self.setup_options = menus.get_options()
