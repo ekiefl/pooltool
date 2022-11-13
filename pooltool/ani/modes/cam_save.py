@@ -2,6 +2,7 @@
 
 from direct.gui.DirectGui import DGG
 
+import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
 from pooltool.ani.menu import GenericMenu
