@@ -189,7 +189,7 @@ class CallShotMode(BaseMode):
         return task.cont
 
     def add_transparent_ball(self):
-        self.trans_ball = Global.base.loader.loadModel(
+        self.trans_ball = Global.loader.loadModel(
             panda_path(ani.model_dir / "balls" / self.closest_ball.rel_model_path)
         )
         self.trans_ball.reparentTo(Global.render.find("scene").find("cloth"))

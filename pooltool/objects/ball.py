@@ -59,7 +59,7 @@ class BallRender(Render):
             expected_path = ani.model_dir / "balls" / "set_1" / f"{self.id}.glb"
             path = expected_path if expected_path.exists() else fallback_path
 
-            sphere_node = Global.base.loader.loadModel(panda_path(path))
+            sphere_node = Global.loader.loadModel(panda_path(path))
             sphere_node.reparentTo(position)
 
             if path == fallback_path:
@@ -80,7 +80,7 @@ class BallRender(Render):
                 parents.append(parent.stem)
                 parent = parent.parent
         else:
-            sphere_node = Global.base.loader.loadModel(
+            sphere_node = Global.loader.loadModel(
                 panda_path(ani.model_dir / "balls" / self.rel_model_path)
             )
             sphere_node.reparentTo(position)
@@ -137,7 +137,7 @@ class BallRender(Render):
         shadow_node.setTransparency(TransparencyAttrib.MAlpha)
 
         for i, scale in enumerate(scales):
-            shadow_layer = Global.base.loader.loadModel(panda_path(shadow_path))
+            shadow_layer = Global.loader.loadModel(panda_path(shadow_path))
             shadow_layer.reparentTo(shadow_node)
             shadow_layer.setScale(self.get_scale_factor(shadow_layer) * scale)
             shadow_layer.setZ(z_offset * (1 - i / N))
