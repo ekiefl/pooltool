@@ -31,6 +31,7 @@ from panda3d.core import (
 import pooltool
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
+from pooltool.ani.globals import Global
 from pooltool.utils import panda_path
 
 TEXT_COLOR = (0.1, 0.1, 0.1, 1)
@@ -79,17 +80,12 @@ class XMLMenu:
 
 class Menu:
     def __init__(self, xml, name):
-        # Panda pollutes the global namespace, appease linters
-        self.aspect2d = __builtins__["aspect2d"]
-        self.render2d = __builtins__["render2d"]
-        self.loader = __builtins__["loader"]
-
         self.xml = xml
         self.name = name
         self.menu_xml = self.get_xml()
 
-        self.title_font = self.loader.loadFont(panda_path(TITLE_FONT))
-        self.button_font = self.loader.loadFont(panda_path(BUTTON_FONT))
+        self.title_font = Global.loader.loadFont(panda_path(TITLE_FONT))
+        self.button_font = Global.loader.loadFont(panda_path(BUTTON_FONT))
 
         # No idea why this conditional must exist
         if self.title_font.get_num_pages() == 0:
@@ -102,7 +98,7 @@ class Menu:
         self.area_backdrop = DirectFrame(
             frameColor=FRAME_COLOR,
             frameSize=(-1, 1, -1, 1),
-            parent=self.render2d,
+            parent=Global.render2d,
         )
 
         self.area_backdrop.setImage(panda_path(MENU_ASSETS / "menu_background.jpeg"))
@@ -120,7 +116,7 @@ class Menu:
             frameSize=(-1, 1, -0.9, 0.3),
             scrollBarWidth=0.04,
             horizontalScroll_frameSize=(0, 0, 0, 0),
-            parent=self.aspect2d,
+            parent=Global.aspect2d,
         )
         self.area.setPos(0, 0, 0)
         self.area.setTransparency(TransparencyAttrib.MAlpha)
@@ -921,7 +917,7 @@ class Menu:
             frameColor=(1, 1, 0.9, 1),
             text=msg,
             scale=INFO_TEXT_SCALE,
-            parent=self.aspect2d,
+            parent=Global.aspect2d,
             text_fg=TEXT_COLOR,
             text_align=TextNode.ALeft,
             pad=(0.2, 0.2),
@@ -930,7 +926,7 @@ class Menu:
         # Position the hover message at the mouse
         coords = mouse_watcher.getMouse()
         r2d = Point3(coords[0], 0, coords[1])
-        a2d = self.aspect2d.getRelativePoint(self.render2d, r2d)
+        a2d = Global.aspect2d.getRelativePoint(Global.render2d, r2d)
         self.hover_msg.setPos(a2d)
         # Now shift it up so the mouse doesn't get in the way
         self.hover_msg.setZ(self.hover_msg.getZ() + INFO_SCALE * 2)
@@ -1106,10 +1102,7 @@ def loadImageAsPlane(filepath, yresolution=600):
     yresolution -- pixel-perfect width resolution
     """
 
-    # Panda pollutes the global namespace, appease linters
-    loader = __builtins__["loader"]
-
-    tex = loader.loadTexture(filepath)
+    tex = Global.loader.loadTexture(filepath)
     tex.setBorderColor(Vec4(0, 0, 0, 0))
     tex.setWrapU(Texture.WMBorderColor)
     tex.setWrapV(Texture.WMBorderColor)
@@ -1149,13 +1142,10 @@ menus = Menus()
 
 class GenericMenu:
     def __init__(self, title="", frame_color=(1, 1, 1, 1), title_pos=(0, 0, 0.8)):
-        # Panda pollutes the global namespace, appease linters
-        self.render2d = __builtins__["render2d"]
-
         self.titleMenuBackdrop = DirectFrame(
             frameColor=frame_color,
             frameSize=(-1, 1, -1, 1),
-            parent=self.render2d,
+            parent=Global.render2d,
         )
 
         self.text_scale = 0.07

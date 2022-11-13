@@ -49,11 +49,6 @@ class Render(ABC):
         self.nodes = {}
         self.rendered = False
 
-        # These are initialized when render(...) is called
-        self.loader = None
-        self.global_render = None
-        self.base = None
-
     def remove_node(self, name):
         self.nodes[name].removeNode()
         del self.nodes[name]
@@ -102,10 +97,5 @@ class Render(ABC):
     def render(self):
         if self.rendered:
             return
-
-        # Panda pollutes the global namespace, appease linters
-        self.loader = __builtins__["loader"]
-        self.global_render = __builtins__["render"]
-        self.base = __builtins__["base"]
 
         self.rendered = True

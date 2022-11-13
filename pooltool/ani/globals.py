@@ -30,10 +30,29 @@ def require_showbase(func):
 
 
 class _Global:
+    clock = ShowBaseGlobal.globalClock
+    aspect2d = ShowBaseGlobal.aspect2d
+    render2d = ShowBaseGlobal.render2d
+
     @property
     @require_showbase
     def base(self):
         return ShowBaseGlobal.base
+
+    @property
+    @require_showbase
+    def render(self):
+        return ShowBaseGlobal.base.render
+
+    @property
+    @require_showbase
+    def task_mgr(self):
+        return ShowBaseGlobal.base.taskMgr
+
+    @property
+    @require_showbase
+    def loader(self):
+        return ShowBaseGlobal.base.loader
 
 
 Global = _Global()

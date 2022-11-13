@@ -8,6 +8,7 @@ import pooltool.ani as ani
 import pooltool.constants as c
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
+from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import mouse
 from pooltool.utils import panda_path
@@ -174,14 +175,10 @@ class BallInHandMode(BaseMode):
         return task.cont
 
     def add_transparent_ball(self):
-        # Panda pollutes the global namespace, appease linters
-        global_render = __builtins__["render"]
-        base = __builtins__["base"]
-
-        self.trans_ball = base.loader.loadModel(
+        self.trans_ball = Global.base.loader.loadModel(
             panda_path(ani.model_dir / "balls" / self.grabbed_ball.rel_model_path)
         )
-        self.trans_ball.reparentTo(global_render.find("scene").find("cloth"))
+        self.trans_ball.reparentTo(Global.render.find("scene").find("cloth"))
         self.trans_ball.setTransparency(TransparencyAttrib.MAlpha)
         self.trans_ball.setAlphaScale(0.4)
         self.trans_ball.setPos(self.grabbed_ball.get_node("pos").getPos())

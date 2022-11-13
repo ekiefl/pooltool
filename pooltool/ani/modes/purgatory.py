@@ -2,6 +2,7 @@
 
 import pooltool.ani as ani
 from pooltool.ani.action import Action
+from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import mouse
 
@@ -32,10 +33,6 @@ class PurgatoryMode(BaseMode):
     def __init__(self):
         super().__init__()
 
-        # Panda pollutes the global namespace, appease linters
-        self.global_clock = __builtins__["globalClock"]
-        self.base = __builtins__["base"]
-
         self.is_window_active = None
 
     def enter(self):
@@ -51,21 +48,21 @@ class PurgatoryMode(BaseMode):
         self.remove_task("purgatory_task")
 
         # Set the framerate to pre-purgatory levels
-        self.global_clock.setFrameRate(ani.settings["graphics"]["fps"])
+        Global.clock.setFrameRate(ani.settings["graphics"]["fps"])
 
     def purgatory_task(self, task):
         if self.keymap[Action.regain_control]:
             self.change_mode(self.last_mode)
 
-        is_window_active = self.base.win.get_properties().foreground
+        is_window_active = Global.base.win.get_properties().foreground
 
         if is_window_active is not self.is_window_active:
             # The state of the window has changed. Time to update the FPS
 
             if is_window_active:
-                self.global_clock.setFrameRate(ani.settings["graphics"]["fps"])
+                Global.clock.setFrameRate(ani.settings["graphics"]["fps"])
             else:
-                self.global_clock.setFrameRate(ani.settings["graphics"]["fps_inactive"])
+                Global.clock.setFrameRate(ani.settings["graphics"]["fps_inactive"])
 
             # Update status
             self.is_window_active = is_window_active

@@ -23,7 +23,7 @@ class PlayerCam:
         self.focus.setH(-90)
 
         # create visible object
-        self.focus_object = Global.base.loader.loadModel("smiley.egg")
+        self.focus_object = Global.loader.loadModel("smiley.egg")
         self.focus_object.setScale(0.005)
         self.focus_object.setTransparency(TransparencyAttrib.MAlpha)
         self.focus_object.setAlphaScale(0.4)

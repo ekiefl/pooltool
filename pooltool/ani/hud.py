@@ -15,6 +15,7 @@ from panda3d.core import CardMaker, NodePath, TextNode, TransparencyAttrib
 
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
+from pooltool.ani.globals import Global
 from pooltool.utils import panda_path
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -107,12 +108,8 @@ class HUD:
 
 class BaseHUDElement(ABC):
     def __init__(self):
-        # Panda pollutes the global namespace, appease linters
-        self.aspect2d = __builtins__["aspect2d"]
-        self.render2d = __builtins__["render2d"]
-
         self.dummy_right = NodePath("right_panel_hud")
-        self.dummy_right.reparentTo(self.aspect2d)
+        self.dummy_right.reparentTo(Global.aspect2d)
         self.dummy_right.setPos(1.25, 0, 0)
 
     @abstractmethod
@@ -196,7 +193,7 @@ class Logo(BaseHUDElement):
         self.img = OnscreenImage(
             image=ani.logo_paths["pt_smaller"],
             pos=(0.94, 0, 0.89),
-            parent=self.render2d,
+            parent=Global.render2d,
             scale=(0.08 * 0.49, 1, 0.08),
         )
         self.img.setTransparency(TransparencyAttrib.MAlpha)
@@ -346,14 +343,14 @@ class Jack(BaseHUDElement):
         self.arc = OnscreenImage(
             image=panda_path(self.dir / "arc.png"),
             pos=(1.4, 0, -0.45),
-            parent=self.aspect2d,
+            parent=Global.aspect2d,
             scale=0.075,
         )
         self.arc.setTransparency(TransparencyAttrib.MAlpha)
 
         self.cue_cartoon = OnscreenImage(
             image=panda_path(self.dir / "cue.png"),
-            parent=self.aspect2d,
+            parent=Global.aspect2d,
             pos=(0, 0, 0),
             scale=(0.15, 1, 0.01),
         )

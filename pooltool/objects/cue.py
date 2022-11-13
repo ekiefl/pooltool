@@ -7,6 +7,7 @@ from panda3d.core import ClockObject, CollisionNode, CollisionSegment, Vec3
 import pooltool.ani as ani
 import pooltool.constants as c
 import pooltool.utils as utils
+from pooltool.ani.globals import Global
 from pooltool.error import ConfigError
 from pooltool.events import StickBallCollision
 from pooltool.objects import Object, Render
@@ -26,12 +27,10 @@ class CueRender(Render):
 
     def init_model(self, R=c.R):
         path = utils.panda_path(ani.model_dir / "cue" / "cue.glb")
-        cue_stick_model = self.loader.loadModel(path)
+        cue_stick_model = Global.loader.loadModel(path)
         cue_stick_model.setName("cue_stick_model")
 
-        cue_stick = (
-            self.global_render.find("scene").find("cloth").attachNewNode("cue_stick")
-        )
+        cue_stick = Global.render.find("scene").find("cloth").attachNewNode("cue_stick")
         cue_stick_model.reparentTo(cue_stick)
 
         self.nodes["cue_stick"] = cue_stick
@@ -43,9 +42,7 @@ class CueRender(Render):
         self.get_node("cue_stick_model").setPos(ball.R, 0, 0)
 
         cue_stick_focus = (
-            self.global_render.find("scene")
-            .find("cloth")
-            .attachNewNode("cue_stick_focus")
+            Global.render.find("scene").find("cloth").attachNewNode("cue_stick_focus")
         )
         self.nodes["cue_stick_focus"] = cue_stick_focus
 
@@ -75,7 +72,7 @@ class CueRender(Render):
         collision_node.node().addSolid(CollisionSegment(x, 0, 0, X, 0, 0))
 
         self.nodes["cue_cseg"] = collision_node
-        self.base.cTrav.addCollider(collision_node, collision_handler)
+        Global.base.cTrav.addCollider(collision_node, collision_handler)
 
         if ani.settings["graphics"]["debug"]:
             collision_node.show()
@@ -501,9 +498,6 @@ class CueAvoid:
           those are handled in events.py
         """
 
-        # Panda pollutes the global namespace, appease linters
-        self.global_render = __builtins__["render"]
-
         self.min_theta = 0
 
         if not ani.settings["gameplay"]["cue_collision"]:
@@ -511,7 +505,7 @@ class CueAvoid:
 
         # Declare frequently used nodes
         self.avoid_nodes = {
-            "scene": self.global_render.find("scene"),
+            "scene": Global.render.find("scene"),
             "cue_collision_node": self.shots.active.cue.get_node("cue_cseg"),
             "cue_stick_model": self.shots.active.cue.get_node("cue_stick_model"),
             "cue_stick": self.shots.active.cue.get_node("cue_stick"),
@@ -589,10 +583,10 @@ class CueAvoid:
         if ball == self.shots.active.cue.cueing_ball:
             return 0
 
-        scene = self.global_render.find("scene")
+        scene = Global.render.find("scene")
 
         # Radius of transect
-        n = np.array(entry.get_surface_normal(self.global_render.find("scene")))
+        n = np.array(entry.get_surface_normal(Global.render.find("scene")))
         phi = ((self.avoid_nodes["cue_stick_focus"].getH() + 180) % 360) * np.pi / 180
         c = np.array([np.cos(phi), np.sin(phi), 0])
         gamma = np.arccos(np.dot(n, c))

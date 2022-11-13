@@ -19,6 +19,7 @@ import pooltool.ani as ani
 import pooltool.ani.environment as environment
 import pooltool.games as games
 from pooltool.ani.camera import player_cam
+from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.menu import GenericMenu, menus
 from pooltool.ani.modes import (
@@ -132,23 +133,16 @@ class Interface(ShowBase, ModeManager):
 
         super().__init__(self)
 
-        # Panda pollutes the global namespace, appease linters
-        self.global_clock = __builtins__["globalClock"]
-        self.global_render = __builtins__["render"]
-        self.aspect2d = __builtins__["aspect2d"]
-        self.task_mgr = __builtins__["taskMgr"]
-        self.base = __builtins__["base"]
-
-        self.base.setBackgroundColor(0.04, 0.04, 0.04)
+        Global.base.setBackgroundColor(0.04, 0.04, 0.04)
         simplepbr.init(
             enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
         )
 
         if not ani.settings["graphics"]["shader"]:
-            self.global_render.set_shader_off()
+            Global.render.set_shader_off()
 
-        self.global_clock.setMode(ClockObject.MLimited)
-        self.global_clock.setFrameRate(ani.settings["graphics"]["fps"])
+        Global.clock.setMode(ClockObject.MLimited)
+        Global.clock.setFrameRate(ani.settings["graphics"]["fps"])
 
         self.shots = SystemCollection()
 
@@ -178,8 +172,8 @@ class Interface(ShowBase, ModeManager):
         user, this will override their resizing, and resize the window to one with an
         area equal to that requested, but at the required aspect ratio.
         """
-        requested_width = self.base.win.getXSize()
-        requested_height = self.base.win.getYSize()
+        requested_width = Global.base.win.getXSize()
+        requested_height = Global.base.win.getYSize()
 
         if (
             abs(requested_width / requested_height - ani.aspect_ratio)
@@ -204,7 +198,7 @@ class Interface(ShowBase, ModeManager):
     def handle_window_event(self, win=None):
         self.fix_window_resize(win=win)
 
-        is_window_active = self.base.win.get_properties().foreground
+        is_window_active = Global.base.win.get_properties().foreground
         if not is_window_active and self.mode != Mode.purgatory:
             self.change_mode(Mode.purgatory)
 
@@ -215,16 +209,16 @@ class Interface(ShowBase, ModeManager):
     def add_task(self, func, name, *args, **kwargs):
         if not self.has_task(name):
             # If the task already exists, don't add it again
-            self.task_mgr.add(func, name, *args, **kwargs)
+            Global.task_mgr.add(func, name, *args, **kwargs)
 
     def add_task_later(self, *args, **kwargs):
-        self.task_mgr.doMethodLater(*args, **kwargs)
+        Global.task_mgr.doMethodLater(*args, **kwargs)
 
     def remove_task(self, name):
-        self.task_mgr.remove(name)
+        Global.task_mgr.remove(name)
 
     def has_task(self, name):
-        return self.task_mgr.hasTaskNamed(name)
+        return Global.task_mgr.hasTaskNamed(name)
 
     def close_scene(self):
         for shot in self.shots:
@@ -266,7 +260,7 @@ class Interface(ShowBase, ModeManager):
         )
 
     def init_scene(self):
-        self.scene = self.global_render.attachNewNode("scene")
+        self.scene = Global.render.attachNewNode("scene")
 
     def init_environment(self):
         if ani.settings["graphics"]["physical_based_rendering"]:
@@ -296,7 +290,7 @@ class Interface(ShowBase, ModeManager):
           unrelated to this.
         """
 
-        self.base.cTrav = CollisionTraverser()
+        Global.base.cTrav = CollisionTraverser()
         self.collision_handler = CollisionHandlerQueue()
 
         self.shots.active.cue.init_collision_handling(self.collision_handler)
@@ -309,7 +303,7 @@ class Interface(ShowBase, ModeManager):
         )
         self.stdout.info("Mode", self.mode)
         self.stdout.info("Last", self.last_mode)
-        self.stdout.info("Tasks", [task.name for task in self.task_mgr.getAllTasks()])
+        self.stdout.info("Tasks", [task.name for task in Global.task_mgr.getAllTasks()])
         self.stdout.info("Memory", pt.utils.get_total_memory_usage())
         self.stdout.info("Actions", [k for k in self.keymap if self.keymap[k]])
         self.stdout.info("Keymap", self.keymap)
@@ -328,18 +322,18 @@ class Interface(ShowBase, ModeManager):
             scale=ani.menu_text_scale * 0.9,
             fg=(1, 1, 1, 1),
             align=TextNode.ALeft,
-            parent=self.aspect2d,
+            parent=Global.aspect2d,
         )
         self.help_hint.show()
 
-        self.help_node = self.aspect2d.attachNewNode("help")
+        self.help_node = Global.aspect2d.attachNewNode("help")
 
         def add_instruction(pos, msg, title=False):
             text = OnscreenText(
                 text=msg,
                 style=1,
                 fg=(1, 1, 1, 1),
-                parent=self.base.a2dTopLeft,
+                parent=Global.base.a2dTopLeft,
                 align=TextNode.ALeft,
                 pos=(-1.45 if not title else -1.55, 0.85 - pos),
                 scale=ani.menu_text_scale if title else 0.7 * ani.menu_text_scale,
@@ -402,7 +396,7 @@ class ShotViewer(Interface):
             scale=ani.menu_text_scale * 0.7,
             fg=(1, 1, 1, 1),
             align=TextNode.ALeft,
-            parent=self.aspect2d,
+            parent=Global.aspect2d,
         )
         self.title_node.hide()
 
@@ -413,7 +407,7 @@ class ShotViewer(Interface):
             scale=ani.menu_text_scale * 0.7,
             fg=(1, 1, 1, 1),
             align=TextNode.ALeft,
-            parent=self.aspect2d,
+            parent=Global.aspect2d,
         )
         self.instructions.hide()
 
@@ -481,8 +475,8 @@ class ShotViewer(Interface):
         self.standby_screen.show()
         self.instructions.hide()
         self.title_node.hide()
-        self.base.graphicsEngine.renderFrame()
-        self.base.graphicsEngine.renderFrame()
+        Global.base.graphicsEngine.renderFrame()
+        Global.base.graphicsEngine.renderFrame()
 
         self.taskMgr.stop()
 
@@ -498,7 +492,7 @@ class Play(Interface):
         self.change_mode(Mode.menu)
 
         # This task chain allows simulations to be run in parallel to the game processes
-        self.task_mgr.setupTaskChain(
+        Global.task_mgr.setupTaskChain(
             "simulation",
             numThreads=1,
             tickClock=None,
