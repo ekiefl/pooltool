@@ -34,8 +34,10 @@ class MenuMode(BaseMode):
         self.register_keymap_event("mouse1-up", "click", True)
 
         tasks.add(self.menu_task, "menu_task")
+        tasks.add(self.shared_task, "shared_task")
 
     def exit(self):
+        tasks.remove("shared_task")
         tasks.remove("menu_task")
 
     def menu_task(self, task):

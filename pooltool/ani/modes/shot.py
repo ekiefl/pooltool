@@ -101,6 +101,7 @@ class ShotMode(BaseMode):
 
         tasks.add(self.shot_view_task, "shot_view_task")
         tasks.add(self.shot_animation_task, "shot_animation_task")
+        tasks.add(self.shared_task, "shared_task")
 
     def exit(self, key="soft"):
         """Exit shot mode
@@ -200,6 +201,7 @@ class ShotMode(BaseMode):
 
         tasks.remove("shot_view_task")
         tasks.remove("shot_animation_task")
+        tasks.remove("shared_task")
 
     def shot_view_task(self, task):
         if self.keymap[Action.close_scene]:

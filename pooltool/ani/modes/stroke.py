@@ -31,9 +31,12 @@ class StrokeMode(BaseMode):
         self.register_keymap_event("s-up", Action.stroke, False)
 
         tasks.add(self.stroke_task, "stroke_task")
+        tasks.add(self.shared_task, "shared_task")
 
     def exit(self):
         tasks.remove("stroke_task")
+        tasks.remove("shared_task")
+
         player_cam.store_state(Mode.stroke, overwrite=True)
 
     def stroke_task(self, task):

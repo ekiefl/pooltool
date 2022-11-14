@@ -1,4 +1,5 @@
 import copy
+import pdb
 from abc import ABC, abstractmethod
 
 import pooltool.ani.tasks as tasks
@@ -41,49 +42,27 @@ class BaseMode(ABC):
 
         self.defaults = copy.deepcopy(self.keymap)
 
-        tasks.add(self.shared_task, "shared_task")
-        tasks.add(self.cam_save_watch, "cam_save_watch")
-        tasks.add(self.cam_load_watch, "cam_load_watch")
-        tasks.add(self.help_watch, "help_watch")
-
     def shared_task(self, task):
         if self.keymap.get(Action.quit):
-            Global.base.messenger.send("close-scene")
-
             self.keymap[Action.quit] = False
+            Global.base.messenger.send("close-scene")
             Global.mode_mgr.change_mode(Mode.menu)
 
         elif self.keymap.get(Action.introspect):
             self.keymap[Action.introspect] = False
-
-            import pdb
-
-            import pooltool as pt
-
             shot = Global.shots.active
+            shot
             pdb.set_trace()
 
-        return task.cont
+        elif self.keymap.get(Action.show_help):
+            self.keymap[Action.show_help] = False
+            Global.base.messenger.send("toggle-help")
 
-    def cam_save_watch(self, task):
-        if self.keymap.get(Action.cam_save) and Global.mode_mgr.mode != Mode.cam_save:
-            Global.mode_mgr.change_mode(Mode.cam_save)
-
-        return task.cont
-
-    def cam_load_watch(self, task):
-        if self.keymap.get(Action.cam_load) and Global.mode_mgr.mode != Mode.cam_load:
+        elif self.keymap.get(Action.cam_load) and Global.mode_mgr.mode != Mode.cam_load:
             Global.mode_mgr.change_mode(Mode.cam_load)
 
-        return task.cont
-
-    def help_watch(self, task):
-        if self.keymap.get(Action.show_help):
-            self.keymap[Action.show_help] = False
-            if self.help_node.is_hidden():
-                self.help_node.show()
-            else:
-                self.help_node.hide()
+        if self.keymap.get(Action.cam_save) and Global.mode_mgr.mode != Mode.cam_save:
+            Global.mode_mgr.change_mode(Mode.cam_save)
 
         return task.cont
 

@@ -112,6 +112,13 @@ class Interface(ShowBase):
         """Listen for events that are mode independent"""
         tasks.register_event("window-event", self.handle_window_event)
         tasks.register_event("close-scene", self.close_scene)
+        tasks.register_event("toggle-help", self.toggle_help)
+
+    def toggle_help(self):
+        if self.help_node.is_hidden():
+            self.help_node.show()
+        else:
+            self.help_node.hide()
 
     def close_scene(self):
         for shot in Global.shots:

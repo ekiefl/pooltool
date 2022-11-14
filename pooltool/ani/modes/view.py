@@ -44,8 +44,8 @@ class ViewMode(BaseMode):
 
         # In this state, the cue sticks to the cue_avoid.min_theta
         self.magnet_theta = True
-        # if cue angle is within this many degrees from cue_avoid.min_theta, it sticks to
-        # cue_avoid.min_theta
+        # if cue angle is within this many degrees from cue_avoid.min_theta, it sticks
+        # to cue_avoid.min_theta
         self.magnet_threshold = 0.2
 
     def enter(self, move_active=False, load_prev_cam=False):
@@ -68,8 +68,8 @@ class ViewMode(BaseMode):
         self.register_keymap_event("mouse1", Action.zoom, True)
         self.register_keymap_event("mouse1-up", Action.zoom, False)
         self.register_keymap_event("a", Action.aim, True)
-        self.register_keymap_event("v", Action.move, True)
         self.register_keymap_event("s", Action.stroke, True)
+        self.register_keymap_event("v", Action.move, True)
         self.register_keymap_event("v-up", Action.move, False)
         self.register_keymap_event("1", Action.cam_save, True)
         self.register_keymap_event("2", Action.cam_load, True)
@@ -90,11 +90,14 @@ class ViewMode(BaseMode):
         self.register_keymap_event("space-up", Action.exec_shot, False)
 
         tasks.add(self.view_task, "view_task")
+        tasks.add(self.shared_task, "shared_task")
         if ani.settings["gameplay"]["cue_collision"]:
             tasks.add(cue_avoid.collision_task, "collision_task")
 
     def exit(self):
         tasks.remove("view_task")
+        tasks.remove("shared_task")
+
         if ani.settings["gameplay"]["cue_collision"]:
             tasks.remove("collision_task")
         player_cam.store_state(Mode.view, overwrite=True)

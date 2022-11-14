@@ -44,9 +44,12 @@ class CalculateMode(BaseMode):
         self.register_keymap_event("h", Action.show_help, True)
 
         tasks.add(self.calculate_view_task, "calculate_view_task")
+        tasks.add(self.shared_task, "shared_task")
 
     def exit(self):
         tasks.remove("calculate_view_task")
+        tasks.remove("shared_task")
+
         self.shot_sim_overlay.hide()
 
     def calculate_view_task(self, task):

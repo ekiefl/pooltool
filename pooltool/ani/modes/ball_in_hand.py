@@ -60,9 +60,12 @@ class BallInHandMode(BaseMode):
             self.picking = "ball"
 
         tasks.add(self.ball_in_hand_task, "ball_in_hand_task")
+        tasks.add(self.shared_task, "shared_task")
 
     def exit(self, success=False):
         tasks.remove("ball_in_hand_task")
+        tasks.remove("shared_task")
+
         BallInHandMode.remove_transparent_ball(self)
 
         if self.picking == "ball":

@@ -44,8 +44,10 @@ class PurgatoryMode(BaseMode):
         self.register_keymap_event("mouse1-down", Action.regain_control, False)
 
         tasks.add(self.purgatory_task, "purgatory_task")
+        tasks.add(self.shared_task, "shared_task")
 
     def exit(self):
+        tasks.remove("shared_task")
         tasks.remove("purgatory_task")
 
         # Set the framerate to pre-purgatory levels

@@ -96,9 +96,12 @@ class AimMode(BaseMode):
             tasks.add(cue_avoid.collision_task, "collision_task")
 
         tasks.add(self.aim_task, "aim_task")
+        tasks.add(self.shared_task, "shared_task")
 
     def exit(self):
         tasks.remove("aim_task")
+        tasks.remove("shared_task")
+
         if ani.settings["gameplay"]["cue_collision"]:
             tasks.remove("collision_task")
 

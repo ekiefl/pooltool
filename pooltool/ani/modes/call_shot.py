@@ -52,9 +52,12 @@ class CallShotMode(BaseMode):
         self.picking = "ball"
 
         tasks.add(self.call_shot_task, "call_shot_task")
+        tasks.add(self.shared_task, "shared_task")
 
     def exit(self):
         tasks.remove("call_shot_task")
+        tasks.remove("shared_task")
+
         if self.picking in ("ball", "pocket"):
             CallShotMode.remove_ball_highlight(self)
         CallShotMode.remove_transparent_ball(self)

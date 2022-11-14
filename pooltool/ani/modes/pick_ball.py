@@ -34,9 +34,11 @@ class PickBallMode(BaseMode):
         self.register_keymap_event("mouse1-up", "done", True)
 
         tasks.add(self.pick_ball_task, "pick_ball_task")
+        tasks.add(self.shared_task, "shared_task")
 
     def exit(self):
         PickBallMode.remove_ball_highlight(self)
+        tasks.remove("shared_task")
         tasks.remove("pick_ball_task")
 
     def pick_ball_task(self, task):

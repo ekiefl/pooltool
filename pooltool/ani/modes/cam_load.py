@@ -34,6 +34,17 @@ class CamLoadMode(BaseMode):
 
         self.render_camera_load_buttons()
         tasks.add(self.cam_load_task, "cam_load_task")
+        tasks.add(self.shared_task, "shared_task")
+
+    def exit(self):
+        if self.selection:
+            player_cam.load_state(name=f"save_{self.selection}", ok_if_not_exists=True)
+
+        tasks.remove("cam_load_task")
+        tasks.remove("shared_task")
+
+        mouse.touch()
+        self.cam_load_slots.hide()
 
     def render_camera_load_buttons(self):
         self.cam_load_slots = GenericMenu(
@@ -62,14 +73,6 @@ class CamLoadMode(BaseMode):
 
     def update_load_selection(self, state, coords):
         self.selection = state
-
-    def exit(self):
-        if self.selection:
-            player_cam.load_state(name=f"save_{self.selection}", ok_if_not_exists=True)
-
-        tasks.remove("cam_load_task")
-        mouse.touch()
-        self.cam_load_slots.hide()
 
     def cam_load_task(self, task):
         if not self.keymap[Action.cam_load]:

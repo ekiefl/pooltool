@@ -30,6 +30,18 @@ class CamSaveMode(BaseMode):
 
         self.render_camera_save_buttons()
         tasks.add(self.cam_save_task, "cam_save_task")
+        tasks.add(self.shared_task, "shared_task")
+
+    def exit(self):
+        if self.selection:
+            player_cam.store_state(name=f"save_{self.selection}", overwrite=True)
+
+        tasks.remove("cam_save_task")
+        tasks.remove("shared_task")
+
+        mouse.touch()
+        self.cam_save_slots.hide()
+        del self.selection
 
     def render_camera_save_buttons(self):
         self.cam_save_slots = GenericMenu(
@@ -63,15 +75,6 @@ class CamSaveMode(BaseMode):
 
     def update_save_selection(self, state, coords):
         self.selection = state
-
-    def exit(self):
-        if self.selection:
-            player_cam.store_state(name=f"save_{self.selection}", overwrite=True)
-
-        tasks.remove("cam_save_task")
-        mouse.touch()
-        self.cam_save_slots.hide()
-        del self.selection
 
     def cam_save_task(self, task):
         if not self.keymap[Action.cam_save]:
