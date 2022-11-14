@@ -16,7 +16,7 @@
         </checkbox>
     <subtitle>Table</subtitle>
         <text>Pick an existing table, view the table parameters, or create a new table.</text>
-    <dropdown from_yaml="config/tables" name="table_type" selection="7_foot">
+    <dropdown from_yaml="config/tables" name="table_type" selection="tight">
         <name>Table</name>
         <description>Choose from an existing table</description>
     </dropdown>

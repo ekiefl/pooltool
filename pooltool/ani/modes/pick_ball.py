@@ -41,7 +41,7 @@ class PickBallMode(BaseMode):
 
     def pick_ball_task(self, task):
         if not self.keymap[Action.pick_ball]:
-            self.change_mode(Mode.aim)
+            Global.mode_mgr.change_mode(Mode.aim)
             return task.done
 
         self.move_camera_pick_ball()
@@ -62,7 +62,7 @@ class PickBallMode(BaseMode):
                     f"Now cueing the {Global.shots.active.cue.cueing_ball.id} ball",
                     sentiment="neutral",
                 )
-            self.change_mode(Mode.aim)
+            Global.mode_mgr.change_mode(Mode.aim)
             return task.done
 
         return task.cont

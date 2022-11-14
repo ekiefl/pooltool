@@ -4,6 +4,7 @@ import sys
 
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
+from pooltool.ani.globals import Global
 from pooltool.ani.menu import menus
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import mouse
@@ -43,7 +44,7 @@ class MenuMode(BaseMode):
             return task.done
 
         if self.keymap[Action.new_game]:
-            self.go()
+            Global.base.messenger.send("go")
             return task.done
 
         if self.keymap[Action.scroll_up]:

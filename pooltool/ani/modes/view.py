@@ -11,6 +11,8 @@ from pooltool.ani.globals import Global
 from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import mouse
+from pooltool.objects.ball import Ball
+from pooltool.objects.cue import cue_avoid
 
 
 class ViewMode(BaseMode):
@@ -37,6 +39,15 @@ class ViewMode(BaseMode):
         Action.exec_shot: False,
     }
 
+    def __init__(self):
+        super().__init__()
+
+        # In this state, the cue sticks to the cue_avoid.min_theta
+        self.magnet_theta = True
+        # if cue angle is within this many degrees from cue_avoid.min_theta, it sticks to
+        # cue_avoid.min_theta
+        self.magnet_threshold = 0.2
+
     def enter(self, move_active=False, load_prev_cam=False):
         mouse.hide()
         mouse.relative()
@@ -48,7 +59,7 @@ class ViewMode(BaseMode):
         if load_prev_cam:
             player_cam.load_state(Mode.view)
 
-        self.scale_focus()
+        player_cam.scale_focus()
 
         if move_active:
             self.keymap[Action.move] = True
@@ -80,7 +91,7 @@ class ViewMode(BaseMode):
 
         tasks.add(self.view_task, "view_task")
         if ani.settings["gameplay"]["cue_collision"]:
-            tasks.add(self.collision_task, "collision_task")
+            tasks.add(cue_avoid.collision_task, "collision_task")
 
     def exit(self):
         tasks.remove("view_task")
@@ -90,13 +101,13 @@ class ViewMode(BaseMode):
 
     def view_task(self, task):
         if self.keymap[Action.stroke]:
-            self.change_mode(Mode.stroke)
+            Global.mode_mgr.change_mode(Mode.stroke)
         elif self.keymap[Action.pick_ball]:
-            self.change_mode(Mode.pick_ball)
+            Global.mode_mgr.change_mode(Mode.pick_ball)
         elif self.keymap[Action.call_shot]:
-            self.change_mode(Mode.call_shot)
+            Global.mode_mgr.change_mode(Mode.call_shot)
         elif self.keymap[Action.ball_in_hand]:
-            self.change_mode(Mode.ball_in_hand)
+            Global.mode_mgr.change_mode(Mode.ball_in_hand)
         elif self.keymap[Action.zoom]:
             self.zoom_camera_view()
         elif self.keymap[Action.move]:
@@ -115,46 +126,31 @@ class ViewMode(BaseMode):
         elif self.keymap[Action.power]:
             self.view_apply_power()
         elif self.keymap[Action.aim]:
-            self.change_mode(Mode.aim, enter_kwargs=dict(load_prev_cam=True))
+            Global.mode_mgr.change_mode(Mode.aim, enter_kwargs=dict(load_prev_cam=True))
         elif self.keymap[Action.exec_shot]:
-            self.mode_stroked_from = Mode.view
+            Global.mode_mgr.mode_stroked_from = Mode.view
             Global.shots.active.cue.set_object_state_as_render_state(skip_V0=True)
             Global.shots.active.cue.strike()
-            self.change_mode(Mode.calculate)
+            Global.mode_mgr.change_mode(Mode.calculate)
         elif self.keymap[Action.prev_shot]:
             self.keymap[Action.prev_shot] = False
             if len(Global.shots) > 1:
-                self.change_animation(
-                    Global.shots.active_index - 1
-                )  # ShotMode.change_animation
-                self.change_mode(Mode.shot, enter_kwargs=dict(init_animations=False))
+                self.change_animation(Global.shots.active_index - 1)
+                Global.mode_mgr.change_mode(
+                    Mode.shot, enter_kwargs=dict(init_animations=False)
+                )
                 return task.done
         else:
             self.rotate_camera_view()
 
         return task.cont
 
-    def scale_focus(self):
-        """Scale the camera's focus object
-
-        The focus marker is a small dot to show where the camera is centered, and where
-        it rotates about. This helps a lot in navigating the camera effectively. Here
-        the marker is scaled so that it is always a constant size, regardless of how
-        zoomed in or out the camera is.
-        """
-        # `dist` is the distance from the camera to the focus object and is equivalent
-        # to: cam_pos, focus_pos = player_cam.node.getPos(render),
-        # player_cam.focus_object.getPos(render) dist = (cam_pos -
-        # focus_pos).length()
-        dist = player_cam.node.getX()
-        player_cam.focus_object.setScale(0.002 * dist)
-
     def zoom_camera_view(self):
         with mouse:
             s = -mouse.get_dy() * ani.zoom_sensitivity
 
         player_cam.node.setPos(autils.multiply_cw(player_cam.node.getPos(), 1 - s))
-        self.scale_focus()
+        player_cam.scale_focus()
 
     def move_camera_view(self):
         with mouse:
@@ -212,10 +208,10 @@ class ViewMode(BaseMode):
         old_elevation = -cue.getR()
         new_elevation = max(0, min(ani.max_elevate, old_elevation + delta_elevation))
 
-        if self.min_theta >= new_elevation - self.magnet_threshold:
+        if cue_avoid.min_theta >= new_elevation - self.magnet_threshold:
             # user set theta to minimum value, resume cushion tracking
             self.magnet_theta = True
-            new_elevation = self.min_theta
+            new_elevation = cue_avoid.min_theta
         else:
             # theta has been modified by the user, so no longer tracks the cushion
             self.magnet_theta = False
@@ -253,9 +249,9 @@ class ViewMode(BaseMode):
         # increase elevation
         if (
             self.magnet_theta
-            or self.min_theta >= -cue_focus.getR() - self.magnet_threshold
+            or cue_avoid.min_theta >= -cue_focus.getR() - self.magnet_threshold
         ):
-            cue_focus.setR(-self.min_theta)
+            cue_focus.setR(-cue_avoid.min_theta)
 
         a, b, theta = (
             -new_y / R,
@@ -265,3 +261,34 @@ class ViewMode(BaseMode):
         Global.shots.active.cue.set_state(a=a, b=b, theta=theta)
         hud.elements[HUDElement.english].set(a, b)
         hud.elements[HUDElement.jack].set(theta)
+
+    def change_animation(self, shot_index):
+        # Switch shots
+        Global.shots.clear_animation()
+        Global.shots.active.teardown()
+        Global.shots.set_active(shot_index)
+        Global.shots.active.buildup()
+
+        # Initialize the animation
+        Global.shots.set_animation()
+        Global.shots.loop_animation()
+
+        # A lot of dumb things to make the cue track the initial position of the ball
+        dummy = Ball("dummy")
+        dummy.R = Global.shots.active.cue.cueing_ball.R
+        dummy.rvw = Global.shots.active.cue.cueing_ball.history.rvw[0]
+        dummy.render()
+        Global.shots.active.cue.init_focus(dummy)
+        Global.shots.active.cue.set_render_state_as_object_state()
+        Global.shots.active.cue.follow = None
+        dummy.remove_nodes()
+        del dummy
+
+        cue_avoid.init_collisions()
+
+        # Set the HUD
+        hud.elements.get(HUDElement.english).set(
+            Global.shots.active.cue.a, Global.shots.active.cue.b
+        )
+        hud.elements.get(HUDElement.jack).set(Global.shots.active.cue.theta)
+        hud.elements.get(HUDElement.power).set(Global.shots.active.cue.V0)

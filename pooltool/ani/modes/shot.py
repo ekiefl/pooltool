@@ -2,7 +2,6 @@
 
 import numpy as np
 
-import pooltool as pt
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
@@ -12,6 +11,8 @@ from pooltool.ani.globals import Global
 from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import mouse
+from pooltool.objects.ball import Ball
+from pooltool.objects.cue import cue_avoid
 
 
 class ShotMode(BaseMode):
@@ -58,7 +59,7 @@ class ShotMode(BaseMode):
             Global.shots.loop_animation()
             Global.shots.skip_stroke()
 
-        self.scale_focus()
+        player_cam.scale_focus()
 
         hud.elements.get(HUDElement.english).set(
             Global.shots.active.cue.a, Global.shots.active.cue.b
@@ -158,7 +159,7 @@ class ShotMode(BaseMode):
             Global.shots.set_active(-1)
             Global.shots.active.buildup()
 
-            self.init_collisions()
+            cue_avoid.init_collisions()
 
             if make_new:
                 Global.shots.active.cue.reset_state()
@@ -181,9 +182,9 @@ class ShotMode(BaseMode):
                 Global.shots.active.teardown()
                 Global.shots.set_active(-1)
                 Global.shots.active.buildup()
-                self.init_collisions()
+                cue_avoid.init_collisions()
 
-            player_cam.load_state(self.mode_stroked_from)
+            player_cam.load_state(Global.mode_mgr.mode_stroked_from)
             for ball in Global.shots.active.balls.values():
                 if ball.history.is_populated():
                     ball.set(
@@ -205,15 +206,15 @@ class ShotMode(BaseMode):
             player_cam.store_state("last_scene", overwrite=True)
 
             Global.base.messenger.send("close-scene")
-
             self.end_mode()
-            self.stop()
+            Global.base.messenger.send("stop")
+
         elif self.keymap[Action.aim]:
             Global.game.advance(Global.shots[-1])
             if Global.game.game_over:
-                self.change_mode(Mode.game_over)
+                Global.mode_mgr.change_mode(Mode.game_over)
             else:
-                self.change_mode(Mode.aim, exit_kwargs=dict(key="advance"))
+                Global.mode_mgr.change_mode(Mode.aim, exit_kwargs=dict(key="advance"))
         elif self.keymap[Action.zoom]:
             self.zoom_camera_shot()
         elif self.keymap[Action.move]:
@@ -239,8 +240,8 @@ class ShotMode(BaseMode):
             Global.shots.fast_forward()
 
         elif self.keymap[Action.undo_shot]:
-            self.change_mode(
-                self.mode_stroked_from,
+            Global.mode_mgr.change_mode(
+                Global.mode_mgr.mode_stroked_from,
                 exit_kwargs=dict(key="reset"),
                 enter_kwargs=dict(load_prev_cam=True),
             )
@@ -311,7 +312,7 @@ class ShotMode(BaseMode):
         Global.shots.loop_animation()
 
         # A lot of dumb things to make the cue track the initial position of the ball
-        dummy = pt.Ball("dummy")
+        dummy = Ball("dummy")
         dummy.R = Global.shots.active.cue.cueing_ball.R
         dummy.rvw = Global.shots.active.cue.cueing_ball.history.rvw[0]
         dummy.render()
@@ -321,7 +322,7 @@ class ShotMode(BaseMode):
         dummy.remove_nodes()
         del dummy
 
-        self.init_collisions()
+        cue_avoid.init_collisions()
 
         # Set the HUD
         hud.elements.get(HUDElement.english).set(
@@ -335,7 +336,7 @@ class ShotMode(BaseMode):
             s = -mouse.get_dy() * ani.zoom_sensitivity
 
         player_cam.node.setPos(autils.multiply_cw(player_cam.node.getPos(), 1 - s))
-        self.scale_focus()  # ViewMode.scale_focus()
+        player_cam.scale_focus()
 
     def move_camera_shot(self):
         with mouse:

@@ -6,7 +6,7 @@ from pooltool.ani.modes.calculate import CalculateMode
 from pooltool.ani.modes.call_shot import CallShotMode
 from pooltool.ani.modes.cam_load import CamLoadMode
 from pooltool.ani.modes.cam_save import CamSaveMode
-from pooltool.ani.modes.datatypes import BaseMode
+from pooltool.ani.modes.datatypes import BaseMode, Mode, ModeManager
 from pooltool.ani.modes.game_over import GameOverMode
 from pooltool.ani.modes.menu import MenuMode
 from pooltool.ani.modes.pick_ball import PickBallMode
@@ -15,9 +15,12 @@ from pooltool.ani.modes.shot import ShotMode
 from pooltool.ani.modes.stroke import StrokeMode
 from pooltool.ani.modes.view import ViewMode
 
-modes = {cls.name: cls for cls in BaseMode.__subclasses__()}
+all_modes = {cls.name: cls for cls in BaseMode.__subclasses__()}
+
 
 __all__ = [
+    "Mode",
+    "ModeManager",
     "AimMode",
     "BallInHandMode",
     "CalculateMode",

@@ -2,7 +2,14 @@
 
 import numpy as np
 from direct.interval.IntervalGlobal import LerpPosInterval, Sequence
-from panda3d.core import ClockObject, CollisionNode, CollisionSegment, Vec3
+from panda3d.core import (
+    ClockObject,
+    CollisionHandlerQueue,
+    CollisionNode,
+    CollisionSegment,
+    CollisionTraverser,
+    Vec3,
+)
 
 import pooltool.ani as ani
 import pooltool.constants as c
@@ -500,8 +507,31 @@ class CueAvoid:
 
         self.min_theta = 0
 
+    def init_collisions(self):
+        """Setup collision detection for cue stick
+
+        Notes
+        =====
+        - NOTE this Panda3D collision handler is specifically for determining whether
+          the cue stick is intersecting with cushions or balls. All other collisions
+          discussed at
+          https://ekiefl.github.io/2020/12/20/pooltool-alg/#2-what-are-events are
+          unrelated to this.
+        """
+
         if not ani.settings["gameplay"]["cue_collision"]:
             return
+
+        Global.base.cTrav = CollisionTraverser()
+        self.collision_handler = CollisionHandlerQueue()
+
+        Global.shots.active.cue.init_collision_handling(self.collision_handler)
+        for ball in Global.shots.active.balls.values():
+            ball.init_collision(Global.shots.active.cue)
+
+        # The stick needs a focus ball
+        if not Global.shots.active.cue.has_focus:
+            Global.shots.active.cue.init_focus(Global.shots.active.cue.cueing_ball)
 
         # Declare frequently used nodes
         self.avoid_nodes = {
@@ -655,6 +685,9 @@ class CueAvoid:
         assert into_node_path_name.startswith(expected_suffix)
         ball_id = into_node_path_name[len(expected_suffix) :]
         return Global.shots.active.balls[ball_id]
+
+
+cue_avoid = CueAvoid()
 
 
 def cue_from_dict(d):

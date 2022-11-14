@@ -52,7 +52,9 @@ class CalculateMode(BaseMode):
     def calculate_view_task(self, task):
         if not tasks.has("run_simulation"):
             # simulation calculation is finished
-            self.change_mode(Mode.shot, enter_kwargs=dict(init_animations=True))
+            Global.mode_mgr.change_mode(
+                Mode.shot, enter_kwargs=dict(init_animations=True)
+            )
         elif self.keymap[Action.zoom]:
             self.zoom_camera_calculate()
         elif self.keymap[Action.move]:

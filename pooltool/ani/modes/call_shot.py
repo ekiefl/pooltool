@@ -63,7 +63,7 @@ class CallShotMode(BaseMode):
 
     def call_shot_task(self, task):
         if not self.keymap[Action.call_shot]:
-            self.change_mode(self.last_mode)
+            Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
             return task.done
 
         self.move_camera_call_shot()
@@ -100,7 +100,7 @@ class CallShotMode(BaseMode):
                         f"Calling the {self.closest_pocket.id} pocket",
                         sentiment="neutral",
                     )
-                self.change_mode(self.last_mode)
+                Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
                 return task.done
 
         return task.cont

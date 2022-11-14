@@ -17,7 +17,7 @@ class StrokeMode(BaseMode):
     }
 
     def enter(self):
-        self.mode_stroked_from = self.last_mode
+        Global.mode_mgr.mode_stroked_from = Global.mode_mgr.last_mode
         mouse.hide()
         mouse.relative()
         mouse.track()
@@ -48,12 +48,12 @@ class StrokeMode(BaseMode):
                 Global.shots.active.cue.set_object_state_as_render_state()
                 Global.shots.active.cue.strike()
                 Global.shots.active.user_stroke = True
-                self.change_mode(Mode.calculate)
+                Global.mode_mgr.change_mode(Mode.calculate)
                 return
         else:
             Global.shots.active.cue.get_node("cue_stick").setX(0)
             Global.shots.active.cue.hide_nodes(ignore=("cue_cseg",))
-            self.change_mode(self.last_mode)
+            Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
             return
 
         return task.cont

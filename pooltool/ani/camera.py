@@ -46,6 +46,21 @@ class PlayerCam:
     def update_focus(self, pos):
         self.focus.setPos(pos)
 
+    def scale_focus(self):
+        """Scale the camera's focus object
+
+        The focus marker is a small dot to show where the camera is centered, and where
+        it rotates about. This helps a lot in navigating the camera effectively. Here
+        the marker is scaled so that it is always a constant size, regardless of how
+        zoomed in or out the camera is.
+        """
+        # `dist` is the distance from the camera to the focus object and is equivalent
+        # to: cam_pos, focus_pos = player_cam.node.getPos(render),
+        # player_cam.focus_object.getPos(render) dist = (cam_pos -
+        # focus_pos).length()
+        dist = self.node.getX()
+        self.focus_object.setScale(0.002 * dist)
+
     def get_state(self):
         return {
             "CamHpr": self.node.getHpr(),

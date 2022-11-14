@@ -5,6 +5,7 @@ from direct.gui.DirectGui import DGG
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
+from pooltool.ani.globals import Global
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import mouse
@@ -75,8 +76,12 @@ class CamSaveMode(BaseMode):
     def cam_save_task(self, task):
         if not self.keymap[Action.cam_save]:
             enter_kwargs = (
-                dict(load_prev_cam=True) if self.last_mode == Mode.aim else dict()
+                dict(load_prev_cam=True)
+                if Global.mode_mgr.last_mode == Mode.aim
+                else dict()
             )
-            self.change_mode(self.last_mode, enter_kwargs=enter_kwargs)
+            Global.mode_mgr.change_mode(
+                Global.mode_mgr.last_mode, enter_kwargs=enter_kwargs
+            )
 
         return task.cont

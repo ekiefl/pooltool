@@ -53,7 +53,7 @@ class PurgatoryMode(BaseMode):
 
     def purgatory_task(self, task):
         if self.keymap[Action.regain_control]:
-            self.change_mode(self.last_mode)
+            Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
 
         is_window_active = Global.base.win.get_properties().foreground
 

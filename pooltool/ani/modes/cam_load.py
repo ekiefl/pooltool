@@ -5,6 +5,7 @@ from direct.gui.DirectGui import DGG
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
+from pooltool.ani.globals import Global
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import mouse
@@ -18,9 +19,9 @@ class CamLoadMode(BaseMode):
     }
 
     def enter(self):
-        if self.last_mode == Mode.aim:
+        if Global.mode_mgr.last_mode == Mode.aim:
             # FIXME Justification for this lie?
-            self.last_mode = Mode.view
+            Global.mode_mgr.last_mode = Mode.view
 
         mouse.show()
         mouse.absolute()
@@ -73,8 +74,12 @@ class CamLoadMode(BaseMode):
     def cam_load_task(self, task):
         if not self.keymap[Action.cam_load]:
             enter_kwargs = (
-                dict(load_prev_cam=True) if self.last_mode == Mode.aim else dict()
+                dict(load_prev_cam=True)
+                if Global.mode_mgr.last_mode == Mode.aim
+                else dict()
             )
-            self.change_mode(self.last_mode, enter_kwargs=enter_kwargs)
+            Global.mode_mgr.change_mode(
+                Global.mode_mgr.last_mode, enter_kwargs=enter_kwargs
+            )
 
         return task.cont
