@@ -44,7 +44,7 @@ class _Global:
 
         (1) It gives access to the `ShowBaseGlobal` variables.
         (2) It provide a namespace for other variables designed to be shared across many
-            modules. Such variables must be set with the `register` method.
+            modules.
     """
 
     _freeze = False
@@ -53,15 +53,18 @@ class _Global:
     aspect2d = ShowBaseGlobal.aspect2d
     render2d = ShowBaseGlobal.render2d
 
+    shots = None
+    game = None
+    mode_mgr = None
+
     def __init__(self):
-        self._custom_registry = set()
         self._freeze = True
 
     def __setattr__(self, key, val):
         if self._freeze and not hasattr(self, key):
             raise TypeError(
-                "Global is a sacred namespace and does not support direct attribute "
-                "declaration. Please use the Global.register method."
+                f"Global.{key} cannot be set. Global is a protected namespace and does "
+                f"not support declaration of unknown attributes."
             )
 
         object.__setattr__(self, key, val)
@@ -85,13 +88,6 @@ class _Global:
     @require_showbase
     def loader(self):
         return ShowBaseGlobal.base.loader
-
-    def register(self, name, var):
-        """Register a variable into the Global namespace"""
-        self._freeze = False
-        setattr(self, name, var)
-        self._freeze = True
-        self._custom_registry.add(name)
 
 
 Global = _Global()

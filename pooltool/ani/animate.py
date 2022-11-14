@@ -43,16 +43,12 @@ class Interface(ShowBase):
         Global.clock.setMode(ClockObject.MLimited)
         Global.clock.setFrameRate(ani.settings["graphics"]["fps"])
 
-        # We register a new shot collection under the "Global" namespace so it can be
-        # accessed from any object
-        Global.register("shots", SystemCollection())
+        Global.shots = SystemCollection()
 
         mouse.init()
         player_cam.init()
 
-        # We register the mode manager under the "Global" namespace so it can be
-        # accessed from any object
-        Global.register("mode_mgr", ModeManager(all_modes))
+        Global.mode_mgr = ModeManager(all_modes)
         Global.mode_mgr.init_modes()
 
         self.scene = None
@@ -310,15 +306,10 @@ class ShotViewer(Interface):
         else:
             # Create a new SystemCollection based on type of shot_or_shots
             if issubclass(type(shot_or_shots), System):
-                # We register a new shot collection under the "Global" namespace so it
-                # can be accessed from any object
-                Global.register("shots", SystemCollection())
-
+                Global.shots = SystemCollection()
                 Global.shots.append(shot_or_shots)
             elif issubclass(type(shot_or_shots), SystemCollection):
-                # We register a new shot collection under the "Global" namespace so it
-                # can be accessed from any object
-                Global.register("shots", shot_or_shots)
+                Global.shots = shot_or_shots
 
         if Global.shots.active is None:
             Global.shots.set_active(0)
@@ -395,10 +386,7 @@ class Play(Interface):
     def go(self):
         menus.hide_all()
 
-        # We register a new shot collection under the "Global" namespace so it can be
-        # accessed from any object
-        Global.register("shots", SystemCollection())
-
+        Global.shots = SystemCollection()
         Global.shots.append(System())
         Global.shots.set_active(-1)
 
@@ -461,8 +449,7 @@ class Play(Interface):
         game_class = games.game_classes[ani.options_sandbox]
 
         # Register the game under the Global namespace
-        Global.register("game", game_class())
-
+        Global.game = game_class()
         Global.game.init(Global.shots.active.table, ball_kwargs)
         Global.game.start()
 
