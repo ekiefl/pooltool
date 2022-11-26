@@ -1,6 +1,7 @@
 from direct.showbase import ShowBaseGlobal
 
 from pooltool.error import ConfigError
+from pooltool.utils import classproperty
 
 
 def is_showbase_initialized() -> bool:
@@ -29,7 +30,7 @@ def require_showbase(func):
     return wrapper
 
 
-class _Global:
+class Global:
     """A namespace for shared variables
 
     When an instance of ShowBase is created, Panda3d populates the global namespace with
@@ -47,8 +48,6 @@ class _Global:
             modules.
     """
 
-    _freeze = False
-
     clock = ShowBaseGlobal.globalClock
     aspect2d = ShowBaseGlobal.aspect2d
     render2d = ShowBaseGlobal.render2d
@@ -57,37 +56,34 @@ class _Global:
     game = None
     mode_mgr = None
 
-    def __init__(self):
-        self._freeze = True
-
-    def __setattr__(self, key, val):
-        if self._freeze and not hasattr(self, key):
-            raise TypeError(
-                f"Global.{key} cannot be set. Global is a protected namespace and does "
-                f"not support declaration of unknown attributes."
-            )
-
-        object.__setattr__(self, key, val)
-
-    @property
+    @classproperty
     @require_showbase
     def base(self):
         return ShowBaseGlobal.base
 
-    @property
+    @classproperty
     @require_showbase
     def render(self):
         return ShowBaseGlobal.base.render
 
-    @property
+    @classproperty
     @require_showbase
     def task_mgr(self):
         return ShowBaseGlobal.base.taskMgr
 
-    @property
+    @classproperty
     @require_showbase
     def loader(self):
         return ShowBaseGlobal.base.loader
 
+    @classmethod
+    def register_shots(cls, shots):
+        cls.shots = shots
 
-Global = _Global()
+    @classmethod
+    def register_game(cls, game):
+        cls.game = game
+
+    @classmethod
+    def register_mode_mgr(cls, mode_mgr):
+        cls.mode_mgr = mode_mgr

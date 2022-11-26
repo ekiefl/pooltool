@@ -4,7 +4,7 @@ import numpy as np
 from panda3d.core import ClockObject
 from pandac.PandaModules import WindowProperties
 
-from pooltool.ani.globals import Global
+from pooltool.ani.globals import Global, require_showbase
 
 
 class Mouse(ClockObject):
@@ -18,6 +18,7 @@ class Mouse(ClockObject):
     def __exit__(self, *args):
         self.touch()
 
+    @require_showbase
     def init(self):
         Global.base.disableMouse()
         self.mouse = Global.base.mouseWatcherNode

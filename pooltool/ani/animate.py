@@ -8,10 +8,11 @@ from direct.gui.OnscreenText import OnscreenText
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import ClockObject, TextNode, WindowProperties
 
-import pooltool as pt
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.games as games
+import pooltool.terminal as terminal
+import pooltool.utils as utils
 from pooltool.ani.camera import player_cam
 from pooltool.ani.environment import environment
 from pooltool.ani.globals import Global
@@ -27,15 +28,21 @@ from pooltool.system import System, SystemCollection
 
 class Interface(ShowBase):
     def __init__(self, shot=None, monitor=False):
-        self.stdout = pt.terminal.Run()
-
         super().__init__(self)
 
+        # Conceptually I like the idea of super().__init__(self) and simplepbr.init()
+        # being one after the other, but this background doesn't apply if ran after
+        # simplepbr.init(). See open discussion here:
+        # https://discourse.panda3d.org/t/cant-change-base-background-after-simplepbr-init/28945
         Global.base.setBackgroundColor(0.04, 0.04, 0.04)
 
         simplepbr.init(
             enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
         )
+
+        # These require `base`. With ShowBase initialized, they can now be called
+        mouse.init()
+        player_cam.init()
 
         if not ani.settings["graphics"]["shader"]:
             Global.render.set_shader_off()
@@ -43,15 +50,9 @@ class Interface(ShowBase):
         Global.clock.setMode(ClockObject.MLimited)
         Global.clock.setFrameRate(ani.settings["graphics"]["fps"])
 
-        Global.shots = SystemCollection()
-
-        mouse.init()
-        player_cam.init()
-
-        Global.mode_mgr = ModeManager(all_modes)
+        Global.register_shots(SystemCollection())
+        Global.register_mode_mgr(ModeManager(all_modes))
         Global.mode_mgr.init_modes()
-
-        self.scene = None
 
         self.frame = 0
         tasks.add(self.increment_frame, "increment_frame")
@@ -60,6 +61,7 @@ class Interface(ShowBase):
             tasks.add(self.monitor, "monitor")
 
         self.listen_constant_events()
+        self.stdout = terminal.Run()
 
     def fix_window_resize(self, win=None):
         """Fix aspect ratio of window upon user resizing
@@ -138,7 +140,7 @@ class Interface(ShowBase):
         gc.collect()
 
     def init_system_nodes(self):
-        self.init_scene()
+        Global.render.attachNewNode("scene")
         Global.shots.active.table.render()
         environment.init(Global.shots.active.table)
 
@@ -155,10 +157,10 @@ class Interface(ShowBase):
             pos=(Global.shots.active.table.w / 2, Global.shots.active.table.l / 2, R),
         )
 
-    def init_scene(self):
-        self.scene = Global.render.attachNewNode("scene")
-
     def monitor(self, task):
+        if Global.mode_mgr.mode == Mode.purgatory or Global.mode_mgr.mode is None:
+            return task.cont
+
         keymap = Global.mode_mgr.get_keymap()
         self.stdout.warning(
             "", header=f"Frame {self.frame}", lc="green", nl_before=1, nl_after=0
@@ -166,7 +168,7 @@ class Interface(ShowBase):
         self.stdout.info("Mode", Global.mode_mgr.mode)
         self.stdout.info("Last", Global.mode_mgr.last_mode)
         self.stdout.info("Tasks", [task.name for task in Global.task_mgr.getAllTasks()])
-        self.stdout.info("Memory", pt.utils.get_total_memory_usage())
+        self.stdout.info("Memory", utils.get_total_memory_usage())
         self.stdout.info("Actions", [k for k in keymap if keymap[k]])
         self.stdout.info("Keymap", Global.mode_mgr.get_keymap())
         self.stdout.info("Frame", self.frame)
@@ -241,15 +243,177 @@ class Interface(ShowBase):
 
         self.help_node.hide()
 
+    def start(self):
+        Global.task_mgr.run()
 
-class ShotViewer(Interface):
+
+# class ShotViewer(Interface):
+#    def __init__(self, *args, **kwargs):
+#        Interface.__init__(self, *args, **kwargs)
+#        self.create_standby_screen()
+#        self.create_instructions()
+#        self.create_title("")
+#
+#        self.stop()
+#
+#    def listen_constant_events(self):
+#        """Listen for events that are mode independent"""
+#        Interface.listen_constant_events(self)
+#        tasks.register_event("stop", self.stop)
+#
+#    def create_title(self, title):
+#        self.title_node = OnscreenText(
+#            text=title,
+#            pos=(-1.55, -0.93),
+#            scale=ani.menu_text_scale * 0.7,
+#            fg=(1, 1, 1, 1),
+#            align=TextNode.ALeft,
+#            parent=Global.aspect2d,
+#        )
+#        self.title_node.hide()
+#
+#    def create_instructions(self):
+#        self.instructions = OnscreenText(
+#            text="Press <escape> to exit",
+#            pos=(-1.55, 0.93),
+#            scale=ani.menu_text_scale * 0.7,
+#            fg=(1, 1, 1, 1),
+#            align=TextNode.ALeft,
+#            parent=Global.aspect2d,
+#        )
+#        self.instructions.hide()
+#
+#    def create_standby_screen(self):
+#        self.standby_screen = GenericMenu(frame_color=(0.3, 0.3, 0.3, 1))
+#        self.standby_screen.add_image(
+#            ani.logo_paths["default"], pos=(0, 0, 0), scale=(0.5, 1, 0.44)
+#        )
+#
+#        OnscreenText(
+#            text="GUI standing by...",
+#            style=1,
+#            fg=(1, 1, 1, 1),
+#            parent=self.standby_screen.titleMenu,
+#            align=TextNode.ALeft,
+#            pos=(-1.55, 0.93),
+#            scale=0.8 * ani.menu_text_scale,
+#        )
+#
+#    def show(self, shot_or_shots=None, title=""):
+#
+#        if shot_or_shots is None:
+#            # No passed shots. This is ok if Global.shots has already been defined, but
+#            # will complain otherwise
+#            if not len(Global.shots):
+#                raise ConfigError(
+#                    "ShotViewer.show :: No shots passed and no shots set."
+#                )
+#        else:
+#            # Create a new SystemCollection based on type of shot_or_shots
+#            if issubclass(type(shot_or_shots), System):
+#                Global.register_shots(SystemCollection())
+#                Global.shots.append(shot_or_shots)
+#            elif issubclass(type(shot_or_shots), SystemCollection):
+#                Global.register_shots(shot_or_shots)
+#
+#        if Global.shots.active is None:
+#            Global.shots.set_active(0)
+#
+#        self.standby_screen.hide()
+#        self.instructions.show()
+#        self.create_title(title)
+#        self.title_node.show()
+#        self.init_help_page()
+#        self.help_hint.hide()
+#
+#        mouse.init()
+#        player_cam.init()
+#
+#        self.init_system_nodes()
+#
+#        hud_task = hud.init()
+#
+#        player_cam.load_state("last_scene", ok_if_not_exists=True)
+#
+#        Global.task_mgr.run()
+#
+#        tasks.add(hud_task, "update_hud")
+#
+#        params = dict(
+#            init_animations=True,
+#            single_instance=True,
+#        )
+#        Global.mode_mgr.update_event_baseline()
+#        Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
+#
+#    def stop(self):
+#        self.standby_screen.show()
+#        self.instructions.hide()
+#        self.title_node.hide()
+#
+#        Global.base.graphicsEngine.renderFrame()
+#        Global.base.graphicsEngine.renderFrame()
+#
+#        Global.task_mgr.stop()
+#
+#    def finalizeExit(self):
+#        self.stop()
+
+
+class ShotViewer2(Interface):
     def __init__(self, *args, **kwargs):
         Interface.__init__(self, *args, **kwargs)
         self.create_standby_screen()
         self.create_instructions()
-        self.create_title("")
+        self.create_title("Sup")
 
         self.stop()
+
+    def show(self, shot_or_shots=None, title=""):
+        if shot_or_shots is None:
+            # No passed shots. This is ok if Global.shots has already been defined, but
+            # will complain otherwise
+            if not len(Global.shots):
+                raise ConfigError(
+                    "ShotViewer.show :: No shots passed and no shots set."
+                )
+        else:
+            # Create a new SystemCollection based on type of shot_or_shots
+            if issubclass(type(shot_or_shots), System):
+                Global.register_shots(SystemCollection())
+                Global.shots.append(shot_or_shots)
+            elif issubclass(type(shot_or_shots), SystemCollection):
+                Global.register_shots(shot_or_shots)
+
+        if Global.shots.active is None:
+            Global.shots.set_active(0)
+
+        self.standby_screen.hide()
+        self.instructions.show()
+        self.create_title(title)
+        self.title_node.show()
+        self.init_help_page()
+        self.help_hint.hide()
+
+        mouse.init()
+        player_cam.init()
+
+        # FIXME not working
+        player_cam.load_state("last_scene", ok_if_not_exists=True)
+
+        self.init_system_nodes()
+
+        hud_task = hud.init()
+        tasks.add(hud_task, "update_hud")
+
+        params = dict(
+            init_animations=True,
+            single_instance=True,
+        )
+        Global.mode_mgr.update_event_baseline()
+        Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
+
+        Global.task_mgr.run()
 
     def listen_constant_events(self):
         """Listen for events that are mode independent"""
@@ -265,7 +429,6 @@ class ShotViewer(Interface):
             align=TextNode.ALeft,
             parent=Global.aspect2d,
         )
-        self.title_node.hide()
 
     def create_instructions(self):
         self.instructions = OnscreenText(
@@ -276,7 +439,6 @@ class ShotViewer(Interface):
             align=TextNode.ALeft,
             parent=Global.aspect2d,
         )
-        self.instructions.hide()
 
     def create_standby_screen(self):
         self.standby_screen = GenericMenu(frame_color=(0.3, 0.3, 0.3, 1))
@@ -294,64 +456,24 @@ class ShotViewer(Interface):
             scale=0.8 * ani.menu_text_scale,
         )
 
-    def show(self, shot_or_shots=None, title=""):
-
-        if shot_or_shots is None:
-            # No passed shots. This is ok if Global.shots has already been defined, but
-            # will complain otherwise
-            if not len(Global.shots):
-                raise ConfigError(
-                    "ShotViewer.show :: No shots passed and no shots set."
-                )
-        else:
-            # Create a new SystemCollection based on type of shot_or_shots
-            if issubclass(type(shot_or_shots), System):
-                Global.shots = SystemCollection()
-                Global.shots.append(shot_or_shots)
-            elif issubclass(type(shot_or_shots), SystemCollection):
-                Global.shots = shot_or_shots
-
-        if Global.shots.active is None:
-            Global.shots.set_active(0)
-
-        self.standby_screen.hide()
-        self.instructions.show()
-        self.create_title(title)
-        self.title_node.show()
-        self.init_help_page()
-        self.help_hint.hide()
-
-        mouse.init()
-
-        self.init_system_nodes()
-
-        hud_task = hud.init()
-
-        player_cam.load_state("last_scene", ok_if_not_exists=True)
-
-        Global.task_mgr.run()
-
-        tasks.add(hud_task, "update_hud")
-
-        params = dict(
-            init_animations=True,
-            single_instance=True,
-        )
-
-        Global.mode_mgr.update_event_baseline()
-        Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
-        print("asdfasdfasdfasdfasdf")
-
     def stop(self):
         self.standby_screen.show()
         self.instructions.hide()
         self.title_node.hide()
+
+        # ???
         Global.base.graphicsEngine.renderFrame()
         Global.base.graphicsEngine.renderFrame()
 
+        # https://discourse.panda3d.org/t/executing-code-post-app-run/27812/7
         Global.task_mgr.stop()
 
     def finalizeExit(self):
+        """Override ShowBase.finalizeExit to prevent sys.exit call
+
+        See:
+        https://docs.panda3d.org/1.10/python/reference/direct.showbase.ShowBase#direct.showbase.ShowBase.ShowBase.finalizeExit
+        """
         self.stop()
 
 
@@ -386,7 +508,7 @@ class Play(Interface):
     def go(self):
         menus.hide_all()
 
-        Global.shots = SystemCollection()
+        Global.register_shots(SystemCollection())
         Global.shots.append(System())
         Global.shots.set_active(-1)
 
@@ -460,6 +582,3 @@ class Play(Interface):
 
     def setup_balls(self):
         Global.shots.active.balls = Global.game.balls
-
-    def start(self):
-        self.run()

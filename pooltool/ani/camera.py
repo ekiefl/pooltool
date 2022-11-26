@@ -2,10 +2,11 @@
 
 from panda3d.core import TransparencyAttrib
 
-from pooltool.ani.globals import Global
+from pooltool.ani.globals import Global, require_showbase
 
 
 class PlayerCam:
+    @require_showbase
     def init(self):
         self.node = Global.base.camera
         self.lens = Global.base.camLens

@@ -16,6 +16,21 @@ from panda3d.core import Filename
 import pooltool.constants as c
 
 
+class classproperty(property):
+    """Decorator for a class property
+
+    Examples:
+        >>> from pooltool.utils import classproperty
+        >>> class Test:
+        >>>     @classproperty
+        >>>     def foo(cls):
+        >>>         return cls.__name__
+    """
+
+    def __get__(self, owner_self, owner_cls):
+        return self.fget(owner_cls)
+
+
 def save_pickle(x, path):
     """Save an object `x` to filepath `path`"""
     with open(path, "wb") as f:

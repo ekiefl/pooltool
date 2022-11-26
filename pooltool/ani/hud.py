@@ -66,7 +66,7 @@ class HUD:
         self.elements["element"].show()
 
     def update_hud(self, task):
-        if hasattr(Global, "game"):
+        if Global.game is not None:
             self.update_log_window()
             self.update_player_stats()
 
