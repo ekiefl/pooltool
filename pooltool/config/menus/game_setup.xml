@@ -3,6 +3,11 @@
     <backbutton>
         <func>func_go_main_menu</func>
     </backbutton>
+    <button>
+        <name>Play now</name>
+        <func>func_play_now</func>
+        <description>Enter the game with the currently selected settings</description>
+    </button>
     <subtitle>Type</subtitle>
         <dropdown name="game_type" selection="9-ball">
             <name>Game</name>
@@ -16,7 +21,7 @@
         </checkbox>
     <subtitle>Table</subtitle>
         <text>Pick an existing table, view the table parameters, or create a new table.</text>
-    <dropdown from_yaml="config/tables" name="table_type" selection="tight">
+    <dropdown from_yaml="config/tables" name="table_type" selection="7_foot">
         <name>Table</name>
         <description>Choose from an existing table</description>
     </dropdown>
