@@ -1069,6 +1069,9 @@ class Menus:
     def func_go_new_table(self):
         self.show("new_table")
 
+    def func_play_now(self):
+        Global.base.messenger.send("go")
+
     def func_go_view_table(self):
         for element in self.menus["view_table"].elements:
             if element.get("name") == "table_params_name":
