@@ -2,11 +2,19 @@
 
 import numpy as np
 from direct.interval.IntervalGlobal import LerpPosInterval, Sequence
-from panda3d.core import ClockObject, CollisionNode, CollisionSegment, Vec3
+from panda3d.core import (
+    ClockObject,
+    CollisionHandlerQueue,
+    CollisionNode,
+    CollisionSegment,
+    CollisionTraverser,
+    Vec3,
+)
 
 import pooltool.ani as ani
 import pooltool.constants as c
 import pooltool.utils as utils
+from pooltool.ani.globals import Global
 from pooltool.error import ConfigError
 from pooltool.events import StickBallCollision
 from pooltool.objects import Object, Render
@@ -26,12 +34,10 @@ class CueRender(Render):
 
     def init_model(self, R=c.R):
         path = utils.panda_path(ani.model_dir / "cue" / "cue.glb")
-        cue_stick_model = self.loader.loadModel(path)
+        cue_stick_model = Global.loader.loadModel(path)
         cue_stick_model.setName("cue_stick_model")
 
-        cue_stick = (
-            self.global_render.find("scene").find("cloth").attachNewNode("cue_stick")
-        )
+        cue_stick = Global.render.find("scene").find("cloth").attachNewNode("cue_stick")
         cue_stick_model.reparentTo(cue_stick)
 
         self.nodes["cue_stick"] = cue_stick
@@ -43,9 +49,7 @@ class CueRender(Render):
         self.get_node("cue_stick_model").setPos(ball.R, 0, 0)
 
         cue_stick_focus = (
-            self.global_render.find("scene")
-            .find("cloth")
-            .attachNewNode("cue_stick_focus")
+            Global.render.find("scene").find("cloth").attachNewNode("cue_stick_focus")
         )
         self.nodes["cue_stick_focus"] = cue_stick_focus
 
@@ -75,7 +79,7 @@ class CueRender(Render):
         collision_node.node().addSolid(CollisionSegment(x, 0, 0, X, 0, 0))
 
         self.nodes["cue_cseg"] = collision_node
-        self.base.cTrav.addCollider(collision_node, collision_handler)
+        Global.base.cTrav.addCollider(collision_node, collision_handler)
 
         if ani.settings["graphics"]["debug"]:
             collision_node.show()
@@ -480,7 +484,7 @@ class Cue(Object, CueRender):
         utils.save_pickle(self.as_dict(), path)
 
 
-class CueAvoid(object):
+class CueAvoid:
     def __init__(self):
         """Calculates min elevation required to avoid colliding with balls and cushions
 
@@ -496,26 +500,46 @@ class CueAvoid(object):
 
         Notes
         =====
-        - This class has nothing to do with collisions that occurr during the shot
+        - This class has nothing to do with collisions that occur during the shot
           evolution, e.g.  ball-ball collisions, ball-cushion collisions, etc. All of
           those are handled in events.py
         """
 
-        # Panda pollutes the global namespace, appease linters
-        self.global_render = __builtins__["render"]
-
         self.min_theta = 0
+
+    def init_collisions(self):
+        """Setup collision detection for cue stick
+
+        Notes
+        =====
+        - NOTE this Panda3D collision handler is specifically for determining whether
+          the cue stick is intersecting with cushions or balls. All other collisions
+          discussed at
+          https://ekiefl.github.io/2020/12/20/pooltool-alg/#2-what-are-events are
+          unrelated to this.
+        """
 
         if not ani.settings["gameplay"]["cue_collision"]:
             return
 
+        Global.base.cTrav = CollisionTraverser()
+        self.collision_handler = CollisionHandlerQueue()
+
+        Global.shots.active.cue.init_collision_handling(self.collision_handler)
+        for ball in Global.shots.active.balls.values():
+            ball.init_collision(Global.shots.active.cue)
+
+        # The stick needs a focus ball
+        if not Global.shots.active.cue.has_focus:
+            Global.shots.active.cue.init_focus(Global.shots.active.cue.cueing_ball)
+
         # Declare frequently used nodes
         self.avoid_nodes = {
-            "scene": self.global_render.find("scene"),
-            "cue_collision_node": self.shots.active.cue.get_node("cue_cseg"),
-            "cue_stick_model": self.shots.active.cue.get_node("cue_stick_model"),
-            "cue_stick": self.shots.active.cue.get_node("cue_stick"),
-            "cue_stick_focus": self.shots.active.cue.get_node("cue_stick_focus"),
+            "scene": Global.render.find("scene"),
+            "cue_collision_node": Global.shots.active.cue.get_node("cue_cseg"),
+            "cue_stick_model": Global.shots.active.cue.get_node("cue_stick_model"),
+            "cue_stick": Global.shots.active.cue.get_node("cue_stick"),
+            "cue_stick_focus": Global.shots.active.cue.get_node("cue_stick_focus"),
         }
 
     def collision_task(self, task):
@@ -586,22 +610,22 @@ class CueAvoid(object):
         min_theta = 0
         ball = self.get_ball(entry)
 
-        if ball == self.shots.active.cue.cueing_ball:
+        if ball == Global.shots.active.cue.cueing_ball:
             return 0
 
-        scene = self.global_render.find("scene")
+        scene = Global.render.find("scene")
 
         # Radius of transect
-        n = np.array(entry.get_surface_normal(self.global_render.find("scene")))
+        n = np.array(entry.get_surface_normal(Global.render.find("scene")))
         phi = ((self.avoid_nodes["cue_stick_focus"].getH() + 180) % 360) * np.pi / 180
         c = np.array([np.cos(phi), np.sin(phi), 0])
         gamma = np.arccos(np.dot(n, c))
-        AB = (ball.R + self.shots.active.cue.tip_radius) * np.cos(gamma)
+        AB = (ball.R + Global.shots.active.cue.tip_radius) * np.cos(gamma)
 
         # Center of blocking ball transect
         Ax, Ay, _ = entry.getSurfacePoint(scene)
-        Ax -= (AB + self.shots.active.cue.tip_radius) * np.cos(phi)
-        Ay -= (AB + self.shots.active.cue.tip_radius) * np.sin(phi)
+        Ax -= (AB + Global.shots.active.cue.tip_radius) * np.cos(phi)
+        Ay -= (AB + Global.shots.active.cue.tip_radius) * np.sin(phi)
         Az = ball.R
 
         # Center of aim, leveled to ball height
@@ -637,11 +661,11 @@ class CueAvoid(object):
     def get_cue_radius(self, l):
         """Returns cue radius at collision point, given point is distance l from tip"""
 
-        bounds = self.shots.active.cue.get_node("cue_stick").get_tight_bounds()
+        bounds = Global.shots.active.cue.get_node("cue_stick").get_tight_bounds()
         L = bounds[1][0] - bounds[0][0]  # cue length
 
-        r = self.shots.active.cue.tip_radius
-        R = self.shots.active.cue.butt_radius
+        r = Global.shots.active.cue.tip_radius
+        R = Global.shots.active.cue.butt_radius
 
         m = (R - r) / L  # rise/run
         b = r  # intercept
@@ -653,14 +677,17 @@ class CueAvoid(object):
         into_node_path_name = entry.get_into_node_path().name
         assert into_node_path_name.startswith(expected_suffix)
         cushion_id = into_node_path_name[len(expected_suffix) :]
-        return self.shots.active.table.cushion_segments["linear"][cushion_id]
+        return Global.shots.active.table.cushion_segments["linear"][cushion_id]
 
     def get_ball(self, entry):
         expected_suffix = "ball_csphere_"
         into_node_path_name = entry.get_into_node_path().name
         assert into_node_path_name.startswith(expected_suffix)
         ball_id = into_node_path_name[len(expected_suffix) :]
-        return self.shots.active.balls[ball_id]
+        return Global.shots.active.balls[ball_id]
+
+
+cue_avoid = CueAvoid()
 
 
 def cue_from_dict(d):

@@ -23,6 +23,7 @@ import pooltool.ani.utils as autils
 import pooltool.constants as c
 import pooltool.physics as physics
 import pooltool.utils as utils
+from pooltool.ani.globals import Global
 from pooltool.error import ConfigError
 from pooltool.events import (
     Events,
@@ -47,7 +48,7 @@ class BallRender(Render):
     def init_sphere(self):
         """Initialize the ball's nodes"""
         position = (
-            self.global_render.find("scene")
+            Global.render.find("scene")
             .find("cloth")
             .attachNewNode(f"ball_{self.id}_position")
         )
@@ -58,7 +59,7 @@ class BallRender(Render):
             expected_path = ani.model_dir / "balls" / "set_1" / f"{self.id}.glb"
             path = expected_path if expected_path.exists() else fallback_path
 
-            sphere_node = self.base.loader.loadModel(panda_path(path))
+            sphere_node = Global.loader.loadModel(panda_path(path))
             sphere_node.reparentTo(position)
 
             if path == fallback_path:
@@ -79,7 +80,7 @@ class BallRender(Render):
                 parents.append(parent.stem)
                 parent = parent.parent
         else:
-            sphere_node = self.base.loader.loadModel(
+            sphere_node = Global.loader.loadModel(
                 panda_path(ani.model_dir / "balls" / self.rel_model_path)
             )
             sphere_node.reparentTo(position)
@@ -128,9 +129,7 @@ class BallRender(Render):
 
         shadow_path = ani.model_dir / "balls" / "set_1" / "shadow.glb"
         shadow_node = (
-            self.global_render.find("scene")
-            .find("cloth")
-            .attachNewNode(f"shadow_{self.id}")
+            Global.render.find("scene").find("cloth").attachNewNode(f"shadow_{self.id}")
         )
         shadow_node.setPos(self.rvw[0, 0], self.rvw[0, 1], 0)
 
@@ -138,7 +137,7 @@ class BallRender(Render):
         shadow_node.setTransparency(TransparencyAttrib.MAlpha)
 
         for i, scale in enumerate(scales):
-            shadow_layer = self.base.loader.loadModel(panda_path(shadow_path))
+            shadow_layer = Global.loader.loadModel(panda_path(shadow_path))
             shadow_layer.reparentTo(shadow_node)
             shadow_layer.setScale(self.get_scale_factor(shadow_layer) * scale)
             shadow_layer.setZ(z_offset * (1 - i / N))

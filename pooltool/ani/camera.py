@@ -2,16 +2,14 @@
 
 from panda3d.core import TransparencyAttrib
 
+from pooltool.ani.globals import Global, require_showbase
+
 
 class PlayerCam:
-    def __init__(self):
-        # Panda pollutes the global namespace, appease linters
-        self.base = __builtins__["base"]
-        self.global_render = __builtins__["render"]
-        self.loader = __builtins__["loader"]
-
-        self.node = self.base.camera
-        self.lens = self.base.camLens
+    @require_showbase
+    def init(self):
+        self.node = Global.base.camera
+        self.lens = Global.base.camLens
         self.lens.setNear(0.02)
 
         self.states = {}
@@ -20,13 +18,13 @@ class PlayerCam:
 
     def create_focus(self, parent=None, pos=None):
         if parent is None:
-            parent = self.global_render
+            parent = Global.base.render
 
         self.focus = parent.attachNewNode("camera_focus")
         self.focus.setH(-90)
 
         # create visible object
-        self.focus_object = self.loader.loadModel("smiley.egg")
+        self.focus_object = Global.loader.loadModel("smiley.egg")
         self.focus_object.setScale(0.005)
         self.focus_object.setTransparency(TransparencyAttrib.MAlpha)
         self.focus_object.setAlphaScale(0.4)
@@ -48,6 +46,21 @@ class PlayerCam:
 
     def update_focus(self, pos):
         self.focus.setPos(pos)
+
+    def scale_focus(self):
+        """Scale the camera's focus object
+
+        The focus marker is a small dot to show where the camera is centered, and where
+        it rotates about. This helps a lot in navigating the camera effectively. Here
+        the marker is scaled so that it is always a constant size, regardless of how
+        zoomed in or out the camera is.
+        """
+        # `dist` is the distance from the camera to the focus object and is equivalent
+        # to: cam_pos, focus_pos = player_cam.node.getPos(render),
+        # player_cam.focus_object.getPos(render) dist = (cam_pos -
+        # focus_pos).length()
+        dist = self.node.getX()
+        self.focus_object.setScale(0.002 * dist)
 
     def get_state(self):
         return {
@@ -90,3 +103,6 @@ class PlayerCam:
 
     def has_state(self, name):
         return True if name in self.states else False
+
+
+player_cam = PlayerCam()

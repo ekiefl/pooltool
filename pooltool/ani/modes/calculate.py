@@ -4,9 +4,13 @@ import numpy as np
 
 import pooltool as pt
 import pooltool.ani as ani
+import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
+from pooltool.ani.camera import player_cam
+from pooltool.ani.globals import Global
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 
 
 class CalculateMode(BaseMode):
@@ -19,9 +23,9 @@ class CalculateMode(BaseMode):
     }
 
     def enter(self):
-        self.mouse.hide()
-        self.mouse.relative()
-        self.mouse.track()
+        mouse.hide()
+        mouse.relative()
+        mouse.track()
 
         self.shot_sim_overlay = GenericMenu(
             title="Calculating shot...",
@@ -29,26 +33,31 @@ class CalculateMode(BaseMode):
             title_pos=(0, 0, -0.2),
         )
 
-        self.add_task(self.run_simulation, "run_simulation", taskChain="simulation")
+        tasks.add(self.run_simulation, "run_simulation", taskChain="simulation")
 
-        self.task_action("escape", Action.quit, True)
-        self.task_action("mouse1", Action.zoom, True)
-        self.task_action("mouse1-up", Action.zoom, False)
-        self.task_action("a", Action.aim, True)
-        self.task_action("v", Action.move, True)
-        self.task_action("v-up", Action.move, False)
-        self.task_action("h", Action.show_help, True)
+        self.register_keymap_event("escape", Action.quit, True)
+        self.register_keymap_event("mouse1", Action.zoom, True)
+        self.register_keymap_event("mouse1-up", Action.zoom, False)
+        self.register_keymap_event("a", Action.aim, True)
+        self.register_keymap_event("v", Action.move, True)
+        self.register_keymap_event("v-up", Action.move, False)
+        self.register_keymap_event("h", Action.show_help, True)
 
-        self.add_task(self.calculate_view_task, "calculate_view_task")
+        tasks.add(self.calculate_view_task, "calculate_view_task")
+        tasks.add(self.shared_task, "shared_task")
 
     def exit(self):
-        self.remove_task("calculate_view_task")
+        tasks.remove("calculate_view_task")
+        tasks.remove("shared_task")
+
         self.shot_sim_overlay.hide()
 
     def calculate_view_task(self, task):
-        if "run_simulation" not in self.tasks:
+        if not tasks.has("run_simulation"):
             # simulation calculation is finished
-            self.change_mode(Mode.shot, enter_kwargs=dict(init_animations=True))
+            Global.mode_mgr.change_mode(
+                Mode.shot, enter_kwargs=dict(init_animations=True)
+            )
         elif self.keymap[Action.zoom]:
             self.zoom_camera_calculate()
         elif self.keymap[Action.move]:
@@ -59,7 +68,7 @@ class CalculateMode(BaseMode):
                 self.rotate_camera_calculate()
             else:
                 # Update mouse positions so there is not a big jump
-                self.mouse.touch()
+                mouse.touch()
 
             if task.time > 0.25:
                 self.shot_sim_overlay.show()
@@ -68,44 +77,36 @@ class CalculateMode(BaseMode):
 
     def run_simulation(self, task):
         """Run a pool simulation"""
-        self.shots.active.simulate(continuize=False, quiet=False)
-        self.game.process_shot(self.shots.active)
+        Global.shots.active.simulate(continuize=False, quiet=False)
+        Global.game.process_shot(Global.shots.active)
 
-        self.remove_task("run_simulation")
+        tasks.remove("run_simulation")
 
         return task.done
 
     def zoom_camera_calculate(self):
-        with self.mouse:
-            s = -self.mouse.get_dy() * ani.zoom_sensitivity
+        with mouse:
+            s = -mouse.get_dy() * ani.zoom_sensitivity
 
-        self.player_cam.node.setPos(
-            pt.autils.multiply_cw(self.player_cam.node.getPos(), 1 - s)
-        )
+        player_cam.node.setPos(pt.autils.multiply_cw(player_cam.node.getPos(), 1 - s))
 
     def move_camera_calculate(self):
-        with self.mouse:
-            dxp, dyp = self.mouse.get_dx(), self.mouse.get_dy()
+        with mouse:
+            dxp, dyp = mouse.get_dx(), mouse.get_dy()
 
-        h = self.player_cam.focus.getH() * np.pi / 180 + np.pi / 2
+        h = player_cam.focus.getH() * np.pi / 180 + np.pi / 2
         dx = dxp * np.cos(h) - dyp * np.sin(h)
         dy = dxp * np.sin(h) + dyp * np.cos(h)
 
-        self.player_cam.focus.setX(
-            self.player_cam.focus.getX() + dx * ani.move_sensitivity
-        )
-        self.player_cam.focus.setY(
-            self.player_cam.focus.getY() + dy * ani.move_sensitivity
-        )
+        player_cam.focus.setX(player_cam.focus.getX() + dx * ani.move_sensitivity)
+        player_cam.focus.setY(player_cam.focus.getY() + dy * ani.move_sensitivity)
 
     def rotate_camera_calculate(self):
         fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
 
-        with self.mouse:
-            alpha_x = self.player_cam.focus.getH() - fx * self.mouse.get_dx()
-            alpha_y = max(
-                min(0, self.player_cam.focus.getR() + fy * self.mouse.get_dy()), -90
-            )
+        with mouse:
+            alpha_x = player_cam.focus.getH() - fx * mouse.get_dx()
+            alpha_y = max(min(0, player_cam.focus.getR() + fy * mouse.get_dy()), -90)
 
-        self.player_cam.focus.setH(alpha_x)  # Move view laterally
-        self.player_cam.focus.setR(alpha_y)  # Move view vertically
+        player_cam.focus.setH(alpha_x)  # Move view laterally
+        player_cam.focus.setR(alpha_y)  # Move view vertically

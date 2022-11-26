@@ -2,9 +2,13 @@
 
 from direct.gui.DirectGui import DGG
 
+import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
+from pooltool.ani.camera import player_cam
+from pooltool.ani.globals import Global
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 
 
 class CamLoadMode(BaseMode):
@@ -15,19 +19,32 @@ class CamLoadMode(BaseMode):
     }
 
     def enter(self):
-        if self.last_mode == Mode.aim:
-            self.last_mode = Mode.view
-        self.mouse.show()
-        self.mouse.absolute()
-        self.mouse.track()
+        if Global.mode_mgr.last_mode == Mode.aim:
+            # FIXME Justification for this lie?
+            Global.mode_mgr.last_mode = Mode.view
+
+        mouse.show()
+        mouse.absolute()
+        mouse.track()
         self.selection = None
 
-        self.task_action("escape", Action.quit, True)
-        self.task_action("2", Action.cam_load, True)
-        self.task_action("2-up", Action.cam_load, False)
+        self.register_keymap_event("escape", Action.quit, True)
+        self.register_keymap_event("2", Action.cam_load, True)
+        self.register_keymap_event("2-up", Action.cam_load, False)
 
         self.render_camera_load_buttons()
-        self.add_task(self.cam_load_task, "cam_load_task")
+        tasks.add(self.cam_load_task, "cam_load_task")
+        tasks.add(self.shared_task, "shared_task")
+
+    def exit(self):
+        if self.selection:
+            player_cam.load_state(name=f"save_{self.selection}", ok_if_not_exists=True)
+
+        tasks.remove("cam_load_task")
+        tasks.remove("shared_task")
+
+        mouse.touch()
+        self.cam_load_slots.hide()
 
     def render_camera_load_buttons(self):
         self.cam_load_slots = GenericMenu(
@@ -38,7 +55,7 @@ class CamLoadMode(BaseMode):
 
         pos = -1.2
         for slot in range(1, 10):
-            exists = True if f"save_{slot}" in self.player_cam.states else False
+            exists = True if f"save_{slot}" in player_cam.states else False
             button = self.cam_load_slots.add_button(
                 text=(f"{slot}", f"{slot}", "load" if exists else "empty", f"{slot}"),
                 command=lambda: None,
@@ -57,21 +74,15 @@ class CamLoadMode(BaseMode):
     def update_load_selection(self, state, coords):
         self.selection = state
 
-    def exit(self):
-        if self.selection:
-            self.player_cam.load_state(
-                name=f"save_{self.selection}", ok_if_not_exists=True
-            )
-
-        self.remove_task("cam_load_task")
-        self.mouse.touch()
-        self.cam_load_slots.hide()
-
     def cam_load_task(self, task):
         if not self.keymap[Action.cam_load]:
             enter_kwargs = (
-                dict(load_prev_cam=True) if self.last_mode == Mode.aim else dict()
+                dict(load_prev_cam=True)
+                if Global.mode_mgr.last_mode == Mode.aim
+                else dict()
             )
-            self.change_mode(self.last_mode, enter_kwargs=enter_kwargs)
+            Global.mode_mgr.change_mode(
+                Global.mode_mgr.last_mode, enter_kwargs=enter_kwargs
+            )
 
         return task.cont

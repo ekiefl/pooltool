@@ -5,9 +5,13 @@ from direct.interval.IntervalGlobal import LerpFunc, Parallel
 from panda3d.core import TransparencyAttrib
 
 import pooltool.ani as ani
+import pooltool.ani.tasks as tasks
 import pooltool.constants as c
 from pooltool.ani.action import Action
+from pooltool.ani.camera import player_cam
+from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 from pooltool.utils import panda_path
 
 
@@ -20,6 +24,8 @@ class CallShotMode(BaseMode):
     }
 
     def __init__(self):
+        super().__init__()
+
         self.head_raise = 14
 
         self.trans_ball = None
@@ -29,35 +35,38 @@ class CallShotMode(BaseMode):
     def enter(self):
         self.ball_highlight_sequence = Parallel()
 
-        self.mouse.hide()
-        self.mouse.relative()
-        self.mouse.track()
+        mouse.hide()
+        mouse.relative()
+        mouse.track()
 
-        self.player_cam.focus.setR(self.player_cam.focus.getR() - self.head_raise)
+        player_cam.focus.setR(player_cam.focus.getR() - self.head_raise)
 
         self.closest_pocket = None
         self.closest_ball = None
 
-        self.task_action("escape", Action.quit, True)
-        self.task_action("c", Action.call_shot, True)
-        self.task_action("c-up", Action.call_shot, False)
-        self.task_action("mouse1-up", "next", True)
+        self.register_keymap_event("escape", Action.quit, True)
+        self.register_keymap_event("c", Action.call_shot, True)
+        self.register_keymap_event("c-up", Action.call_shot, False)
+        self.register_keymap_event("mouse1-up", "next", True)
 
         self.picking = "ball"
 
-        self.add_task(self.call_shot_task, "call_shot_task")
+        tasks.add(self.call_shot_task, "call_shot_task")
+        tasks.add(self.shared_task, "shared_task")
 
     def exit(self):
-        self.remove_task("call_shot_task")
+        tasks.remove("call_shot_task")
+        tasks.remove("shared_task")
+
         if self.picking in ("ball", "pocket"):
             CallShotMode.remove_ball_highlight(self)
         CallShotMode.remove_transparent_ball(self)
         self.ball_highlight_sequence.pause()
-        self.player_cam.focus.setR(self.player_cam.focus.getR() + self.head_raise)
+        player_cam.focus.setR(player_cam.focus.getR() + self.head_raise)
 
     def call_shot_task(self, task):
         if not self.keymap[Action.call_shot]:
-            self.change_mode(self.last_mode)
+            Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
             return task.done
 
         self.move_camera_call_shot()
@@ -72,9 +81,9 @@ class CallShotMode(BaseMode):
 
             if self.keymap["next"]:
                 self.keymap["next"] = False
-                self.game.ball_call = self.closest_ball
+                Global.game.ball_call = self.closest_ball
                 if self.closest_ball is not None:
-                    self.game.log.add_msg(
+                    Global.game.log.add_msg(
                         f"Calling the {self.closest_ball.id} ball", sentiment="neutral"
                     )
                 self.picking = "pocket"
@@ -88,13 +97,13 @@ class CallShotMode(BaseMode):
 
             if self.keymap["next"]:
                 self.keymap["next"] = False
-                self.game.pocket_call = self.closest_pocket
+                Global.game.pocket_call = self.closest_pocket
                 if self.closest_pocket is not None:
-                    self.game.log.add_msg(
+                    Global.game.log.add_msg(
                         f"Calling the {self.closest_pocket.id} pocket",
                         sentiment="neutral",
                     )
-                self.change_mode(self.last_mode)
+                Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
                 return task.done
 
         return task.cont
@@ -135,10 +144,10 @@ class CallShotMode(BaseMode):
             self.ball_highlight_sequence.start()
 
     def find_closest_pocket(self):
-        cam_pos = self.player_cam.focus.getPos()
+        cam_pos = player_cam.focus.getPos()
         d_min = np.inf
         closest = None
-        for pocket in self.shots.active.table.pockets.values():
+        for pocket in Global.shots.active.table.pockets.values():
             d = np.linalg.norm(pocket.center - cam_pos)
             if d < d_min:
                 d_min, closest = d, pocket
@@ -152,13 +161,13 @@ class CallShotMode(BaseMode):
             self.closest_ball.get_node("shadow").setAlphaScale(1)
             self.closest_ball.get_node("shadow").setScale(1)
             self.closest_ball.set_render_state_as_object_state()
-            self.remove_task("call_shot_ball_highlight_animation")
+            tasks.remove("call_shot_ball_highlight_animation")
 
     def add_ball_highlight(self):
         if self.closest_ball is not None:
             CallShotMode.add_transparent_ball(self)
             self.trans_ball.hide()
-            self.add_task(
+            tasks.add(
                 self.call_shot_ball_highlight_animation,
                 "call_shot_ball_highlight_animation",
             )
@@ -184,14 +193,10 @@ class CallShotMode(BaseMode):
         return task.cont
 
     def add_transparent_ball(self):
-        # Panda pollutes the global namespace, appease linters
-        global_render = __builtins__["render"]
-        base = __builtins__["base"]
-
-        self.trans_ball = base.loader.loadModel(
+        self.trans_ball = Global.loader.loadModel(
             panda_path(ani.model_dir / "balls" / self.closest_ball.rel_model_path)
         )
-        self.trans_ball.reparentTo(global_render.find("scene").find("cloth"))
+        self.trans_ball.reparentTo(Global.render.find("scene").find("cloth"))
         self.trans_ball.setTransparency(TransparencyAttrib.MAlpha)
         self.trans_ball.setAlphaScale(0.4)
         self.trans_ball.setPos(self.closest_ball.get_node("pos").getPos())
@@ -203,11 +208,11 @@ class CallShotMode(BaseMode):
         self.trans_ball = None
 
     def find_closest_ball(self):
-        cam_pos = self.player_cam.focus.getPos()
+        cam_pos = player_cam.focus.getPos()
         d_min = np.inf
         closest = None
-        for ball in self.shots.active.balls.values():
-            if ball.id not in self.game.active_player.target_balls:
+        for ball in Global.shots.active.balls.values():
+            if ball.id not in Global.game.active_player.target_balls:
                 continue
             if ball.s == c.pocketed:
                 continue
@@ -218,16 +223,12 @@ class CallShotMode(BaseMode):
         return closest
 
     def move_camera_call_shot(self):
-        with self.mouse:
-            dxp, dyp = self.mouse.get_dx(), self.mouse.get_dy()
+        with mouse:
+            dxp, dyp = mouse.get_dx(), mouse.get_dy()
 
-        h = self.player_cam.focus.getH() * np.pi / 180 + np.pi / 2
+        h = player_cam.focus.getH() * np.pi / 180 + np.pi / 2
         dx = dxp * np.cos(h) - dyp * np.sin(h)
         dy = dxp * np.sin(h) + dyp * np.cos(h)
 
-        self.player_cam.focus.setX(
-            self.player_cam.focus.getX() + dx * ani.move_sensitivity
-        )
-        self.player_cam.focus.setY(
-            self.player_cam.focus.getY() + dy * ani.move_sensitivity
-        )
+        player_cam.focus.setX(player_cam.focus.getX() + dx * ani.move_sensitivity)
+        player_cam.focus.setY(player_cam.focus.getY() + dy * ani.move_sensitivity)

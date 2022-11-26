@@ -5,6 +5,7 @@ from direct.gui.DirectGui import OnscreenText
 from pooltool.ani.action import Action
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 
 
 class GameOverMode(BaseMode):
@@ -19,10 +20,10 @@ class GameOverMode(BaseMode):
     }
 
     def enter(self):
-        self.mouse.show()
-        self.mouse.absolute()
+        mouse.show()
+        mouse.absolute()
 
-        self.task_action("escape", Action.quit, True)
+        self.register_keymap_event("escape", Action.quit, True)
         self.render_game_over_screen()
 
     def exit(self):
@@ -35,7 +36,7 @@ class GameOverMode(BaseMode):
 
     def render_game_over_screen(self):
         self.game_over_menu = GenericMenu(
-            title=f"Game over! {self.game.winner.name} wins!",
+            title=f"Game over! {Global.game.winner.name} wins!",
             frame_color=(0, 0, 0, 0.5),
             title_pos=(0, 0, 0.55),
         )
@@ -51,7 +52,7 @@ class GameOverMode(BaseMode):
                 scale=self.stat_font_size,
             ),
         }
-        for i, player in enumerate(self.game.players):
+        for i, player in enumerate(Global.game.players):
             self.text[player.name] = OnscreenText(
                 text=f"{player.name}\n{player.points}",
                 style=1,

@@ -2,9 +2,13 @@
 
 from direct.gui.DirectGui import DGG
 
+import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
+from pooltool.ani.camera import player_cam
+from pooltool.ani.globals import Global
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 
 
 class CamSaveMode(BaseMode):
@@ -15,17 +19,29 @@ class CamSaveMode(BaseMode):
     }
 
     def enter(self):
-        self.mouse.show()
-        self.mouse.absolute()
-        self.mouse.track()
+        mouse.show()
+        mouse.absolute()
+        mouse.track()
         self.selection = None
 
-        self.task_action("escape", Action.quit, True)
-        self.task_action("1", Action.cam_save, True)
-        self.task_action("1-up", Action.cam_save, False)
+        self.register_keymap_event("escape", Action.quit, True)
+        self.register_keymap_event("1", Action.cam_save, True)
+        self.register_keymap_event("1-up", Action.cam_save, False)
 
         self.render_camera_save_buttons()
-        self.add_task(self.cam_save_task, "cam_save_task")
+        tasks.add(self.cam_save_task, "cam_save_task")
+        tasks.add(self.shared_task, "shared_task")
+
+    def exit(self):
+        if self.selection:
+            player_cam.store_state(name=f"save_{self.selection}", overwrite=True)
+
+        tasks.remove("cam_save_task")
+        tasks.remove("shared_task")
+
+        mouse.touch()
+        self.cam_save_slots.hide()
+        del self.selection
 
     def render_camera_save_buttons(self):
         self.cam_save_slots = GenericMenu(
@@ -36,7 +52,7 @@ class CamSaveMode(BaseMode):
 
         pos = -1.2
         for slot in range(1, 10):
-            exists = True if f"save_{slot}" in self.player_cam.states else False
+            exists = True if f"save_{slot}" in player_cam.states else False
             button = self.cam_save_slots.add_button(
                 text=(
                     f"{slot}",
@@ -60,20 +76,15 @@ class CamSaveMode(BaseMode):
     def update_save_selection(self, state, coords):
         self.selection = state
 
-    def exit(self):
-        if self.selection:
-            self.player_cam.store_state(name=f"save_{self.selection}", overwrite=True)
-
-        self.remove_task("cam_save_task")
-        self.mouse.touch()
-        self.cam_save_slots.hide()
-        del self.selection
-
     def cam_save_task(self, task):
         if not self.keymap[Action.cam_save]:
             enter_kwargs = (
-                dict(load_prev_cam=True) if self.last_mode == Mode.aim else dict()
+                dict(load_prev_cam=True)
+                if Global.mode_mgr.last_mode == Mode.aim
+                else dict()
             )
-            self.change_mode(self.last_mode, enter_kwargs=enter_kwargs)
+            Global.mode_mgr.change_mode(
+                Global.mode_mgr.last_mode, enter_kwargs=enter_kwargs
+            )
 
         return task.cont

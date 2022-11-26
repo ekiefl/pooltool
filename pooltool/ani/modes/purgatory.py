@@ -1,8 +1,11 @@
 #! /usr/bin/env python
 
 import pooltool.ani as ani
+import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
+from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 
 
 class PurgatoryMode(BaseMode):
@@ -29,40 +32,40 @@ class PurgatoryMode(BaseMode):
     }
 
     def __init__(self):
-        # Panda pollutes the global namespace, appease linters
-        self.global_clock = __builtins__["globalClock"]
-        self.base = __builtins__["base"]
+        super().__init__()
 
         self.is_window_active = None
 
     def enter(self):
-        self.mouse.show()
-        self.mouse.absolute()
+        mouse.show()
+        mouse.absolute()
 
-        self.task_action("mouse1-up", Action.regain_control, True)
-        self.task_action("mouse1-down", Action.regain_control, False)
+        self.register_keymap_event("mouse1-up", Action.regain_control, True)
+        self.register_keymap_event("mouse1-down", Action.regain_control, False)
 
-        self.add_task(self.purgatory_task, "purgatory_task")
+        tasks.add(self.purgatory_task, "purgatory_task")
+        tasks.add(self.shared_task, "shared_task")
 
     def exit(self):
-        self.remove_task("purgatory_task")
+        tasks.remove("shared_task")
+        tasks.remove("purgatory_task")
 
         # Set the framerate to pre-purgatory levels
-        self.global_clock.setFrameRate(ani.settings["graphics"]["fps"])
+        Global.clock.setFrameRate(ani.settings["graphics"]["fps"])
 
     def purgatory_task(self, task):
         if self.keymap[Action.regain_control]:
-            self.change_mode(self.last_mode)
+            Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
 
-        is_window_active = self.base.win.get_properties().foreground
+        is_window_active = Global.base.win.get_properties().foreground
 
         if is_window_active is not self.is_window_active:
             # The state of the window has changed. Time to update the FPS
 
             if is_window_active:
-                self.global_clock.setFrameRate(ani.settings["graphics"]["fps"])
+                Global.clock.setFrameRate(ani.settings["graphics"]["fps"])
             else:
-                self.global_clock.setFrameRate(ani.settings["graphics"]["fps_inactive"])
+                Global.clock.setFrameRate(ani.settings["graphics"]["fps_inactive"])
 
             # Update status
             self.is_window_active = is_window_active

@@ -31,6 +31,7 @@ from panda3d.core import (
 import pooltool
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
+from pooltool.ani.globals import Global
 from pooltool.utils import panda_path
 
 TEXT_COLOR = (0.1, 0.1, 0.1, 1)
@@ -79,17 +80,12 @@ class XMLMenu:
 
 class Menu:
     def __init__(self, xml, name):
-        # Panda pollutes the global namespace, appease linters
-        self.aspect2d = __builtins__["aspect2d"]
-        self.render2d = __builtins__["render2d"]
-        self.loader = __builtins__["loader"]
-
         self.xml = xml
         self.name = name
-        self.menu_xml = self.get_menu_xml()
+        self.menu_xml = self.get_xml()
 
-        self.title_font = self.loader.loadFont(panda_path(TITLE_FONT))
-        self.button_font = self.loader.loadFont(panda_path(BUTTON_FONT))
+        self.title_font = Global.loader.loadFont(panda_path(TITLE_FONT))
+        self.button_font = Global.loader.loadFont(panda_path(BUTTON_FONT))
 
         # No idea why this conditional must exist
         if self.title_font.get_num_pages() == 0:
@@ -102,7 +98,7 @@ class Menu:
         self.area_backdrop = DirectFrame(
             frameColor=FRAME_COLOR,
             frameSize=(-1, 1, -1, 1),
-            parent=self.render2d,
+            parent=Global.render2d,
         )
 
         self.area_backdrop.setImage(panda_path(MENU_ASSETS / "menu_background.jpeg"))
@@ -120,7 +116,7 @@ class Menu:
             frameSize=(-1, 1, -0.9, 0.3),
             scrollBarWidth=0.04,
             horizontalScroll_frameSize=(0, 0, 0, 0),
-            parent=self.aspect2d,
+            parent=Global.aspect2d,
         )
         self.area.setPos(0, 0, 0)
         self.area.setTransparency(TransparencyAttrib.MAlpha)
@@ -138,7 +134,7 @@ class Menu:
 
         return inner
 
-    def get_menu_xml(self):
+    def get_xml(self):
         for menu in self.xml.iterate_menus():
             if menu.attrib["name"] == self.name:
                 break
@@ -747,7 +743,7 @@ class Menu:
         desc = self.search_child_tag(item, "description").text
 
         # This is the button you click. NOTE `command` is assigned ad hoc. See
-        # Menus.populate_menus
+        # Menus.populate
         button = DirectButton(
             text=name,
             text_align=TextNode.ALeft,
@@ -823,7 +819,7 @@ class Menu:
         func_name = item[0].text
 
         # This is the button you click. NOTE `command` is assigned ad hoc. See
-        # Menus.populate_menus
+        # Menus.populate
         button = DirectButton(
             scale=BACKBUTTON_TEXT_SCALE,
             geom=(
@@ -921,7 +917,7 @@ class Menu:
             frameColor=(1, 1, 0.9, 1),
             text=msg,
             scale=INFO_TEXT_SCALE,
-            parent=self.aspect2d,
+            parent=Global.aspect2d,
             text_fg=TEXT_COLOR,
             text_align=TextNode.ALeft,
             pad=(0.2, 0.2),
@@ -930,7 +926,7 @@ class Menu:
         # Position the hover message at the mouse
         coords = mouse_watcher.getMouse()
         r2d = Point3(coords[0], 0, coords[1])
-        a2d = self.aspect2d.getRelativePoint(self.render2d, r2d)
+        a2d = Global.aspect2d.getRelativePoint(Global.render2d, r2d)
         self.hover_msg.setPos(a2d)
         # Now shift it up so the mouse doesn't get in the way
         self.hover_msg.setZ(self.hover_msg.getZ() + INFO_SCALE * 2)
@@ -959,10 +955,7 @@ class Menus:
     def __init__(self):
         self.menus = {}
         self.xml = XMLMenu()
-        self.current_menu = None
-        self.populate_menus()
-
-        self.show_menu("main_menu")
+        self.current = None
 
     def _update_xml(func):
         def inner(self, *args, **kwargs):
@@ -972,7 +965,7 @@ class Menus:
 
         return inner
 
-    def populate_menus(self):
+    def populate(self):
         """Populate all menus"""
         for menu_xml in self.xml.iterate_menus():
             name = menu_xml.attrib["name"]
@@ -996,18 +989,18 @@ class Menus:
                     # the function and attribute it to the element.
                     element["object"]["command"] = getattr(self, func_name)
 
-    def show_menu(self, name):
-        self.hide_menus()
+    def show(self, name):
+        self.hide_all()
         self.menus[name].show()
-        self.current_menu = self.menus[name]
+        self.current = self.menus[name]
 
-    def hide_menus(self):
+    def hide_all(self):
         for menu_name, menu in self.menus.items():
             self.menus[menu_name].hide()
 
-        self.current_menu = None
+        self.current = None
 
-    def get_menu_options(self):
+    def get_options(self):
         return {
             "table_type": self.xml.roots["game_setup"]
             .find(".//*[@name='table_type']")
@@ -1016,14 +1009,14 @@ class Menus:
 
     @_update_xml
     def func_update_checkbox_xml(self, value, name):
-        for element in self.current_menu.elements:
+        for element in self.current.elements:
             if element.get("name") == name:
                 break
         element["xml"].set("checked", "true" if value == 1 else "false")
 
     @_update_xml
     def func_update_dropdown_xml(self, value, name):
-        for element in self.current_menu.elements:
+        for element in self.current.elements:
             if element.get("name") == name:
                 break
         element["xml"].set("selection", value)
@@ -1046,7 +1039,7 @@ class Menus:
         for entry in self.xml.root.findall(".//*[@name='new_table']/entry"):
             name = entry.attrib["name"]
             value = entry.attrib["value"]
-            validator = getattr(self.current_menu, entry.attrib["validator"])
+            validator = getattr(self.current, entry.attrib["validator"])
 
             is_valid, reason = validator(value)
             if not is_valid:
@@ -1068,13 +1061,13 @@ class Menus:
                 element["object"]["items"] = tmp_options
 
     def func_go_about(self):
-        self.show_menu("about")
+        self.show("about")
 
     def func_go_game_setup(self):
-        self.show_menu("game_setup")
+        self.show("game_setup")
 
     def func_go_new_table(self):
-        self.show_menu("new_table")
+        self.show("new_table")
 
     def func_go_view_table(self):
         for element in self.menus["view_table"].elements:
@@ -1091,13 +1084,13 @@ class Menus:
                     string.append(key + " " * (buffer + 4) + str(val))
                 element["content"].setText("\n".join(string))
 
-        self.show_menu("view_table")
+        self.show("view_table")
 
     def func_go_settings(self):
-        self.show_menu("settings")
+        self.show("settings")
 
     def func_go_main_menu(self):
-        self.show_menu("main_menu")
+        self.show("main_menu")
 
 
 def loadImageAsPlane(filepath, yresolution=600):
@@ -1109,10 +1102,7 @@ def loadImageAsPlane(filepath, yresolution=600):
     yresolution -- pixel-perfect width resolution
     """
 
-    # Panda pollutes the global namespace, appease linters
-    loader = __builtins__["loader"]
-
-    tex = loader.loadTexture(filepath)
+    tex = Global.loader.loadTexture(filepath)
     tex.setBorderColor(Vec4(0, 0, 0, 0))
     tex.setWrapU(Texture.WMBorderColor)
     tex.setWrapV(Texture.WMBorderColor)
@@ -1129,6 +1119,8 @@ def loadImageAsPlane(filepath, yresolution=600):
     card.flattenLight()  # apply scale
     return card
 
+
+menus = Menus()
 
 # -----------------------------------------------------------------------------------
 
@@ -1150,13 +1142,10 @@ def loadImageAsPlane(filepath, yresolution=600):
 
 class GenericMenu:
     def __init__(self, title="", frame_color=(1, 1, 1, 1), title_pos=(0, 0, 0.8)):
-        # Panda pollutes the global namespace, appease linters
-        self.render2d = __builtins__["render2d"]
-
         self.titleMenuBackdrop = DirectFrame(
             frameColor=frame_color,
             frameSize=(-1, 1, -1, 1),
-            parent=self.render2d,
+            parent=Global.render2d,
         )
 
         self.text_scale = 0.07

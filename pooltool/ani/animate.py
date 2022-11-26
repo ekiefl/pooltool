@@ -6,173 +6,69 @@ import gltf  # FIXME at first glance this does nothing?
 import simplepbr
 from direct.gui.OnscreenText import OnscreenText
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import (
-    ClockObject,
-    CollisionHandlerQueue,
-    CollisionTraverser,
-    TextNode,
-    WindowProperties,
-)
+from panda3d.core import ClockObject, TextNode, WindowProperties
 
-import pooltool as pt
 import pooltool.ani as ani
-import pooltool.ani.environment as environment
+import pooltool.ani.tasks as tasks
 import pooltool.games as games
-from pooltool.ani.camera import PlayerCam
-from pooltool.ani.hud import HUD
-from pooltool.ani.menu import GenericMenu, Menus
-from pooltool.ani.modes import (
-    AimMode,
-    BallInHandMode,
-    CalculateMode,
-    CallShotMode,
-    CamLoadMode,
-    CamSaveMode,
-    GameOverMode,
-    MenuMode,
-    PickBallMode,
-    PurgatoryMode,
-    ShotMode,
-    StrokeMode,
-    ViewMode,
-    modes,
-)
-from pooltool.ani.modes.datatypes import Mode
-from pooltool.ani.mouse import Mouse
+import pooltool.terminal as terminal
+import pooltool.utils as utils
+from pooltool.ani.camera import player_cam
+from pooltool.ani.environment import environment
+from pooltool.ani.globals import Global, require_showbase
+from pooltool.ani.hud import hud
+from pooltool.ani.menu import GenericMenu, menus
+from pooltool.ani.modes import Mode, ModeManager, all_modes
+from pooltool.ani.mouse import mouse
 from pooltool.error import ConfigError
-from pooltool.objects.cue import Cue
+from pooltool.objects.cue import Cue, cue_avoid
 from pooltool.objects.table import table_types
 from pooltool.system import System, SystemCollection
 
 
-class ModeManager(
-    MenuMode,
-    AimMode,
-    StrokeMode,
-    ViewMode,
-    ShotMode,
-    CamLoadMode,
-    CamSaveMode,
-    CalculateMode,
-    PickBallMode,
-    GameOverMode,
-    CallShotMode,
-    BallInHandMode,
-    PurgatoryMode,
-):
-    def __init__(self):
-        # Init every Mode class
-        self.modes = modes
-        for mode_cls in modes.values():
-            mode_cls.__init__(self)
-
-        # Store the above as default states
-        self.action_state_defaults = {}
-        for mode in self.modes:
-            self.action_state_defaults[mode] = {}
-            for a, default_state in self.modes[mode].keymap.items():
-                self.action_state_defaults[mode][a] = default_state
-
-        self.last_mode = None
-        self.mode = None
-        self.keymap = None
-
-    def update_keymap(self, action_name, action_state):
-        self.keymap[action_name] = action_state
-
-    def task_action(self, keystroke, action_name, action_state):
-        """Add action to keymap to be handled by tasks"""
-
-        self.accept(keystroke, self.update_keymap, [action_name, action_state])
-
-    def change_mode(self, mode, exit_kwargs={}, enter_kwargs={}):
-        assert mode in Mode
-
-        # Teardown operations for the old mode
-        self.last_mode = self.mode
-        self.end_mode(**exit_kwargs)
-
-        # Build up operations for the new mode
-        self.mode = mode
-        self.keymap = self.modes[mode].keymap
-        self.modes[mode].enter(self, **enter_kwargs)
-
-    def end_mode(self, **kwargs):
-        # Stop watching actions related to mode
-        self.reset_event_listeners()
-
-        if self.mode is not None:
-            self.modes[self.mode].exit(self, **kwargs)
-            self.reset_action_states()
-
-        self.mode = None
-
-    def reset_event_listeners(self):
-        """Stop watching for events related to the current mode
-
-        Something a bit clunky is happening here. Since the keystrokes assigned to tasks
-        are hardcoded into the `enter` method of each mode, it is not known which event
-        listeners belong to the mode, and which are active regardless of mode.
-        Consequently, the best strategy (besides refactoring) is to wipe all listeners,
-        and then re-instate the global listeners.
-        """
-        # Stop listening for all actions
-        self.ignoreAll()
-
-        # Reinstate the listeners for mode-independent events
-        self.listen_constant_events()
-
-    def reset_action_states(self):
-        for key in self.keymap:
-            self.keymap[key] = self.action_state_defaults[self.mode][key]
+@require_showbase
+def boop(frames=1):
+    """Advance/render a number of frames"""
+    for _ in range(frames):
+        Global.base.graphicsEngine.renderFrame()
 
 
-class Interface(ShowBase, ModeManager, HUD):
-    is_game = None
-
+class Interface(ShowBase):
     def __init__(self, shot=None, monitor=False):
-        if self.is_game is None:
-            raise Exception(f"'{self.__class__.__name__}' must set 'is_game' attribute")
-
-        self.stdout = pt.terminal.Run()
-
         super().__init__(self)
 
-        # Panda pollutes the global namespace, appease linters
-        self.global_clock = __builtins__["globalClock"]
-        self.global_render = __builtins__["render"]
-        self.aspect2d = __builtins__["aspect2d"]
-        self.task_mgr = __builtins__["taskMgr"]
-        self.base = __builtins__["base"]
+        # Conceptually I like the idea of super().__init__(self) and simplepbr.init()
+        # being one after the other, but this background doesn't apply if ran after
+        # simplepbr.init(). See open discussion here:
+        # https://discourse.panda3d.org/t/cant-change-base-background-after-simplepbr-init/28945
+        Global.base.setBackgroundColor(0.04, 0.04, 0.04)
 
-        HUD.__init__(self)
-        self.base.setBackgroundColor(0.04, 0.04, 0.04)
         simplepbr.init(
             enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
         )
 
+        # These require `base`. With ShowBase initialized, they can now be called
+        mouse.init()
+        player_cam.init()
+
         if not ani.settings["graphics"]["shader"]:
-            self.global_render.set_shader_off()
+            Global.render.set_shader_off()
 
-        self.global_clock.setMode(ClockObject.MLimited)
-        self.global_clock.setFrameRate(ani.settings["graphics"]["fps"])
+        Global.clock.setMode(ClockObject.MLimited)
+        Global.clock.setFrameRate(ani.settings["graphics"]["fps"])
 
-        self.shots = SystemCollection()
-
-        self.tasks = {}
-        self.disableMouse()
-        self.mouse = Mouse()
-        self.player_cam = PlayerCam()
-
-        ModeManager.__init__(self)
-
-        self.scene = None
+        Global.register_shots(SystemCollection())
+        Global.register_mode_mgr(ModeManager(all_modes))
+        Global.mode_mgr.init_modes()
 
         self.frame = 0
-        self.add_task(self.increment_frame, "increment_frame")
+        tasks.add(self.increment_frame, "increment_frame")
 
         if monitor:
-            self.add_task(self.monitor, "monitor")
+            tasks.add(self.monitor, "monitor")
+
+        self.listen_constant_events()
+        self.stdout = terminal.Run()
 
     def fix_window_resize(self, win=None):
         """Fix aspect ratio of window upon user resizing
@@ -187,8 +83,8 @@ class Interface(ShowBase, ModeManager, HUD):
         user, this will override their resizing, and resize the window to one with an
         area equal to that requested, but at the required aspect ratio.
         """
-        requested_width = self.base.win.getXSize()
-        requested_height = self.base.win.getYSize()
+        requested_width = Global.base.win.getXSize()
+        requested_height = Global.base.win.getYSize()
 
         if (
             abs(requested_width / requested_height - ani.aspect_ratio)
@@ -213,111 +109,75 @@ class Interface(ShowBase, ModeManager, HUD):
     def handle_window_event(self, win=None):
         self.fix_window_resize(win=win)
 
-        is_window_active = self.base.win.get_properties().foreground
-        if not is_window_active and self.mode != Mode.purgatory:
-            self.change_mode(Mode.purgatory)
+        is_window_active = Global.base.win.get_properties().foreground
+        if not is_window_active and Global.mode_mgr.mode != Mode.purgatory:
+            Global.mode_mgr.change_mode(Mode.purgatory)
 
     def listen_constant_events(self):
         """Listen for events that are mode independent"""
-        self.accept("window-event", self.handle_window_event)
+        tasks.register_event("window-event", self.handle_window_event)
+        tasks.register_event("close-scene", self.close_scene)
+        tasks.register_event("toggle-help", self.toggle_help)
 
-    def add_task(self, *args, **kwargs):
-        task = self.task_mgr.add(*args, **kwargs)
-        self.tasks[task.name] = task
-
-    def add_task_later(self, *args, **kwargs):
-        task = self.task_mgr.doMethodLater(*args, **kwargs)
-        self.tasks[task.name] = task
-
-    def remove_task(self, name):
-        self.task_mgr.remove(name)
-        del self.tasks[name]
+    def toggle_help(self):
+        if self.help_node.is_hidden():
+            self.help_node.show()
+        else:
+            self.help_node.hide()
 
     def close_scene(self):
-        for shot in self.shots:
+        for shot in Global.shots:
             shot.table.remove_nodes()
             for ball in shot.balls.values():
                 ball.teardown()
 
-        self.environment.unload_room()
-        self.environment.unload_lights()
-        self.destroy_hud()
+        environment.unload_room()
+        environment.unload_lights()
 
-        if len(self.shots):
-            self.shots.clear_animation()
-            self.shots.clear()
+        hud.destroy()
+        tasks.remove("update_hud")
 
-        self.player_cam.focus = None
-        self.player_cam.has_focus = False
+        if len(Global.shots):
+            Global.shots.clear_animation()
+            Global.shots.clear()
+
+        player_cam.focus = None
+        player_cam.has_focus = False
 
         gc.collect()
 
     def init_system_nodes(self):
-        self.init_scene()
-        self.shots.active.table.render()
-        self.init_environment()
+        Global.render.attachNewNode("scene")
+        Global.shots.active.table.render()
+        environment.init(Global.shots.active.table)
 
         # Render the balls of the active shot
-        for ball in self.shots.active.balls.values():
+        for ball in Global.shots.active.balls.values():
             if not ball.rendered:
                 ball.render()
 
-        self.shots.active.cue.render()
+        Global.shots.active.cue.render()
 
-        R = max([ball.R for ball in self.shots.active.balls.values()])
-        self.player_cam.create_focus(
-            parent=self.shots.active.table.get_node("cloth"),
-            pos=(self.shots.active.table.w / 2, self.shots.active.table.l / 2, R),
+        R = max([ball.R for ball in Global.shots.active.balls.values()])
+        player_cam.create_focus(
+            parent=Global.shots.active.table.get_node("cloth"),
+            pos=(Global.shots.active.table.w / 2, Global.shots.active.table.l / 2, R),
         )
 
-    def init_scene(self):
-        self.scene = self.global_render.attachNewNode("scene")
-
-    def init_environment(self):
-        if ani.settings["graphics"]["physical_based_rendering"]:
-            room_path = pt.utils.panda_path(ani.model_dir / "room/room_pbr.glb")
-            floor_path = pt.utils.panda_path(ani.model_dir / "room/floor_pbr.glb")
-        else:
-            room_path = pt.utils.panda_path(ani.model_dir / "room/room.glb")
-            floor_path = pt.utils.panda_path(ani.model_dir / "room/floor.glb")
-
-        self.environment = environment.Environment(self.shots.active.table)
-        if ani.settings["graphics"]["room"]:
-            self.environment.load_room(room_path)
-        if ani.settings["graphics"]["floor"]:
-            self.environment.load_floor(floor_path)
-        if ani.settings["graphics"]["lights"]:
-            self.environment.load_lights()
-
-    def init_collisions(self):
-        """Setup collision detection for cue stick
-
-        Notes
-        =====
-        - NOTE this Panda3D collision handler is specifically for determining whether
-          the cue stick is intersecting with cushions or balls. All other collisions
-          discussed at
-          https://ekiefl.github.io/2020/12/20/pooltool-alg/#2-what-are-events are
-          unrelated to this.
-        """
-
-        self.base.cTrav = CollisionTraverser()
-        self.collision_handler = CollisionHandlerQueue()
-
-        self.shots.active.cue.init_collision_handling(self.collision_handler)
-        for ball in self.shots.active.balls.values():
-            ball.init_collision(self.shots.active.cue)
-
     def monitor(self, task):
+        if Global.mode_mgr.mode == Mode.purgatory or Global.mode_mgr.mode is None:
+            return task.cont
+
+        keymap = Global.mode_mgr.get_keymap()
         self.stdout.warning(
             "", header=f"Frame {self.frame}", lc="green", nl_before=1, nl_after=0
         )
-        self.stdout.info("Mode", self.mode)
-        self.stdout.info("Last", self.last_mode)
-        self.stdout.info("Tasks", list(self.tasks.keys()))
-        self.stdout.info("Memory", pt.utils.get_total_memory_usage())
-        self.stdout.info("Actions", [k for k in self.keymap if self.keymap[k]])
-        self.stdout.info("Keymap", self.keymap)
+        self.stdout.info("Mode", Global.mode_mgr.mode)
+        self.stdout.info("Last", Global.mode_mgr.last_mode)
+        self.stdout.info("Tasks", [task.name for task in Global.task_mgr.getAllTasks()])
+        self.stdout.info("Memory", utils.get_total_memory_usage())
+        self.stdout.info("Actions", [k for k in keymap if keymap[k]])
+        self.stdout.info("Keymap", Global.mode_mgr.get_keymap())
         self.stdout.info("Frame", self.frame)
 
         return task.cont
@@ -333,18 +193,18 @@ class Interface(ShowBase, ModeManager, HUD):
             scale=ani.menu_text_scale * 0.9,
             fg=(1, 1, 1, 1),
             align=TextNode.ALeft,
-            parent=self.aspect2d,
+            parent=Global.aspect2d,
         )
         self.help_hint.show()
 
-        self.help_node = self.aspect2d.attachNewNode("help")
+        self.help_node = Global.aspect2d.attachNewNode("help")
 
         def add_instruction(pos, msg, title=False):
             text = OnscreenText(
                 text=msg,
                 style=1,
                 fg=(1, 1, 1, 1),
-                parent=self.base.a2dTopLeft,
+                parent=Global.base.a2dTopLeft,
                 align=TextNode.ALeft,
                 pos=(-1.45 if not title else -1.55, 0.85 - pos),
                 scale=ani.menu_text_scale if title else 0.7 * ani.menu_text_scale,
@@ -390,17 +250,64 @@ class Interface(ShowBase, ModeManager, HUD):
 
         self.help_node.hide()
 
+    def start(self):
+        Global.task_mgr.run()
+
 
 class ShotViewer(Interface):
-    is_game = False
-
     def __init__(self, *args, **kwargs):
         Interface.__init__(self, *args, **kwargs)
         self.create_standby_screen()
         self.create_instructions()
         self.create_title("")
 
+        # Set ShotMode to view only. This prevents giving cue stick control to the user
+        # and dictates that esc key closes scene rather than going to a menu
+        Global.mode_mgr.modes[Mode.shot].view_only = True
+
         self.stop()
+
+    def show(self, shot_or_shots=None, title=""):
+        if shot_or_shots is None:
+            if not len(Global.shots):
+                raise ConfigError(
+                    "ShotViewer.show :: No shots passed and no shots set."
+                )
+        else:
+            if issubclass(type(shot_or_shots), System):
+                Global.register_shots(SystemCollection())
+                Global.shots.append(shot_or_shots)
+            elif issubclass(type(shot_or_shots), SystemCollection):
+                Global.register_shots(shot_or_shots)
+
+        if Global.shots.active is None:
+            Global.shots.set_active(0)
+
+        self.init_system_nodes()
+
+        player_cam.load_state("last_scene", ok_if_not_exists=True)
+
+        self.standby_screen.hide()
+        self.instructions.show()
+        self.create_title(title)
+        self.title_node.show()
+        self.init_help_page()
+        self.help_hint.hide()
+
+        hud_task = hud.init()
+        tasks.add(hud_task, "update_hud")
+
+        params = dict(
+            init_animations=True,
+        )
+        Global.mode_mgr.update_event_baseline()
+        Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
+        Global.task_mgr.run()
+
+    def listen_constant_events(self):
+        """Listen for events that are mode independent"""
+        Interface.listen_constant_events(self)
+        tasks.register_event("stop", self.stop)
 
     def create_title(self, title):
         self.title_node = OnscreenText(
@@ -409,7 +316,7 @@ class ShotViewer(Interface):
             scale=ani.menu_text_scale * 0.7,
             fg=(1, 1, 1, 1),
             align=TextNode.ALeft,
-            parent=self.aspect2d,
+            parent=Global.aspect2d,
         )
         self.title_node.hide()
 
@@ -420,9 +327,8 @@ class ShotViewer(Interface):
             scale=ani.menu_text_scale * 0.7,
             fg=(1, 1, 1, 1),
             align=TextNode.ALeft,
-            parent=self.aspect2d,
+            parent=Global.aspect2d,
         )
-        self.instructions.hide()
 
     def create_standby_screen(self):
         self.standby_screen = GenericMenu(frame_color=(0.3, 0.3, 0.3, 1))
@@ -440,70 +346,39 @@ class ShotViewer(Interface):
             scale=0.8 * ani.menu_text_scale,
         )
 
-    def show(self, shot_or_shots=None, title=""):
-
-        if shot_or_shots is None:
-            # No passed shots. This is ok if self.shots has already been defined, but
-            # will complain otherwise
-            if not len(self.shots):
-                raise ConfigError(
-                    "ShotViewer.show :: No shots passed and no shots set."
-                )
-        else:
-            # Create a new SystemCollection based on type of shot_or_shots
-            if issubclass(type(shot_or_shots), System):
-                self.shots = SystemCollection()
-                self.shots.append(shot_or_shots)
-            elif issubclass(type(shot_or_shots), SystemCollection):
-                self.shots = shot_or_shots
-
-        if self.shots.active is None:
-            self.shots.set_active(0)
-
-        self.standby_screen.hide()
-        self.instructions.show()
-        self.create_title(title)
-        self.title_node.show()
-        self.init_help_page()
-        self.help_hint.hide()
-        self.mouse = Mouse()
-        self.init_system_nodes()
-        self.init_hud()
-
-        params = dict(
-            init_animations=True,
-            single_instance=True,
-        )
-        self.change_mode(Mode.shot, enter_kwargs=params)
-
-        self.player_cam.load_state("last_scene", ok_if_not_exists=True)
-
-        self.taskMgr.run()
-
     def stop(self):
+        """Display the standby screen and halt the main loop"""
+
         self.standby_screen.show()
         self.instructions.hide()
         self.title_node.hide()
-        self.base.graphicsEngine.renderFrame()
-        self.base.graphicsEngine.renderFrame()
 
-        self.taskMgr.stop()
+        # Advance a couple of frames to render changes
+        boop(2)
+
+        # Stop the main loop
+        Global.task_mgr.stop()
 
     def finalizeExit(self):
+        """Override ShowBase.finalizeExit to prevent sys.exit call
+
+        See:
+        https://docs.panda3d.org/1.10/python/reference/direct.showbase.ShowBase#direct.showbase.ShowBase.ShowBase.finalizeExit
+        """
         self.stop()
 
 
-class Play(Interface, Menus):
-    is_game = True
-
+class Play(Interface):
     def __init__(self, *args, **kwargs):
         Interface.__init__(self, *args, **kwargs)
-        Menus.__init__(self)
 
-        self.change_mode(Mode.menu)
+        # FIXME can this be added to MenuMode.enter? It produces a lot of events. To
+        # see, enter debugger after this command check
+        # Global.base.messenger.get_events()
+        menus.populate()
 
         # This task chain allows simulations to be run in parallel to the game processes
-        self.task_mgr.setupTaskChain(
+        Global.task_mgr.setupTaskChain(
             "simulation",
             numThreads=1,
             tickClock=None,
@@ -513,31 +388,39 @@ class Play(Interface, Menus):
             timeslicePriority=None,
         )
 
-    def go(self):
-        self.hide_menus()
+        Global.mode_mgr.update_event_baseline()
+        Global.mode_mgr.change_mode(Mode.menu)
 
-        self.shots = SystemCollection()
-        self.shots.append(System())
-        self.shots.set_active(-1)
+    def listen_constant_events(self):
+        """Listen for events that are mode independent"""
+        Interface.listen_constant_events(self)
+        tasks.register_event("go", self.go)
+
+    def go(self):
+        menus.hide_all()
+
+        Global.register_shots(SystemCollection())
+        Global.shots.append(System())
+        Global.shots.set_active(-1)
 
         self.init_help_page()
         self.setup()
         self.init_system_nodes()
-        self.init_collisions()
-        self.change_mode(Mode.aim)
 
-    def close_scene(self):
-        Interface.close_scene(self)
+        cue_avoid.init_collisions()
+
+        Global.mode_mgr.change_mode(Mode.aim)
 
     def setup(self):
-        self.setup_options = self.get_menu_options()
+        self.setup_options = menus.get_options()
 
         self.setup_table()
         self.setup_game()
         self.setup_balls()
         self.setup_cue()
 
-        self.init_hud()
+        hud_task = hud.init()
+        tasks.add(hud_task, "update_hud")
 
     def setup_table(self):
         selected_table = self.setup_options["table_type"]
@@ -545,7 +428,7 @@ class Play(Interface, Menus):
         table_params = table_config[selected_table]
         table_params["model_name"] = selected_table
         table_type = table_params.pop("type")
-        self.shots.active.table = table_types[table_type](**table_params)
+        Global.shots.active.table = table_types[table_type](**table_params)
 
     def setup_game(self):
         """Setup the game class from pooltool.games
@@ -574,20 +457,19 @@ class Play(Interface, Menus):
             e_c=0.85,  # cushion coeffiient of restitution
         )
 
-        # FIXME
-        # game_class = games.game_classes[self.setup_options[ani.options_game]]
+        # FIXME use what use to be self.setup_options[ani.options_game] to determine the
+        # game type, instead of hardcoding ani.options_sandbox
         game_class = games.game_classes[ani.options_sandbox]
-        self.game = game_class()
-        self.game.init(self.shots.active.table, ball_kwargs)
-        self.game.start()
+
+        # Register the game under the Global namespace
+        Global.game = game_class()
+        Global.game.init(Global.shots.active.table, ball_kwargs)
+        Global.game.start()
 
     def setup_cue(self):
-        self.shots.active.cue = Cue(
-            cueing_ball=self.game.set_initial_cueing_ball(self.shots.active.balls)
+        Global.shots.active.cue = Cue(
+            cueing_ball=Global.game.set_initial_cueing_ball(Global.shots.active.balls)
         )
 
     def setup_balls(self):
-        self.shots.active.balls = self.game.balls
-
-    def start(self):
-        self.run()
+        Global.shots.active.balls = Global.game.balls

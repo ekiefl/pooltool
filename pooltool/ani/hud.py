@@ -15,62 +15,75 @@ from panda3d.core import CardMaker, NodePath, TextNode, TransparencyAttrib
 
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
+from pooltool.ani.globals import Global
 from pooltool.utils import panda_path
+from pooltool.utils.strenum import StrEnum, auto
+
+
+class HUDElement(StrEnum):
+    logo = auto()
+    log_win = auto()
+    english = auto()
+    jack = auto()
+    power = auto()
+    player_stats = auto()
 
 
 class HUD:
     def __init__(self):
-        pass
+        self.elements = None
 
-    def init_hud(self):
-        self.hud_elements = {
-            "logo": Logo(),
-            "log_win": LogWindow(),
-            "english": English(),
-            "jack": Jack(),
-            "power": Power(),
-            "player_stats": PlayerStats(),
+    def init(self):
+        """Initialize HUD elements and return HUD update task
+
+        It is assumed that if this is being called, ShowBase has been initialized.
+        """
+
+        self.elements = {
+            HUDElement.logo: Logo(),
+            HUDElement.log_win: LogWindow(),
+            HUDElement.english: English(),
+            HUDElement.jack: Jack(),
+            HUDElement.power: Power(),
+            HUDElement.player_stats: PlayerStats(),
         }
 
-        for element in self.hud_elements.values():
+        for element in self.elements.values():
             element.init()
 
-        self.add_task(self.update_hud, "update_hud")
+        return self.update_hud
 
-    def destroy_hud(self):
-        self.remove_task("update_hud")
-
-        # remove log messages
-        for element in self.hud_elements.values():
+    def destroy(self):
+        for element in self.elements.values():
             element.destroy()
 
     def hide_hud_element(self, element):
-        assert element in self.hud_elements
-        self.hud_elements["element"].hide()
+        assert element in self.elements
+        self.elements["element"].hide()
 
     def show_hud_element(self, element):
-        assert element in self.hud_elements
-        self.hud_elements["element"].show()
+        assert element in self.elements
+        self.elements["element"].show()
 
     def update_hud(self, task):
-        if self.is_game:
+        if Global.game is not None:
             self.update_log_window()
             self.update_player_stats()
 
         return task.cont
 
     def update_player_stats(self):
-        if not self.game.update_player_stats:
+        if not Global.game.update_player_stats:
             return
 
-        self.hud_elements["player_stats"].update(self.game)
-        self.game.update_player_stats = False
+        self.elements["player_stats"].update(Global.game)
+        Global.game.update_player_stats = False
 
     def update_log_window(self):
-        if not self.game.log.update:
+        if not Global.game.log.update:
             return
 
-        for msg in reversed(self.game.log.msgs):
+        for msg in reversed(Global.game.log.msgs):
             if not msg["quiet"]:
                 if not msg["broadcast"]:
                     timestamp, msg_txt, sentiment = (
@@ -78,25 +91,21 @@ class HUD:
                         msg["msg"],
                         msg["sentiment"],
                     )
-                    self.hud_elements["log_win"].broadcast_msg(
+                    self.elements["log_win"].broadcast_msg(
                         f"({timestamp}) {msg_txt}",
-                        color=self.hud_elements["log_win"].colors[sentiment],
+                        color=self.elements["log_win"].colors[sentiment],
                     )
                     msg["broadcast"] = True
                 else:
                     break
 
-        self.game.log.update = False
+        Global.game.log.update = False
 
 
-class HUDElement(ABC):
+class BaseHUDElement(ABC):
     def __init__(self):
-        # Panda pollutes the global namespace, appease linters
-        self.aspect2d = __builtins__["aspect2d"]
-        self.render2d = __builtins__["render2d"]
-
         self.dummy_right = NodePath("right_panel_hud")
-        self.dummy_right.reparentTo(self.aspect2d)
+        self.dummy_right.reparentTo(Global.aspect2d)
         self.dummy_right.setPos(1.25, 0, 0)
 
     @abstractmethod
@@ -116,7 +125,7 @@ class HUDElement(ABC):
         pass
 
 
-class PlayerStats(HUDElement):
+class PlayerStats(BaseHUDElement):
     def __init__(self):
         self.top_spot = -0.18
         self.spacer = 0.05
@@ -173,14 +182,14 @@ class PlayerStats(HUDElement):
             self.on_screen.append(self.init_text_object(i, msg, color=color))
 
 
-class Logo(HUDElement):
+class Logo(BaseHUDElement):
     def __init__(self):
-        HUDElement.__init__(self)
+        BaseHUDElement.__init__(self)
 
         self.img = OnscreenImage(
             image=ani.logo_paths["pt_smaller"],
             pos=(0.94, 0, 0.89),
-            parent=self.render2d,
+            parent=Global.render2d,
             scale=(0.08 * 0.49, 1, 0.08),
         )
         self.img.setTransparency(TransparencyAttrib.MAlpha)
@@ -199,9 +208,9 @@ class Logo(HUDElement):
         del self.img
 
 
-class English(HUDElement):
+class English(BaseHUDElement):
     def __init__(self):
-        HUDElement.__init__(self)
+        BaseHUDElement.__init__(self)
         self.dir = ani.model_dir / "hud" / "english"
         self.text_scale = 0.2
         self.text_color = (1, 1, 1, 1)
@@ -253,7 +262,7 @@ class English(HUDElement):
         del self.circle
 
 
-class Power(NodePath, HUDElement):
+class Power(NodePath, BaseHUDElement):
     """Power meter indicating strength of shot
 
     Modified from drwr:
@@ -264,7 +273,7 @@ class Power(NodePath, HUDElement):
         self.min_strike = min_strike
         self.max_strike = max_strike
 
-        HUDElement.__init__(self)
+        BaseHUDElement.__init__(self)
         self.text_scale = 0.11
         self.text_color = (1, 1, 1, 1)
 
@@ -320,9 +329,9 @@ class Power(NodePath, HUDElement):
         self.bg.setScale(1.0 - value, 1, 1)
 
 
-class Jack(HUDElement):
+class Jack(BaseHUDElement):
     def __init__(self):
-        HUDElement.__init__(self)
+        BaseHUDElement.__init__(self)
         self.dir = ani.model_dir / "hud" / "jack"
         self.text_scale = 0.4
         self.text_color = (1, 1, 1, 1)
@@ -330,14 +339,14 @@ class Jack(HUDElement):
         self.arc = OnscreenImage(
             image=panda_path(self.dir / "arc.png"),
             pos=(1.4, 0, -0.45),
-            parent=self.aspect2d,
+            parent=Global.aspect2d,
             scale=0.075,
         )
         self.arc.setTransparency(TransparencyAttrib.MAlpha)
 
         self.cue_cartoon = OnscreenImage(
             image=panda_path(self.dir / "cue.png"),
-            parent=self.aspect2d,
+            parent=Global.aspect2d,
             pos=(0, 0, 0),
             scale=(0.15, 1, 0.01),
         )
@@ -387,7 +396,7 @@ class Jack(HUDElement):
         del self.arc
 
 
-class LogWindow(HUDElement):
+class LogWindow(BaseHUDElement):
     def __init__(self):
         self.top_spot = -0.95
         self.spacer = 0.05
@@ -496,3 +505,6 @@ class LogWindow(HUDElement):
                 )
             animation.append(sequence)
         animation.start()
+
+
+hud = HUD()

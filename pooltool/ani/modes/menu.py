@@ -2,8 +2,12 @@
 
 import sys
 
+import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
+from pooltool.ani.globals import Global
+from pooltool.ani.menu import menus
 from pooltool.ani.modes.datatypes import BaseMode, Mode
+from pooltool.ani.mouse import mouse
 
 
 class MenuMode(BaseMode):
@@ -17,22 +21,24 @@ class MenuMode(BaseMode):
     }
 
     def enter(self):
-        self.mouse.show()
-        self.mouse.absolute()
-        self.show_menu("main_menu")
+        mouse.show()
+        mouse.absolute()
+        menus.show("main_menu")
 
-        self.task_action("escape", Action.exit, True)
-        self.task_action("escape-up", Action.exit, False)
-        self.task_action("n", Action.new_game, True)
-        self.task_action("n-up", Action.new_game, False)
-        self.task_action("wheel_up", Action.scroll_up, True)
-        self.task_action("wheel_down", Action.scroll_down, True)
-        self.task_action("mouse1-up", "click", True)
+        self.register_keymap_event("escape", Action.exit, True)
+        self.register_keymap_event("escape-up", Action.exit, False)
+        self.register_keymap_event("n", Action.new_game, True)
+        self.register_keymap_event("n-up", Action.new_game, False)
+        self.register_keymap_event("wheel_up", Action.scroll_up, True)
+        self.register_keymap_event("wheel_down", Action.scroll_down, True)
+        self.register_keymap_event("mouse1-up", "click", True)
 
-        self.add_task(self.menu_task, "menu_task")
+        tasks.add(self.menu_task, "menu_task")
+        tasks.add(self.shared_task, "shared_task")
 
     def exit(self):
-        self.remove_task("menu_task")
+        tasks.remove("shared_task")
+        tasks.remove("menu_task")
 
     def menu_task(self, task):
         if self.keymap[Action.exit]:
@@ -40,26 +46,26 @@ class MenuMode(BaseMode):
             return task.done
 
         if self.keymap[Action.new_game]:
-            self.go()
+            Global.base.messenger.send("go")
             return task.done
 
         if self.keymap[Action.scroll_up]:
-            scroll_bar = self.current_menu.area.verticalScroll
+            scroll_bar = menus.current.area.verticalScroll
             scroll_bar.setValue(scroll_bar.getValue() - scroll_bar["pageSize"])
             self.keymap[Action.scroll_up] = False
 
         if self.keymap[Action.scroll_down]:
-            scroll_bar = self.current_menu.area.verticalScroll
+            scroll_bar = menus.current.area.verticalScroll
             scroll_bar.setValue(scroll_bar.getValue() + scroll_bar["pageSize"])
             self.keymap[Action.scroll_down] = False
 
         if self.keymap["click"]:
             self.keymap["click"] = False
-            for element in self.current_menu.elements:
+            for element in menus.current.elements:
                 if (
                     element["type"] == "entry"
                     and element["object"]["focus"]
-                    and element["name"] != self.current_menu.hovered_entry
+                    and element["name"] != self.current.hovered_entry
                 ):
                     element["object"]["focus"] = False
 
