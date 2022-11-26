@@ -37,7 +37,11 @@ class ShotMode(BaseMode):
         Action.parallel: False,
     }
 
-    def enter(self, init_animations=False, single_instance=False):
+    # Controls whether user is viewing a shot, or whether they can take control and undo
+    # shot, advance to next shot, etc.
+    view_only = False
+
+    def enter(self, init_animations=False):
         """Enter method for Shot
 
         Parameters
@@ -45,10 +49,6 @@ class ShotMode(BaseMode):
         init_animations : bool, False
             If True, the shot animations are built and looped via
             SystemCollection.init_animation() and SystemCollection.loop_animation()
-
-        single_instance : bool, False
-            If True, exiting with `esc` will close the scene. Otherwise, quit_task will
-            be called, and user is brought back to main menu.
         """
         mouse.hide()
         mouse.relative()
@@ -71,7 +71,7 @@ class ShotMode(BaseMode):
         tasks.register_event("arrow_up", Global.shots.speed_up)
         tasks.register_event("arrow_down", Global.shots.slow_down)
 
-        if single_instance:
+        if self.view_only:
             self.register_keymap_event("escape", Action.close_scene, True)
             self.register_keymap_event("escape-up", Action.close_scene, False)
         else:

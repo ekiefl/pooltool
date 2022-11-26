@@ -261,6 +261,10 @@ class ShotViewer(Interface):
         self.create_instructions()
         self.create_title("")
 
+        # Set ShotMode to view only. This prevents giving cue stick control to the user
+        # and dictates that esc key closes scene rather than going to a menu
+        Global.mode_mgr.modes[Mode.shot].view_only = True
+
         self.stop()
 
     def show(self, shot_or_shots=None, title=""):
@@ -295,7 +299,6 @@ class ShotViewer(Interface):
 
         params = dict(
             init_animations=True,
-            single_instance=True,
         )
         Global.mode_mgr.update_event_baseline()
         Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
