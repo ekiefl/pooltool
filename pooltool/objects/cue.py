@@ -15,7 +15,7 @@ import pooltool.ani as ani
 import pooltool.constants as c
 import pooltool.utils as utils
 from pooltool.ani.globals import Global
-from pooltool.error import ConfigError
+from pooltool.error import ConfigError, StrokeError
 from pooltool.events import StickBallCollision
 from pooltool.objects import Object, Render
 
@@ -144,12 +144,15 @@ class CueRender(Render):
             the cue stick. backstroke is start of the backswing, apex is when the cue is
             at the peak of the backswing, and strike is when the cue makes contact.
         """
+        if not len(self.stroke_pos):
+            return 0, 0, 0
 
         apex_pos = 0
         for i, pos in enumerate(self.stroke_pos[::-1]):
             if pos < apex_pos:
                 break
             apex_pos = pos
+
         apex_index = len(self.stroke_pos) - i
         while True:
             if apex_pos == self.stroke_pos[apex_index + 1]:
@@ -209,7 +212,7 @@ class CueRender(Render):
 
         max_time = 0.1
         if (strike_time - apex_time) < max_time:
-            return self.stroke_pos[apex_index] / apex_time
+            raise StrokeError("Unresolved edge case")
 
         for i, t in enumerate(self.stroke_time[::-1]):
             if strike_time - t > max_time:
@@ -225,11 +228,12 @@ class CueRender(Render):
         cue_stick_focus = self.get_node("cue_stick_focus")
 
         phi = (cue_stick_focus.getH() + 180) % 360
+
         try:
-            # FIXME short strokes give NameError: name 'apex_index' is not defined
             V0 = self.calc_V0_from_stroke()
-        except:
-            V0 = 1
+        except StrokeError:
+            V0 = 0.1
+
         cueing_ball = self.follow
         theta = -cue_stick_focus.getR()
         a = -cue_stick.getY() / self.follow.R

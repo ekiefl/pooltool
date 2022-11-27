@@ -10,7 +10,7 @@ import pooltool.ani as ani
 import pooltool.constants as c
 import pooltool.physics as physics
 import pooltool.utils as utils
-from pooltool.error import ConfigError
+from pooltool.error import ConfigError, SimulateError
 from pooltool.events import (
     Events,
     NonEvent,
@@ -208,12 +208,8 @@ class SystemRender(object):
     ):
         if not len(self.events):
             try:
-                self.simulate()
-            except Exception:
-                raise ValueError(
-                    "FIXME This exception needs to be caught and `pass`ed, but it "
-                    "needs to be caught with a non-bare except."
-                )
+                self.simulate(raise_simulate_error=True)
+            except SimulateError:
                 pass
 
         if not self.continuized:

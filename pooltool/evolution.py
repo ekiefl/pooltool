@@ -8,6 +8,7 @@ import pooltool.constants as c
 import pooltool.physics as physics
 import pooltool.terminal as terminal
 import pooltool.utils as utils
+from pooltool.error import SimulateError
 from pooltool.events import (
     BallBallCollision,
     BallCushionCollision,
@@ -32,7 +33,7 @@ class EvolveShot(ABC):
             type_ball_pocket: True,
         }
 
-    def simulate(self, name="NA", quiet=False, **kwargs):
+    def simulate(self, name="NA", quiet=False, raise_simulate_error=False, **kwargs):
         """Run a simulation
 
         Parameters
@@ -40,6 +41,9 @@ class EvolveShot(ABC):
         t_final : float, None
             The simulation will run until the time is greater than this value. If None,
             simulation is ran until the next event occurs at np.inf
+        raise_simulate_error : bool, False
+            If true, a SimulateError is raised upon failure, so it may be caught and
+            handled. This is to avoid errors when simulating shots in the GUI.
 
         name : str, 'NA'
             A name for the simulated shot
@@ -63,7 +67,11 @@ class EvolveShot(ABC):
                 pass
 
         self.progress_update = progress_update
-        self.evolution_algorithm(**kwargs)
+
+        try:
+            self.evolution_algorithm(**kwargs)
+        except:
+            raise SimulateError()
 
         if not quiet:
             self.progress.end()

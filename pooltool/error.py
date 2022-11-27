@@ -51,3 +51,17 @@ class ConfigError(PoolToolError):
         self.e = remove_spaces(e)
         self.error_type = "Config Error"
         PoolToolError.__init__(self)
+
+
+class StrokeError(PoolToolError):
+    def __init__(self, e=None):
+        self.e = remove_spaces(e)
+        self.error_type = "Stroke Error"
+        PoolToolError.__init__(self)
+
+
+class SimulateError(PoolToolError):
+    def __init__(self, e=None):
+        self.e = remove_spaces(e)
+        self.error_type = "Simulate Error"
+        PoolToolError.__init__(self)
