@@ -363,7 +363,12 @@ class Play:
         Global.mode_mgr.change_mode(Mode.aim)
 
     def create_system(self):
-        """Create the Global shots and game objects"""
+        """Create the Global shots and game objects
+
+        FIXME this and its calls (setup_*) should probably be a method of some
+        MenuOptions class. Since this depends strictly on the menu options, it should
+        not belong in this class.
+        """
         self.setup_options = menus.get_options()
 
         game = self.setup_game()
@@ -385,7 +390,6 @@ class Play:
     def start(self):
         Global.task_mgr.run()
 
-    # FIXME should be staticmethod
     def setup_table(self):
         selected_table = self.setup_options["table_type"]
         table_config = ani.load_config("tables")
