@@ -1,3 +1,5 @@
+import functools
+
 from direct.showbase import ShowBaseGlobal
 
 from pooltool.error import ConfigError
@@ -18,6 +20,7 @@ def is_showbase_initialized() -> bool:
 def require_showbase(func):
     """Return wrapper that complains if ShowBase no instance exists"""
 
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         if is_showbase_initialized():
             return func(*args, **kwargs)
