@@ -8,7 +8,7 @@ import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
 from pooltool.ani.globals import Global
-from pooltool.ani.hud import HUDElement, hud
+from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import mouse
 from pooltool.objects.ball import Ball
@@ -186,19 +186,14 @@ class ViewMode(BaseMode):
         with mouse:
             dy = mouse.get_dy()
 
-        min_V0, max_V0 = (
-            hud.elements[HUDElement.power].min_strike,
-            hud.elements[HUDElement.power].max_strike,
-        )
-
         V0 = Global.shots.active.cue.V0 + dy * ani.power_sensitivity
-        if V0 < min_V0:
-            V0 = min_V0
-        if V0 > max_V0:
-            V0 = max_V0
+        if V0 < ani.min_stroke_speed:
+            V0 = ani.min_stroke_speed
+        if V0 > ani.max_stroke_speed:
+            V0 = ani.max_stroke_speed
 
         Global.shots.active.cue.set_state(V0=V0)
-        hud.elements[HUDElement.power].set(V0)
+        hud.update_cue(Global.shots.active.cue)
 
     def view_elevate_cue(self):
         Global.shots.active.cue.show_nodes(ignore=("cue_cseg",))
@@ -222,7 +217,7 @@ class ViewMode(BaseMode):
         cue.setR(-new_elevation)
 
         Global.shots.active.cue.set_state(theta=new_elevation)
-        hud.elements[HUDElement.jack].set(new_elevation)
+        hud.update_cue(Global.shots.active.cue)
 
     def view_apply_english(self):
         Global.shots.active.cue.show_nodes(ignore=("cue_cseg",))
@@ -256,14 +251,13 @@ class ViewMode(BaseMode):
         ):
             cue_focus.setR(-cue_avoid.min_theta)
 
-        a, b, theta = (
-            -new_y / R,
-            new_z / R,
-            -Global.shots.active.cue.get_node("cue_stick_focus").getR(),
+        Global.shots.active.cue.set_state(
+            a=-new_y / R,
+            b=new_z / R,
+            theta=-Global.shots.active.cue.get_node("cue_stick_focus").getR(),
         )
-        Global.shots.active.cue.set_state(a=a, b=b, theta=theta)
-        hud.elements[HUDElement.english].set(a, b)
-        hud.elements[HUDElement.jack].set(theta)
+
+        hud.update_cue(Global.shots.active.cue)
 
     def change_animation(self, shot_index):
         # Switch shots
@@ -290,8 +284,4 @@ class ViewMode(BaseMode):
         cue_avoid.init_collisions()
 
         # Set the HUD
-        hud.elements.get(HUDElement.english).set(
-            Global.shots.active.cue.a, Global.shots.active.cue.b
-        )
-        hud.elements.get(HUDElement.jack).set(Global.shots.active.cue.theta)
-        hud.elements.get(HUDElement.power).set(Global.shots.active.cue.V0)
+        hud.update_cue(Global.shots.active.cue)

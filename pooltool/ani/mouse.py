@@ -10,6 +10,7 @@ class Mouse(ClockObject):
     def __init__(self):
         ClockObject.__init__(self)
         self.relative_requested = False
+        self.initialized = False
 
     def __enter__(self):
         return self
@@ -22,6 +23,7 @@ class Mouse(ClockObject):
         Global.base.disableMouse()
         self.mouse = Global.base.mouseWatcherNode
         self.touch()
+        self.initialized = True
 
     def hide(self):
         props = WindowProperties()

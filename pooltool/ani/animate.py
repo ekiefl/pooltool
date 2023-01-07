@@ -6,7 +6,13 @@ import gltf  # FIXME at first glance this does nothing?
 import simplepbr
 from direct.gui.OnscreenText import OnscreenText
 from direct.showbase.ShowBase import ShowBase
-from panda3d.core import ClockObject, TextNode, WindowProperties
+from panda3d.core import (
+    ClockObject,
+    GraphicsOutput,
+    TextNode,
+    Texture,
+    WindowProperties,
+)
 
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
@@ -16,7 +22,7 @@ import pooltool.utils as utils
 from pooltool.ani.camera import player_cam
 from pooltool.ani.environment import environment
 from pooltool.ani.globals import Global, require_showbase
-from pooltool.ani.hud import hud
+from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.menu import GenericMenu, menus
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
@@ -33,13 +39,19 @@ def boop(frames=1):
         Global.base.graphicsEngine.renderFrame()
 
 
+def showbase_kwargs():
+    """Returns parameters that should be passed to the Showbase constructor"""
+    window_type = "offscreen" if ani.settings["graphics"]["offscreen"] else None
+    return dict(
+        windowType=window_type,
+    )
+
+
 class Interface(ShowBase):
     def __init__(self, shot=None, monitor=False):
-        super().__init__(self)
+        super().__init__(self, **showbase_kwargs())
 
-        # Conceptually I like the idea of super().__init__(self) and simplepbr.init()
-        # being one after the other, but this background doesn't apply if ran after
-        # simplepbr.init(). See open discussion here:
+        # Background doesn't apply if ran after simplepbr.init(). See
         # https://discourse.panda3d.org/t/cant-change-base-background-after-simplepbr-init/28945
         Global.base.setBackgroundColor(0.04, 0.04, 0.04)
 
@@ -47,8 +59,9 @@ class Interface(ShowBase):
             enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
         )
 
-        # These require `base`. With ShowBase initialized, they can now be called
-        mouse.init()
+        if ani.settings["graphics"]["offscreen"]:
+            mouse.init()
+
         player_cam.init()
 
         if not ani.settings["graphics"]["shader"]:
@@ -117,13 +130,7 @@ class Interface(ShowBase):
         """Listen for events that are mode independent"""
         tasks.register_event("window-event", self.handle_window_event)
         tasks.register_event("close-scene", self.close_scene)
-        tasks.register_event("toggle-help", self.toggle_help)
-
-    def toggle_help(self):
-        if self.help_node.is_hidden():
-            self.help_node.show()
-        else:
-            self.help_node.hide()
+        tasks.register_event("toggle-help", hud.toggle_help)
 
     def close_scene(self):
         for shot in Global.shots:
@@ -135,7 +142,6 @@ class Interface(ShowBase):
         environment.unload_lights()
 
         hud.destroy()
-        tasks.remove("update_hud")
 
         if len(Global.shots):
             Global.shots.clear_animation()
@@ -186,70 +192,6 @@ class Interface(ShowBase):
         self.frame += 1
         return task.cont
 
-    def init_help_page(self):
-        self.help_hint = OnscreenText(
-            text="Press 'h' to toggle help",
-            pos=(-1.55, 0.93),
-            scale=ani.menu_text_scale * 0.9,
-            fg=(1, 1, 1, 1),
-            align=TextNode.ALeft,
-            parent=Global.aspect2d,
-        )
-        self.help_hint.show()
-
-        self.help_node = Global.aspect2d.attachNewNode("help")
-
-        def add_instruction(pos, msg, title=False):
-            text = OnscreenText(
-                text=msg,
-                style=1,
-                fg=(1, 1, 1, 1),
-                parent=Global.base.a2dTopLeft,
-                align=TextNode.ALeft,
-                pos=(-1.45 if not title else -1.55, 0.85 - pos),
-                scale=ani.menu_text_scale if title else 0.7 * ani.menu_text_scale,
-            )
-            text.reparentTo(self.help_node)
-
-        def hrow(x):
-            return 0.06 * x
-
-        add_instruction(hrow(1), "Camera controls", True)
-        add_instruction(hrow(2), "Rotate - [mouse]")
-        add_instruction(hrow(3), "Pan - [hold v + mouse]")
-        add_instruction(hrow(4), "Zoom - [hold left-click + mouse]")
-
-        add_instruction(hrow(6), "Aim controls", True)
-        add_instruction(hrow(7), "Enter aim mode - [a]")
-        add_instruction(hrow(8), "Apply english - [hold e + mouse]")
-        add_instruction(hrow(9), "Elevate cue - [hold b + mouse]")
-        add_instruction(hrow(10), "Precise aiming - [hold f + mouse]")
-        add_instruction(hrow(11), "Raise head - [hold t + mouse]")
-
-        add_instruction(hrow(13), "Shot controls", True)
-        add_instruction(hrow(14), "Stroke - [hold s] (move mouse down then up)")
-        add_instruction(hrow(15), "Take next shot - [a]")
-        add_instruction(hrow(16), "Undo shot - [z]")
-        add_instruction(hrow(17), "Replay shot - [r]")
-        add_instruction(hrow(18), "Pause shot - [space]")
-        add_instruction(hrow(19), "Rewind - [hold left-arrow]")
-        add_instruction(hrow(20), "Fast forward - [hold right-arrow]")
-        add_instruction(hrow(21), "Slow down - [down-arrow]")
-        add_instruction(hrow(22), "Speed up - [up-arrow]")
-
-        add_instruction(hrow(24), "Other controls", True)
-        add_instruction(
-            hrow(25),
-            "Cue different ball - [hold q]\n    (select with mouse, click to confirm)",
-        )
-        add_instruction(
-            hrow(27),
-            "Move ball - [hold g]\n    (click once to select ball, move with mouse, "
-            "then click to confirm move",
-        )
-
-        self.help_node.hide()
-
     def start(self):
         Global.task_mgr.run()
 
@@ -258,7 +200,6 @@ class ShotViewer(Interface):
     def __init__(self, *args, **kwargs):
         Interface.__init__(self, *args, **kwargs)
         self.create_standby_screen()
-        self.create_instructions()
         self.create_title("")
 
         # Set ShotMode to view only. This prevents giving cue stick control to the user
@@ -288,14 +229,12 @@ class ShotViewer(Interface):
         player_cam.load_state("last_scene", ok_if_not_exists=True)
 
         self.standby_screen.hide()
-        self.instructions.show()
         self.create_title(title)
         self.title_node.show()
-        self.init_help_page()
-        self.help_hint.hide()
 
-        hud_task = hud.init()
-        tasks.add(hud_task, "update_hud")
+        if ani.settings["graphics"]["hud"]:
+            hud.init()
+            hud.elements[HUDElement.help_text].help_hint.hide()
 
         params = dict(
             init_animations=True,
@@ -320,16 +259,6 @@ class ShotViewer(Interface):
         )
         self.title_node.hide()
 
-    def create_instructions(self):
-        self.instructions = OnscreenText(
-            text="Press <escape> to exit",
-            pos=(-1.55, 0.93),
-            scale=ani.menu_text_scale * 0.7,
-            fg=(1, 1, 1, 1),
-            align=TextNode.ALeft,
-            parent=Global.aspect2d,
-        )
-
     def create_standby_screen(self):
         self.standby_screen = GenericMenu(frame_color=(0.3, 0.3, 0.3, 1))
         self.standby_screen.add_image(
@@ -350,7 +279,6 @@ class ShotViewer(Interface):
         """Display the standby screen and halt the main loop"""
 
         self.standby_screen.show()
-        self.instructions.hide()
         self.title_node.hide()
 
         # Advance a couple of frames to render changes
@@ -368,12 +296,47 @@ class ShotViewer(Interface):
         self.stop()
 
 
+class ShotSaver(Interface):
+    def __init__(self, *args, **kwargs):
+        Interface.__init__(self, *args, **kwargs)
+        self.init_texture()
+
+        # Set ShotMode to view only. This prevents giving cue stick control to the user
+        # and dictates that esc key closes scene rather than going to a menu
+        Global.mode_mgr.modes[Mode.shot].view_only = True
+
+    def init_texture(self):
+        self.tex = Texture()
+
+        Global.base.win.addRenderTexture(
+            self.tex, GraphicsOutput.RTMCopyRam, GraphicsOutput.RTPColor
+        )
+
+    def show(self, shot):
+        Global.register_shots(SystemCollection())
+        Global.shots.append(shot)
+
+        if Global.shots.active is None:
+            Global.shots.set_active(0)
+
+        self.init_system_nodes()
+        player_cam.load_state("last_scene", ok_if_not_exists=True)
+
+        params = dict(
+            init_animations=True,
+        )
+        Global.mode_mgr.update_event_baseline()
+        Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
+        Global.task_mgr.run()
+
+
 class Play(Interface):
     def __init__(self, *args, **kwargs):
         Interface.__init__(self, *args, **kwargs)
 
-        # FIXME can this be added to MenuMode.enter? It produces a lot of events. To
-        # see, enter debugger after this command check
+        # FIXME can this be added to MenuMode.enter? It produces a lot of events that
+        # end up being part of the baseline due to the update_event_baseline call below.
+        # To see, enter debugger after this command check
         # Global.base.messenger.get_events()
         menus.populate()
 
@@ -403,7 +366,6 @@ class Play(Interface):
         Global.shots.append(System())
         Global.shots.set_active(-1)
 
-        self.init_help_page()
         self.setup()
         self.init_system_nodes()
 
@@ -419,8 +381,8 @@ class Play(Interface):
         self.setup_balls()
         self.setup_cue()
 
-        hud_task = hud.init()
-        tasks.add(hud_task, "update_hud")
+        if ani.settings["graphics"]["hud"]:
+            hud.init()
 
     def setup_table(self):
         selected_table = self.setup_options["table_type"]
