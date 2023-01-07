@@ -360,29 +360,36 @@ class Play(Interface):
         tasks.register_event("go", self.go)
 
     def go(self):
+        """Close the menu and enter the game"""
         menus.hide_all()
-
-        Global.register_shots(SystemCollection())
-        Global.shots.append(System())
-        Global.shots.set_active(-1)
-
         self.setup()
         self.init_system_nodes()
-
         cue_avoid.init_collisions()
+
+        if ani.settings["graphics"]["hud"]:
+            hud.init()
 
         Global.mode_mgr.change_mode(Mode.aim)
 
     def setup(self):
+        """Create the Global shots and game objects"""
         self.setup_options = menus.get_options()
 
-        self.setup_table()
-        self.setup_game()
-        self.setup_balls()
-        self.setup_cue()
+        game = self.setup_game()
 
-        if ani.settings["graphics"]["hud"]:
-            hud.init()
+        table = self.setup_table()
+        balls = self.setup_balls(table, game.rack)
+        cue = self.setup_cue(balls, game)
+        shot = System(table=table, balls=balls, cue=cue)
+
+        shots = SystemCollection()
+        shots.append(shot)
+        shots.set_active(-1)
+
+        game.start(shot)
+
+        Global.register_shots(shots)
+        Global.game = game
 
     def setup_table(self):
         selected_table = self.setup_options["table_type"]
@@ -390,26 +397,19 @@ class Play(Interface):
         table_params = table_config[selected_table]
         table_params["model_name"] = selected_table
         table_type = table_params.pop("type")
-        Global.shots.active.table = table_types[table_type](**table_params)
+        return table_types[table_type](**table_params)
 
     def setup_game(self):
-        """Setup the game class from pooltool.games
+        """Setup the game class from pooltool.games"""
+        game = games.game_classes[ani.options_sandbox]()
+        game.init()
+        return game
 
-        Notes
-        =====
-        - For reasons of bad design, ball kwargs are defined in this method
-        """
+    def setup_cue(self, balls, game):
+        return Cue(cueing_ball=game.set_initial_cueing_ball(balls))
 
-        # FIXME
-        # ball_kwargs = dict(
-        #    R = self.setup_options[ani.options_ball_diameter]/2,
-        #    u_s = self.setup_options[ani.options_friction_slide],
-        #    u_r = self.setup_options[ani.options_friction_roll],
-        #    u_sp = self.setup_options[ani.options_friction_spin],
-        #    f_c = self.setup_options[ani.options_friction_cushion],
-        #    e_c = self.setup_options[ani.options_restitution_cushion],
-        # )
-
+    def setup_balls(self, table, rack):
+        # FIXME hardcoded
         ball_kwargs = dict(
             R=0.028575,  # ball radius
             u_s=0.2,  # sliding friction
@@ -418,20 +418,4 @@ class Play(Interface):
             f_c=0.2,  # cushion coeffiient of friction
             e_c=0.85,  # cushion coeffiient of restitution
         )
-
-        # FIXME use what use to be self.setup_options[ani.options_game] to determine the
-        # game type, instead of hardcoding ani.options_sandbox
-        game_class = games.game_classes[ani.options_sandbox]
-
-        # Register the game under the Global namespace
-        Global.game = game_class()
-        Global.game.init(Global.shots.active.table, ball_kwargs)
-        Global.game.start()
-
-    def setup_cue(self):
-        Global.shots.active.cue = Cue(
-            cueing_ball=Global.game.set_initial_cueing_ball(Global.shots.active.balls)
-        )
-
-    def setup_balls(self):
-        Global.shots.active.balls = Global.game.balls
+        return rack(table, ordered=True, **ball_kwargs).balls

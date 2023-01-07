@@ -8,6 +8,8 @@ from pooltool.objects import DummyBall
 
 
 class NineBall(Game):
+    rack = NineBallRack
+
     def __init__(self, apa_rules=False):
         self.is_call_ball = False
         self.is_call_pocket = False
@@ -15,11 +17,8 @@ class NineBall(Game):
         self.apa_rules = apa_rules
         self.create_players(2)
 
-    def start(self):
+    def start(self, shot):
         self.active_player.ball_in_hand = ["cue"]
-
-    def setup_initial_layout(self, table, ball_kwargs={}):
-        self.balls = NineBallRack(table=table, ordered=True, **ball_kwargs).balls
 
     def set_initial_cueing_ball(self, balls):
         return balls["cue"]

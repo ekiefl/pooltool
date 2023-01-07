@@ -7,6 +7,8 @@ from pooltool.layouts import ThreeCushionRack
 
 
 class ThreeCushion(Game):
+    rack = ThreeCushionRack
+
     def __init__(self):
         self.points_to_win = 20
         self.is_call_ball = False
@@ -14,14 +16,11 @@ class ThreeCushion(Game):
         Game.__init__(self)
         self.create_players(2)
 
-    def start(self):
+    def start(self, shot):
         self.players[0].can_cue = ["white"]
         self.players[0].target_balls = ["yellow", "red"]
         self.players[1].can_cue = ["yellow"]
         self.players[1].target_balls = ["white", "red"]
-
-    def setup_initial_layout(self, table, ball_kwargs={}):
-        self.balls = ThreeCushionRack(table=table, **ball_kwargs).balls
 
     def set_initial_cueing_ball(self, balls):
         return balls["white"]

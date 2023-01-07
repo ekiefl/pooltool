@@ -4,6 +4,7 @@ import uuid
 from abc import ABC, abstractmethod
 
 import pooltool.constants as c
+from pooltool.system import System
 from pooltool.terminal import Timer
 
 
@@ -31,12 +32,15 @@ class Log:
 class Game(ABC):
     is_call_pocket = None
     is_call_ball = None
+    rack = None
 
     def __init__(self):
         if self.is_call_pocket is None:
             raise Exception(f"{self.__class__.__name__} needs is_call_pocket defined")
         if self.is_call_ball is None:
             raise Exception(f"{self.__class__.__name__} needs is_call_ball defined")
+        if self.rack is None:
+            raise Exception(f"{self.__class__.__name__} needs a rack defined")
 
         self.players = None
         self.shot_number = None
@@ -58,14 +62,13 @@ class Game(ABC):
             player.set_name(f"Player {n}")
             self.players.append(player)
 
-    def init(self, table, ball_kwargs={}):
+    def init(self):
         self.shot_number = 0
         self.turn_number = 0
         self.set_next_player()
         self.game_over = False
         self.winner = None
         self.tie = False
-        self.setup_initial_layout(table, ball_kwargs)
 
     def player_order(self):
         for i in range(len(self.players)):
@@ -160,15 +163,11 @@ class Game(ABC):
         pass
 
     @abstractmethod
-    def setup_initial_layout(self):
-        pass
-
-    @abstractmethod
     def set_initial_cueing_ball(self, balls):
         pass
 
     @abstractmethod
-    def start(self):
+    def start(self, shot: System):
         pass
 
 

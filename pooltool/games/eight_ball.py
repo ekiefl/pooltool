@@ -7,6 +7,8 @@ from pooltool.layouts import EightBallRack
 
 
 class EightBall(Game):
+    rack = EightBallRack
+
     def __init__(self, apa_rules=False):
         self.is_call_ball = True
         self.is_call_pocket = True
@@ -25,11 +27,8 @@ class EightBall(Game):
             player.target_balls = []
             player.can_cue = ["cue"]
 
-    def start(self):
+    def start(self, shot):
         self.active_player.ball_in_hand = ["cue"]
-
-    def setup_initial_layout(self, table, ball_kwargs={}):
-        self.balls = EightBallRack(table=table, ordered=True, **ball_kwargs).balls
 
     def set_initial_cueing_ball(self, balls):
         return balls["cue"]
