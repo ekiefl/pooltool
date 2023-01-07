@@ -112,7 +112,6 @@ class Interface(ShowBase):
         Global.clock.setMode(ClockObject.MLimited)
         Global.clock.setFrameRate(ani.settings["graphics"]["fps"])
 
-        Global.register_shots(SystemCollection())
         Global.register_mode_mgr(ModeManager(all_modes))
         Global.mode_mgr.init_modes()
 
@@ -312,12 +311,15 @@ class ShotSaver(Interface):
     def show(self, shot):
         Global.register_shots(SystemCollection())
         Global.shots.append(shot)
-
         if Global.shots.active is None:
             Global.shots.set_active(0)
 
         self.create_scene()
         player_cam.load_state("last_scene", ok_if_not_exists=True)
+
+        if ani.settings["graphics"]["hud"]:
+            hud.init()
+            hud.elements[HUDElement.help_text].help_hint.hide()
 
         params = dict(
             init_animations=True,
