@@ -32,6 +32,14 @@ from pooltool.objects.table import table_types
 from pooltool.system import System, SystemCollection
 
 
+def showbase_kwargs():
+    """Returns parameters that should be passed to the Showbase constructor"""
+    window_type = "offscreen" if ani.settings["graphics"]["offscreen"] else None
+    return dict(
+        windowType=window_type,
+    )
+
+
 @require_showbase
 def boop(frames=1):
     """Advance/render a number of frames"""
@@ -39,12 +47,43 @@ def boop(frames=1):
         Global.base.graphicsEngine.renderFrame()
 
 
-def showbase_kwargs():
-    """Returns parameters that should be passed to the Showbase constructor"""
-    window_type = "offscreen" if ani.settings["graphics"]["offscreen"] else None
-    return dict(
-        windowType=window_type,
-    )
+@require_showbase
+def window_resize(win=None):
+    """Maintain aspect ratio when user resizes window
+
+    The user can modify the game window to be whatever size they want. Ideally, they
+    would be able to pick arbitrary aspect ratios, however this project has been
+    hardcoded to run at a specific aspect ratio, otherwise it looks
+    stretched/squished.
+
+    With that in mind, this method is called whenever a change to the window occurs,
+    and essentially fixes the aspect ratio. For any given window size chosen by the
+    user, this will override their resizing, and resize the window to one with an
+    area equal to that requested, but at the required aspect ratio.
+    """
+    requested_width = Global.base.win.getXSize()
+    requested_height = Global.base.win.getYSize()
+
+    diff = abs(requested_width / requested_height - ani.aspect_ratio)
+    if diff / ani.aspect_ratio < 0.05:
+        # If they are within 5% of the intended ratio, just let them be.
+        return
+
+    requested_area = requested_width * requested_height
+
+    # A = w*h
+    # A = r*h*h
+    # h = (A/r)^(1/2)
+    height = (requested_area / ani.aspect_ratio) ** (1 / 2)
+    width = height * ani.aspect_ratio
+
+    properties = WindowProperties()
+    properties.setSize(int(width), int(height))
+    Global.base.win.requestProperties(properties)
+
+    is_window_active = Global.base.win.get_properties().foreground
+    if not is_window_active and Global.mode_mgr.mode != Mode.purgatory:
+        Global.mode_mgr.change_mode(Mode.purgatory)
 
 
 class Interface(ShowBase):
@@ -83,52 +122,9 @@ class Interface(ShowBase):
         self.listen_constant_events()
         self.stdout = terminal.Run()
 
-    def fix_window_resize(self, win=None):
-        """Fix aspect ratio of window upon user resizing
-
-        The user can modify the game window to be whatever size they want. Ideally, they
-        would be able to pick arbitrary aspect ratios, however this project has been
-        hardcoded to run at a specific aspect ratio, otherwise it looks
-        stretched/squished.
-
-        With that in mind, this method is called whenever a change to the window occurs,
-        and essentially fixes the aspect ratio. For any given window size chosen by the
-        user, this will override their resizing, and resize the window to one with an
-        area equal to that requested, but at the required aspect ratio.
-        """
-        requested_width = Global.base.win.getXSize()
-        requested_height = Global.base.win.getYSize()
-
-        if (
-            abs(requested_width / requested_height - ani.aspect_ratio)
-            / ani.aspect_ratio
-            < 0.05
-        ):
-            # If they are within 5% of the intended ratio, just let them be.
-            return
-
-        requested_area = requested_width * requested_height
-
-        # A = w*h
-        # A = r*h*h
-        # h = (A/r)^(1/2)
-        height = (requested_area / ani.aspect_ratio) ** (1 / 2)
-        width = height * ani.aspect_ratio
-
-        properties = WindowProperties()
-        properties.setSize(int(width), int(height))
-        self.win.requestProperties(properties)
-
-    def handle_window_event(self, win=None):
-        self.fix_window_resize(win=win)
-
-        is_window_active = Global.base.win.get_properties().foreground
-        if not is_window_active and Global.mode_mgr.mode != Mode.purgatory:
-            Global.mode_mgr.change_mode(Mode.purgatory)
-
     def listen_constant_events(self):
         """Listen for events that are mode independent"""
-        tasks.register_event("window-event", self.handle_window_event)
+        tasks.register_event("window-event", window_resize)
         tasks.register_event("close-scene", self.close_scene)
         tasks.register_event("toggle-help", hud.toggle_help)
 
@@ -152,7 +148,8 @@ class Interface(ShowBase):
 
         gc.collect()
 
-    def init_system_nodes(self):
+    def create_scene(self):
+        """Create a scene from Global.shots"""
         Global.render.attachNewNode("scene")
         Global.shots.active.table.render()
         environment.init(Global.shots.active.table)
@@ -192,9 +189,6 @@ class Interface(ShowBase):
         self.frame += 1
         return task.cont
 
-    def start(self):
-        Global.task_mgr.run()
-
 
 class ShotViewer(Interface):
     def __init__(self, *args, **kwargs):
@@ -224,7 +218,7 @@ class ShotViewer(Interface):
         if Global.shots.active is None:
             Global.shots.set_active(0)
 
-        self.init_system_nodes()
+        self.create_scene()
 
         player_cam.load_state("last_scene", ok_if_not_exists=True)
 
@@ -319,7 +313,7 @@ class ShotSaver(Interface):
         if Global.shots.active is None:
             Global.shots.set_active(0)
 
-        self.init_system_nodes()
+        self.create_scene()
         player_cam.load_state("last_scene", ok_if_not_exists=True)
 
         params = dict(
@@ -330,9 +324,9 @@ class ShotSaver(Interface):
         Global.task_mgr.run()
 
 
-class Play(Interface):
+class Play:
     def __init__(self, *args, **kwargs):
-        Interface.__init__(self, *args, **kwargs)
+        self.interface = Interface(*args, **kwargs)
 
         # FIXME can this be added to MenuMode.enter? It produces a lot of events that
         # end up being part of the baseline due to the update_event_baseline call below.
@@ -351,19 +345,16 @@ class Play(Interface):
             timeslicePriority=None,
         )
 
+        tasks.register_event("enter-game", self.enter_game)
+
         Global.mode_mgr.update_event_baseline()
         Global.mode_mgr.change_mode(Mode.menu)
 
-    def listen_constant_events(self):
-        """Listen for events that are mode independent"""
-        Interface.listen_constant_events(self)
-        tasks.register_event("go", self.go)
-
-    def go(self):
-        """Close the menu and enter the game"""
+    def enter_game(self):
+        """Close the menu, setup the visualization, and start the game"""
         menus.hide_all()
-        self.setup()
-        self.init_system_nodes()
+        self.create_system()
+        self.interface.create_scene()
         cue_avoid.init_collisions()
 
         if ani.settings["graphics"]["hud"]:
@@ -371,7 +362,7 @@ class Play(Interface):
 
         Global.mode_mgr.change_mode(Mode.aim)
 
-    def setup(self):
+    def create_system(self):
         """Create the Global shots and game objects"""
         self.setup_options = menus.get_options()
 
@@ -391,6 +382,10 @@ class Play(Interface):
         Global.register_shots(shots)
         Global.game = game
 
+    def start(self):
+        Global.task_mgr.run()
+
+    # FIXME should be staticmethod
     def setup_table(self):
         selected_table = self.setup_options["table_type"]
         table_config = ani.load_config("tables")
@@ -399,16 +394,19 @@ class Play(Interface):
         table_type = table_params.pop("type")
         return table_types[table_type](**table_params)
 
-    def setup_game(self):
+    @staticmethod
+    def setup_game():
         """Setup the game class from pooltool.games"""
         game = games.game_classes[ani.options_sandbox]()
         game.init()
         return game
 
-    def setup_cue(self, balls, game):
+    @staticmethod
+    def setup_cue(balls, game):
         return Cue(cueing_ball=game.set_initial_cueing_ball(balls))
 
-    def setup_balls(self, table, rack):
+    @staticmethod
+    def setup_balls(table, rack):
         # FIXME hardcoded
         ball_kwargs = dict(
             R=0.028575,  # ball radius

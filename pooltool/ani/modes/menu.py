@@ -45,7 +45,7 @@ class MenuMode(BaseMode):
             return task.done
 
         if self.keymap[Action.new_game]:
-            Global.base.messenger.send("go")
+            Global.base.messenger.send("enter-game")
             return task.done
 
         if self.keymap[Action.scroll_up]:
