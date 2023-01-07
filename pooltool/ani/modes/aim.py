@@ -10,7 +10,7 @@ from pooltool.ani.camera import player_cam
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
-from pooltool.ani.mouse import mouse
+from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.objects.ball import Ball
 from pooltool.objects.cue import cue_avoid
 
@@ -43,14 +43,12 @@ class AimMode(BaseMode):
 
         # In this state, the cue sticks to the cue_avoid.min_theta
         self.magnet_theta = True
-        # if cue angle is within this many degrees from cue_avoid.min_theta, it sticks to
-        # cue_avoid.min_theta
+        # if cue angle is within this many degrees from cue_avoid.min_theta, it sticks
+        # to cue_avoid.min_theta
         self.magnet_threshold = 0.2
 
     def enter(self, load_prev_cam=False):
-        mouse.hide()
-        mouse.relative()
-        mouse.track()
+        mouse.mode(MouseMode.RELATIVE)
 
         if not Global.shots.active.cue.has_focus:
             Global.shots.active.cue.init_focus(Global.shots.active.cue.cueing_ball)

@@ -10,7 +10,7 @@ from pooltool.ani.camera import player_cam
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
-from pooltool.ani.mouse import mouse
+from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.objects.ball import Ball
 from pooltool.objects.cue import cue_avoid
 
@@ -49,9 +49,7 @@ class ViewMode(BaseMode):
         self.magnet_threshold = 0.2
 
     def enter(self, move_active=False, load_prev_cam=False):
-        mouse.hide()
-        mouse.relative()
-        mouse.track()
+        mouse.mode(MouseMode.RELATIVE)
 
         if Global.shots.active is not None:
             Global.shots.active.cue.hide_nodes(ignore=("cue_cseg",))

@@ -10,7 +10,7 @@ from pooltool.ani.camera import player_cam
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
-from pooltool.ani.mouse import mouse
+from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.objects.ball import Ball
 from pooltool.objects.cue import cue_avoid
 
@@ -50,10 +50,7 @@ class ShotMode(BaseMode):
             If True, the shot animations are built and looped via
             SystemCollection.init_animation() and SystemCollection.loop_animation()
         """
-        if mouse.initialized:
-            mouse.hide()
-            mouse.relative()
-            mouse.track()
+        mouse.mode(MouseMode.RELATIVE)
 
         if init_animations:
             Global.shots.set_animation()

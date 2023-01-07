@@ -59,7 +59,7 @@ class Interface(ShowBase):
             enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
         )
 
-        if ani.settings["graphics"]["offscreen"]:
+        if not ani.settings["graphics"]["offscreen"]:
             mouse.init()
 
         player_cam.init()

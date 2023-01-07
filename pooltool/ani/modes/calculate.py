@@ -10,7 +10,7 @@ from pooltool.ani.camera import player_cam
 from pooltool.ani.globals import Global
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
-from pooltool.ani.mouse import mouse
+from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.error import SimulateError
 
 
@@ -24,9 +24,7 @@ class CalculateMode(BaseMode):
     }
 
     def enter(self):
-        mouse.hide()
-        mouse.relative()
-        mouse.track()
+        mouse.mode(MouseMode.RELATIVE)
 
         self.shot_sim_overlay = GenericMenu(
             title="Calculating shot...",

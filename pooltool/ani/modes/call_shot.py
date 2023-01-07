@@ -11,7 +11,7 @@ from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
-from pooltool.ani.mouse import mouse
+from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.utils import panda_path
 
 
@@ -35,9 +35,7 @@ class CallShotMode(BaseMode):
     def enter(self):
         self.ball_highlight_sequence = Parallel()
 
-        mouse.hide()
-        mouse.relative()
-        mouse.track()
+        mouse.mode(MouseMode.RELATIVE)
 
         player_cam.focus.setR(player_cam.focus.getR() - self.head_raise)
 

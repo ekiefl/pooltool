@@ -8,7 +8,7 @@ from pooltool.ani.camera import player_cam
 from pooltool.ani.globals import Global
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
-from pooltool.ani.mouse import mouse
+from pooltool.ani.mouse import MouseMode, mouse
 
 
 class CamLoadMode(BaseMode):
@@ -23,9 +23,7 @@ class CamLoadMode(BaseMode):
             # FIXME Justification for this lie?
             Global.mode_mgr.last_mode = Mode.view
 
-        mouse.show()
-        mouse.absolute()
-        mouse.track()
+        mouse.mode(MouseMode.ABSOLUTE)
         self.selection = None
 
         self.register_keymap_event("escape", Action.quit, True)

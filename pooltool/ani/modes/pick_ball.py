@@ -10,7 +10,7 @@ from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
-from pooltool.ani.mouse import mouse
+from pooltool.ani.mouse import MouseMode, mouse
 
 
 class PickBallMode(BaseMode):
@@ -22,9 +22,7 @@ class PickBallMode(BaseMode):
     }
 
     def enter(self):
-        mouse.hide()
-        mouse.relative()
-        mouse.track()
+        mouse.mode(MouseMode.RELATIVE)
 
         self.closest_ball = None
 

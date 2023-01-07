@@ -7,7 +7,7 @@ from pooltool.ani.action import Action
 from pooltool.ani.globals import Global
 from pooltool.ani.menu import menus
 from pooltool.ani.modes.datatypes import BaseMode, Mode
-from pooltool.ani.mouse import mouse
+from pooltool.ani.mouse import MouseMode, mouse
 
 
 class MenuMode(BaseMode):
@@ -21,8 +21,7 @@ class MenuMode(BaseMode):
     }
 
     def enter(self):
-        mouse.show()
-        mouse.absolute()
+        mouse.mode(MouseMode.ABSOLUTE)
         menus.show("main_menu")
 
         self.register_keymap_event("escape", Action.exit, True)

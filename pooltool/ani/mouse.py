@@ -4,6 +4,12 @@ import numpy as np
 from panda3d.core import ClockObject, WindowProperties
 
 from pooltool.ani.globals import Global, require_showbase
+from pooltool.utils.strenum import StrEnum, auto
+
+
+class MouseMode(StrEnum):
+    ABSOLUTE = auto()
+    RELATIVE = auto()
 
 
 class Mouse(ClockObject):
@@ -17,6 +23,20 @@ class Mouse(ClockObject):
 
     def __exit__(self, *args):
         self.touch()
+
+    def mode(self, mouse_mode: MouseMode) -> None:
+        """Change to different mouse mode (silently return if mouse uninitialized)"""
+        if not self.initialized:
+            return
+
+        if mouse_mode == MouseMode.ABSOLUTE:
+            self.show()
+            self.absolute()
+        elif mouse_mode == MouseMode.RELATIVE:
+            mouse.hide()
+            mouse.relative()
+
+        mouse.track()
 
     @require_showbase
     def init(self):
