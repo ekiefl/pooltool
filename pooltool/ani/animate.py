@@ -327,7 +327,7 @@ class ShotSaver(Interface):
         Global.task_mgr.run()
 
 
-class Play(Interface):
+class Game(Interface):
     def __init__(self, *args, **kwargs):
         Interface.__init__(self, *args, **kwargs)
 

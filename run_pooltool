@@ -2,11 +2,11 @@
 
 import argparse
 
-from pooltool.ani.animate import Play
+from pooltool.ani.animate import Game
 
 
 def main(args):
-    play = Play(monitor=args.monitor)
+    play = Game(monitor=args.monitor)
     play.start()
 
 
