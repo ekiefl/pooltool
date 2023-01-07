@@ -33,7 +33,10 @@ from pooltool.system import System, SystemCollection
 
 
 def showbase_kwargs():
-    """Returns parameters that should be passed to the Showbase constructor"""
+    """Returns parameters that should be passed to the Showbase constructor
+
+    FIXME This should be a method of some MenuOptions config class
+    """
     window_type = "offscreen" if ani.settings["graphics"]["offscreen"] else None
     return dict(
         windowType=window_type,
@@ -324,9 +327,9 @@ class ShotSaver(Interface):
         Global.task_mgr.run()
 
 
-class Play:
+class Play(Interface):
     def __init__(self, *args, **kwargs):
-        self.interface = Interface(*args, **kwargs)
+        Interface.__init__(self, *args, **kwargs)
 
         # FIXME can this be added to MenuMode.enter? It produces a lot of events that
         # end up being part of the baseline due to the update_event_baseline call below.
@@ -354,7 +357,7 @@ class Play:
         """Close the menu, setup the visualization, and start the game"""
         menus.hide_all()
         self.create_system()
-        self.interface.create_scene()
+        self.create_scene()
         cue_avoid.init_collisions()
 
         if ani.settings["graphics"]["hud"]:
