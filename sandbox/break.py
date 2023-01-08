@@ -6,7 +6,7 @@ import pooltool as pt
 
 def main(args):
     if not args.no_viz:
-        interface = pt.ShotViewer()
+        interface = pt.ShotSaver(monitor=False)
 
     if args.seed:
         import numpy as np

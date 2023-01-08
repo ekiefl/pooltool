@@ -225,7 +225,7 @@ class BallRender(Render):
         self.set_render_state(rvw[0])
 
     def set_playback_sequence(self, playback_speed=1):
-        """Creates the sequence motions of the ball for a given playback speed"""
+        """Creates the motion sequences of the ball for a given playback speed"""
         dts = np.diff(self.history_cts.t)
         motion_states = self.history_cts.s
         playback_dts = dts / playback_speed

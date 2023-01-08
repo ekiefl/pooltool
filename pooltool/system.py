@@ -327,6 +327,7 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
         SystemRender.__init__(self)
         EvolveShotEventBased.__init__(self)
 
+        # FIXME use classmethods/staticmethods for path and d routes
         if path and (cue or table or balls):
             raise ConfigError(
                 "System :: if path provided, cue, table, and balls must be None"

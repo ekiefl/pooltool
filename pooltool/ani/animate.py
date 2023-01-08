@@ -1,13 +1,19 @@
 #! /usr/bin/env python
 
 import gc
+import sys
+from pathlib import Path
+from shutil import rmtree
 
 import gltf  # FIXME at first glance this does nothing?
+import matplotlib.pyplot as plt
+import numpy as np
 import simplepbr
 from direct.gui.OnscreenText import OnscreenText
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import (
     ClockObject,
+    FrameBufferProperties,
     GraphicsOutput,
     TextNode,
     Texture,
@@ -30,6 +36,7 @@ from pooltool.error import ConfigError
 from pooltool.objects.cue import Cue, cue_avoid
 from pooltool.objects.table import table_types
 from pooltool.system import System, SystemCollection
+from pooltool.utils.strenum import StrEnum, auto
 
 
 def showbase_kwargs():
@@ -97,9 +104,9 @@ class Interface(ShowBase):
         # https://discourse.panda3d.org/t/cant-change-base-background-after-simplepbr-init/28945
         Global.base.setBackgroundColor(0.04, 0.04, 0.04)
 
-        simplepbr.init(
-            enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
-        )
+        # simplepbr.init(
+        #    enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
+        # )
 
         if not ani.settings["graphics"]["offscreen"]:
             mouse.init()
@@ -292,14 +299,95 @@ class ShotViewer(Interface):
         self.stop()
 
 
+class Methods(StrEnum):
+    none = auto()
+    numpy = auto()
+    png = auto()
+    jpg = auto()
+    panda = auto()
+
+
 class ShotSaver(Interface):
     def __init__(self, *args, **kwargs):
+        # --------------------
+        self.frames = 100
+        self.dim = (640, 480)
+        self.method = Methods.jpg
+        # --------------------
+
         Interface.__init__(self, *args, **kwargs)
+
+        self.init_window()
         self.init_texture()
+        self.init_save_dir()
 
         # Set ShotMode to view only. This prevents giving cue stick control to the user
         # and dictates that esc key closes scene rather than going to a menu
         Global.mode_mgr.modes[Mode.shot].view_only = True
+
+        tasks.add(self.task_save_frame, "save_frame")
+        tasks.add(self.task_is_done, "is_done")
+
+        if self.method == Methods.numpy:
+            self.img_scan = np.zeros(
+                (self.frames, self.dim[1], self.dim[0], 3), dtype=np.uint8
+            )
+
+    def task_is_done(self, task):
+        if self.frame == self.frames - 1:
+            if self.method == Methods.numpy:
+                np.save(self.dir_name / "out.npy", self.img_scan)
+            sys.exit()
+
+        return task.cont
+
+    def task_save_frame(self, task):
+        if not self.tex.hasRamImage():
+            return task.cont
+
+        if self.method == Methods.none:
+            return task.cont
+
+        if self.method == Methods.panda:
+            self.tex.write(self.dir_name / f"{self.frame:04d}.jpg")
+            return task.cont
+
+        array = np.frombuffer(self.tex.getRamImage(), dtype=np.uint8)
+        array.shape = (
+            self.tex.getYSize(),
+            self.tex.getXSize(),
+            self.tex.getNumComponents(),
+        )
+
+        if self.method == Methods.numpy:
+            self.img_scan[self.frame, :, :, :] = array
+
+        if self.method == Methods.png:
+            plt.imsave(self.dir_name / f"{self.frame:04d}.png", array)
+
+        if self.method == Methods.jpg:
+            plt.imsave(self.dir_name / f"{self.frame:04d}.jpg", array[::-1, ::-1, ::-1])
+
+        return task.cont
+
+    def init_window(self):
+        # FIXME this needs to happen before the simplepbr.init call in Interface
+        fb_prop = FrameBufferProperties()
+        fb_prop.setRgbColor(True)
+        fb_prop.setRgbaBits(8, 8, 8, 0)
+        fb_prop.setDepthBits(24)
+
+        self.openMainWindow(fbprops=fb_prop, size=self.dim)
+
+        simplepbr.init(
+            enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
+        )
+
+    def init_save_dir(self):
+        self.dir_name = Path("screenshot_output")
+        if self.dir_name.exists():
+            rmtree(self.dir_name)
+        self.dir_name.mkdir()
 
     def init_texture(self):
         self.tex = Texture()
@@ -309,24 +397,25 @@ class ShotSaver(Interface):
         )
 
     def show(self, shot):
-        Global.register_shots(SystemCollection())
-        Global.shots.append(shot)
-        if Global.shots.active is None:
-            Global.shots.set_active(0)
+        with terminal.TimeCode():
+            Global.register_shots(SystemCollection())
+            Global.shots.append(shot)
+            if Global.shots.active is None:
+                Global.shots.set_active(0)
 
-        self.create_scene()
-        player_cam.load_state("last_scene", ok_if_not_exists=True)
+            self.create_scene()
+            player_cam.load_state("last_scene", ok_if_not_exists=True)
 
-        if ani.settings["graphics"]["hud"]:
-            hud.init()
-            hud.elements[HUDElement.help_text].help_hint.hide()
+            if ani.settings["graphics"]["hud"]:
+                hud.init()
+                hud.elements[HUDElement.help_text].help_hint.hide()
 
-        params = dict(
-            init_animations=True,
-        )
-        Global.mode_mgr.update_event_baseline()
-        Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
-        Global.task_mgr.run()
+            params = dict(
+                init_animations=True,
+            )
+            Global.mode_mgr.update_event_baseline()
+            Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
+            Global.task_mgr.run()
 
 
 class Game(Interface):
