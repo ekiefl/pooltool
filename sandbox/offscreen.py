@@ -1,5 +1,8 @@
 #! /usr/bin/env python
-"""This is a basic example of the pooltool API"""
+"""This illustrates how to render offscreen and save as images"""
+
+import shutil
+from pathlib import Path
 
 import numpy as np
 
@@ -7,8 +10,7 @@ import pooltool as pt
 
 
 def main(args):
-    if not args.no_viz:
-        interface = pt.ShotViewer()
+    interface = pt.ShotSaver()
 
     if args.seed:
         np.random.seed(args.seed)
@@ -27,11 +29,11 @@ def main(args):
     shot = pt.System(cue=cue, table=table, balls=balls)
     shot.simulate()
 
-    if not args.no_viz:
-        interface.show(shot)
+    output = Path(__file__).parent / "offscreen_out"
+    if output.exists():
+        shutil.rmtree(output)
 
-    if args.save:
-        shot.save(args.save)
+    interface.save(shot, output)
 
 
 if __name__ == "__main__":
@@ -58,9 +60,6 @@ if __name__ == "__main__":
         type=int,
         default=None,
         help="Provide a random seed if you want reproducible results",
-    )
-    ap.add_argument(
-        "--save", type=str, default=None, help="Filepath that shot will be saved to"
     )
 
     args = ap.parse_args()

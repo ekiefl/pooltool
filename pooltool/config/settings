@@ -11,7 +11,6 @@ angular_vectors = 0
 fps = 60
 fps_inactive = 5
 hud = 0
-offscreen = 1
 
 [gameplay]
 cue_collision = 1

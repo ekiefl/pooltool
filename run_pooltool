@@ -2,11 +2,14 @@
 
 import argparse
 
-from pooltool.ani.animate import Game
+from pooltool.ani.animate import Game, ShowBaseConfig
 
 
 def main(args):
-    play = Game(monitor=args.monitor)
+    config = ShowBaseConfig.default()
+    config.monitor = args.monitor
+
+    play = Game(config)
     play.start()
 
 

@@ -2,8 +2,10 @@
 
 import gc
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from shutil import rmtree
+from typing import Optional, Tuple, Union
 
 import gltf  # FIXME at first glance this does nothing?
 import matplotlib.pyplot as plt
@@ -15,6 +17,7 @@ from panda3d.core import (
     ClockObject,
     FrameBufferProperties,
     GraphicsOutput,
+    GraphicsWindow,
     TextNode,
     Texture,
     WindowProperties,
@@ -39,15 +42,21 @@ from pooltool.system import System, SystemCollection
 from pooltool.utils.strenum import StrEnum, auto
 
 
-def showbase_kwargs():
-    """Returns parameters that should be passed to the Showbase constructor
+@dataclass
+class ShowBaseConfig:
+    window_type: Optional[str]
+    window_size: Optional[Tuple[int, int]]
+    fb_prop: Optional[FrameBufferProperties]
+    monitor: bool
 
-    FIXME This should be a method of some MenuOptions config class
-    """
-    window_type = "offscreen" if ani.settings["graphics"]["offscreen"] else None
-    return dict(
-        windowType=window_type,
-    )
+    @classmethod
+    def default(cls):
+        return cls(
+            window_type="onscreen",
+            window_size=None,
+            fb_prop=None,
+            monitor=False,
+        )
 
 
 @require_showbase
@@ -97,18 +106,20 @@ def window_resize(win=None):
 
 
 class Interface(ShowBase):
-    def __init__(self, shot=None, monitor=False):
-        super().__init__(self, **showbase_kwargs())
+    def __init__(self, config: ShowBaseConfig):
+        super().__init__(self, windowType=config.window_type)
+
+        self.openMainWindow(fbprops=config.fb_prop, size=config.window_size)
 
         # Background doesn't apply if ran after simplepbr.init(). See
         # https://discourse.panda3d.org/t/cant-change-base-background-after-simplepbr-init/28945
         Global.base.setBackgroundColor(0.04, 0.04, 0.04)
 
-        # simplepbr.init(
-        #    enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
-        # )
+        simplepbr.init(
+            enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
+        )
 
-        if not ani.settings["graphics"]["offscreen"]:
+        if isinstance(self.win, GraphicsWindow):
             mouse.init()
 
         player_cam.init()
@@ -125,7 +136,7 @@ class Interface(ShowBase):
         self.frame = 0
         tasks.add(self.increment_frame, "increment_frame")
 
-        if monitor:
+        if config.monitor:
             tasks.add(self.monitor, "monitor")
 
         self.listen_constant_events()
@@ -198,10 +209,22 @@ class Interface(ShowBase):
         self.frame += 1
         return task.cont
 
+    def finalizeExit(self):
+        """Override ShowBase.finalizeExit to potentially prevent sys.exit call
+
+        See:
+        https://docs.panda3d.org/1.10/python/reference/direct.showbase.ShowBase#direct.showbase.ShowBase.ShowBase.finalizeExit
+        """
+        self.stop()
+
+    def stop(self):
+        """Called when window exited. Subclasses can avoid by overwriting this method"""
+        sys.exit()
+
 
 class ShotViewer(Interface):
-    def __init__(self, *args, **kwargs):
-        Interface.__init__(self, *args, **kwargs)
+    def __init__(self, config=ShowBaseConfig.default()):
+        Interface.__init__(self, config=config)
         self.create_standby_screen()
         self.create_title("")
 
@@ -290,66 +313,47 @@ class ShotViewer(Interface):
         # Stop the main loop
         Global.task_mgr.stop()
 
-    def finalizeExit(self):
-        """Override ShowBase.finalizeExit to prevent sys.exit call
-
-        See:
-        https://docs.panda3d.org/1.10/python/reference/direct.showbase.ShowBase#direct.showbase.ShowBase.ShowBase.finalizeExit
-        """
-        self.stop()
-
-
-class Methods(StrEnum):
-    none = auto()
-    numpy = auto()
-    png = auto()
-    jpg = auto()
-    panda = auto()
-
 
 class ShotSaver(Interface):
-    def __init__(self, *args, **kwargs):
-        # --------------------
-        self.frames = 100
-        self.dim = (640, 480)
-        self.method = Methods.jpg
-        # --------------------
+    def __init__(self, config=None):
+        if config is None:
+            config = ShowBaseConfig(
+                window_type="offscreen",
+                window_size=(1280, 720),
+                monitor=False,
+                fb_prop=self.frame_buffer_properties(),
+            )
 
-        Interface.__init__(self, *args, **kwargs)
+        Interface.__init__(self, config=config)
 
-        self.init_window()
         self.init_texture()
-        self.init_save_dir()
+
+        self.save_dir = None
+        self.img_frame = 0
 
         # Set ShotMode to view only. This prevents giving cue stick control to the user
         # and dictates that esc key closes scene rather than going to a menu
         Global.mode_mgr.modes[Mode.shot].view_only = True
 
+        tasks.add(self.increment_img_frame, "increment_img_frame")
         tasks.add(self.task_save_frame, "save_frame")
-        tasks.add(self.task_is_done, "is_done")
 
-        if self.method == Methods.numpy:
-            self.img_scan = np.zeros(
-                (self.frames, self.dim[1], self.dim[0], 3), dtype=np.uint8
-            )
+        # FIXME will be removed manual frame advancement is implemented
+        tasks.add(self.task_is_done, "is_done")
+        self.total_img_frames = 100
 
     def task_is_done(self, task):
-        if self.frame == self.frames - 1:
-            if self.method == Methods.numpy:
-                np.save(self.dir_name / "out.npy", self.img_scan)
+        if self.img_frame == self.total_img_frames - 1:
             sys.exit()
 
         return task.cont
 
+    def increment_img_frame(self, task):
+        self.img_frame += 1
+        return task.cont
+
     def task_save_frame(self, task):
         if not self.tex.hasRamImage():
-            return task.cont
-
-        if self.method == Methods.none:
-            return task.cont
-
-        if self.method == Methods.panda:
-            self.tex.write(self.dir_name / f"{self.frame:04d}.jpg")
             return task.cont
 
         array = np.frombuffer(self.tex.getRamImage(), dtype=np.uint8)
@@ -358,36 +362,22 @@ class ShotSaver(Interface):
             self.tex.getXSize(),
             self.tex.getNumComponents(),
         )
+        array = array[::-1, :, ::-1]
 
-        if self.method == Methods.numpy:
-            self.img_scan[self.frame, :, :, :] = array
-
-        if self.method == Methods.png:
-            plt.imsave(self.dir_name / f"{self.frame:04d}.png", array)
-
-        if self.method == Methods.jpg:
-            plt.imsave(self.dir_name / f"{self.frame:04d}.jpg", array[::-1, ::-1, ::-1])
+        plt.imsave(self._get_next_filepath(), array)
 
         return task.cont
 
-    def init_window(self):
-        # FIXME this needs to happen before the simplepbr.init call in Interface
-        fb_prop = FrameBufferProperties()
-        fb_prop.setRgbColor(True)
-        fb_prop.setRgbaBits(8, 8, 8, 0)
-        fb_prop.setDepthBits(24)
+    def _get_next_filepath(self):
+        return f"{self.save_dir}/frame_{self.img_frame:05d}.jpg"
 
-        self.openMainWindow(fbprops=fb_prop, size=self.dim)
+    def make_save_dir(self, save_dir: Union[str, Path]):
+        self.save_dir = Path(save_dir)
 
-        simplepbr.init(
-            enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
-        )
+        if self.save_dir.exists():
+            raise ConfigError(f"'{self.save_dir}' exists")
 
-    def init_save_dir(self):
-        self.dir_name = Path("screenshot_output")
-        if self.dir_name.exists():
-            rmtree(self.dir_name)
-        self.dir_name.mkdir()
+        self.save_dir.mkdir()
 
     def init_texture(self):
         self.tex = Texture()
@@ -396,31 +386,41 @@ class ShotSaver(Interface):
             self.tex, GraphicsOutput.RTMCopyRam, GraphicsOutput.RTPColor
         )
 
-    def show(self, shot):
-        with terminal.TimeCode():
-            Global.register_shots(SystemCollection())
-            Global.shots.append(shot)
-            if Global.shots.active is None:
-                Global.shots.set_active(0)
+    def save(self, shot: System, save_dir: Union[str, Path]):
+        Global.register_shots(SystemCollection())
+        Global.shots.append(shot)
+        if Global.shots.active is None:
+            Global.shots.set_active(0)
 
-            self.create_scene()
-            player_cam.load_state("last_scene", ok_if_not_exists=True)
+        self.create_scene()
 
-            if ani.settings["graphics"]["hud"]:
-                hud.init()
-                hud.elements[HUDElement.help_text].help_hint.hide()
+        if ani.settings["graphics"]["hud"]:
+            hud.init()
+            hud.elements[HUDElement.help_text].help_hint.hide()
 
-            params = dict(
-                init_animations=True,
-            )
-            Global.mode_mgr.update_event_baseline()
-            Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
-            Global.task_mgr.run()
+        params = dict(
+            init_animations=True,
+        )
+        Global.mode_mgr.update_event_baseline()
+        Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
+
+        self.make_save_dir(save_dir)
+
+        Global.task_mgr.run()
+
+    @staticmethod
+    def frame_buffer_properties():
+        fb_prop = FrameBufferProperties()
+        fb_prop.setRgbColor(True)
+        fb_prop.setRgbaBits(8, 8, 8, 0)
+        fb_prop.setDepthBits(24)
+
+        return fb_prop
 
 
 class Game(Interface):
-    def __init__(self, *args, **kwargs):
-        Interface.__init__(self, *args, **kwargs)
+    def __init__(self, config=ShowBaseConfig.default()):
+        Interface.__init__(self, config=config)
 
         # FIXME can this be added to MenuMode.enter? It produces a lot of events that
         # end up being part of the baseline due to the update_event_baseline call below.
@@ -429,15 +429,7 @@ class Game(Interface):
         menus.populate()
 
         # This task chain allows simulations to be run in parallel to the game processes
-        Global.task_mgr.setupTaskChain(
-            "simulation",
-            numThreads=1,
-            tickClock=None,
-            threadPriority=None,
-            frameBudget=None,
-            frameSync=None,
-            timeslicePriority=None,
-        )
+        Global.task_mgr.setupTaskChain("simulation", numThreads=1)
 
         tasks.register_event("enter-game", self.enter_game)
 
