@@ -87,7 +87,7 @@ class Menu:
         self.title_font = Global.loader.loadFont(panda_path(TITLE_FONT))
         self.button_font = Global.loader.loadFont(panda_path(BUTTON_FONT))
 
-        # No idea why this conditional must exist
+        # This is necessary, but unexplainable
         if self.title_font.get_num_pages() == 0:
             self.title_font.setPixelsPerUnit(90)
 
@@ -1030,13 +1030,23 @@ class Menus:
     def func_save_table(self):
         new_table = {}
 
-        # FIXME https://github.com/ekiefl/pooltool/issues/38
         # Add all dropdowns
-        for dropdown in self.xml.root.findall(".//*[@name='new_table']/dropdown"):
+        for dropdown in self.xml.roots["new_table"].findall(".//dropdown"):
             new_table[dropdown.attrib["name"]] = dropdown.attrib["selection"]
 
+        has_pockets = True if new_table["type"] == "pocket" else False
+
         # Add the entries
-        for entry in self.xml.root.findall(".//*[@name='new_table']/entry"):
+        for entry in self.xml.roots["new_table"].findall(".//entry"):
+            pocket_param = (
+                False
+                if "pocket_param" not in entry.attrib.keys()
+                or entry.attrib["pocket_param"] == "false"
+                else True
+            )
+            if not has_pockets and pocket_param:
+                continue
+
             name = entry.attrib["name"]
             value = entry.attrib["value"]
             validator = getattr(self.current, entry.attrib["validator"])
