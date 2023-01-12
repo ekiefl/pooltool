@@ -11,7 +11,7 @@
         If you pick a pocketless table type, you can ignore all pocket-related parameters.
     </text>
     <subtitle>General</subtitle>
-    <dropdown name="type" selection="pocket">
+    <dropdown name="type" selection="billiard">
         <name>Type</name>
         <option>pocket</option>
         <option>billiard</option>

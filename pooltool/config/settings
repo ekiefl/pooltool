@@ -2,9 +2,9 @@
 room = 0
 floor = 0
 table = 1
-lights = 1
 shadows = 0
-shader = 0
+shader = 1
+lights = 1
 physical_based_rendering = 0
 debug = 0
 angular_vectors = 0
