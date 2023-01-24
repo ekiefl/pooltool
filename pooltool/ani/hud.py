@@ -63,6 +63,7 @@ class HUD:
         for element in self.elements.values():
             element.destroy()
 
+        self.initialized = False
         tasks.remove("update_hud")
 
     def toggle_help(self):

@@ -4,7 +4,6 @@ import gc
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from shutil import rmtree
 from typing import Optional, Tuple, Union
 
 import gltf  # FIXME at first glance this does nothing?
@@ -44,10 +43,10 @@ from pooltool.utils.strenum import StrEnum, auto
 
 @dataclass
 class ShowBaseConfig:
-    window_type: Optional[str]
-    window_size: Optional[Tuple[int, int]]
-    fb_prop: Optional[FrameBufferProperties]
-    monitor: bool
+    window_type: Optional[str] = None
+    window_size: Optional[Tuple[int, int]] = None
+    fb_prop: Optional[FrameBufferProperties] = None
+    monitor: bool = False
 
     @classmethod
     def default(cls):
@@ -328,65 +327,17 @@ class ShotSaver(Interface):
         if config is None:
             config = ShowBaseConfig(
                 window_type="offscreen",
-                window_size=(230, 144),
                 monitor=False,
                 fb_prop=self.frame_buffer_properties(),
             )
 
         Interface.__init__(self, config=config)
-
         self.init_image_texture()
 
-        self.save_dir = None
-        self.img_frame = 0
+        # Global.clock.setMode(ClockObject.MNonRealTime)
 
-        # Set ShotMode to view only. This prevents giving cue stick control to the user
-        # and dictates that esc key closes scene rather than going to a menu
+        # FIXME after doing rid of entering ShotMode this can be removed
         Global.mode_mgr.modes[Mode.shot].view_only = True
-
-        tasks.add(self.increment_img_frame, "increment_img_frame")
-        tasks.add(self.task_save_frame, "save_frame")
-
-        # FIXME will be removed manual frame advancement is implemented
-        tasks.add(self.task_is_done, "is_done")
-        self.total_img_frames = 100
-
-    def task_is_done(self, task):
-        if self.img_frame == self.total_img_frames - 1:
-            sys.exit()
-
-        return task.cont
-
-    def increment_img_frame(self, task):
-        self.img_frame += 1
-        return task.cont
-
-    def task_save_frame(self, task):
-        if not self.tex.hasRamImage():
-            return task.cont
-
-        array = np.frombuffer(self.tex.getRamImage(), dtype=np.uint8)
-        array.shape = (
-            self.tex.getYSize(),
-            self.tex.getXSize(),
-            self.tex.getNumComponents(),
-        )
-        array = array[::-1, :, ::-1]
-
-        plt.imsave(self._get_next_filepath(), array)
-
-        return task.cont
-
-    def _get_next_filepath(self):
-        return f"{self.save_dir}/frame_{self.img_frame:05d}.png"
-
-    def make_save_dir(self, save_dir: Union[str, Path]):
-        self.save_dir = Path(save_dir)
-
-        if self.save_dir.exists():
-            raise ConfigError(f"'{self.save_dir}' exists")
-
-        self.save_dir.mkdir()
 
     def init_image_texture(self):
         self.tex = Texture()
@@ -395,22 +346,63 @@ class ShotSaver(Interface):
             self.tex, GraphicsOutput.RTMCopyRam, GraphicsOutput.RTPColor
         )
 
-    def save(
-        self,
-        shot: System,
-        save_dir: Union[str, Path],
-        img_format: ImageFormat = ImageFormat.PNG,
-    ):
+    def make_save_dir(self, save_dir: Union[str, Path]):
+        save_dir = Path(save_dir)
+
+        if save_dir.exists():
+            raise ConfigError(f"'{self.save_dir}' exists")
+
+        save_dir.mkdir()
+        return save_dir
+
+    def _get_filepath(self, save_dir, frame, img_format):
+        return f"{save_dir}/frame_{frame:06d}.{img_format}"
+
+    def _resize_window(self, size):
+        """Changes window size when provided the dimensions (x, y) in pixels"""
+        Global.base.win.setSize(*[int(dim) for dim in size])
+
+    def _init_system_collection(self, shot):
+        """Create system collection holding the shot. Register to Global"""
         Global.register_shots(SystemCollection())
         Global.shots.append(shot)
         if Global.shots.active is None:
             Global.shots.set_active(0)
 
+    def get_image_array(self):
+        """Return array of current image texture, or None if texture has no RAM image"""
+        if not self.tex.hasRamImage():
+            return None
+
+        array = np.frombuffer(self.tex.getRamImage(), dtype=np.uint8)
+        array.shape = (
+            self.tex.getYSize(),
+            self.tex.getXSize(),
+            self.tex.getNumComponents(),
+        )
+
+        # This flips things rightside up and orders RGB correctly
+        return array[::-1, :, ::-1]
+
+    def save(
+        self,
+        shot: System,
+        save_dir: Union[str, Path],
+        size: Tuple[int, int] = (230, 144),
+        img_format: ImageFormat = ImageFormat.PNG,
+        show_hud: bool = False,
+        frames: Optional[int] = 400,
+    ):
+
+        self._init_system_collection(shot)
+        self._resize_window(size)
         self.create_scene()
 
-        if ani.settings["graphics"]["hud"]:
+        if show_hud:
             hud.init()
             hud.elements[HUDElement.help_text].help_hint.hide()
+        else:
+            hud.destroy()
 
         params = dict(
             init_animations=True,
@@ -418,9 +410,21 @@ class ShotSaver(Interface):
         Global.mode_mgr.update_event_baseline()
         Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
 
-        self.make_save_dir(save_dir)
+        save_dir = self.make_save_dir(save_dir)
 
-        Global.task_mgr.run()
+        # -----------------------------
+
+        # FIXME change when frames can be optional
+        for frame in range(100):
+
+            # FIXME check first frame image. Is it really the first or should this go at
+            # the end of the loop?
+            Global.task_mgr.step()
+
+            plt.imsave(
+                self._get_filepath(save_dir, frame, img_format),
+                self.get_image_array(),
+            )
 
     @staticmethod
     def frame_buffer_properties():
