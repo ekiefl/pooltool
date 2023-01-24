@@ -412,8 +412,6 @@ class ShotSaver(Interface):
 
         save_dir = self.make_save_dir(save_dir)
 
-        # -----------------------------
-
         # FIXME change when frames can be optional
         for frame in range(100):
 

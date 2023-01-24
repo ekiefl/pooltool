@@ -196,14 +196,13 @@ class ShotMode(BaseMode):
         tasks.remove("shared_task")
 
     def shot_view_task(self, task):
-
         if self.keymap[Action.close_scene]:
             player_cam.store_state("last_scene", overwrite=True)
             Global.base.messenger.send("close-scene")
             Global.mode_mgr.end_mode()
             Global.base.messenger.send("stop")
 
-        elif self.keymap[Action.aim] or not Global.shots.shot_animation.isPlaying():
+        elif self.keymap[Action.aim] or Global.shots.animation_finished:
             # Either the user has requested to start the next shot, or the animation has
             # finished
             Global.game.advance(Global.shots[-1])

@@ -555,6 +555,19 @@ class SystemCollectionRender(object):
         self.parallel = False
         self.paused = False
 
+    @property
+    def animation_finished(self):
+        """Returns whether or not the animation is finished
+
+        Returns true if the animation has stopped and it's not because the game has been
+        paused. The animation is never finished if it's playing in a loop.
+        """
+
+        if not self.shot_animation.isPlaying() and not self.paused:
+            return True
+        else:
+            return False
+
     def set_animation(self):
         if self.parallel:
             self.shot_animation = Parallel()
