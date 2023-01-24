@@ -334,10 +334,8 @@ class ShotSaver(Interface):
         Interface.__init__(self, config=config)
         self.init_image_texture()
 
-        # Global.clock.setMode(ClockObject.MNonRealTime)
-
-        # FIXME after doing rid of entering ShotMode this can be removed
-        Global.mode_mgr.modes[Mode.shot].view_only = True
+        Global.clock.setMode(ClockObject.MLimited)
+        Global.clock.setFrameRate(1000)
 
     def init_image_texture(self):
         self.tex = Texture()
@@ -364,6 +362,9 @@ class ShotSaver(Interface):
 
     def _init_system_collection(self, shot):
         """Create system collection holding the shot. Register to Global"""
+        if not shot.continuized:
+            shot.continuize()
+
         Global.register_shots(SystemCollection())
         Global.shots.append(shot)
         if Global.shots.active is None:
@@ -404,19 +405,16 @@ class ShotSaver(Interface):
         else:
             hud.destroy()
 
-        params = dict(
-            init_animations=True,
-        )
-        Global.mode_mgr.update_event_baseline()
-        Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
-
         save_dir = self.make_save_dir(save_dir)
 
-        # FIXME change when frames can be optional
-        for frame in range(100):
+        # Set quaternions for each ball
+        for ball in Global.shots.active.balls.values():
+            ball.set_quats()
 
-            # FIXME check first frame image. Is it really the first or should this go at
-            # the end of the loop?
+        for frame in range(frames):
+            for ball in Global.shots.active.balls.values():
+                ball.set_render_state_from_history(frame)
+
             Global.task_mgr.step()
 
             plt.imsave(
