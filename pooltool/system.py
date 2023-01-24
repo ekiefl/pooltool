@@ -27,6 +27,7 @@ from pooltool.evolution import EvolveShotEventBased
 from pooltool.objects.ball import BallHistory, ball_from_dict
 from pooltool.objects.cue import cue_from_dict
 from pooltool.objects.table import table_from_dict
+from pooltool.utils.strenum import StrEnum, auto
 
 
 class SystemHistory(object):
@@ -199,6 +200,11 @@ class SystemHistory(object):
         self.continuized = True
 
 
+class PlaybackMode(StrEnum):
+    LOOP = auto()
+    SINGLE = auto()
+
+
 class SystemRender(object):
     def __init__(self):
         self.reset_animation()
@@ -244,25 +250,28 @@ class SystemRender(object):
                 HideInterval(self.cue.get_node("cue_stick")),
             )
             self.shot_animation = Sequence(
+                Func(self.restart_ball_animations),
                 self.stroke_animation,
                 self.ball_animations,
                 Wait(trailing_buffer),
-                Func(self.restart_ball_animations),
             )
         else:
             self.cue.hide_nodes()
             self.stroke_animation = None
             self.shot_animation = Sequence(
+                Func(self.restart_ball_animations),
                 self.ball_animations,
                 Wait(trailing_buffer),
-                Func(self.restart_ball_animations),
             )
 
-    def loop_animation(self):
+    def start_animation(self, playback_mode: PlaybackMode):
         if self.shot_animation is None:
             raise Exception("First call SystemRender.init_shot_animation()")
 
-        self.shot_animation.loop()
+        if playback_mode == PlaybackMode.SINGLE:
+            self.shot_animation.start()
+        elif playback_mode == PlaybackMode.LOOP:
+            self.shot_animation.loop()
 
     def restart_animation(self):
         self.shot_animation.set_t(0)
@@ -575,8 +584,11 @@ class SystemCollectionRender(object):
             self.active.init_shot_animation()
             self.shot_animation = self.active.shot_animation
 
-    def loop_animation(self):
-        self.shot_animation.loop()
+    def start_animation(self, playback_mode: PlaybackMode):
+        if playback_mode == PlaybackMode.SINGLE:
+            self.shot_animation.start()
+        elif playback_mode == PlaybackMode.LOOP:
+            self.shot_animation.loop()
 
     def skip_stroke(self):
         stroke = self.active.stroke_animation
@@ -615,7 +627,7 @@ class SystemCollectionRender(object):
             self.set_animation()
 
         if not self.paused:
-            self.loop_animation()
+            self.start_animation(PlaybackMode.LOOP)
 
     def toggle_pause(self):
         if self.shot_animation.isPlaying():
@@ -651,7 +663,7 @@ class SystemCollectionRender(object):
         self.shot_animation.setPlayRate(factor * self.shot_animation.getPlayRate())
 
         if not self.paused:
-            self.loop_animation()
+            self.resume_animation()
 
         self.shot_animation.set_t(curr_time / factor)
 

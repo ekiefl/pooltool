@@ -13,6 +13,7 @@ from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.objects.ball import Ball
 from pooltool.objects.cue import cue_avoid
+from pooltool.system import PlaybackMode
 
 
 class ShotMode(BaseMode):
@@ -47,14 +48,14 @@ class ShotMode(BaseMode):
         Parameters
         ==========
         init_animations : bool, False
-            If True, the shot animations are built and looped via
-            SystemCollection.init_animation() and SystemCollection.loop_animation()
+            If True, the shot animations are built and played via
+            SystemCollection.init_animation() and SystemCollection.start_animation()
         """
         mouse.mode(MouseMode.RELATIVE)
 
         if init_animations:
             Global.shots.set_animation()
-            Global.shots.loop_animation()
+            Global.shots.start_animation(PlaybackMode.SINGLE)
             Global.shots.skip_stroke()
 
         player_cam.scale_focus()
@@ -195,13 +196,16 @@ class ShotMode(BaseMode):
         tasks.remove("shared_task")
 
     def shot_view_task(self, task):
+
         if self.keymap[Action.close_scene]:
             player_cam.store_state("last_scene", overwrite=True)
             Global.base.messenger.send("close-scene")
             Global.mode_mgr.end_mode()
             Global.base.messenger.send("stop")
 
-        elif self.keymap[Action.aim]:
+        elif self.keymap[Action.aim] or not Global.shots.shot_animation.isPlaying():
+            # Either the user has requested to start the next shot, or the animation has
+            # finished
             Global.game.advance(Global.shots[-1])
             if Global.game.game_over:
                 Global.mode_mgr.change_mode(Mode.game_over)
@@ -221,7 +225,7 @@ class ShotMode(BaseMode):
 
     def shot_animation_task(self, task):
         if self.keymap[Action.restart_ani]:
-            Global.shots.restart_animation()
+            Global.shots.start_animation(PlaybackMode.LOOP)
 
         elif self.keymap[Action.rewind]:
             Global.shots.rewind()
@@ -283,6 +287,7 @@ class ShotMode(BaseMode):
         return task.cont
 
     def change_animation(self, shot_index):
+        """Switch to a different system in the system collection"""
         # Switch shots
         Global.shots.clear_animation()
         Global.shots.active.teardown()
@@ -291,7 +296,10 @@ class ShotMode(BaseMode):
 
         # Initialize the animation
         Global.shots.set_animation()
-        Global.shots.loop_animation()
+
+        # Changing to a different shot is considered advanced maneuvering, so we enter
+        # loop mode.
+        Global.shots.start_animation(PlaybackMode.LOOP)
 
         # A lot of dumb things to make the cue track the initial position of the ball
         dummy = Ball("dummy")

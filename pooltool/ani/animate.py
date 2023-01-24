@@ -223,6 +223,8 @@ class Interface(ShowBase):
 
 
 class ShotViewer(Interface):
+    """An interface for viewing shots from within a python script"""
+
     def __init__(self, config=ShowBaseConfig.default()):
         Interface.__init__(self, config=config)
         self.create_standby_screen()
@@ -314,19 +316,26 @@ class ShotViewer(Interface):
         Global.task_mgr.stop()
 
 
+class ImageFormat(StrEnum):
+    PNG = auto()
+    JPG = auto()
+
+
 class ShotSaver(Interface):
+    """An interface for saving shots as series of images"""
+
     def __init__(self, config=None):
         if config is None:
             config = ShowBaseConfig(
                 window_type="offscreen",
-                window_size=(1280, 720),
+                window_size=(230, 144),
                 monitor=False,
                 fb_prop=self.frame_buffer_properties(),
             )
 
         Interface.__init__(self, config=config)
 
-        self.init_texture()
+        self.init_image_texture()
 
         self.save_dir = None
         self.img_frame = 0
@@ -369,7 +378,7 @@ class ShotSaver(Interface):
         return task.cont
 
     def _get_next_filepath(self):
-        return f"{self.save_dir}/frame_{self.img_frame:05d}.jpg"
+        return f"{self.save_dir}/frame_{self.img_frame:05d}.png"
 
     def make_save_dir(self, save_dir: Union[str, Path]):
         self.save_dir = Path(save_dir)
@@ -379,14 +388,19 @@ class ShotSaver(Interface):
 
         self.save_dir.mkdir()
 
-    def init_texture(self):
+    def init_image_texture(self):
         self.tex = Texture()
 
         Global.base.win.addRenderTexture(
             self.tex, GraphicsOutput.RTMCopyRam, GraphicsOutput.RTPColor
         )
 
-    def save(self, shot: System, save_dir: Union[str, Path]):
+    def save(
+        self,
+        shot: System,
+        save_dir: Union[str, Path],
+        img_format: ImageFormat = ImageFormat.PNG,
+    ):
         Global.register_shots(SystemCollection())
         Global.shots.append(shot)
         if Global.shots.active is None:

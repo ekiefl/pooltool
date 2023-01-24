@@ -258,6 +258,7 @@ class ViewMode(BaseMode):
         hud.update_cue(Global.shots.active.cue)
 
     def change_animation(self, shot_index):
+        """Switch to a different system in the system collection"""
         # Switch shots
         Global.shots.clear_animation()
         Global.shots.active.teardown()
@@ -266,7 +267,10 @@ class ViewMode(BaseMode):
 
         # Initialize the animation
         Global.shots.set_animation()
-        Global.shots.loop_animation()
+
+        # Changing to a different shot is considered advanced maneuvering, so we enter
+        # loop mode.
+        Global.shots.start_animation(PlaybackMode.LOOP)
 
         # A lot of dumb things to make the cue track the initial position of the ball
         dummy = Ball("dummy")
