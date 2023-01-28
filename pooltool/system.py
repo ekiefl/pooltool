@@ -96,23 +96,19 @@ class SystemHistory(object):
 
         self.events.append(event)
 
-    def continuize(self, dt=0.01):
-        """Create BallHistory for each ball with timepoints _inbetween_ events
+    def continuize_old(self, dt=0.01):
+        """Old way to continuize
 
-        Attaches BallHistory to respective ball
+        Keeping this in the codebase until I'm happy with the new way.
 
         Notes
         =====
         - This does not create uniform time spacings between shots. For example, all
           events are sandwiched between two time points, one immediately before the
-          event, and one immediately after.  This ensures that during lerp (linear
-          interpolation) operations, the event is never interpolated over with any
-          significant amount of time.
-        - FIXME This is a very inefficient function that could be radically sped up if
-          physics.evolve_ball_motion and/or its functions had vectorized operations for
-          arrays of time values.
-        - FIXME This function doesn't do a good job. Reduce dt to 0.1 and see the
-          results...
+          event, and one immediately after. I used to think this cleaned up the LERP
+          (linear interpolation) motions, but now I think the very small time between
+          events actually leads to ball appearances to momentarily pass through the
+          cushion.
         """
         for ball in self.balls.values():
             # Create a new history
@@ -191,6 +187,100 @@ class SystemHistory(object):
                 )
 
                 cts_history.add(rvw, s, next_event.time - c.tol)
+
+            # Attach the newly created history to the ball, overwriting the existing
+            # history
+            ball.attach_history_cts(cts_history)
+            ball.history_cts.vectorize()
+
+        self.continuized = True
+
+    def continuize(self, dt=0.01):
+        """Create BallHistory for each ball with many timepoints
+
+        Notes
+        =====
+        - This creates uniformly spaced timepoints.
+        - All balls share the same timepoints.
+        - FIXME This is a very inefficient function that could be radically sped up if
+          physics.evolve_ball_motion and/or its functions had vectorized operations for
+          arrays of time values.
+        """
+        for ball in self.balls.values():
+            # Create a new history and add the zeroth event
+            cts_history = BallHistory()
+            rvw, s = ball.history.rvw[0], ball.history.s[0]
+            cts_history.add(rvw, s, 0)
+
+            # Get all events that the ball is involved in, even the NonEvent events that
+            # mark the start and end times
+            events = self.events.filter_ball(ball, keep_nonevent=True)
+
+            # Tracks which event is currently being handled
+            event_counter = 0
+
+            # The elapsed simulation time (as of the last timepoint)
+            elapsed = 0
+
+            # How many timestamps do we need?
+            num_timestamps = int(events[-1].time // dt)
+
+            for n in range(num_timestamps):
+
+                if events[event_counter + 1].time - elapsed > dt:
+                    # This is the easy case. There is no upcoming event so we simply
+                    # evolve the state an amount dt
+                    evolve_time = dt
+
+                else:
+                    # The next event (and perhaps an arbitrary number of subsequent
+                    # events) occurs before the next timestamp. Find the last event
+                    # between the current timestamp and the next timestamp. This will be
+                    # used as a launching point to simulate the ball state to the next
+                    # timestamp
+
+                    while True:
+                        event_counter += 1
+
+                        if events[event_counter + 1].time - elapsed > dt:
+                            # OK, we found the last event between the current timestamp
+                            # and the next timestamp. It is events[event_counter].
+                            break
+
+                    # We need to get the ball's outgoing state from the event. We'll
+                    # evolve the system from this state.
+                    if events[event_counter].event_class == class_transition:
+                        rvw, s = events[event_counter].agent_state_initial
+                    elif events[event_counter].event_class == class_collision:
+                        if ball == events[event_counter].agents[0]:
+                            rvw, s = events[event_counter].agent1_state_final
+                        else:
+                            rvw, s = events[event_counter].agent2_state_final
+                    else:
+                        raise NotImplementedError(
+                            f"Can't handle {events[event_counter]}"
+                        )
+
+                    # Since this event occurs between two timestamps, we won't be
+                    # evolving a full dt. Instead, we evolve this much:
+                    evolve_time = elapsed + dt - events[event_counter].time
+
+                # Whether it was the hard path or the easy path, the ball state is
+                # properly defined and we know how much we need to simulate.
+                rvw, s = physics.evolve_ball_motion(
+                    state=s,
+                    rvw=rvw,
+                    R=ball.R,
+                    m=ball.m,
+                    u_s=ball.u_s,
+                    u_sp=ball.u_sp,
+                    u_r=ball.u_r,
+                    g=ball.g,
+                    t=evolve_time,
+                )
+
+                cts_history.add(rvw, s, elapsed + dt)
+                elapsed += dt
 
             # Attach the newly created history to the ball, overwriting the existing
             # history
