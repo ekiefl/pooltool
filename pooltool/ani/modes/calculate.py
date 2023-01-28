@@ -6,7 +6,7 @@ import pooltool as pt
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
-from pooltool.ani.camera import player_cam
+from pooltool.ani.camera import camera
 from pooltool.ani.globals import Global
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
@@ -96,25 +96,25 @@ class CalculateMode(BaseMode):
         with mouse:
             s = -mouse.get_dy() * ani.zoom_sensitivity
 
-        player_cam.node.setPos(pt.autils.multiply_cw(player_cam.node.getPos(), 1 - s))
+        camera.node.setPos(pt.autils.multiply_cw(camera.node.getPos(), 1 - s))
 
     def move_camera_calculate(self):
         with mouse:
             dxp, dyp = mouse.get_dx(), mouse.get_dy()
 
-        h = player_cam.focus.getH() * np.pi / 180 + np.pi / 2
+        h = camera.focus.getH() * np.pi / 180 + np.pi / 2
         dx = dxp * np.cos(h) - dyp * np.sin(h)
         dy = dxp * np.sin(h) + dyp * np.cos(h)
 
-        player_cam.focus.setX(player_cam.focus.getX() + dx * ani.move_sensitivity)
-        player_cam.focus.setY(player_cam.focus.getY() + dy * ani.move_sensitivity)
+        camera.focus.setX(camera.focus.getX() + dx * ani.move_sensitivity)
+        camera.focus.setY(camera.focus.getY() + dy * ani.move_sensitivity)
 
     def rotate_camera_calculate(self):
         fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
 
         with mouse:
-            alpha_x = player_cam.focus.getH() - fx * mouse.get_dx()
-            alpha_y = max(min(0, player_cam.focus.getR() + fy * mouse.get_dy()), -90)
+            alpha_x = camera.focus.getH() - fx * mouse.get_dx()
+            alpha_y = max(min(0, camera.focus.getR() + fy * mouse.get_dy()), -90)
 
-        player_cam.focus.setH(alpha_x)  # Move view laterally
-        player_cam.focus.setR(alpha_y)  # Move view vertically
+        camera.focus.setH(alpha_x)  # Move view laterally
+        camera.focus.setR(alpha_y)  # Move view vertically

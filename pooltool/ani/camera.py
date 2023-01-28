@@ -56,8 +56,8 @@ class PlayerCam:
         zoomed in or out the camera is.
         """
         # `dist` is the distance from the camera to the focus object and is equivalent
-        # to: cam_pos, focus_pos = player_cam.node.getPos(render),
-        # player_cam.focus_object.getPos(render) dist = (cam_pos -
+        # to: cam_pos, focus_pos = camera.node.getPos(render),
+        # camera.focus_object.getPos(render) dist = (cam_pos -
         # focus_pos).length()
         dist = self.node.getX()
         self.focus_object.setScale(0.002 * dist)
@@ -105,4 +105,4 @@ class PlayerCam:
         return True if name in self.states else False
 
 
-player_cam = PlayerCam()
+camera = PlayerCam()

@@ -8,7 +8,7 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.constants as c
 from pooltool.ani.action import Action
-from pooltool.ani.camera import player_cam
+from pooltool.ani.camera import camera
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
@@ -97,7 +97,7 @@ class BallInHandMode(BaseMode):
                 self.keymap["next"] = False
                 if self.grabbed_ball:
                     self.picking = "placement"
-                    player_cam.update_focus(self.grab_ball_node.getPos())
+                    camera.update_focus(self.grab_ball_node.getPos())
                     BallInHandMode.remove_grab_selection_highlight(self)
                     BallInHandMode.add_transparent_ball(self)
 
@@ -132,7 +132,7 @@ class BallInHandMode(BaseMode):
         return True
 
     def move_grabbed_ball(self):
-        x, y = player_cam.focus.getX(), player_cam.focus.getY()
+        x, y = camera.focus.getX(), camera.focus.getY()
 
         self.grab_ball_node.setX(x)
         self.grab_ball_node.setY(y)
@@ -192,7 +192,7 @@ class BallInHandMode(BaseMode):
         self.trans_ball = None
 
     def find_closest_ball(self):
-        cam_pos = player_cam.focus.getPos()
+        cam_pos = camera.focus.getPos()
         d_min = np.inf
         closest = None
         for ball in Global.shots.active.balls.values():
@@ -210,9 +210,9 @@ class BallInHandMode(BaseMode):
         with mouse:
             dxp, dyp = mouse.get_dx(), mouse.get_dy()
 
-        h = player_cam.focus.getH() * np.pi / 180 + np.pi / 2
+        h = camera.focus.getH() * np.pi / 180 + np.pi / 2
         dx = dxp * np.cos(h) - dyp * np.sin(h)
         dy = dxp * np.sin(h) + dyp * np.cos(h)
 
-        player_cam.focus.setX(player_cam.focus.getX() + dx * ani.move_sensitivity)
-        player_cam.focus.setY(player_cam.focus.getY() + dy * ani.move_sensitivity)
+        camera.focus.setX(camera.focus.getX() + dx * ani.move_sensitivity)
+        camera.focus.setY(camera.focus.getY() + dy * ani.move_sensitivity)
