@@ -10,7 +10,7 @@ import pooltool as pt
 
 
 def main(args):
-    interface = pt.ShotSaver()
+    interface = pt.ImageSaver()
 
     if args.seed:
         np.random.seed(args.seed)

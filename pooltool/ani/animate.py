@@ -321,7 +321,7 @@ class ImageFormat(StrEnum):
     JPG = auto()
 
 
-class ShotSaver(Interface):
+class ImageSaver(Interface):
     """An interface for saving shots as series of images"""
 
     def __init__(self, config=None):
