@@ -200,12 +200,24 @@ class SystemHistory(object):
 
         Notes
         =====
-        - This creates uniformly spaced timepoints.
         - All balls share the same timepoints.
+        - All timepoints are uniformly spaced.
+        - FIXME There exists no timepoint for the final state of the system (t_f). The
+          time difference between t_f and the last timepoint is less than dt. This could
+          be improved by providing an optional like `include_final`, or perhaps the
+          default behavior could be to add one more timepoint that is dt away from the
+          current implementation's last time point, and set the ball state to the final
+          state.  This latter idea achieves both uniformly spaced timepoints and
+          physical accuracy (the system ends in a 0 energy state, rather than an
+          _almost_ 0 energy state)
         - FIXME This is a very inefficient function that could be radically sped up if
           physics.evolve_ball_motion and/or its functions had vectorized operations for
           arrays of time values.
         """
+
+        # This is the exact number of timepoints that the ball histories will contain
+        num_timestamps = int(self.events[-1].time // dt) + 1
+
         for ball in self.balls.values():
             # Create a new history and add the zeroth event
             cts_history = BallHistory()
@@ -222,10 +234,13 @@ class SystemHistory(object):
             # The elapsed simulation time (as of the last timepoint)
             elapsed = 0
 
-            # How many timestamps do we need?
-            num_timestamps = int(events[-1].time // dt)
-
             for n in range(num_timestamps):
+
+                if n == (num_timestamps - 1):
+                    # We made it to the end. the difference between the final time and
+                    # the elapsed time should be < dt
+                    assert events[-1].time - elapsed < dt
+                    break
 
                 if events[event_counter + 1].time - elapsed > dt:
                     # This is the easy case. There is no upcoming event so we simply

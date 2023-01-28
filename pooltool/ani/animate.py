@@ -362,9 +362,6 @@ class ShotSaver(Interface):
 
     def _init_system_collection(self, shot):
         """Create system collection holding the shot. Register to Global"""
-        if not shot.continuized:
-            shot.continuize()
-
         Global.register_shots(SystemCollection())
         Global.shots.append(shot)
         if Global.shots.active is None:
@@ -390,10 +387,11 @@ class ShotSaver(Interface):
         shot: System,
         save_dir: Union[str, Path],
         size: Tuple[int, int] = (230, 144),
-        img_format: ImageFormat = ImageFormat.PNG,
+        img_format: ImageFormat = ImageFormat.JPG,
         show_hud: bool = False,
-        frames: Optional[int] = 400,
+        fps: float = 30.0,
     ):
+        shot.continuize(dt=1 / fps)
 
         self._init_system_collection(shot)
         self._resize_window(size)
@@ -402,6 +400,7 @@ class ShotSaver(Interface):
         if show_hud:
             hud.init()
             hud.elements[HUDElement.help_text].help_hint.hide()
+            hud.update_cue(shot.cue)
         else:
             hud.destroy()
 
@@ -411,6 +410,7 @@ class ShotSaver(Interface):
         for ball in Global.shots.active.balls.values():
             ball.set_quats()
 
+        frames = int(shot.events[-1].time * fps) + 1
         for frame in range(frames):
             for ball in Global.shots.active.balls.values():
                 ball.set_render_state_from_history(frame)
