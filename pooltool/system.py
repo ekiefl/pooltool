@@ -96,105 +96,6 @@ class SystemHistory(object):
 
         self.events.append(event)
 
-    def continuize_old(self, dt=0.01):
-        """Old way to continuize
-
-        Keeping this in the codebase until I'm happy with the new way.
-
-        Notes
-        =====
-        - This does not create uniform time spacings between shots. For example, all
-          events are sandwiched between two time points, one immediately before the
-          event, and one immediately after. I used to think this cleaned up the LERP
-          (linear interpolation) motions, but now I think the very small time between
-          events actually leads to ball appearances to momentarily pass through the
-          cushion.
-        """
-        for ball in self.balls.values():
-            # Create a new history
-            cts_history = BallHistory()
-
-            # Add t=0
-            cts_history.add(ball.history.rvw[0], ball.history.s[0], 0)
-
-            events = self.events.filter_ball(ball, keep_nonevent=True)
-            for n in range(len(events) - 1):
-                curr_event = events[n]
-                next_event = events[n + 1]
-
-                dtau_E = next_event.time - curr_event.time
-                if not dtau_E:
-                    continue
-
-                # The first step is to establish the rvw and s states of the ball at the
-                # timepoint of curr_event, since all calculated timepoints between
-                # curr_event and next_event will be calculated by evolving from this
-                # state.
-                if curr_event.event_class == class_transition:
-                    rvw, s = curr_event.agent_state_initial
-                elif curr_event.event_class == class_collision:
-                    if ball == curr_event.agents[0]:
-                        rvw, s = curr_event.agent1_state_final
-                    else:
-                        rvw, s = curr_event.agent2_state_final
-                elif curr_event.event_class == class_none:
-                    # This is a special case that should happen only once. It is the
-                    # initial event, which contains no agents. We therefore grab rvw and
-                    # s from the ball's history.
-                    rvw, s = ball.history.rvw[0], ball.history.s[0]
-                else:
-                    raise NotImplementedError(
-                        f"SystemHistory.continuize :: event class "
-                        f"'{curr_event.event_class}' is not implemented"
-                    )
-
-                step = 0
-                while step < dtau_E:
-                    rvw, s = physics.evolve_ball_motion(
-                        state=s,
-                        rvw=rvw,
-                        R=ball.R,
-                        m=ball.m,
-                        u_s=ball.u_s,
-                        u_sp=ball.u_sp,
-                        u_r=ball.u_r,
-                        g=ball.g,
-                        t=dt,
-                    )
-
-                    cts_history.add(rvw, s, curr_event.time + step)
-                    step += dt
-
-                # By this point the history has been populated with equally spaced
-                # timesteps `dt` starting from curr_event.time up until--but not
-                # including--next_event.time.  There still exists a `remainder` of time
-                # that is strictly less than `dt`. I evolve the state this additional
-                # amount which gives the state of the system at the time of the next
-                # event. This makes sure there exists a timepoint precisely at each
-                # event, which is helpful for things like smooth, nonintersecting
-                # animations
-                remainder = dtau_E - step
-                rvw, s = physics.evolve_ball_motion(
-                    state=s,
-                    rvw=rvw,
-                    R=ball.R,
-                    m=ball.m,
-                    u_s=ball.u_s,
-                    u_sp=ball.u_sp,
-                    u_r=ball.u_r,
-                    g=ball.g,
-                    t=remainder,
-                )
-
-                cts_history.add(rvw, s, next_event.time - c.tol)
-
-            # Attach the newly created history to the ball, overwriting the existing
-            # history
-            ball.attach_history_cts(cts_history)
-            ball.history_cts.vectorize()
-
-        self.continuized = True
-
     def continuize(self, dt=0.01):
         """Create BallHistory for each ball with many timepoints
 
@@ -213,6 +114,8 @@ class SystemHistory(object):
         - FIXME This is a very inefficient function that could be radically sped up if
           physics.evolve_ball_motion and/or its functions had vectorized operations for
           arrays of time values.
+        - The old implementation of continuize can be found by looking at code before
+          the "save_movie" branch was merged into main
         """
 
         # This is the exact number of timepoints that the ball histories will contain
