@@ -394,6 +394,35 @@ class ShotSaver(Interface):
         fps: float = 30.0,
         make_gif: bool = False,
     ):
+        """Save a shot as a series of images
+
+        Args:
+            shot:
+                The shot you would like visualized. It should already by simulated (e.g.
+                shot.simulate()). It is OK if you have continuized the shot (you can
+                check with shot.continuized), but the continuization will be overwritten
+                to match the `fps` chosen in this method.
+            save_dir:
+                The directory that you would like to save the shots in. It must not
+                already exist.
+            file_prefix:
+                The image filenames will be prefixed with this string. By default, the
+                prefix is "shot".
+            size:
+                The number of pixels in x and y. If x:y != 1.6, the aspect ratio will
+                look distorted.
+            img_format:
+                The image format, e.g. "jpg".
+            show_hud:
+                If True, the HUD will appear in the images.
+            fps:
+                This is the rate (in frames per second) that an image of the shot is
+                taken.
+            make_gif:
+                If True, a GIF will be created in addition to the image files. The GIF
+                should play in realtime, however in practice this is only the case for
+                low res and low fps GIFs.
+        """
         shot.continuize(dt=1 / fps)
 
         self._init_system_collection(shot)
