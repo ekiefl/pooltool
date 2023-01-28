@@ -5,7 +5,7 @@ from panda3d.core import TransparencyAttrib
 from pooltool.ani.globals import Global, require_showbase
 
 
-class PlayerCam:
+class Camera:
     @require_showbase
     def init(self):
         self.node = Global.base.camera
@@ -75,7 +75,7 @@ class PlayerCam:
             if overwrite:
                 self.remove_state(name)
             else:
-                raise Exception(f"PlayerCam :: '{name}' is already a camera state")
+                raise Exception(f"Camera :: '{name}' is already a camera state")
 
         self.states[name] = self.get_state()
         self.last_state = name
@@ -85,7 +85,7 @@ class PlayerCam:
             if ok_if_not_exists:
                 return
             else:
-                raise Exception(f"PlayerCam :: '{name}' is not a camera state")
+                raise Exception(f"Camera :: '{name}' is not a camera state")
 
         self.node.setPos(self.states[name]["CamPos"])
         self.node.setHpr(self.states[name]["CamHpr"])
@@ -105,4 +105,4 @@ class PlayerCam:
         return True if name in self.states else False
 
 
-camera = PlayerCam()
+camera = Camera()
