@@ -8,11 +8,12 @@ import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
 from pooltool.ani.globals import Global
-from pooltool.ani.hud import HUDElement, hud
+from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
-from pooltool.ani.mouse import mouse
+from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.objects.ball import Ball
 from pooltool.objects.cue import cue_avoid
+from pooltool.system import PlaybackMode
 
 
 class ShotMode(BaseMode):
@@ -47,25 +48,19 @@ class ShotMode(BaseMode):
         Parameters
         ==========
         init_animations : bool, False
-            If True, the shot animations are built and looped via
-            SystemCollection.init_animation() and SystemCollection.loop_animation()
+            If True, the shot animations are built and played via
+            SystemCollection.init_animation() and SystemCollection.start_animation()
         """
-        mouse.hide()
-        mouse.relative()
-        mouse.track()
+        mouse.mode(MouseMode.RELATIVE)
 
         if init_animations:
             Global.shots.set_animation()
-            Global.shots.loop_animation()
+            Global.shots.start_animation(PlaybackMode.SINGLE)
             Global.shots.skip_stroke()
 
         player_cam.scale_focus()
 
-        hud.elements.get(HUDElement.english).set(
-            Global.shots.active.cue.a, Global.shots.active.cue.b
-        )
-        hud.elements.get(HUDElement.jack).set(Global.shots.active.cue.theta)
-        hud.elements.get(HUDElement.power).set(Global.shots.active.cue.V0)
+        hud.update_cue(Global.shots.active.cue)
 
         tasks.register_event("space", Global.shots.toggle_pause)
         tasks.register_event("arrow_up", Global.shots.speed_up)
@@ -167,10 +162,7 @@ class ShotMode(BaseMode):
             Global.shots.active.cue.set_render_state_as_object_state()
 
             # Set the HUD
-            V0, _, theta, a, b, _ = Global.shots.active.cue.get_render_state()
-            hud.elements.get(HUDElement.english).set(a, b)
-            hud.elements.get(HUDElement.jack).set(theta)
-            hud.elements.get(HUDElement.power).set(Global.shots.active.cue.V0)
+            hud.update_cue(Global.shots.active.cue)
 
         elif key == "reset":
             if Global.shots.parallel:
@@ -206,34 +198,33 @@ class ShotMode(BaseMode):
     def shot_view_task(self, task):
         if self.keymap[Action.close_scene]:
             player_cam.store_state("last_scene", overwrite=True)
-
             Global.base.messenger.send("close-scene")
             Global.mode_mgr.end_mode()
             Global.base.messenger.send("stop")
 
-        elif self.keymap[Action.aim]:
+        elif self.keymap[Action.aim] or Global.shots.animation_finished:
+            # Either the user has requested to start the next shot, or the animation has
+            # finished
             Global.game.advance(Global.shots[-1])
             if Global.game.game_over:
                 Global.mode_mgr.change_mode(Mode.game_over)
             else:
                 Global.mode_mgr.change_mode(Mode.aim, exit_kwargs=dict(key="advance"))
+
         elif self.keymap[Action.zoom]:
             self.zoom_camera_shot()
+
         elif self.keymap[Action.move]:
             self.move_camera_shot()
-        else:
-            if task.time > ani.rotate_downtime:
-                # Prevents shot follow through from moving camera
-                self.rotate_camera_shot()
-            else:
-                # Update mouse positions so there is not a big jump
-                mouse.touch()
+
+        elif mouse.initialized:
+            self.maybe_rotate_camera(task)
 
         return task.cont
 
     def shot_animation_task(self, task):
         if self.keymap[Action.restart_ani]:
-            Global.shots.restart_animation()
+            Global.shots.start_animation(PlaybackMode.LOOP)
 
         elif self.keymap[Action.rewind]:
             Global.shots.rewind()
@@ -271,11 +262,7 @@ class ShotMode(BaseMode):
             else:
                 Global.shots.set_active(shot_index)
                 Global.shots.highlight_system(shot_index)
-                hud.elements.get(HUDElement.english).set(
-                    Global.shots.active.cue.a, Global.shots.active.cue.b
-                )
-                hud.elements.get(HUDElement.jack).set(Global.shots.active.cue.theta)
-                hud.elements.get(HUDElement.power).set(Global.shots.active.cue.V0)
+                hud.update_cue(Global.shots.active.cue)
 
         elif self.keymap[Action.next_shot]:
             self.keymap[Action.next_shot] = False
@@ -294,15 +281,12 @@ class ShotMode(BaseMode):
             else:
                 Global.shots.set_active(shot_index)
                 Global.shots.highlight_system(shot_index)
-                hud.elements.get(HUDElement.english).set(
-                    Global.shots.active.cue.a, Global.shots.active.cue.b
-                )
-                hud.elements.get(HUDElement.jack).set(Global.shots.active.cue.theta)
-                hud.elements.get(HUDElement.power).set(Global.shots.active.cue.V0)
+                hud.update_cue(Global.shots.active.cue)
 
         return task.cont
 
     def change_animation(self, shot_index):
+        """Switch to a different system in the system collection"""
         # Switch shots
         Global.shots.clear_animation()
         Global.shots.active.teardown()
@@ -311,7 +295,10 @@ class ShotMode(BaseMode):
 
         # Initialize the animation
         Global.shots.set_animation()
-        Global.shots.loop_animation()
+
+        # Changing to a different shot is considered advanced maneuvering, so we enter
+        # loop mode.
+        Global.shots.start_animation(PlaybackMode.LOOP)
 
         # A lot of dumb things to make the cue track the initial position of the ball
         dummy = Ball("dummy")
@@ -327,11 +314,7 @@ class ShotMode(BaseMode):
         cue_avoid.init_collisions()
 
         # Set the HUD
-        hud.elements.get(HUDElement.english).set(
-            Global.shots.active.cue.a, Global.shots.active.cue.b
-        )
-        hud.elements.get(HUDElement.jack).set(Global.shots.active.cue.theta)
-        hud.elements.get(HUDElement.power).set(Global.shots.active.cue.V0)
+        hud.update_cue(Global.shots.active.cue)
 
     def zoom_camera_shot(self):
         with mouse:
@@ -351,7 +334,13 @@ class ShotMode(BaseMode):
         player_cam.focus.setX(player_cam.focus.getX() + dx * ani.move_sensitivity)
         player_cam.focus.setY(player_cam.focus.getY() + dy * ani.move_sensitivity)
 
-    def rotate_camera_shot(self):
+    def maybe_rotate_camera(self, task):
+        if task.time < ani.rotate_downtime:
+            # Shot follow through can move camera jarringly, so don't move camera if
+            # within the dwell time. But do touch the mouse so there is not a big jump
+            mouse.touch()
+            return
+
         fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
 
         with mouse:

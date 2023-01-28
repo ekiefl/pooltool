@@ -27,6 +27,7 @@ from pooltool.evolution import EvolveShotEventBased
 from pooltool.objects.ball import BallHistory, ball_from_dict
 from pooltool.objects.cue import cue_from_dict
 from pooltool.objects.table import table_from_dict
+from pooltool.utils.strenum import StrEnum, auto
 
 
 class SystemHistory(object):
@@ -96,87 +97,94 @@ class SystemHistory(object):
         self.events.append(event)
 
     def continuize(self, dt=0.01):
-        """Create BallHistory for each ball with timepoints _inbetween_ events
-
-        Attaches BallHistory to respective ball
+        """Create BallHistory for each ball with many timepoints
 
         Notes
         =====
-        - This does not create uniform time spacings between shots. For example, all
-          events are sandwiched between two time points, one immediately before the
-          event, and one immediately after.  This ensures that during lerp (linear
-          interpolation) operations, the event is never interpolated over with any
-          significant amount of time.
+        - All balls share the same timepoints.
+        - All timepoints are uniformly spaced.
+        - FIXME There exists no timepoint for the final state of the system (t_f). The
+          time difference between t_f and the last timepoint is less than dt. This could
+          be improved by providing an optional like `include_final`, or perhaps the
+          default behavior could be to add one more timepoint that is dt away from the
+          current implementation's last time point, and set the ball state to the final
+          state.  This latter idea achieves both uniformly spaced timepoints and
+          physical accuracy (the system ends in a 0 energy state, rather than an
+          _almost_ 0 energy state)
         - FIXME This is a very inefficient function that could be radically sped up if
           physics.evolve_ball_motion and/or its functions had vectorized operations for
           arrays of time values.
-        - FIXME This function doesn't do a good job. Reduce dt to 0.1 and see the
-          results...
+        - The old implementation of continuize can be found by looking at code before
+          the "save_movie" branch was merged into main
         """
+
+        # This is the exact number of timepoints that the ball histories will contain
+        num_timestamps = int(self.events[-1].time // dt) + 1
+
         for ball in self.balls.values():
-            # Create a new history
+            # Create a new history and add the zeroth event
             cts_history = BallHistory()
+            rvw, s = ball.history.rvw[0], ball.history.s[0]
+            cts_history.add(rvw, s, 0)
 
-            # Add t=0
-            cts_history.add(ball.history.rvw[0], ball.history.s[0], 0)
-
+            # Get all events that the ball is involved in, even the NonEvent events that
+            # mark the start and end times
             events = self.events.filter_ball(ball, keep_nonevent=True)
-            for n in range(len(events) - 1):
-                curr_event = events[n]
-                next_event = events[n + 1]
 
-                dtau_E = next_event.time - curr_event.time
-                if not dtau_E:
-                    continue
+            # Tracks which event is currently being handled
+            event_counter = 0
 
-                # The first step is to establish the rvw and s states of the ball at the
-                # timepoint of curr_event, since all calculated timepoints between
-                # curr_event and next_event will be calculated by evolving from this
-                # state.
-                if curr_event.event_class == class_transition:
-                    rvw, s = curr_event.agent_state_initial
-                elif curr_event.event_class == class_collision:
-                    if ball == curr_event.agents[0]:
-                        rvw, s = curr_event.agent1_state_final
-                    else:
-                        rvw, s = curr_event.agent2_state_final
-                elif curr_event.event_class == class_none:
-                    # This is a special case that should happen only once. It is the
-                    # initial event, which contains no agents. We therefore grab rvw and
-                    # s from the ball's history.
-                    rvw, s = ball.history.rvw[0], ball.history.s[0]
+            # The elapsed simulation time (as of the last timepoint)
+            elapsed = 0
+
+            for n in range(num_timestamps):
+
+                if n == (num_timestamps - 1):
+                    # We made it to the end. the difference between the final time and
+                    # the elapsed time should be < dt
+                    assert events[-1].time - elapsed < dt
+                    break
+
+                if events[event_counter + 1].time - elapsed > dt:
+                    # This is the easy case. There is no upcoming event so we simply
+                    # evolve the state an amount dt
+                    evolve_time = dt
+
                 else:
-                    raise NotImplementedError(
-                        f"SystemHistory.continuize :: event class "
-                        f"'{curr_event.event_class}' is not implemented"
-                    )
+                    # The next event (and perhaps an arbitrary number of subsequent
+                    # events) occurs before the next timestamp. Find the last event
+                    # between the current timestamp and the next timestamp. This will be
+                    # used as a launching point to simulate the ball state to the next
+                    # timestamp
 
-                step = 0
-                while step < dtau_E:
-                    rvw, s = physics.evolve_ball_motion(
-                        state=s,
-                        rvw=rvw,
-                        R=ball.R,
-                        m=ball.m,
-                        u_s=ball.u_s,
-                        u_sp=ball.u_sp,
-                        u_r=ball.u_r,
-                        g=ball.g,
-                        t=dt,
-                    )
+                    while True:
+                        event_counter += 1
 
-                    cts_history.add(rvw, s, curr_event.time + step)
-                    step += dt
+                        if events[event_counter + 1].time - elapsed > dt:
+                            # OK, we found the last event between the current timestamp
+                            # and the next timestamp. It is events[event_counter].
+                            break
 
-                # By this point the history has been populated with equally spaced
-                # timesteps `dt` starting from curr_event.time up until--but not
-                # including--next_event.time.  There still exists a `remainder` of time
-                # that is strictly less than `dt`. I evolve the state this additional
-                # amount which gives the state of the system at the time of the next
-                # event. This makes sure there exists a timepoint precisely at each
-                # event, which is helpful for things like smooth, nonintersecting
-                # animations
-                remainder = dtau_E - step
+                    # We need to get the ball's outgoing state from the event. We'll
+                    # evolve the system from this state.
+                    if events[event_counter].event_class == class_transition:
+                        rvw, s = events[event_counter].agent_state_initial
+                    elif events[event_counter].event_class == class_collision:
+                        if ball == events[event_counter].agents[0]:
+                            rvw, s = events[event_counter].agent1_state_final
+                        else:
+                            rvw, s = events[event_counter].agent2_state_final
+                    else:
+                        raise NotImplementedError(
+                            f"Can't handle {events[event_counter]}"
+                        )
+
+                    # Since this event occurs between two timestamps, we won't be
+                    # evolving a full dt. Instead, we evolve this much:
+                    evolve_time = elapsed + dt - events[event_counter].time
+
+                # Whether it was the hard path or the easy path, the ball state is
+                # properly defined and we know how much we need to simulate.
                 rvw, s = physics.evolve_ball_motion(
                     state=s,
                     rvw=rvw,
@@ -186,10 +194,11 @@ class SystemHistory(object):
                     u_sp=ball.u_sp,
                     u_r=ball.u_r,
                     g=ball.g,
-                    t=remainder,
+                    t=evolve_time,
                 )
 
-                cts_history.add(rvw, s, next_event.time - c.tol)
+                cts_history.add(rvw, s, elapsed + dt)
+                elapsed += dt
 
             # Attach the newly created history to the ball, overwriting the existing
             # history
@@ -197,6 +206,11 @@ class SystemHistory(object):
             ball.history_cts.vectorize()
 
         self.continuized = True
+
+
+class PlaybackMode(StrEnum):
+    LOOP = auto()
+    SINGLE = auto()
 
 
 class SystemRender(object):
@@ -244,25 +258,28 @@ class SystemRender(object):
                 HideInterval(self.cue.get_node("cue_stick")),
             )
             self.shot_animation = Sequence(
+                Func(self.restart_ball_animations),
                 self.stroke_animation,
                 self.ball_animations,
                 Wait(trailing_buffer),
-                Func(self.restart_ball_animations),
             )
         else:
             self.cue.hide_nodes()
             self.stroke_animation = None
             self.shot_animation = Sequence(
+                Func(self.restart_ball_animations),
                 self.ball_animations,
                 Wait(trailing_buffer),
-                Func(self.restart_ball_animations),
             )
 
-    def loop_animation(self):
+    def start_animation(self, playback_mode: PlaybackMode):
         if self.shot_animation is None:
             raise Exception("First call SystemRender.init_shot_animation()")
 
-        self.shot_animation.loop()
+        if playback_mode == PlaybackMode.SINGLE:
+            self.shot_animation.start()
+        elif playback_mode == PlaybackMode.LOOP:
+            self.shot_animation.loop()
 
     def restart_animation(self):
         self.shot_animation.set_t(0)
@@ -327,6 +344,7 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
         SystemRender.__init__(self)
         EvolveShotEventBased.__init__(self)
 
+        # FIXME use classmethods/staticmethods for path and d routes
         if path and (cue or table or balls):
             raise ConfigError(
                 "System :: if path provided, cue, table, and balls must be None"
@@ -545,6 +563,19 @@ class SystemCollectionRender(object):
         self.parallel = False
         self.paused = False
 
+    @property
+    def animation_finished(self):
+        """Returns whether or not the animation is finished
+
+        Returns true if the animation has stopped and it's not because the game has been
+        paused. The animation is never finished if it's playing in a loop.
+        """
+
+        if not self.shot_animation.isPlaying() and not self.paused:
+            return True
+        else:
+            return False
+
     def set_animation(self):
         if self.parallel:
             self.shot_animation = Parallel()
@@ -574,8 +605,11 @@ class SystemCollectionRender(object):
             self.active.init_shot_animation()
             self.shot_animation = self.active.shot_animation
 
-    def loop_animation(self):
-        self.shot_animation.loop()
+    def start_animation(self, playback_mode: PlaybackMode):
+        if playback_mode == PlaybackMode.SINGLE:
+            self.shot_animation.start()
+        elif playback_mode == PlaybackMode.LOOP:
+            self.shot_animation.loop()
 
     def skip_stroke(self):
         stroke = self.active.stroke_animation
@@ -614,7 +648,7 @@ class SystemCollectionRender(object):
             self.set_animation()
 
         if not self.paused:
-            self.loop_animation()
+            self.start_animation(PlaybackMode.LOOP)
 
     def toggle_pause(self):
         if self.shot_animation.isPlaying():
@@ -650,7 +684,7 @@ class SystemCollectionRender(object):
         self.shot_animation.setPlayRate(factor * self.shot_animation.getPlayRate())
 
         if not self.paused:
-            self.loop_animation()
+            self.resume_animation()
 
         self.shot_animation.set_t(curr_time / factor)
 

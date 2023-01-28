@@ -14,13 +14,16 @@ from direct.interval.IntervalGlobal import (
 from panda3d.core import CardMaker, NodePath, TextNode, TransparencyAttrib
 
 import pooltool.ani as ani
+import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 from pooltool.ani.globals import Global
+from pooltool.objects.cue import Cue
 from pooltool.utils import panda_path
 from pooltool.utils.strenum import StrEnum, auto
 
 
 class HUDElement(StrEnum):
+    help_text = auto()
     logo = auto()
     log_win = auto()
     english = auto()
@@ -32,14 +35,13 @@ class HUDElement(StrEnum):
 class HUD:
     def __init__(self):
         self.elements = None
+        self.initialized = False
 
     def init(self):
-        """Initialize HUD elements and return HUD update task
-
-        It is assumed that if this is being called, ShowBase has been initialized.
-        """
+        """Initialize HUD elements and start the HUD update task"""
 
         self.elements = {
+            HUDElement.help_text: Help(),
             HUDElement.logo: Logo(),
             HUDElement.log_win: LogWindow(),
             HUDElement.english: English(),
@@ -51,24 +53,44 @@ class HUD:
         for element in self.elements.values():
             element.init()
 
-        return self.update_hud
+        self.initialized = True
+        tasks.add(self.update_hud, "update_hud")
 
     def destroy(self):
+        if not self.initialized:
+            return
+
         for element in self.elements.values():
             element.destroy()
 
-    def hide_hud_element(self, element):
-        assert element in self.elements
-        self.elements["element"].hide()
+        self.initialized = False
+        tasks.remove("update_hud")
 
-    def show_hud_element(self, element):
-        assert element in self.elements
-        self.elements["element"].show()
+    def toggle_help(self):
+        if not self.initialized:
+            return
+        self.elements[HUDElement.help_text].toggle()
+
+    def update_cue(self, cue: Cue):
+        """Update HUD to reflect english, jack, and power of cue
+
+        Returns silently if HUD is not initialized.
+        """
+
+        if not self.initialized:
+            return
+
+        self.elements[HUDElement.english].set(cue.a, cue.b)
+        self.elements[HUDElement.jack].set(cue.theta)
+        self.elements[HUDElement.power].set(cue.V0)
 
     def update_hud(self, task):
         if Global.game is not None:
             self.update_log_window()
             self.update_player_stats()
+
+        if (help_hint := self.elements[HUDElement.help_text].help_hint).is_hidden():
+            help_hint.show()
 
         return task.cont
 
@@ -123,6 +145,102 @@ class BaseHUDElement(ABC):
     @abstractmethod
     def destroy(self):
         pass
+
+
+class Help(BaseHUDElement):
+    def __init__(self):
+        self.row_num = 0
+
+    def init(self):
+        self.destroy()
+
+        self.help_hint = OnscreenText(
+            text="Press 'h' to toggle help",
+            pos=(-1.55, 0.93),
+            scale=ani.menu_text_scale * 0.9,
+            fg=(1, 1, 1, 1),
+            align=TextNode.ALeft,
+            parent=Global.aspect2d,
+        )
+
+        self.help_node = Global.aspect2d.attachNewNode("help")
+
+        def add(msg, title=False):
+            pos = 0.06 * self.row_num
+            text = OnscreenText(
+                text=msg,
+                style=1,
+                fg=(1, 1, 1, 1),
+                parent=Global.base.a2dTopLeft,
+                align=TextNode.ALeft,
+                pos=(-1.45 if not title else -1.55, 0.85 - pos),
+                scale=ani.menu_text_scale if title else 0.7 * ani.menu_text_scale,
+            )
+            text.reparentTo(self.help_node)
+            self.row_num += 1
+
+        add("Exit", True)
+        add("Leave - [escape]")
+
+        add("Camera controls", True)
+        add("Rotate - [mouse]")
+        add("Pan - [hold v + mouse]")
+        add("Zoom - [hold left-click + mouse]")
+
+        add("Aim controls", True)
+        add("Enter aim mode - [a]")
+        add("Apply english - [hold e + mouse]")
+        add("Elevate cue - [hold b + mouse]")
+        add("Precise aiming - [hold f + mouse]")
+        add("Raise head - [hold t + mouse]")
+
+        add("Shot controls", True)
+        add("Stroke - [hold s] (move mouse down then up)")
+        add("Take next shot - [a]")
+        add("Undo shot - [z]")
+        add("Replay shot - [r]")
+        add("Pause shot - [space]")
+        add("Rewind - [hold left-arrow]")
+        add("Fast forward - [hold right-arrow]")
+        add("Slow down - [down-arrow]")
+        add("Speed up - [up-arrow]")
+
+        add("Other controls", True)
+        add(
+            "Cue different ball - [hold q] (select with mouse, click to confirm)",
+        )
+        add(
+            "Move ball - [hold g] (click once to select ball, move with mouse, "
+            "then click to confirm move",
+        )
+
+        self.display = False
+        self.help_hint.hide()
+        self.help_node.hide()
+
+    def destroy(self):
+        if hasattr(self, "help_hint"):
+            self.help_hint.hide()
+            del self.help_hint
+
+        if hasattr(self, "help_node"):
+            self.help_node.hide()
+            del self.help_node
+
+    def show(self):
+        self.help_hint.show()
+        if self.display:
+            self.help_node.show()
+
+    def hide(self):
+        self.help_node.hide()
+        self.help_hint.hide()
+
+    def toggle(self):
+        if self.help_node.is_hidden():
+            self.help_node.show()
+        else:
+            self.help_node.hide()
 
 
 class PlayerStats(BaseHUDElement):
@@ -270,9 +388,6 @@ class Power(NodePath, BaseHUDElement):
     """
 
     def __init__(self, min_strike=0.05, max_strike=7):
-        self.min_strike = min_strike
-        self.max_strike = max_strike
-
         BaseHUDElement.__init__(self)
         self.text_scale = 0.11
         self.text_color = (1, 1, 1, 1)
@@ -320,7 +435,9 @@ class Power(NodePath, BaseHUDElement):
     def set(self, V0):
         self.text.setText(f"{V0:.2f} m/s")
 
-        value = (V0 - self.min_strike) / (self.max_strike - self.min_strike)
+        value = (V0 - ani.min_stroke_speed) / (
+            ani.max_stroke_speed - ani.min_stroke_speed
+        )
         if value < 0:
             value = 0
         if value > 1:

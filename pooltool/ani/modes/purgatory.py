@@ -5,7 +5,7 @@ import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
-from pooltool.ani.mouse import mouse
+from pooltool.ani.mouse import MouseMode, mouse
 
 
 class PurgatoryMode(BaseMode):
@@ -37,8 +37,7 @@ class PurgatoryMode(BaseMode):
         self.is_window_active = None
 
     def enter(self):
-        mouse.show()
-        mouse.absolute()
+        mouse.mode(MouseMode.ABSOLUTE)
 
         self.register_keymap_event("mouse1-up", Action.regain_control, True)
         self.register_keymap_event("mouse1-down", Action.regain_control, False)

@@ -1,13 +1,15 @@
 #! /usr/bin/env python
 
 import argparse
-import sys
 
-from pooltool.ani.animate import Play
+from pooltool.ani.animate import Game, ShowBaseConfig
 
 
 def main(args):
-    play = Play(monitor=args.monitor)
+    config = ShowBaseConfig.default()
+    config.monitor = args.monitor
+
+    play = Game(config)
     play.start()
 
 

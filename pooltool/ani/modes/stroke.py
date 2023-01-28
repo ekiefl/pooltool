@@ -6,7 +6,7 @@ from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
-from pooltool.ani.mouse import mouse
+from pooltool.ani.mouse import MouseMode, mouse
 
 
 class StrokeMode(BaseMode):
@@ -17,10 +17,8 @@ class StrokeMode(BaseMode):
     }
 
     def enter(self):
+        mouse.mode(MouseMode.RELATIVE)
         Global.mode_mgr.mode_stroked_from = Global.mode_mgr.last_mode
-        mouse.hide()
-        mouse.relative()
-        mouse.track()
 
         Global.shots.active.cue.track_stroke()
         Global.shots.active.cue.show_nodes(ignore=("cue_cseg",))

@@ -1080,7 +1080,7 @@ class Menus:
         self.show("new_table")
 
     def func_play_now(self):
-        Global.base.messenger.send("go")
+        Global.base.messenger.send("enter-game")
 
     def func_go_view_table(self):
         for element in self.menus["view_table"].elements:

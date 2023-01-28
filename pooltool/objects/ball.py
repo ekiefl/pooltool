@@ -200,16 +200,20 @@ class BallRender(Render):
         pos = self.rvw[0]
         self.set_render_state(pos)
 
-    def set_render_state(self, pos):
-        """Set the position of the rendered ball
+    def set_render_state(self, pos, quat=None):
+        """Set the position (and quaternion) of the rendered ball
 
         Parameters
         ==========
         pos : length-3 iterable
+        quat : length-4 iterable
         """
 
         self.nodes["pos"].setPos(*pos)
         self.nodes["shadow"].setPos(pos[0], pos[1], min(0, pos[2] - self.R))
+
+        if quat is not None:
+            self.nodes["pos"].setQuat(quat)
 
     def set_render_state_from_history(self, i):
         """Set the position of the rendered ball based on history index
@@ -221,11 +225,21 @@ class BallRender(Render):
             final state
         """
 
-        rvw, _, _ = self.history.get_state(i)
-        self.set_render_state(rvw[0])
+        rvw, _, _ = self.history_cts.get_state(i)
+        quat = self.quats[i] if self.quats is not None else None
+        self.set_render_state(rvw[0], quat)
+
+    def set_quats(self):
+        """Set self.quats based on self.history_cts
+
+        Quaternions are not calculated in the rvw state vector, so this method provides
+        an opportunity to calculate all the quaternions from the ball's history
+        """
+        ws = self.history_cts.rvw[:, 2, :]
+        self.quats = autils.as_quaternion(ws, self.history_cts.t)
 
     def set_playback_sequence(self, playback_speed=1):
-        """Creates the sequence motions of the ball for a given playback speed"""
+        """Creates the motion sequences of the ball for a given playback speed"""
         dts = np.diff(self.history_cts.t)
         motion_states = self.history_cts.s
         playback_dts = dts / playback_speed

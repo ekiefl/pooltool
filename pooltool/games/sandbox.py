@@ -6,20 +6,19 @@ from pooltool.layouts import NineBallRack
 
 
 class Sandbox(Game):
+    rack = NineBallRack
+
     def __init__(self, apa_rules=False):
         self.is_call_ball = False
         self.is_call_pocket = False
         Game.__init__(self)
         self.create_players(1)
 
-    def start(self):
-        self.active_player.ball_in_hand = [ball_id for ball_id in self.balls]
+    def start(self, shot):
+        self.active_player.ball_in_hand = [ball_id for ball_id in shot.balls]
         for player in self.players:
-            player.can_cue = [ball_id for ball_id in self.balls]
-            player.target_balls = [ball_id for ball_id in self.balls]
-
-    def setup_initial_layout(self, table, ball_kwargs={}):
-        self.balls = NineBallRack(table, ordered=True, **ball_kwargs).balls
+            player.can_cue = [ball_id for ball_id in shot.balls]
+            player.target_balls = [ball_id for ball_id in shot.balls]
 
     def set_initial_cueing_ball(self, balls):
         return balls["cue"]

@@ -8,11 +8,12 @@ import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.camera import player_cam
 from pooltool.ani.globals import Global
-from pooltool.ani.hud import HUDElement, hud
+from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
-from pooltool.ani.mouse import mouse
+from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.objects.ball import Ball
 from pooltool.objects.cue import cue_avoid
+from pooltool.system import PlaybackMode
 
 
 class AimMode(BaseMode):
@@ -43,14 +44,12 @@ class AimMode(BaseMode):
 
         # In this state, the cue sticks to the cue_avoid.min_theta
         self.magnet_theta = True
-        # if cue angle is within this many degrees from cue_avoid.min_theta, it sticks to
-        # cue_avoid.min_theta
+        # if cue angle is within this many degrees from cue_avoid.min_theta, it sticks
+        # to cue_avoid.min_theta
         self.magnet_threshold = 0.2
 
     def enter(self, load_prev_cam=False):
-        mouse.hide()
-        mouse.relative()
-        mouse.track()
+        mouse.mode(MouseMode.RELATIVE)
 
         if not Global.shots.active.cue.has_focus:
             Global.shots.active.cue.init_focus(Global.shots.active.cue.cueing_ball)
@@ -184,10 +183,9 @@ class AimMode(BaseMode):
             -Global.shots.active.cue.get_node("cue_stick_focus").getR()
             < cue_avoid.min_theta
         ) or self.magnet_theta:
-            Global.shots.active.cue.get_node("cue_stick_focus").setR(
-                -cue_avoid.min_theta
-            )
-            hud.elements[HUDElement.jack].set(cue_avoid.min_theta)
+            Global.shots.active.cue.set_state(theta=cue_avoid.min_theta)
+            Global.shots.active.cue.set_render_state_as_object_state()
+            hud.update_cue(Global.shots.active.cue)
 
         if -player_cam.focus.getR() < (
             -Global.shots.active.cue.get_node("cue_stick_focus").getR()
@@ -201,27 +199,22 @@ class AimMode(BaseMode):
             )
 
     def fix_cue_stick_to_camera(self):
-        Global.shots.active.cue.get_node("cue_stick_focus").setH(
-            player_cam.focus.getH()
-        )
+        phi = (player_cam.focus.getH() + 180) % 360
+        Global.shots.active.cue.set_state(phi=phi)
+        Global.shots.active.cue.set_render_state_as_object_state()
 
     def aim_apply_power(self):
         with mouse:
             dy = mouse.get_dy()
 
-        min_V0, max_V0 = (
-            hud.elements[HUDElement.power].min_strike,
-            hud.elements[HUDElement.power].max_strike,
-        )
-
         V0 = Global.shots.active.cue.V0 + dy * ani.power_sensitivity
-        if V0 < min_V0:
-            V0 = min_V0
-        if V0 > max_V0:
-            V0 = max_V0
+        if V0 < ani.min_stroke_speed:
+            V0 = ani.min_stroke_speed
+        if V0 > ani.max_stroke_speed:
+            V0 = ani.max_stroke_speed
 
         Global.shots.active.cue.set_state(V0=V0)
-        hud.elements[HUDElement.power].set(V0)
+        hud.update_cue(Global.shots.active.cue)
 
     def aim_elevate_cue(self):
         cue = Global.shots.active.cue.get_node("cue_stick_focus")
@@ -246,7 +239,7 @@ class AimMode(BaseMode):
             player_cam.focus.setR(-(new_elevation + ani.min_player_cam))
 
         Global.shots.active.cue.set_state(theta=new_elevation)
-        hud.elements[HUDElement.jack].set(new_elevation)
+        hud.update_cue(Global.shots.active.cue)
 
     def apply_english(self):
         with mouse:
@@ -289,16 +282,16 @@ class AimMode(BaseMode):
                 )
             )
 
-        a, b, theta = (
-            -new_y / R,
-            new_z / R,
-            -Global.shots.active.cue.get_node("cue_stick_focus").getR(),
+        Global.shots.active.cue.set_state(
+            a=-new_y / R,
+            b=new_z / R,
+            theta=-Global.shots.active.cue.get_node("cue_stick_focus").getR(),
         )
-        Global.shots.active.cue.set_state(a=a, b=b, theta=theta)
-        hud.elements[HUDElement.english].set(a, b)
-        hud.elements[HUDElement.jack].set(theta)
+
+        hud.update_cue(Global.shots.active.cue)
 
     def change_animation(self, shot_index):
+        """Switch to a different system in the system collection"""
         # Switch shots
         Global.shots.clear_animation()
         Global.shots.active.teardown()
@@ -307,7 +300,10 @@ class AimMode(BaseMode):
 
         # Initialize the animation
         Global.shots.set_animation()
-        Global.shots.loop_animation()
+
+        # Changing to a different shot is considered advanced maneuvering, so we enter
+        # loop mode.
+        Global.shots.start_animation(PlaybackMode.LOOP)
 
         # A lot of dumb things to make the cue track the initial position of the ball
         dummy = Ball("dummy")
@@ -323,8 +319,4 @@ class AimMode(BaseMode):
         cue_avoid.init_collisions()
 
         # Set the HUD
-        hud.elements.get(HUDElement.english).set(
-            Global.shots.active.cue.a, Global.shots.active.cue.b
-        )
-        hud.elements.get(HUDElement.jack).set(Global.shots.active.cue.theta)
-        hud.elements.get(HUDElement.power).set(Global.shots.active.cue.V0)
+        hud.update_cue(Global.shots.active.cue)
