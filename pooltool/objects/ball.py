@@ -480,10 +480,16 @@ class Ball(Object, BallRender):
 
         self.t = 0
         self.s = c.stationary
-        x, y, z = xyz if xyz is not None else (np.nan, np.nan, np.nan)
-        self.rvw = np.array(
-            [[x, y, z], [0, 0, 0], [0, 0, 0]]  # positions (r)  # velocities (v)
-        )  # angular velocities (w)
+
+        if xyz is None:
+            x, y, z = (np.nan, np.nan, np.nan)
+        elif len(xyz) == 3:
+            x, y, z = xyz
+        elif len(xyz) == 2:
+            x, y = xyz
+            z = self.R
+
+        self.rvw = np.array([[x, y, z], [0, 0, 0], [0, 0, 0]])
         self.update_next_transition_event()
 
         self.history = BallHistory()

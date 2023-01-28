@@ -22,7 +22,11 @@ class MenuMode(BaseMode):
 
     def enter(self):
         mouse.mode(MouseMode.ABSOLUTE)
-        menus.show("main_menu")
+
+        try:
+            menus.show(menus.current.name)
+        except AttributeError:
+            menus.show("main_menu")
 
         self.register_keymap_event("escape", Action.exit, True)
         self.register_keymap_event("escape-up", Action.exit, False)
@@ -64,7 +68,7 @@ class MenuMode(BaseMode):
                 if (
                     element["type"] == "entry"
                     and element["object"]["focus"]
-                    and element["name"] != self.current.hovered_entry
+                    and element["name"] != menus.current.hovered_entry
                 ):
                     element["object"]["focus"] = False
 
