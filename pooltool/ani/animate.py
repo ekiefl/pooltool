@@ -21,6 +21,7 @@ from panda3d.core import (
     Texture,
     WindowProperties,
 )
+from PIL import Image
 
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
@@ -353,8 +354,8 @@ class ShotSaver(Interface):
         save_dir.mkdir()
         return save_dir
 
-    def _get_filepath(self, save_dir, frame, img_format):
-        return f"{save_dir}/frame_{frame:06d}.{img_format}"
+    def _get_filepath(self, save_dir, file_prefix, frame, img_format):
+        return f"{save_dir}/{file_prefix}_{frame:06d}.{img_format}"
 
     def _resize_window(self, size):
         """Changes window size when provided the dimensions (x, y) in pixels"""
@@ -386,10 +387,12 @@ class ShotSaver(Interface):
         self,
         shot: System,
         save_dir: Union[str, Path],
+        file_prefix: str = "shot",
         size: Tuple[int, int] = (230, 144),
         img_format: ImageFormat = ImageFormat.JPG,
         show_hud: bool = False,
         fps: float = 30.0,
+        make_gif: bool = False,
     ):
         shot.continuize(dt=1 / fps)
 
@@ -411,6 +414,7 @@ class ShotSaver(Interface):
             ball.set_quats()
 
         frames = int(shot.events[-1].time * fps) + 1
+
         for frame in range(frames):
             for ball in Global.shots.active.balls.values():
                 ball.set_render_state_from_history(frame)
@@ -418,9 +422,31 @@ class ShotSaver(Interface):
             Global.task_mgr.step()
 
             plt.imsave(
-                self._get_filepath(save_dir, frame, img_format),
+                self._get_filepath(save_dir, file_prefix, frame, img_format),
                 self.get_image_array(),
             )
+
+        if not make_gif:
+            return
+
+        imgs = (
+            Image.open(fp)
+            for fp in (
+                self._get_filepath(save_dir, file_prefix, frame, img_format)
+                for frame in range(frames)
+            )
+        )
+
+        img = next(imgs)
+
+        img.save(
+            fp=f"{save_dir}/{file_prefix}.gif",
+            format="GIF",
+            append_images=imgs,
+            save_all=True,
+            duration=(1 / fps) * 1e3,
+            loop=0,  # loop infinitely
+        )
 
     @staticmethod
     def frame_buffer_properties():

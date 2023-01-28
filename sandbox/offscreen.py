@@ -33,14 +33,16 @@ def main(args):
     if output.exists():
         shutil.rmtree(output)
 
-    with pt.terminal.TimeCode():
-        interface.save(
-            shot=shot,
-            save_dir=output,
-            img_format="jpg",
-            size=(480 * 1.6, 480),
-            show_hud=True,
-        )
+    interface.save(
+        shot=shot,
+        save_dir=output,
+        file_prefix="my_shot",
+        img_format="png",
+        size=(480 * 1.6, 480),
+        show_hud=True,
+        fps=10,
+        make_gif=True,
+    )
 
 
 if __name__ == "__main__":
