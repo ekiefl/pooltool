@@ -58,7 +58,7 @@ class ShotMode(BaseMode):
             Global.shots.start_animation(PlaybackMode.SINGLE)
             Global.shots.skip_stroke()
 
-        camera.scale_focus()
+        camera.scale_fixation_object()
 
         hud.update_cue(Global.shots.active.cue)
 
@@ -321,7 +321,7 @@ class ShotMode(BaseMode):
             s = -mouse.get_dy() * ani.zoom_sensitivity
 
         camera.node.setPos(autils.multiply_cw(camera.node.getPos(), 1 - s))
-        camera.scale_focus()
+        camera._scale_fixation_object()
 
     def move_camera_shot(self):
         with mouse:

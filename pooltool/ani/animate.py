@@ -164,7 +164,7 @@ class Interface(ShowBase):
             Global.shots.clear()
 
         camera.focus = None
-        camera.has_focus = False
+        camera.fixated = False
 
         gc.collect()
 
@@ -182,9 +182,9 @@ class Interface(ShowBase):
         Global.shots.active.cue.render()
 
         R = max([ball.R for ball in Global.shots.active.balls.values()])
-        camera.create_focus(
-            parent=Global.shots.active.table.get_node("cloth"),
+        camera.fixate(
             pos=(Global.shots.active.table.w / 2, Global.shots.active.table.l / 2, R),
+            node=Global.shots.active.table.get_node("cloth"),
         )
 
     def monitor(self, task):

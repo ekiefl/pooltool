@@ -57,7 +57,8 @@ class ViewMode(BaseMode):
         if load_prev_cam:
             camera.load_state(Mode.view)
 
-        camera.scale_focus()
+        # FIXME almost certainly not necessary
+        camera._scale_fixation_object()
 
         if move_active:
             self.keymap[Action.move] = True
@@ -151,7 +152,7 @@ class ViewMode(BaseMode):
             s = -mouse.get_dy() * ani.zoom_sensitivity
 
         camera.node.setPos(autils.multiply_cw(camera.node.getPos(), 1 - s))
-        camera.scale_focus()
+        camera.scale_fixation_object()
 
     def move_camera_view(self):
         with mouse:

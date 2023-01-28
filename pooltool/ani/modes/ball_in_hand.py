@@ -97,7 +97,7 @@ class BallInHandMode(BaseMode):
                 self.keymap["next"] = False
                 if self.grabbed_ball:
                     self.picking = "placement"
-                    camera.update_focus(self.grab_ball_node.getPos())
+                    camera.update_fixation(self.grab_ball_node.getPos())
                     BallInHandMode.remove_grab_selection_highlight(self)
                     BallInHandMode.add_transparent_ball(self)
 
