@@ -58,7 +58,7 @@ class AimMode(BaseMode):
         Global.shots.active.cue.show_nodes(ignore=("cue_cseg",))
         Global.shots.active.cue.get_node("cue_stick").setX(0)
 
-        camera.update_fixation(
+        camera.move_fixation(
             Global.shots.active.cue.cueing_ball.get_node("pos").getPos()
         )
 

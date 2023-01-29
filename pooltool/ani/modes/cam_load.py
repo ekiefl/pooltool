@@ -53,7 +53,7 @@ class CamLoadMode(BaseMode):
 
         pos = -1.2
         for slot in range(1, 10):
-            exists = True if f"save_{slot}" in camera.states else False
+            exists = f"save_{slot}" in camera.states
             button = self.cam_load_slots.add_button(
                 text=(f"{slot}", f"{slot}", "load" if exists else "empty", f"{slot}"),
                 command=lambda: None,

@@ -1,10 +1,7 @@
 #! /usr/bin/env python
 
-import numpy as np
-
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
-import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.camera import camera
 from pooltool.ani.globals import Global
@@ -57,8 +54,6 @@ class ShotMode(BaseMode):
             Global.shots.set_animation()
             Global.shots.start_animation(PlaybackMode.SINGLE)
             Global.shots.skip_stroke()
-
-        camera.scale_fixation_object()
 
         hud.update_cue(Global.shots.active.cue)
 
@@ -212,13 +207,20 @@ class ShotMode(BaseMode):
                 Global.mode_mgr.change_mode(Mode.aim, exit_kwargs=dict(key="advance"))
 
         elif self.keymap[Action.zoom]:
-            self.zoom_camera_shot()
+            camera.zoom_via_mouse()
 
         elif self.keymap[Action.move]:
-            self.move_camera_shot()
+            camera.move_fixation_via_mouse()
 
-        elif mouse.initialized:
-            self.maybe_rotate_camera(task)
+        elif task.time > ani.rotate_downtime:
+            # Only rotate the camera if some time has passed since the mode was entered,
+            # otherwise the shot followthrough jarringly rotates the camera
+            camera.rotate_via_mouse()
+
+        else:
+            # We didn't do anything this frame, but touch the mouse so any future mouse
+            # movements don't experience a big jump
+            mouse.touch()
 
         return task.cont
 
@@ -315,37 +317,3 @@ class ShotMode(BaseMode):
 
         # Set the HUD
         hud.update_cue(Global.shots.active.cue)
-
-    def zoom_camera_shot(self):
-        with mouse:
-            s = -mouse.get_dy() * ani.zoom_sensitivity
-
-        camera.node.setPos(autils.multiply_cw(camera.node.getPos(), 1 - s))
-        camera._scale_fixation_object()
-
-    def move_camera_shot(self):
-        with mouse:
-            dxp, dyp = mouse.get_dx(), mouse.get_dy()
-
-        h = camera.focus.getH() * np.pi / 180 + np.pi / 2
-        dx = dxp * np.cos(h) - dyp * np.sin(h)
-        dy = dxp * np.sin(h) + dyp * np.cos(h)
-
-        camera.focus.setX(camera.focus.getX() + dx * ani.move_sensitivity)
-        camera.focus.setY(camera.focus.getY() + dy * ani.move_sensitivity)
-
-    def maybe_rotate_camera(self, task):
-        if task.time < ani.rotate_downtime:
-            # Shot follow through can move camera jarringly, so don't move camera if
-            # within the dwell time. But do touch the mouse so there is not a big jump
-            mouse.touch()
-            return
-
-        fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
-
-        with mouse:
-            alpha_x = camera.focus.getH() - fx * mouse.get_dx()
-            alpha_y = max(min(0, camera.focus.getR() + fy * mouse.get_dy()), -90)
-
-        camera.focus.setH(alpha_x)  # Move view laterally
-        camera.focus.setR(alpha_y)  # Move view vertically

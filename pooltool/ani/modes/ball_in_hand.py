@@ -82,7 +82,7 @@ class BallInHandMode(BaseMode):
             )
             return task.done
 
-        self.move_camera_ball_in_hand()
+        camera.move_fixation_via_mouse()
 
         if self.picking == "ball":
             closest = BallInHandMode.find_closest_ball(self)
@@ -97,7 +97,7 @@ class BallInHandMode(BaseMode):
                 self.keymap["next"] = False
                 if self.grabbed_ball:
                     self.picking = "placement"
-                    camera.update_fixation(self.grab_ball_node.getPos())
+                    camera.move_fixation(self.grab_ball_node.getPos())
                     BallInHandMode.remove_grab_selection_highlight(self)
                     BallInHandMode.add_transparent_ball(self)
 
@@ -205,14 +205,3 @@ class BallInHandMode(BaseMode):
                 d_min, closest = d, ball
 
         return closest
-
-    def move_camera_ball_in_hand(self):
-        with mouse:
-            dxp, dyp = mouse.get_dx(), mouse.get_dy()
-
-        h = camera.fixation.getH() * np.pi / 180 + np.pi / 2
-        dx = dxp * np.cos(h) - dyp * np.sin(h)
-        dy = dxp * np.sin(h) + dyp * np.cos(h)
-
-        camera.fixation.setX(camera.fixation.getX() + dx * ani.move_sensitivity)
-        camera.fixation.setY(camera.fixation.getY() + dy * ani.move_sensitivity)

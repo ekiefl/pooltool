@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import numpy as np
 from panda3d.core import TransparencyAttrib
 
 import pooltool.ani as ani
@@ -57,6 +58,7 @@ class Camera:
             self.fixation.setR(-theta)
 
     def rotate_via_mouse(self, fine_control: bool = False, theta_only: bool = False):
+        """Rotate about camera fixation based on mouse movement for the current frame"""
         if fine_control:
             fx, fy = ani.rotate_fine_sensitivity_x, ani.rotate_fine_sensitivity_y
         else:
@@ -79,6 +81,27 @@ class Camera:
         else:
             self.rotate(phi=phi, theta=theta)
 
+    def move_fixation(self, pos):
+        """Move the point that the camera is fixated upon
+
+        Args:
+            pos:
+                The (x, y, z) coordinates of the point of fixationw w w
+        """
+        self.fixation.setPos(pos)
+
+    def move_fixation_via_mouse(self):
+        """Move camera fixation based on mouse movement for the current frame"""
+        with mouse:
+            dxp, dyp = mouse.get_dx(), mouse.get_dy()
+
+        h = self.fixation.getH() * np.pi / 180 + np.pi / 2
+        dx = dxp * np.cos(h) - dyp * np.sin(h)
+        dy = dxp * np.sin(h) + dyp * np.cos(h)
+
+        self.fixation.setX(self.fixation.getX() + dx * ani.move_sensitivity)
+        self.fixation.setY(self.fixation.getY() + dy * ani.move_sensitivity)
+
     def fixate(self, pos, node):
         """Fixate on a position
 
@@ -92,7 +115,7 @@ class Camera:
                 The render node that the coordinates are calculated from. Also becomes
                 the parent of the focus and the fixation object.
         """
-        self.fixation = node.attachNewNode("camera_focus")
+        self.fixation = node.attachNewNode("camera_fixation")
         self.fixation.setH(-90)
 
         # create the fixation object. It's just the panda3d built in smiley sphere. The
@@ -113,9 +136,6 @@ class Camera:
         self.node.setPos(2, 0, 0)
         self.node.lookAt(self.fixation)
         self.fixated = True
-
-    def update_fixation(self, pos):
-        self.fixation.setPos(pos)
 
     def get_state(self):
         return {
@@ -156,7 +176,7 @@ class Camera:
         """
         # `dist` is the distance from the camera to the focus object and is equivalent
         # to: cam_pos, focus_pos = camera.node.getPos(render),
-        # camera.focus_object.getPos(render) dist = (cam_pos - focus_pos).length()
+        # camera.fixation_object.getPos(render) dist = (cam_pos - focus_pos).length()
         dist = self.node.getX()
         self.fixation_object.setScale(0.002 * dist)
 

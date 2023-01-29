@@ -37,7 +37,7 @@ class CallShotMode(BaseMode):
 
         mouse.mode(MouseMode.RELATIVE)
 
-        camera.focus.setR(camera.focus.getR() - self.head_raise)
+        camera.rotate(theta=camera.theta + self.head_raise)
 
         self.closest_pocket = None
         self.closest_ball = None
@@ -60,14 +60,14 @@ class CallShotMode(BaseMode):
             CallShotMode.remove_ball_highlight(self)
         CallShotMode.remove_transparent_ball(self)
         self.ball_highlight_sequence.pause()
-        camera.focus.setR(camera.focus.getR() + self.head_raise)
+        camera.rotate(theta=camera.theta - self.head_raise)
 
     def call_shot_task(self, task):
         if not self.keymap[Action.call_shot]:
             Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
             return task.done
 
-        self.move_camera_call_shot()
+        camera.move_fixation_via_mouse()
 
         if self.picking == "ball":
             closest = CallShotMode.find_closest_ball(self)
@@ -142,11 +142,11 @@ class CallShotMode(BaseMode):
             self.ball_highlight_sequence.start()
 
     def find_closest_pocket(self):
-        cam_pos = camera.focus.getPos()
+        fixation_pos = camera.fixation.getPos()
         d_min = np.inf
         closest = None
         for pocket in Global.shots.active.table.pockets.values():
-            d = np.linalg.norm(pocket.center - cam_pos)
+            d = np.linalg.norm(pocket.center - fixation_pos)
             if d < d_min:
                 d_min, closest = d, pocket
 
@@ -206,7 +206,7 @@ class CallShotMode(BaseMode):
         self.trans_ball = None
 
     def find_closest_ball(self):
-        cam_pos = camera.focus.getPos()
+        fixation_pos = camera.fixation.getPos()
         d_min = np.inf
         closest = None
         for ball in Global.shots.active.balls.values():
@@ -214,19 +214,8 @@ class CallShotMode(BaseMode):
                 continue
             if ball.s == c.pocketed:
                 continue
-            d = np.linalg.norm(ball.rvw[0] - cam_pos)
+            d = np.linalg.norm(ball.rvw[0] - fixation_pos)
             if d < d_min:
                 d_min, closest = d, ball
 
         return closest
-
-    def move_camera_call_shot(self):
-        with mouse:
-            dxp, dyp = mouse.get_dx(), mouse.get_dy()
-
-        h = camera.focus.getH() * np.pi / 180 + np.pi / 2
-        dx = dxp * np.cos(h) - dyp * np.sin(h)
-        dy = dxp * np.sin(h) + dyp * np.cos(h)
-
-        camera.focus.setX(camera.focus.getX() + dx * ani.move_sensitivity)
-        camera.focus.setY(camera.focus.getY() + dy * ani.move_sensitivity)

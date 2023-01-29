@@ -208,7 +208,10 @@ class CueRender(Render):
         seconds, calculate the average velocity since the apex
         """
 
-        backstroke_time, apex_time, strike_time = self.get_stroke_times()
+        try:
+            backstroke_time, apex_time, strike_time = self.get_stroke_times()
+        except IndexError:
+            raise StrokeError("Unresolved edge case")
 
         max_time = 0.1
         if (strike_time - apex_time) < max_time:

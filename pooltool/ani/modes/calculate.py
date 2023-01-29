@@ -1,8 +1,5 @@
 #! /usr/bin/env python
 
-import numpy as np
-
-import pooltool as pt
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
@@ -58,16 +55,18 @@ class CalculateMode(BaseMode):
                 Mode.shot, enter_kwargs=dict(init_animations=True)
             )
         elif self.keymap[Action.zoom]:
-            self.zoom_camera_calculate()
+            camera.zoom_via_mouse()
         elif self.keymap[Action.move]:
-            self.move_camera_calculate()
+            camera.move_fixation_via_mouse()
         else:
-            if task.time > ani.rotate_downtime:
-                # Prevents shot follow through from moving camera
-                self.rotate_camera_calculate()
-            else:
-                # Update mouse positions so there is not a big jump
+            if task.time < ani.rotate_downtime:
+                # This catch helps prevent the shot follow through from moving the
+                # camera, which is annoying and no one would want. So instead of
+                # rotating the camera, we just touch the mouse so there is not a big
+                # jump the next time the camera is truly rotated
                 mouse.touch()
+            else:
+                camera.rotate_via_mouse()
 
             if task.time > 0.25:
                 self.shot_sim_overlay.show()
@@ -91,30 +90,3 @@ class CalculateMode(BaseMode):
         tasks.remove("run_simulation")
 
         return task.done
-
-    def zoom_camera_calculate(self):
-        with mouse:
-            s = -mouse.get_dy() * ani.zoom_sensitivity
-
-        camera.node.setPos(pt.autils.multiply_cw(camera.node.getPos(), 1 - s))
-
-    def move_camera_calculate(self):
-        with mouse:
-            dxp, dyp = mouse.get_dx(), mouse.get_dy()
-
-        h = camera.focus.getH() * np.pi / 180 + np.pi / 2
-        dx = dxp * np.cos(h) - dyp * np.sin(h)
-        dy = dxp * np.sin(h) + dyp * np.cos(h)
-
-        camera.focus.setX(camera.focus.getX() + dx * ani.move_sensitivity)
-        camera.focus.setY(camera.focus.getY() + dy * ani.move_sensitivity)
-
-    def rotate_camera_calculate(self):
-        fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
-
-        with mouse:
-            alpha_x = camera.focus.getH() - fx * mouse.get_dx()
-            alpha_y = max(min(0, camera.focus.getR() + fy * mouse.get_dy()), -90)
-
-        camera.focus.setH(alpha_x)  # Move view laterally
-        camera.focus.setR(alpha_y)  # Move view vertically
