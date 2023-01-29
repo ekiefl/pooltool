@@ -3,7 +3,7 @@
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
-from pooltool.ani.camera import camera
+from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
@@ -172,7 +172,7 @@ class ShotMode(BaseMode):
                 Global.shots.active.buildup()
                 cue_avoid.init_collisions()
 
-            camera.load_state(Global.mode_mgr.mode_stroked_from)
+            cam.load_state(Global.mode_mgr.mode_stroked_from)
             for ball in Global.shots.active.balls.values():
                 if ball.history.is_populated():
                     ball.set(
@@ -192,7 +192,7 @@ class ShotMode(BaseMode):
 
     def shot_view_task(self, task):
         if self.keymap[Action.close_scene]:
-            camera.store_state("last_scene", overwrite=True)
+            cam.store_state("last_scene", overwrite=True)
             Global.base.messenger.send("close-scene")
             Global.mode_mgr.end_mode()
             Global.base.messenger.send("stop")
@@ -207,15 +207,15 @@ class ShotMode(BaseMode):
                 Global.mode_mgr.change_mode(Mode.aim, exit_kwargs=dict(key="advance"))
 
         elif self.keymap[Action.zoom]:
-            camera.zoom_via_mouse()
+            cam.zoom_via_mouse()
 
         elif self.keymap[Action.move]:
-            camera.move_fixation_via_mouse()
+            cam.move_fixation_via_mouse()
 
         elif task.time > ani.rotate_downtime:
             # Only rotate the camera if some time has passed since the mode was entered,
             # otherwise the shot followthrough jarringly rotates the camera
-            camera.rotate_via_mouse()
+            cam.rotate_via_mouse()
 
         else:
             # We didn't do anything this frame, but touch the mouse so any future mouse

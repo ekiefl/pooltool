@@ -5,7 +5,7 @@ import numpy as np
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
-from pooltool.ani.camera import camera
+from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
@@ -54,7 +54,7 @@ class ViewMode(BaseMode):
             Global.shots.active.cue.hide_nodes(ignore=("cue_cseg",))
 
         if load_prev_cam:
-            camera.load_state(Mode.view)
+            cam.load_state(Mode.view)
 
         if move_active:
             self.keymap[Action.move] = True
@@ -95,7 +95,7 @@ class ViewMode(BaseMode):
 
         if ani.settings["gameplay"]["cue_collision"]:
             tasks.remove("collision_task")
-        camera.store_state(Mode.view, overwrite=True)
+        cam.store_state(Mode.view, overwrite=True)
 
     def view_task(self, task):
         if self.keymap[Action.stroke]:
@@ -107,9 +107,9 @@ class ViewMode(BaseMode):
         elif self.keymap[Action.ball_in_hand]:
             Global.mode_mgr.change_mode(Mode.ball_in_hand)
         elif self.keymap[Action.zoom]:
-            camera.zoom_via_mouse()
+            cam.zoom_via_mouse()
         elif self.keymap[Action.move]:
-            camera.move_fixation_via_mouse()
+            cam.move_fixation_via_mouse()
         elif self.keymap[Action.hide_cue]:
             self.keymap[Action.hide_cue] = False
             self.keymap[Action.english] = False
@@ -139,7 +139,7 @@ class ViewMode(BaseMode):
                 )
                 return task.done
         else:
-            camera.rotate_via_mouse()
+            cam.rotate_via_mouse()
 
         return task.cont
 

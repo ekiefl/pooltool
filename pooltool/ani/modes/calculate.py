@@ -3,7 +3,7 @@
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
-from pooltool.ani.camera import camera
+from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
@@ -55,9 +55,9 @@ class CalculateMode(BaseMode):
                 Mode.shot, enter_kwargs=dict(init_animations=True)
             )
         elif self.keymap[Action.zoom]:
-            camera.zoom_via_mouse()
+            cam.zoom_via_mouse()
         elif self.keymap[Action.move]:
-            camera.move_fixation_via_mouse()
+            cam.move_fixation_via_mouse()
         else:
             if task.time < ani.rotate_downtime:
                 # This catch helps prevent the shot follow through from moving the
@@ -66,7 +66,7 @@ class CalculateMode(BaseMode):
                 # jump the next time the camera is truly rotated
                 mouse.touch()
             else:
-                camera.rotate_via_mouse()
+                cam.rotate_via_mouse()
 
             if task.time > 0.25:
                 self.shot_sim_overlay.show()

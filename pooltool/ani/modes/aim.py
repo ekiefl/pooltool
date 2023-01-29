@@ -5,7 +5,7 @@ import numpy as np
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
-from pooltool.ani.camera import camera
+from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
@@ -58,12 +58,10 @@ class AimMode(BaseMode):
         Global.shots.active.cue.show_nodes(ignore=("cue_cseg",))
         Global.shots.active.cue.get_node("cue_stick").setX(0)
 
-        camera.move_fixation(
-            Global.shots.active.cue.cueing_ball.get_node("pos").getPos()
-        )
+        cam.move_fixation(Global.shots.active.cue.cueing_ball.get_node("pos").getPos())
 
         if load_prev_cam:
-            camera.load_state(Mode.aim)
+            cam.load_state(Mode.aim)
 
         self.register_keymap_event("escape", Action.quit, True)
         self.register_keymap_event("f", Action.fine_control, True)
@@ -105,7 +103,7 @@ class AimMode(BaseMode):
         if ani.settings["gameplay"]["cue_collision"]:
             tasks.remove("collision_task")
 
-        camera.store_state(Mode.aim, overwrite=True)
+        cam.store_state(Mode.aim, overwrite=True)
 
     def aim_task(self, task):
         if self.keymap[Action.view]:
@@ -120,9 +118,9 @@ class AimMode(BaseMode):
         elif self.keymap[Action.ball_in_hand]:
             Global.mode_mgr.change_mode(Mode.ball_in_hand)
         elif self.keymap[Action.zoom]:
-            camera.zoom_via_mouse()
+            cam.zoom_via_mouse()
         elif self.keymap[Action.adjust_head]:
-            camera.rotate_via_mouse(theta_only=True)
+            cam.rotate_via_mouse(theta_only=True)
             self.cue_avoidance()
         elif self.keymap[Action.elevation]:
             self.aim_elevate_cue()
@@ -144,7 +142,7 @@ class AimMode(BaseMode):
                 )
                 return task.done
         else:
-            camera.rotate_via_mouse(fine_control=self.keymap[Action.fine_control])
+            cam.rotate_via_mouse(fine_control=self.keymap[Action.fine_control])
             self.fix_cue_stick_to_camera()
             self.cue_avoidance()
 
@@ -159,11 +157,11 @@ class AimMode(BaseMode):
             Global.shots.active.cue.set_render_state_as_object_state()
             hud.update_cue(Global.shots.active.cue)
 
-        if camera.theta < theta + ani.min_camera:
-            camera.rotate(theta=theta + ani.min_camera)
+        if cam.theta < theta + ani.min_camera:
+            cam.rotate(theta=theta + ani.min_camera)
 
     def fix_cue_stick_to_camera(self):
-        phi = (camera.fixation.getH() + 180) % 360
+        phi = (cam.fixation.getH() + 180) % 360
         Global.shots.active.cue.set_state(phi=phi)
         Global.shots.active.cue.set_render_state_as_object_state()
 
@@ -199,8 +197,8 @@ class AimMode(BaseMode):
 
         cue.setR(-new_elevation)
 
-        if camera.theta < (new_elevation + ani.min_camera):
-            camera.rotate(theta=new_elevation + ani.min_camera)
+        if cam.theta < (new_elevation + ani.min_camera):
+            cam.rotate(theta=new_elevation + ani.min_camera)
 
         Global.shots.active.cue.set_state(theta=new_elevation)
         hud.update_cue(Global.shots.active.cue)
@@ -235,8 +233,8 @@ class AimMode(BaseMode):
         ):
             cue_focus.setR(-cue_avoid.min_theta)
 
-        if camera.theta < (new_theta := -cue_focus.getR() + ani.min_camera):
-            camera.rotate(theta=new_theta)
+        if cam.theta < (new_theta := -cue_focus.getR() + ani.min_camera):
+            cam.rotate(theta=new_theta)
 
         Global.shots.active.cue.set_state(
             a=-new_y / R,

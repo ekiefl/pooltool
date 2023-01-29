@@ -8,7 +8,7 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.constants as c
 from pooltool.ani.action import Action
-from pooltool.ani.camera import camera
+from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
@@ -82,7 +82,7 @@ class BallInHandMode(BaseMode):
             )
             return task.done
 
-        camera.move_fixation_via_mouse()
+        cam.move_fixation_via_mouse()
 
         if self.picking == "ball":
             closest = BallInHandMode.find_closest_ball(self)
@@ -97,7 +97,7 @@ class BallInHandMode(BaseMode):
                 self.keymap["next"] = False
                 if self.grabbed_ball:
                     self.picking = "placement"
-                    camera.move_fixation(self.grab_ball_node.getPos())
+                    cam.move_fixation(self.grab_ball_node.getPos())
                     BallInHandMode.remove_grab_selection_highlight(self)
                     BallInHandMode.add_transparent_ball(self)
 
@@ -132,7 +132,7 @@ class BallInHandMode(BaseMode):
         return True
 
     def move_grabbed_ball(self):
-        x, y = camera.fixation.getX(), camera.fixation.getY()
+        x, y = cam.fixation.getX(), cam.fixation.getY()
 
         self.grab_ball_node.setX(x)
         self.grab_ball_node.setY(y)
@@ -192,7 +192,7 @@ class BallInHandMode(BaseMode):
         self.trans_ball = None
 
     def find_closest_ball(self):
-        cam_pos = camera.fixation.getPos()
+        cam_pos = cam.fixation.getPos()
         d_min = np.inf
         closest = None
         for ball in Global.shots.active.balls.values():

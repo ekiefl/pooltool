@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+from dataclasses import dataclass
+
 import numpy as np
 from panda3d.core import TransparencyAttrib
 
@@ -7,6 +9,12 @@ import pooltool.ani as ani
 import pooltool.ani.utils as autils
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.mouse import mouse
+
+# class CameraState:
+#    "CamHpr": self.node.getHpr(),
+#    "CamPos": self.node.getPos(),
+#    "FocusHpr": self.fixation.getHpr() if self.fixated else None,
+#    "FocusPos": self.fixation.getPos() if self.fixated else None,
 
 
 class Camera:
@@ -181,4 +189,4 @@ class Camera:
         self.fixation_object.setScale(0.002 * dist)
 
 
-camera = Camera()
+cam = Camera()

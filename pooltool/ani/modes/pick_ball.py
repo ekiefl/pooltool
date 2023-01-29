@@ -7,7 +7,7 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.constants as c
 from pooltool.ani.action import Action
-from pooltool.ani.camera import camera
+from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
@@ -44,7 +44,7 @@ class PickBallMode(BaseMode):
             Global.mode_mgr.change_mode(Mode.aim)
             return task.done
 
-        camera.move_fixation_via_mouse()
+        cam.move_fixation_via_mouse()
 
         closest = PickBallMode.find_closest_ball(self)
         if closest != self.closest_ball:
@@ -104,7 +104,7 @@ class PickBallMode(BaseMode):
         return task.cont
 
     def find_closest_ball(self):
-        cam_fixation = camera.fixation.getPos()
+        cam_fixation = cam.fixation.getPos()
         d_min = np.inf
         closest = None
         for ball in Global.shots.active.balls.values():

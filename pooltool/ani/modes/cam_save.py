@@ -4,7 +4,7 @@ from direct.gui.DirectGui import DGG
 
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
-from pooltool.ani.camera import camera
+from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
@@ -32,7 +32,7 @@ class CamSaveMode(BaseMode):
 
     def exit(self):
         if self.selection:
-            camera.store_state(name=f"save_{self.selection}", overwrite=True)
+            cam.store_state(name=f"save_{self.selection}", overwrite=True)
 
         tasks.remove("cam_save_task")
         tasks.remove("shared_task")
@@ -50,7 +50,7 @@ class CamSaveMode(BaseMode):
 
         pos = -1.2
         for slot in range(1, 10):
-            exists = f"save_{slot}" in camera.states
+            exists = f"save_{slot}" in cam.states
             button = self.cam_save_slots.add_button(
                 text=(
                     f"{slot}",

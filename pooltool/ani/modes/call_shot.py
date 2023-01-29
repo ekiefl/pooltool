@@ -8,7 +8,7 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.constants as c
 from pooltool.ani.action import Action
-from pooltool.ani.camera import camera
+from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
@@ -37,7 +37,7 @@ class CallShotMode(BaseMode):
 
         mouse.mode(MouseMode.RELATIVE)
 
-        camera.rotate(theta=camera.theta + self.head_raise)
+        cam.rotate(theta=cam.theta + self.head_raise)
 
         self.closest_pocket = None
         self.closest_ball = None
@@ -60,14 +60,14 @@ class CallShotMode(BaseMode):
             CallShotMode.remove_ball_highlight(self)
         CallShotMode.remove_transparent_ball(self)
         self.ball_highlight_sequence.pause()
-        camera.rotate(theta=camera.theta - self.head_raise)
+        cam.rotate(theta=cam.theta - self.head_raise)
 
     def call_shot_task(self, task):
         if not self.keymap[Action.call_shot]:
             Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
             return task.done
 
-        camera.move_fixation_via_mouse()
+        cam.move_fixation_via_mouse()
 
         if self.picking == "ball":
             closest = CallShotMode.find_closest_ball(self)
@@ -142,7 +142,7 @@ class CallShotMode(BaseMode):
             self.ball_highlight_sequence.start()
 
     def find_closest_pocket(self):
-        fixation_pos = camera.fixation.getPos()
+        fixation_pos = cam.fixation.getPos()
         d_min = np.inf
         closest = None
         for pocket in Global.shots.active.table.pockets.values():
@@ -206,7 +206,7 @@ class CallShotMode(BaseMode):
         self.trans_ball = None
 
     def find_closest_ball(self):
-        fixation_pos = camera.fixation.getPos()
+        fixation_pos = cam.fixation.getPos()
         d_min = np.inf
         closest = None
         for ball in Global.shots.active.balls.values():

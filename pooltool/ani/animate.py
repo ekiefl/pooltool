@@ -28,7 +28,7 @@ import pooltool.ani.tasks as tasks
 import pooltool.games as games
 import pooltool.terminal as terminal
 import pooltool.utils as utils
-from pooltool.ani.camera import camera
+from pooltool.ani.camera import cam
 from pooltool.ani.environment import environment
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.hud import HUDElement, hud
@@ -122,7 +122,7 @@ class Interface(ShowBase):
         if isinstance(self.win, GraphicsWindow):
             mouse.init()
 
-        camera.init()
+        cam.init()
 
         if not ani.settings["graphics"]["shader"]:
             Global.render.set_shader_off()
@@ -163,9 +163,9 @@ class Interface(ShowBase):
             Global.shots.clear_animation()
             Global.shots.clear()
 
-        camera.fixation = None
-        camera.fixation_object = None
-        camera.fixated = False
+        cam.fixation = None
+        cam.fixation_object = None
+        cam.fixated = False
 
         gc.collect()
 
@@ -183,7 +183,7 @@ class Interface(ShowBase):
         Global.shots.active.cue.render()
 
         R = max([ball.R for ball in Global.shots.active.balls.values()])
-        camera.fixate(
+        cam.fixate(
             pos=(Global.shots.active.table.w / 2, Global.shots.active.table.l / 2, R),
             node=Global.shots.active.table.get_node("cloth"),
         )
@@ -255,7 +255,7 @@ class ShotViewer(Interface):
 
         self.create_scene()
 
-        camera.load_state("last_scene", ok_if_not_exists=True)
+        cam.load_state("last_scene", ok_if_not_exists=True)
 
         self.standby_screen.hide()
         self.create_title(title)
