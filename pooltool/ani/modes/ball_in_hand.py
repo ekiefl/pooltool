@@ -132,7 +132,7 @@ class BallInHandMode(BaseMode):
         return True
 
     def move_grabbed_ball(self):
-        x, y = camera.focus.getX(), camera.focus.getY()
+        x, y = camera.fixation.getX(), camera.fixation.getY()
 
         self.grab_ball_node.setX(x)
         self.grab_ball_node.setY(y)
@@ -192,7 +192,7 @@ class BallInHandMode(BaseMode):
         self.trans_ball = None
 
     def find_closest_ball(self):
-        cam_pos = camera.focus.getPos()
+        cam_pos = camera.fixation.getPos()
         d_min = np.inf
         closest = None
         for ball in Global.shots.active.balls.values():
@@ -210,9 +210,9 @@ class BallInHandMode(BaseMode):
         with mouse:
             dxp, dyp = mouse.get_dx(), mouse.get_dy()
 
-        h = camera.focus.getH() * np.pi / 180 + np.pi / 2
+        h = camera.fixation.getH() * np.pi / 180 + np.pi / 2
         dx = dxp * np.cos(h) - dyp * np.sin(h)
         dy = dxp * np.sin(h) + dyp * np.cos(h)
 
-        camera.focus.setX(camera.focus.getX() + dx * ani.move_sensitivity)
-        camera.focus.setY(camera.focus.getY() + dy * ani.move_sensitivity)
+        camera.fixation.setX(camera.fixation.getX() + dx * ani.move_sensitivity)
+        camera.fixation.setY(camera.fixation.getY() + dy * ani.move_sensitivity)

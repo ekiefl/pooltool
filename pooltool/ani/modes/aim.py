@@ -199,8 +199,8 @@ class AimMode(BaseMode):
 
         cue.setR(-new_elevation)
 
-        if -camera.fixation.getR() < (new_elevation + ani.min_camera):
-            camera.fixation.setR(-(new_elevation + ani.min_camera))
+        if camera.theta < (new_elevation + ani.min_camera):
+            camera.rotate(theta=new_elevation + ani.min_camera)
 
         Global.shots.active.cue.set_state(theta=new_elevation)
         hud.update_cue(Global.shots.active.cue)
@@ -235,20 +235,13 @@ class AimMode(BaseMode):
         ):
             cue_focus.setR(-cue_avoid.min_theta)
 
-        if -camera.fixation.getR() < (
-            -Global.shots.active.cue.get_node("cue_stick_focus").getR() + ani.min_camera
-        ):
-            camera.fixation.setR(
-                -(
-                    -Global.shots.active.cue.get_node("cue_stick_focus").getR()
-                    + ani.min_camera
-                )
-            )
+        if camera.theta < (new_theta := -cue_focus.getR() + ani.min_camera):
+            camera.rotate(theta=new_theta)
 
         Global.shots.active.cue.set_state(
             a=-new_y / R,
             b=new_z / R,
-            theta=-Global.shots.active.cue.get_node("cue_stick_focus").getR(),
+            theta=-cue_focus.getR(),
         )
 
         hud.update_cue(Global.shots.active.cue)

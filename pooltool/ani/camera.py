@@ -126,11 +126,8 @@ class Camera:
         }
 
     def store_state(self, name, overwrite=False):
-        if name in self.states:
-            if overwrite:
-                self.remove_state(name)
-            else:
-                raise Exception(f"Camera :: '{name}' is already a camera state")
+        if name in self.states and not overwrite:
+            raise Exception(f"Camera :: '{name}' is already a camera state")
 
         self.states[name] = self.get_state()
         self.last_state = name

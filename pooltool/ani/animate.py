@@ -163,7 +163,8 @@ class Interface(ShowBase):
             Global.shots.clear_animation()
             Global.shots.clear()
 
-        camera.focus = None
+        camera.fixation = None
+        camera.fixation_object = None
         camera.fixated = False
 
         gc.collect()
