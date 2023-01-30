@@ -2,11 +2,13 @@
 
 import collections
 import importlib.util
+import json
 import linecache
 import os
 import pickle
 import tempfile
 import tracemalloc
+from pathlib import Path
 
 import numpy as np
 import pprofile
@@ -51,6 +53,16 @@ def is_pickleable(obj):
     except TypeError:
         return False
     return True
+
+
+def to_json(dictionary: dict, filepath: Path) -> None:
+    with open(filepath, "w") as outfile:
+        json.dump(dictionary, outfile, indent=4)
+
+
+def from_json(filepath: Path) -> dict:
+    with open(filepath, "r") as openfile:
+        return json.load(openfile)
 
 
 def panda_path(path):

@@ -172,7 +172,7 @@ class ShotMode(BaseMode):
                 Global.shots.active.buildup()
                 cue_avoid.init_collisions()
 
-            cam.load_state(Global.mode_mgr.mode_stroked_from)
+            cam.load_saved_state(Global.mode_mgr.mode_stroked_from)
             for ball in Global.shots.active.balls.values():
                 if ball.history.is_populated():
                     ball.set(

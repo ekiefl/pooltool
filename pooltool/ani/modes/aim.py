@@ -61,7 +61,7 @@ class AimMode(BaseMode):
         cam.move_fixation(Global.shots.active.cue.cueing_ball.get_node("pos").getPos())
 
         if load_prev_cam:
-            cam.load_state(Mode.aim)
+            cam.load_saved_state(Mode.aim)
 
         self.register_keymap_event("escape", Action.quit, True)
         self.register_keymap_event("f", Action.fine_control, True)

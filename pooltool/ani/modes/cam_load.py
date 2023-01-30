@@ -36,7 +36,7 @@ class CamLoadMode(BaseMode):
 
     def exit(self):
         if self.selection:
-            cam.load_state(name=f"save_{self.selection}", ok_if_not_exists=True)
+            cam.load_saved_state(name=f"save_{self.selection}", ok_if_not_exists=True)
 
         tasks.remove("cam_load_task")
         tasks.remove("shared_task")

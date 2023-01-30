@@ -1,20 +1,20 @@
 #! /usr/bin/env python
 
-from dataclasses import dataclass
+from __future__ import annotations
 
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, Optional, Tuple, Union
+
+import cattr
 import numpy as np
-from panda3d.core import TransparencyAttrib
+from panda3d.core import LVecBase3f, TransparencyAttrib
 
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.mouse import mouse
-
-# class CameraState:
-#    "CamHpr": self.node.getHpr(),
-#    "CamPos": self.node.getPos(),
-#    "FocusHpr": self.fixation.getHpr() if self.fixated else None,
-#    "FocusPos": self.fixation.getPos() if self.fixated else None,
+from pooltool.utils import from_json, to_json
 
 
 class Camera:
@@ -24,7 +24,7 @@ class Camera:
         self.lens = Global.base.camLens
         self.lens.setNear(0.02)
 
-        self.states = {}
+        self.states: Dict[str, CameraState] = {}
         self.last_state = None
         self.fixated = False
 
@@ -37,6 +37,10 @@ class Camera:
     def theta(self):
         """The zenith angle, where theta=-90 is south pole and theta=90 is north pole"""
         return -self.fixation.getR()
+
+    @property
+    def state(self) -> CameraState:
+        return CameraState.from_camera(self)
 
     def zoom(self, s: float):
         """Zoom the camera
@@ -145,34 +149,32 @@ class Camera:
         self.node.lookAt(self.fixation)
         self.fixated = True
 
-    def get_state(self):
-        return {
-            "CamHpr": self.node.getHpr(),
-            "CamPos": self.node.getPos(),
-            "FocusHpr": self.fixation.getHpr() if self.fixated else None,
-            "FocusPos": self.fixation.getPos() if self.fixated else None,
-        }
-
     def store_state(self, name, overwrite=False):
+        """Store the current camera state in self.states"""
         if name in self.states and not overwrite:
             raise Exception(f"Camera :: '{name}' is already a camera state")
 
-        self.states[name] = self.get_state()
+        self.states[name] = self.state
         self.last_state = name
 
-    def load_state(self, name, ok_if_not_exists=False):
+    def load_saved_state(self, name, ok_if_not_exists=False):
+        """Load a named camera state found in self.states"""
         if name not in self.states:
             if ok_if_not_exists:
                 return
             else:
                 raise Exception(f"Camera :: '{name}' is not a camera state")
 
-        self.node.setPos(self.states[name]["CamPos"])
-        self.node.setHpr(self.states[name]["CamHpr"])
+        self.load_state(self.states[name])
+
+    def load_state(self, camera_state: CameraState):
+        """Load a camera state"""
+        self.node.setPos(camera_state.cam_pos)
+        self.node.setHpr(camera_state.cam_hpr)
 
         if self.fixated:
-            self.fixation.setPos(self.states[name]["FocusPos"])
-            self.fixation.setHpr(self.states[name]["FocusHpr"])
+            self.fixation.setPos(camera_state.fixation_pos)
+            self.fixation.setHpr(camera_state.fixation_hpr)
 
     def _scale_fixation_object(self):
         """Scale the camera's focus object
@@ -187,6 +189,41 @@ class Camera:
         # camera.fixation_object.getPos(render) dist = (cam_pos - focus_pos).length()
         dist = self.node.getX()
         self.fixation_object.setScale(0.002 * dist)
+
+
+Vec3D = Tuple[float, float, float]
+
+
+def _vec_to_tuple(vec: LVecBase3f) -> Vec3D:
+    return vec.x, vec.y, vec.z
+
+
+@dataclass(frozen=True)
+class CameraState:
+    cam_hpr: Vec3D
+    cam_pos: Vec3D
+    fixation_hpr: Optional[Vec3D]
+    fixation_pos: Optional[Vec3D]
+
+    def to_json(self, path: Union[str, Path]):
+        to_json(cattr.unstructure(self), Path(path))
+
+    @classmethod
+    def from_camera(cls, camera: Camera) -> CameraState:
+        return cls(
+            cam_hpr=_vec_to_tuple(camera.node.getHpr()),
+            cam_pos=_vec_to_tuple(camera.node.getPos()),
+            fixation_hpr=_vec_to_tuple(camera.fixation.getHpr())
+            if camera.fixated
+            else None,
+            fixation_pos=_vec_to_tuple(camera.fixation.getPos())
+            if camera.fixated
+            else None,
+        )
+
+    @classmethod
+    def from_json(cls, path: Union[str, Path]) -> CameraState:
+        return cattr.structure(from_json(Path(path)), cls)
 
 
 cam = Camera()

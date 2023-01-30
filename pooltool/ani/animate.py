@@ -255,7 +255,7 @@ class ShotViewer(Interface):
 
         self.create_scene()
 
-        cam.load_state("last_scene", ok_if_not_exists=True)
+        cam.load_saved_state("last_scene", ok_if_not_exists=True)
 
         self.standby_screen.hide()
         self.create_title(title)

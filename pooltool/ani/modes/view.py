@@ -54,7 +54,7 @@ class ViewMode(BaseMode):
             Global.shots.active.cue.hide_nodes(ignore=("cue_cseg",))
 
         if load_prev_cam:
-            cam.load_state(Mode.view)
+            cam.load_saved_state(Mode.view)
 
         if move_active:
             self.keymap[Action.move] = True
