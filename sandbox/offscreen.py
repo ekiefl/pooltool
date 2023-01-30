@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 
 import pooltool as pt
+from pooltool.ani.camera import CameraState
 
 
 def main(args):
@@ -36,6 +37,7 @@ def main(args):
     interface.save(
         shot=shot,
         save_dir=output,
+        camera_state=CameraState.from_json("test.json"),
         file_prefix="my_shot",
         img_format="jpg",
         size=(480 * 1.6, 480),

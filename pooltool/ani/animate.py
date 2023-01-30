@@ -28,7 +28,7 @@ import pooltool.ani.tasks as tasks
 import pooltool.games as games
 import pooltool.terminal as terminal
 import pooltool.utils as utils
-from pooltool.ani.camera import cam
+from pooltool.ani.camera import CameraState, cam
 from pooltool.ani.environment import environment
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.hud import HUDElement, hud
@@ -388,6 +388,7 @@ class ImageSaver(Interface):
         self,
         shot: System,
         save_dir: Union[str, Path],
+        camera_state: CameraState = None,
         file_prefix: str = "shot",
         size: Tuple[int, int] = (230, 144),
         img_format: ImageFormat = ImageFormat.JPG,
@@ -406,6 +407,8 @@ class ImageSaver(Interface):
             save_dir:
                 The directory that you would like to save the shots in. It must not
                 already exist.
+            camera_state:
+                A camera state specifying the camera's view of the table.
             file_prefix:
                 The image filenames will be prefixed with this string. By default, the
                 prefix is "shot".
@@ -429,6 +432,12 @@ class ImageSaver(Interface):
         self._init_system_collection(shot)
         self._resize_window(size)
         self.create_scene()
+
+        # We don't want the cue in this
+        shot.cue.hide_nodes()
+
+        if camera_state:
+            cam.load_state(camera_state)
 
         if show_hud:
             hud.init()
