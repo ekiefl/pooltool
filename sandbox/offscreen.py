@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 
 import pooltool as pt
-from pooltool.ani.camera import CameraState
+from pooltool.ani.camera import camera_states
 
 
 def main(args):
@@ -33,18 +33,28 @@ def main(args):
     output = Path(__file__).parent / "offscreen_out"
     if output.exists():
         shutil.rmtree(output)
+    output.mkdir()
 
-    interface.save(
-        shot=shot,
-        save_dir=output,
-        camera_state=CameraState.from_json("test.json"),
-        file_prefix="my_shot",
-        img_format="jpg",
-        size=(480 * 1.6, 480),
-        show_hud=True,
-        fps=10,
-        make_gif=True,
-    )
+    # These camera states can be found in pooltool/ani/camera/camera_states. You can
+    # make your own by creating a new JSON in that directory. Reach out if you want to
+    # create a camera state from within the interactive interface (this is also
+    # possible).
+    for camera_state in [
+        "7_foot_overhead",
+        "7_foot_offcenter",
+        "rack",
+    ]:
+        interface.save(
+            shot=shot,
+            save_dir=output / camera_state,
+            camera_state=camera_states[camera_state],
+            file_prefix=camera_state,
+            img_format="jpg",
+            size=(480 * 1.6, 480),
+            show_hud=False,
+            fps=10,
+            make_gif=True,
+        )
 
 
 if __name__ == "__main__":

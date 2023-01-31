@@ -224,6 +224,3 @@ class CameraState:
     @classmethod
     def from_json(cls, path: Union[str, Path]) -> CameraState:
         return cattr.structure(from_json(Path(path)), cls)
-
-
-cam = Camera()
