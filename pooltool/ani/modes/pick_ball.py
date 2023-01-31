@@ -7,7 +7,7 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.constants as c
 from pooltool.ani.action import Action
-from pooltool.ani.camera import player_cam
+from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
@@ -44,7 +44,7 @@ class PickBallMode(BaseMode):
             Global.mode_mgr.change_mode(Mode.aim)
             return task.done
 
-        self.move_camera_pick_ball()
+        cam.move_fixation_via_mouse()
 
         closest = PickBallMode.find_closest_ball(self)
         if closest != self.closest_ball:
@@ -104,7 +104,7 @@ class PickBallMode(BaseMode):
         return task.cont
 
     def find_closest_ball(self):
-        cam_pos = player_cam.focus.getPos()
+        cam_fixation = cam.fixation.getPos()
         d_min = np.inf
         closest = None
         for ball in Global.shots.active.balls.values():
@@ -112,19 +112,8 @@ class PickBallMode(BaseMode):
                 continue
             if ball.s == c.pocketed:
                 continue
-            d = np.linalg.norm(ball.rvw[0] - cam_pos)
+            d = np.linalg.norm(ball.rvw[0] - cam_fixation)
             if d < d_min:
                 d_min, closest = d, ball
 
         return closest
-
-    def move_camera_pick_ball(self):
-        with mouse:
-            dxp, dyp = mouse.get_dx(), mouse.get_dy()
-
-        h = player_cam.focus.getH() * np.pi / 180 + np.pi / 2
-        dx = dxp * np.cos(h) - dyp * np.sin(h)
-        dy = dxp * np.sin(h) + dyp * np.cos(h)
-
-        player_cam.focus.setX(player_cam.focus.getX() + dx * ani.move_sensitivity)
-        player_cam.focus.setY(player_cam.focus.getY() + dy * ani.move_sensitivity)

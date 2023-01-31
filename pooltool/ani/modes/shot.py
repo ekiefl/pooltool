@@ -1,12 +1,9 @@
 #! /usr/bin/env python
 
-import numpy as np
-
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
-import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
-from pooltool.ani.camera import player_cam
+from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
@@ -57,8 +54,6 @@ class ShotMode(BaseMode):
             Global.shots.set_animation()
             Global.shots.start_animation(PlaybackMode.SINGLE)
             Global.shots.skip_stroke()
-
-        player_cam.scale_focus()
 
         hud.update_cue(Global.shots.active.cue)
 
@@ -177,7 +172,7 @@ class ShotMode(BaseMode):
                 Global.shots.active.buildup()
                 cue_avoid.init_collisions()
 
-            player_cam.load_state(Global.mode_mgr.mode_stroked_from)
+            cam.load_saved_state(Global.mode_mgr.mode_stroked_from)
             for ball in Global.shots.active.balls.values():
                 if ball.history.is_populated():
                     ball.set(
@@ -197,7 +192,7 @@ class ShotMode(BaseMode):
 
     def shot_view_task(self, task):
         if self.keymap[Action.close_scene]:
-            player_cam.store_state("last_scene", overwrite=True)
+            cam.store_state("last_scene", overwrite=True)
             Global.base.messenger.send("close-scene")
             Global.mode_mgr.end_mode()
             Global.base.messenger.send("stop")
@@ -212,13 +207,20 @@ class ShotMode(BaseMode):
                 Global.mode_mgr.change_mode(Mode.aim, exit_kwargs=dict(key="advance"))
 
         elif self.keymap[Action.zoom]:
-            self.zoom_camera_shot()
+            cam.zoom_via_mouse()
 
         elif self.keymap[Action.move]:
-            self.move_camera_shot()
+            cam.move_fixation_via_mouse()
 
-        elif mouse.initialized:
-            self.maybe_rotate_camera(task)
+        elif task.time > ani.rotate_downtime:
+            # Only rotate the camera if some time has passed since the mode was entered,
+            # otherwise the shot followthrough jarringly rotates the camera
+            cam.rotate_via_mouse()
+
+        else:
+            # We didn't do anything this frame, but touch the mouse so any future mouse
+            # movements don't experience a big jump
+            mouse.touch()
 
         return task.cont
 
@@ -315,37 +317,3 @@ class ShotMode(BaseMode):
 
         # Set the HUD
         hud.update_cue(Global.shots.active.cue)
-
-    def zoom_camera_shot(self):
-        with mouse:
-            s = -mouse.get_dy() * ani.zoom_sensitivity
-
-        player_cam.node.setPos(autils.multiply_cw(player_cam.node.getPos(), 1 - s))
-        player_cam.scale_focus()
-
-    def move_camera_shot(self):
-        with mouse:
-            dxp, dyp = mouse.get_dx(), mouse.get_dy()
-
-        h = player_cam.focus.getH() * np.pi / 180 + np.pi / 2
-        dx = dxp * np.cos(h) - dyp * np.sin(h)
-        dy = dxp * np.sin(h) + dyp * np.cos(h)
-
-        player_cam.focus.setX(player_cam.focus.getX() + dx * ani.move_sensitivity)
-        player_cam.focus.setY(player_cam.focus.getY() + dy * ani.move_sensitivity)
-
-    def maybe_rotate_camera(self, task):
-        if task.time < ani.rotate_downtime:
-            # Shot follow through can move camera jarringly, so don't move camera if
-            # within the dwell time. But do touch the mouse so there is not a big jump
-            mouse.touch()
-            return
-
-        fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
-
-        with mouse:
-            alpha_x = player_cam.focus.getH() - fx * mouse.get_dx()
-            alpha_y = max(min(0, player_cam.focus.getR() + fy * mouse.get_dy()), -90)
-
-        player_cam.focus.setH(alpha_x)  # Move view laterally
-        player_cam.focus.setR(alpha_y)  # Move view vertically

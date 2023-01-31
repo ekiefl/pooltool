@@ -28,7 +28,7 @@ import pooltool.ani.tasks as tasks
 import pooltool.games as games
 import pooltool.terminal as terminal
 import pooltool.utils as utils
-from pooltool.ani.camera import player_cam
+from pooltool.ani.camera import CameraState, cam
 from pooltool.ani.environment import environment
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.hud import HUDElement, hud
@@ -122,7 +122,7 @@ class Interface(ShowBase):
         if isinstance(self.win, GraphicsWindow):
             mouse.init()
 
-        player_cam.init()
+        cam.init()
 
         if not ani.settings["graphics"]["shader"]:
             Global.render.set_shader_off()
@@ -163,8 +163,9 @@ class Interface(ShowBase):
             Global.shots.clear_animation()
             Global.shots.clear()
 
-        player_cam.focus = None
-        player_cam.has_focus = False
+        cam.fixation = None
+        cam.fixation_object = None
+        cam.fixated = False
 
         gc.collect()
 
@@ -182,9 +183,9 @@ class Interface(ShowBase):
         Global.shots.active.cue.render()
 
         R = max([ball.R for ball in Global.shots.active.balls.values()])
-        player_cam.create_focus(
-            parent=Global.shots.active.table.get_node("cloth"),
+        cam.fixate(
             pos=(Global.shots.active.table.w / 2, Global.shots.active.table.l / 2, R),
+            node=Global.shots.active.table.get_node("cloth"),
         )
 
     def monitor(self, task):
@@ -254,7 +255,7 @@ class ShotViewer(Interface):
 
         self.create_scene()
 
-        player_cam.load_state("last_scene", ok_if_not_exists=True)
+        cam.load_saved_state("last_scene", ok_if_not_exists=True)
 
         self.standby_screen.hide()
         self.create_title(title)
@@ -387,6 +388,7 @@ class ImageSaver(Interface):
         self,
         shot: System,
         save_dir: Union[str, Path],
+        camera_state: CameraState = None,
         file_prefix: str = "shot",
         size: Tuple[int, int] = (230, 144),
         img_format: ImageFormat = ImageFormat.JPG,
@@ -405,6 +407,8 @@ class ImageSaver(Interface):
             save_dir:
                 The directory that you would like to save the shots in. It must not
                 already exist.
+            camera_state:
+                A camera state specifying the camera's view of the table.
             file_prefix:
                 The image filenames will be prefixed with this string. By default, the
                 prefix is "shot".
@@ -428,6 +432,12 @@ class ImageSaver(Interface):
         self._init_system_collection(shot)
         self._resize_window(size)
         self.create_scene()
+
+        # We don't want the cue in this
+        shot.cue.hide_nodes()
+
+        if camera_state:
+            cam.load_state(camera_state)
 
         if show_hud:
             hud.init()

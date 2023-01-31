@@ -4,9 +4,8 @@ import numpy as np
 
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
-import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
-from pooltool.ani.camera import player_cam
+from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
@@ -55,9 +54,7 @@ class ViewMode(BaseMode):
             Global.shots.active.cue.hide_nodes(ignore=("cue_cseg",))
 
         if load_prev_cam:
-            player_cam.load_state(Mode.view)
-
-        player_cam.scale_focus()
+            cam.load_saved_state(Mode.view)
 
         if move_active:
             self.keymap[Action.move] = True
@@ -98,7 +95,7 @@ class ViewMode(BaseMode):
 
         if ani.settings["gameplay"]["cue_collision"]:
             tasks.remove("collision_task")
-        player_cam.store_state(Mode.view, overwrite=True)
+        cam.store_state(Mode.view, overwrite=True)
 
     def view_task(self, task):
         if self.keymap[Action.stroke]:
@@ -110,9 +107,9 @@ class ViewMode(BaseMode):
         elif self.keymap[Action.ball_in_hand]:
             Global.mode_mgr.change_mode(Mode.ball_in_hand)
         elif self.keymap[Action.zoom]:
-            self.zoom_camera_view()
+            cam.zoom_via_mouse()
         elif self.keymap[Action.move]:
-            self.move_camera_view()
+            cam.move_fixation_via_mouse()
         elif self.keymap[Action.hide_cue]:
             self.keymap[Action.hide_cue] = False
             self.keymap[Action.english] = False
@@ -142,41 +139,9 @@ class ViewMode(BaseMode):
                 )
                 return task.done
         else:
-            self.rotate_camera_view()
+            cam.rotate_via_mouse()
 
         return task.cont
-
-    def zoom_camera_view(self):
-        with mouse:
-            s = -mouse.get_dy() * ani.zoom_sensitivity
-
-        player_cam.node.setPos(autils.multiply_cw(player_cam.node.getPos(), 1 - s))
-        player_cam.scale_focus()
-
-    def move_camera_view(self):
-        with mouse:
-            dxp, dyp = mouse.get_dx(), mouse.get_dy()
-
-        # NOTE This conversion _may_ depend on how I initialized player_cam.focus
-        h = player_cam.focus.getH() * np.pi / 180 + np.pi / 2
-        dx = dxp * np.cos(h) - dyp * np.sin(h)
-        dy = dxp * np.sin(h) + dyp * np.cos(h)
-
-        player_cam.focus.setX(player_cam.focus.getX() + dx * ani.move_sensitivity)
-        player_cam.focus.setY(player_cam.focus.getY() + dy * ani.move_sensitivity)
-
-    def rotate_camera_view(self):
-        if self.keymap[Action.fine_control]:
-            fx, fy = ani.rotate_fine_sensitivity_x, ani.rotate_fine_sensitivity_y
-        else:
-            fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
-
-        with mouse:
-            alpha_x = player_cam.focus.getH() - fx * mouse.get_dx()
-            alpha_y = max(min(0, player_cam.focus.getR() + fy * mouse.get_dy()), -90)
-
-        player_cam.focus.setH(alpha_x)  # Move view laterally
-        player_cam.focus.setR(alpha_y)  # Move view vertically
 
     def view_apply_power(self):
         Global.shots.active.cue.show_nodes(ignore=("cue_cseg",))

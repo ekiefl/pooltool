@@ -717,7 +717,7 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
 
         SystemCollectionRender.__init__(self)
 
-        self.active = None
+        self.active: System = None
         self.active_index = None
 
     def append(self, system):

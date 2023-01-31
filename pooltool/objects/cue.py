@@ -53,7 +53,7 @@ class CueRender(Render):
         )
         self.nodes["cue_stick_focus"] = cue_stick_focus
 
-        self.update_focus()
+        self.match_ball_position()
         self.get_node("cue_stick").reparentTo(cue_stick_focus)
 
         self.has_focus = True
@@ -208,7 +208,10 @@ class CueRender(Render):
         seconds, calculate the average velocity since the apex
         """
 
-        backstroke_time, apex_time, strike_time = self.get_stroke_times()
+        try:
+            backstroke_time, apex_time, strike_time = self.get_stroke_times()
+        except IndexError:
+            raise StrokeError("Unresolved edge case")
 
         max_time = 0.1
         if (strike_time - apex_time) < max_time:
@@ -218,7 +221,8 @@ class CueRender(Render):
             if strike_time - t > max_time:
                 return self.stroke_pos[::-1][i] / max_time
 
-    def update_focus(self):
+    def match_ball_position(self):
+        """Update the cue stick's position to match the cueing ball's position"""
         self.get_node("cue_stick_focus").setPos(self.follow.get_node("pos").getPos())
 
     def get_render_state(self):
@@ -262,7 +266,7 @@ class CueRender(Render):
             ) = self.get_render_state()
 
     def set_render_state_as_object_state(self):
-        self.update_focus()
+        self.match_ball_position()
 
         cue_stick = self.get_node("cue_stick")
         cue_stick_focus = self.get_node("cue_stick_focus")
