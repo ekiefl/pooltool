@@ -73,6 +73,7 @@ class Event(ABC):
         agents = [(agent.id if agent is not None else None) for agent in self.agents]
         lines = [
             f"<{self.__class__.__name__} object at {hex(id(self))}>",
+            f" ├── type   : {self.event_type}",
             f" ├── time   : {self.time}",
             f" └── agents : {agents}",
         ]
