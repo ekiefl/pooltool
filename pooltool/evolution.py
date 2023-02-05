@@ -13,10 +13,8 @@ from pooltool.events import (
     BallBallCollision,
     BallCushionCollision,
     BallPocketCollision,
+    EventType,
     NonEvent,
-    type_ball_ball,
-    type_ball_cushion,
-    type_ball_pocket,
 )
 from pooltool.objects import DummyBall, NonObject
 
@@ -28,9 +26,9 @@ class EvolveShot(ABC):
 
         # What kinds of events should be considered?
         self.include = {
-            type_ball_ball: True,
-            type_ball_cushion: True,
-            type_ball_pocket: True,
+            EventType.BALL_BALL: True,
+            EventType.BALL_CUSHION: True,
+            EventType.BALL_POCKET: True,
         }
 
     def simulate(self, name="NA", quiet=False, raise_simulate_error=False, **kwargs):

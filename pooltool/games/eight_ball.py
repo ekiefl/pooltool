@@ -62,7 +62,7 @@ class EightBall(Game):
         if not self.shot_info["is_legal"]:
             return True
 
-        pocket_events = shot.events.filter_type(e.type_ball_pocket)
+        pocket_events = shot.events.filter_type(e.EventType.BALL_POCKET)
 
         if self.active_player.stripes_or_solids is None and len(pocket_events):
             return False
@@ -76,14 +76,14 @@ class EightBall(Game):
         return True
 
     def is_game_over(self, shot):
-        pocket_events = shot.events.filter_type(e.type_ball_pocket)
+        pocket_events = shot.events.filter_type(e.EventType.BALL_POCKET)
         for event in pocket_events:
             if "8" in (event.agents[0].id, event.agents[1].id):
                 return True
 
     def is_object_ball_hit_first(self, shot):
         cue = shot.balls["cue"]
-        collisions = cue.events.filter_type(e.type_ball_ball)
+        collisions = cue.events.filter_type(e.EventType.BALL_BALL)
         if not len(collisions):
             return False
 
@@ -105,7 +105,7 @@ class EightBall(Game):
             return True
 
         ball_pocketed = (
-            True if len(shot.events.filter_type(e.type_ball_pocket)) else False
+            True if len(shot.events.filter_type(e.EventType.BALL_POCKET)) else False
         )
         enough_cushions = (
             True if len(self.numbered_balls_that_hit_cushion(shot)) >= 4 else False
@@ -116,7 +116,7 @@ class EightBall(Game):
     def numbered_balls_that_hit_cushion(self, shot):
         numbered_balls = [ball for ball in shot.balls.values() if ball.id != "cue"]
 
-        cushion_events = shot.events.filter_type(e.type_ball_cushion).filter_ball(
+        cushion_events = shot.events.filter_type(e.EventType.BALL_CUSHION).filter_ball(
             numbered_balls
         )
 
@@ -129,15 +129,15 @@ class EightBall(Game):
         if not self.is_object_ball_hit_first(shot):
             return False
 
-        first_contact = shot.balls["cue"].events.filter_type(e.type_ball_ball)[0]
+        first_contact = shot.balls["cue"].events.filter_type(e.EventType.BALL_BALL)[0]
         cushion_events = shot.events.filter_time(first_contact.time).filter_type(
-            e.type_ball_cushion
+            e.EventType.BALL_CUSHION
         )
 
         cushion_hit = True if len(cushion_events) else False
 
         numbered_balls = [ball for ball in shot.balls.values() if ball.id != "cue"]
-        ball_pocketed = shot.events.filter_type(e.type_ball_pocket).filter_ball(
+        ball_pocketed = shot.events.filter_type(e.EventType.BALL_POCKET).filter_ball(
             numbered_balls
         )
 
@@ -147,7 +147,7 @@ class EightBall(Game):
         if "8" in self.active_player.target_balls:
             return False
 
-        pocket_events = shot.events.filter_type(e.type_ball_pocket)
+        pocket_events = shot.events.filter_type(e.EventType.BALL_POCKET)
         for event in pocket_events:
             if "8" in (event.agents[0].id, event.agents[1].id):
                 return True

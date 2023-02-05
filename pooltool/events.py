@@ -9,34 +9,47 @@ import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.error import ConfigError
 from pooltool.objects import NonObject
+from pooltool.utils import strenum
 
-class_none = "none"
-class_collision = "collision"
-class_transition = "transition"
-type_none = "none"
-type_ball_ball = "ball-ball"
-type_ball_cushion = "ball-cushion"
-type_ball_pocket = "ball-pocket"
-type_stick_ball = "stick-ball"
-type_spinning_stationary = "spinning-stationary"
-type_rolling_stationary = "rolling-stationary"
-type_rolling_spinning = "rolling-spinning"
-type_sliding_rolling = "sliding-rolling"
+
+class EventType(strenum.StrEnum):
+    NONE = strenum.auto()
+    BALL_BALL = strenum.auto()
+    BALL_CUSHION = strenum.auto()
+    BALL_POCKET = strenum.auto()
+    STICK_BALL = strenum.auto()
+    SPINNING_STATIONARY = strenum.auto()
+    ROLLING_STATIONARY = strenum.auto()
+    ROLLING_SPINNING = strenum.auto()
+    SLIDING_ROLLING = strenum.auto()
+
+    def is_collision(self):
+        return self in (
+            EventType.BALL_BALL,
+            EventType.BALL_CUSHION,
+            EventType.BALL_POCKET,
+            EventType.STICK_BALL,
+        )
+
+    def is_transition(self):
+        return self in (
+            EventType.SPINNING_STATIONARY,
+            EventType.ROLLING_STATIONARY,
+            EventType.ROLLING_SPINNING,
+            EventType.SLIDING_ROLLING,
+        )
 
 
 class Event(ABC):
-    event_type, event_class = None, None
+    event_type = None
 
     def __init__(self, *agents, t=None):
         self.time = t
         self.agents = agents
+        self.initial_states: list
+        self.final_states: list
 
-        self.partial = True if not len(agents) else False
-
-        if self.event_class is None:
-            raise NotImplementedError(
-                "Child classes of Event must have a defined event_type"
-            )
+        self.partial = not bool(len(agents))
 
     def __repr__(self):
         agents = [(agent.id if agent is not None else None) for agent in self.agents]
@@ -48,7 +61,7 @@ class Event(ABC):
 
         return "\n".join(lines) + "\n"
 
-    def is_partial(self):
+    def assert_not_partial(self):
         if self.partial:
             raise ConfigError(
                 f"Cannot call `{self.__class__.__name__}.resolve` when event is "
@@ -67,42 +80,41 @@ class Event(ABC):
         utils.save_pickle(self.as_dict(), path)
 
 
-class Collision(Event):
-    event_class = class_collision
+def _get_initial_states(agent):
+    """This is a hack job
 
+    Actual copies of the object should be made rather than storing just rvw and s
+    """
+    if hasattr(agent, "rvw"):
+        return np.copy(agent.rvw), agent.s
+    else:
+        return None
+
+
+class Collision(Event):
     def __init__(self, body1, body2, t=None):
         Event.__init__(self, body1, body2, t=t)
-
-        self.agent1_state_initial = None
-        self.agent2_state_initial = None
-        self.agent1_state_final = None
-        self.agent2_state_final = None
+        self.initial_states = [_get_initial_states(agent) for agent in [body1, body2]]
 
     def as_dict(self):
         return dict(
-            event_class=self.event_class,
             event_type=self.event_type,
             agent_ids=[agent.id for agent in self.agents],
-            agent1_state_initial=self.agent1_state_initial,
-            agent2_state_initial=self.agent2_state_initial,
-            agent1_state_final=self.agent1_state_final,
-            agent2_state_final=self.agent2_state_final,
+            initial_states=self.initial_states,
+            final_states=self.final_states,
             t=self.time,
         )
 
 
 class BallBallCollision(Collision):
-    event_type = type_ball_ball
+    event_type = EventType.BALL_BALL
 
     def __init__(self, ball1, ball2, t=None):
         Collision.__init__(self, body1=ball1, body2=ball2, t=t)
 
     def resolve(self):
-        self.is_partial()
+        self.assert_not_partial()
         ball1, ball2 = self.agents
-
-        self.agent1_state_initial = (np.copy(ball1.rvw), ball1.s)
-        self.agent2_state_initial = (np.copy(ball2.rvw), ball2.s)
 
         rvw1, rvw2 = physics.resolve_ball_ball_collision(ball1.rvw, ball2.rvw)
         s1, s2 = c.sliding, c.sliding
@@ -113,46 +125,22 @@ class BallBallCollision(Collision):
         ball2.set(rvw2, s2, t=self.time)
         ball2.update_next_transition_event()
 
-        self.agent1_state_final = (np.copy(ball1.rvw), ball1.s)
-        self.agent2_state_final = (np.copy(ball2.rvw), ball2.s)
-
-    def cut_angle(self):
-        """Get the cut angle of a ball-ball collision
-
-        The conception of a cut angle only makes sense when one ball is non-translating.
-        Therefore, if this condition is not met, None is returned
-        """
-
-        if self.agent1_state_initial[1] in c.nontranslating:
-            v1 = self.agent2_state_initial[0][1]
-            v2 = self.agent1_state_final[0][1]
-        elif self.agent2_state_initial[1] in c.nontranslating:
-            v1 = self.agent1_state_initial[0][1]
-            v2 = self.agent2_state_final[0][1]
-        else:
-            return None
-
-        unit_vector_1 = v1 / np.linalg.norm(v1)
-        unit_vector_2 = v2 / np.linalg.norm(v2)
-        dot_product = np.dot(unit_vector_1, unit_vector_2)
-        angle = np.arccos(dot_product)
-        sign = np.sign(utils.cross_fast(v1, v2)[-1])
-
-        return angle * sign * 180 / np.pi
+        self.final_states = [
+            (np.copy(ball1.rvw), ball1.s),
+            (np.copy(ball2.rvw), ball2.s),
+        ]
 
 
 class BallCushionCollision(Collision):
-    event_type = type_ball_cushion
+    event_type = EventType.BALL_CUSHION
 
     def __init__(self, ball, cushion, t=None):
         Collision.__init__(self, body1=ball, body2=cushion, t=t)
 
     def resolve(self):
-        self.is_partial()
+        self.assert_not_partial()
         ball, cushion = self.agents
         normal = cushion.get_normal(ball.rvw)
-
-        self.agent1_state_initial = (np.copy(ball.rvw), ball.s)
 
         rvw = physics.resolve_ball_cushion_collision(
             rvw=ball.rvw,
@@ -168,20 +156,21 @@ class BallCushionCollision(Collision):
         ball.set(rvw, s, t=self.time)
         ball.update_next_transition_event()
 
-        self.agent1_state_final = (np.copy(ball.rvw), ball.s)
+        self.final_states = [
+            (np.copy(ball.rvw), ball.s),
+            None,
+        ]
 
 
 class StickBallCollision(Collision):
-    event_type = type_stick_ball
+    event_type = EventType.STICK_BALL
 
     def __init__(self, cue_stick, ball, t=None):
         Collision.__init__(self, body1=cue_stick, body2=ball, t=t)
 
     def resolve(self):
-        self.is_partial()
+        self.assert_not_partial()
         cue_stick, ball = self.agents
-
-        self.agent1_state_initial = (np.copy(ball.rvw), ball.s)
 
         v, w = physics.cue_strike(
             ball.m,
@@ -204,20 +193,21 @@ class StickBallCollision(Collision):
         ball.set(rvw, s)
         ball.update_next_transition_event()
 
-        self.agent1_state_final = (np.copy(ball.rvw), ball.s)
+        self.final_states = [
+            (np.copy(ball.rvw), ball.s),
+            None,
+        ]
 
 
 class BallPocketCollision(Collision):
-    event_type = type_ball_pocket
+    event_type = EventType.BALL_POCKET
 
     def __init__(self, ball, pocket, t=None):
         Collision.__init__(self, body1=ball, body2=pocket, t=t)
 
     def resolve(self):
-        self.is_partial()
+        self.assert_not_partial()
         ball, pocket = self.agents
-
-        self.agent1_state_initial = (np.copy(ball.rvw), ball.s)
 
         # Ball is placed at the pocket center
         rvw = np.array([[pocket.a, pocket.b, -pocket.depth], [0, 0, 0], [0, 0, 0]])
@@ -227,42 +217,40 @@ class BallPocketCollision(Collision):
 
         pocket.add(ball.id)
 
-        self.agent1_state_final = (np.copy(ball.rvw), ball.s)
+        self.final_states = [
+            (np.copy(ball.rvw), ball.s),
+            None,
+        ]
 
 
 class Transition(Event):
-    event_class = class_transition
-
     def __init__(self, ball, t=None):
         Event.__init__(self, ball, t=t)
-
-        self.agent_state_initial = None
-        self.agent_state_final = None
+        self.initial_states = _get_initial_states(ball)
 
     def resolve(self):
         ball = self.agents[0]
 
-        self.is_partial()
+        self.assert_not_partial()
         self.agent_state_initial = (np.copy(ball.rvw), self.state_start)
 
         ball.s = self.state_end
         ball.update_next_transition_event()
 
-        self.agent_state_final = (np.copy(ball.rvw), self.state_end)
+        self.final_states = [(np.copy(ball.rvw), self.state_end)]
 
     def as_dict(self):
         return dict(
-            event_class=self.event_class,
             event_type=self.event_type,
             agent_ids=[agent.id for agent in self.agents],
-            agent_state_initial=self.agent_state_initial,
-            agent_state_final=self.agent_state_final,
+            initial_states=self.initial_states,
+            final_states=self.final_states,
             t=self.time,
         )
 
 
 class SpinningStationaryTransition(Transition):
-    event_type = type_spinning_stationary
+    event_type = EventType.SPINNING_STATIONARY
 
     def __init__(self, ball, t=None):
         Transition.__init__(self, ball, t=t)
@@ -270,7 +258,7 @@ class SpinningStationaryTransition(Transition):
 
 
 class RollingStationaryTransition(Transition):
-    event_type = type_rolling_stationary
+    event_type = EventType.ROLLING_STATIONARY
 
     def __init__(self, ball, t=None):
         Transition.__init__(self, ball, t=t)
@@ -278,7 +266,7 @@ class RollingStationaryTransition(Transition):
 
 
 class RollingSpinningTransition(Transition):
-    event_type = type_rolling_spinning
+    event_type = EventType.ROLLING_SPINNING
 
     def __init__(self, ball, t=None):
         Transition.__init__(self, ball, t=t)
@@ -286,7 +274,7 @@ class RollingSpinningTransition(Transition):
 
 
 class SlidingRollingTransition(Transition):
-    event_type = type_sliding_rolling
+    event_type = EventType.SLIDING_ROLLING
 
     def __init__(self, ball, t=None):
         Transition.__init__(self, ball, t=t)
@@ -294,21 +282,23 @@ class SlidingRollingTransition(Transition):
 
 
 class NonEvent(Event):
-    event_type = type_none
-    event_class = class_none
+    event_type = EventType.NONE
 
     def __init__(self, t=None):
         Event.__init__(self, t=t)
+        self.initial_states = []
+        self.final_states = []
         self.partial = False
 
     def resolve(self):
-        self.is_partial()
+        self.assert_not_partial()
 
     def as_dict(self):
         return dict(
-            event_class=self.event_class,
             event_type=self.event_type,
-            agent_ids=tuple(),
+            initial_states=self.initial_states,
+            final_states=self.final_states,
+            agent_ids=list(),
             t=self.time,
         )
 
@@ -322,8 +312,8 @@ class Events(utils.ListLike):
         Parameters
         ==========
         types : str or list of str
-            Event types to be filtered by. E.g. pooltool.events.type_ball_cushion or
-            equivalently, 'ball-cushion'
+            Event types to be filtered by. E.g. pooltool.events.EventType.BALL_CUSHION
+            or equivalently, 'ball_cushion'
 
         Returns
         =======
@@ -364,7 +354,7 @@ class Events(utils.ListLike):
 
         events = Events()
         for event in self._list:
-            if keep_nonevent and event.event_type == type_none:
+            if keep_nonevent and event.event_type == EventType.NONE:
                 events.append(event)
             else:
                 for ball in balls:
@@ -417,32 +407,25 @@ def get_subclasses(cls):
     )
 
 
-# event_classes looks like {
+# event_type_dict looks like {
 #    'spinning-stationary': <class 'pooltool.events.SpinningStationaryTransition'>,
 #    'rolling-stationary': <class 'pooltool.events.RollingStationaryTransition'>,
 #    'ball-ball': <class 'pooltool.events.BallBallCollision'>,
 #    'ball-cushion': <class 'pooltool.events.BallCushionCollision'>,
 #    (...)
 # }
-event_classes = {subcls.event_type: subcls for subcls in get_subclasses(Event)}
+event_type_dict = {subcls.event_type: subcls for subcls in get_subclasses(Event)}
 
 
 def event_from_dict(d):
-    cls = event_classes[d["event_type"]]
+    cls = event_type_dict[d["event_type"]]
 
     # The constructed agents are placeholders
     agents = [NonObject(agent_id) for agent_id in d["agent_ids"]]
 
     event = cls(*agents, t=d["t"])
-
-    if d["event_class"] == class_collision:
-        event.agent1_state_initial = d["agent1_state_initial"]
-        event.agent2_state_initial = d["agent2_state_initial"]
-        event.agent1_state_final = d["agent1_state_final"]
-        event.agent2_state_final = d["agent2_state_final"]
-    elif d["event_class"] == class_transition:
-        event.agent_state_initial = d["agent_state_initial"]
-        event.agent_state_final = d["agent_state_final"]
+    event.initial_states = d["initial_states"]
+    event.final_states = d["final_states"]
 
     # `partial` is set to True, which disables the ability to call event.resolve. This
     # is because NonObjects have been passed as the agents of this event

@@ -11,18 +11,7 @@ import pooltool.constants as c
 import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.error import ConfigError, SimulateError
-from pooltool.events import (
-    Events,
-    NonEvent,
-    class_collision,
-    class_none,
-    class_transition,
-    event_from_dict,
-    type_ball_ball,
-    type_ball_cushion,
-    type_ball_pocket,
-    type_stick_ball,
-)
+from pooltool.events import Events, EventType, NonEvent, event_from_dict
 from pooltool.evolution import EvolveShotEventBased
 from pooltool.objects.ball import BallHistory, ball_from_dict
 from pooltool.objects.cue import cue_from_dict
@@ -167,13 +156,13 @@ class SystemHistory(object):
 
                     # We need to get the ball's outgoing state from the event. We'll
                     # evolve the system from this state.
-                    if events[event_counter].event_class == class_transition:
-                        rvw, s = events[event_counter].agent_state_initial
-                    elif events[event_counter].event_class == class_collision:
+                    if events[event_counter].event_type.is_transition():
+                        rvw, s = events[event_counter].final_states[0]
+                    elif events[event_counter].event_type.is_collision():
                         if ball == events[event_counter].agents[0]:
-                            rvw, s = events[event_counter].agent1_state_final
+                            rvw, s = events[event_counter].final_states[0]
                         else:
-                            rvw, s = events[event_counter].agent2_state_final
+                            rvw, s = events[event_counter].final_states[1]
                     else:
                         raise NotImplementedError(
                             f"Can't handle {events[event_counter]}"
@@ -476,11 +465,11 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
             # dictionary.  We attempt to change that by associating the proper agents
             # based on object IDs. So if the NonObject agent has an id 'cue', We replace
             # this agent with a proper instantiation of 'cue', i.e. balls['cue']
-            if event.event_type == type_ball_ball:
+            if event.event_type == EventType.BALL_BALL:
                 agent1, agent2 = event.agents
                 event.agents = (balls[agent1.id], balls[agent2.id])
 
-            elif event.event_type == type_ball_cushion:
+            elif event.event_type == EventType.BALL_CUSHION:
                 agent1, agent2 = event.agents
                 if agent2.id.endswith("edge"):
                     cushion = table.cushion_segments["linear"][agent2.id.split("_")[0]]
@@ -488,15 +477,15 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
                     cushion = table.cushion_segments["circular"][agent2.id]
                 event.agents = (balls[agent1.id], cushion)
 
-            elif event.event_type == type_ball_pocket:
+            elif event.event_type == EventType.BALL_POCKET:
                 agent1, agent2 = event.agents
                 event.agents = (balls[agent1.id], table.pockets[agent2.id])
 
-            elif event.event_type == type_stick_ball:
+            elif event.event_type == EventType.STICK_BALL:
                 agent1, agent2 = event.agents
                 event.agents = (cue, balls[agent2.id])
 
-            elif event.event_class == class_transition:
+            elif event.event_type.is_transition():
                 agent = event.agents[0]
                 event.agents = (balls[agent.id],)
 
