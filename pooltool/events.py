@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 from abc import ABC, abstractmethod
+from typing import Dict
 
 import numpy as np
 
@@ -39,10 +40,27 @@ class EventType(strenum.StrEnum):
             EventType.SLIDING_ROLLING,
         )
 
+    def ball_transition_motion_states(self):
+        """Return the ball motion states before and after a transition
+
+        For example, if self == EventType.SPINNING_STATIONARY, return (c.spinning,
+        c.stationary). Raises AssertionError if event is not a transition.
+        """
+        assert self.is_transition()
+
+        if self == EventType.SPINNING_STATIONARY:
+            return c.spinning, c.stationary
+        elif self == EventType.ROLLING_STATIONARY:
+            return c.rolling, c.stationary
+        elif self == EventType.ROLLING_SPINNING:
+            return c.rolling, c.spinning
+        elif self == EventType.SLIDING_ROLLING:
+            return c.sliding, c.rolling
+        else:
+            raise NotImplementedError()
+
 
 class Event(ABC):
-    event_type = None
-
     def __init__(self, *agents, t=None):
         self.time = t
         self.agents = agents
@@ -224,20 +242,24 @@ class BallPocketCollision(Collision):
 
 
 class Transition(Event):
-    def __init__(self, ball, t=None):
+    def __init__(self, event_type: EventType, ball, t=None):
         Event.__init__(self, ball, t=t)
+        self.event_type = event_type
         self.initial_states = _get_initial_states(ball)
 
     def resolve(self):
+        self.assert_not_partial()
+
         ball = self.agents[0]
 
-        self.assert_not_partial()
-        self.agent_state_initial = (np.copy(ball.rvw), self.state_start)
+        start, end = self.event_type.ball_transition_motion_states()
 
-        ball.s = self.state_end
+        self.agent_state_initial = (np.copy(ball.rvw), start)
+
+        ball.s = end
         ball.update_next_transition_event()
 
-        self.final_states = [(np.copy(ball.rvw), self.state_end)]
+        self.final_states = [(np.copy(ball.rvw), end)]
 
     def as_dict(self):
         return dict(
@@ -247,38 +269,6 @@ class Transition(Event):
             final_states=self.final_states,
             t=self.time,
         )
-
-
-class SpinningStationaryTransition(Transition):
-    event_type = EventType.SPINNING_STATIONARY
-
-    def __init__(self, ball, t=None):
-        Transition.__init__(self, ball, t=t)
-        self.state_start, self.state_end = c.spinning, c.stationary
-
-
-class RollingStationaryTransition(Transition):
-    event_type = EventType.ROLLING_STATIONARY
-
-    def __init__(self, ball, t=None):
-        Transition.__init__(self, ball, t=t)
-        self.state_start, self.state_end = c.rolling, c.stationary
-
-
-class RollingSpinningTransition(Transition):
-    event_type = EventType.ROLLING_SPINNING
-
-    def __init__(self, ball, t=None):
-        Transition.__init__(self, ball, t=t)
-        self.state_start, self.state_end = c.rolling, c.spinning
-
-
-class SlidingRollingTransition(Transition):
-    event_type = EventType.SLIDING_ROLLING
-
-    def __init__(self, ball, t=None):
-        Transition.__init__(self, ball, t=t)
-        self.state_start, self.state_end = c.sliding, c.rolling
 
 
 class NonEvent(Event):
@@ -400,30 +390,31 @@ class Events(utils.ListLike):
         )
 
 
-def get_subclasses(cls):
-    """Built upon https://stackoverflow.com/a/3862957"""
-    return set(cls.__subclasses__()).union(
-        [s for c in cls.__subclasses__() for s in get_subclasses(c)]
-    )
-
-
-# event_type_dict looks like {
-#    'spinning-stationary': <class 'pooltool.events.SpinningStationaryTransition'>,
-#    'rolling-stationary': <class 'pooltool.events.RollingStationaryTransition'>,
-#    'ball-ball': <class 'pooltool.events.BallBallCollision'>,
-#    'ball-cushion': <class 'pooltool.events.BallCushionCollision'>,
-#    (...)
-# }
-event_type_dict = {subcls.event_type: subcls for subcls in get_subclasses(Event)}
+event_dict: Dict[EventType, Event] = {
+    EventType.NONE: NonEvent,
+    EventType.BALL_BALL: BallBallCollision,
+    EventType.BALL_CUSHION: BallCushionCollision,
+    EventType.BALL_POCKET: BallPocketCollision,
+    EventType.STICK_BALL: StickBallCollision,
+    EventType.SPINNING_STATIONARY: Transition,
+    EventType.ROLLING_STATIONARY: Transition,
+    EventType.ROLLING_SPINNING: Transition,
+    EventType.SLIDING_ROLLING: Transition,
+}
 
 
 def event_from_dict(d):
-    cls = event_type_dict[d["event_type"]]
+    cls = event_dict[d["event_type"]]
 
     # The constructed agents are placeholders
     agents = [NonObject(agent_id) for agent_id in d["agent_ids"]]
 
-    event = cls(*agents, t=d["t"])
+    # FIXME
+    if d["event_type"].is_transition():
+        event = cls(event_type=d["event_type"], ball=agents[0], t=d["t"])
+    else:
+        event = cls(*agents, t=d["t"])
+
     event.initial_states = d["initial_states"]
     event.final_states = d["final_states"]
 

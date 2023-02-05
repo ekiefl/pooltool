@@ -25,15 +25,7 @@ import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.ani.globals import Global
 from pooltool.error import ConfigError
-from pooltool.events import (
-    Events,
-    NonEvent,
-    RollingSpinningTransition,
-    RollingStationaryTransition,
-    SlidingRollingTransition,
-    SpinningStationaryTransition,
-    event_from_dict,
-)
+from pooltool.events import Events, EventType, NonEvent, Transition, event_from_dict
 from pooltool.objects import Object, Render
 from pooltool.utils import panda_path
 
@@ -524,8 +516,8 @@ class Ball(Object, BallRender):
 
         elif self.s == c.spinning:
             dtau_E = physics.get_spin_time_fast(self.rvw, self.R, self.u_sp, self.g)
-            self.next_transition_event = SpinningStationaryTransition(
-                self, t=(self.t + dtau_E)
+            self.next_transition_event = Transition(
+                event_type=EventType.SPINNING_STATIONARY, ball=self, t=(self.t + dtau_E)
             )
 
         elif self.s == c.rolling:
@@ -535,18 +527,22 @@ class Ball(Object, BallRender):
             dtau_E_roll = physics.get_roll_time_fast(self.rvw, self.u_r, self.g)
 
             if dtau_E_spin > dtau_E_roll:
-                self.next_transition_event = RollingSpinningTransition(
-                    self, t=(self.t + dtau_E_roll)
+                self.next_transition_event = Transition(
+                    event_type=EventType.ROLLING_SPINNING,
+                    ball=self,
+                    t=(self.t + dtau_E_roll),
                 )
             else:
-                self.next_transition_event = RollingStationaryTransition(
-                    self, t=(self.t + dtau_E_roll)
+                self.next_transition_event = Transition(
+                    event_type=EventType.ROLLING_STATIONARY,
+                    ball=self,
+                    t=(self.t + dtau_E_roll),
                 )
 
         elif self.s == c.sliding:
             dtau_E = physics.get_slide_time_fast(self.rvw, self.R, self.u_s, self.g)
-            self.next_transition_event = SlidingRollingTransition(
-                self, t=(self.t + dtau_E)
+            self.next_transition_event = Transition(
+                event_type=EventType.SLIDING_ROLLING, ball=self, t=(self.t + dtau_E)
             )
 
         else:
