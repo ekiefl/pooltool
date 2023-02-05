@@ -91,16 +91,21 @@ class Event(ABC):
     def resolve(self):
         pass
 
-    @abstractmethod
     def as_dict(self):
-        pass
+        return dict(
+            event_type=self.event_type,
+            agent_ids=list(),
+            initial_states=self.initial_states,
+            final_states=self.final_states,
+            t=self.time,
+        )
 
     def save(self, path):
         utils.save_pickle(self.as_dict(), path)
 
 
 def _get_initial_states(agent):
-    """This is a hack job
+    """This is a hack job FIXME
 
     Actual copies of the object should be made rather than storing just rvw and s
     """
@@ -114,15 +119,6 @@ class Collision(Event):
     def __init__(self, body1, body2, t=None):
         Event.__init__(self, body1, body2, t=t)
         self.initial_states = [_get_initial_states(agent) for agent in [body1, body2]]
-
-    def as_dict(self):
-        return dict(
-            event_type=self.event_type,
-            agent_ids=[agent.id for agent in self.agents],
-            initial_states=self.initial_states,
-            final_states=self.final_states,
-            t=self.time,
-        )
 
 
 class BallBallCollision(Collision):
@@ -262,15 +258,6 @@ class Transition(Event):
 
         self.final_states = [(np.copy(ball.rvw), end)]
 
-    def as_dict(self):
-        return dict(
-            event_type=self.event_type,
-            agent_ids=[agent.id for agent in self.agents],
-            initial_states=self.initial_states,
-            final_states=self.final_states,
-            t=self.time,
-        )
-
 
 class NonEvent(Event):
     event_type = EventType.NONE
@@ -283,15 +270,6 @@ class NonEvent(Event):
 
     def resolve(self):
         self.assert_not_partial()
-
-    def as_dict(self):
-        return dict(
-            event_type=self.event_type,
-            initial_states=self.initial_states,
-            final_states=self.final_states,
-            agent_ids=list(),
-            t=self.time,
-        )
 
 
 class Events(utils.ListLike):
