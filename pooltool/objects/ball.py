@@ -25,7 +25,7 @@ import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.ani.globals import Global
 from pooltool.error import ConfigError
-from pooltool.events import Event, Events, EventType, NonEvent
+from pooltool.events import Event, Events, EventType, null_event
 from pooltool.objects import Object, Render
 from pooltool.utils import panda_path
 
@@ -508,11 +508,11 @@ class Ball(Object, BallRender):
         self.events.append(event)
 
     def init_history(self):
-        self.update_history(NonEvent(time=0))
+        self.update_history(null_event(time=0))
 
     def update_next_transition_event(self):
         if self.s == c.stationary or self.s == c.pocketed:
-            self.next_transition_event = NonEvent(time=np.inf)
+            self.next_transition_event = null_event(time=np.inf)
 
         elif self.s == c.spinning:
             dtau_E = physics.get_spin_time_fast(self.rvw, self.R, self.u_sp, self.g)

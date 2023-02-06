@@ -151,12 +151,6 @@ class Event:
         return event
 
 
-@dataclass
-class NonEvent(Event):
-    event_type: EventType = field(init=False, default=EventType.NONE)
-    agents: List[Object] = field(init=False, default_factory=list)
-
-
 class Events(utils.ListLike):
     """Stores Event objects"""
 

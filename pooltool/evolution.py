@@ -9,7 +9,7 @@ import pooltool.physics as physics
 import pooltool.terminal as terminal
 import pooltool.utils as utils
 from pooltool.error import SimulateError
-from pooltool.events import Event, EventType, NonEvent
+from pooltool.events import Event, EventType, null_event
 from pooltool.objects import DummyBall, NonObject
 
 
@@ -135,7 +135,7 @@ class EvolveShotEventBased(EvolveShot):
 
     def get_next_event(self):
         # Start by assuming next event doesn't happen
-        event = NonEvent(time=np.inf)
+        event = null_event(time=np.inf)
 
         transition_event = self.get_min_transition_event_time()
         if transition_event.time < event.time:
@@ -162,7 +162,7 @@ class EvolveShotEventBased(EvolveShot):
     def get_min_transition_event_time(self):
         """Returns minimum time until next ball transition event"""
 
-        event = NonEvent(time=np.inf)
+        event = null_event(time=np.inf)
 
         for ball in self.balls.values():
             if ball.next_transition_event.time <= event.time:
@@ -389,7 +389,7 @@ class EvolveShotDiscreteTime(EvolveShot):
         events.extend(self.detect_ball_cushion_collisions())
 
         if not len(events):
-            events.append(NonEvent(time=self.t))
+            events.append(null_event(time=self.t))
 
         return events
 

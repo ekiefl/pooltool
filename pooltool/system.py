@@ -11,7 +11,7 @@ import pooltool.constants as c
 import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.error import ConfigError, SimulateError
-from pooltool.events import Event, Events, EventType, NonEvent
+from pooltool.events import Event, Events, EventType, null_event
 from pooltool.evolution import EvolveShotEventBased
 from pooltool.objects.ball import BallHistory, ball_from_dict
 from pooltool.objects.cue import cue_from_dict
@@ -26,17 +26,17 @@ class SystemHistory(object):
         self.continuized = False
 
     def init_history(self):
-        """Add an initializing NonEvent"""
-        event = NonEvent(time=0)
+        """Add an initializing null_event"""
+        event = null_event(time=0)
         for ball in self.balls.values():
             ball.update_history(event)
 
         self.events.append(event)
 
     def end_history(self):
-        """Add a final NonEvent that timestamps the final state of each ball"""
+        """Add a final null_event that timestamps the final state of each ball"""
 
-        event = NonEvent(time=self.t + c.tol)
+        event = null_event(time=self.t + c.tol)
         for ball in self.balls.values():
             ball.update_history(event)
 
@@ -116,7 +116,7 @@ class SystemHistory(object):
             rvw, s = ball.history.rvw[0], ball.history.s[0]
             cts_history.add(rvw, s, 0)
 
-            # Get all events that the ball is involved in, even the NonEvent events that
+            # Get all events that the ball is involved in, even the null_event events that
             # mark the start and end times
             events = self.events.filter_ball(ball, keep_nonevent=True)
 
