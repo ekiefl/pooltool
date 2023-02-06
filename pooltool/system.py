@@ -11,7 +11,7 @@ import pooltool.constants as c
 import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.error import ConfigError, SimulateError
-from pooltool.events import Events, EventType, NonEvent, event_from_dict
+from pooltool.events import Event, Events, EventType, NonEvent
 from pooltool.evolution import EvolveShotEventBased
 from pooltool.objects.ball import BallHistory, ball_from_dict
 from pooltool.objects.cue import cue_from_dict
@@ -27,7 +27,7 @@ class SystemHistory(object):
 
     def init_history(self):
         """Add an initializing NonEvent"""
-        event = NonEvent(t=0)
+        event = NonEvent(time=0)
         for ball in self.balls.values():
             ball.update_history(event)
 
@@ -36,7 +36,7 @@ class SystemHistory(object):
     def end_history(self):
         """Add a final NonEvent that timestamps the final state of each ball"""
 
-        event = NonEvent(t=self.t + c.tol)
+        event = NonEvent(time=self.t + c.tol)
         for ball in self.balls.values():
             ball.update_history(event)
 
@@ -459,7 +459,7 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
 
         events = Events()
         for event_dict in d["events"]:
-            event = event_from_dict(event_dict)
+            event = Event.from_dict(event_dict)
 
             # The agents of this event are NonObjects, since they came from a pickleable
             # dictionary.  We attempt to change that by associating the proper agents
@@ -467,7 +467,7 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
             # this agent with a proper instantiation of 'cue', i.e. balls['cue']
             if event.event_type == EventType.BALL_BALL:
                 agent1, agent2 = event.agents
-                event.agents = (balls[agent1.id], balls[agent2.id])
+                event.agents = [balls[agent1.id], balls[agent2.id]]
 
             elif event.event_type == EventType.BALL_CUSHION:
                 agent1, agent2 = event.agents
@@ -475,23 +475,20 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
                     cushion = table.cushion_segments["linear"][agent2.id.split("_")[0]]
                 else:
                     cushion = table.cushion_segments["circular"][agent2.id]
-                event.agents = (balls[agent1.id], cushion)
+                event.agents = [balls[agent1.id], cushion]
 
             elif event.event_type == EventType.BALL_POCKET:
                 agent1, agent2 = event.agents
-                event.agents = (balls[agent1.id], table.pockets[agent2.id])
+                event.agents = [balls[agent1.id], table.pockets[agent2.id]]
 
             elif event.event_type == EventType.STICK_BALL:
                 agent1, agent2 = event.agents
-                event.agents = (cue, balls[agent2.id])
+                event.agents = [cue, balls[agent2.id]]
 
             elif event.event_type.is_transition():
                 agent = event.agents[0]
-                event.agents = (balls[agent.id],)
+                event.agents = [balls[agent.id]]
 
-            # The event now has no NonObject agents, so it is not longer 'partial'. For
-            # example, event.resolve may not be called
-            event.partial = False
             events.append(event)
 
         meta = d["meta"]

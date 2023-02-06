@@ -154,7 +154,7 @@ class NineBall(Game):
         return set([event.agents[0].id for event in cushion_events])
 
     def is_cue_pocketed(self, shot):
-        return True if shot.balls["cue"].s == c.pocketed else False
+        return shot.balls["cue"].s == c.pocketed
 
     def is_cushion_after_first_contact(self, shot):
         if not self.is_lowest_hit_first(shot):

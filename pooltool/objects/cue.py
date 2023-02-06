@@ -16,7 +16,7 @@ import pooltool.constants as c
 import pooltool.utils as utils
 from pooltool.ani.globals import Global
 from pooltool.error import ConfigError, StrokeError
-from pooltool.events import StickBallCollision
+from pooltool.events import Event, EventType
 from pooltool.objects import Object, Render
 
 
@@ -368,7 +368,7 @@ class Cue(Object, CueRender):
         ):
             raise ValueError("Cue.strike :: Must set V0, phi, theta, a, and b")
 
-        event = StickBallCollision(self, self.cueing_ball, t=t)
+        event = Event(EventType.STICK_BALL, agents=[self, self.cueing_ball], time=t)
         event.resolve()
 
         return event
