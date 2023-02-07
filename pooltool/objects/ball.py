@@ -21,11 +21,12 @@ from panda3d.core import (
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 import pooltool.constants as c
+import pooltool.events as events
 import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.ani.globals import Global
 from pooltool.error import ConfigError
-from pooltool.events import Event, Events, EventType, null_event
+from pooltool.events import Event, Events
 from pooltool.objects import Object, Render
 from pooltool.utils import panda_path
 
@@ -508,18 +509,16 @@ class Ball(Object, BallRender):
         self.events.append(event)
 
     def init_history(self):
-        self.update_history(null_event(time=0))
+        self.update_history(events.null_event(time=0))
 
     def update_next_transition_event(self):
         if self.s == c.stationary or self.s == c.pocketed:
-            self.next_transition_event = null_event(time=np.inf)
+            self.next_transition_event = events.null_event(time=np.inf)
 
         elif self.s == c.spinning:
             dtau_E = physics.get_spin_time_fast(self.rvw, self.R, self.u_sp, self.g)
-            self.next_transition_event = Event(
-                event_type=EventType.SPINNING_STATIONARY,
-                agents=[self],
-                time=(self.t + dtau_E),
+            self.next_transition_event = events.spinning_stationary_transition(
+                self, self.t + dtau_E
             )
 
         elif self.s == c.rolling:
@@ -529,24 +528,18 @@ class Ball(Object, BallRender):
             dtau_E_roll = physics.get_roll_time_fast(self.rvw, self.u_r, self.g)
 
             if dtau_E_spin > dtau_E_roll:
-                self.next_transition_event = Event(
-                    event_type=EventType.ROLLING_SPINNING,
-                    agents=[self],
-                    time=(self.t + dtau_E_roll),
+                self.next_transition_event = events.rolling_spinning_transition(
+                    self, self.t + dtau_E_roll
                 )
             else:
-                self.next_transition_event = Event(
-                    event_type=EventType.ROLLING_STATIONARY,
-                    agents=[self],
-                    time=(self.t + dtau_E_roll),
+                self.next_transition_event = events.rolling_stationary_transition(
+                    self, self.t + dtau_E_roll
                 )
 
         elif self.s == c.sliding:
             dtau_E = physics.get_slide_time_fast(self.rvw, self.R, self.u_s, self.g)
-            self.next_transition_event = Event(
-                event_type=EventType.SLIDING_ROLLING,
-                agents=[self],
-                time=(self.t + dtau_E),
+            self.next_transition_event = events.sliding_rolling_transition(
+                self, self.t + dtau_E
             )
 
         else:
