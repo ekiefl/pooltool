@@ -670,7 +670,7 @@ class SystemCollectionRender(object):
         self.shot_animation.setPlayRate(factor * self.shot_animation.getPlayRate())
 
         if not self.paused:
-            self.resume_animation()
+            self.start_animation(PlaybackMode.LOOP)
 
         self.shot_animation.set_t(curr_time / factor)
 
