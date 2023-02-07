@@ -31,7 +31,7 @@ class NineBall(Game):
             return
 
         points = 0
-        for event in shot.events.filter_type(e.type_ball_pocket):
+        for event in shot.events.filter_type(e.EventType.BALL_POCKET):
             ball, pocket = event.agents
             points += 2 if (ball.id == "9") else 1
 
@@ -60,7 +60,7 @@ class NineBall(Game):
         highest = self.get_highest_ball(shot)
         lowest = self.get_lowest_ball(shot)
 
-        pocket_events = shot.events.filter_type(e.type_ball_pocket)
+        pocket_events = shot.events.filter_type(e.EventType.BALL_POCKET)
         pocketed_balls = [event.agents[0] for event in pocket_events]
 
         if (
@@ -76,7 +76,7 @@ class NineBall(Game):
         if not self.shot_info["is_legal"]:
             return True
 
-        pocket_events = shot.events.filter_type(e.type_ball_pocket)
+        pocket_events = shot.events.filter_type(e.EventType.BALL_POCKET)
         if len(pocket_events):
             balls_potted = [e.agents[0].id for e in pocket_events]
             self.log.add_msg(
@@ -89,7 +89,7 @@ class NineBall(Game):
     def is_game_over(self, shot):
         highest = self.get_highest_ball(shot)
 
-        pocket_events = shot.events.filter_type(e.type_ball_pocket)
+        pocket_events = shot.events.filter_type(e.EventType.BALL_POCKET)
         pocketed_balls = [event.agents[0] for event in pocket_events]
 
         if highest in pocketed_balls and self.shot_info["is_legal"]:
@@ -127,7 +127,7 @@ class NineBall(Game):
         lowest = self.get_lowest_ball(shot)
         cue = shot.balls["cue"]
 
-        collisions = cue.events.filter_type(e.type_ball_ball)
+        collisions = cue.events.filter_type(e.EventType.BALL_BALL)
 
         return True if (len(collisions) and lowest in collisions[0].agents) else False
 
@@ -136,7 +136,7 @@ class NineBall(Game):
             return True
 
         ball_pocketed = (
-            True if len(shot.events.filter_type(e.type_ball_pocket)) else False
+            True if len(shot.events.filter_type(e.EventType.BALL_POCKET)) else False
         )
         enough_cushions = (
             True if len(self.numbered_balls_that_hit_cushion(shot)) >= 4 else False
@@ -147,28 +147,28 @@ class NineBall(Game):
     def numbered_balls_that_hit_cushion(self, shot):
         numbered_balls = [ball for ball in shot.balls.values() if ball.id != "cue"]
 
-        cushion_events = shot.events.filter_type(e.type_ball_cushion).filter_ball(
+        cushion_events = shot.events.filter_type(e.EventType.BALL_CUSHION).filter_ball(
             numbered_balls
         )
 
         return set([event.agents[0].id for event in cushion_events])
 
     def is_cue_pocketed(self, shot):
-        return True if shot.balls["cue"].s == c.pocketed else False
+        return shot.balls["cue"].s == c.pocketed
 
     def is_cushion_after_first_contact(self, shot):
         if not self.is_lowest_hit_first(shot):
             return False
 
-        first_contact = shot.balls["cue"].events.filter_type(e.type_ball_ball)[0]
+        first_contact = shot.balls["cue"].events.filter_type(e.EventType.BALL_BALL)[0]
         cushion_events = shot.events.filter_time(first_contact.time).filter_type(
-            e.type_ball_cushion
+            e.EventType.BALL_CUSHION
         )
 
         cushion_hit = True if len(cushion_events) else False
 
         numbered_balls = [ball for ball in shot.balls.values() if ball.id != "cue"]
-        ball_pocketed = shot.events.filter_type(e.type_ball_pocket).filter_ball(
+        ball_pocketed = shot.events.filter_type(e.EventType.BALL_POCKET).filter_ball(
             numbered_balls
         )
 

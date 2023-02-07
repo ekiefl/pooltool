@@ -38,7 +38,7 @@ from pooltool.ani.mouse import mouse
 from pooltool.error import ConfigError
 from pooltool.objects.cue import Cue, cue_avoid
 from pooltool.objects.table import table_types
-from pooltool.system import System, SystemCollection
+from pooltool.system import PlaybackMode, System, SystemCollection
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -267,6 +267,7 @@ class ShotViewer(Interface):
 
         params = dict(
             init_animations=True,
+            playback_mode=PlaybackMode.LOOP,
         )
         Global.mode_mgr.update_event_baseline()
         Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)

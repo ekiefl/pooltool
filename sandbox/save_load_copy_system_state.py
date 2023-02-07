@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 """This is a basic example of saving and loading a system state"""
 
-import tempfile
-
 import pooltool as pt
 
 
