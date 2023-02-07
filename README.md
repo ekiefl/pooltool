@@ -52,8 +52,6 @@ This installation uses `pip`. With this option, you have access to the python AP
 
 This installation has been tested with the following python versions:
 
-- Python 3.6.2 |Anaconda, Inc.| (default, Oct  5 2017, 03:00:07)
-- Python 3.6.10 |Anaconda, Inc.| (default, May  7 2020, 23:06:31)
 - Python 3.8.10 (default, May 19 2021, 11:01:55)
 - Python 3.9.0 (default, Nov 15 2020, 06:25:35)
 - Python 3.10.0 (default, Nov 10 2021, 11:24:47) [Clang 12.0.0 ] on darwin
