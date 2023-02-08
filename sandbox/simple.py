@@ -1,14 +1,17 @@
 """Two balls, a cue, and a table"""
-
+import numpy as np
 import pooltool as pt
 
 # Create a system
+from pooltool.constants import table_length, table_width, R
+cx, cy = np.random.uniform(0, table_width - 2*R), np.random.uniform(0, table_length - 2*R)
+bx, by = np.random.uniform(0, table_width - 2*R), np.random.uniform(0, table_length - 2*R)
 shot = pt.System(
     table=pt.PocketTable(model_name="7_foot"),
     cue=pt.Cue(),
     balls={
-        "cue": pt.Ball("cue", xyz=[0.5, 1]),
-        "1": pt.Ball("1", xyz=[0.16, 1.4]),
+        "cue": pt.Ball("cue", xyz=[cx, cy]),
+        "1": pt.Ball("1", xyz=[bx, by]),
     },
 )
 
@@ -32,7 +35,8 @@ shot.cue.set_state(
 assert shot.cue.phi == 0
 
 # So let's Aim at the 1-ball, with a 30 degree cut to the left
-shot.cue.aim_at_ball(ball=shot.balls["1"], cut=-30)
+target_ball = shot.balls['1']
+shot.cue.aim_to_pot(target_ball, shot.table.pockets.values())
 
 # Now the direction is set!
 assert shot.cue.phi != 0

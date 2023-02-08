@@ -481,6 +481,7 @@ class Ball(Object, BallRender):
         elif len(xyz) == 2:
             x, y = xyz
             z = self.R
+        self.center = x, y
 
         self.rvw = np.array([[x, y, z], [0, 0, 0], [0, 0, 0]])
         self.update_next_transition_event()
