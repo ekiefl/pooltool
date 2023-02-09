@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import math
+
 import numpy as np
 from direct.interval.IntervalGlobal import LerpPosInterval, Sequence
 from panda3d.core import (
@@ -402,7 +403,8 @@ class Cue(Object, CueRender):
 
             # calculate x and y coordinate of the point
             x0, y0 = ball_center
-            sign = 1 if pocket.id[0] == 'l' else -1 # If the pocket is on the left, add to x0, else subtract
+            # If the pocket is on the left, add to x0, else subtract
+            sign = 1 if pocket.id[0] == "l" else -1
             aim_p_x = x0 + sign * d * math.cos(theta)
             aim_p_y = m * aim_p_x + b
             return aim_p_x, aim_p_y
@@ -425,12 +427,18 @@ class Cue(Object, CueRender):
         for pocket in pockets:
             m, b = line_equation(ball.center, pocket.potting_point)
             shadow_ball_point = calc_aiming_point(m, ball.center, pocket, 2 * ball.R)
-            cut_angle = calc_cut_angle(self.cueing_ball.center, shadow_ball_point, pocket.potting_point)
-            if abs(cut_angle) < abs(min_cut_angle): # Prefer a straighter shot
+            cut_angle = calc_cut_angle(
+                self.cueing_ball.center, shadow_ball_point, pocket.potting_point
+            )
+            if abs(cut_angle) < abs(min_cut_angle):  # Prefer a straighter shot
                 min_cut_angle = cut_angle
                 aim_point = shadow_ball_point
 
-        potting_angle = 180 if aim_point is None else angle_between_points(self.cueing_ball.center, aim_point)
+        potting_angle = (
+            180
+            if aim_point is None
+            else angle_between_points(self.cueing_ball.center, aim_point)
+        )
         self.phi = potting_angle
 
     def aim_at_ball(self, ball, cut=None):

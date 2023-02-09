@@ -699,7 +699,6 @@ class Pocket(object):
         self.depth = depth
         self.potting_point = self.calc_potting_point()
 
-
         self.a, self.b = self.center[:2]
 
         # hold ball ids of balls the pocket contains
@@ -713,14 +712,14 @@ class Pocket(object):
 
     def calc_potting_point(self):
         (x, y, _), r = self.center, self.radius
-        if self.id[0] == 'l':
+        if self.id[0] == "l":
             x = x + r
         else:
             x = x - r
 
-        if self.id[1] == 'b':
+        if self.id[1] == "b":
             y = y + r
-        elif self.id[1] == 't':
+        elif self.id[1] == "t":
             y = y - r
 
         return x, y
