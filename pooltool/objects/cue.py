@@ -397,7 +397,7 @@ class Cue(Object, CueRender):
             b = y1 - m * x1
             return m, b
 
-        def calc_aiming_point(m, ball_center, pocket, d):
+        def calc_aiming_point(m, b, ball_center, pocket, d):
             # calculate the angle between x-axis and the line
             theta = math.atan(m)
 
@@ -426,7 +426,7 @@ class Cue(Object, CueRender):
         aim_point, min_cut_angle = None, 90
         for pocket in pockets:
             m, b = line_equation(ball.center, pocket.potting_point)
-            shadow_ball_point = calc_aiming_point(m, ball.center, pocket, 2 * ball.R)
+            shadow_ball_point = calc_aiming_point(m, b, ball.center, pocket, 2 * ball.R)
             cut_angle = calc_cut_angle(
                 self.cueing_ball.center, shadow_ball_point, pocket.potting_point
             )
