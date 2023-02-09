@@ -81,7 +81,4 @@ def pick_best_pot(cue, ball, pockets):
             min_cut_angle = cut_angle
             best_pocket = pocket
 
-    if best_pocket is None:
-        raise NotImplementedError("Uh oh.")
-
     return best_pocket
