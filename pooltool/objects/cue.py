@@ -389,9 +389,17 @@ class Cue(Object, CueRender):
         )
         self.set_state(phi=direction * 180 / np.pi)
 
-    def aim_to_pot(self, ball, pockets, config=PottingConfig.default()):
-        """Set phi to pot a given ball into an unchosen pocket"""
-        self.set_state(phi=config.method(self, ball, pockets))
+    def aim_for_pocket(self, ball, pocket, config=PottingConfig.default()):
+        """Set phi to pot a given ball into a given pocket"""
+        self.set_state(phi=config.calculate_angle(self, ball, pocket))
+
+    def aim_for_best_pocket(self, ball, pockets, config=PottingConfig.default()):
+        """Set phi to pot a given ball into the best/easiest pocket"""
+        self.aim_for_pocket(
+            ball=ball,
+            pocket=config.choose_pocket(self, ball, pockets),
+            config=config,
+        )
 
     def aim_at_ball(self, ball, cut=None):
         """Set phi to aim directly at a ball

@@ -47,21 +47,41 @@ def calc_cut_angle(c, b, p):
     return angle_between_vectors(aim_vector, pocket_vector)
 
 
-def calc_potting_angle(cue, ball, pockets):
-    """Return the cue phi angle required to pot the ball"""
-    aim_point, min_cut_angle = None, 90
+def calc_shadow_ball_center(cue, ball, pocket):
+    """Return coordinates of shadow ball for potting into specific pocket"""
+    m, b = line_equation(ball.center, pocket.potting_point)
+    return calc_aiming_point(m, b, ball.center, pocket, 2 * ball.R)
+
+
+def calc_potting_angle(cue, ball, pocket):
+    """Return potting angle phi for potting into pocket"""
+    if pocket is None:
+        return 180
+
+    return angle_between_points(
+        cue.cueing_ball.center, calc_shadow_ball_center(cue, ball, pocket)
+    )
+
+
+def pick_best_pot(cue, ball, pockets):
+    """Return best pocket to pot ball into
+
+    This function calculates the potting angle required for each pocket. The "best"
+    pocket is the one where the pot requires the smallest cut angle.
+    """
+
+    best_pocket, min_cut_angle = None, 90
     for pocket in pockets:
-        m, b = line_equation(ball.center, pocket.potting_point)
-        shadow_ball_point = calc_aiming_point(m, b, ball.center, pocket, 2 * ball.R)
         cut_angle = calc_cut_angle(
-            cue.cueing_ball.center, shadow_ball_point, pocket.potting_point
+            c=cue.cueing_ball.center,
+            b=calc_shadow_ball_center(cue, ball, pocket),
+            p=pocket.potting_point,
         )
         if abs(cut_angle) < abs(min_cut_angle):  # Prefer a straighter shot
             min_cut_angle = cut_angle
-            aim_point = shadow_ball_point
+            best_pocket = pocket
 
-    return (
-        180
-        if aim_point is None
-        else angle_between_points(cue.cueing_ball.center, aim_point)
-    )
+    if best_pocket is None:
+        raise NotImplementedError("Uh oh.")
+
+    return best_pocket

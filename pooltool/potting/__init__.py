@@ -3,15 +3,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
-from pooltool.potting.simple import calc_potting_angle as calc_potting_angle_simple
+from pooltool.potting.simple import calc_potting_angle, pick_best_pot
 
 
 @dataclass
 class PottingConfig:
-    method: Callable
+    calculate_angle: Callable
+    choose_pocket: Callable
 
     @staticmethod
     def default() -> PottingConfig:
         return PottingConfig(
-            method=calc_potting_angle_simple,
+            calculate_angle=calc_potting_angle,
+            choose_pocket=pick_best_pot,
         )
