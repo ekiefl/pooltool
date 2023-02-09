@@ -481,7 +481,6 @@ class Ball(Object, BallRender):
         elif len(xyz) == 2:
             x, y = xyz
             z = self.R
-        self.center = x, y
 
         self.rvw = np.array([[x, y, z], [0, 0, 0], [0, 0, 0]])
         self.update_next_transition_event()
@@ -496,6 +495,10 @@ class Ball(Object, BallRender):
 
         self.rel_model_path = rel_model_path
         BallRender.__init__(self, rel_model_path=self.rel_model_path)
+
+    @property
+    def center(self):
+        return self.rvw[0][:2]
 
     def attach_history(self, history):
         """Sets self.history to an existing BallHistory object"""
