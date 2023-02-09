@@ -1,7 +1,5 @@
 #! /usr/bin/env python
 
-import math
-
 import numpy as np
 from direct.interval.IntervalGlobal import LerpPosInterval, Sequence
 from panda3d.core import (
@@ -20,6 +18,7 @@ import pooltool.utils as utils
 from pooltool.ani.globals import Global
 from pooltool.error import ConfigError, StrokeError
 from pooltool.objects import Object, Render
+from pooltool.potting import PottingConfig
 
 
 class CueRender(Render):
@@ -390,56 +389,9 @@ class Cue(Object, CueRender):
         )
         self.set_state(phi=direction * 180 / np.pi)
 
-    def aim_to_pot(self, ball, pockets):
-        def line_equation(p1, p2):
-            (x1, y1), (x2, y2) = p1, p2
-            m = (y2 - y1) / (x2 - x1)
-            b = y1 - m * x1
-            return m, b
-
-        def calc_aiming_point(m, b, ball_center, pocket, d):
-            # calculate the angle between x-axis and the line
-            theta = math.atan(m)
-
-            # calculate x and y coordinate of the point
-            x0, y0 = ball_center
-            # If the pocket is on the left, add to x0, else subtract
-            sign = 1 if pocket.id[0] == "l" else -1
-            aim_p_x = x0 + sign * d * math.cos(theta)
-            aim_p_y = m * aim_p_x + b
-            return aim_p_x, aim_p_y
-
-        def angle_between_points(p1, p2):
-            (x1, y1), (x2, y2) = p1, p2
-            x_diff, y_diff = x2 - x1, y2 - y1
-            return math.degrees(math.atan2(y_diff, x_diff))
-
-        def angle_between_vectors(v1, v2):
-            angle = np.math.atan2(np.linalg.det([v1, v2]), np.dot(v1, v2))
-            return math.degrees(angle)
-
-        def calc_cut_angle(c, b, p):
-            aim_vector = b[0] - c[0], b[1] - c[1]
-            pocket_vector = p[0] - b[0], p[1] - b[1]
-            return angle_between_vectors(aim_vector, pocket_vector)
-
-        aim_point, min_cut_angle = None, 90
-        for pocket in pockets:
-            m, b = line_equation(ball.center, pocket.potting_point)
-            shadow_ball_point = calc_aiming_point(m, b, ball.center, pocket, 2 * ball.R)
-            cut_angle = calc_cut_angle(
-                self.cueing_ball.center, shadow_ball_point, pocket.potting_point
-            )
-            if abs(cut_angle) < abs(min_cut_angle):  # Prefer a straighter shot
-                min_cut_angle = cut_angle
-                aim_point = shadow_ball_point
-
-        potting_angle = (
-            180
-            if aim_point is None
-            else angle_between_points(self.cueing_ball.center, aim_point)
-        )
-        self.phi = potting_angle
+    def aim_to_pot(self, ball, pockets, config=PottingConfig.default()):
+        """Set phi to pot a given ball into an unchosen pocket"""
+        self.set_state(phi=config.method(self, ball, pockets))
 
     def aim_at_ball(self, ball, cut=None):
         """Set phi to aim directly at a ball
