@@ -48,7 +48,7 @@ def calc_cut_angle(c, b, p):
     return angle_between_vectors(aim_vector, pocket_vector)
 
 
-def calc_shadow_ball_center(cue, ball, pocket):
+def calc_shadow_ball_center(ball, pocket):
     """Return coordinates of shadow ball for potting into specific pocket"""
     m, b = line_equation(ball.center, pocket.potting_point)
     return calc_aiming_point(m, b, ball, pocket)
@@ -60,7 +60,7 @@ def calc_potting_angle(cue, ball, pocket):
         return 180
 
     return angle_between_points(
-        cue.cueing_ball.center, calc_shadow_ball_center(cue, ball, pocket)
+        cue.cueing_ball.center, calc_shadow_ball_center(ball, pocket)
     )
 
 
@@ -75,7 +75,7 @@ def pick_best_pot(cue, ball, pockets):
     for pocket in pockets:
         cut_angle = calc_cut_angle(
             c=cue.cueing_ball.center,
-            b=calc_shadow_ball_center(cue, ball, pocket),
+            b=calc_shadow_ball_center(ball, pocket),
             p=pocket.potting_point,
         )
         if abs(cut_angle) < abs(min_cut_angle):  # Prefer a straighter shot
