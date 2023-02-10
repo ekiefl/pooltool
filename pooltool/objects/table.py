@@ -722,7 +722,7 @@ class Pocket(object):
         elif self.id[1] == "t":
             y = y - r
 
-        return x, y
+        return np.array([x, y])
 
 
 table_types = {

@@ -9,12 +9,7 @@ import math
 
 import numpy as np
 
-
-def line_equation(p1, p2):
-    (x1, y1), (x2, y2) = p1, p2
-    m = (y2 - y1) / (x2 - x1)
-    b = y1 - m * x1
-    return m, b
+from pooltool.utils import unit_vector
 
 
 def angle_between_points(p1, p2):
@@ -36,19 +31,15 @@ def calc_cut_angle(c, b, p):
 
 def calc_shadow_ball_center(ball, pocket):
     """Return coordinates of shadow ball for potting into specific pocket"""
-    m, b = line_equation(ball.center, pocket.potting_point)
 
-    # calculate the angle between x-axis and the line
-    theta = math.atan(m)
+    # Calculate the unit vector drawn from the object ball to the pocket
+    ball_to_pocket_vector = unit_vector(pocket.potting_point - ball.center)
 
-    # calculate x and y coordinate of the point
-    x0, y0 = ball.center
-    # If the pocket is on the left, add to x0, else subtract
-    d = ball.R * 2
-    sign = 1 if pocket.id[0] == "l" else -1
-    aim_p_x = x0 + sign * d * math.cos(theta)
-    aim_p_y = m * aim_p_x + b
-    return aim_p_x, aim_p_y
+    # The shadow ball center is two ball radii away from the object ball center
+    magnitude = ball.R * 2
+
+    # In the direction opposite the ball to pocket vector
+    return ball.center - ball_to_pocket_vector * magnitude
 
 
 def calc_potting_angle(cue, ball, pocket):
