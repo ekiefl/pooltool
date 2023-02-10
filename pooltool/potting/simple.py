@@ -17,13 +17,14 @@ def line_equation(p1, p2):
     return m, b
 
 
-def calc_aiming_point(m, b, ball_center, pocket, d):
+def calc_aiming_point(m, b, ball, pocket):
     # calculate the angle between x-axis and the line
     theta = math.atan(m)
 
     # calculate x and y coordinate of the point
-    x0, y0 = ball_center
+    x0, y0 = ball.center
     # If the pocket is on the left, add to x0, else subtract
+    d = ball.R * 2
     sign = 1 if pocket.id[0] == "l" else -1
     aim_p_x = x0 + sign * d * math.cos(theta)
     aim_p_y = m * aim_p_x + b
