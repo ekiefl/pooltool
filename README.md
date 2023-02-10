@@ -172,3 +172,6 @@ cd ~
 run_pooltool
 ```
 
+## Tutorials
+
+There are some tutorials for pooltool that can be viewed in [the wiki](https://github.com/ekiefl/pooltool/wiki).
