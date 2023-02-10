@@ -17,22 +17,6 @@ def line_equation(p1, p2):
     return m, b
 
 
-def calc_aiming_point(ball, pocket):
-    m, b = line_equation(ball.center, pocket.potting_point)
-
-    # calculate the angle between x-axis and the line
-    theta = math.atan(m)
-
-    # calculate x and y coordinate of the point
-    x0, y0 = ball.center
-    # If the pocket is on the left, add to x0, else subtract
-    d = ball.R * 2
-    sign = 1 if pocket.id[0] == "l" else -1
-    aim_p_x = x0 + sign * d * math.cos(theta)
-    aim_p_y = m * aim_p_x + b
-    return aim_p_x, aim_p_y
-
-
 def angle_between_points(p1, p2):
     (x1, y1), (x2, y2) = p1, p2
     x_diff, y_diff = x2 - x1, y2 - y1
@@ -52,7 +36,19 @@ def calc_cut_angle(c, b, p):
 
 def calc_shadow_ball_center(ball, pocket):
     """Return coordinates of shadow ball for potting into specific pocket"""
-    return calc_aiming_point(ball, pocket)
+    m, b = line_equation(ball.center, pocket.potting_point)
+
+    # calculate the angle between x-axis and the line
+    theta = math.atan(m)
+
+    # calculate x and y coordinate of the point
+    x0, y0 = ball.center
+    # If the pocket is on the left, add to x0, else subtract
+    d = ball.R * 2
+    sign = 1 if pocket.id[0] == "l" else -1
+    aim_p_x = x0 + sign * d * math.cos(theta)
+    aim_p_y = m * aim_p_x + b
+    return aim_p_x, aim_p_y
 
 
 def calc_potting_angle(cue, ball, pocket):
