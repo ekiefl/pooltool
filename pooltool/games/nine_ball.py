@@ -4,7 +4,7 @@ import pooltool.constants as c
 import pooltool.events as e
 from pooltool.games.datatypes import Game
 from pooltool.layouts import NineBallRack
-from pooltool.objects import DummyBall
+from pooltool.objects import NullObject
 
 
 class NineBall(Game):
@@ -98,7 +98,7 @@ class NineBall(Game):
             return False
 
     def get_lowest_ball(self, shot):
-        lowest = DummyBall(ball_id="10")
+        lowest = NullObject(id="10")
 
         for ball in shot.balls.values():
             if ball.id == "cue":
@@ -111,7 +111,7 @@ class NineBall(Game):
         return lowest
 
     def get_highest_ball(self, shot):
-        highest = DummyBall(ball_id="0")
+        highest = NullObject(id="0")
 
         for ball in shot.balls.values():
             if ball.id == "cue":

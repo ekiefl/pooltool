@@ -16,7 +16,7 @@ from pooltool.events import (
     ball_pocket_collision,
     null_event,
 )
-from pooltool.objects import DummyBall, NonObject
+from pooltool.objects import NullObject
 
 
 class EvolveShot(ABC):
@@ -213,7 +213,7 @@ class EvolveShotEventBased(EvolveShot):
 
         if not len(collision_coeffs):
             # There are no collisions to test for
-            return ball_ball_collision(DummyBall(), DummyBall(), self.t + dtau_E)
+            return ball_ball_collision(NullObject(), NullObject(), self.t + dtau_E)
 
         dtau_E, index = utils.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
 
@@ -250,7 +250,7 @@ class EvolveShotEventBased(EvolveShot):
 
         if not len(collision_coeffs):
             # There are no collisions to test for
-            return ball_cushion_collision(DummyBall(), NonObject(), self.t + dtau_E)
+            return ball_cushion_collision(NullObject(), NullObject(), self.t + dtau_E)
 
         dtau_E, index = utils.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
 
@@ -264,7 +264,7 @@ class EvolveShotEventBased(EvolveShot):
 
     def get_min_ball_linear_cushion_event_time(self):
         dtau_E_min = np.inf
-        involved_agents = tuple([DummyBall(), NonObject()])
+        involved_agents = tuple([NullObject(), NullObject()])
 
         for ball in self.balls.values():
             if ball.s in c.nontranslating:
@@ -323,7 +323,7 @@ class EvolveShotEventBased(EvolveShot):
 
         if not len(collision_coeffs):
             # There are no collisions to test for
-            return ball_pocket_collision(DummyBall(), NonObject(), self.t + dtau_E)
+            return ball_pocket_collision(NullObject(), NullObject(), self.t + dtau_E)
 
         dtau_E, index = utils.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
 

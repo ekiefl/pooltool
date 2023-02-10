@@ -27,7 +27,7 @@ import pooltool.utils as utils
 from pooltool.ani.globals import Global
 from pooltool.error import ConfigError
 from pooltool.events import Event, Events
-from pooltool.objects import Object, Render
+from pooltool.objects import Render
 from pooltool.utils import panda_path
 
 
@@ -426,7 +426,7 @@ class BallHistory(object):
         self.vectorized = True
 
 
-class Ball(Object, BallRender):
+class Ball(BallRender):
     object_type = "ball"
 
     def __init__(

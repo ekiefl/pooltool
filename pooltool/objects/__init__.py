@@ -1,35 +1,30 @@
 #! /usr/bin/env python
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 
 import numpy as np
 
 import pooltool.constants as c
+from pooltool.utils import strenum
 
 
-class Object(object):
-    object_type = None
-
-    def __init__(self):
-        if self.object_type is None:
-            raise NotImplementedError(
-                "Child classes of Object must have 'object_type' attribute"
-            )
+class ObjectType(strenum.StrEnum):
+    NULL = strenum.auto()
 
 
-class NonObject(Object):
-    object_type = "none"
+@dataclass
+class NullObject:
+    id: str = field(default="NA")
+    object_type: ObjectType = field(init=False, default=ObjectType.NULL)
 
-    def __init__(self, object_id="NA"):
-        self.id = object_id
+    @property
+    def s(self):
+        return c.stationary
 
-
-class DummyBall(NonObject):
-    s = c.stationary
-    rvw = np.zeros((3, 3))
-
-    def __init__(self, ball_id="NA"):
-        self.id = ball_id
+    @property
+    def rvw(self):
+        return np.zeros((3, 3))
 
 
 class Render(ABC):

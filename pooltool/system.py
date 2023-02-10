@@ -127,7 +127,6 @@ class SystemHistory(object):
             elapsed = 0
 
             for n in range(num_timestamps):
-
                 if n == (num_timestamps - 1):
                     # We made it to the end. the difference between the final time and
                     # the elapsed time should be < dt
@@ -461,9 +460,9 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
         for event_dict in d["events"]:
             event = Event.from_dict(event_dict)
 
-            # The agents of this event are NonObjects, since they came from a pickleable
+            # The agents of this event are NullObjects, since they came from a pickleable
             # dictionary.  We attempt to change that by associating the proper agents
-            # based on object IDs. So if the NonObject agent has an id 'cue', We replace
+            # based on object IDs. So if the NullObject agent has an id 'cue', We replace
             # this agent with a proper instantiation of 'cue', i.e. balls['cue']
             if event.event_type == EventType.BALL_BALL:
                 agent1, agent2 = event.agents

@@ -15,7 +15,7 @@ from pooltool.events.resolve import (
     resolve_stick_ball,
     resolve_transition,
 )
-from pooltool.objects import NonObject, Object
+from pooltool.objects import NullObject
 from pooltool.utils import strenum
 
 
@@ -93,7 +93,7 @@ def _get_initial_states(agent):
 @dataclass
 class Event:
     event_type: EventType
-    agents: List[Object]
+    agents: List[Any]
     time: float = 0
 
     initial_states: Any = field(init=False)
@@ -117,11 +117,11 @@ class Event:
         """Raise AssertionError if agents are invalid
 
         In order to call resolve, there must exist at least one agent and it may not be
-        a NonObject.
+        a NullObject.
         """
         assert len(self.agents)
         for agent in self.agents:
-            assert not isinstance(agent, NonObject)
+            assert not isinstance(agent, NullObject)
 
     def resolve(self):
         event_resolvers[self.event_type](self)
@@ -141,7 +141,7 @@ class Event:
     @classmethod
     def from_dict(cls, d) -> Event:
         # The constructed agents are placeholders
-        agents = [NonObject(agent_id) for agent_id in d["agent_ids"]]
+        agents = [NullObject(agent_id) for agent_id in d["agent_ids"]]
 
         event = Event(event_type=d["event_type"], agents=agents, time=d["time"])
 

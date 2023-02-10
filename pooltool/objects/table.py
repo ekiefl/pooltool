@@ -8,7 +8,7 @@ import pooltool.constants as c
 import pooltool.utils as utils
 from pooltool.ani.globals import Global
 from pooltool.error import ConfigError
-from pooltool.objects import Object, Render
+from pooltool.objects import Render
 from pooltool.utils import panda_path
 
 
@@ -193,7 +193,7 @@ class Table(object):
         utils.save_pickle(self.as_dict(), path)
 
 
-class PocketTable(Object, Table, TableRender):
+class PocketTable(Table, TableRender):
     object_type = "pocket_table"
 
     def __init__(
@@ -217,7 +217,6 @@ class PocketTable(Object, Table, TableRender):
         has_model=False,
         model_name="none",
     ):
-
         self.w = w or c.table_width
         self.l = l or c.table_length
         self.cushion_width = cushion_width or c.cushion_width
@@ -527,7 +526,7 @@ class PocketTable(Object, Table, TableRender):
         )
 
 
-class BilliardTable(Object, Table, TableRender):
+class BilliardTable(Table, TableRender):
     object_type = "billiard_table"
 
     def __init__(
@@ -541,7 +540,6 @@ class BilliardTable(Object, Table, TableRender):
         has_model=False,
         model_name="none",
     ):
-
         self.w = w or c.table_width
         self.l = l or c.table_length
         self.cushion_width = cushion_width or c.cushion_width
@@ -610,7 +608,7 @@ class BilliardTable(Object, Table, TableRender):
         )
 
 
-class CushionSegment(Object):
+class CushionSegment:
     def get_normal(self, *args, **kwargs):
         return self.normal if hasattr(self, "normal") else None
 

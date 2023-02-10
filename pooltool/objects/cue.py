@@ -17,7 +17,7 @@ import pooltool.events as events
 import pooltool.utils as utils
 from pooltool.ani.globals import Global
 from pooltool.error import ConfigError, StrokeError
-from pooltool.objects import Object, Render
+from pooltool.objects import Render
 
 
 class CueRender(Render):
@@ -281,7 +281,7 @@ class CueRender(Render):
         self.init_model()
 
 
-class Cue(Object, CueRender):
+class Cue(CueRender):
     object_type = "cue_stick"
 
     def __init__(
@@ -299,7 +299,6 @@ class Cue(Object, CueRender):
         a=0,
         b=1 / 4,
     ):
-
         self.id = cue_id
         self.M = M
         self.length = length
