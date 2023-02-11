@@ -651,40 +651,36 @@ class LinearCushionSegment:
     p2: NDArray[np.float64]
     direction: CushionDirection = field(default=CushionDirection.BOTH)
 
-    height: float = field(init=False)
-    lx: float = field(init=False)
-    ly: float = field(init=False)
-    l0: float = field(init=False)
-
     def __post_init__(self):
-        assert len(self.p1) == 3
-        assert len(self.p2) == 3
-
-        p1x, p1y, p1z = self.p1
-        p2x, p2y, p2z = self.p2
-
-        assert p1z == p2z, "Point heights must be equal"
-
-        self.height = p1z
-
-        if (p2x - p1x) == 0:
-            self.lx = 1
-            self.ly = 0
-            self.l0 = -p1x
-        else:
-            self.lx = -(p2y - p1y) / (p2x - p1x)
-            self.ly = 1
-            self.l0 = (p2y - p1y) / (p2x - p1x) * p1x - p1y
-
         self.p1 = np.array(self.p1, dtype=np.float64)
         self.p2 = np.array(self.p2, dtype=np.float64)
 
-    def get_normal(self, rvw):
-        return self.normal
+    @property
+    def height(self):
+        return self.p1[2]
+
+    @property
+    def lx(self):
+        p1x, p1y, _ = self.p1
+        p2x, p2y, _ = self.p2
+        return 1 if (p2x - p1x) == 0 else -(p2y - p1y) / (p2x - p1x)
+
+    @property
+    def ly(self):
+        return 0 if (self.p2[0] - self.p1[0]) == 0 else 1
+
+    @property
+    def l0(self):
+        p1x, p1y, _ = self.p1
+        p2x, p2y, _ = self.p2
+        return -p1x if (p2x - p1x) == 0 else (p2y - p1y) / (p2x - p1x) * p1x - p1y
 
     @property
     def normal(self):
         return utils.unit_vector_fast(np.array([self.lx, self.ly, 0]))
+
+    def get_normal(self, rvw):
+        return self.normal
 
 
 @dataclass
