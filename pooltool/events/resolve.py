@@ -77,7 +77,7 @@ def resolve_stick_ball(event):
 
     v, w = physics.cue_strike(
         ball.m,
-        cue_stick.M,
+        cue_stick.specs.M,
         ball.R,
         cue_stick.V0,
         cue_stick.phi,

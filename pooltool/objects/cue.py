@@ -1,5 +1,10 @@
 #! /usr/bin/env python
 
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any, Optional
+
 import numpy as np
 from direct.interval.IntervalGlobal import LerpPosInterval, Sequence
 from panda3d.core import (
@@ -18,6 +23,25 @@ import pooltool.utils as utils
 from pooltool.ani.globals import Global
 from pooltool.error import ConfigError, StrokeError
 from pooltool.objects import Render
+
+
+@dataclass
+class CueSpecs:
+    brand: str
+    M: float
+    length: float
+    tip_radius: float
+    butt_radius: float
+
+    @staticmethod
+    def default() -> CueSpecs:
+        return CueSpecs(
+            brand="Predator",
+            M=0.567,  # 20oz
+            length=1.4732,  # 58in
+            tip_radius=0.007,  # 14mm tip
+            butt_radius=0.02,
+        )
 
 
 class CueRender(Render):
@@ -250,43 +274,29 @@ class CueRender(Render):
         self.init_model()
 
 
+@dataclass
 class Cue:
-    object_type = "cue_stick"
+    id: str = field(default="cue_stick")
 
-    def __init__(
-        self,
-        M=c.M,
-        length=c.cue_length,
-        tip_radius=c.cue_tip_radius,
-        butt_radius=c.cue_butt_radius,
-        cueing_ball=None,
-        cue_id="cue_stick",
-        brand=None,
-        V0=2,
-        phi=0,
-        theta=0,
-        a=0,
-        b=1 / 4,
-    ):
-        self.id = cue_id
-        self.M = M
-        self.length = length
-        self.tip_radius = tip_radius
-        self.butt_radius = butt_radius
-        self.brand = brand
+    V0: float = field(default=2.0)
+    phi: float = field(default=0.0)
+    theta: float = field(default=0.0)
+    a: float = field(default=0.0)
+    b: float = field(default=0.25)
+    cueing_ball: Optional[Any] = field(default=None)
 
-        self.V0 = V0
-        self.phi = phi
-        self.theta = theta
-        self.a = a
-        self.b = b
+    specs: CueSpecs = field(default=CueSpecs.default())
 
-        self.cueing_ball = cueing_ball
-
-        self.render_obj = CueRender()
+    render_obj: CueRender = field(init=False, default=CueRender())
 
     def reset_state(self):
-        self.set_state(V0=2, phi=0, theta=0, a=0, b=1 / 4)
+        """Reset V0, phi, theta, a and b to their defaults"""
+        field_defaults = {
+            fname: field.default
+            for fname, field in self.__dataclass_fields__.items()
+            if fname in ("V0", "phi", "theta", "a", "b")
+        }
+        self.set_state(**field_defaults)
 
     def set_state(
         self, V0=None, phi=None, theta=None, a=None, b=None, cueing_ball=None
@@ -324,17 +334,9 @@ class Cue:
             Pass state parameters to be updated before the cue strike. Any parameters
             accepted by Cue.set_state are permissible.
         """
-
         self.set_state(**state_kwargs)
 
-        if (
-            self.V0 is None
-            or self.phi is None
-            or self.theta is None
-            or self.a is None
-            or self.b is None
-        ):
-            raise ValueError("Cue.strike :: Must set V0, phi, theta, a, and b")
+        assert self.cueing_ball
 
         event = events.stick_ball_collision(self, self.cueing_ball, t)
         event.resolve()
@@ -351,6 +353,8 @@ class Cue:
             aimed at
         """
 
+        assert self.cueing_ball
+
         direction = utils.angle_fast(
             utils.unit_vector_fast(np.array(pos) - self.cueing_ball.rvw[0])
         )
@@ -366,6 +370,8 @@ class Cue:
         cut : float, None
             The cut angle in degrees, within [-89, 89]
         """
+
+        assert self.cueing_ball
 
         self.aim_at_pos(ball.rvw[0])
 
@@ -430,24 +436,17 @@ class Cue:
         return "\n".join(lines) + "\n"
 
     def set_object_state_as_render_state(self, skip_V0=False):
-        if skip_V0:
-            (
-                _,
-                self.phi,
-                self.theta,
-                self.a,
-                self.b,
-                self.cueing_ball,
-            ) = self.render_obj.get_render_state()
-        else:
-            (
-                self.V0,
-                self.phi,
-                self.theta,
-                self.a,
-                self.b,
-                self.cueing_ball,
-            ) = self.render_obj.get_render_state()
+        (
+            V0,
+            self.phi,
+            self.theta,
+            self.a,
+            self.b,
+            self.cueing_ball,
+        ) = self.render_obj.get_render_state()
+
+        if not skip_V0:
+            self.V0 = V0
 
     def set_render_state_as_object_state(self):
         self.render_obj.match_ball_position()
@@ -627,12 +626,12 @@ class CueAvoid:
         phi = ((self.avoid_nodes["cue_stick_focus"].getH() + 180) % 360) * np.pi / 180
         c = np.array([np.cos(phi), np.sin(phi), 0])
         gamma = np.arccos(np.dot(n, c))
-        AB = (ball.R + Global.system.cue.tip_radius) * np.cos(gamma)
+        AB = (ball.R + Global.system.cue.specs.tip_radius) * np.cos(gamma)
 
         # Center of blocking ball transect
         Ax, Ay, _ = entry.getSurfacePoint(scene)
-        Ax -= (AB + Global.system.cue.tip_radius) * np.cos(phi)
-        Ay -= (AB + Global.system.cue.tip_radius) * np.sin(phi)
+        Ax -= (AB + Global.system.cue.specs.tip_radius) * np.cos(phi)
+        Ay -= (AB + Global.system.cue.specs.tip_radius) * np.sin(phi)
         Az = ball.R
 
         # Center of aim, leveled to ball height
@@ -671,8 +670,8 @@ class CueAvoid:
         bounds = Global.system.cue.render_obj.get_node("cue_stick").get_tight_bounds()
         L = bounds[1][0] - bounds[0][0]  # cue length
 
-        r = Global.system.cue.tip_radius
-        R = Global.system.cue.butt_radius
+        r = Global.system.cue.specs.tip_radius
+        R = Global.system.cue.specs.butt_radius
 
         m = (R - r) / L  # rise/run
         b = r  # intercept

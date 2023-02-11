@@ -61,7 +61,7 @@ class StrokeMode(BaseMode):
 
     def stroke_cue_stick(self):
         max_speed_mouse = ani.max_stroke_speed / ani.stroke_sensitivity  # [px/s]
-        max_backstroke = Global.system.cue.length * ani.backstroke_fraction  # [m]
+        max_backstroke = Global.system.cue.specs.length * ani.backstroke_fraction  # [m]
 
         with mouse:
             dt = mouse.get_dt()
