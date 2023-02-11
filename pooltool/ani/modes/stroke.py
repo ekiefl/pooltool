@@ -20,8 +20,8 @@ class StrokeMode(BaseMode):
         mouse.mode(MouseMode.RELATIVE)
         Global.mode_mgr.mode_stroked_from = Global.mode_mgr.last_mode
 
-        Global.shots.active.cue.track_stroke()
-        Global.shots.active.cue.show_nodes(ignore=("cue_cseg",))
+        Global.shots.active.cue.render_obj.track_stroke()
+        Global.shots.active.cue.render_obj.show_nodes(ignore=("cue_cseg",))
 
         self.register_keymap_event("f", Action.fine_control, True)
         self.register_keymap_event("f-up", Action.fine_control, False)
@@ -52,8 +52,8 @@ class StrokeMode(BaseMode):
                 Global.mode_mgr.change_mode(Mode.calculate)
                 return
         else:
-            Global.shots.active.cue.get_node("cue_stick").setX(0)
-            Global.shots.active.cue.hide_nodes(ignore=("cue_cseg",))
+            Global.shots.active.cue.render_obj.get_node("cue_stick").setX(0)
+            Global.shots.active.cue.render_obj.hide_nodes(ignore=("cue_cseg",))
             Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
             return
 
@@ -71,16 +71,16 @@ class StrokeMode(BaseMode):
         if speed_mouse > max_speed_mouse:
             dx *= max_speed_mouse / speed_mouse
 
-        cue_stick_node = Global.shots.active.cue.get_node("cue_stick")
+        cue_stick_node = Global.shots.active.cue.render_obj.get_node("cue_stick")
         newX = min(max_backstroke, cue_stick_node.getX() - dx * ani.stroke_sensitivity)
 
         if newX < 0:
             newX = 0
-            collision = True if Global.shots.active.cue.is_shot() else False
+            collision = True if Global.shots.active.cue.render_obj.is_shot() else False
         else:
             collision = False
 
         cue_stick_node.setX(newX)
-        Global.shots.active.cue.append_stroke_data()
+        Global.shots.active.cue.render_obj.append_stroke_data()
 
         return True if collision else False

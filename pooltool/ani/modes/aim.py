@@ -50,13 +50,15 @@ class AimMode(BaseMode):
     def enter(self, load_prev_cam=False):
         mouse.mode(MouseMode.RELATIVE)
 
-        if not Global.shots.active.cue.has_focus:
-            Global.shots.active.cue.init_focus(Global.shots.active.cue.cueing_ball)
+        if not Global.shots.active.cue.render_obj.has_focus:
+            Global.shots.active.cue.render_obj.init_focus(
+                Global.shots.active.cue.cueing_ball
+            )
         else:
-            Global.shots.active.cue.match_ball_position()
+            Global.shots.active.cue.render_obj.match_ball_position()
 
-        Global.shots.active.cue.show_nodes(ignore=("cue_cseg",))
-        Global.shots.active.cue.get_node("cue_stick").setX(0)
+        Global.shots.active.cue.render_obj.show_nodes(ignore=("cue_cseg",))
+        Global.shots.active.cue.render_obj.get_node("cue_stick").setX(0)
 
         cam.move_fixation(Global.shots.active.cue.cueing_ball.get_node("pos").getPos())
 
@@ -149,7 +151,7 @@ class AimMode(BaseMode):
         return task.cont
 
     def cue_avoidance(self):
-        _, _, theta, *_ = Global.shots.active.cue.get_render_state()
+        _, _, theta, *_ = Global.shots.active.cue.render_obj.get_render_state()
 
         if (theta < cue_avoid.min_theta) or self.magnet_theta:
             theta = cue_avoid.min_theta
@@ -179,7 +181,7 @@ class AimMode(BaseMode):
         hud.update_cue(Global.shots.active.cue)
 
     def aim_elevate_cue(self):
-        cue = Global.shots.active.cue.get_node("cue_stick_focus")
+        cue = Global.shots.active.cue.render_obj.get_node("cue_stick_focus")
 
         with mouse:
             delta_elevation = mouse.get_dy() * ani.elevate_sensitivity
@@ -207,9 +209,9 @@ class AimMode(BaseMode):
         with mouse:
             dx, dy = mouse.get_dx(), mouse.get_dy()
 
-        cue = Global.shots.active.cue.get_node("cue_stick")
-        cue_focus = Global.shots.active.cue.get_node("cue_stick_focus")
-        R = Global.shots.active.cue.follow.R
+        cue = Global.shots.active.cue.render_obj.get_node("cue_stick")
+        cue_focus = Global.shots.active.cue.render_obj.get_node("cue_stick_focus")
+        R = Global.shots.active.cue.render_obj.follow.R
 
         delta_y, delta_z = dx * ani.english_sensitivity, dy * ani.english_sensitivity
 
@@ -264,9 +266,9 @@ class AimMode(BaseMode):
         dummy.R = Global.shots.active.cue.cueing_ball.R
         dummy.rvw = Global.shots.active.cue.cueing_ball.history.rvw[0]
         dummy.render()
-        Global.shots.active.cue.init_focus(dummy)
+        Global.shots.active.cue.render_obj.init_focus(dummy)
         Global.shots.active.cue.set_render_state_as_object_state()
-        Global.shots.active.cue.follow = None
+        Global.shots.active.cue.render_obj.follow = None
         dummy.remove_nodes()
         del dummy
 

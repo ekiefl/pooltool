@@ -191,7 +191,9 @@ class ShotMode(BaseMode):
                 ball.set_render_state_as_object_state()
                 ball.history.reset()
 
-            Global.shots.active.cue.init_focus(Global.shots.active.cue.cueing_ball)
+            Global.shots.active.cue.render_obj.init_focus(
+                Global.shots.active.cue.cueing_ball
+            )
 
         tasks.remove("shot_view_task")
         tasks.remove("shot_animation_task")
@@ -314,9 +316,9 @@ class ShotMode(BaseMode):
         dummy.R = Global.shots.active.cue.cueing_ball.R
         dummy.rvw = Global.shots.active.cue.cueing_ball.history.rvw[0]
         dummy.render()
-        Global.shots.active.cue.init_focus(dummy)
+        Global.shots.active.cue.render_obj.init_focus(dummy)
         Global.shots.active.cue.set_render_state_as_object_state()
-        Global.shots.active.cue.follow = None
+        Global.shots.active.cue.render_obj.follow = None
         dummy.remove_nodes()
         del dummy
 

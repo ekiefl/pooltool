@@ -100,7 +100,7 @@ class BallRender(Render):
             self.initial_orientation = self.get_orientation()
 
     def init_collision(self, cue):
-        if not cue.rendered:
+        if not cue.render_obj.rendered:
             raise ConfigError("BallRender.init_collision :: `cue` must be rendered")
 
         collision_node = self.nodes["ball"].attachNewNode(

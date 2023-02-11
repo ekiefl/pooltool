@@ -180,7 +180,7 @@ class Interface(ShowBase):
             if not ball.rendered:
                 ball.render()
 
-        Global.shots.active.cue.render()
+        Global.shots.active.cue.render_obj.render()
 
         R = max([ball.R for ball in Global.shots.active.balls.values()])
         cam.fixate(
@@ -435,7 +435,7 @@ class ImageSaver(Interface):
         self.create_scene()
 
         # We don't want the cue in this
-        shot.cue.hide_nodes()
+        shot.cue.render_obj.hide_nodes()
 
         if camera_state:
             cam.load_state(camera_state)

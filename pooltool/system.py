@@ -239,11 +239,11 @@ class SystemRender(object):
         if self.user_stroke and animate_stroke:
             # There exists a stroke trajectory, and animating the stroke has been
             # requested
-            self.cue.set_stroke_sequence()
+            self.cue.render_obj.set_stroke_sequence()
             self.stroke_animation = Sequence(
-                ShowInterval(self.cue.get_node("cue_stick")),
-                self.cue.stroke_sequence,
-                HideInterval(self.cue.get_node("cue_stick")),
+                ShowInterval(self.cue.render_obj.get_node("cue_stick")),
+                self.cue.render_obj.stroke_sequence,
+                HideInterval(self.cue.render_obj.get_node("cue_stick")),
             )
             self.shot_animation = Sequence(
                 Func(self.restart_ball_animations),
@@ -252,7 +252,7 @@ class SystemRender(object):
                 Wait(trailing_buffer),
             )
         else:
-            self.cue.hide_nodes()
+            self.cue.render_obj.hide_nodes()
             self.stroke_animation = None
             self.shot_animation = Sequence(
                 Func(self.restart_ball_animations),
@@ -315,15 +315,15 @@ class SystemRender(object):
         self.clear_animation()
         for ball in self.balls.values():
             ball.remove_nodes()
-        self.cue.remove_nodes()
+        self.cue.render_obj.remove_nodes()
 
     def buildup(self):
         self.clear_animation()
         for ball in self.balls.values():
             ball.render()
             ball.reset_angular_integration()
-        self.cue.render()
-        self.cue.init_focus(self.cue.cueing_ball)
+        self.cue.render_obj.render()
+        self.cue.render_obj.init_focus(self.cue.cueing_ball)
 
 
 class System(SystemHistory, SystemRender, EvolveShotEventBased):

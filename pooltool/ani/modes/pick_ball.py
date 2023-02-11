@@ -57,7 +57,9 @@ class PickBallMode(BaseMode):
             PickBallMode.remove_ball_highlight(self)
             Global.shots.active.cue.cueing_ball = self.closest_ball
             if Global.shots.active.cue.cueing_ball is not None:
-                Global.shots.active.cue.init_focus(Global.shots.active.cue.cueing_ball)
+                Global.shots.active.cue.render_obj.init_focus(
+                    Global.shots.active.cue.cueing_ball
+                )
                 Global.game.log.add_msg(
                     f"Now cueing the {Global.shots.active.cue.cueing_ball.id} ball",
                     sentiment="neutral",

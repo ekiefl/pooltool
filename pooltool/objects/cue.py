@@ -245,43 +245,12 @@ class CueRender(Render):
 
         return V0, phi, theta, a, b, cueing_ball
 
-    def set_object_state_as_render_state(self, skip_V0=False):
-        if skip_V0:
-            (
-                _,
-                self.phi,
-                self.theta,
-                self.a,
-                self.b,
-                self.cueing_ball,
-            ) = self.get_render_state()
-        else:
-            (
-                self.V0,
-                self.phi,
-                self.theta,
-                self.a,
-                self.b,
-                self.cueing_ball,
-            ) = self.get_render_state()
-
-    def set_render_state_as_object_state(self):
-        self.match_ball_position()
-
-        cue_stick = self.get_node("cue_stick")
-        cue_stick_focus = self.get_node("cue_stick_focus")
-
-        cue_stick_focus.setH(self.phi + 180)  # phi
-        cue_stick_focus.setR(-self.theta)  # theta
-        cue_stick.setY(-self.a * self.follow.R)  # a
-        cue_stick.setZ(self.b * self.follow.R)  # b
-
     def render(self):
         super().render()
         self.init_model()
 
 
-class Cue(CueRender):
+class Cue:
     object_type = "cue_stick"
 
     def __init__(
@@ -314,7 +283,7 @@ class Cue(CueRender):
 
         self.cueing_ball = cueing_ball
 
-        CueRender.__init__(self)
+        self.render_obj = CueRender()
 
     def reset_state(self):
         self.set_state(V0=2, phi=0, theta=0, a=0, b=1 / 4)
@@ -460,6 +429,37 @@ class Cue(CueRender):
 
         return "\n".join(lines) + "\n"
 
+    def set_object_state_as_render_state(self, skip_V0=False):
+        if skip_V0:
+            (
+                _,
+                self.phi,
+                self.theta,
+                self.a,
+                self.b,
+                self.cueing_ball,
+            ) = self.render_obj.get_render_state()
+        else:
+            (
+                self.V0,
+                self.phi,
+                self.theta,
+                self.a,
+                self.b,
+                self.cueing_ball,
+            ) = self.render_obj.get_render_state()
+
+    def set_render_state_as_object_state(self):
+        self.render_obj.match_ball_position()
+
+        cue_stick = self.render_obj.get_node("cue_stick")
+        cue_stick_focus = self.render_obj.get_node("cue_stick_focus")
+
+        cue_stick_focus.setH(self.phi + 180)  # phi
+        cue_stick_focus.setR(-self.theta)  # theta
+        cue_stick.setY(-self.a * self.render_obj.follow.R)  # a
+        cue_stick.setZ(self.b * self.render_obj.follow.R)  # b
+
     def as_dict(self):
         try:
             # It doesn't make sense to store a dictionary copy of the cueing_ball, since
@@ -532,21 +532,31 @@ class CueAvoid:
         Global.base.cTrav = CollisionTraverser()
         self.collision_handler = CollisionHandlerQueue()
 
-        Global.shots.active.cue.init_collision_handling(self.collision_handler)
+        Global.shots.active.cue.render_obj.init_collision_handling(
+            self.collision_handler
+        )
         for ball in Global.shots.active.balls.values():
             ball.init_collision(Global.shots.active.cue)
 
         # The stick needs a focus ball
-        if not Global.shots.active.cue.has_focus:
-            Global.shots.active.cue.init_focus(Global.shots.active.cue.cueing_ball)
+        if not Global.shots.active.cue.render_obj.has_focus:
+            Global.shots.active.cue.render_obj.init_focus(
+                Global.shots.active.cue.cueing_ball
+            )
 
         # Declare frequently used nodes
         self.avoid_nodes = {
             "scene": Global.render.find("scene"),
-            "cue_collision_node": Global.shots.active.cue.get_node("cue_cseg"),
-            "cue_stick_model": Global.shots.active.cue.get_node("cue_stick_model"),
-            "cue_stick": Global.shots.active.cue.get_node("cue_stick"),
-            "cue_stick_focus": Global.shots.active.cue.get_node("cue_stick_focus"),
+            "cue_collision_node": Global.shots.active.cue.render_obj.get_node(
+                "cue_cseg"
+            ),
+            "cue_stick_model": Global.shots.active.cue.render_obj.get_node(
+                "cue_stick_model"
+            ),
+            "cue_stick": Global.shots.active.cue.render_obj.get_node("cue_stick"),
+            "cue_stick_focus": Global.shots.active.cue.render_obj.get_node(
+                "cue_stick_focus"
+            ),
         }
 
     def collision_task(self, task):
@@ -668,7 +678,9 @@ class CueAvoid:
     def get_cue_radius(self, l):
         """Returns cue radius at collision point, given point is distance l from tip"""
 
-        bounds = Global.shots.active.cue.get_node("cue_stick").get_tight_bounds()
+        bounds = Global.shots.active.cue.render_obj.get_node(
+            "cue_stick"
+        ).get_tight_bounds()
         L = bounds[1][0] - bounds[0][0]  # cue length
 
         r = Global.shots.active.cue.tip_radius

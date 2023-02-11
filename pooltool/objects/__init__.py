@@ -81,14 +81,6 @@ class Render(ABC):
         pass
 
     @abstractmethod
-    def set_object_state_as_render_state(self):
-        pass
-
-    @abstractmethod
-    def set_render_state_as_object_state(self):
-        pass
-
-    @abstractmethod
     def render(self):
         if self.rendered:
             return
