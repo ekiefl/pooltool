@@ -149,7 +149,7 @@ class Interface(ShowBase):
         tasks.register_event("toggle-help", hud.toggle_help)
 
     def close_scene(self):
-        for shot in Global.shots:
+        for shot in Global.multisystem:
             shot.table.remove_nodes()
             for ball in shot.balls.values():
                 ball.teardown()
@@ -159,9 +159,9 @@ class Interface(ShowBase):
 
         hud.destroy()
 
-        if len(Global.shots):
-            Global.shots.clear_animation()
-            Global.shots.clear()
+        if len(Global.multisystem):
+            Global.multisystem.clear_animation()
+            Global.multisystem.clear()
 
         cam.fixation = None
         cam.fixation_object = None
@@ -170,22 +170,22 @@ class Interface(ShowBase):
         gc.collect()
 
     def create_scene(self):
-        """Create a scene from Global.shots"""
+        """Create a scene from Global.multisystem"""
         Global.render.attachNewNode("scene")
-        Global.shots.active.table.render()
-        environment.init(Global.shots.active.table)
+        Global.system.table.render()
+        environment.init(Global.system.table)
 
         # Render the balls of the active shot
-        for ball in Global.shots.active.balls.values():
+        for ball in Global.system.balls.values():
             if not ball.rendered:
                 ball.render()
 
-        Global.shots.active.cue.render_obj.render()
+        Global.system.cue.render_obj.render()
 
-        R = max([ball.R for ball in Global.shots.active.balls.values()])
+        R = max([ball.R for ball in Global.system.balls.values()])
         cam.fixate(
-            pos=(Global.shots.active.table.w / 2, Global.shots.active.table.l / 2, R),
-            node=Global.shots.active.table.get_node("cloth"),
+            pos=(Global.system.table.w / 2, Global.system.table.l / 2, R),
+            node=Global.system.table.get_node("cloth"),
         )
 
     def monitor(self, task):
@@ -239,19 +239,19 @@ class ShotViewer(Interface):
 
     def show(self, shot_or_shots=None, title=""):
         if shot_or_shots is None:
-            if not len(Global.shots):
+            if not len(Global.multisystem):
                 raise ConfigError(
                     "ShotViewer.show :: No shots passed and no shots set."
                 )
         else:
             if issubclass(type(shot_or_shots), System):
-                Global.register_shots(SystemCollection())
-                Global.shots.append(shot_or_shots)
+                Global.register_multisystem(SystemCollection())
+                Global.multisystem.append(shot_or_shots)
             elif issubclass(type(shot_or_shots), SystemCollection):
-                Global.register_shots(shot_or_shots)
+                Global.register_multisystem(shot_or_shots)
 
-        if Global.shots.active is None:
-            Global.shots.set_active(0)
+        if Global.system is None:
+            Global.multisystem.set_active(0)
 
         self.create_scene()
 
@@ -365,10 +365,10 @@ class ImageSaver(Interface):
 
     def _init_system_collection(self, shot):
         """Create system collection holding the shot. Register to Global"""
-        Global.register_shots(SystemCollection())
-        Global.shots.append(shot)
-        if Global.shots.active is None:
-            Global.shots.set_active(0)
+        Global.register_multisystem(SystemCollection())
+        Global.multisystem.append(shot)
+        if Global.system is None:
+            Global.multisystem.set_active(0)
 
     def get_image_array(self):
         """Return array of current image texture, or None if texture has no RAM image"""
@@ -450,13 +450,13 @@ class ImageSaver(Interface):
         save_dir = self.make_save_dir(save_dir)
 
         # Set quaternions for each ball
-        for ball in Global.shots.active.balls.values():
+        for ball in Global.system.balls.values():
             ball.set_quats()
 
         frames = int(shot.events[-1].time * fps) + 1
 
         for frame in range(frames):
-            for ball in Global.shots.active.balls.values():
+            for ball in Global.system.balls.values():
                 ball.set_render_state_from_history(frame)
 
             Global.task_mgr.step()
@@ -529,7 +529,7 @@ class Game(Interface):
         Global.mode_mgr.change_mode(Mode.aim)
 
     def create_system(self):
-        """Create the Global shots and game objects
+        """Create the Global.multisystem and game objects
 
         FIXME this and its calls (setup_*) should probably be a method of some
         MenuOptions class. Since this depends strictly on the menu options, it should
@@ -550,7 +550,7 @@ class Game(Interface):
 
         game.start(shot)
 
-        Global.register_shots(shots)
+        Global.register_multisystem(shots)
         Global.game = game
 
     def start(self):

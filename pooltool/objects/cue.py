@@ -532,31 +532,21 @@ class CueAvoid:
         Global.base.cTrav = CollisionTraverser()
         self.collision_handler = CollisionHandlerQueue()
 
-        Global.shots.active.cue.render_obj.init_collision_handling(
-            self.collision_handler
-        )
-        for ball in Global.shots.active.balls.values():
-            ball.init_collision(Global.shots.active.cue)
+        Global.system.cue.render_obj.init_collision_handling(self.collision_handler)
+        for ball in Global.system.balls.values():
+            ball.init_collision(Global.system.cue)
 
         # The stick needs a focus ball
-        if not Global.shots.active.cue.render_obj.has_focus:
-            Global.shots.active.cue.render_obj.init_focus(
-                Global.shots.active.cue.cueing_ball
-            )
+        if not Global.system.cue.render_obj.has_focus:
+            Global.system.cue.render_obj.init_focus(Global.system.cue.cueing_ball)
 
         # Declare frequently used nodes
         self.avoid_nodes = {
             "scene": Global.render.find("scene"),
-            "cue_collision_node": Global.shots.active.cue.render_obj.get_node(
-                "cue_cseg"
-            ),
-            "cue_stick_model": Global.shots.active.cue.render_obj.get_node(
-                "cue_stick_model"
-            ),
-            "cue_stick": Global.shots.active.cue.render_obj.get_node("cue_stick"),
-            "cue_stick_focus": Global.shots.active.cue.render_obj.get_node(
-                "cue_stick_focus"
-            ),
+            "cue_collision_node": Global.system.cue.render_obj.get_node("cue_cseg"),
+            "cue_stick_model": Global.system.cue.render_obj.get_node("cue_stick_model"),
+            "cue_stick": Global.system.cue.render_obj.get_node("cue_stick"),
+            "cue_stick_focus": Global.system.cue.render_obj.get_node("cue_stick_focus"),
         }
 
     def collision_task(self, task):
@@ -627,7 +617,7 @@ class CueAvoid:
         min_theta = 0
         ball = self.get_ball(entry)
 
-        if ball == Global.shots.active.cue.cueing_ball:
+        if ball == Global.system.cue.cueing_ball:
             return 0
 
         scene = Global.render.find("scene")
@@ -637,12 +627,12 @@ class CueAvoid:
         phi = ((self.avoid_nodes["cue_stick_focus"].getH() + 180) % 360) * np.pi / 180
         c = np.array([np.cos(phi), np.sin(phi), 0])
         gamma = np.arccos(np.dot(n, c))
-        AB = (ball.R + Global.shots.active.cue.tip_radius) * np.cos(gamma)
+        AB = (ball.R + Global.system.cue.tip_radius) * np.cos(gamma)
 
         # Center of blocking ball transect
         Ax, Ay, _ = entry.getSurfacePoint(scene)
-        Ax -= (AB + Global.shots.active.cue.tip_radius) * np.cos(phi)
-        Ay -= (AB + Global.shots.active.cue.tip_radius) * np.sin(phi)
+        Ax -= (AB + Global.system.cue.tip_radius) * np.cos(phi)
+        Ay -= (AB + Global.system.cue.tip_radius) * np.sin(phi)
         Az = ball.R
 
         # Center of aim, leveled to ball height
@@ -678,13 +668,11 @@ class CueAvoid:
     def get_cue_radius(self, l):
         """Returns cue radius at collision point, given point is distance l from tip"""
 
-        bounds = Global.shots.active.cue.render_obj.get_node(
-            "cue_stick"
-        ).get_tight_bounds()
+        bounds = Global.system.cue.render_obj.get_node("cue_stick").get_tight_bounds()
         L = bounds[1][0] - bounds[0][0]  # cue length
 
-        r = Global.shots.active.cue.tip_radius
-        R = Global.shots.active.cue.butt_radius
+        r = Global.system.cue.tip_radius
+        R = Global.system.cue.butt_radius
 
         m = (R - r) / L  # rise/run
         b = r  # intercept
@@ -696,14 +684,14 @@ class CueAvoid:
         into_node_path_name = entry.get_into_node_path().name
         assert into_node_path_name.startswith(expected_suffix)
         cushion_id = into_node_path_name[len(expected_suffix) :]
-        return Global.shots.active.table.cushion_segments["linear"][cushion_id]
+        return Global.system.table.cushion_segments["linear"][cushion_id]
 
     def get_ball(self, entry):
         expected_suffix = "ball_csphere_"
         into_node_path_name = entry.get_into_node_path().name
         assert into_node_path_name.startswith(expected_suffix)
         ball_id = into_node_path_name[len(expected_suffix) :]
-        return Global.shots.active.balls[ball_id]
+        return Global.system.balls[ball_id]
 
 
 cue_avoid = CueAvoid()

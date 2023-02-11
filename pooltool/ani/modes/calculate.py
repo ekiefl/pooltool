@@ -77,7 +77,7 @@ class CalculateMode(BaseMode):
         """Run a pool simulation"""
 
         try:
-            Global.shots.active.simulate(
+            Global.system.simulate(
                 continuize=False, quiet=False, raise_simulate_error=True
             )
         except SimulateError:
@@ -85,7 +85,7 @@ class CalculateMode(BaseMode):
             # runtime error
             Global.mode_mgr.change_mode(Mode.aim)
 
-        Global.game.process_shot(Global.shots.active)
+        Global.game.process_shot(Global.system)
 
         tasks.remove("run_simulation")
 

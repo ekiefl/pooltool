@@ -48,7 +48,7 @@ class BallInHandMode(BaseMode):
             # FIXME add message
             self.picking = "ball"
         elif num_options == 1:
-            self.grabbed_ball = Global.shots.active.balls[
+            self.grabbed_ball = Global.system.balls[
                 Global.game.active_player.ball_in_hand[0]
             ]
             self.grab_ball_node = self.grabbed_ball.get_node("pos")
@@ -122,7 +122,7 @@ class BallInHandMode(BaseMode):
         """
         r, pos = self.grabbed_ball.R, np.array(self.grab_ball_node.getPos())
 
-        for ball in Global.shots.active.balls.values():
+        for ball in Global.system.balls.values():
             if ball == self.grabbed_ball:
                 continue
             if np.linalg.norm(ball.rvw[0] - pos) <= (r + ball.R):
@@ -195,7 +195,7 @@ class BallInHandMode(BaseMode):
         cam_pos = cam.fixation.getPos()
         d_min = np.inf
         closest = None
-        for ball in Global.shots.active.balls.values():
+        for ball in Global.system.balls.values():
             if ball.id not in Global.game.active_player.ball_in_hand:
                 continue
             if ball.s == c.pocketed:

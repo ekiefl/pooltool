@@ -55,9 +55,15 @@ class Global:
     aspect2d = ShowBaseGlobal.aspect2d
     render2d = ShowBaseGlobal.render2d
 
-    shots = None
+    multisystem = None
     game = None
     mode_mgr = None
+
+    @classproperty
+    def system(self):
+        """Return the active system"""
+        assert self.multisystem
+        return self.multisystem.active
 
     @classproperty
     @require_showbase
@@ -80,8 +86,8 @@ class Global:
         return ShowBaseGlobal.base.loader
 
     @classmethod
-    def register_shots(cls, shots):
-        cls.shots = shots
+    def register_multisystem(cls, multisystem):
+        cls.multisystem = multisystem
 
     @classmethod
     def register_game(cls, game):

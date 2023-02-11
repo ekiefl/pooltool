@@ -50,7 +50,7 @@ class BaseMode(ABC):
 
         elif self.keymap.get(Action.introspect):
             self.keymap[Action.introspect] = False
-            shot = Global.shots.active
+            shot = Global.system
             shot
             pdb.set_trace()
 
