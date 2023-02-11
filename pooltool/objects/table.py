@@ -1,6 +1,11 @@
 #! /usr/bin/env python
 
+import enum
+from dataclasses import dataclass, field
+from typing import Union
+
 import numpy as np
+from numpy.typing import NDArray
 from panda3d.core import CollisionNode, CollisionPlane, LineSegs, Plane, Point3, Vec3
 
 import pooltool.ani as ani
@@ -188,7 +193,7 @@ class TableRender(Render):
         )
 
 
-class Table(object):
+class Table:
     def save(self, path):
         utils.save_pickle(self.as_dict(), path)
 
@@ -270,50 +275,50 @@ class PocketTable(Table, TableRender):
                     "3_edge",
                     p1=(0, pw * np.cos(np.pi / 4) + dc, h),
                     p2=(0, (self.l - sw) / 2 - ds, h),
-                    direction=1,
+                    direction=CushionDirection.SIDE2,
                 ),
                 "6": LinearCushionSegment(
                     "6_edge",
                     p1=(0, (self.l + sw) / 2 + ds, h),
                     p2=(0, -pw * np.cos(np.pi / 4) + self.l - dc, h),
-                    direction=1,
+                    direction=CushionDirection.SIDE2,
                 ),
                 "15": LinearCushionSegment(
                     "15_edge",
                     p1=(self.w, pw * np.cos(np.pi / 4) + dc, h),
                     p2=(self.w, (self.l - sw) / 2 - ds, h),
-                    direction=0,
+                    direction=CushionDirection.SIDE1,
                 ),
                 "12": LinearCushionSegment(
                     "12_edge",
                     p1=(self.w, (self.l + sw) / 2 + ds, h),
                     p2=(self.w, -pw * np.cos(np.pi / 4) + self.l - dc, h),
-                    direction=0,
+                    direction=CushionDirection.SIDE1,
                 ),
                 "18": LinearCushionSegment(
                     "18_edge",
                     p1=(pw * np.cos(np.pi / 4) + dc, 0, h),
                     p2=(-pw * np.cos(np.pi / 4) + self.w - dc, 0, h),
-                    direction=1,
+                    direction=CushionDirection.SIDE2,
                 ),
                 "9": LinearCushionSegment(
                     "9_edge",
                     p1=(pw * np.cos(np.pi / 4) + dc, self.l, h),
                     p2=(-pw * np.cos(np.pi / 4) + self.w - dc, self.l, h),
-                    direction=0,
+                    direction=CushionDirection.SIDE1,
                 ),
                 # side jaw segments
                 "5": LinearCushionSegment(
                     "5_edge",
                     p1=(-cw, (self.l + sw) / 2 - cw * np.sin(sa), h),
                     p2=(-ds * np.cos(sa), (self.l + sw) / 2 - ds * np.sin(sa), h),
-                    direction=0,
+                    direction=CushionDirection.SIDE1,
                 ),
                 "4": LinearCushionSegment(
                     "4_edge",
                     p1=(-cw, (self.l - sw) / 2 + cw * np.sin(sa), h),
                     p2=(-ds * np.cos(sa), (self.l - sw) / 2 + ds * np.sin(sa), h),
-                    direction=1,
+                    direction=CushionDirection.SIDE2,
                 ),
                 "13": LinearCushionSegment(
                     "13_edge",
@@ -323,7 +328,7 @@ class PocketTable(Table, TableRender):
                         (self.l + sw) / 2 - ds * np.sin(sa),
                         h,
                     ),
-                    direction=0,
+                    direction=CushionDirection.SIDE1,
                 ),
                 "14": LinearCushionSegment(
                     "14_edge",
@@ -333,20 +338,20 @@ class PocketTable(Table, TableRender):
                         (self.l - sw) / 2 + ds * np.sin(sa),
                         h,
                     ),
-                    direction=1,
+                    direction=CushionDirection.SIDE2,
                 ),
                 # corner jaw segments
                 "1": LinearCushionSegment(
                     "1_edge",
                     p1=(pw * np.cos(np.pi / 4) - cw * np.tan(ca), -cw, h),
                     p2=(pw * np.cos(np.pi / 4) - dc * np.sin(ca), -dc * np.cos(ca), h),
-                    direction=1,
+                    direction=CushionDirection.SIDE2,
                 ),
                 "2": LinearCushionSegment(
                     "2_edge",
                     p1=(-cw, pw * np.cos(np.pi / 4) - cw * np.tan(ca), h),
                     p2=(-dc * np.cos(ca), pw * np.cos(np.pi / 4) - dc * np.sin(ca), h),
-                    direction=0,
+                    direction=CushionDirection.SIDE1,
                 ),
                 "8": LinearCushionSegment(
                     "8_edge",
@@ -356,7 +361,7 @@ class PocketTable(Table, TableRender):
                         self.l + dc * np.cos(ca),
                         h,
                     ),
-                    direction=0,
+                    direction=CushionDirection.SIDE1,
                 ),
                 "7": LinearCushionSegment(
                     "7_edge",
@@ -366,7 +371,7 @@ class PocketTable(Table, TableRender):
                         -pw * np.cos(np.pi / 4) + self.l + dc * np.sin(ca),
                         h,
                     ),
-                    direction=1,
+                    direction=CushionDirection.SIDE2,
                 ),
                 "11": LinearCushionSegment(
                     "11_edge",
@@ -380,7 +385,7 @@ class PocketTable(Table, TableRender):
                         -pw * np.cos(np.pi / 4) + self.l + dc * np.sin(ca),
                         h,
                     ),
-                    direction=1,
+                    direction=CushionDirection.SIDE2,
                 ),
                 "10": LinearCushionSegment(
                     "10_edge",
@@ -394,7 +399,7 @@ class PocketTable(Table, TableRender):
                         self.l + dc * np.cos(ca),
                         h,
                     ),
-                    direction=0,
+                    direction=CushionDirection.SIDE1,
                 ),
                 "16": LinearCushionSegment(
                     "16_edge",
@@ -404,7 +409,7 @@ class PocketTable(Table, TableRender):
                         pw * np.cos(np.pi / 4) - dc * np.sin(ca),
                         h,
                     ),
-                    direction=0,
+                    direction=CushionDirection.SIDE1,
                 ),
                 "17": LinearCushionSegment(
                     "17_edge",
@@ -414,7 +419,7 @@ class PocketTable(Table, TableRender):
                         -dc * np.cos(ca),
                         h,
                     ),
-                    direction=1,
+                    direction=CushionDirection.SIDE2,
                 ),
             },
             "circular": {
@@ -571,22 +576,25 @@ class BilliardTable(Table, TableRender):
                     "3_edge",
                     p1=(0, 0, h),
                     p2=(0, self.l, h),
-                    direction=1,
+                    direction=CushionDirection.SIDE2,
                 ),
                 "12": LinearCushionSegment(
                     "12_edge",
                     p1=(self.w, self.l, h),
                     p2=(self.w, 0, h),
-                    direction=0,
+                    direction=CushionDirection.SIDE1,
                 ),
                 "9": LinearCushionSegment(
                     "9_edge",
                     p1=(0, self.l, h),
                     p2=(self.w, self.l, h),
-                    direction=0,
+                    direction=CushionDirection.SIDE1,
                 ),
                 "18": LinearCushionSegment(
-                    "18_edge", p1=(0, 0, h), p2=(self.w, 0, h), direction=1
+                    "18_edge",
+                    p1=(0, 0, h),
+                    p2=(self.w, 0, h),
+                    direction=CushionDirection.SIDE2,
                 ),
             },
             "circular": {},
@@ -608,47 +616,55 @@ class BilliardTable(Table, TableRender):
         )
 
 
-class CushionSegment:
-    def get_normal(self, *args, **kwargs):
-        return self.normal if hasattr(self, "normal") else None
+class CushionDirection(enum.Enum):
+    """An Enum for the direction of a cushion
+
+    For most table geometries, the playing surface only exists on one side of the
+    cushion, so collisions only need to be checked for one direction. This direction can
+    be specified with the CushionDirection Enum. To determine whether 0 or 1 should be
+    used, please experiment (FIXME: determine the rule, it is not straightforward like
+    "left or right of the vector from p1 to p2"). By default, both collision directions
+    are checked, which can be specified explicitly by passing 2, however this makes
+    collision checks twice as slow for event-based shot evolution algorithms.
+    """
+
+    SIDE1 = 0
+    SIDE2 = 1
+    BOTH = 2
 
 
-class LinearCushionSegment(CushionSegment):
-    object_type = "linear_cushion_segment"
+@dataclass
+class LinearCushionSegment:
+    """A linear cushion segment defined by the line between points p1 and p2
 
-    def __init__(self, cushion_id, p1, p2, direction=2):
-        """A linear cushion segment defined by the line between points p1 and p2
+    Attributes:
+        p1:
+            A length-3 array that defines a 3D point in space where the cushion segment
+            starts.
+        p2:
+            A length-3 array that defines a 3D point in space where the cushion segment
+            ends.
+    """
 
-        Parameters
-        ==========
-        p1 : tuple
-            A length-3 tuple that defines a 3D point in space where the cushion segment
-            starts
-        p2 : tuple
-            A length-3 tuple that defines a 3D point in space where the cushion segment
-            ends
-        direction: 0 or 1, default 2
-            For most table geometries, the playing surface only exists on one side of
-            the cushion, so collisions only need to be checked for one direction. This
-            direction can be specified with either 0 or 1. To determine whether 0 or 1
-            should be used, please experiment (FIXME: determine the rule). By default,
-            both collision directions are checked, which can be specified explicitly by
-            passing 2, however this makes collision checks twice as slow for event-based
-            shot evolution algorithms.
-        """
-        self.id = cushion_id
+    id: str
+    p1: NDArray[np.float64]
+    p2: NDArray[np.float64]
+    direction: CushionDirection = field(default=CushionDirection.BOTH)
 
-        self.p1 = np.array(p1, dtype=np.float64)
-        self.p2 = np.array(p2, dtype=np.float64)
+    height: float = field(init=False)
+    lx: float = field(init=False)
+    ly: float = field(init=False)
+    l0: float = field(init=False)
+
+    def __post_init__(self):
+        assert len(self.p1) == 3
+        assert len(self.p2) == 3
 
         p1x, p1y, p1z = self.p1
         p2x, p2y, p2z = self.p2
 
-        if p1z != p2z:
-            raise ValueError(
-                f"LinearCushionSegment with id '{self.id}' has points p1 and p2 with "
-                f"different cushion heights (h)"
-            )
+        assert p1z == p2z, "Point heights must be equal"
+
         self.height = p1z
 
         if (p2x - p1x) == 0:
@@ -660,24 +676,39 @@ class LinearCushionSegment(CushionSegment):
             self.ly = 1
             self.l0 = (p2y - p1y) / (p2x - p1x) * p1x - p1y
 
-        self.normal = utils.unit_vector_fast(np.array([self.lx, self.ly, 0]))
+        self.p1 = np.array(self.p1, dtype=np.float64)
+        self.p2 = np.array(self.p2, dtype=np.float64)
 
-        if direction not in {0, 1, 2}:
-            raise ConfigError("LinearCushionSegment :: `direction` must be 0, 1, or 2.")
+    def get_normal(self, rvw):
+        return self.normal
 
-        self.direction = direction
+    @property
+    def normal(self):
+        return utils.unit_vector_fast(np.array([self.lx, self.ly, 0]))
 
 
-class CircularCushionSegment(CushionSegment):
-    object_type = "circular_cushion_segment"
+@dataclass
+class CircularCushionSegment:
+    """A circular cushion segment defined a circle center and radius
 
-    def __init__(self, cushion_id, center, radius):
-        self.id = cushion_id
+    Attributes:
+        center:
+            A length-3 array that defines a 3D point in space of the circle center.
+            starts. The last component (z-axis) is the height of the cushion segment.
+        radius:
+            The radius of the circular cushion segment.
+    """
 
-        self.center = np.array(center)
-        self.radius = radius
-        self.height = center[2]
+    id: str
+    center: NDArray[np.float64]
+    radius: float
 
+    height: float = field(init=False)
+    a: float = field(init=False)
+    b: float = field(init=False)
+
+    def __post_init__(self):
+        self.height = self.center[2]
         self.a, self.b = self.center[:2]
 
     def get_normal(self, rvw):
@@ -686,20 +717,23 @@ class CircularCushionSegment(CushionSegment):
         return normal
 
 
-class Pocket(object):
-    object_type = "pocket"
+CushionSegment = Union[LinearCushionSegment, CircularCushionSegment]
 
-    def __init__(self, pocket_id, center, radius, depth=0.08):
-        self.id = pocket_id
 
-        self.center = np.array(center)
-        self.radius = radius
-        self.depth = depth
+@dataclass
+class Pocket:
+    id: str
+    center: NDArray[np.float64]
+    radius: float
+    depth: float = field(default=0.08)
 
+    contains: set = field(default_factory=set)
+
+    a: float = field(init=False)
+    b: float = field(init=False)
+
+    def __post_init__(self):
         self.a, self.b = self.center[:2]
-
-        # hold ball ids of balls the pocket contains
-        self.contains = set()
 
     def add(self, ball_id):
         self.contains.add(ball_id)
