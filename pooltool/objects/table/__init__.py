@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 import numpy as np
 from panda3d.core import CollisionNode, CollisionPlane, LineSegs, Plane, Point3, Vec3
@@ -21,6 +21,42 @@ from pooltool.objects.table.components import CushionSegment, Pocket
 from pooltool.utils import panda_path, strenum
 
 
+@dataclass
+class ModelDescr:
+    name: str
+
+    @property
+    def path(self):
+        """The path of the model
+
+        The path is searched for in pooltool/models/table/{name}/{name}[_pbr].glb. If
+        physical based rendering (PBR) is requested, a model suffixed with _pbr will be
+        looked for. ConfigError is raised if model path cannot be determined from name.
+        """
+
+        if ani.settings["graphics"]["physical_based_rendering"]:
+            path = ani.model_dir / "table" / self.name / (self.name + "_pbr.glb")
+        else:
+            path = ani.model_dir / "table" / self.name / (self.name + ".glb")
+
+        if not path.exists():
+            raise ConfigError(f"Couldn't find table model with name: {self.name}")
+
+        return panda_path(path)
+
+    @staticmethod
+    def null() -> ModelDescr:
+        return ModelDescr(name="null")
+
+    @staticmethod
+    def pocket_table_default() -> ModelDescr:
+        return ModelDescr(name="7_foot")
+
+    @staticmethod
+    def billiard_table_default() -> ModelDescr:
+        return ModelDescr.null()
+
+
 class TableRender(Render):
     def __init__(self, name, has_model):
         """A class for all pool table associated panda3d nodes"""
@@ -29,30 +65,17 @@ class TableRender(Render):
         Render.__init__(self)
 
     def init_table(self, table):
-        if not self.has_model or not ani.settings["graphics"]["table"]:
+        if (
+            not table.specs.model_descr
+            or table.specs.model_descr == ModelDescr.null()
+            or not ani.settings["graphics"]["table"]
+        ):
+            model = Global.loader.loadModel(ModelDescr.null().path)
             node = Global.render.find("scene").attachNewNode("table")
-            path = ani.model_dir / "table" / "custom" / "custom.glb"
-
-            model = Global.loader.loadModel(panda_path(path))
             model.reparentTo(node)
             model.setScale(table.w, table.l, 1)
         else:
-            path_dir = ani.model_dir / "table" / self.name
-            pbr_path = path_dir / (self.name + "_pbr.glb")
-            standard_path = path_dir / (self.name + ".glb")
-            if ani.settings["graphics"]["physical_based_rendering"]:
-                path = pbr_path
-                if not path.exists():
-                    path = standard_path
-            else:
-                path = standard_path
-
-            if not path.exists():
-                raise ConfigError(
-                    f"Couldn't find table model at {standard_path} or {pbr_path}"
-                )
-
-            node = Global.loader.loadModel(panda_path(path))
+            node = Global.loader.loadModel(table.specs.model_descr.path)
             node.reparentTo(Global.render.find("scene"))
             node.setName("table")
 
@@ -198,7 +221,7 @@ class TableType(strenum.StrEnum):
     BILLIARD = strenum.auto()
 
 
-@dataclass(frozen=True)
+@dataclass
 class PocketTableSpecs:
     """Parameters that specify a pocket table"""
 
@@ -220,10 +243,25 @@ class PocketTableSpecs:
     side_jaw_radius: float = field(default=0.0159 / 2)
 
     # For visualization
+    model_descr: Optional[ModelDescr] = None
     height: float = field(default=0.708)
     lights_height: float = field(default=1.99)
 
     table_type: TableType = field(init=False, default=TableType.POCKET)
+
+    def __post_init__(self):
+        field_defaults = {
+            fname: field.default
+            for fname, field in self.__dataclass_fields__.items()
+            if field.init
+        }
+
+        if all(
+            getattr(self, fname) == default for fname, default in field_defaults.items()
+        ):
+            # All parameters match the default table, and so the ModelDescr is used even
+            # if it wasn't explictly requested.
+            self.model_descr = ModelDescr.pocket_table_default()
 
     def create_cushion_segments(self):
         return _create_pocket_table_cushion_segments(self)
@@ -232,7 +270,7 @@ class PocketTableSpecs:
         return _create_pocket_table_pockets(self)
 
 
-@dataclass(frozen=True)
+@dataclass
 class BilliardTableSpecs:
     """Parameters that specify a billiard (pocketless) table"""
 
@@ -245,10 +283,25 @@ class BilliardTableSpecs:
     cushion_height: float = field(default=0.64 * 2 * 0.028575)
 
     # For visualization
+    model_descr: Optional[ModelDescr] = None
     height: float = field(default=0.708)
     lights_height: float = field(default=1.99)
 
     table_type: TableType = field(init=False, default=TableType.BILLIARD)
+
+    def __post_init__(self):
+        field_defaults = {
+            fname: field.default
+            for fname, field in self.__dataclass_fields__.items()
+            if field.init
+        }
+
+        if all(
+            getattr(self, fname) == default for fname, default in field_defaults.items()
+        ):
+            # All parameters match the default table, and so the ModelDescr is used even
+            # if it wasn't explictly requested.
+            self.model_descr = ModelDescr.billiard_table_default()
 
     def create_cushion_segments(self):
         return _create_billiard_table_cushion_segments(self)
