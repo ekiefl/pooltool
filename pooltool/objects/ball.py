@@ -187,22 +187,23 @@ class BallRender(Render):
 
     def set_playback_sequence(self, ball, playback_speed=1):
         """Creates the motion sequences of the ball for a given playback speed"""
-        dts = np.diff(ball.history_cts.t)
-        motion_states = ball.history_cts.s
+        rvws, motion_states, ts = ball.history_cts.vectorize()
+
+        dts = np.diff(ts)
         playback_dts = dts / playback_speed
 
         # Get the trajectories
-        xyzs = ball.history_cts.rvw[:, 0, :]
-        ws = ball.history_cts.rvw[:, 2, :]
+        xyzs = rvws[:, 0, :]
+        ws = rvws[:, 2, :]
 
         if (xyzs == xyzs[0, :]).all() and (ws == ws[0, :]).all():
             # Ball has no motion. No need to create Lerp intervals
             self.playback_sequence = Sequence()
-            self.quats = autils.as_quaternion(ws, ball.history_cts.t)
+            self.quats = autils.as_quaternion(ws, ts)
             return
 
         xyzs = autils.get_list_of_Vec3s_from_array(xyzs)
-        self.quats = autils.as_quaternion(ws, ball.history_cts.t)
+        self.quats = autils.as_quaternion(ws, ts)
 
         # Init the animation sequences
         ball_sequence = Sequence()
@@ -324,7 +325,6 @@ class BallRender(Render):
 
 class BallHistory:
     def __init__(self):
-        self.vectorized = False
         self.reset()
 
     def get_state(self, i):
@@ -338,7 +338,6 @@ class BallHistory:
 
     def reset(self):
         n = 0
-        self.vectorized = False
         self.rvw = [np.nan * np.ones((3, 3))] * n
         self.s = [np.nan] * n
         self.t = [np.nan] * n
@@ -353,18 +352,8 @@ class BallHistory:
         self.t.append(t)
 
     def vectorize(self):
-        """Convert all list objects in self.history to array objects
-
-        Notes
-        =====
-        - Append operations will cease to work
-        """
-
-        self.rvw = np.array(self.rvw)
-        self.s = np.array(self.s)
-        self.t = np.array(self.t)
-
-        self.vectorized = True
+        """Return all list objects in self.history as array objects"""
+        return np.array(self.rvw), np.array(self.s), np.array(self.t)
 
 
 class Ball:
@@ -550,13 +539,11 @@ class Ball:
                 rvw=self.history.rvw,
                 s=self.history.s,
                 t=self.history.t,
-                vectorized=self.history.vectorized,
             ),
             history_cts=dict(
                 rvw=self.history_cts.rvw,
                 s=self.history_cts.s,
                 t=self.history_cts.t,
-                vectorized=self.history_cts.vectorized,
             ),
             events=self.events.as_dict(),
             initial_orientation=self.initial_orientation,
@@ -602,14 +589,12 @@ def ball_from_dict(d):
     ball_history.rvw = d["history"]["rvw"]
     ball_history.s = d["history"]["s"]
     ball_history.t = d["history"]["t"]
-    ball_history.vectorized = d["history"]["vectorized"]
     ball.attach_history(ball_history)
 
     ball_history_cts = BallHistory()
     ball_history_cts.rvw = d.get("history_cts", {}).get("rvw")
     ball_history_cts.s = d.get("history_cts", {}).get("s")
     ball_history_cts.t = d.get("history_cts", {}).get("t")
-    ball_history_cts.vectorized = d.get("history_cts", {}).get("vectorized", False)
     ball.attach_history_cts(ball_history_cts)
 
     events = Events()

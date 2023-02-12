@@ -190,7 +190,6 @@ class SystemHistory(object):
             # Attach the newly created history to the ball, overwriting the existing
             # history
             ball.attach_history_cts(cts_history)
-            ball.history_cts.vectorize()
 
         self.continuized = True
 
