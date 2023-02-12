@@ -77,7 +77,7 @@ import pooltool as pt
 
 interface = pt.ShotViewer()
 
-table = pt.PocketTable()
+table = pt.Table.default()
 balls = pt.get_nine_ball_rack(table, ordered=True)
 cue = pt.Cue(cueing_ball=balls['cue'])
 

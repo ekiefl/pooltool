@@ -16,7 +16,7 @@ def main(args):
     if args.seed:
         np.random.seed(args.seed)
 
-    table = pt.PocketTable(model_name="7_foot")
+    table = pt.Table.default()
     balls = pt.get_nine_ball_rack(
         table, ordered=True, spacing_factor=args.spacing_factor
     )

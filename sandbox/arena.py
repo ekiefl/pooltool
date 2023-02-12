@@ -32,7 +32,7 @@ def main(args):
         interface = pt.ShotViewer()
     while True:
         # setup table, cue, and cue ball
-        table = pt.PocketTable(l=4, w=2)
+        table = pt.Table.from_table_specs(pt.PocketTableSpecs(l=4, w=2))
 
         balls = {}
         balls["cue"] = place_ball("cue", balls, table)

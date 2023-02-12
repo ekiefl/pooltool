@@ -37,7 +37,7 @@ from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
 from pooltool.error import ConfigError
 from pooltool.objects.cue import Cue, cue_avoid
-from pooltool.objects.table import table_types
+from pooltool.objects.table import Table
 from pooltool.system import PlaybackMode, System, SystemCollection
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -150,7 +150,7 @@ class Interface(ShowBase):
 
     def close_scene(self):
         for shot in Global.multisystem:
-            shot.table.remove_nodes()
+            shot.table.render_obj.remove_nodes()
             for ball in shot.balls.values():
                 ball.teardown()
 
@@ -185,7 +185,7 @@ class Interface(ShowBase):
         R = max([ball.R for ball in Global.system.balls.values()])
         cam.fixate(
             pos=(Global.system.table.w / 2, Global.system.table.l / 2, R),
-            node=Global.system.table.get_node("cloth"),
+            node=Global.system.table.render_obj.get_node("cloth"),
         )
 
     def monitor(self, task):
@@ -557,12 +557,7 @@ class Game(Interface):
         Global.task_mgr.run()
 
     def setup_table(self):
-        selected_table = self.setup_options["table_type"]
-        table_config = ani.load_config("tables")
-        table_params = table_config[selected_table]
-        table_params["model_name"] = selected_table
-        table_type = table_params.pop("type")
-        return table_types[table_type](**table_params)
+        return Table.default()
 
     @staticmethod
     def setup_game():

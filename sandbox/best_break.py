@@ -80,7 +80,7 @@ def process_shots(shots, stats, break_count, session_best, best_break, interface
 def worker(output_queue):
     while True:
         # setup table, cue, and cue ball
-        table = pt.PocketTable(model_name="7_foot")
+        table = pt.Table.default()
         balls = pt.get_nine_ball_rack(
             table, spacing_factor=spacing_factor, ordered=True
         )

@@ -4,7 +4,7 @@ import pooltool as pt
 
 # Create a system
 shot = pt.System(
-    table=pt.PocketTable(model_name="7_foot"),
+    table=pt.Table.default(),
     cue=pt.Cue(),
     balls={
         "cue": pt.Ball("cue", xyz=[0.5, 1]),

@@ -15,7 +15,6 @@ from pooltool.events import Event, Events, EventType, null_event
 from pooltool.evolution import EvolveShotEventBased
 from pooltool.objects.ball import BallHistory, ball_from_dict
 from pooltool.objects.cue import cue_from_dict
-from pooltool.objects.table import table_from_dict
 from pooltool.utils.strenum import StrEnum, auto
 
 

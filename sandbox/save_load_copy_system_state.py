@@ -9,7 +9,7 @@ def main():
     interface = pt.ShotViewer()
 
     # Create a system state
-    table = pt.PocketTable(model_name="7_foot")
+    table = pt.Table.default()
     balls = pt.get_nine_ball_rack(table, ordered=True)
     cue = pt.Cue(cueing_ball=balls["cue"])
 

@@ -5,7 +5,7 @@ import numpy as np
 import pooltool as pt
 
 # Setup a shot
-table = pt.PocketTable(model_name="7_foot")
+table = pt.Table.default()
 balls = {
     "cue": pt.Ball("cue", xyz=(table.w / 2, table.l / 3, pt.R)),
     "1": pt.Ball("1", xyz=(table.w / 4, table.l * 0.2, pt.R)),

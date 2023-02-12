@@ -257,10 +257,10 @@ class Environment:
         self.lights_loaded = True
 
     def set_table_offset(self, table):
-        self.offset = (table.w / 2, table.l / 2, -table.height)
+        self.offset = (table.w / 2, table.l / 2, -table.specs.height)
         self.table_w = table.w
         self.table_l = table.l
-        self.lights_height = table.lights_height + table.height
+        self.lights_height = table.specs.lights_height + table.specs.height
 
     def load_room(self, path):
         self.room = Global.loader.loadModel(panda_path(path))
