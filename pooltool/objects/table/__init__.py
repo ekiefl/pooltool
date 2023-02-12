@@ -28,9 +28,9 @@ class TableRender(Render):
         self.has_model = has_model
         Render.__init__(self)
 
-    def init_cloth(self, table):
+    def init_table(self, table):
         if not self.has_model or not ani.settings["graphics"]["table"]:
-            node = Global.render.find("scene").attachNewNode("cloth")
+            node = Global.render.find("scene").attachNewNode("table")
             path = ani.model_dir / "table" / "custom" / "custom.glb"
 
             model = Global.loader.loadModel(panda_path(path))
@@ -54,9 +54,9 @@ class TableRender(Render):
 
             node = Global.loader.loadModel(panda_path(path))
             node.reparentTo(Global.render.find("scene"))
-            node.setName("cloth")
+            node.setName("table")
 
-        self.nodes["cloth"] = node
+        self.nodes["table"] = node
         self.collision_nodes = {}
 
     def init_collisions(self, table):
@@ -80,7 +80,7 @@ class TableRender(Render):
                 # These normals need to be flipped
                 n1, n2, n3 = -n1, -n2, -n3
 
-            collision_node = self.nodes["cloth"].attachNewNode(
+            collision_node = self.nodes["table"].attachNewNode(
                 CollisionNode(f"cushion_cplane_{cushion_id}")
             )
             collision_node.node().addSolid(
@@ -101,7 +101,7 @@ class TableRender(Render):
         self.cushion_drawer.drawTo(cushion.p2[0], cushion.p2[1], cushion.p2[2])
         node = (
             Global.render.find("scene")
-            .find("cloth")
+            .find("table")
             .attachNewNode(self.cushion_drawer.create())
         )
         node.set_shader_auto(True)
@@ -118,7 +118,7 @@ class TableRender(Render):
         circle = self.draw_circle(
             self.cushion_drawer, (center_x, center_y, height), radius, 30
         )
-        node = Global.render.find("scene").find("cloth").attachNewNode(circle)
+        node = Global.render.find("scene").find("table").attachNewNode(circle)
         node.set_shader_auto(True)
         self.nodes[f"cushion_{cushion_id}"] = node
 
@@ -132,7 +132,7 @@ class TableRender(Render):
     def init_pocket(self, table, pocket_id):
         pocket = table.pockets[pocket_id]
         circle = self.draw_circle(self.pocket_drawer, pocket.center, pocket.radius, 100)
-        node = Global.render.find("scene").find("cloth").attachNewNode(circle)
+        node = Global.render.find("scene").find("table").attachNewNode(circle)
         node.set_shader_auto(True)
         self.nodes[f"pocket_{pocket_id}"] = node
 
@@ -144,7 +144,7 @@ class TableRender(Render):
         super().render()
 
         # draw table as rectangle
-        self.init_cloth(table)
+        self.init_table(table)
 
         if not self.has_model or not ani.settings["graphics"]["table"]:
             # draw cushion_segments as edges

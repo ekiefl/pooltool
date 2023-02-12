@@ -249,7 +249,7 @@ class Environment:
             0: self.get_dlight(
                 light_id=0,
                 hpr=(0, -90, 0),
-                illuminates=(Global.render.find("scene").find("cloth"),),
+                illuminates=(Global.render.find("scene").find("table"),),
                 shadows=False,
             ),
         }

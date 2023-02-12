@@ -185,7 +185,7 @@ class Interface(ShowBase):
         R = max([ball.R for ball in Global.system.balls.values()])
         cam.fixate(
             pos=(Global.system.table.w / 2, Global.system.table.l / 2, R),
-            node=Global.system.table.render_obj.get_node("cloth"),
+            node=Global.system.table.render_obj.get_node("table"),
         )
 
     def monitor(self, task):

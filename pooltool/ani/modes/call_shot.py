@@ -194,7 +194,7 @@ class CallShotMode(BaseMode):
         self.trans_ball = Global.loader.loadModel(
             panda_path(ani.model_dir / "balls" / self.closest_ball.rel_model_path)
         )
-        self.trans_ball.reparentTo(Global.render.find("scene").find("cloth"))
+        self.trans_ball.reparentTo(Global.render.find("scene").find("table"))
         self.trans_ball.setTransparency(TransparencyAttrib.MAlpha)
         self.trans_ball.setAlphaScale(0.4)
         self.trans_ball.setPos(self.closest_ball.get_node("pos").getPos())

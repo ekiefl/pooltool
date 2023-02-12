@@ -61,7 +61,7 @@ class CueRender(Render):
         cue_stick_model = Global.loader.loadModel(path)
         cue_stick_model.setName("cue_stick_model")
 
-        cue_stick = Global.render.find("scene").find("cloth").attachNewNode("cue_stick")
+        cue_stick = Global.render.find("scene").find("table").attachNewNode("cue_stick")
         cue_stick_model.reparentTo(cue_stick)
 
         self.nodes["cue_stick"] = cue_stick
@@ -73,7 +73,7 @@ class CueRender(Render):
         self.get_node("cue_stick_model").setPos(ball.R, 0, 0)
 
         cue_stick_focus = (
-            Global.render.find("scene").find("cloth").attachNewNode("cue_stick_focus")
+            Global.render.find("scene").find("table").attachNewNode("cue_stick_focus")
         )
         self.nodes["cue_stick_focus"] = cue_stick_focus
 

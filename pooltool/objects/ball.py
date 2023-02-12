@@ -42,7 +42,7 @@ class BallRender(Render):
         """Initialize the ball's nodes"""
         position = (
             Global.render.find("scene")
-            .find("cloth")
+            .find("table")
             .attachNewNode(f"ball_{self.id}_position")
         )
         ball = position.attachNewNode(f"ball_{self.id}")
@@ -122,7 +122,7 @@ class BallRender(Render):
 
         shadow_path = ani.model_dir / "balls" / "set_1" / "shadow.glb"
         shadow_node = (
-            Global.render.find("scene").find("cloth").attachNewNode(f"shadow_{self.id}")
+            Global.render.find("scene").find("table").attachNewNode(f"shadow_{self.id}")
         )
         shadow_node.setPos(self.rvw[0, 0], self.rvw[0, 1], 0)
 
