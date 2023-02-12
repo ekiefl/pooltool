@@ -230,10 +230,12 @@ class SystemRender(object):
             # This takes ~90% of this method's execution time
             self.ball_animations = Parallel()
             for ball in self.balls.values():
-                if not ball.rendered:
+                if not ball.render_obj.rendered:
                     ball.render()
-                ball.set_playback_sequence(playback_speed=self.playback_speed)
-                self.ball_animations.append(ball.playback_sequence)
+                ball.render_obj.set_playback_sequence(
+                    ball, playback_speed=self.playback_speed
+                )
+                self.ball_animations.append(ball.render_obj.playback_sequence)
 
         if self.user_stroke and animate_stroke:
             # There exists a stroke trajectory, and animating the stroke has been
@@ -282,9 +284,9 @@ class SystemRender(object):
             self.stroke_animation = None
 
         for ball in self.balls.values():
-            if ball.playback_sequence is not None:
-                ball.playback_sequence.pause()
-                ball.playback_sequence = None
+            if ball.render_obj.playback_sequence is not None:
+                ball.render_obj.playback_sequence.pause()
+                ball.render_obj.playback_sequence = None
 
     def toggle_pause(self):
         if self.shot_animation.isPlaying():

@@ -32,24 +32,25 @@ from pooltool.utils import panda_path
 
 
 class BallRender(Render):
-    def __init__(self, rel_model_path=None):
+    def __init__(self, R, rel_model_path=None):
         self.rel_model_path = rel_model_path
         self.quats = None
+        self.R = R
         self.playback_sequence = None
         Render.__init__(self)
 
-    def init_sphere(self):
+    def init_sphere(self, ball):
         """Initialize the ball's nodes"""
         position = (
             Global.render.find("scene")
             .find("table")
-            .attachNewNode(f"ball_{self.id}_position")
+            .attachNewNode(f"ball_{ball.id}_position")
         )
-        ball = position.attachNewNode(f"ball_{self.id}")
+        ball_node = position.attachNewNode(f"ball_{ball.id}")
 
         if self.rel_model_path is None:
             fallback_path = ani.model_dir / "balls" / "set_1" / "1.glb"
-            expected_path = ani.model_dir / "balls" / "set_1" / f"{self.id}.glb"
+            expected_path = ani.model_dir / "balls" / "set_1" / f"{ball.id}.glb"
             path = expected_path if expected_path.exists() else fallback_path
 
             sphere_node = Global.loader.loadModel(panda_path(path))
@@ -58,7 +59,7 @@ class BallRender(Render):
             if path == fallback_path:
                 tex = sphere_node.find_texture(Path(fallback_path).stem)
             else:
-                tex = sphere_node.find_texture(self.id)
+                tex = sphere_node.find_texture(ball.id)
 
             # Here, we define self.rel_model_path based on path. Since rel_model_path is
             # defined relative to the directory, pooltool/models/balls, some work has to
@@ -82,27 +83,26 @@ class BallRender(Render):
         # https://discourse.panda3d.org/t/visual-artifact-at-poles-of-uv-sphere-gltf-format/27975/8
         tex.set_minfilter(SamplerState.FT_linear)
 
-        sphere_node.setScale(self.get_scale_factor(sphere_node))
-        position.setPos(*self.rvw[0, :])
+        sphere_node.setScale(self.get_scale_factor(sphere_node, ball))
+        position.setPos(*ball.rvw[0, :])
 
         self.nodes["sphere"] = sphere_node
-        self.nodes["ball"] = ball
+        self.nodes["ball"] = ball_node
         self.nodes["pos"] = position
-        self.nodes["shadow"] = self.init_shadow()
+        self.nodes["shadow"] = self.init_shadow(ball)
 
-        if self.initial_orientation:
+        if ball.initial_orientation:
             # This ball already has a defined initial orientation, so load it up
-            self.set_orientation(self.initial_orientation)
+            self.set_orientation(ball.initial_orientation)
         else:
             self.randomize_orientation()
-            self.initial_orientation = self.get_orientation()
 
-    def init_collision(self, cue):
+    def init_collision(self, ball, cue):
         if not cue.render_obj.rendered:
             raise ConfigError("BallRender.init_collision :: `cue` must be rendered")
 
         collision_node = self.nodes["ball"].attachNewNode(
-            CollisionNode(f"ball_csphere_{self.id}")
+            CollisionNode(f"ball_csphere_{ball.id}")
         )
         collision_node.node().addSolid(
             CollisionCapsule(0, 0, -self.R, 0, 0, self.R, cue.specs.tip_radius + self.R)
@@ -110,9 +110,9 @@ class BallRender(Render):
         if ani.settings["graphics"]["debug"]:
             collision_node.show()
 
-        self.nodes[f"ball_csphere_{self.id}"] = collision_node
+        self.nodes[f"ball_csphere_{ball.id}"] = collision_node
 
-    def init_shadow(self):
+    def init_shadow(self, ball):
         N = 20
         start, stop = 0.5, 0.9  # fraction of ball radius
         z_offset = 0.0005
@@ -120,9 +120,9 @@ class BallRender(Render):
 
         shadow_path = ani.model_dir / "balls" / "set_1" / "shadow.glb"
         shadow_node = (
-            Global.render.find("scene").find("table").attachNewNode(f"shadow_{self.id}")
+            Global.render.find("scene").find("table").attachNewNode(f"shadow_{ball.id}")
         )
-        shadow_node.setPos(self.rvw[0, 0], self.rvw[0, 1], 0)
+        shadow_node.setPos(ball.rvw[0, 0], ball.rvw[0, 1], 0)
 
         # allow transparency of shadow to change
         shadow_node.setTransparency(TransparencyAttrib.MAlpha)
@@ -130,12 +130,12 @@ class BallRender(Render):
         for i, scale in enumerate(scales):
             shadow_layer = Global.loader.loadModel(panda_path(shadow_path))
             shadow_layer.reparentTo(shadow_node)
-            shadow_layer.setScale(self.get_scale_factor(shadow_layer) * scale)
+            shadow_layer.setScale(self.get_scale_factor(shadow_layer, ball) * scale)
             shadow_layer.setZ(z_offset * (1 - i / N))
 
         return shadow_node
 
-    def get_scale_factor(self, node):
+    def get_scale_factor(self, node, ball):
         """Find scale factor to match model size to ball's SI radius"""
         m, M = node.getTightBounds()
         model_R = (M - m)[0] / 2
@@ -146,15 +146,6 @@ class BallRender(Render):
         """Return the position of the rendered ball"""
         x, y, z = self.nodes["pos"].getPos()
         return x, y, z
-
-    def set_object_state_as_render_state(self):
-        """Set the object position based on the rendered position"""
-        self.rvw[0] = self.get_render_state()
-
-    def set_render_state_as_object_state(self):
-        """Set rendered position based on the object's position (self.rvw[0,:])"""
-        pos = self.rvw[0]
-        self.set_render_state(pos)
 
     def set_render_state(self, pos, quat=None):
         """Set the position (and quaternion) of the rendered ball
@@ -171,7 +162,7 @@ class BallRender(Render):
         if quat is not None:
             self.nodes["pos"].setQuat(quat)
 
-    def set_render_state_from_history(self, i):
+    def set_render_state_from_history(self, ball_history, i):
         """Set the position of the rendered ball based on history index
 
         Parameters
@@ -181,7 +172,7 @@ class BallRender(Render):
             final state
         """
 
-        rvw, _, _ = self.history_cts.get_state(i)
+        rvw, _, _ = ball_history.get_state(i)
         quat = self.quats[i] if self.quats is not None else None
         self.set_render_state(rvw[0], quat)
 
@@ -194,30 +185,30 @@ class BallRender(Render):
         ws = self.history_cts.rvw[:, 2, :]
         self.quats = autils.as_quaternion(ws, self.history_cts.t)
 
-    def set_playback_sequence(self, playback_speed=1):
+    def set_playback_sequence(self, ball, playback_speed=1):
         """Creates the motion sequences of the ball for a given playback speed"""
-        dts = np.diff(self.history_cts.t)
-        motion_states = self.history_cts.s
+        dts = np.diff(ball.history_cts.t)
+        motion_states = ball.history_cts.s
         playback_dts = dts / playback_speed
 
         # Get the trajectories
-        xyzs = self.history_cts.rvw[:, 0, :]
-        ws = self.history_cts.rvw[:, 2, :]
+        xyzs = ball.history_cts.rvw[:, 0, :]
+        ws = ball.history_cts.rvw[:, 2, :]
 
         if (xyzs == xyzs[0, :]).all() and (ws == ws[0, :]).all():
             # Ball has no motion. No need to create Lerp intervals
             self.playback_sequence = Sequence()
-            self.quats = autils.as_quaternion(ws, self.history_cts.t)
+            self.quats = autils.as_quaternion(ws, ball.history_cts.t)
             return
 
         xyzs = autils.get_list_of_Vec3s_from_array(xyzs)
-        self.quats = autils.as_quaternion(ws, self.history_cts.t)
+        self.quats = autils.as_quaternion(ws, ball.history_cts.t)
 
         # Init the animation sequences
         ball_sequence = Sequence()
         shadow_sequence = Sequence()
 
-        self.set_render_state_from_history(0)
+        self.set_render_state_from_history(ball.history_cts, 0)
 
         j = 0
         energetic = False
@@ -326,12 +317,12 @@ class BallRender(Render):
             self.playback_sequence.pause()
         self.remove_nodes()
 
-    def render(self):
+    def render(self, ball):
         super().render()
-        self.init_sphere()
+        self.init_sphere(ball)
 
 
-class BallHistory(object):
+class BallHistory:
     def __init__(self):
         self.vectorized = False
         self.reset()
@@ -376,7 +367,7 @@ class BallHistory(object):
         self.vectorized = True
 
 
-class Ball(BallRender):
+class Ball:
     object_type = "ball"
 
     def __init__(
@@ -444,7 +435,16 @@ class Ball(BallRender):
             self.initial_orientation = self.get_random_orientation()
 
         self.rel_model_path = rel_model_path
-        BallRender.__init__(self, rel_model_path=self.rel_model_path)
+        self.render_obj = BallRender(R=self.R, rel_model_path=self.rel_model_path)
+
+    def set_object_state_as_render_state(self):
+        """Set the object position based on the rendered position"""
+        self.rvw[0] = self.render_obj.get_render_state()
+
+    def set_render_state_as_object_state(self):
+        """Set rendered position based on the object's position (self.rvw[0,:])"""
+        pos = self.rvw[0]
+        self.render_obj.set_render_state(pos)
 
     def attach_history(self, history):
         """Sets self.history to an existing BallHistory object"""
@@ -564,6 +564,10 @@ class Ball(BallRender):
 
     def save(self, path):
         utils.save_pickle(self.as_dict(), path)
+
+    def render(self):
+        self.render_obj.render(self)
+        self.initial_orientation = self.render_obj.get_orientation()
 
 
 def ball_from_dict(d):

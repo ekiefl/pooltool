@@ -152,7 +152,7 @@ class Interface(ShowBase):
         for shot in Global.multisystem:
             shot.table.render_obj.remove_nodes()
             for ball in shot.balls.values():
-                ball.teardown()
+                ball.render_obj.teardown()
 
         environment.unload_room()
         environment.unload_lights()
@@ -177,7 +177,7 @@ class Interface(ShowBase):
 
         # Render the balls of the active shot
         for ball in Global.system.balls.values():
-            if not ball.rendered:
+            if not ball.render_obj.rendered:
                 ball.render()
 
         Global.system.cue.render_obj.render()
@@ -457,7 +457,7 @@ class ImageSaver(Interface):
 
         for frame in range(frames):
             for ball in Global.system.balls.values():
-                ball.set_render_state_from_history(frame)
+                ball.set_render_state_from_history(ball.history_cts, frame)
 
             Global.task_mgr.step()
 

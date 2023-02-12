@@ -60,7 +60,9 @@ class AimMode(BaseMode):
         Global.system.cue.render_obj.show_nodes(ignore=("cue_cseg",))
         Global.system.cue.render_obj.get_node("cue_stick").setX(0)
 
-        cam.move_fixation(Global.system.cue.cueing_ball.get_node("pos").getPos())
+        cam.move_fixation(
+            Global.system.cue.cueing_ball.render_obj.get_node("pos").getPos()
+        )
 
         if load_prev_cam:
             cam.load_saved_state(Mode.aim)

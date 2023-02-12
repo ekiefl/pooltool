@@ -247,7 +247,9 @@ class CueRender(Render):
 
     def match_ball_position(self):
         """Update the cue stick's position to match the cueing ball's position"""
-        self.get_node("cue_stick_focus").setPos(self.follow.get_node("pos").getPos())
+        self.get_node("cue_stick_focus").setPos(
+            self.follow.render_obj.get_node("pos").getPos()
+        )
 
     def get_render_state(self):
         """Return phi, theta, V0, a, and b as determined by the cue_stick node"""
@@ -533,7 +535,7 @@ class CueAvoid:
 
         Global.system.cue.render_obj.init_collision_handling(self.collision_handler)
         for ball in Global.system.balls.values():
-            ball.init_collision(Global.system.cue)
+            ball.render_obj.init_collision(ball, Global.system.cue)
 
         # The stick needs a focus ball
         if not Global.system.cue.render_obj.has_focus:
