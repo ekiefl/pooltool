@@ -18,6 +18,8 @@ from pooltool.system import PlaybackMode
 class AimMode(BaseMode):
     name = Mode.aim
     keymap = {
+        Action.rotate_cue_left: False,
+        Action.rotate_cue_right: False,
         Action.fine_control: False,
         Action.adjust_head: False,
         Action.quit: False,
@@ -70,6 +72,10 @@ class AimMode(BaseMode):
         self.register_keymap_event("t-up", Action.adjust_head, False)
         self.register_keymap_event("mouse1", Action.zoom, True)
         self.register_keymap_event("mouse1-up", Action.zoom, False)
+        self.register_keymap_event("j", Action.rotate_cue_left, True)
+        self.register_keymap_event("j-up", Action.rotate_cue_left, False)
+        self.register_keymap_event("k", Action.rotate_cue_right, True)
+        self.register_keymap_event("k-up", Action.rotate_cue_right, False)
         self.register_keymap_event("s", Action.stroke, True)
         self.register_keymap_event("v", Action.view, True)
         self.register_keymap_event("1", Action.cam_save, True)
@@ -142,11 +148,20 @@ class AimMode(BaseMode):
                 )
                 return task.done
         else:
-            cam.rotate_via_mouse(fine_control=self.keymap[Action.fine_control])
-            self.fix_cue_stick_to_camera()
-            self.cue_avoidance()
+            self.rotate()
 
         return task.cont
+
+    def rotate(self):
+        keyboard_rotation = 0.1 if self.keymap[Action.fine_control] else 2
+        if self.keymap[Action.rotate_cue_left]:
+            cam.rotate(phi=cam.phi + keyboard_rotation)
+        elif self.keymap[Action.rotate_cue_right]:
+            cam.rotate(phi=cam.phi - keyboard_rotation)
+        else:
+            cam.rotate_via_mouse(fine_control=self.keymap[Action.fine_control])
+        self.fix_cue_stick_to_camera()
+        self.cue_avoidance()
 
     def cue_avoidance(self):
         _, _, theta, *_ = Global.system.cue.render_obj.get_render_state()

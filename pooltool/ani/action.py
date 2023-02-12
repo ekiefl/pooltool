@@ -5,6 +5,8 @@ from pooltool.utils.strenum import StrEnum, auto
 
 class Action(StrEnum):
     aim = auto()
+    rotate_cue_left = auto()
+    rotate_cue_right = auto()
     exit = auto()
     power = auto()
     elevation = auto()
