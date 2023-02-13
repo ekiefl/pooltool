@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import List
 
 import numpy as np
 from direct.interval.IntervalGlobal import (
@@ -10,6 +12,7 @@ from direct.interval.IntervalGlobal import (
     Parallel,
     Sequence,
 )
+from numpy.typing import NDArray
 from panda3d.core import (
     CollisionCapsule,
     CollisionNode,
@@ -176,14 +179,15 @@ class BallRender(Render):
         quat = self.quats[i] if self.quats is not None else None
         self.set_render_state(rvw[0], quat)
 
-    def set_quats(self):
-        """Set self.quats based on self.history_cts
+    def set_quats(self, history):
+        """Set self.quats based on history
 
         Quaternions are not calculated in the rvw state vector, so this method provides
         an opportunity to calculate all the quaternions from the ball's history
         """
-        ws = self.history_cts.rvw[:, 2, :]
-        self.quats = autils.as_quaternion(ws, self.history_cts.t)
+        rvws, _, ts = history.vectorize()
+        ws = rvws[:, 2, :]
+        self.quats = autils.as_quaternion(ws, ts)
 
     def set_playback_sequence(self, ball, playback_speed=1):
         """Creates the motion sequences of the ball for a given playback speed"""
@@ -323,11 +327,17 @@ class BallRender(Render):
         self.init_sphere(ball)
 
 
+@dataclass
 class BallHistory:
-    def __init__(self):
-        self.reset()
+    rvw: List[NDArray[np.float64]] = field(default_factory=list)
+    s: List[float] = field(default_factory=list)
+    t: List[float] = field(default_factory=list)
 
-    def get_state(self, i):
+    @property
+    def empty(self) -> bool:
+        return not bool(len(self.rvw))
+
+    def get_state(self, i: int):
         """Get state based on history index
 
         Returns
@@ -336,17 +346,7 @@ class BallHistory:
         """
         return self.rvw[i], self.s[i], self.t[i]
 
-    def reset(self):
-        n = 0
-        self.rvw = [np.nan * np.ones((3, 3))] * n
-        self.s = [np.nan] * n
-        self.t = [np.nan] * n
-
-    def is_populated(self):
-        """Returns True if rvw has non-zero length"""
-        return True if len(self.rvw) else False
-
-    def add(self, rvw, s, t):
+    def add(self, rvw: NDArray[np.float64], s: float, t: float):
         self.rvw.append(rvw)
         self.s.append(s)
         self.t.append(t)
@@ -357,8 +357,6 @@ class BallHistory:
 
 
 class Ball:
-    object_type = "ball"
-
     def __init__(
         self,
         ball_id,
@@ -434,14 +432,6 @@ class Ball:
         """Set rendered position based on the object's position (self.rvw[0,:])"""
         pos = self.rvw[0]
         self.render_obj.set_render_state(pos)
-
-    def attach_history(self, history):
-        """Sets self.history to an existing BallHistory object"""
-        self.history = history
-
-    def attach_history_cts(self, history):
-        """Sets self.history_cts to an existing BallHistory object"""
-        self.history_cts = history
 
     def update_history(self, event):
         self.history.add(np.copy(self.rvw), self.s, event.time)
@@ -589,13 +579,13 @@ def ball_from_dict(d):
     ball_history.rvw = d["history"]["rvw"]
     ball_history.s = d["history"]["s"]
     ball_history.t = d["history"]["t"]
-    ball.attach_history(ball_history)
+    ball.history = ball_history
 
     ball_history_cts = BallHistory()
     ball_history_cts.rvw = d.get("history_cts", {}).get("rvw")
     ball_history_cts.s = d.get("history_cts", {}).get("s")
     ball_history_cts.t = d.get("history_cts", {}).get("t")
-    ball.attach_history_cts(ball_history_cts)
+    ball.history_cts = ball_history_cts
 
     events = Events()
     for event_dict in d["events"]:

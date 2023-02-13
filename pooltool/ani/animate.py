@@ -451,13 +451,13 @@ class ImageSaver(Interface):
 
         # Set quaternions for each ball
         for ball in Global.system.balls.values():
-            ball.set_quats()
+            ball.render_obj.set_quats(ball.history_cts)
 
         frames = int(shot.events[-1].time * fps) + 1
 
         for frame in range(frames):
             for ball in Global.system.balls.values():
-                ball.set_render_state_from_history(ball.history_cts, frame)
+                ball.render_obj.set_render_state_from_history(ball.history_cts, frame)
 
             Global.task_mgr.step()
 

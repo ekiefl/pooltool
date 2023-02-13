@@ -10,7 +10,7 @@ from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
-from pooltool.objects.ball import Ball
+from pooltool.objects.ball import Ball, BallHistory
 from pooltool.objects.cue import cue_avoid
 from pooltool.system import PlaybackMode
 
@@ -181,7 +181,7 @@ class ShotMode(BaseMode):
 
             cam.load_saved_state(Global.mode_mgr.mode_stroked_from)
             for ball in Global.system.balls.values():
-                if ball.history.is_populated():
+                if not ball.history.empty:
                     ball.set(
                         rvw=ball.history.rvw[0],
                         s=ball.history.s[0],
@@ -189,7 +189,7 @@ class ShotMode(BaseMode):
                     )
                     ball.get_node("pos").setQuat(ball.quats[0])
                 ball.set_render_state_as_object_state()
-                ball.history.reset()
+                ball.history = BallHistory()
 
             Global.system.cue.render_obj.init_focus(Global.system.cue.cueing_ball)
 

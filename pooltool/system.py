@@ -13,7 +13,7 @@ import pooltool.utils as utils
 from pooltool.error import ConfigError, SimulateError
 from pooltool.events import Event, Events, EventType, null_event
 from pooltool.evolution import EvolveShotEventBased
-from pooltool.objects.ball import BallHistory, ball_from_dict
+from pooltool.objects.ball import Ball, BallHistory, ball_from_dict
 from pooltool.objects.cue import cue_from_dict
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -48,8 +48,8 @@ class SystemHistory(object):
         self.continuized = False
 
         for ball in self.balls.values():
-            ball.history.reset()
-            ball.history_cts.reset()
+            ball.history = BallHistory()
+            ball.history_cts = BallHistory()
             ball.events.reset()
             ball.set_time(0)
 
@@ -79,7 +79,7 @@ class SystemHistory(object):
                 ball.update_history(event)
         else:
             for agent in event.agents:
-                if agent.object_type == "ball":
+                if isinstance(agent, Ball):
                     agent.update_history(event)
 
         self.events.append(event)
@@ -187,9 +187,8 @@ class SystemHistory(object):
                 cts_history.add(rvw, s, elapsed + dt)
                 elapsed += dt
 
-            # Attach the newly created history to the ball, overwriting the existing
-            # history
-            ball.attach_history_cts(cts_history)
+            # Attach the newly created history to the ball
+            ball.history_cts = cts_history
 
         self.continuized = True
 
