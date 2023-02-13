@@ -312,6 +312,8 @@ class BallRender(Render):
 
 @dataclass
 class BallHistory:
+    """FIXME consider BallState and more complicated vectorize"""
+
     rvw: List[NDArray[np.float64]] = field(default_factory=list)
     s: List[float] = field(default_factory=list)
     t: List[float] = field(default_factory=list)
@@ -335,7 +337,7 @@ class BallHistory:
         self.t.append(t)
 
     def vectorize(self):
-        """Return all list objects in self.history as array objects"""
+        """Return rvw, s, and t as arrays"""
         return np.array(self.rvw), np.array(self.s), np.array(self.t)
 
 
@@ -385,6 +387,10 @@ class BallParams:
         """Coefficient of spinning friction (radius dependent)"""
         return self.u_sp_proportionality * self.R
 
+    @staticmethod
+    def default() -> BallParams:
+        return BallParams()
+
 
 def _null_ball_state() -> NDArray[np.float64]:
     return np.array([[np.nan, np.nan, np.nan], [0, 0, 0], [0, 0, 0]], dtype=np.float64)
@@ -392,9 +398,9 @@ def _null_ball_state() -> NDArray[np.float64]:
 
 @dataclass
 class BallState:
-    rvw: NDArray[np.float64] = field(default_factory=_null_ball_state)
-    s: float = field(default=c.stationary)
-    t: float = field(default=0)
+    rvw: NDArray[np.float64]
+    s: float
+    t: float
 
     def set(self, rvw, s=None, t=None):
         self.rvw = rvw
@@ -403,15 +409,23 @@ class BallState:
         if t is not None:
             self.t = t
 
+    @staticmethod
+    def default() -> BallState:
+        return BallState(
+            rvw=_null_ball_state(),
+            s=c.stationary,
+            t=0,
+        )
+
 
 @dataclass
 class Ball:
     """A pool ball"""
 
     id: str
-    state: BallState = field(default=BallState())
-    params: BallParams = field(default=BallParams())
-    initial_orientation: BallOrientation = field(default=BallOrientation.random())
+    state: BallState = field(default_factory=BallState.default)
+    params: BallParams = field(default_factory=BallParams.default)
+    initial_orientation: BallOrientation = field(default_factory=BallOrientation.random)
 
     history: BallHistory = field(default=BallHistory())
     history_cts: BallHistory = field(default=BallHistory())
@@ -434,6 +448,7 @@ class Ball:
 
     @staticmethod
     def create() -> Ball:
+        """FIXME should allow parameters like xyz"""
         raise NotImplementedError()
 
     def set_object_state_as_render_state(self):

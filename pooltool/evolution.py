@@ -90,14 +90,14 @@ class EvolveShot(ABC):
                 state=ball.s,
                 rvw=ball.state.rvw,
                 R=ball.params.R,
-                m=ball.m,
+                m=ball.params.m,
                 u_s=ball.u_s,
                 u_sp=ball.u_sp,
                 u_r=ball.u_r,
                 g=ball.g,
                 t=dt,
             )
-            ball.set(rvw, s=s, t=(self.t + dt))
+            ball.state.set(rvw, s=s, t=(self.t + dt))
 
     @abstractmethod
     def evolution_algorithm(self):
@@ -243,7 +243,7 @@ class EvolveShotEventBased(EvolveShot):
                         b=cushion.b,
                         r=cushion.radius,
                         mu=(ball.u_s if ball.state.s == c.sliding else ball.u_r),
-                        m=ball.m,
+                        m=ball.params.m,
                         g=ball.g,
                         R=ball.params.R,
                     )
@@ -284,7 +284,7 @@ class EvolveShotEventBased(EvolveShot):
                     p2=cushion.p2,
                     direction=cushion.direction.value,
                     mu=(ball.u_s if ball.state.s == c.sliding else ball.u_r),
-                    m=ball.m,
+                    m=ball.params.m,
                     g=ball.g,
                     R=ball.params.R,
                 )
@@ -316,7 +316,7 @@ class EvolveShotEventBased(EvolveShot):
                         b=pocket.b,
                         r=pocket.radius,
                         mu=(ball.u_s if ball.state.s == c.sliding else ball.u_r),
-                        m=ball.m,
+                        m=ball.params.m,
                         g=ball.g,
                         R=ball.params.R,
                     )

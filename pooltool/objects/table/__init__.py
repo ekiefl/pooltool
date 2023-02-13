@@ -310,12 +310,16 @@ class BilliardTableSpecs:
         return {}
 
 
+def _table_render_factory():
+    return TableRender()
+
+
 @dataclass
 class Table:
     specs: Union[PocketTableSpecs, BilliardTableSpecs]
     cushion_segments: Dict[str, Dict[str, CushionSegment]]
     pockets: Dict[str, Pocket]
-    render_obj: TableRender = field(init=False, default=TableRender())
+    render_obj: TableRender = field(init=False, default_factory=_table_render_factory)
 
     @property
     def w(self):

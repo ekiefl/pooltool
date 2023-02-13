@@ -12,7 +12,6 @@ class Rack(ABC):
     def __init__(self, table):
         self.arrange()
         self.center_by_table(table)
-        self.balls = self.get_balls_dict()
 
     def get_balls_dict(self):
         return {str(ball.id): ball for ball in self.balls}

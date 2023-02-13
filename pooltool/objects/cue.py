@@ -287,7 +287,7 @@ class Cue:
     b: float = field(default=0.25)
     cueing_ball: Optional[Any] = field(default=None)
 
-    specs: CueSpecs = field(default=CueSpecs.default())
+    specs: CueSpecs = field(default_factory=CueSpecs.default)
 
     render_obj: CueRender = field(init=False, default=CueRender())
 

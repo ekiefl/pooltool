@@ -176,7 +176,7 @@ class SystemHistory(object):
                     state=s,
                     rvw=rvw,
                     R=ball.params.R,
-                    m=ball.m,
+                    m=ball.params.m,
                     u_s=ball.u_s,
                     u_sp=ball.u_sp,
                     u_r=ball.u_r,
@@ -387,7 +387,9 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
     def get_system_energy(self):
         energy = 0
         for ball in self.balls.values():
-            energy += physics.get_ball_energy(ball.state.rvw, ball.params.R, ball.m)
+            energy += physics.get_ball_energy(
+                ball.state.rvw, ball.params.R, ball.params.m
+            )
 
         return energy
 

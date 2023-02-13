@@ -138,7 +138,7 @@ def test_get_ball_linear_cushion_collision_time(ref):
                 p1=cushion.p1,
                 p2=cushion.p2,
                 mu=(ball.u_s if ball.state.s == c.sliding else ball.u_r),
-                m=ball.m,
+                m=ball.params.m,
                 g=ball.g,
                 R=ball.params.R,
             )
@@ -166,7 +166,7 @@ def test_get_ball_circular_cushion_collision_time(ref):
                 b=cushion.b,
                 r=cushion.radius,
                 mu=(ball.u_s if ball.state.s == c.sliding else ball.u_r),
-                m=ball.m,
+                m=ball.params.m,
                 g=ball.g,
                 R=ball.params.R,
             )
@@ -191,7 +191,7 @@ def test_get_ball_pocket_collision_time(ref):
                 b=pocket.b,
                 r=pocket.radius,
                 mu=(ball.u_s if ball.state.s == c.sliding else ball.u_r),
-                m=ball.m,
+                m=ball.params.m,
                 g=ball.g,
                 R=ball.params.R,
             )
@@ -226,7 +226,7 @@ def test_evolve_ball_motion(ref):
                 ball.s,
                 ball.state.rvw,
                 ball.params.R,
-                ball.m,
+                ball.params.m,
                 ball.u_s,
                 ball.u_sp,
                 ball.u_r,

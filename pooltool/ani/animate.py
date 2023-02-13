@@ -574,4 +574,4 @@ class Game(Interface):
     @staticmethod
     def setup_balls(table, rack):
         # FIXME Using default BallParams
-        return rack(table, ordered=True, params=BallParams()).balls
+        return rack(table, ordered=True, params=BallParams()).get_balls_dict()

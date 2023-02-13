@@ -182,7 +182,7 @@ class ShotMode(BaseMode):
             cam.load_saved_state(Global.mode_mgr.mode_stroked_from)
             for ball in Global.system.balls.values():
                 if not ball.history.empty:
-                    ball.set(
+                    ball.state.set(
                         rvw=ball.history.rvw[0],
                         s=ball.history.s[0],
                         t=0,

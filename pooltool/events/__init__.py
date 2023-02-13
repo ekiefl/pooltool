@@ -212,10 +212,8 @@ def resolve_ball_ball(event):
     s1, s2 = c.sliding, c.sliding
 
     ball1.set(rvw1, s1, t=event.time)
-    ball1.update_next_transition_event()
 
     ball2.set(rvw2, s2, t=event.time)
-    ball2.update_next_transition_event()
 
     event.final_states = [
         (np.copy(ball1.rvw), ball1.s),
@@ -236,18 +234,17 @@ def resolve_ball_cushion(event):
         rvw=ball.state.rvw,
         normal=normal,
         R=ball.params.R,
-        m=ball.m,
+        m=ball.params.m,
         h=cushion.height,
         e_c=ball.e_c,
         f_c=ball.f_c,
     )
     s = c.sliding
 
-    ball.set(rvw, s, t=event.time)
-    ball.update_next_transition_event()
+    ball.state.set(rvw, s, t=event.time)
 
     event.final_states = [
-        (np.copy(ball.state.rvw), ball.s),
+        (np.copy(ball.state.rvw), ball.state.s),
         None,
     ]
 
@@ -259,13 +256,12 @@ def resolve_ball_pocket(event):
     # Ball is placed at the pocket center
     rvw = np.array([[pocket.a, pocket.b, -pocket.depth], [0, 0, 0], [0, 0, 0]])
 
-    ball.set(rvw, c.pocketed)
-    ball.update_next_transition_event()
+    ball.state.set(rvw, c.pocketed)
 
     pocket.add(ball.id)
 
     event.final_states = [
-        (np.copy(ball.state.rvw), ball.s),
+        (np.copy(ball.state.rvw), ball.state.s),
         None,
     ]
 
@@ -275,7 +271,7 @@ def resolve_stick_ball(event):
     cue_stick, ball = event.agents
 
     v, w = physics.cue_strike(
-        ball.m,
+        ball.params.m,
         cue_stick.specs.M,
         ball.params.R,
         cue_stick.V0,
@@ -292,11 +288,10 @@ def resolve_stick_ball(event):
         else c.sliding
     )
 
-    ball.set(rvw, s)
-    ball.update_next_transition_event()
+    ball.state.set(rvw, s)
 
     event.final_states = [
-        (np.copy(ball.state.rvw), ball.s),
+        (np.copy(ball.state.rvw), ball.state.s),
         None,
     ]
 
@@ -308,7 +303,6 @@ def resolve_transition(event):
 
     ball = event.agents[0]
     ball.state.s = end
-    ball.update_next_transition_event()
 
     event.final_states = [(np.copy(ball.state.rvw), end)]
 
@@ -327,7 +321,7 @@ event_resolvers: Dict[EventType, Callable] = {
 
 
 def resolve_event(event: Event) -> None:
-    event_resolvers[event.event_type]()
+    event_resolvers[event.event_type](event)
 
 
 class Events(utils.ListLike):
