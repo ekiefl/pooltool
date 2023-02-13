@@ -14,7 +14,9 @@ from pooltool.events import (
     ball_ball_collision,
     ball_cushion_collision,
     ball_pocket_collision,
+    get_next_transition_event,
     null_event,
+    resolve_event,
 )
 from pooltool.objects import NullObject
 
@@ -86,8 +88,8 @@ class EvolveShot(ABC):
         for ball_id, ball in self.balls.items():
             rvw, s = physics.evolve_ball_motion(
                 state=ball.s,
-                rvw=ball.rvw,
-                R=ball.R,
+                rvw=ball.state.rvw,
+                R=ball.params.R,
                 m=ball.m,
                 u_s=ball.u_s,
                 u_sp=ball.u_sp,
@@ -126,7 +128,7 @@ class EvolveShotEventBased(EvolveShot):
 
             self.evolve(event.time - self.t)
             if self.include.get(event.event_type, True):
-                event.resolve()
+                resolve_event(event)
 
             self.update_history(event, update_all=True)
 
@@ -171,8 +173,9 @@ class EvolveShotEventBased(EvolveShot):
         event = null_event(time=np.inf)
 
         for ball in self.balls.values():
-            if ball.next_transition_event.time <= event.time:
-                event = ball.next_transition_event
+            trans_event = get_next_transition_event(ball)
+            if trans_event.time <= event.time:
+                event = trans_event
 
         return event
 
@@ -228,21 +231,21 @@ class EvolveShotEventBased(EvolveShot):
         collision_coeffs = []
 
         for ball in self.balls.values():
-            if ball.s in c.nontranslating:
+            if ball.state.s in c.nontranslating:
                 continue
 
             for cushion in self.table.cushion_segments["circular"].values():
                 collision_coeffs.append(
                     physics.get_ball_circular_cushion_collision_coeffs_fast(
-                        rvw=ball.rvw,
+                        rvw=ball.state.rvw,
                         s=ball.s,
                         a=cushion.a,
                         b=cushion.b,
                         r=cushion.radius,
-                        mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
+                        mu=(ball.u_s if ball.state.s == c.sliding else ball.u_r),
                         m=ball.m,
                         g=ball.g,
-                        R=ball.R,
+                        R=ball.params.R,
                     )
                 )
 
@@ -267,12 +270,12 @@ class EvolveShotEventBased(EvolveShot):
         involved_agents = tuple([NullObject(), NullObject()])
 
         for ball in self.balls.values():
-            if ball.s in c.nontranslating:
+            if ball.state.s in c.nontranslating:
                 continue
 
             for cushion in self.table.cushion_segments["linear"].values():
                 dtau_E = physics.get_ball_linear_cushion_collision_time_fast(
-                    rvw=ball.rvw,
+                    rvw=ball.state.rvw,
                     s=ball.s,
                     lx=cushion.lx,
                     ly=cushion.ly,
@@ -280,10 +283,10 @@ class EvolveShotEventBased(EvolveShot):
                     p1=cushion.p1,
                     p2=cushion.p2,
                     direction=cushion.direction.value,
-                    mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
+                    mu=(ball.u_s if ball.state.s == c.sliding else ball.u_r),
                     m=ball.m,
                     g=ball.g,
-                    R=ball.R,
+                    R=ball.params.R,
                 )
 
                 if dtau_E < dtau_E_min:
@@ -301,21 +304,21 @@ class EvolveShotEventBased(EvolveShot):
         collision_coeffs = []
 
         for ball in self.balls.values():
-            if ball.s in c.nontranslating:
+            if ball.state.s in c.nontranslating:
                 continue
 
             for pocket in self.table.pockets.values():
                 collision_coeffs.append(
                     physics.get_ball_pocket_collision_coeffs_fast(
-                        rvw=ball.rvw,
+                        rvw=ball.state.rvw,
                         s=ball.s,
                         a=pocket.a,
                         b=pocket.b,
                         r=pocket.radius,
-                        mu=(ball.u_s if ball.s == c.sliding else ball.u_r),
+                        mu=(ball.u_s if ball.state.s == c.sliding else ball.u_r),
                         m=ball.m,
                         g=ball.g,
-                        R=ball.R,
+                        R=ball.params.R,
                     )
                 )
 
@@ -347,7 +350,7 @@ class EvolveShotDiscreteTime(EvolveShot):
 
             events = self.detect_events()
             for event in events:
-                event.resolve()
+                resolve_event(event)
                 self.update_history(event, update_all=True)
 
             if (steps % 1000) == 0:
@@ -391,26 +394,26 @@ class EvolveShotDiscreteTime(EvolveShot):
         events = []
 
         for ball in self.balls.values():
-            ball_x, ball_y = ball.rvw[0, :2]
-            if ball_x <= self.table.L + ball.R:
+            ball_x, ball_y = ball.state.rvw[0, :2]
+            if ball_x <= self.table.L + ball.params.R:
                 events.append(
                     ball_cushion_collision(
                         ball, self.table.cushion_segments["L"], self.t
                     )
                 )
-            elif ball_x >= self.table.R - ball.R:
+            elif ball_x >= self.table.R - ball.params.R:
                 events.append(
                     ball_cushion_collision(
                         ball, self.table.cushion_segments["R"], self.t
                     )
                 )
-            elif ball_y <= self.table.B + ball.R:
+            elif ball_y <= self.table.B + ball.params.R:
                 events.append(
                     ball_cushion_collision(
                         ball, self.table.cushion_segments["B"], self.t
                     )
                 )
-            elif ball_y >= self.table.T - ball.R:
+            elif ball_y >= self.table.T - ball.params.R:
                 events.append(
                     ball_cushion_collision(
                         ball, self.table.cushion_segments["T"], self.t

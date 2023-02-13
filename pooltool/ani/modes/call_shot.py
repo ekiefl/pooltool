@@ -212,9 +212,9 @@ class CallShotMode(BaseMode):
         for ball in Global.system.balls.values():
             if ball.id not in Global.game.active_player.target_balls:
                 continue
-            if ball.s == c.pocketed:
+            if ball.state.s == c.pocketed:
                 continue
-            d = np.linalg.norm(ball.rvw[0] - fixation_pos)
+            d = np.linalg.norm(ball.state.rvw[0] - fixation_pos)
             if d < d_min:
                 d_min, closest = d, ball
 

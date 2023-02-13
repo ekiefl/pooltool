@@ -8,9 +8,9 @@ import pooltool as pt
 run = pt.terminal.Run()
 
 get_pos = lambda table, ball: (
-    (table.w - 2 * ball.R) * np.random.rand() + ball.R,
-    (table.l - 2 * ball.R) * np.random.rand() + ball.R,
-    ball.R,
+    (table.w - 2 * ball.params.R) * np.random.rand() + ball.params.R,
+    (table.l - 2 * ball.params.R) * np.random.rand() + ball.params.R,
+    ball.params.R,
 )
 
 
@@ -18,10 +18,12 @@ def place_ball(i, balls, table):
     ball = pt.Ball(i)
     while True:
         new_pos = get_pos(table, ball)
-        ball.rvw[0] = new_pos
+        ball.state.rvw[0] = new_pos
 
         for other in balls.values():
-            if pt.physics.is_overlapping(ball.rvw, other.rvw, ball.R, other.R):
+            if pt.physics.is_overlapping(
+                ball.state.rvw, other.state.rvw, ball.params.R, other.params.R
+            ):
                 break
         else:
             return ball

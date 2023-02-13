@@ -311,7 +311,7 @@ class ShotMode(BaseMode):
 
         # A lot of dumb things to make the cue track the initial position of the ball
         dummy = Ball("dummy")
-        dummy.R = Global.system.cue.cueing_ball.R
+        dummy.R = Global.system.cue.cueing_ball.params.R
         dummy.rvw = Global.system.cue.cueing_ball.history.rvw[0]
         dummy.render()
         Global.system.cue.render_obj.init_focus(dummy)

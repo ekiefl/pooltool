@@ -120,12 +120,12 @@ class BallInHandMode(BaseMode):
 
         If no, places and returns True. If yes, returns False
         """
-        r, pos = self.grabbed_ball.R, np.array(self.grab_ball_node.getPos())
+        r, pos = self.grabbed_ball.params.R, np.array(self.grab_ball_node.getPos())
 
         for ball in Global.system.balls.values():
             if ball == self.grabbed_ball:
                 continue
-            if np.linalg.norm(ball.rvw[0] - pos) <= (r + ball.R):
+            if np.linalg.norm(ball.state.rvw[0] - pos) <= (r + ball.params.R):
                 return False
 
         self.grabbed_ball.set_object_state_as_render_state()
@@ -198,9 +198,9 @@ class BallInHandMode(BaseMode):
         for ball in Global.system.balls.values():
             if ball.id not in Global.game.active_player.ball_in_hand:
                 continue
-            if ball.s == c.pocketed:
+            if ball.state.s == c.pocketed:
                 continue
-            d = np.linalg.norm(ball.rvw[0] - cam_pos)
+            d = np.linalg.norm(ball.state.rvw[0] - cam_pos)
             if d < d_min:
                 d_min, closest = d, ball
 

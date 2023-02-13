@@ -22,7 +22,7 @@ def test_save(trial):
         ball.save(filepath)
         pickle_ball = pt.ball_from_pickle(filepath)
 
-        np.testing.assert_allclose(ball.rvw, pickle_ball.rvw)
+        np.testing.assert_allclose(ball.state.rvw, pickle_ball.state.rvw)
         np.testing.assert_allclose(ball.s, pickle_ball.s)
         np.testing.assert_allclose(ball.t, pickle_ball.t)
         np.testing.assert_allclose(ball.history.rvw, pickle_ball.history.rvw)

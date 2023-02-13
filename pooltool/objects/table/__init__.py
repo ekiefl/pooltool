@@ -22,7 +22,7 @@ from pooltool.utils import panda_path, strenum
 
 
 @dataclass
-class ModelDescr:
+class TableModelDescr:
     name: str
 
     @property
@@ -45,32 +45,28 @@ class ModelDescr:
         return panda_path(path)
 
     @staticmethod
-    def null() -> ModelDescr:
-        return ModelDescr(name="null")
+    def null() -> TableModelDescr:
+        return TableModelDescr(name="null")
 
     @staticmethod
-    def pocket_table_default() -> ModelDescr:
-        return ModelDescr(name="7_foot")
+    def pocket_table_default() -> TableModelDescr:
+        return TableModelDescr(name="7_foot")
 
     @staticmethod
-    def billiard_table_default() -> ModelDescr:
-        return ModelDescr.null()
+    def billiard_table_default() -> TableModelDescr:
+        return TableModelDescr.null()
 
 
 class TableRender(Render):
-    def __init__(self, name, has_model):
-        """A class for all pool table associated panda3d nodes"""
-        self.name = name
-        self.has_model = has_model
-        Render.__init__(self)
+    """A class for all pool table associated panda3d nodes"""
 
     def init_table(self, table):
         if (
             not table.specs.model_descr
-            or table.specs.model_descr == ModelDescr.null()
+            or table.specs.model_descr == TableModelDescr.null()
             or not ani.settings["graphics"]["table"]
         ):
-            model = Global.loader.loadModel(ModelDescr.null().path)
+            model = Global.loader.loadModel(TableModelDescr.null().path)
             node = Global.render.find("scene").attachNewNode("table")
             model.reparentTo(node)
             model.setScale(table.w, table.l, 1)
@@ -169,7 +165,11 @@ class TableRender(Render):
         # draw table as rectangle
         self.init_table(table)
 
-        if not self.has_model or not ani.settings["graphics"]["table"]:
+        if (
+            not table.specs.model_descr
+            or table.specs.model_descr == TableModelDescr.null()
+            or not ani.settings["graphics"]["table"]
+        ):
             # draw cushion_segments as edges
             self.cushion_drawer = LineSegs()
             self.cushion_drawer.setThickness(3)
@@ -243,7 +243,7 @@ class PocketTableSpecs:
     side_jaw_radius: float = field(default=0.0159 / 2)
 
     # For visualization
-    model_descr: Optional[ModelDescr] = None
+    model_descr: Optional[TableModelDescr] = None
     height: float = field(default=0.708)
     lights_height: float = field(default=1.99)
 
@@ -259,9 +259,9 @@ class PocketTableSpecs:
         if all(
             getattr(self, fname) == default for fname, default in field_defaults.items()
         ):
-            # All parameters match the default table, and so the ModelDescr is used even
+            # All parameters match the default table, and so the TableModelDescr is used even
             # if it wasn't explictly requested.
-            self.model_descr = ModelDescr.pocket_table_default()
+            self.model_descr = TableModelDescr.pocket_table_default()
 
     def create_cushion_segments(self):
         return _create_pocket_table_cushion_segments(self)
@@ -283,7 +283,7 @@ class BilliardTableSpecs:
     cushion_height: float = field(default=0.64 * 2 * 0.028575)
 
     # For visualization
-    model_descr: Optional[ModelDescr] = None
+    model_descr: Optional[TableModelDescr] = None
     height: float = field(default=0.708)
     lights_height: float = field(default=1.99)
 
@@ -299,9 +299,9 @@ class BilliardTableSpecs:
         if all(
             getattr(self, fname) == default for fname, default in field_defaults.items()
         ):
-            # All parameters match the default table, and so the ModelDescr is used even
+            # All parameters match the default table, and so the TableModelDescr is used even
             # if it wasn't explictly requested.
-            self.model_descr = ModelDescr.billiard_table_default()
+            self.model_descr = TableModelDescr.billiard_table_default()
 
     def create_cushion_segments(self):
         return _create_billiard_table_cushion_segments(self)
@@ -315,10 +315,7 @@ class Table:
     specs: Union[PocketTableSpecs, BilliardTableSpecs]
     cushion_segments: Dict[str, Dict[str, CushionSegment]]
     pockets: Dict[str, Pocket]
-    render_obj: TableRender = field(init=False)
-
-    def __post_init__(self):
-        self.render_obj = TableRender(name="none", has_model=False)
+    render_obj: TableRender = field(init=False, default=TableRender())
 
     @property
     def w(self):

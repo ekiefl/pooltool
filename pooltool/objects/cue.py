@@ -56,7 +56,7 @@ class CueRender(Render):
         self.stroke_pos = []
         self.stroke_time = []
 
-    def init_model(self, R=c.R):
+    def init_model(self):
         path = utils.panda_path(ani.model_dir / "cue" / "cue.glb")
         cue_stick_model = Global.loader.loadModel(path)
         cue_stick_model.setName("cue_stick_model")
@@ -70,7 +70,7 @@ class CueRender(Render):
     def init_focus(self, ball):
         self.follow = ball
 
-        self.get_node("cue_stick_model").setPos(ball.R, 0, 0)
+        self.get_node("cue_stick_model").setPos(ball.params.R, 0, 0)
 
         cue_stick_focus = (
             Global.render.find("scene").find("table").attachNewNode("cue_stick_focus")
@@ -266,8 +266,8 @@ class CueRender(Render):
 
         cueing_ball = self.follow
         theta = -cue_stick_focus.getR()
-        a = -cue_stick.getY() / self.follow.R
-        b = cue_stick.getZ() / self.follow.R
+        a = -cue_stick.getY() / self.follow.params.R
+        b = cue_stick.getZ() / self.follow.params.R
 
         return V0, phi, theta, a, b, cueing_ball
 
@@ -341,7 +341,7 @@ class Cue:
         assert self.cueing_ball
 
         event = events.stick_ball_collision(self, self.cueing_ball, t)
-        event.resolve()
+        events.resolve_event(event)
 
         return event
 
@@ -358,7 +358,7 @@ class Cue:
         assert self.cueing_ball
 
         direction = utils.angle_fast(
-            utils.unit_vector_fast(np.array(pos) - self.cueing_ball.rvw[0])
+            utils.unit_vector_fast(np.array(pos) - self.cueing_ball.state.rvw[0])
         )
         self.set_state(phi=direction * 180 / np.pi)
 
@@ -375,7 +375,7 @@ class Cue:
 
         assert self.cueing_ball
 
-        self.aim_at_pos(ball.rvw[0])
+        self.aim_at_pos(ball.state.rvw[0])
 
         if cut is None:
             return
@@ -396,8 +396,8 @@ class Cue:
 
         left = True if cut < 0 else False
         cut = np.abs(cut) * np.pi / 180
-        R = ball.R
-        d = np.linalg.norm(ball.rvw[0] - self.cueing_ball.rvw[0])
+        R = ball.params.R
+        d = np.linalg.norm(ball.state.rvw[0] - self.cueing_ball.state.rvw[0])
 
         lower_bound = 0
         upper_bound = np.pi / 2 - np.arccos((2 * R) / d)
@@ -458,8 +458,8 @@ class Cue:
 
         cue_stick_focus.setH(self.phi + 180)  # phi
         cue_stick_focus.setR(-self.theta)  # theta
-        cue_stick.setY(-self.a * self.render_obj.follow.R)  # a
-        cue_stick.setZ(self.b * self.render_obj.follow.R)  # b
+        cue_stick.setY(-self.a * self.render_obj.follow.params.R)  # a
+        cue_stick.setZ(self.b * self.render_obj.follow.params.R)  # b
 
     def as_dict(self):
         try:
@@ -628,13 +628,13 @@ class CueAvoid:
         phi = ((self.avoid_nodes["cue_stick_focus"].getH() + 180) % 360) * np.pi / 180
         c = np.array([np.cos(phi), np.sin(phi), 0])
         gamma = np.arccos(np.dot(n, c))
-        AB = (ball.R + Global.system.cue.specs.tip_radius) * np.cos(gamma)
+        AB = (ball.params.R + Global.system.cue.specs.tip_radius) * np.cos(gamma)
 
         # Center of blocking ball transect
         Ax, Ay, _ = entry.getSurfacePoint(scene)
         Ax -= (AB + Global.system.cue.specs.tip_radius) * np.cos(phi)
         Ay -= (AB + Global.system.cue.specs.tip_radius) * np.sin(phi)
-        Az = ball.R
+        Az = ball.params.R
 
         # Center of aim, leveled to ball height
         Cx, Cy, Cz = self.avoid_nodes["cue_stick_focus"].getPos(scene)

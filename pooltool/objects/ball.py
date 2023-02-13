@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -6,7 +7,6 @@ from typing import List
 
 import numpy as np
 from direct.interval.IntervalGlobal import (
-    LerpFunc,
     LerpPosInterval,
     LerpPosQuatInterval,
     Parallel,
@@ -16,7 +16,6 @@ from numpy.typing import NDArray
 from panda3d.core import (
     CollisionCapsule,
     CollisionNode,
-    LineSegs,
     SamplerState,
     TransparencyAttrib,
 )
@@ -24,19 +23,29 @@ from panda3d.core import (
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
 import pooltool.constants as c
-import pooltool.events as events
-import pooltool.physics as physics
-import pooltool.utils as utils
 from pooltool.ani.globals import Global
 from pooltool.error import ConfigError
-from pooltool.events import Event, Events
 from pooltool.objects import Render
 from pooltool.utils import panda_path
 
 
+@dataclass
+class BallOrientation:
+    """Stores a ball's rendered orientation"""
+
+    pos: List[float]
+    sphere: List[float]
+
+    @staticmethod
+    def random() -> BallOrientation:
+        return BallOrientation(
+            pos=[1, 0, 0, 0],
+            sphere=list((tmp := 2 * np.random.rand(4) - 1) / np.linalg.norm(tmp)),
+        )
+
+
 class BallRender(Render):
-    def __init__(self, R, rel_model_path=None):
-        self.rel_model_path = rel_model_path
+    def __init__(self, R):
         self.quats = None
         self.R = R
         self.playback_sequence = None
@@ -51,54 +60,30 @@ class BallRender(Render):
         )
         ball_node = position.attachNewNode(f"ball_{ball.id}")
 
-        if self.rel_model_path is None:
-            fallback_path = ani.model_dir / "balls" / "set_1" / "1.glb"
-            expected_path = ani.model_dir / "balls" / "set_1" / f"{ball.id}.glb"
-            path = expected_path if expected_path.exists() else fallback_path
+        fallback_path = ani.model_dir / "balls" / "set_1" / "1.glb"
+        expected_path = ani.model_dir / "balls" / "set_1" / f"{ball.id}.glb"
+        path = expected_path if expected_path.exists() else fallback_path
 
-            sphere_node = Global.loader.loadModel(panda_path(path))
-            sphere_node.reparentTo(position)
+        sphere_node = Global.loader.loadModel(panda_path(path))
+        sphere_node.reparentTo(position)
 
-            if path == fallback_path:
-                tex = sphere_node.find_texture(Path(fallback_path).stem)
-            else:
-                tex = sphere_node.find_texture(ball.id)
-
-            # Here, we define self.rel_model_path based on path. Since rel_model_path is
-            # defined relative to the directory, pooltool/models/balls, some work has to
-            # be done to define rel_model_path relative to this directory. NOTE assumes
-            # no child directory is named balls
-            parents = []
-            parent = path.parent
-            while True:
-                if parent.stem == "balls":
-                    self.rel_model_path = Path("/".join(parents[::-1])) / path.name
-                    break
-                parents.append(parent.stem)
-                parent = parent.parent
+        if path == fallback_path:
+            tex = sphere_node.find_texture(Path(fallback_path).stem)
         else:
-            sphere_node = Global.loader.loadModel(
-                panda_path(ani.model_dir / "balls" / self.rel_model_path)
-            )
-            sphere_node.reparentTo(position)
-            tex = sphere_node.find_texture(Path(self.rel_model_path).stem)
+            tex = sphere_node.find_texture(ball.id)
 
         # https://discourse.panda3d.org/t/visual-artifact-at-poles-of-uv-sphere-gltf-format/27975/8
         tex.set_minfilter(SamplerState.FT_linear)
 
         sphere_node.setScale(self.get_scale_factor(sphere_node, ball))
-        position.setPos(*ball.rvw[0, :])
+        position.setPos(*ball.state.rvw[0, :])
 
         self.nodes["sphere"] = sphere_node
         self.nodes["ball"] = ball_node
         self.nodes["pos"] = position
         self.nodes["shadow"] = self.init_shadow(ball)
 
-        if ball.initial_orientation:
-            # This ball already has a defined initial orientation, so load it up
-            self.set_orientation(ball.initial_orientation)
-        else:
-            self.randomize_orientation()
+        self.set_orientation(ball.initial_orientation)
 
     def init_collision(self, ball, cue):
         if not cue.render_obj.rendered:
@@ -125,7 +110,7 @@ class BallRender(Render):
         shadow_node = (
             Global.render.find("scene").find("table").attachNewNode(f"shadow_{ball.id}")
         )
-        shadow_node.setPos(ball.rvw[0, 0], ball.rvw[0, 1], 0)
+        shadow_node.setPos(ball.state.rvw[0, 0], ball.state.rvw[0, 1], 0)
 
         # allow transparency of shadow to change
         shadow_node.setTransparency(TransparencyAttrib.MAlpha)
@@ -284,19 +269,19 @@ class BallRender(Render):
 
     def get_orientation(self):
         """Get the quaternions required to define the ball's rendered orientation"""
-        return {
-            "pos": [x for x in self.nodes["pos"].getQuat()],
-            "sphere": [x for x in self.nodes["sphere"].getQuat()],
-        }
+        return BallOrientation(
+            pos=[x for x in self.nodes["pos"].getQuat()],
+            sphere=[x for x in self.nodes["sphere"].getQuat()],
+        )
 
     def get_final_orientation(self):
         """Get the ball's quaternions of the final state in the history"""
-        return {
-            "pos": [x for x in self.quats[-1]],
-            "sphere": [x for x in self.nodes["sphere"].getQuat()],
-        }
+        return BallOrientation(
+            pos=[x for x in self.quats[-1]],
+            sphere=[x for x in self.nodes["sphere"].getQuat()],
+        )
 
-    def set_orientation(self, orientation):
+    def set_orientation(self, orientation: BallOrientation):
         """Set the orientation of a ball's rendered state from an orientation dict
 
         Parameters
@@ -305,10 +290,8 @@ class BallRender(Render):
             A dictionary of quaternions with keys 'pos' and 'sphere'. Such a dictionary
             can be generated with `self.get_orientation`.
         """
-        self.get_node("pos").setQuat(autils.get_quat_from_vector(orientation["pos"]))
-        self.get_node("sphere").setQuat(
-            autils.get_quat_from_vector(orientation["sphere"])
-        )
+        self.get_node("pos").setQuat(autils.get_quat_from_vector(orientation.pos))
+        self.get_node("sphere").setQuat(autils.get_quat_from_vector(orientation.sphere))
 
     def reset_angular_integration(self):
         """Reset rotations applied to 'pos' while retaining rendered orientation"""
@@ -346,7 +329,7 @@ class BallHistory:
         """
         return self.rvw[i], self.s[i], self.t[i]
 
-    def add(self, rvw: NDArray[np.float64], s: float, t: float):
+    def add(self, rvw: NDArray[np.float64], s: float, t: float) -> None:
         self.rvw.append(rvw)
         self.s.append(s)
         self.t.append(t)
@@ -356,137 +339,62 @@ class BallHistory:
         return np.array(self.rvw), np.array(self.s), np.array(self.t)
 
 
-class Ball:
-    def __init__(
-        self,
-        ball_id,
-        m=None,
-        R=None,
-        u_s=None,
-        u_r=None,
-        u_sp=None,
-        g=None,
-        e_c=None,
-        f_c=None,
-        rel_model_path=None,
-        xyz=None,
-        initial_orientation=None,
-    ):
-        """Initialize a ball
+@dataclass
+class BallParams:
+    """Pool ball parameters and physical constants
 
-        Parameters
-        ==========
-        rel_model_path : str
-            path should be relative to pooltool/models/balls directory
-        """
-        self.id = ball_id
+    Most of the default values are taken from or based off of
+    https://billiards.colostate.edu/faq/physics/physical-properties/. All units are SI.
+    Some of the parameters aren't truly _ball_ parameters, e.g. the gravitational
+    constant, however it is nice to be able to tune such parameters on a ball-by-ball
+    basis.
 
-        if not (isinstance(self.id, int) or isinstance(self.id, str)):
-            raise ConfigError("ball_id must be integer or string")
+    Attributes:
+        m:
+            Mass.
+        R:
+            Radius.
+        u_s:
+            Coefficient of sliding friction.
+        u_r:
+            Coefficient of rolling friction.
+        u_sp_proportionality:
+            The coefficient of spinning friction is proportional ball radius. This is
+            the proportionality constant. To obtain the coefficient of spinning
+            friction, use the property `u_sp`.
+        e_c:
+            Cushion coefficient of restitution.
+        f_c:
+            Cushion coefficient of friction.
+        g:
+            Gravitational constant.
+    """
 
-        # physical properties
-        self.m = m or c.m
-        self.R = R or c.R
-        self.I = 2 / 5 * self.m * self.R**2
-        self.g = g or c.g
+    m: float = field(default=0.170097)
+    R: float = field(default=0.028575)
 
-        # felt properties
-        self.u_s = u_s or c.u_s
-        self.u_r = u_r or c.u_r
-        self.u_sp = u_sp or c.u_sp
+    u_s: float = field(default=0.2)
+    u_r: float = field(default=0.01)
+    u_sp_proportionality: float = field(default=10 * 2 / 5 / 9)
+    e_c: float = field(default=0.85)
+    f_c: float = field(default=0.2)
+    g: float = field(default=9.8)
 
-        # restitution properties
-        self.e_c = e_c or c.e_c
-        self.f_c = f_c or c.f_c
+    @property
+    def u_sp(self) -> float:
+        """Coefficient of spinning friction (radius dependent)"""
+        return self.u_sp_proportionality * self.R
 
-        self.t = 0
-        self.s = c.stationary
 
-        if xyz is None:
-            x, y, z = (np.nan, np.nan, np.nan)
-        elif len(xyz) == 3:
-            x, y, z = xyz
-        elif len(xyz) == 2:
-            x, y = xyz
-            z = self.R
+def _null_ball_state() -> NDArray[np.float64]:
+    return np.array([[np.nan, np.nan, np.nan], [0, 0, 0], [0, 0, 0]], dtype=np.float64)
 
-        self.rvw = np.array([[x, y, z], [0, 0, 0], [0, 0, 0]])
-        self.update_next_transition_event()
 
-        self.history = BallHistory()
-        self.history_cts = BallHistory()
-
-        self.events = Events()
-
-        if initial_orientation is None:
-            self.initial_orientation = self.get_random_orientation()
-
-        self.rel_model_path = rel_model_path
-        self.render_obj = BallRender(R=self.R, rel_model_path=self.rel_model_path)
-
-    def set_object_state_as_render_state(self):
-        """Set the object position based on the rendered position"""
-        self.rvw[0] = self.render_obj.get_render_state()
-
-    def set_render_state_as_object_state(self):
-        """Set rendered position based on the object's position (self.rvw[0,:])"""
-        pos = self.rvw[0]
-        self.render_obj.set_render_state(pos)
-
-    def update_history(self, event):
-        self.history.add(np.copy(self.rvw), self.s, event.time)
-        self.events.append(event)
-
-    def init_history(self):
-        self.update_history(events.null_event(time=0))
-
-    def update_next_transition_event(self):
-        if self.s == c.stationary or self.s == c.pocketed:
-            self.next_transition_event = events.null_event(time=np.inf)
-
-        elif self.s == c.spinning:
-            dtau_E = physics.get_spin_time_fast(self.rvw, self.R, self.u_sp, self.g)
-            self.next_transition_event = events.spinning_stationary_transition(
-                self, self.t + dtau_E
-            )
-
-        elif self.s == c.rolling:
-            dtau_E_spin = physics.get_spin_time_fast(
-                self.rvw, self.R, self.u_sp, self.g
-            )
-            dtau_E_roll = physics.get_roll_time_fast(self.rvw, self.u_r, self.g)
-
-            if dtau_E_spin > dtau_E_roll:
-                self.next_transition_event = events.rolling_spinning_transition(
-                    self, self.t + dtau_E_roll
-                )
-            else:
-                self.next_transition_event = events.rolling_stationary_transition(
-                    self, self.t + dtau_E_roll
-                )
-
-        elif self.s == c.sliding:
-            dtau_E = physics.get_slide_time_fast(self.rvw, self.R, self.u_s, self.g)
-            self.next_transition_event = events.sliding_rolling_transition(
-                self, self.t + dtau_E
-            )
-
-        else:
-            raise NotImplementedError(
-                f"State '{self.s}' not implemented for object Ball"
-            )
-
-    def __repr__(self):
-        lines = [
-            f"<{self.__class__.__name__} object at {hex(id(self))}>",
-            f" ├── id       : {self.id}",
-            f" ├── state    : {self.s}",
-            f" ├── position : {self.rvw[0]}",
-            f" ├── velocity : {self.rvw[1]}",
-            f" └── angular  : {self.rvw[2]}",
-        ]
-
-        return "\n".join(lines) + "\n"
+@dataclass
+class BallState:
+    rvw: NDArray[np.float64] = field(default_factory=_null_ball_state)
+    s: float = field(default=c.stationary)
+    t: float = field(default=0)
 
     def set(self, rvw, s=None, t=None):
         self.rvw = rvw
@@ -495,108 +403,54 @@ class Ball:
         if t is not None:
             self.t = t
 
+
+@dataclass
+class Ball:
+    """A pool ball"""
+
+    id: str
+    state: BallState = field(default=BallState())
+    params: BallParams = field(default=BallParams())
+    initial_orientation: BallOrientation = field(default=BallOrientation.random())
+
+    history: BallHistory = field(default=BallHistory())
+    history_cts: BallHistory = field(default=BallHistory())
+
+    render_obj: BallRender = field(init=False)
+
+    def __post_init__(self):
+        self.render_obj = BallRender(R=self.params.R)
+
+    def __repr__(self):
+        lines = [
+            f"<{self.__class__.__name__} object at {hex(id(self))}>",
+            f" ├── id       : {self.id}",
+            f" ├── state    : {self.state.s}",
+            f" ├── position : {self.state.rvw[0]}",
+            f" ├── velocity : {self.state.rvw[1]}",
+            f" └── angular  : {self.state.rvw[2]}",
+        ]
+        return "\n".join(lines) + "\n"
+
+    @staticmethod
+    def create() -> Ball:
+        raise NotImplementedError()
+
+    def set_object_state_as_render_state(self):
+        """Set the object position based on the rendered position"""
+        self.state.rvw[0] = self.render_obj.get_render_state()
+
+    def set_render_state_as_object_state(self):
+        """Set rendered position based on the object's position (self.state.rvw[0,:])"""
+        pos = self.state.rvw[0]
+        self.render_obj.set_render_state(pos)
+
+    def update_history(self, t):
+        self.history.add(np.copy(self.state.rvw), self.s, t)
+
+    def init_history(self):
+        self.update_history(t=0)
+
     def set_from_history(self, i):
         """Set the ball state according to a history index"""
-        self.set(*self.history.get_state(i))
-
-    def set_time(self, t):
-        self.t = t
-
-    def get_random_orientation(self):
-        quat1 = [1, 0, 0, 0]
-        quat2 = 2 * np.random.rand(4) - 1
-        quat2 /= np.linalg.norm(quat2)
-        return {"pos": quat1, "sphere": list(quat2)}
-
-    def as_dict(self):
-        """Return a pickle-able dictionary of the ball"""
-        return dict(
-            id=self.id,
-            m=self.m,
-            R=self.R,
-            I=self.I,
-            g=self.g,
-            u_s=self.u_s,
-            u_r=self.u_r,
-            u_sp=self.u_sp,
-            s=self.s,
-            t=self.t,
-            rvw=np.copy(self.rvw),
-            rel_model_path=None
-            if self.rel_model_path is None
-            else str(self.rel_model_path),
-            history=dict(
-                rvw=self.history.rvw,
-                s=self.history.s,
-                t=self.history.t,
-            ),
-            history_cts=dict(
-                rvw=self.history_cts.rvw,
-                s=self.history_cts.s,
-                t=self.history_cts.t,
-            ),
-            events=self.events.as_dict(),
-            initial_orientation=self.initial_orientation,
-        )
-
-    def save(self, path):
-        utils.save_pickle(self.as_dict(), path)
-
-    def render(self):
-        self.render_obj.render(self)
-        self.initial_orientation = self.render_obj.get_orientation()
-
-
-def ball_from_dict(d):
-    """Return a ball object from a dictionary
-
-    For dictionary form see return value of Ball.as_dict
-    """
-
-    try:
-        ball = Ball(
-            d["id"],
-            rel_model_path=d["rel_model_path"],
-            initial_orientation=d["initial_orientation"],
-        )
-    except Exception:
-        ball = Ball(
-            d["id"],
-            rel_model_path=d["rel_model_path"],
-        )
-    ball.m = d["m"]
-    ball.R = d["R"]
-    ball.I = d["I"]
-    ball.g = d["g"]
-    ball.u_s = d["u_s"]
-    ball.u_r = d["u_r"]
-    ball.u_sp = d["u_sp"]
-    ball.s = d["s"]
-    ball.t = d["t"]
-    ball.rvw = d["rvw"]
-
-    ball_history = BallHistory()
-    ball_history.rvw = d["history"]["rvw"]
-    ball_history.s = d["history"]["s"]
-    ball_history.t = d["history"]["t"]
-    ball.history = ball_history
-
-    ball_history_cts = BallHistory()
-    ball_history_cts.rvw = d.get("history_cts", {}).get("rvw")
-    ball_history_cts.s = d.get("history_cts", {}).get("s")
-    ball_history_cts.t = d.get("history_cts", {}).get("t")
-    ball.history_cts = ball_history_cts
-
-    events = Events()
-    for event_dict in d["events"]:
-        events.append(Event.from_dict(event_dict))
-    ball.events = events
-
-    ball.initial_orientation = d.get("initial_orientation", None)
-
-    return ball
-
-
-def ball_from_pickle(path):
-    d = utils.load_pickle(path)
-    return ball_from_dict(d)
+        self.state.set(*self.history.get_state(i))

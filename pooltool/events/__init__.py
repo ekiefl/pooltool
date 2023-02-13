@@ -1,9 +1,138 @@
 #! /usr/bin/env python
+from __future__ import annotations
 
-from pooltool.events._events import Event, Events, EventType, event_resolvers
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List
+
+import numpy as np
+
+import pooltool.constants as c
+import pooltool.physics as physics
+import pooltool.utils as utils
+from pooltool.objects import NullObject
 from pooltool.objects.ball import Ball
 from pooltool.objects.cue import Cue
 from pooltool.objects.table import CushionSegment, Pocket
+from pooltool.utils import strenum
+
+
+class EventType(strenum.StrEnum):
+    NONE = strenum.auto()
+    BALL_BALL = strenum.auto()
+    BALL_CUSHION = strenum.auto()
+    BALL_POCKET = strenum.auto()
+    STICK_BALL = strenum.auto()
+    SPINNING_STATIONARY = strenum.auto()
+    ROLLING_STATIONARY = strenum.auto()
+    ROLLING_SPINNING = strenum.auto()
+    SLIDING_ROLLING = strenum.auto()
+
+    def is_collision(self):
+        return self in (
+            EventType.BALL_BALL,
+            EventType.BALL_CUSHION,
+            EventType.BALL_POCKET,
+            EventType.STICK_BALL,
+        )
+
+    def is_transition(self):
+        return self in (
+            EventType.SPINNING_STATIONARY,
+            EventType.ROLLING_STATIONARY,
+            EventType.ROLLING_SPINNING,
+            EventType.SLIDING_ROLLING,
+        )
+
+    def ball_transition_motion_states(self):
+        """Return the ball motion states before and after a transition
+
+        For example, if self == EventType.SPINNING_STATIONARY, return (c.spinning,
+        c.stationary). Raises AssertionError if event is not a transition.
+        """
+        assert self.is_transition()
+
+        if self == EventType.SPINNING_STATIONARY:
+            return c.spinning, c.stationary
+        elif self == EventType.ROLLING_STATIONARY:
+            return c.rolling, c.stationary
+        elif self == EventType.ROLLING_SPINNING:
+            return c.rolling, c.spinning
+        elif self == EventType.SLIDING_ROLLING:
+            return c.sliding, c.rolling
+        else:
+            raise NotImplementedError()
+
+
+def _get_initial_states(agent):
+    """This is a hack job FIXME
+
+    Frozen (or handled with care) BallState objects could be great here.
+    """
+    if hasattr(agent, "rvw"):
+        return np.copy(agent.rvw), agent.s
+    else:
+        return None
+
+
+@dataclass
+class Event:
+    event_type: EventType
+    agents: List[Any]
+    time: float = 0
+
+    initial_states: Any = field(init=False)
+    final_states: Any = field(init=False, default=None)
+
+    def __post_init__(self):
+        self.initial_states = [_get_initial_states(agent) for agent in self.agents]
+
+    def __repr__(self):
+        agents = [(agent.id if agent is not None else None) for agent in self.agents]
+        lines = [
+            f"<{self.__class__.__name__} object at {hex(id(self))}>",
+            f" ├── type   : {self.event_type}",
+            f" ├── time   : {self.time}",
+            f" └── agents : {agents}",
+        ]
+
+        return "\n".join(lines) + "\n"
+
+    def assert_not_partial(self):
+        """Raise AssertionError if agents are invalid
+
+        In order to call resolve, there must exist at least one agent and it may not be
+        a NullObject.
+        """
+        assert len(self.agents)
+        for agent in self.agents:
+            assert not isinstance(agent, NullObject)
+
+    def resolve(self):
+        event_resolvers[self.event_type](self)
+
+    def as_dict(self):
+        return dict(
+            event_type=self.event_type,
+            agent_ids=[agent.id for agent in self.agents],
+            initial_states=self.initial_states,
+            final_states=self.final_states,
+            time=self.time,
+        )
+
+    def save(self, path):
+        utils.save_pickle(self.as_dict(), path)
+
+    @classmethod
+    def from_dict(cls, d) -> Event:
+        # The constructed agents are placeholders
+        agents = [NullObject(agent_id) for agent_id in d["agent_ids"]]
+
+        event = Event(event_type=d["event_type"], agents=agents, time=d["time"])
+
+        event.initial_states = d["initial_states"]
+        event.final_states = d["final_states"]
+
+        return event
 
 
 def null_event(time: float) -> Event:
@@ -40,3 +169,259 @@ def rolling_spinning_transition(ball: Ball, time: float) -> Event:
 
 def sliding_rolling_transition(ball: Ball, time: float) -> Event:
     return Event(event_type=EventType.SLIDING_ROLLING, agents=[ball], time=time)
+
+
+def get_next_transition_event(ball: Ball) -> Event:
+    if ball.state.s == c.stationary or ball.state.s == c.pocketed:
+        return null_event(time=np.inf)
+
+    elif ball.state.s == c.spinning:
+        dtau_E = physics.get_spin_time_fast(
+            ball.state.rvw, ball.params.R, ball.params.u_sp, ball.params.g
+        )
+        return spinning_stationary_transition(ball, ball.state.t + dtau_E)
+
+    elif ball.state.s == c.rolling:
+        dtau_E_spin = physics.get_spin_time_fast(
+            ball.state.rvw, ball.params.R, ball.params.u_sp, ball.params.g
+        )
+        dtau_E_roll = physics.get_roll_time_fast(
+            ball.state.rvw, ball.params.u_r, ball.params.g
+        )
+
+        if dtau_E_spin > dtau_E_roll:
+            return rolling_spinning_transition(ball, ball.state.t + dtau_E_roll)
+        else:
+            return rolling_stationary_transition(ball, ball.state.t + dtau_E_roll)
+
+    elif ball.state.s == c.sliding:
+        dtau_E = physics.get_slide_time_fast(
+            ball.state.rvw, ball.params.R, ball.params.u_s, ball.params.g
+        )
+        return sliding_rolling_transition(ball, ball.state.t + dtau_E)
+
+    else:
+        raise NotImplementedError(f"Unknown '{ball.state.s=}'")
+
+
+def resolve_ball_ball(event):
+    event.assert_not_partial()
+    ball1, ball2 = event.agents
+
+    rvw1, rvw2 = physics.resolve_ball_ball_collision(ball1.rvw, ball2.rvw)
+    s1, s2 = c.sliding, c.sliding
+
+    ball1.set(rvw1, s1, t=event.time)
+    ball1.update_next_transition_event()
+
+    ball2.set(rvw2, s2, t=event.time)
+    ball2.update_next_transition_event()
+
+    event.final_states = [
+        (np.copy(ball1.rvw), ball1.s),
+        (np.copy(ball2.rvw), ball2.s),
+    ]
+
+
+def resolve_null(event):
+    event.assert_not_partial()
+
+
+def resolve_ball_cushion(event):
+    event.assert_not_partial()
+    ball, cushion = event.agents
+    normal = cushion.get_normal(ball.state.rvw)
+
+    rvw = physics.resolve_ball_cushion_collision(
+        rvw=ball.state.rvw,
+        normal=normal,
+        R=ball.params.R,
+        m=ball.m,
+        h=cushion.height,
+        e_c=ball.e_c,
+        f_c=ball.f_c,
+    )
+    s = c.sliding
+
+    ball.set(rvw, s, t=event.time)
+    ball.update_next_transition_event()
+
+    event.final_states = [
+        (np.copy(ball.state.rvw), ball.s),
+        None,
+    ]
+
+
+def resolve_ball_pocket(event):
+    event.assert_not_partial()
+    ball, pocket = event.agents
+
+    # Ball is placed at the pocket center
+    rvw = np.array([[pocket.a, pocket.b, -pocket.depth], [0, 0, 0], [0, 0, 0]])
+
+    ball.set(rvw, c.pocketed)
+    ball.update_next_transition_event()
+
+    pocket.add(ball.id)
+
+    event.final_states = [
+        (np.copy(ball.state.rvw), ball.s),
+        None,
+    ]
+
+
+def resolve_stick_ball(event):
+    event.assert_not_partial()
+    cue_stick, ball = event.agents
+
+    v, w = physics.cue_strike(
+        ball.m,
+        cue_stick.specs.M,
+        ball.params.R,
+        cue_stick.V0,
+        cue_stick.phi,
+        cue_stick.theta,
+        cue_stick.a,
+        cue_stick.b,
+    )
+    rvw = np.array([ball.state.rvw[0], v, w])
+
+    s = (
+        c.rolling
+        if abs(np.sum(utils.get_rel_velocity_fast(rvw, ball.params.R))) <= c.tol
+        else c.sliding
+    )
+
+    ball.set(rvw, s)
+    ball.update_next_transition_event()
+
+    event.final_states = [
+        (np.copy(ball.state.rvw), ball.s),
+        None,
+    ]
+
+
+def resolve_transition(event):
+    event.assert_not_partial()
+
+    start, end = event.event_type.ball_transition_motion_states()
+
+    ball = event.agents[0]
+    ball.state.s = end
+    ball.update_next_transition_event()
+
+    event.final_states = [(np.copy(ball.state.rvw), end)]
+
+
+event_resolvers: Dict[EventType, Callable] = {
+    EventType.NONE: resolve_null,
+    EventType.BALL_BALL: resolve_ball_ball,
+    EventType.BALL_CUSHION: resolve_ball_cushion,
+    EventType.BALL_POCKET: resolve_ball_pocket,
+    EventType.STICK_BALL: resolve_stick_ball,
+    EventType.SPINNING_STATIONARY: resolve_transition,
+    EventType.ROLLING_STATIONARY: resolve_transition,
+    EventType.ROLLING_SPINNING: resolve_transition,
+    EventType.SLIDING_ROLLING: resolve_transition,
+}
+
+
+def resolve_event(event: Event) -> None:
+    event_resolvers[event.event_type]()
+
+
+class Events(utils.ListLike):
+    """Stores Event objects"""
+
+    def filter_type(self, types):
+        """Return events in chronological order that are of an event type or types
+
+        Parameters
+        ==========
+        types : str or list of str
+            Event types to be filtered by. E.g. pooltool.events.EventType.BALL_CUSHION
+            or equivalently, 'ball_cushion'
+
+        Returns
+        =======
+        events : pooltool.events.Events
+            A subset Events object containing events only of specified types
+        """
+
+        try:
+            iter(types)
+        except TypeError:
+            types = [types]
+
+        events = Events()
+        for event in self._list:
+            if event.event_type in types:
+                events.append(event)
+
+        return events
+
+    def filter_ball(self, balls, keep_nonevent=False):
+        """Return events in chronological order that involve a collection of balls
+
+        Parameters
+        ==========
+        balls : pooltool.objects.ball.Ball or list of pooltool.objects.ball.Ball
+            Balls that you want events for.
+
+        Returns
+        =======
+        events : pooltool.events.Events
+            A subset Events object containing events only with specified balls
+        """
+
+        try:
+            iter(balls)
+        except TypeError:
+            balls = [balls]
+
+        events = Events()
+        for event in self._list:
+            if keep_nonevent and event.event_type == EventType.NONE:
+                events.append(event)
+            else:
+                for ball in balls:
+                    if ball in event.agents:
+                        events.append(event)
+                        break
+
+        return events
+
+    def filter_time(self, t):
+        """Return events in chronological order after a certain time
+
+        Parameters
+        ==========
+        t : float
+            time after which you want events for
+
+        Returns
+        =======
+        events : pooltool.events.Events
+            A subset Events object containing events only after specified time
+        """
+
+        events = Events()
+        for event in reversed(self._list):
+            if event.time > t:
+                events.append(event)
+            else:
+                break
+
+        events._list = events._list[::-1]
+        return events
+
+    def reset(self):
+        self._list = []
+
+    def as_dict(self):
+        return [event.as_dict() for event in self._list]
+
+    def __repr__(self):
+        return "\n".join(
+            [f"{i}: {event.__repr__()}" for i, event in enumerate(self._list)]
+        )

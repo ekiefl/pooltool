@@ -110,9 +110,9 @@ class PickBallMode(BaseMode):
         for ball in Global.system.balls.values():
             if ball.id not in Global.game.active_player.can_cue:
                 continue
-            if ball.s == c.pocketed:
+            if ball.state.s == c.pocketed:
                 continue
-            d = np.linalg.norm(ball.rvw[0] - cam_fixation)
+            d = np.linalg.norm(ball.state.rvw[0] - cam_fixation)
             if d < d_min:
                 d_min, closest = d, ball
 

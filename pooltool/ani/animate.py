@@ -36,6 +36,7 @@ from pooltool.ani.menu import GenericMenu, menus
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
 from pooltool.error import ConfigError
+from pooltool.objects.ball import BallParams
 from pooltool.objects.cue import Cue, cue_avoid
 from pooltool.objects.table import Table
 from pooltool.system import PlaybackMode, System, SystemCollection
@@ -178,11 +179,11 @@ class Interface(ShowBase):
         # Render the balls of the active shot
         for ball in Global.system.balls.values():
             if not ball.render_obj.rendered:
-                ball.render()
+                ball.render_obj.render(ball)
 
         Global.system.cue.render_obj.render()
 
-        R = max([ball.R for ball in Global.system.balls.values()])
+        R = max([ball.params.R for ball in Global.system.balls.values()])
         cam.fixate(
             pos=(Global.system.table.w / 2, Global.system.table.l / 2, R),
             node=Global.system.table.render_obj.get_node("table"),
@@ -572,13 +573,5 @@ class Game(Interface):
 
     @staticmethod
     def setup_balls(table, rack):
-        # FIXME hardcoded
-        ball_kwargs = dict(
-            R=0.028575,  # ball radius
-            u_s=0.2,  # sliding friction
-            u_r=0.01,  # rolling friction
-            u_sp=10 * 2 / 5 * 0.028575 / 9,  # spinning friction
-            f_c=0.2,  # cushion coeffiient of friction
-            e_c=0.85,  # cushion coeffiient of restitution
-        )
-        return rack(table, ordered=True, **ball_kwargs).balls
+        # FIXME Using default BallParams
+        return rack(table, ordered=True, params=BallParams()).balls

@@ -37,7 +37,7 @@ for i, spacing_factor in enumerate(spacing_factors):
         cue = Cue()
         table = Table.default()
         cue_ball = Ball("cue")
-        cue_ball.rvw[0] = get_cue_pos(cue_ball, table)
+        cue_ball.state.rvw[0] = get_cue_pos(cue_ball, table)
 
         # Create a rack with specified spacing factor
         diamond = NineBallRack(spacing_factor=spacing_factor, ordered=True)

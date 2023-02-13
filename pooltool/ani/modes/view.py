@@ -12,6 +12,7 @@ from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.objects.ball import Ball
 from pooltool.objects.cue import cue_avoid
+from pooltool.system import PlaybackMode
 
 
 class ViewMode(BaseMode):
@@ -190,7 +191,7 @@ class ViewMode(BaseMode):
 
         cue = Global.system.cue.render_obj.get_node("cue_stick")
         cue_focus = Global.system.cue.render_obj.get_node("cue_stick_focus")
-        R = Global.system.cue.render_obj.follow.R
+        R = Global.system.cue.render_obj.follow.params.R
 
         delta_y, delta_z = dx * ani.english_sensitivity, dy * ani.english_sensitivity
 
@@ -239,7 +240,7 @@ class ViewMode(BaseMode):
 
         # A lot of dumb things to make the cue track the initial position of the ball
         dummy = Ball("dummy")
-        dummy.R = Global.system.cue.cueing_ball.R
+        dummy.R = Global.system.cue.cueing_ball.params.R
         dummy.rvw = Global.system.cue.cueing_ball.history.rvw[0]
         dummy.render()
         Global.system.cue.render_obj.init_focus(dummy)

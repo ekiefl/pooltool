@@ -3,6 +3,7 @@
 from direct.gui.DirectGui import OnscreenText
 
 from pooltool.ani.action import Action
+from pooltool.ani.globals import Global
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse

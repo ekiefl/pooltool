@@ -191,7 +191,9 @@ class EightBall(Game):
                 player.target_balls = self.solids + self.stripes
 
             states = [
-                ball.s for ball in shot.balls.values() if ball.id in player.target_balls
+                ball.state.s
+                for ball in shot.balls.values()
+                if ball.id in player.target_balls
             ]
             if all([state == c.pocketed for state in states]):
                 player.target_balls.append("8")

@@ -13,7 +13,7 @@ import pooltool.utils as utils
 from pooltool.error import ConfigError, SimulateError
 from pooltool.events import Event, Events, EventType, null_event
 from pooltool.evolution import EvolveShotEventBased
-from pooltool.objects.ball import Ball, BallHistory, ball_from_dict
+from pooltool.objects.ball import Ball, BallHistory
 from pooltool.objects.cue import cue_from_dict
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -51,7 +51,7 @@ class SystemHistory(object):
             ball.history = BallHistory()
             ball.history_cts = BallHistory()
             ball.events.reset()
-            ball.set_time(0)
+            ball.t = 0
 
         self.events.reset()
 
@@ -175,7 +175,7 @@ class SystemHistory(object):
                 rvw, s = physics.evolve_ball_motion(
                     state=s,
                     rvw=rvw,
-                    R=ball.R,
+                    R=ball.params.R,
                     m=ball.m,
                     u_s=ball.u_s,
                     u_sp=ball.u_sp,
@@ -229,7 +229,7 @@ class SystemRender(object):
             self.ball_animations = Parallel()
             for ball in self.balls.values():
                 if not ball.render_obj.rendered:
-                    ball.render()
+                    ball.render_obj.render(ball)
                 ball.render_obj.set_playback_sequence(
                     ball, playback_speed=self.playback_speed
                 )
@@ -319,7 +319,7 @@ class SystemRender(object):
     def buildup(self):
         self.clear_animation()
         for ball in self.balls.values():
-            ball.render()
+            ball.render_obj.render(ball)
             ball.reset_angular_integration()
         self.cue.render_obj.render()
         self.cue.render_obj.init_focus(self.cue.cueing_ball)
@@ -387,7 +387,7 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
     def get_system_energy(self):
         energy = 0
         for ball in self.balls.values():
-            energy += physics.get_ball_energy(ball.rvw, ball.R, ball.m)
+            energy += physics.get_ball_energy(ball.state.rvw, ball.params.R, ball.m)
 
         return energy
 
