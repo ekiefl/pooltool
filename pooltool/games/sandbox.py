@@ -33,9 +33,13 @@ class Sandbox(Game):
         self.shot_info["ball_in_hand"] = [ball.id for ball in shot.balls.values()]
 
     def respot_balls(self, shot):
-        if shot.balls["cue"].s == c.pocketed:
+        if shot.balls["cue"].state.s == c.pocketed:
             self.respot(
-                shot, "cue", shot.table.w / 2, shot.table.l * 1 / 4, shot.balls["cue"].R
+                shot,
+                "cue",
+                shot.table.w / 2,
+                shot.table.l * 1 / 4,
+                shot.balls["cue"].params.R,
             )
 
     def is_turn_over(self, shot):

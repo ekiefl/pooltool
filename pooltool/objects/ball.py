@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import astuple, dataclass, field, replace
 from pathlib import Path
-from typing import List
+from typing import Any, List, Tuple
 
 import numpy as np
 from direct.interval.IntervalGlobal import (
@@ -160,9 +160,8 @@ class BallRender(Render):
             final state
         """
 
-        rvw, _, _ = ball_history.get_state(i)
         quat = self.quats[i] if self.quats is not None else None
-        self.set_render_state(rvw[0], quat)
+        self.set_render_state(ball_history[i].rvw[0], quat)
 
     def set_quats(self, history):
         """Set self.quats based on history
@@ -311,37 +310,6 @@ class BallRender(Render):
 
 
 @dataclass
-class BallHistory:
-    """FIXME consider BallState and more complicated vectorize"""
-
-    rvw: List[NDArray[np.float64]] = field(default_factory=list)
-    s: List[float] = field(default_factory=list)
-    t: List[float] = field(default_factory=list)
-
-    @property
-    def empty(self) -> bool:
-        return not bool(len(self.rvw))
-
-    def get_state(self, i: int):
-        """Get state based on history index
-
-        Returns
-        =======
-        out : (rvw, s, t)
-        """
-        return self.rvw[i], self.s[i], self.t[i]
-
-    def add(self, rvw: NDArray[np.float64], s: float, t: float) -> None:
-        self.rvw.append(rvw)
-        self.s.append(s)
-        self.t.append(t)
-
-    def vectorize(self):
-        """Return rvw, s, and t as arrays"""
-        return np.array(self.rvw), np.array(self.s), np.array(self.t)
-
-
-@dataclass
 class BallParams:
     """Pool ball parameters and physical constants
 
@@ -392,15 +360,41 @@ class BallParams:
         return BallParams()
 
 
-def _null_ball_state() -> NDArray[np.float64]:
+def _null_rvw() -> NDArray[np.float64]:
     return np.array([[np.nan, np.nan, np.nan], [0, 0, 0], [0, 0, 0]], dtype=np.float64)
 
 
-@dataclass
+def _array_safe_eq(a, b) -> bool:
+    """Check if a and b are equal, even if they are numpy arrays"""
+    if a is b:
+        return True
+    if isinstance(a, np.ndarray) and isinstance(b, np.ndarray):
+        return np.array_equal(a, b, equal_nan=True)
+    try:
+        return a == b
+    except TypeError:
+        return NotImplemented
+
+
+def _are_dataclasses_equal(dc1, dc2) -> bool:
+    """Check if two dataclasses which hold numpy arrays are equal"""
+    if dc1 is dc2:
+        return True
+    if dc1.__class__ is not dc2.__class__:
+        return NotImplemented  # better than False
+    t1 = astuple(dc1)
+    t2 = astuple(dc2)
+    return all(_array_safe_eq(a1, a2) for a1, a2 in zip(t1, t2))
+
+
+@dataclass(eq=False)
 class BallState:
     rvw: NDArray[np.float64]
     s: float
     t: float
+
+    def __eq__(self, other):
+        return _are_dataclasses_equal(self, other)
 
     def set(self, rvw, s=None, t=None):
         self.rvw = rvw
@@ -409,13 +403,52 @@ class BallState:
         if t is not None:
             self.t = t
 
+    def copy(self):
+        # Twice as fast as copy.deepcopy(self)
+        return replace(self, rvw=np.copy(self.rvw))
+
     @staticmethod
     def default() -> BallState:
         return BallState(
-            rvw=_null_ball_state(),
+            rvw=_null_rvw(),
             s=c.stationary,
             t=0,
         )
+
+
+def _float64_array(x: Any) -> NDArray[np.float64]:
+    return np.array(x, dtype=np.float64)
+
+
+@dataclass
+class BallHistory:
+    states: List[BallState] = field(default_factory=list)
+
+    def __getitem__(self, idx: int) -> BallState:
+        return self.states[idx]
+
+    @property
+    def empty(self) -> bool:
+        return not bool(len(self.states))
+
+    def add(self, state: BallState) -> None:
+        """Append a state to self.states"""
+        new = state.copy()
+
+        if not self.empty:
+            assert new.t >= self.states[-1].t
+
+        self.states.append(new)
+
+    def vectorize(
+        self,
+    ) -> Tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
+        """Return rvw, s, and t as arrays"""
+        return tuple(map(_float64_array, zip(*[astuple(x) for x in self.states])))  # type: ignore
+
+    @staticmethod
+    def factory() -> BallHistory:
+        return BallHistory()
 
 
 @dataclass
@@ -427,29 +460,13 @@ class Ball:
     params: BallParams = field(default_factory=BallParams.default)
     initial_orientation: BallOrientation = field(default_factory=BallOrientation.random)
 
-    history: BallHistory = field(default=BallHistory())
-    history_cts: BallHistory = field(default=BallHistory())
+    history: BallHistory = field(default_factory=BallHistory.factory)
+    history_cts: BallHistory = field(default_factory=BallHistory.factory)
 
     render_obj: BallRender = field(init=False)
 
     def __post_init__(self):
         self.render_obj = BallRender(R=self.params.R)
-
-    def __repr__(self):
-        lines = [
-            f"<{self.__class__.__name__} object at {hex(id(self))}>",
-            f" ├── id       : {self.id}",
-            f" ├── state    : {self.state.s}",
-            f" ├── position : {self.state.rvw[0]}",
-            f" ├── velocity : {self.state.rvw[1]}",
-            f" └── angular  : {self.state.rvw[2]}",
-        ]
-        return "\n".join(lines) + "\n"
-
-    @staticmethod
-    def create() -> Ball:
-        """FIXME should allow parameters like xyz"""
-        raise NotImplementedError()
 
     def set_object_state_as_render_state(self):
         """Set the object position based on the rendered position"""
@@ -460,12 +477,7 @@ class Ball:
         pos = self.state.rvw[0]
         self.render_obj.set_render_state(pos)
 
-    def update_history(self, t):
-        self.history.add(np.copy(self.state.rvw), self.s, t)
-
-    def init_history(self):
-        self.update_history(t=0)
-
-    def set_from_history(self, i):
-        """Set the ball state according to a history index"""
-        self.state.set(*self.history.get_state(i))
+    @staticmethod
+    def create() -> Ball:
+        """FIXME should allow parameters like xyz"""
+        raise NotImplementedError()

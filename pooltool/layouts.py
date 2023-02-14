@@ -225,12 +225,12 @@ class ThreeCushionRack(Rack):
 
 
 def get_nine_ball_rack(*args, **kwargs):
-    return NineBallRack(*args, **kwargs).balls
+    return NineBallRack(*args, **kwargs).get_balls_dict()
 
 
 def get_eight_ball_rack(*args, **kwargs):
-    return EightBallRack(*args, **kwargs).balls
+    return EightBallRack(*args, **kwargs).get_balls_dict()
 
 
 def get_three_cushion_rack(*args, **kwargs):
-    return ThreeCushionRack(*args, **kwargs).balls
+    return ThreeCushionRack(*args, **kwargs).get_balls_dict()

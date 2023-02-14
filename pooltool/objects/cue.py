@@ -341,7 +341,7 @@ class Cue:
         assert self.cueing_ball
 
         event = events.stick_ball_collision(self, self.cueing_ball, t)
-        events.resolve_event(event)
+        event.resolve()
 
         return event
 

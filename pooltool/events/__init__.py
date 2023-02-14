@@ -208,16 +208,15 @@ def resolve_ball_ball(event):
     event.assert_not_partial()
     ball1, ball2 = event.agents
 
-    rvw1, rvw2 = physics.resolve_ball_ball_collision(ball1.rvw, ball2.rvw)
+    rvw1, rvw2 = physics.resolve_ball_ball_collision(ball1.state.rvw, ball2.state.rvw)
     s1, s2 = c.sliding, c.sliding
 
-    ball1.set(rvw1, s1, t=event.time)
-
-    ball2.set(rvw2, s2, t=event.time)
+    ball1.state.set(rvw1, s1, event.time)
+    ball2.state.set(rvw2, s2, event.time)
 
     event.final_states = [
-        (np.copy(ball1.rvw), ball1.s),
-        (np.copy(ball2.rvw), ball2.s),
+        (np.copy(ball1.state.rvw), ball1.state.s),
+        (np.copy(ball2.state.rvw), ball2.state.s),
     ]
 
 
@@ -236,8 +235,8 @@ def resolve_ball_cushion(event):
         R=ball.params.R,
         m=ball.params.m,
         h=cushion.height,
-        e_c=ball.e_c,
-        f_c=ball.f_c,
+        e_c=ball.params.e_c,
+        f_c=ball.params.f_c,
     )
     s = c.sliding
 
@@ -318,10 +317,6 @@ event_resolvers: Dict[EventType, Callable] = {
     EventType.ROLLING_SPINNING: resolve_transition,
     EventType.SLIDING_ROLLING: resolve_transition,
 }
-
-
-def resolve_event(event: Event) -> None:
-    event_resolvers[event.event_type](event)
 
 
 class Events(utils.ListLike):

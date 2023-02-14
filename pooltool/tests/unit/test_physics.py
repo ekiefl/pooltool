@@ -34,30 +34,30 @@ def test_resolve_ball_ball_collision(ref):
         ball1, ball2 = col.agents
 
         # Set agents to their pre-resolved states
-        ball1.rvw, ball1.s = col.agent1_state_initial
-        ball2.rvw, ball2.s = col.agent2_state_initial
+        ball1.state.rvw, ball1.s = col.agent1_state_initial
+        ball2.state.rvw, ball2.s = col.agent2_state_initial
 
         # Store the expected post-resolved states. These were the values
         # calculated from the reference benchmark, which we assume to be
         # the correct values
-        ball1_rvw_expected, ball1_s_expected = (
+        ball1.state.rvw_expected, ball1_s_expected = (
             np.copy(col.agent1_state_final[0]),
             col.agent1_state_final[1],
         )
-        ball2_rvw_expected, ball2_s_expected = (
+        ball2.state.rvw_expected, ball2_s_expected = (
             np.copy(col.agent2_state_final[0]),
             col.agent2_state_final[1],
         )
 
         # Now resolve the event with the current codebase
         col.resolve()
-        ball1_rvw, ball1_s = col.agent1_state_final
-        ball2_rvw, ball2_s = col.agent2_state_final
+        ball1.state.rvw, ball1_s = col.agent1_state_final
+        ball2.state.rvw, ball2_s = col.agent2_state_final
 
         # Assert the calculated values equal the reference values
-        np.testing.assert_allclose(ball1_rvw, ball1_rvw_expected)
+        np.testing.assert_allclose(ball1.state.rvw, ball1.state.rvw_expected)
         np.testing.assert_allclose(ball1_s, ball1_s_expected)
-        np.testing.assert_allclose(ball2_rvw, ball2_rvw_expected)
+        np.testing.assert_allclose(ball2.state.rvw, ball2.state.rvw_expected)
         np.testing.assert_allclose(ball2_s, ball2_s_expected)
 
 
@@ -100,8 +100,8 @@ def test_get_ball_ball_collision_time(ref):
 
             # Calculate time until collision
             t = p.get_ball_ball_collision_time(
-                rvw1=ball1.rvw,
-                rvw2=ball2.rvw,
+                rvw1=ball1.state.rvw,
+                rvw2=ball2.state.rvw,
                 s1=ball1.s,
                 s2=ball2.s,
                 mu1=ball1.u_s if ball1.s == c.sliding else ball1.u_r,
@@ -110,7 +110,7 @@ def test_get_ball_ball_collision_time(ref):
                 m2=ball2.m,
                 g1=ball1.g,
                 g2=ball2.g,
-                R=ball1.R,
+                R=ball1.params.R,
             )
 
             np.testing.assert_allclose(t, t_expected)
@@ -131,15 +131,15 @@ def test_get_ball_linear_cushion_collision_time(ref):
 
             t = p.get_ball_linear_cushion_collision_time(
                 rvw=ball.state.rvw,
-                s=ball.s,
+                s=ball.state.s,
                 lx=cushion.lx,
                 ly=cushion.ly,
                 l0=cushion.l0,
                 p1=cushion.p1,
                 p2=cushion.p2,
-                mu=(ball.u_s if ball.state.s == c.sliding else ball.u_r),
+                mu=(ball.params.u_s if ball.state.s == c.sliding else ball.params.u_r),
                 m=ball.params.m,
-                g=ball.g,
+                g=ball.params.g,
                 R=ball.params.R,
             )
 
@@ -161,13 +161,13 @@ def test_get_ball_circular_cushion_collision_time(ref):
 
             t = p.get_ball_circular_cushion_collision_time(
                 rvw=ball.state.rvw,
-                s=ball.s,
+                s=ball.state.s,
                 a=cushion.a,
                 b=cushion.b,
                 r=cushion.radius,
-                mu=(ball.u_s if ball.state.s == c.sliding else ball.u_r),
+                mu=(ball.params.u_s if ball.state.s == c.sliding else ball.params.u_r),
                 m=ball.params.m,
-                g=ball.g,
+                g=ball.params.g,
                 R=ball.params.R,
             )
 
@@ -186,13 +186,13 @@ def test_get_ball_pocket_collision_time(ref):
 
             t = p.get_ball_pocket_collision_time(
                 rvw=ball.state.rvw,
-                s=ball.s,
+                s=ball.state.s,
                 a=pocket.a,
                 b=pocket.b,
                 r=pocket.radius,
-                mu=(ball.u_s if ball.state.s == c.sliding else ball.u_r),
+                mu=(ball.params.u_s if ball.state.s == c.sliding else ball.params.u_r),
                 m=ball.params.m,
-                g=ball.g,
+                g=ball.params.g,
                 R=ball.params.R,
             )
 
@@ -223,14 +223,14 @@ def test_evolve_ball_motion(ref):
 
             ball.set_from_history(i)
             rvw, s = p.evolve_ball_motion(
-                ball.s,
+                ball.state.s,
                 ball.state.rvw,
                 ball.params.R,
                 ball.params.m,
-                ball.u_s,
-                ball.u_sp,
-                ball.u_r,
-                ball.g,
+                ball.params.u_s,
+                ball.params.u_sp,
+                ball.params.u_r,
+                ball.params.g,
                 dt,
             )
 

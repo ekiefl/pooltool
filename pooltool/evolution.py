@@ -16,7 +16,6 @@ from pooltool.events import (
     ball_pocket_collision,
     get_next_transition_event,
     null_event,
-    resolve_event,
 )
 from pooltool.objects import NullObject
 
@@ -50,7 +49,7 @@ class EvolveShot(ABC):
         """
 
         self.reset_history()
-        self.init_history()
+        self.update_history(null_event(time=0))
 
         if not quiet:
 
@@ -87,14 +86,14 @@ class EvolveShot(ABC):
 
         for ball_id, ball in self.balls.items():
             rvw, s = physics.evolve_ball_motion(
-                state=ball.s,
+                state=ball.state.s,
                 rvw=ball.state.rvw,
                 R=ball.params.R,
                 m=ball.params.m,
-                u_s=ball.u_s,
-                u_sp=ball.u_sp,
-                u_r=ball.u_r,
-                g=ball.g,
+                u_s=ball.params.u_s,
+                u_sp=ball.params.u_sp,
+                u_r=ball.params.u_r,
+                g=ball.params.g,
                 t=dt,
             )
             ball.state.set(rvw, s=s, t=(self.t + dt))
@@ -114,23 +113,18 @@ class EvolveShotEventBased(EvolveShot):
         if dt is None:
             dt = 0.01
 
-        # Balls may already have energy. Therefore, it is critical to establish their
-        # next transition events.
-        for ball in self.balls.values():
-            ball.update_next_transition_event()
-
         while True:
             event = self.get_next_event()
 
             if event.time == np.inf:
-                self.end_history()
+                self.update_history(null_event(time=self.t + c.tol))
                 break
 
             self.evolve(event.time - self.t)
             if self.include.get(event.event_type, True):
-                resolve_event(event)
+                event.resolve()
 
-            self.update_history(event, update_all=True)
+            self.update_history(event)
 
             if (len(self.events) % 30) == 0:
                 self.progress_update()
@@ -190,25 +184,36 @@ class EvolveShotEventBased(EvolveShot):
                 if i >= j:
                     continue
 
-                if ball1.s == c.pocketed or ball2.s == c.pocketed:
+                if ball1.state.s == c.pocketed or ball2.state.s == c.pocketed:
                     continue
 
-                if ball1.s in c.nontranslating and ball2.s in c.nontranslating:
+                if (
+                    ball1.state.s in c.nontranslating
+                    and ball2.state.s in c.nontranslating
+                ):
                     continue
 
                 collision_coeffs.append(
                     physics.get_ball_ball_collision_coeffs_fast(
-                        rvw1=ball1.rvw,
-                        rvw2=ball2.rvw,
-                        s1=ball1.s,
-                        s2=ball2.s,
-                        mu1=(ball1.u_s if ball1.s == c.sliding else ball1.u_r),
-                        mu2=(ball2.u_s if ball2.s == c.sliding else ball2.u_r),
-                        m1=ball1.m,
-                        m2=ball2.m,
-                        g1=ball1.g,
-                        g2=ball2.g,
-                        R=ball1.R,
+                        rvw1=ball1.state.rvw,
+                        rvw2=ball2.state.rvw,
+                        s1=ball1.state.s,
+                        s2=ball2.state.s,
+                        mu1=(
+                            ball1.params.u_s
+                            if ball1.state.s == c.sliding
+                            else ball1.params.u_r
+                        ),
+                        mu2=(
+                            ball2.params.u_s
+                            if ball2.state.s == c.sliding
+                            else ball2.params.u_r
+                        ),
+                        m1=ball1.params.m,
+                        m2=ball2.params.m,
+                        g1=ball1.params.g,
+                        g2=ball2.params.g,
+                        R=ball1.params.R,
                     )
                 )
 
@@ -238,13 +243,17 @@ class EvolveShotEventBased(EvolveShot):
                 collision_coeffs.append(
                     physics.get_ball_circular_cushion_collision_coeffs_fast(
                         rvw=ball.state.rvw,
-                        s=ball.s,
+                        s=ball.state.s,
                         a=cushion.a,
                         b=cushion.b,
                         r=cushion.radius,
-                        mu=(ball.u_s if ball.state.s == c.sliding else ball.u_r),
+                        mu=(
+                            ball.params.u_s
+                            if ball.state.s == c.sliding
+                            else ball.params.u_r
+                        ),
                         m=ball.params.m,
-                        g=ball.g,
+                        g=ball.params.g,
                         R=ball.params.R,
                     )
                 )
@@ -276,16 +285,20 @@ class EvolveShotEventBased(EvolveShot):
             for cushion in self.table.cushion_segments["linear"].values():
                 dtau_E = physics.get_ball_linear_cushion_collision_time_fast(
                     rvw=ball.state.rvw,
-                    s=ball.s,
+                    s=ball.state.s,
                     lx=cushion.lx,
                     ly=cushion.ly,
                     l0=cushion.l0,
                     p1=cushion.p1,
                     p2=cushion.p2,
                     direction=cushion.direction.value,
-                    mu=(ball.u_s if ball.state.s == c.sliding else ball.u_r),
+                    mu=(
+                        ball.params.u_s
+                        if ball.state.s == c.sliding
+                        else ball.params.u_r
+                    ),
                     m=ball.params.m,
-                    g=ball.g,
+                    g=ball.params.g,
                     R=ball.params.R,
                 )
 
@@ -311,13 +324,17 @@ class EvolveShotEventBased(EvolveShot):
                 collision_coeffs.append(
                     physics.get_ball_pocket_collision_coeffs_fast(
                         rvw=ball.state.rvw,
-                        s=ball.s,
+                        s=ball.state.s,
                         a=pocket.a,
                         b=pocket.b,
                         r=pocket.radius,
-                        mu=(ball.u_s if ball.state.s == c.sliding else ball.u_r),
+                        mu=(
+                            ball.params.u_s
+                            if ball.state.s == c.sliding
+                            else ball.params.u_r
+                        ),
                         m=ball.params.m,
-                        g=ball.g,
+                        g=ball.params.g,
                         R=ball.params.R,
                     )
                 )
@@ -351,7 +368,7 @@ class EvolveShotDiscreteTime(EvolveShot):
             events = self.detect_events()
             for event in events:
                 resolve_event(event)
-                self.update_history(event, update_all=True)
+                self.update_history(event)
 
             if (steps % 1000) == 0:
                 self.progress_update()
@@ -384,7 +401,9 @@ class EvolveShotDiscreteTime(EvolveShot):
                 if ball1.s in c.nontranslating and ball2.s in c.nontranslating:
                     continue
 
-                if physics.is_overlapping(ball1.rvw, ball2.rvw, ball1.R, ball2.R):
+                if physics.is_overlapping(
+                    ball1.state.rvw, ball2.state.rvw, ball1.params.R, ball2.params.R
+                ):
                     events.append(ball_ball_collision(ball1, ball2, self.t))
 
         return events

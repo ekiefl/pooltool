@@ -7,37 +7,35 @@ from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
 
 import pooltool.ani as ani
-import pooltool.constants as c
 import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.error import ConfigError, SimulateError
-from pooltool.events import Event, Events, EventType, null_event
+from pooltool.events import Event, Events, EventType
 from pooltool.evolution import EvolveShotEventBased
-from pooltool.objects.ball import Ball, BallHistory
+from pooltool.objects.ball import BallHistory, BallState
 from pooltool.objects.cue import cue_from_dict
 from pooltool.utils.strenum import StrEnum, auto
 
 
-class SystemHistory(object):
+class SystemHistory:
     def __init__(self):
         self.t = None
         self.events = Events()
         self.continuized = False
 
-    def init_history(self):
-        """Add an initializing null_event"""
-        event = null_event(time=0)
+    def update_history(self, event):
+        """Updates the history for agents of an event
+
+        Parameters
+        ==========
+        event : class with base events.Event
+            An event
+        """
+        self.t = event.time
+
         for ball in self.balls.values():
-            ball.update_history(event)
-
-        self.events.append(event)
-
-    def end_history(self):
-        """Add a final null_event that timestamps the final state of each ball"""
-
-        event = null_event(time=self.t + c.tol)
-        for ball in self.balls.values():
-            ball.update_history(event)
+            ball.state.t = event.time
+            ball.history.add(ball.state)
 
         self.events.append(event)
 
@@ -50,39 +48,9 @@ class SystemHistory(object):
         for ball in self.balls.values():
             ball.history = BallHistory()
             ball.history_cts = BallHistory()
-            ball.events.reset()
             ball.t = 0
 
         self.events.reset()
-
-    def set_from_history(self, i):
-        """Set the ball states according to a history index"""
-        for ball in self.balls.values():
-            ball.set_from_history(i)
-
-    def update_history(self, event, update_all=False):
-        """Updates the history for agents of an event
-
-        Parameters
-        ==========
-        event : class with base events.Event
-            An event
-        update_all : bool, False
-            By default, this method updates only the histories of balls that are agents
-            of the event. However, if update_all is True, each ball's history will be
-            updated.
-        """
-        self.t = event.time
-
-        if update_all:
-            for ball in self.balls.values():
-                ball.update_history(event)
-        else:
-            for agent in event.agents:
-                if isinstance(agent, Ball):
-                    agent.update_history(event)
-
-        self.events.append(event)
 
     def continuize(self, dt=0.01):
         """Create BallHistory for each ball with many timepoints
@@ -111,12 +79,13 @@ class SystemHistory(object):
 
         for ball in self.balls.values():
             # Create a new history and add the zeroth event
-            cts_history = BallHistory()
-            rvw, s = ball.history.rvw[0], ball.history.s[0]
-            cts_history.add(rvw, s, 0)
+            history = BallHistory()
+            history.add(ball.history[0])
 
-            # Get all events that the ball is involved in, even the null_event events that
-            # mark the start and end times
+            rvw, s = ball.history[0].rvw, ball.history[0].s
+
+            # Get all events that the ball is involved in, even the null_event events
+            # that mark the start and end times
             events = self.events.filter_ball(ball, keep_nonevent=True)
 
             # Tracks which event is currently being handled
@@ -177,18 +146,18 @@ class SystemHistory(object):
                     rvw=rvw,
                     R=ball.params.R,
                     m=ball.params.m,
-                    u_s=ball.u_s,
-                    u_sp=ball.u_sp,
-                    u_r=ball.u_r,
-                    g=ball.g,
+                    u_s=ball.params.u_s,
+                    u_sp=ball.params.u_sp,
+                    u_r=ball.params.u_r,
+                    g=ball.params.g,
                     t=evolve_time,
                 )
 
-                cts_history.add(rvw, s, elapsed + dt)
+                history.add(BallState(rvw, s, elapsed + dt))
                 elapsed += dt
 
             # Attach the newly created history to the ball
-            ball.history_cts = cts_history
+            ball.history_cts = history
 
         self.continuized = True
 
@@ -394,10 +363,10 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
         return energy
 
     def reset_balls(self):
-        """Reset balls to their initial states, i.e. ball.history.*[0]"""
+        """Reset balls to their initial states"""
         for ball in self.balls.values():
             try:
-                ball.set_from_history(0)
+                ball.state = ball.history[0].copy()
             except IndexError:
                 pass
 
@@ -407,7 +376,9 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
                 if ball1 is ball2:
                     continue
 
-                if physics.is_overlapping(ball1.rvw, ball2.rvw, ball1.R, ball2.R):
+                if physics.is_overlapping(
+                    ball1.state.rvw, ball2.state.rvw, ball1.params.R, ball2.params.R
+                ):
                     return True
 
         return False
@@ -746,10 +717,9 @@ class SystemCollection(utils.ListLike, SystemCollectionRender):
         set_to_initial = False if state == "current" else True
         new = self.active.copy(set_to_initial=set_to_initial)
 
-        if state == "initial":
-            new.set_from_history(0)
-        elif state == "final":
-            new.set_from_history(-1)
+        idx = 0 if state == "initial" else -1
+        for ball in new.balls.values():
+            ball.state = ball.history[idx].copy()
 
         if reset_history:
             new.reset_history()
