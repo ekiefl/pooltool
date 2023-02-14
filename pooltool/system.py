@@ -2,6 +2,7 @@
 
 import tempfile
 from pathlib import Path
+from typing import List
 
 from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
@@ -10,7 +11,7 @@ import pooltool.ani as ani
 import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.error import ConfigError, SimulateError
-from pooltool.events import Event, Events, EventType
+from pooltool.events import Event, EventType, filter_ball
 from pooltool.evolution import EvolveShotEventBased
 from pooltool.objects.ball import BallHistory, BallState
 from pooltool.objects.cue import cue_from_dict
@@ -20,7 +21,7 @@ from pooltool.utils.strenum import StrEnum, auto
 class SystemHistory:
     def __init__(self):
         self.t = None
-        self.events = Events()
+        self.events = []
         self.continuized = False
 
     def update_history(self, event):
@@ -50,7 +51,7 @@ class SystemHistory:
             ball.history_cts = BallHistory()
             ball.t = 0
 
-        self.events.reset()
+        self.events = []
 
     def continuize(self, dt=0.01):
         """Create BallHistory for each ball with many timepoints
@@ -86,7 +87,7 @@ class SystemHistory:
 
             # Get all events that the ball is involved in, even the null_event events
             # that mark the start and end times
-            events = self.events.filter_ball(ball, keep_nonevent=True)
+            events = filter_ball(self.events, ball, keep_nonevent=True)
 
             # Tracks which event is currently being handled
             event_counter = 0
@@ -429,14 +430,15 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
         else:
             table = None
 
-        events = Events()
+        events = []
         for event_dict in d["events"]:
             event = Event.from_dict(event_dict)
 
-            # The agents of this event are NullObjects, since they came from a pickleable
-            # dictionary.  We attempt to change that by associating the proper agents
-            # based on object IDs. So if the NullObject agent has an id 'cue', We replace
-            # this agent with a proper instantiation of 'cue', i.e. balls['cue']
+            # The agents of this event are NullObjects, since they came from a
+            # pickleable dictionary.  We attempt to change that by associating the
+            # proper agents based on object IDs. So if the NullObject agent has an id
+            # 'cue', We replace this agent with a proper instantiation of 'cue', i.e.
+            # balls['cue']
             if event.event_type == EventType.BALL_BALL:
                 agent1, agent2 = event.agents
                 event.agents = [balls[agent1.id], balls[agent2.id]]

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
 
@@ -105,29 +105,8 @@ class Event:
     def resolve(self):
         event_resolvers[self.event_type](self)
 
-    def as_dict(self):
-        return dict(
-            event_type=self.event_type,
-            agent_ids=[agent.id for agent in self.agents],
-            initial_states=self.initial_states,
-            final_states=self.final_states,
-            time=self.time,
-        )
-
     def save(self, path):
-        utils.save_pickle(self.as_dict(), path)
-
-    @classmethod
-    def from_dict(cls, d) -> Event:
-        # The constructed agents are placeholders
-        agents = [NullObject(agent_id) for agent_id in d["agent_ids"]]
-
-        event = Event(event_type=d["event_type"], agents=agents, time=d["time"])
-
-        event.initial_states = d["initial_states"]
-        event.final_states = d["final_states"]
-
-        return event
+        raise NotImplementedError()
 
 
 def null_event(time: float) -> Event:
@@ -302,98 +281,85 @@ event_resolvers: Dict[EventType, Callable] = {
 }
 
 
-class Events(utils.ListLike):
-    """Stores Event objects"""
+def filter_type(
+    events: List[Event], types: Union[EventType, List[EventType]]
+) -> List[Event]:
+    """Return events in chronological order that are of an event type or types
 
-    def filter_type(self, types):
-        """Return events in chronological order that are of an event type or types
+    Parameters
+    ==========
+    types : str or list of str
+        Event types to be filtered by. E.g. pooltool.events.EventType.BALL_CUSHION
+        or equivalently, 'ball_cushion'
 
-        Parameters
-        ==========
-        types : str or list of str
-            Event types to be filtered by. E.g. pooltool.events.EventType.BALL_CUSHION
-            or equivalently, 'ball_cushion'
+    Returns
+    =======
+    events:
+        A subset of events that are of the specified types.
+    """
 
-        Returns
-        =======
-        events : pooltool.events.Events
-            A subset Events object containing events only of specified types
-        """
+    if isinstance(types, str):
+        types = [types]
 
-        try:
-            iter(types)
-        except TypeError:
-            types = [types]
+    new: List[Event] = []
+    for event in events:
+        if event.event_type in types:
+            new.append(event)
 
-        events = Events()
-        for event in self._list:
-            if event.event_type in types:
-                events.append(event)
+    return new
 
-        return events
 
-    def filter_ball(self, balls, keep_nonevent=False):
-        """Return events in chronological order that involve a collection of balls
+def filter_ball(
+    events: List[Event], balls: Union[Ball, List[Ball]], keep_nonevent: bool = False
+) -> List[Event]:
+    """Return events in chronological order that involve a collection of balls
 
-        Parameters
-        ==========
-        balls : pooltool.objects.ball.Ball or list of pooltool.objects.ball.Ball
-            Balls that you want events for.
+    Parameters
+    ==========
+    balls : pooltool.objects.ball.Ball or list of pooltool.objects.ball.Ball
+        Balls that you want events for.
 
-        Returns
-        =======
-        events : pooltool.events.Events
-            A subset Events object containing events only with specified balls
-        """
+    Returns
+    =======
+    events:
+        A subset of events involving specified balls.
+    """
 
-        try:
-            iter(balls)
-        except TypeError:
-            balls = [balls]
+    if isinstance(balls, Ball):
+        balls = [balls]
 
-        events = Events()
-        for event in self._list:
-            if keep_nonevent and event.event_type == EventType.NONE:
-                events.append(event)
-            else:
-                for ball in balls:
-                    if ball in event.agents:
-                        events.append(event)
-                        break
+    new: List[Event] = []
+    for event in events:
+        if keep_nonevent and event.event_type == EventType.NONE:
+            new.append(event)
+        else:
+            for ball in balls:
+                if ball in event.agents:
+                    new.append(event)
+                    break
 
-        return events
+    return new
 
-    def filter_time(self, t):
-        """Return events in chronological order after a certain time
 
-        Parameters
-        ==========
-        t : float
-            time after which you want events for
+def filter_time(events: List[Event], t: float) -> List[Event]:
+    """Return events in chronological order after a certain time
 
-        Returns
-        =======
-        events : pooltool.events.Events
-            A subset Events object containing events only after specified time
-        """
+    Parameters
+    ==========
+    t : float
+        time after which you want events for
 
-        events = Events()
-        for event in reversed(self._list):
-            if event.time > t:
-                events.append(event)
-            else:
-                break
+    Returns
+    =======
+    events:
+        A subset of events occurring after specified time, non-inclusive.
+    """
 
-        events._list = events._list[::-1]
-        return events
+    new: List[Event] = []
+    for event in reversed(events):
+        if event.time > t:
+            new.append(event)
+        else:
+            break
 
-    def reset(self):
-        self._list = []
-
-    def as_dict(self):
-        return [event.as_dict() for event in self._list]
-
-    def __repr__(self):
-        return "\n".join(
-            [f"{i}: {event.__repr__()}" for i, event in enumerate(self._list)]
-        )
+    return new[::-1]

@@ -98,7 +98,11 @@ def worker(output_queue):
         except Exception as e:
             continue
 
-        if len(shot.events.filter_ball(balls["cue"]).filter_type("ball-pocket")):
+        if len(
+            e.filter_type(
+                e.filter_ball(shot.events, balls["cue"]), e.EventType.BALL_POCKET
+            )
+        ):
             # Cue ball was potted. Illegal shot
             output_queue.put(shot.as_dict())
             continue
