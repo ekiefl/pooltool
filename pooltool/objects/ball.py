@@ -440,11 +440,11 @@ class BallHistory:
 
         self.states.append(new)
 
-    def vectorize(
-        self,
-    ) -> Tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
+    def vectorize(self) -> Tuple[NDArray, NDArray, NDArray]:
         """Return rvw, s, and t as arrays"""
-        return tuple(map(_float64_array, zip(*[astuple(x) for x in self.states])))  # type: ignore
+        return tuple(  # type: ignore
+            map(_float64_array, zip(*[astuple(x) for x in self.states]))
+        )
 
     @staticmethod
     def factory() -> BallHistory:

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
 
@@ -10,7 +10,7 @@ import pooltool.constants as c
 import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.objects import NullObject
-from pooltool.objects.ball import Ball
+from pooltool.objects.ball import Ball, BallState
 from pooltool.objects.cue import Cue
 from pooltool.objects.table import CushionSegment, Pocket
 from pooltool.utils import strenum
@@ -63,15 +63,10 @@ class EventType(strenum.StrEnum):
             raise NotImplementedError()
 
 
-def _get_initial_states(agent):
-    """This is a hack job FIXME
-
-    Frozen (or handled with care) BallState objects could be great here.
-    """
-    if hasattr(agent, "rvw"):
-        return np.copy(agent.rvw), agent.s
-    else:
-        return None
+def _get_state(agent) -> Optional[BallState]:
+    if isinstance(agent, Ball):
+        return agent.state.copy()
+    return None
 
 
 @dataclass
@@ -80,11 +75,11 @@ class Event:
     agents: List[Any]
     time: float = 0
 
-    initial_states: Any = field(init=False)
-    final_states: Any = field(init=False, default=None)
+    initial_states: List[Optional[BallState]] = field(init=False)
+    final_states: List[Optional[BallState]] = field(init=False, default_factory=list)
 
     def __post_init__(self):
-        self.initial_states = [_get_initial_states(agent) for agent in self.agents]
+        self.initial_states = [_get_state(agent) for agent in self.agents]
 
     def __repr__(self):
         agents = [(agent.id if agent is not None else None) for agent in self.agents]
@@ -214,10 +209,7 @@ def resolve_ball_ball(event):
     ball1.state.set(rvw1, s1, event.time)
     ball2.state.set(rvw2, s2, event.time)
 
-    event.final_states = [
-        (np.copy(ball1.state.rvw), ball1.state.s),
-        (np.copy(ball2.state.rvw), ball2.state.s),
-    ]
+    event.final_states = [ball1.state.copy(), ball2.state.copy()]
 
 
 def resolve_null(event):
@@ -242,10 +234,7 @@ def resolve_ball_cushion(event):
 
     ball.state.set(rvw, s, t=event.time)
 
-    event.final_states = [
-        (np.copy(ball.state.rvw), ball.state.s),
-        None,
-    ]
+    event.final_states = [ball.state.copy(), None]
 
 
 def resolve_ball_pocket(event):
@@ -259,10 +248,7 @@ def resolve_ball_pocket(event):
 
     pocket.add(ball.id)
 
-    event.final_states = [
-        (np.copy(ball.state.rvw), ball.state.s),
-        None,
-    ]
+    event.final_states = [ball.state.copy(), None]
 
 
 def resolve_stick_ball(event):
@@ -289,10 +275,7 @@ def resolve_stick_ball(event):
 
     ball.state.set(rvw, s)
 
-    event.final_states = [
-        (np.copy(ball.state.rvw), ball.state.s),
-        None,
-    ]
+    event.final_states = [ball.state.copy(), None]
 
 
 def resolve_transition(event):
@@ -303,7 +286,7 @@ def resolve_transition(event):
     ball = event.agents[0]
     ball.state.s = end
 
-    event.final_states = [(np.copy(ball.state.rvw), end)]
+    event.final_states = [ball.state.copy()]
 
 
 event_resolvers: Dict[EventType, Callable] = {

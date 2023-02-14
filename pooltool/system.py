@@ -124,16 +124,17 @@ class SystemHistory:
                     # We need to get the ball's outgoing state from the event. We'll
                     # evolve the system from this state.
                     if events[event_counter].event_type.is_transition():
-                        rvw, s = events[event_counter].final_states[0]
+                        state = events[event_counter].final_states[0]
                     elif events[event_counter].event_type.is_collision():
                         if ball == events[event_counter].agents[0]:
-                            rvw, s = events[event_counter].final_states[0]
+                            state = events[event_counter].final_states[0]
                         else:
-                            rvw, s = events[event_counter].final_states[1]
+                            state = events[event_counter].final_states[1]
                     else:
                         raise NotImplementedError(
                             f"Can't handle {events[event_counter]}"
                         )
+                    rvw, s = state.rvw, state.s
 
                     # Since this event occurs between two timestamps, we won't be
                     # evolving a full dt. Instead, we evolve this much:
