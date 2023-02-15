@@ -697,6 +697,7 @@ class Pocket(object):
         self.center = np.array(center)
         self.radius = radius
         self.depth = depth
+        self.potting_point = self.calc_potting_point()
 
         self.a, self.b = self.center[:2]
 
@@ -708,6 +709,24 @@ class Pocket(object):
 
     def remove(self, ball_id):
         self.contains.remove(ball_id)
+
+    def calc_potting_point(self):
+        """ Determines the coordinates of a point ahead of the pocket where, if a traveling ball were to pass through
+        it, would result in the ball being sunk. The point would be a radius to left/right, and a radius up/down,
+        depending on the pocket. These values were determined empirically by trail and error.
+        """
+        (x, y, _), r = self.center, self.radius
+        if self.id[0] == "l":
+            x = x + r
+        else:
+            x = x - r
+
+        if self.id[1] == "b":
+            y = y + r
+        elif self.id[1] == "t":
+            y = y - r
+
+        return np.array([x, y])
 
 
 table_types = {

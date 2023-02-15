@@ -496,6 +496,10 @@ class Ball(Object, BallRender):
         self.rel_model_path = rel_model_path
         BallRender.__init__(self, rel_model_path=self.rel_model_path)
 
+    @property
+    def center(self):
+        return self.rvw[0][:2]
+
     def attach_history(self, history):
         """Sets self.history to an existing BallHistory object"""
         self.history = history

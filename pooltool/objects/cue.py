@@ -18,6 +18,7 @@ import pooltool.utils as utils
 from pooltool.ani.globals import Global
 from pooltool.error import ConfigError, StrokeError
 from pooltool.objects import Object, Render
+from pooltool.potting import PottingConfig
 
 
 class CueRender(Render):
@@ -387,6 +388,18 @@ class Cue(Object, CueRender):
             utils.unit_vector_fast(np.array(pos) - self.cueing_ball.rvw[0])
         )
         self.set_state(phi=direction * 180 / np.pi)
+
+    def aim_for_pocket(self, ball, pocket, config=PottingConfig.default()):
+        """Set phi to pot a given ball into a given pocket"""
+        self.set_state(phi=config.calculate_angle(self, ball, pocket))
+
+    def aim_for_best_pocket(self, ball, pockets, config=PottingConfig.default()):
+        """Set phi to pot a given ball into the best/easiest pocket"""
+        self.aim_for_pocket(
+            ball=ball,
+            pocket=config.choose_pocket(self, ball, pockets),
+            config=config,
+        )
 
     def aim_at_ball(self, ball, cut=None):
         """Set phi to aim directly at a ball
