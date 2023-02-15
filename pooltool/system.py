@@ -16,11 +16,198 @@ from pooltool.objects.cue import cue_from_dict
 from pooltool.utils.strenum import StrEnum, auto
 
 
-class SystemHistory:
+class PlaybackMode(StrEnum):
+    LOOP = auto()
+    SINGLE = auto()
+
+
+class SystemRender(object):
     def __init__(self):
+        self.reset_animation()
+
+    def init_shot_animation(
+        self, animate_stroke=True, trailing_buffer=0, leading_buffer=0
+    ):
+        if not len(self.events):
+            try:
+                self.simulate(raise_simulate_error=True)
+            except SimulateError:
+                pass
+
+        if not self.continuized:
+            # playback speed / fps * 2.0 is basically the sweetspot for creating smooth
+            # interpolations that capture motion. Any more is wasted computation and any
+            # less and the interpolation starts to look bad.
+            if self.playback_speed > 0.99:
+                self.continuize(
+                    dt=self.playback_speed / ani.settings["graphics"]["fps"] * 2.5
+                )
+            else:
+                self.continuize(
+                    dt=self.playback_speed / ani.settings["graphics"]["fps"] * 1.5
+                )
+
+        if self.ball_animations is None:
+            # This takes ~90% of this method's execution time
+            self.ball_animations = Parallel()
+            for ball in self.balls.values():
+                if not ball.render_obj.rendered:
+                    ball.render_obj.render(ball)
+                ball.render_obj.set_playback_sequence(
+                    ball, playback_speed=self.playback_speed
+                )
+                self.ball_animations.append(ball.render_obj.playback_sequence)
+
+        if self.user_stroke and animate_stroke:
+            # There exists a stroke trajectory, and animating the stroke has been
+            # requested
+            self.cue.render_obj.set_stroke_sequence()
+            self.stroke_animation = Sequence(
+                ShowInterval(self.cue.render_obj.get_node("cue_stick")),
+                self.cue.render_obj.stroke_sequence,
+                HideInterval(self.cue.render_obj.get_node("cue_stick")),
+            )
+            self.shot_animation = Sequence(
+                Func(self.restart_ball_animations),
+                self.stroke_animation,
+                self.ball_animations,
+                Wait(trailing_buffer),
+            )
+        else:
+            self.cue.render_obj.hide_nodes()
+            self.stroke_animation = None
+            self.shot_animation = Sequence(
+                Func(self.restart_ball_animations),
+                self.ball_animations,
+                Wait(trailing_buffer),
+            )
+
+    def start_animation(self, playback_mode: PlaybackMode):
+        if self.shot_animation is None:
+            raise Exception("First call SystemRender.init_shot_animation()")
+
+        if playback_mode == PlaybackMode.SINGLE:
+            self.shot_animation.start()
+        elif playback_mode == PlaybackMode.LOOP:
+            self.shot_animation.loop()
+
+    def restart_animation(self):
+        self.shot_animation.set_t(0)
+
+    def restart_ball_animations(self):
+        self.ball_animations.set_t(0)
+
+    def clear_animation(self):
+        if self.shot_animation is not None:
+            self.shot_animation.clearToInitial()
+            self.shot_animation = None
+            self.ball_animations = None
+            self.stroke_animation = None
+
+        for ball in self.balls.values():
+            if ball.render_obj.playback_sequence is not None:
+                ball.render_obj.playback_sequence.pause()
+                ball.render_obj.playback_sequence = None
+
+    def toggle_pause(self):
+        if self.shot_animation.isPlaying():
+            self.pause_animation()
+        else:
+            self.resume_animation()
+
+    def offset_time(self, dt):
+        old_t = self.shot_animation.get_t()
+        new_t = max(0, min(old_t + dt, self.shot_animation.duration))
+        self.shot_animation.set_t(new_t)
+
+    def pause_animation(self):
+        self.shot_animation.pause()
+
+    def resume_animation(self):
+        self.shot_animation.resume()
+
+    def reset_animation(self):
+        self.shot_animation = None
+        self.ball_animations = None
+        self.stroke_animation = None
+        self.user_stroke = False
+        self.playback_speed = 1
+
+    def teardown(self):
+        self.clear_animation()
+        for ball in self.balls.values():
+            ball.remove_nodes()
+        self.cue.render_obj.remove_nodes()
+
+    def buildup(self):
+        self.clear_animation()
+        for ball in self.balls.values():
+            ball.render_obj.render(ball)
+            ball.reset_angular_integration()
+        self.cue.render_obj.render()
+        self.cue.render_obj.init_focus(self.cue.cueing_ball)
+
+
+class System(SystemRender):
+    def __init__(self, path=None, cue=None, table=None, balls=None, d=None):
         self.t = None
         self.events = []
         self.continuized = False
+
+        SystemRender.__init__(self)
+
+        # FIXME use classmethods/staticmethods for path and d routes
+        if path and (cue or table or balls):
+            raise ConfigError(
+                "System :: if path provided, cue, table, and balls must be None"
+            )
+        if d and (cue or table or balls):
+            raise ConfigError(
+                "System :: if d provided, cue, table, and balls must be None"
+            )
+        if d and path:
+            raise ConfigError(
+                "System :: Preload a system with either `d` or `path`, not both"
+            )
+
+        if path:
+            path = Path(path)
+            self.load(path)
+        elif d:
+            self.load_from_dict(d)
+        else:
+            self.cue = cue
+            self.table = table
+            self.balls = balls
+            self.t = None
+            self.meta = None
+
+    def set_cue(self, cue):
+        self.cue = cue
+
+    def set_table(self, table):
+        self.table = table
+
+    def set_balls(self, balls):
+        self.balls = balls
+
+    def set_meta(self, meta):
+        """Define any meta data for the shot
+
+        This method provides the opportunity to associate information to the system. If
+        the system is saved or copied, this information will be retained under the
+        attribute `meta`.
+
+        Parameters
+        ==========
+        meta : pickleable object
+             Any information can be stored, so long as it is pickleable.
+        """
+
+        if not utils.is_pickleable(meta):
+            raise ConfigError("System.set_meta :: Cannot set unpickleable object")
+
+        self.meta = meta
 
     def update_history(self, event: Event):
         """Updates the history for all balls"""
@@ -154,197 +341,6 @@ class SystemHistory:
             ball.history_cts = history
 
         self.continuized = True
-
-
-class PlaybackMode(StrEnum):
-    LOOP = auto()
-    SINGLE = auto()
-
-
-class SystemRender(object):
-    def __init__(self):
-        self.reset_animation()
-
-    def init_shot_animation(
-        self, animate_stroke=True, trailing_buffer=0, leading_buffer=0
-    ):
-        if not len(self.events):
-            try:
-                self.simulate(raise_simulate_error=True)
-            except SimulateError:
-                pass
-
-        if not self.continuized:
-            # playback speed / fps * 2.0 is basically the sweetspot for creating smooth
-            # interpolations that capture motion. Any more is wasted computation and any
-            # less and the interpolation starts to look bad.
-            if self.playback_speed > 0.99:
-                self.continuize(
-                    dt=self.playback_speed / ani.settings["graphics"]["fps"] * 2.5
-                )
-            else:
-                self.continuize(
-                    dt=self.playback_speed / ani.settings["graphics"]["fps"] * 1.5
-                )
-
-        if self.ball_animations is None:
-            # This takes ~90% of this method's execution time
-            self.ball_animations = Parallel()
-            for ball in self.balls.values():
-                if not ball.render_obj.rendered:
-                    ball.render_obj.render(ball)
-                ball.render_obj.set_playback_sequence(
-                    ball, playback_speed=self.playback_speed
-                )
-                self.ball_animations.append(ball.render_obj.playback_sequence)
-
-        if self.user_stroke and animate_stroke:
-            # There exists a stroke trajectory, and animating the stroke has been
-            # requested
-            self.cue.render_obj.set_stroke_sequence()
-            self.stroke_animation = Sequence(
-                ShowInterval(self.cue.render_obj.get_node("cue_stick")),
-                self.cue.render_obj.stroke_sequence,
-                HideInterval(self.cue.render_obj.get_node("cue_stick")),
-            )
-            self.shot_animation = Sequence(
-                Func(self.restart_ball_animations),
-                self.stroke_animation,
-                self.ball_animations,
-                Wait(trailing_buffer),
-            )
-        else:
-            self.cue.render_obj.hide_nodes()
-            self.stroke_animation = None
-            self.shot_animation = Sequence(
-                Func(self.restart_ball_animations),
-                self.ball_animations,
-                Wait(trailing_buffer),
-            )
-
-    def start_animation(self, playback_mode: PlaybackMode):
-        if self.shot_animation is None:
-            raise Exception("First call SystemRender.init_shot_animation()")
-
-        if playback_mode == PlaybackMode.SINGLE:
-            self.shot_animation.start()
-        elif playback_mode == PlaybackMode.LOOP:
-            self.shot_animation.loop()
-
-    def restart_animation(self):
-        self.shot_animation.set_t(0)
-
-    def restart_ball_animations(self):
-        self.ball_animations.set_t(0)
-
-    def clear_animation(self):
-        if self.shot_animation is not None:
-            self.shot_animation.clearToInitial()
-            self.shot_animation = None
-            self.ball_animations = None
-            self.stroke_animation = None
-
-        for ball in self.balls.values():
-            if ball.render_obj.playback_sequence is not None:
-                ball.render_obj.playback_sequence.pause()
-                ball.render_obj.playback_sequence = None
-
-    def toggle_pause(self):
-        if self.shot_animation.isPlaying():
-            self.pause_animation()
-        else:
-            self.resume_animation()
-
-    def offset_time(self, dt):
-        old_t = self.shot_animation.get_t()
-        new_t = max(0, min(old_t + dt, self.shot_animation.duration))
-        self.shot_animation.set_t(new_t)
-
-    def pause_animation(self):
-        self.shot_animation.pause()
-
-    def resume_animation(self):
-        self.shot_animation.resume()
-
-    def reset_animation(self):
-        self.shot_animation = None
-        self.ball_animations = None
-        self.stroke_animation = None
-        self.user_stroke = False
-        self.playback_speed = 1
-
-    def teardown(self):
-        self.clear_animation()
-        for ball in self.balls.values():
-            ball.remove_nodes()
-        self.cue.render_obj.remove_nodes()
-
-    def buildup(self):
-        self.clear_animation()
-        for ball in self.balls.values():
-            ball.render_obj.render(ball)
-            ball.reset_angular_integration()
-        self.cue.render_obj.render()
-        self.cue.render_obj.init_focus(self.cue.cueing_ball)
-
-
-class System(SystemHistory, SystemRender):
-    def __init__(self, path=None, cue=None, table=None, balls=None, d=None):
-        SystemHistory.__init__(self)
-        SystemRender.__init__(self)
-
-        # FIXME use classmethods/staticmethods for path and d routes
-        if path and (cue or table or balls):
-            raise ConfigError(
-                "System :: if path provided, cue, table, and balls must be None"
-            )
-        if d and (cue or table or balls):
-            raise ConfigError(
-                "System :: if d provided, cue, table, and balls must be None"
-            )
-        if d and path:
-            raise ConfigError(
-                "System :: Preload a system with either `d` or `path`, not both"
-            )
-
-        if path:
-            path = Path(path)
-            self.load(path)
-        elif d:
-            self.load_from_dict(d)
-        else:
-            self.cue = cue
-            self.table = table
-            self.balls = balls
-            self.t = None
-            self.meta = None
-
-    def set_cue(self, cue):
-        self.cue = cue
-
-    def set_table(self, table):
-        self.table = table
-
-    def set_balls(self, balls):
-        self.balls = balls
-
-    def set_meta(self, meta):
-        """Define any meta data for the shot
-
-        This method provides the opportunity to associate information to the system. If
-        the system is saved or copied, this information will be retained under the
-        attribute `meta`.
-
-        Parameters
-        ==========
-        meta : pickleable object
-             Any information can be stored, so long as it is pickleable.
-        """
-
-        if not utils.is_pickleable(meta):
-            raise ConfigError("System.set_meta :: Cannot set unpickleable object")
-
-        self.meta = meta
 
     def evolve(self, dt):
         """Evolves current ball an amount of time dt
