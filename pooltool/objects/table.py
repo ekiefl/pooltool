@@ -711,6 +711,10 @@ class Pocket(object):
         self.contains.remove(ball_id)
 
     def calc_potting_point(self):
+        """ Determines the coordinates of a point ahead of the pocket where, if a traveling ball were to pass through
+        it, would result in the ball being sunk. The point would be a radius to left/right, and a radius up/down,
+        depending on the pocket. These values were determined empirically by trail and error.
+        """
         (x, y, _), r = self.center, self.radius
         if self.id[0] == "l":
             x = x + r
