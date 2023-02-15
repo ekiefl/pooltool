@@ -402,10 +402,10 @@ class ImageSaver(Interface):
 
         Args:
             shot:
-                The shot you would like visualized. It should already by simulated (e.g.
-                shot.simulate()). It is OK if you have continuized the shot (you can
-                check with shot.continuized), but the continuization will be overwritten
-                to match the `fps` chosen in this method.
+                The shot you would like visualized. It should already by simulated. It
+                is OK if you have continuized the shot (you can check with
+                shot.continuized), but the continuization will be overwritten to match
+                the `fps` chosen in this method.
             save_dir:
                 The directory that you would like to save the shots in. It must not
                 already exist.

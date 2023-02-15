@@ -10,6 +10,7 @@ import pooltool.utils as utils
 from pooltool.ani.animate import *
 from pooltool.constants import *
 from pooltool.events import *
+from pooltool.evolution import *
 from pooltool.layouts import *
 from pooltool.objects.ball import *
 from pooltool.objects.cue import *

@@ -481,3 +481,7 @@ class Ball:
     def create() -> Ball:
         """FIXME should allow parameters like xyz"""
         raise NotImplementedError()
+
+    @staticmethod
+    def dummy() -> Ball:
+        return Ball(id="dummy")

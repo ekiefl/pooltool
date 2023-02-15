@@ -2,7 +2,6 @@
 
 import tempfile
 from pathlib import Path
-from typing import List
 
 from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
@@ -12,7 +11,6 @@ import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.error import ConfigError, SimulateError
 from pooltool.events import Event, EventType, filter_ball
-from pooltool.evolution import EvolveShotEventBased
 from pooltool.objects.ball import BallHistory, BallState
 from pooltool.objects.cue import cue_from_dict
 from pooltool.utils.strenum import StrEnum, auto
@@ -24,14 +22,8 @@ class SystemHistory:
         self.events = []
         self.continuized = False
 
-    def update_history(self, event):
-        """Updates the history for agents of an event
-
-        Parameters
-        ==========
-        event : class with base events.Event
-            An event
-        """
+    def update_history(self, event: Event):
+        """Updates the history for all balls"""
         self.t = event.time
 
         for ball in self.balls.values():
@@ -296,11 +288,10 @@ class SystemRender(object):
         self.cue.render_obj.init_focus(self.cue.cueing_ball)
 
 
-class System(SystemHistory, SystemRender, EvolveShotEventBased):
+class System(SystemHistory, SystemRender):
     def __init__(self, path=None, cue=None, table=None, balls=None, d=None):
         SystemHistory.__init__(self)
         SystemRender.__init__(self)
-        EvolveShotEventBased.__init__(self)
 
         # FIXME use classmethods/staticmethods for path and d routes
         if path and (cue or table or balls):
@@ -354,6 +345,28 @@ class System(SystemHistory, SystemRender, EvolveShotEventBased):
             raise ConfigError("System.set_meta :: Cannot set unpickleable object")
 
         self.meta = meta
+
+    def evolve(self, dt):
+        """Evolves current ball an amount of time dt
+
+        FIXME This is very inefficent. each ball should store its natural trajectory
+        thereby avoid a call to the clunky evolve_ball_motion. It could even be a
+        partial function so parameters don't continuously need to be passed
+        """
+
+        for ball_id, ball in self.balls.items():
+            rvw, s = physics.evolve_ball_motion(
+                state=ball.state.s,
+                rvw=ball.state.rvw,
+                R=ball.params.R,
+                m=ball.params.m,
+                u_s=ball.params.u_s,
+                u_sp=ball.params.u_sp,
+                u_r=ball.params.u_r,
+                g=ball.params.g,
+                t=dt,
+            )
+            ball.state.set(rvw, s=s, t=(self.t + dt))
 
     def get_system_energy(self):
         energy = 0

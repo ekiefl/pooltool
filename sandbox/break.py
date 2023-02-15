@@ -24,8 +24,7 @@ def main(args):
     cue.strike(V0=args.V0)
 
     # Evolve the shot
-    shot = pt.System(cue=cue, table=table, balls=balls)
-    shot.simulate()
+    shot = pt.simulate(pt.System(cue=cue, table=table, balls=balls))
 
     if not args.no_viz:
         interface.show(shot)

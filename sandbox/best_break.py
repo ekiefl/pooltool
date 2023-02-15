@@ -14,11 +14,15 @@ best_break_path = Path(__file__).parent / "best_break.pkl"
 best_break_stats = Path(__file__).parent / "best_break_stats.pkl"
 
 spacing_factor = 1e-3
-get_cue_pos = lambda cue, table: [
-    cue.R + np.random.rand() * (table.w - 2 * cue.R),
-    table.l / 4,
-    cue.R,
-]
+
+
+def get_cue_pos(cue, table):
+    return [
+        cue.R + np.random.rand() * (table.w - 2 * cue.R),
+        table.l / 4,
+        cue.R,
+    ]
+
 
 run = pt.terminal.Run()
 
