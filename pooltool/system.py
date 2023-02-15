@@ -21,9 +21,16 @@ class PlaybackMode(StrEnum):
     SINGLE = auto()
 
 
-class SystemRender(object):
+class SystemRender:
     def __init__(self):
         self.reset_animation()
+
+    def reset_animation(self):
+        self.shot_animation = None
+        self.ball_animations = None
+        self.stroke_animation = None
+        self.user_stroke = False
+        self.playback_speed = 1
 
     def init_shot_animation(
         self, animate_stroke=True, trailing_buffer=0, leading_buffer=0
@@ -126,13 +133,6 @@ class SystemRender(object):
     def resume_animation(self):
         self.shot_animation.resume()
 
-    def reset_animation(self):
-        self.shot_animation = None
-        self.ball_animations = None
-        self.stroke_animation = None
-        self.user_stroke = False
-        self.playback_speed = 1
-
     def teardown(self):
         self.clear_animation()
         for ball in self.balls.values():
@@ -146,6 +146,159 @@ class SystemRender(object):
             ball.reset_angular_integration()
         self.cue.render_obj.render()
         self.cue.render_obj.init_focus(self.cue.cueing_ball)
+
+
+class SystemCollectionRender:
+    def __init__(self):
+        self.active = None
+        self.shot_animation = None
+        self.playback_speed = 1.0
+        self.parallel = False
+        self.paused = False
+
+    @property
+    def animation_finished(self):
+        """Returns whether or not the animation is finished
+
+        Returns true if the animation has stopped and it's not because the game has been
+        paused. The animation is never finished if it's playing in a loop.
+        """
+
+        if not self.shot_animation.isPlaying() and not self.paused:
+            return True
+        else:
+            return False
+
+    def set_animation(self):
+        if self.parallel:
+            self.shot_animation = Parallel()
+
+            # `max_dur` is the shot duration of the longest shot in the collection. All
+            # shots beside this one will have a buffer appended where the balls stay in
+            # their final state until the last shot finishes.
+            max_dur = max([shot.events[-1].time for shot in self])
+
+            # FIXME `leading_buffer` should be utilized here to sync up all shots that
+            # have cue trajectories such that the ball animations all start at the
+            # moment of the stick-ball collision
+            pass
+
+            for shot in self:
+                shot_dur = shot.events[-1].time
+                shot.init_shot_animation(
+                    trailing_buffer=max_dur - shot_dur,
+                    leading_buffer=0,
+                )
+                self.shot_animation.append(shot.shot_animation)
+        else:
+            if not self.active:
+                raise ConfigError(
+                    "SystemCollectionRender.set_animation :: self.active not set"
+                )
+            self.active.init_shot_animation()
+            self.shot_animation = self.active.shot_animation
+
+    def start_animation(self, playback_mode: PlaybackMode):
+        if playback_mode == PlaybackMode.SINGLE:
+            self.shot_animation.start()
+        elif playback_mode == PlaybackMode.LOOP:
+            self.shot_animation.loop()
+
+    def skip_stroke(self):
+        stroke = self.active.stroke_animation
+        if stroke is not None:
+            self.shot_animation.set_t(stroke.get_duration())
+
+    def restart_animation(self):
+        self.shot_animation.set_t(0)
+
+    def clear_animation(self):
+        if self.parallel:
+            for shot in self:
+                shot.clear_animation()
+        else:
+            self.active.clear_animation()
+
+        if self.shot_animation is not None:
+            self.shot_animation.clearToInitial()
+            self.shot_animation.pause()
+            self.shot_animation = None
+
+    def toggle_parallel(self):
+        self.clear_animation()
+
+        if self.parallel:
+            for shot in self:
+                shot.teardown()
+            self.active.buildup()
+            self.parallel = False
+            self.set_animation()
+        else:
+            self.active.teardown()
+            for shot in self:
+                shot.buildup()
+            self.parallel = True
+            self.set_animation()
+
+        if not self.paused:
+            self.start_animation(PlaybackMode.LOOP)
+
+    def toggle_pause(self):
+        if self.shot_animation.isPlaying():
+            self.pause_animation()
+        else:
+            self.resume_animation()
+
+    def pause_animation(self):
+        self.paused = True
+        self.shot_animation.pause()
+
+    def resume_animation(self):
+        self.paused = False
+        self.shot_animation.resume()
+
+    def slow_down(self):
+        self.change_speed(0.5)
+
+    def speed_up(self):
+        self.change_speed(2.0)
+
+    def change_speed(self, factor):
+        # FIXME This messes up the syncing of shots when self.parallel is True. One
+        # clear issue is that trailing_buffer times do not respect self.playback_speed.
+        self.playback_speed *= factor
+        for shot in self:
+            shot.playback_speed *= factor
+            shot.continuized = False
+
+        curr_time = self.shot_animation.get_t()
+        self.clear_animation()
+        self.set_animation()
+        self.shot_animation.setPlayRate(factor * self.shot_animation.getPlayRate())
+
+        if not self.paused:
+            self.start_animation(PlaybackMode.LOOP)
+
+        self.shot_animation.set_t(curr_time / factor)
+
+    def rewind(self):
+        self.offset_time(-ani.rewind_dt)
+
+    def fast_forward(self):
+        self.offset_time(ani.fast_forward_dt)
+
+    def offset_time(self, dt):
+        old_t = self.shot_animation.get_t()
+        new_t = max(0, min(old_t + dt, self.shot_animation.duration))
+        self.shot_animation.set_t(new_t)
+
+    def highlight_system(self, i):
+        for system in self:
+            for ball in system.balls.values():
+                ball.set_alpha(1 / len(self))
+
+        for ball in self[i].balls.values():
+            ball.set_alpha(1.0)
 
 
 class System(SystemRender):
@@ -522,159 +675,6 @@ class System(SystemRender):
         system.events = events
         system.meta = meta
         return system
-
-
-class SystemCollectionRender(object):
-    def __init__(self):
-        self.active = None
-        self.shot_animation = None
-        self.playback_speed = 1.0
-        self.parallel = False
-        self.paused = False
-
-    @property
-    def animation_finished(self):
-        """Returns whether or not the animation is finished
-
-        Returns true if the animation has stopped and it's not because the game has been
-        paused. The animation is never finished if it's playing in a loop.
-        """
-
-        if not self.shot_animation.isPlaying() and not self.paused:
-            return True
-        else:
-            return False
-
-    def set_animation(self):
-        if self.parallel:
-            self.shot_animation = Parallel()
-
-            # `max_dur` is the shot duration of the longest shot in the collection. All
-            # shots beside this one will have a buffer appended where the balls stay in
-            # their final state until the last shot finishes.
-            max_dur = max([shot.events[-1].time for shot in self])
-
-            # FIXME `leading_buffer` should be utilized here to sync up all shots that
-            # have cue trajectories such that the ball animations all start at the
-            # moment of the stick-ball collision
-            pass
-
-            for shot in self:
-                shot_dur = shot.events[-1].time
-                shot.init_shot_animation(
-                    trailing_buffer=max_dur - shot_dur,
-                    leading_buffer=0,
-                )
-                self.shot_animation.append(shot.shot_animation)
-        else:
-            if not self.active:
-                raise ConfigError(
-                    "SystemCollectionRender.set_animation :: self.active not set"
-                )
-            self.active.init_shot_animation()
-            self.shot_animation = self.active.shot_animation
-
-    def start_animation(self, playback_mode: PlaybackMode):
-        if playback_mode == PlaybackMode.SINGLE:
-            self.shot_animation.start()
-        elif playback_mode == PlaybackMode.LOOP:
-            self.shot_animation.loop()
-
-    def skip_stroke(self):
-        stroke = self.active.stroke_animation
-        if stroke is not None:
-            self.shot_animation.set_t(stroke.get_duration())
-
-    def restart_animation(self):
-        self.shot_animation.set_t(0)
-
-    def clear_animation(self):
-        if self.parallel:
-            for shot in self:
-                shot.clear_animation()
-        else:
-            self.active.clear_animation()
-
-        if self.shot_animation is not None:
-            self.shot_animation.clearToInitial()
-            self.shot_animation.pause()
-            self.shot_animation = None
-
-    def toggle_parallel(self):
-        self.clear_animation()
-
-        if self.parallel:
-            for shot in self:
-                shot.teardown()
-            self.active.buildup()
-            self.parallel = False
-            self.set_animation()
-        else:
-            self.active.teardown()
-            for shot in self:
-                shot.buildup()
-            self.parallel = True
-            self.set_animation()
-
-        if not self.paused:
-            self.start_animation(PlaybackMode.LOOP)
-
-    def toggle_pause(self):
-        if self.shot_animation.isPlaying():
-            self.pause_animation()
-        else:
-            self.resume_animation()
-
-    def pause_animation(self):
-        self.paused = True
-        self.shot_animation.pause()
-
-    def resume_animation(self):
-        self.paused = False
-        self.shot_animation.resume()
-
-    def slow_down(self):
-        self.change_speed(0.5)
-
-    def speed_up(self):
-        self.change_speed(2.0)
-
-    def change_speed(self, factor):
-        # FIXME This messes up the syncing of shots when self.parallel is True. One
-        # clear issue is that trailing_buffer times do not respect self.playback_speed.
-        self.playback_speed *= factor
-        for shot in self:
-            shot.playback_speed *= factor
-            shot.continuized = False
-
-        curr_time = self.shot_animation.get_t()
-        self.clear_animation()
-        self.set_animation()
-        self.shot_animation.setPlayRate(factor * self.shot_animation.getPlayRate())
-
-        if not self.paused:
-            self.start_animation(PlaybackMode.LOOP)
-
-        self.shot_animation.set_t(curr_time / factor)
-
-    def rewind(self):
-        self.offset_time(-ani.rewind_dt)
-
-    def fast_forward(self):
-        self.offset_time(ani.fast_forward_dt)
-
-    def offset_time(self, dt):
-        old_t = self.shot_animation.get_t()
-        new_t = max(0, min(old_t + dt, self.shot_animation.duration))
-        self.shot_animation.set_t(new_t)
-
-    def highlight_system(self, i):
-        for system in self:
-            for ball in system.balls.values():
-                ball.set_alpha(1 / len(self))
-
-        for ball in self[i].balls.values():
-            ball.set_alpha(1.0)
 
 
 class SystemCollection(utils.ListLike, SystemCollectionRender):
