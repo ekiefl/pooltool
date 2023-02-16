@@ -33,31 +33,25 @@ class SystemRender:
         self.playback_speed = 1
 
     def init_shot_animation(
-        self, animate_stroke=True, trailing_buffer=0, leading_buffer=0
+        self, shot, animate_stroke=True, trailing_buffer=0, leading_buffer=0
     ):
-        if not len(self.events):
-            try:
-                self.simulate(raise_simulate_error=True)
-            except SimulateError:
-                pass
-
-        if not self.continuized:
+        if not shot.continuized:
             # playback speed / fps * 2.0 is basically the sweetspot for creating smooth
             # interpolations that capture motion. Any more is wasted computation and any
             # less and the interpolation starts to look bad.
             if self.playback_speed > 0.99:
-                self.continuize(
+                shot.continuize(
                     dt=self.playback_speed / ani.settings["graphics"]["fps"] * 2.5
                 )
             else:
-                self.continuize(
+                shot.continuize(
                     dt=self.playback_speed / ani.settings["graphics"]["fps"] * 1.5
                 )
 
         if self.ball_animations is None:
             # This takes ~90% of this method's execution time
             self.ball_animations = Parallel()
-            for ball in self.balls.values():
+            for ball in shot.balls.values():
                 if not ball.render_obj.rendered:
                     ball.render_obj.render(ball)
                 ball.render_obj.set_playback_sequence(
@@ -68,11 +62,11 @@ class SystemRender:
         if self.user_stroke and animate_stroke:
             # There exists a stroke trajectory, and animating the stroke has been
             # requested
-            self.cue.render_obj.set_stroke_sequence()
+            shot.cue.render_obj.set_stroke_sequence()
             self.stroke_animation = Sequence(
-                ShowInterval(self.cue.render_obj.get_node("cue_stick")),
-                self.cue.render_obj.stroke_sequence,
-                HideInterval(self.cue.render_obj.get_node("cue_stick")),
+                ShowInterval(shot.cue.render_obj.get_node("cue_stick")),
+                shot.cue.render_obj.stroke_sequence,
+                HideInterval(shot.cue.render_obj.get_node("cue_stick")),
             )
             self.shot_animation = Sequence(
                 Func(self.restart_ball_animations),
@@ -81,7 +75,7 @@ class SystemRender:
                 Wait(trailing_buffer),
             )
         else:
-            self.cue.render_obj.hide_nodes()
+            shot.cue.render_obj.hide_nodes()
             self.stroke_animation = None
             self.shot_animation = Sequence(
                 Func(self.restart_ball_animations),
@@ -104,14 +98,14 @@ class SystemRender:
     def restart_ball_animations(self):
         self.ball_animations.set_t(0)
 
-    def clear_animation(self):
+    def clear_animation(self, shot):
         if self.shot_animation is not None:
             self.shot_animation.clearToInitial()
             self.shot_animation = None
             self.ball_animations = None
             self.stroke_animation = None
 
-        for ball in self.balls.values():
+        for ball in shot.balls.values():
             if ball.render_obj.playback_sequence is not None:
                 ball.render_obj.playback_sequence.pause()
                 ball.render_obj.playback_sequence = None
@@ -133,24 +127,23 @@ class SystemRender:
     def resume_animation(self):
         self.shot_animation.resume()
 
-    def teardown(self):
-        self.clear_animation()
-        for ball in self.balls.values():
-            ball.remove_nodes()
-        self.cue.render_obj.remove_nodes()
+    def teardown(self, shot):
+        self.clear_animation(shot)
+        for ball in shot.balls.values():
+            ball.render_obj.remove_nodes()
+        shot.cue.render_obj.remove_nodes()
 
-    def buildup(self):
-        self.clear_animation()
-        for ball in self.balls.values():
+    def buildup(self, shot):
+        self.clear_animation(shot)
+        for ball in shot.balls.values():
             ball.render_obj.render(ball)
-            ball.reset_angular_integration()
-        self.cue.render_obj.render()
-        self.cue.render_obj.init_focus(self.cue.cueing_ball)
+            ball.render_obj.reset_angular_integration()
+        shot.cue.render_obj.render()
+        shot.cue.render_obj.init_focus(shot.cue.cueing_ball)
 
 
 class SystemCollectionRender:
     def __init__(self):
-        self.active = None
         self.shot_animation = None
         self.playback_speed = 1.0
         self.parallel = False
@@ -169,34 +162,35 @@ class SystemCollectionRender:
         else:
             return False
 
-    def set_animation(self):
+    def set_animation(self, multisystem):
         if self.parallel:
             self.shot_animation = Parallel()
 
             # `max_dur` is the shot duration of the longest shot in the collection. All
             # shots beside this one will have a buffer appended where the balls stay in
             # their final state until the last shot finishes.
-            max_dur = max([shot.events[-1].time for shot in self])
+            max_dur = max([shot.events[-1].time for shot in multisystem])
 
             # FIXME `leading_buffer` should be utilized here to sync up all shots that
             # have cue trajectories such that the ball animations all start at the
             # moment of the stick-ball collision
             pass
 
-            for shot in self:
+            for shot in multisystem:
                 shot_dur = shot.events[-1].time
-                shot.init_shot_animation(
+                shot.render_obj.init_shot_animation(
+                    shot,
                     trailing_buffer=max_dur - shot_dur,
                     leading_buffer=0,
                 )
-                self.shot_animation.append(shot.shot_animation)
+                self.shot_animation.append(shot.render_obj.shot_animation)
         else:
-            if not self.active:
+            if not multisystem.active:
                 raise ConfigError(
-                    "SystemCollectionRender.set_animation :: self.active not set"
+                    "SystemCollectionRender.set_animation :: multisystem.active not set"
                 )
-            self.active.init_shot_animation()
-            self.shot_animation = self.active.shot_animation
+            multisystem.active.render_obj.init_shot_animation(multisystem.active)
+            self.shot_animation = multisystem.active.render_obj.shot_animation
 
     def start_animation(self, playback_mode: PlaybackMode):
         if playback_mode == PlaybackMode.SINGLE:
@@ -204,41 +198,41 @@ class SystemCollectionRender:
         elif playback_mode == PlaybackMode.LOOP:
             self.shot_animation.loop()
 
-    def skip_stroke(self):
-        stroke = self.active.stroke_animation
+    def skip_stroke(self, multisystem):
+        stroke = multisystem.active.render_obj.stroke_animation
         if stroke is not None:
             self.shot_animation.set_t(stroke.get_duration())
 
     def restart_animation(self):
         self.shot_animation.set_t(0)
 
-    def clear_animation(self):
+    def clear_animation(self, multisystem):
         if self.parallel:
-            for shot in self:
-                shot.clear_animation()
+            for shot in multisystem:
+                shot.render_obj.clear_animation(shot)
         else:
-            self.active.clear_animation()
+            multisystem.active.render_obj.clear_animation(multisystem.active)
 
         if self.shot_animation is not None:
             self.shot_animation.clearToInitial()
             self.shot_animation.pause()
             self.shot_animation = None
 
-    def toggle_parallel(self):
-        self.clear_animation()
+    def toggle_parallel(self, multisystem):
+        self.clear_animation(multisystem)
 
         if self.parallel:
-            for shot in self:
-                shot.teardown()
-            self.active.buildup()
+            for shot in multisystem:
+                shot.render_obj.teardown(shot)
+            multisystem.active.render_obj.buildup(multisystem.active)
             self.parallel = False
-            self.set_animation()
+            self.set_animation(multisystem)
         else:
-            self.active.teardown()
-            for shot in self:
-                shot.buildup()
+            multisystem.active.render_obj.teardown(multisystem.active)
+            for shot in multisystem:
+                shot.render_obj.buildup(shot)
             self.parallel = True
-            self.set_animation()
+            self.set_animation(multisystem)
 
         if not self.paused:
             self.start_animation(PlaybackMode.LOOP)
@@ -257,23 +251,26 @@ class SystemCollectionRender:
         self.paused = False
         self.shot_animation.resume()
 
-    def slow_down(self):
-        self.change_speed(0.5)
+    def slow_down(self, multisystem):
+        self.change_speed(0.5, multisystem)
 
-    def speed_up(self):
-        self.change_speed(2.0)
+    def speed_up(self, multisystem):
+        self.change_speed(2.0, multisystem)
 
-    def change_speed(self, factor):
+    def change_speed(self, factor, multisystem):
         # FIXME This messes up the syncing of shots when self.parallel is True. One
         # clear issue is that trailing_buffer times do not respect self.playback_speed.
         self.playback_speed *= factor
-        for shot in self:
-            shot.playback_speed *= factor
-            shot.continuized = False
+        for shot in multisystem:
+            shot.render_obj.playback_speed *= factor
+
+            # Reset the continuous ball history
+            for ball in shot.balls.values():
+                ball.history_cts = BallHistory()
 
         curr_time = self.shot_animation.get_t()
-        self.clear_animation()
-        self.set_animation()
+        self.clear_animation(multisystem)
+        self.set_animation(multisystem)
         self.shot_animation.setPlayRate(factor * self.shot_animation.getPlayRate())
 
         if not self.paused:
@@ -292,22 +289,20 @@ class SystemCollectionRender:
         new_t = max(0, min(old_t + dt, self.shot_animation.duration))
         self.shot_animation.set_t(new_t)
 
-    def highlight_system(self, i):
-        for system in self:
+    def highlight_system(self, i, multisystem):
+        for system in multisystem:
             for ball in system.balls.values():
-                ball.set_alpha(1 / len(self))
+                ball.render_obj.set_alpha(1 / len(multisystem))
 
-        for ball in self[i].balls.values():
-            ball.set_alpha(1.0)
+        for ball in multisystem[i].balls.values():
+            ball.render_obj.set_alpha(1.0)
 
 
-class System(SystemRender):
+class System:
     def __init__(self, path=None, cue=None, table=None, balls=None, d=None):
         self.t = None
         self.events = []
-        self.continuized = False
-
-        SystemRender.__init__(self)
+        self.render_obj = SystemRender()
 
         # FIXME use classmethods/staticmethods for path and d routes
         if path and (cue or table or balls):
@@ -335,14 +330,9 @@ class System(SystemRender):
             self.t = None
             self.meta = None
 
-    def set_cue(self, cue):
-        self.cue = cue
-
-    def set_table(self, table):
-        self.table = table
-
-    def set_balls(self, balls):
-        self.balls = balls
+    @property
+    def continuized(self):
+        return all(not ball.history_cts.empty for ball in self.balls.values())
 
     def set_meta(self, meta):
         """Define any meta data for the shot
@@ -376,7 +366,6 @@ class System(SystemRender):
         """Remove all events, histories, and reset timer"""
 
         self.t = 0
-        self.continuized = False
 
         for ball in self.balls.values():
             ball.history = BallHistory()
@@ -492,8 +481,6 @@ class System(SystemRender):
 
             # Attach the newly created history to the ball
             ball.history_cts = history
-
-        self.continuized = True
 
     def evolve(self, dt):
         """Evolves current ball an amount of time dt
@@ -677,17 +664,16 @@ class System(SystemRender):
         return system
 
 
-class SystemCollection(utils.ListLike, SystemCollectionRender):
+class SystemCollection(utils.ListLike):
     def __init__(self, path=None):
         utils.ListLike.__init__(self)
 
         if path:
             self.load(Path(path))
 
-        SystemCollectionRender.__init__(self)
-
-        self.active: System = None
+        self.active = None
         self.active_index = None
+        self.render_obj = SystemCollectionRender()
 
     def append(self, system):
         if len(self):

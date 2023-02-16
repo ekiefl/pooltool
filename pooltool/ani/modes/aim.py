@@ -264,17 +264,17 @@ class AimMode(BaseMode):
     def change_animation(self, shot_index):
         """Switch to a different system in the system collection"""
         # Switch shots
-        Global.multisystem.clear_animation()
-        Global.system.teardown()
+        Global.multisystem.render_obj.clear_animation(Global.multisystem)
+        Global.system.render_obj.teardown(Global.system)
         Global.multisystem.set_active(shot_index)
-        Global.system.buildup()
+        Global.system.render_obj.buildup(Global.system)
 
         # Initialize the animation
-        Global.multisystem.set_animation()
+        Global.multisystem.render_obj.set_animation(Global.multisystem)
 
         # Changing to a different shot is considered advanced maneuvering, so we enter
         # loop mode.
-        Global.multisystem.start_animation(PlaybackMode.LOOP)
+        Global.multisystem.render_obj.start_animation(PlaybackMode.LOOP)
 
         # A lot of dumb things to make the cue track the initial position of the ball
         dummy = Ball("dummy")

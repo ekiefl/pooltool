@@ -28,7 +28,7 @@ def main(args):
 
     # Evolve the shot
     shot = pt.System(cue=cue, table=table, balls=balls)
-    shot.simulate()
+    shot = pt.simulate(shot)
 
     output = Path(__file__).parent / "offscreen_out"
     if output.exists():

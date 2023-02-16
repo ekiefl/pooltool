@@ -161,7 +161,7 @@ class Interface(ShowBase):
         hud.destroy()
 
         if len(Global.multisystem):
-            Global.multisystem.clear_animation()
+            Global.multisystem.render_obj.clear_animation(Global.multisystem)
             Global.multisystem.clear()
 
         cam.fixation = None
