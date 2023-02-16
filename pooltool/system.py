@@ -552,7 +552,14 @@ class MultiSystem:
         assert self.active_index is not None
         return self._multisystem[self.active_index]
 
+    @property
+    def empty(self) -> bool:
+        return not bool(len(self))
+
     def append(self, system: System) -> None:
+        if self.empty:
+            self.active_index = 0
+
         self._multisystem.append(system)
 
     def append_copy_of_active(
