@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 
-import tempfile
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
@@ -11,10 +9,10 @@ from panda3d.direct import HideInterval, ShowInterval
 import pooltool.ani as ani
 import pooltool.physics as physics
 import pooltool.utils as utils
-from pooltool.error import ConfigError, SimulateError
-from pooltool.events import Event, EventType, filter_ball
+from pooltool.error import ConfigError
+from pooltool.events import Event, filter_ball
 from pooltool.objects.ball import Ball, BallHistory, BallState
-from pooltool.objects.cue import Cue, cue_from_dict
+from pooltool.objects.cue import Cue
 from pooltool.objects.table import Table
 from pooltool.utils.strenum import StrEnum, auto
 

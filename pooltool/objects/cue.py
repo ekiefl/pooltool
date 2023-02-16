@@ -17,7 +17,6 @@ from panda3d.core import (
 )
 
 import pooltool.ani as ani
-import pooltool.constants as c
 import pooltool.events as events
 import pooltool.utils as utils
 from pooltool.ani.globals import Global
@@ -27,21 +26,15 @@ from pooltool.objects import Render
 
 @dataclass
 class CueSpecs:
-    brand: str
-    M: float
-    length: float
-    tip_radius: float
-    butt_radius: float
+    brand: str = field(default="Predator")
+    M: float = field(default=0.567)  # 20oz
+    length: float = field(default=1.4732)  # 58in
+    tip_radius: float = field(default=0.007)  # 14mm tip
+    butt_radius: float = field(default=0.02)
 
     @staticmethod
     def default() -> CueSpecs:
-        return CueSpecs(
-            brand="Predator",
-            M=0.567,  # 20oz
-            length=1.4732,  # 58in
-            tip_radius=0.007,  # 14mm tip
-            butt_radius=0.02,
-        )
+        return CueSpecs()
 
 
 class CueRender(Render):
