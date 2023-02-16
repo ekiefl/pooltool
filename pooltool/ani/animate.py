@@ -39,7 +39,7 @@ from pooltool.error import ConfigError
 from pooltool.objects.ball import BallParams
 from pooltool.objects.cue import Cue, cue_avoid
 from pooltool.objects.table import Table
-from pooltool.system import PlaybackMode, System, SystemCollection
+from pooltool.system import MultiSystem, PlaybackMode, System
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -247,9 +247,9 @@ class ShotViewer(Interface):
                 )
         else:
             if issubclass(type(shot_or_shots), System):
-                Global.register_multisystem(SystemCollection())
+                Global.register_multisystem(MultiSystem())
                 Global.multisystem.append(shot_or_shots)
-            elif issubclass(type(shot_or_shots), SystemCollection):
+            elif issubclass(type(shot_or_shots), MultiSystem):
                 Global.register_multisystem(shot_or_shots)
 
         if Global.system is None:
@@ -367,7 +367,7 @@ class ImageSaver(Interface):
 
     def _init_system_collection(self, shot):
         """Create system collection holding the shot. Register to Global"""
-        Global.register_multisystem(SystemCollection())
+        Global.register_multisystem(MultiSystem())
         Global.multisystem.append(shot)
         if Global.system is None:
             Global.multisystem.set_active(0)
@@ -546,7 +546,7 @@ class Game(Interface):
         cue = self.setup_cue(balls, game)
         shot = System(table=table, balls=balls, cue=cue)
 
-        shots = SystemCollection()
+        shots = MultiSystem()
         shots.append(shot)
         shots.set_active(-1)
 

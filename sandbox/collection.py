@@ -14,7 +14,7 @@ cue = pt.Cue(cueing_ball=balls["cue"])
 cue.set_state(phi=225, V0=2)
 system = pt.System(cue=cue, table=table, balls=balls)
 
-collection = pt.SystemCollection()
+collection = pt.MultiSystem()
 
 for x in np.linspace(0, 0.7, 20):
     shot = system.copy()

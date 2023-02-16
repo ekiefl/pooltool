@@ -145,7 +145,7 @@ class SystemRender:
         shot.cue.render_obj.init_focus(shot.cue.cueing_ball)
 
 
-class SystemCollectionRender:
+class MultiSystemRender:
     def __init__(self):
         self.shot_animation = None
         self.playback_speed = 1.0
@@ -190,7 +190,7 @@ class SystemCollectionRender:
         else:
             if not multisystem.active:
                 raise ConfigError(
-                    "SystemCollectionRender.set_animation :: multisystem.active not set"
+                    "MultiSystemRender.set_animation :: multisystem.active not set"
                 )
             multisystem.active.render_obj.init_shot_animation(multisystem.active)
             self.shot_animation = multisystem.active.render_obj.shot_animation
@@ -532,14 +532,14 @@ class System:
 
 
 @dataclass
-class SystemCollection:
+class MultiSystem:
     _multisystem: List[System] = field(default_factory=list)
 
     active_index: Optional[int] = field(init=False, default=None)
-    render_obj: SystemCollectionRender = field(init=False)
+    render_obj: MultiSystemRender = field(init=False)
 
     def __post_init__(self) -> None:
-        self.render_obj = SystemCollectionRender()
+        self.render_obj = MultiSystemRender()
 
     def __len__(self) -> int:
         return len(self._multisystem)

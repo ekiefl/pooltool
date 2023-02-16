@@ -50,7 +50,7 @@ class ShotMode(BaseMode):
         ==========
         init_animations : bool, False
             If True, the shot animations are built and played via
-            SystemCollection.init_animation() and SystemCollection.start_animation()
+            MultiSystem.init_animation() and MultiSystem.start_animation()
         """
         mouse.mode(MouseMode.RELATIVE)
 
