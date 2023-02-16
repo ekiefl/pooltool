@@ -29,7 +29,7 @@ from pooltool.objects import Render
 from pooltool.utils import panda_path
 
 
-@dataclass
+@dataclass(frozen=True)
 class BallOrientation:
     """Stores a ball's rendered orientation"""
 
@@ -309,7 +309,7 @@ class BallRender(Render):
         self.init_sphere(ball)
 
 
-@dataclass
+@dataclass(frozen=True)
 class BallParams:
     """Pool ball parameters and physical constants
 

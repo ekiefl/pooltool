@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Protocol, Union
 
 import numpy as np
 from panda3d.core import CollisionNode, CollisionPlane, LineSegs, Plane, Point3, Vec3
@@ -21,7 +21,7 @@ from pooltool.objects.table.components import CushionSegment, Pocket
 from pooltool.utils import panda_path, strenum
 
 
-@dataclass
+@dataclass(frozen=True)
 class TableModelDescr:
     name: str
 
@@ -221,7 +221,7 @@ class TableType(strenum.StrEnum):
     BILLIARD = strenum.auto()
 
 
-@dataclass
+@dataclass(frozen=True)
 class PocketTableSpecs:
     """Parameters that specify a pocket table"""
 
@@ -259,9 +259,11 @@ class PocketTableSpecs:
         if all(
             getattr(self, fname) == default for fname, default in field_defaults.items()
         ):
-            # All parameters match the default table, and so the TableModelDescr is used even
-            # if it wasn't explictly requested.
-            self.model_descr = TableModelDescr.pocket_table_default()
+            # All parameters match the default table, and so the TableModelDescr is used
+            # even if it wasn't explictly requested.
+            object.__setattr__(
+                self, "model_descr", TableModelDescr.pocket_table_default()
+            )
 
     def create_cushion_segments(self):
         return _create_pocket_table_cushion_segments(self)
@@ -270,7 +272,7 @@ class PocketTableSpecs:
         return _create_pocket_table_pockets(self)
 
 
-@dataclass
+@dataclass(frozen=True)
 class BilliardTableSpecs:
     """Parameters that specify a billiard (pocketless) table"""
 
@@ -299,8 +301,8 @@ class BilliardTableSpecs:
         if all(
             getattr(self, fname) == default for fname, default in field_defaults.items()
         ):
-            # All parameters match the default table, and so the TableModelDescr is used even
-            # if it wasn't explictly requested.
+            # All parameters match the default table, and so the TableModelDescr is used
+            # even if it wasn't explictly requested.
             self.model_descr = TableModelDescr.billiard_table_default()
 
     def create_cushion_segments(self):
@@ -314,19 +316,30 @@ def _table_render_factory():
     return TableRender()
 
 
+class TableSpecs(Protocol):
+    l: float
+    w: float
+
+    def create_cushion_segments(self):
+        ...
+
+    def create_pockets(self):
+        ...
+
+
 @dataclass
 class Table:
-    specs: Union[PocketTableSpecs, BilliardTableSpecs]
+    specs: TableSpecs
     cushion_segments: Dict[str, Dict[str, CushionSegment]]
     pockets: Dict[str, Pocket]
     render_obj: TableRender = field(init=False, default_factory=_table_render_factory)
 
     @property
-    def w(self):
+    def w(self) -> float:
         return self.specs.w
 
     @property
-    def l(self):
+    def l(self) -> float:
         return self.specs.l
 
     @property
@@ -337,7 +350,7 @@ class Table:
         self.render_obj.render(self)
 
     @staticmethod
-    def from_table_specs(specs: Union[PocketTableSpecs, BilliardTableSpecs]) -> Table:
+    def from_table_specs(specs: TableSpecs) -> Table:
         return Table(
             specs=specs,
             cushion_segments=specs.create_cushion_segments(),

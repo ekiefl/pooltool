@@ -24,7 +24,7 @@ from pooltool.error import ConfigError, StrokeError
 from pooltool.objects import Render
 
 
-@dataclass
+@dataclass(frozen=True)
 class CueSpecs:
     brand: str = field(default="Predator")
     M: float = field(default=0.567)  # 20oz
@@ -454,36 +454,6 @@ class Cue:
         cue_stick.setY(-self.a * self.render_obj.follow.params.R)  # a
         cue_stick.setZ(self.b * self.render_obj.follow.params.R)  # b
 
-    def as_dict(self):
-        try:
-            # It doesn't make sense to store a dictionary copy of the cueing_ball, since
-            # building the ball from Ball.from_dict will lead to an object that is
-            # unreferenced elsewhere.  Instead, I store the cueing_ball.id, if it
-            # exists. This way, if a system state is loaded from dictionary, the balls
-            # and cue can be built, and then set the cueing_ball can be directly set by
-            # referencing the newly built Ball
-            cueing_ball_id = self.cueing_ball.id
-        except AttributeError:
-            cueing_ball_id = None
-
-        return dict(
-            cue_id=self.id,
-            M=self.M,
-            length=self.length,
-            tip_radius=self.tip_radius,
-            butt_radius=self.butt_radius,
-            brand=self.brand,
-            V0=self.V0,
-            phi=self.phi,
-            theta=self.theta,
-            a=self.a,
-            b=self.b,
-            cueing_ball_id=cueing_ball_id,
-        )
-
-    def save(self, path):
-        utils.save_pickle(self.as_dict(), path)
-
 
 class CueAvoid:
     def __init__(self):
@@ -689,14 +659,3 @@ class CueAvoid:
 
 
 cue_avoid = CueAvoid()
-
-
-def cue_from_dict(d):
-    cue = Cue(**{k: v for k, v in d.items() if k != "cueing_ball_id"})
-    cue.cueing_ball_id = d["cueing_ball_id"]
-    return cue
-
-
-def cue_from_pickle(path):
-    d = utils.load_pickle(path)
-    return cue_from_dict(d)
