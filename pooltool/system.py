@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 
 import tempfile
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
@@ -11,8 +13,9 @@ import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.error import ConfigError, SimulateError
 from pooltool.events import Event, EventType, filter_ball
-from pooltool.objects.ball import BallHistory, BallState
-from pooltool.objects.cue import cue_from_dict
+from pooltool.objects.ball import Ball, BallHistory, BallState
+from pooltool.objects.cue import Cue, cue_from_dict
+from pooltool.objects.table import Table
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -298,37 +301,20 @@ class SystemCollectionRender:
             ball.render_obj.set_alpha(1.0)
 
 
+@dataclass
 class System:
-    def __init__(self, path=None, cue=None, table=None, balls=None, d=None):
-        self.t = None
-        self.events = []
+    cue: Cue
+    table: Table
+    balls: Dict[str, Ball]
+
+    t: float = field(default=0)
+    events: List[Event] = field(default_factory=list)
+    meta: Any = field(default=None)
+
+    render_obj: SystemRender = field(init=False)
+
+    def __post_init__(self):
         self.render_obj = SystemRender()
-
-        # FIXME use classmethods/staticmethods for path and d routes
-        if path and (cue or table or balls):
-            raise ConfigError(
-                "System :: if path provided, cue, table, and balls must be None"
-            )
-        if d and (cue or table or balls):
-            raise ConfigError(
-                "System :: if d provided, cue, table, and balls must be None"
-            )
-        if d and path:
-            raise ConfigError(
-                "System :: Preload a system with either `d` or `path`, not both"
-            )
-
-        if path:
-            path = Path(path)
-            self.load(path)
-        elif d:
-            self.load_from_dict(d)
-        else:
-            self.cue = cue
-            self.table = table
-            self.balls = balls
-            self.t = None
-            self.meta = None
 
     @property
     def continuized(self):
@@ -516,10 +502,8 @@ class System:
     def reset_balls(self):
         """Reset balls to their initial states"""
         for ball in self.balls.values():
-            try:
+            if not ball.history.empty:
                 ball.state = ball.history[0].copy()
-            except IndexError:
-                pass
 
     def is_balls_overlapping(self):
         for ball1 in self.balls.values():
@@ -534,114 +518,6 @@ class System:
 
         return False
 
-    def set_system_state(self):
-        raise NotImplementedError(
-            "set_system_state FIXME. What should this take as input?"
-        )
-
-    def as_dict(self):
-        d = {}
-
-        if self.balls:
-            d["balls"] = {}
-            for ball in self.balls.values():
-                d["balls"][ball.id] = ball.as_dict()
-
-        if self.cue:
-            d["cue"] = self.cue.as_dict()
-
-        if self.table:
-            d["table"] = self.table.as_dict()
-
-        d["events"] = self.events.as_dict()
-        d["meta"] = self.meta
-
-        return d
-
-    def from_dict(self, d):
-        """Return balls, table, cue, events, and meta objects from dictionary"""
-        if "balls" in d:
-            balls = {}
-            for ball_id, ball_dict in d["balls"].items():
-                balls[ball_id] = ball_from_dict(ball_dict)
-        else:
-            balls = None
-
-        if "cue" in d:
-            cue = cue_from_dict(d["cue"])
-            if balls and cue.cueing_ball_id in balls:
-                cue.set_state(cueing_ball=balls[cue.cueing_ball_id])
-        else:
-            cue = None
-
-        if "table" in d:
-            table = table_from_dict(d["table"])
-        else:
-            table = None
-
-        events = []
-        for event_dict in d["events"]:
-            event = Event.from_dict(event_dict)
-
-            # The agents of this event are NullObjects, since they came from a
-            # pickleable dictionary.  We attempt to change that by associating the
-            # proper agents based on object IDs. So if the NullObject agent has an id
-            # 'cue', We replace this agent with a proper instantiation of 'cue', i.e.
-            # balls['cue']
-            if event.event_type == EventType.BALL_BALL:
-                agent1, agent2 = event.agents
-                event.agents = [balls[agent1.id], balls[agent2.id]]
-
-            elif event.event_type == EventType.BALL_CUSHION:
-                agent1, agent2 = event.agents
-                if agent2.id.endswith("edge"):
-                    cushion = table.cushion_segments["linear"][agent2.id.split("_")[0]]
-                else:
-                    cushion = table.cushion_segments["circular"][agent2.id]
-                event.agents = [balls[agent1.id], cushion]
-
-            elif event.event_type == EventType.BALL_POCKET:
-                agent1, agent2 = event.agents
-                event.agents = [balls[agent1.id], table.pockets[agent2.id]]
-
-            elif event.event_type == EventType.STICK_BALL:
-                agent1, agent2 = event.agents
-                event.agents = [cue, balls[agent2.id]]
-
-            elif event.event_type.is_transition():
-                agent = event.agents[0]
-                event.agents = [balls[agent.id]]
-
-            events.append(event)
-
-        meta = d["meta"]
-
-        return balls, table, cue, events, meta
-
-    def save(self, path, set_to_initial=True):
-        """Save the system state as a pickle
-
-        Parameters
-        ==========
-        set_to_initial : bool, True
-            Prior to saving, this method sets the ball states the initial states in the
-            history.  However, this can be prevented by setting this to False, causing
-            the ball states to be saved as is.
-        """
-        if set_to_initial:
-            self.reset_balls()
-        utils.save_pickle(self.as_dict(), path)
-
-    def load(self, path):
-        """Load a pickle-stored system state"""
-        self.balls, self.table, self.cue, self.events, self.meta = self.from_dict(
-            utils.load_pickle(path)
-        )
-
-    def load_from_dict(self, d):
-        """Load a dictionary-stored system state"""
-        self.balls, self.table, self.cue, self.events, self.meta = self.from_dict(d)
-
     def copy(self, set_to_initial=True):
         """Make a fresh copy of this system state
 
@@ -652,44 +528,36 @@ class System:
             history.  However, this can be prevented by setting this to False, causing
             the ball states to be copied as is.
         """
-        with tempfile.NamedTemporaryFile(delete=True) as temp:
-            self.save(temp.name, set_to_initial=set_to_initial)
-            balls, table, cue, events, meta = self.from_dict(
-                utils.load_pickle(temp.name)
-            )
-
-        system = self.__class__(balls=balls, table=table, cue=cue)
-        system.events = events
-        system.meta = meta
-        return system
+        raise NotImplementedError()
 
 
-class SystemCollection(utils.ListLike):
-    def __init__(self, path=None):
-        utils.ListLike.__init__(self)
+@dataclass
+class SystemCollection:
+    _multisystem: List[System] = field(default_factory=list)
 
-        if path:
-            self.load(Path(path))
+    active_index: Optional[int] = field(init=False, default=None)
+    render_obj: SystemCollectionRender = field(init=False)
 
-        self.active = None
-        self.active_index = None
+    def __post_init__(self) -> None:
         self.render_obj = SystemCollectionRender()
 
-    def append(self, system):
-        if len(self):
-            # In order to append a system, the table must be damn-near identical to
-            # existing systems in this collection. Otherwise we raise an error
-            if system.table.as_dict() != self[0].table.as_dict():
-                raise ConfigError(
-                    f"Cannot append System '{system}', which has a different table "
-                    f"than the rest of the SystemCollection"
-                )
+    def __len__(self) -> int:
+        return len(self._multisystem)
 
-        utils.ListLike.append(self, system)
+    def __getitem__(self, idx: int) -> System:
+        return self._multisystem[idx]
+
+    @property
+    def active(self) -> System:
+        assert self.active_index is not None
+        return self._multisystem[self.active_index]
+
+    def append(self, system: System) -> None:
+        self._multisystem.append(system)
 
     def append_copy_of_active(
         self, state="current", reset_history=True, as_active=False
-    ):
+    ) -> None:
         """Append a copy of the active System
 
         Parameters
@@ -710,6 +578,7 @@ class SystemCollection(utils.ListLike):
         as_active : bool, False
             If True, the newly appended System will be set as the active state
         """
+        raise NotImplementedError()
         assert state in {"initial", "final", "current"}
 
         set_to_initial = False if state == "current" else True
@@ -727,7 +596,7 @@ class SystemCollection(utils.ListLike):
         if as_active:
             self.set_active(-1)
 
-    def set_active(self, i):
+    def set_active(self, i) -> None:
         """Change the active system in the collection
 
         Parameters
@@ -737,31 +606,14 @@ class SystemCollection(utils.ListLike):
             indexing is supported, e.g. set_active(-1) sets the last system in the
             collection as active
         """
-        if self.active is not None:
+        if self.active_index is not None:
             table = self.active.table
-            self.active = self[i]
+            self.active_index = i
             self.active.table = table
         else:
-            self.active = self[i]
+            self.active_index = i
 
         if i < 0:
             i = len(self) - 1
 
         self.active_index = i
-
-    def as_pickleable_object(self):
-        return [system.as_dict() for system in self]
-
-    def save(self, path):
-        for system in self:
-            system.reset_balls()
-        utils.save_pickle(self.as_pickleable_object(), path)
-
-    def load(self, path):
-        obj = utils.load_pickle(path)
-        for system_dict in obj:
-            self.append(System(d=system_dict))
-
-    def clear(self):
-        self.active = None
-        self._list = []

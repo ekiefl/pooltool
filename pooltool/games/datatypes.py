@@ -106,8 +106,8 @@ class Game(ABC):
         =====
         - FIXME check if respot position overlaps with ball
         """
-        shot.balls[ball_id].rvw[0] = [x, y, z]
-        shot.balls[ball_id].s = c.stationary
+        shot.balls[ball_id].state.rvw[0] = [x, y, z]
+        shot.balls[ball_id].state.s = c.stationary
 
     def advance(self, shot):
         for player in self.players:

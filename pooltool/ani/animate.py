@@ -162,7 +162,8 @@ class Interface(ShowBase):
 
         if len(Global.multisystem):
             Global.multisystem.render_obj.clear_animation(Global.multisystem)
-            Global.multisystem.clear()
+            Global.multisystem.active_index = None
+            Global.multisystem._multisystem = []
 
         cam.fixation = None
         cam.fixation_object = None
