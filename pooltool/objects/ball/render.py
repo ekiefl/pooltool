@@ -19,7 +19,7 @@ import pooltool.ani.utils as autils
 import pooltool.constants as c
 from pooltool.ani.globals import Global
 from pooltool.objects.ball.datatypes import Ball, BallOrientation
-from pooltool.objects.cue import Cue
+from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.datatypes import Render
 from pooltool.utils import panda_path
 
