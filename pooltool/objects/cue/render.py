@@ -16,7 +16,7 @@ class CueRender(Render):
     def __init__(self, cue: Cue):
         Render.__init__(self)
 
-        self.cue = cue
+        self._cue = cue
 
         self.follow = None
         self.stroke_sequence = None
@@ -29,15 +29,15 @@ class CueRender(Render):
     def set_object_state_as_render_state(self, skip_V0=False):
         (
             V0,
-            self.cue.phi,
-            self.cue.theta,
-            self.cue.a,
-            self.cue.b,
-            self.cue.cueing_ball,
+            self._cue.phi,
+            self._cue.theta,
+            self._cue.a,
+            self._cue.b,
+            self._cue.cueing_ball,
         ) = self.get_render_state()
 
         if not skip_V0:
-            self.cue.V0 = V0
+            self._cue.V0 = V0
 
     def set_render_state_as_object_state(self):
         self.match_ball_position()
@@ -45,10 +45,10 @@ class CueRender(Render):
         cue_stick = self.get_node("cue_stick")
         cue_stick_focus = self.get_node("cue_stick_focus")
 
-        cue_stick_focus.setH(self.cue.phi + 180)  # phi
-        cue_stick_focus.setR(-self.cue.theta)  # theta
-        cue_stick.setY(-self.cue.a * self.follow.params.R)  # a
-        cue_stick.setZ(self.cue.b * self.follow.params.R)  # b
+        cue_stick_focus.setH(self._cue.phi + 180)  # phi
+        cue_stick_focus.setR(-self._cue.theta)  # theta
+        cue_stick.setY(-self._cue.a * self.follow.params.R)  # a
+        cue_stick.setZ(self._cue.b * self.follow.params.R)  # b
 
     def init_model(self):
         path = utils.panda_path(ani.model_dir / "cue" / "cue.glb")

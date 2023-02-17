@@ -11,39 +11,39 @@ class TableRender(Render):
     """A class for all pool table associated panda3d nodes"""
 
     def __init__(self, table: Table):
-        self.table = Table
+        self._table = Table
         Render.__init__(self)
 
-    def init_table(self, table):
+    def init_table(self):
         if (
-            not table.specs.model_descr
-            or table.specs.model_descr == TableModelDescr.null()
+            not self._table.specs.model_descr
+            or self._table.specs.model_descr == TableModelDescr.null()
             or not ani.settings["graphics"]["table"]
         ):
             model = Global.loader.loadModel(TableModelDescr.null().path)
             node = Global.render.find("scene").attachNewNode("table")
             model.reparentTo(node)
-            model.setScale(table.w, table.l, 1)
+            model.setScale(self._table.w, self._table.l, 1)
         else:
-            node = Global.loader.loadModel(table.specs.model_descr.path)
+            node = Global.loader.loadModel(self._table.specs.model_descr.path)
             node.reparentTo(Global.render.find("scene"))
             node.setName("table")
 
         self.nodes["table"] = node
         self.collision_nodes = {}
 
-    def init_collisions(self, table):
+    def init_collisions(self):
         if not ani.settings["gameplay"]["cue_collision"]:
             return
 
-        if table.specs.table_type not in (TableType.BILLIARD, TableType.POCKET):
+        if self._table.specs.table_type not in (TableType.BILLIARD, TableType.POCKET):
             raise NotImplementedError()
 
         # Make 4 planes
         # For diagram of cushion ids, see
         # https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times
         for cushion_id in ["3", "9", "12", "18"]:
-            cushion = table.cushion_segments["linear"][cushion_id]
+            cushion = self._table.cushion_segments["linear"][cushion_id]
 
             x1, y1, z1 = cushion.p1
             x2, y2, z2 = cushion.p2
@@ -67,8 +67,8 @@ class TableRender(Render):
 
         return collision_node
 
-    def init_cushion_line(self, table, cushion_id):
-        cushion = table.cushion_segments["linear"][cushion_id]
+    def init_cushion_line(self, cushion_id):
+        cushion = self._table.cushion_segments["linear"][cushion_id]
 
         self.cushion_drawer.moveTo(cushion.p1[0], cushion.p1[1], cushion.p1[2])
         self.cushion_drawer.drawTo(cushion.p2[0], cushion.p2[1], cushion.p2[2])
@@ -81,8 +81,8 @@ class TableRender(Render):
 
         self.nodes[f"cushion_{cushion_id}"] = node
 
-    def init_cushion_circle(self, table, cushion_id):
-        cushion = table.cushion_segments["circular"][cushion_id]
+    def init_cushion_circle(self, cushion_id):
+        cushion = self._table.cushion_segments["circular"][cushion_id]
 
         radius = cushion.radius
         center_x, center_y, center_z = cushion.center
@@ -95,33 +95,33 @@ class TableRender(Render):
         node.set_shader_auto(True)
         self.nodes[f"cushion_{cushion_id}"] = node
 
-    def init_cushion_edges(self, table):
-        for cushion_id in table.cushion_segments["linear"]:
-            self.init_cushion_line(table, cushion_id)
+    def init_cushion_edges(self):
+        for cushion_id in self._table.cushion_segments["linear"]:
+            self.init_cushion_line(self._table, cushion_id)
 
-        for cushion_id in table.cushion_segments["circular"]:
-            self.init_cushion_circle(table, cushion_id)
+        for cushion_id in self._table.cushion_segments["circular"]:
+            self.init_cushion_circle(self._table, cushion_id)
 
-    def init_pocket(self, table, pocket_id):
-        pocket = table.pockets[pocket_id]
+    def init_pocket(self, pocket_id):
+        pocket = self._table.pockets[pocket_id]
         circle = self.draw_circle(self.pocket_drawer, pocket.center, pocket.radius, 100)
         node = Global.render.find("scene").find("table").attachNewNode(circle)
         node.set_shader_auto(True)
         self.nodes[f"pocket_{pocket_id}"] = node
 
-    def init_pockets(self, table):
-        for pocket_id in table.pockets:
-            self.init_pocket(table, pocket_id)
+    def init_pockets(self):
+        for pocket_id in self._table.pockets:
+            self.init_pocket(self._table, pocket_id)
 
-    def render(self, table):
+    def render(self):
         super().render()
 
         # draw table as rectangle
-        self.init_table(table)
+        self.init_table()
 
         if (
-            not table.specs.model_descr
-            or table.specs.model_descr == TableModelDescr.null()
+            not self._table.specs.model_descr
+            or self._table.specs.model_descr == TableModelDescr.null()
             or not ani.settings["graphics"]["table"]
         ):
             # draw cushion_segments as edges
@@ -129,15 +129,15 @@ class TableRender(Render):
             self.cushion_drawer.setThickness(3)
             self.cushion_drawer.setColor(1, 1, 1)
 
-            self.init_cushion_edges(table)
+            self.init_cushion_edges()
 
             # draw pockets as unfilled circles
             self.pocket_drawer = LineSegs()
             self.pocket_drawer.setThickness(3)
             self.pocket_drawer.setColor(1, 1, 1)
-            self.init_pockets(table)
+            self.init_pockets()
 
-        self.init_collisions(table)
+        self.init_collisions()
 
     def draw_circle(self, drawer, center, radius, num_points):
         center_x, center_y, height = center

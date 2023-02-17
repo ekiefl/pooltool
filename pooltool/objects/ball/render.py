@@ -26,7 +26,7 @@ from pooltool.utils import panda_path
 
 class BallRender(Render):
     def __init__(self, ball: Ball):
-        self.ball = Ball
+        self._ball = Ball
         self.quats = None
         self.playback_sequence = None
         Render.__init__(self)
@@ -36,12 +36,12 @@ class BallRender(Render):
         position = (
             Global.render.find("scene")
             .find("table")
-            .attachNewNode(f"ball_{self.ball.id}_position")
+            .attachNewNode(f"ball_{self._ball.id}_position")
         )
-        ball_node = position.attachNewNode(f"ball_{self.ball.id}")
+        ball_node = position.attachNewNode(f"ball_{self._ball.id}")
 
         fallback_path = ani.model_dir / "balls" / "set_1" / "1.glb"
-        expected_path = ani.model_dir / "balls" / "set_1" / f"{self.ball.id}.glb"
+        expected_path = ani.model_dir / "balls" / "set_1" / f"{self._ball.id}.glb"
         path = expected_path if expected_path.exists() else fallback_path
 
         sphere_node = Global.loader.loadModel(panda_path(path))
@@ -50,13 +50,13 @@ class BallRender(Render):
         if path == fallback_path:
             tex = sphere_node.find_texture(Path(fallback_path).stem)
         else:
-            tex = sphere_node.find_texture(self.ball.id)
+            tex = sphere_node.find_texture(self._ball.id)
 
         # https://discourse.panda3d.org/t/visual-artifact-at-poles-of-uv-sphere-gltf-format/27975/8
         tex.set_minfilter(SamplerState.FT_linear)
 
-        sphere_node.setScale(self.get_scale_factor(sphere_node, self.ball))
-        position.setPos(*self.ball.state.rvw[0, :])
+        sphere_node.setScale(self.get_scale_factor(sphere_node, self._ball))
+        position.setPos(*self._ball.state.rvw[0, :])
 
         self.nodes["sphere"] = sphere_node
         self.nodes["ball"] = ball_node
@@ -67,16 +67,16 @@ class BallRender(Render):
 
     def set_object_state_as_render_state(self):
         """Set the object position based on the rendered position"""
-        self.ball.state.rvw[0] = self.get_render_state()
+        self._ball.state.rvw[0] = self.get_render_state()
 
     def set_render_state_as_object_state(self):
         """Set rendered position based on the object's position (self.state.rvw[0,:])"""
-        self.set_render_state(self.ball.state.rvw[0])
+        self.set_render_state(self._ball.state.rvw[0])
 
     def init_collision(self, cue: Cue):
-        R = self.ball.params.R
+        R = self._ball.params.R
         collision_node = self.nodes["ball"].attachNewNode(
-            CollisionNode(f"ball_csphere_{self.ball.id}")
+            CollisionNode(f"ball_csphere_{self._ball.id}")
         )
         collision_node.node().addSolid(
             CollisionCapsule(0, 0, -R, 0, 0, R, cue.specs.tip_radius + R)
@@ -84,7 +84,7 @@ class BallRender(Render):
         if ani.settings["graphics"]["debug"]:
             collision_node.show()
 
-        self.nodes[f"ball_csphere_{self.ball.id}"] = collision_node
+        self.nodes[f"ball_csphere_{self._ball.id}"] = collision_node
 
     def init_shadow(self):
         N = 20
@@ -93,9 +93,9 @@ class BallRender(Render):
         scales = np.linspace(start, stop, N)
 
         shadow_path = ani.model_dir / "balls" / "set_1" / "shadow.glb"
-        name = f"shadow_{self.ball.id}"
+        name = f"shadow_{self._ball.id}"
         shadow_node = Global.render.find("scene").find("table").attachNewNode(name)
-        x, y, _ = self.ball.state.rvw[0]
+        x, y, _ = self._ball.state.rvw[0]
         shadow_node.setPos(x, y, 0)
 
         # allow transparency of shadow to change
@@ -114,7 +114,7 @@ class BallRender(Render):
         m, M = node.getTightBounds()
         model_R = (M - m)[0] / 2
 
-        return self.ball.params.R / model_R
+        return self._ball.params.R / model_R
 
     def get_render_state(self):
         """Return the position of the rendered ball"""
@@ -131,7 +131,9 @@ class BallRender(Render):
         """
 
         self.nodes["pos"].setPos(*pos)
-        self.nodes["shadow"].setPos(pos[0], pos[1], min(0, pos[2] - self.ball.params.R))
+        self.nodes["shadow"].setPos(
+            pos[0], pos[1], min(0, pos[2] - self._ball.params.R)
+        )
 
         if quat is not None:
             self.nodes["pos"].setQuat(quat)
@@ -147,7 +149,7 @@ class BallRender(Render):
         """
 
         quat = self.quats[i] if self.quats is not None else None
-        self.set_render_state(self.ball_history[i].rvw[0], quat)
+        self.set_render_state(self._ball_history[i].rvw[0], quat)
 
     def set_quats(self, history):
         """Set self.quats based on history
@@ -161,7 +163,7 @@ class BallRender(Render):
 
     def set_playback_sequence(self, playback_speed=1):
         """Creates the motion sequences of the ball for a given playback speed"""
-        rvws, motion_states, ts = self.ball.history_cts.vectorize()
+        rvws, motion_states, ts = self._ball.history_cts.vectorize()
 
         dts = np.diff(ts)
         playback_dts = dts / playback_speed
@@ -183,7 +185,7 @@ class BallRender(Render):
         ball_sequence = Sequence()
         shadow_sequence = Sequence()
 
-        self.set_render_state_from_history(self.ball.history_cts, 0)
+        self.set_render_state_from_history(self._ball.history_cts, 0)
 
         j = 0
         energetic = False
@@ -212,8 +214,8 @@ class BallRender(Render):
                     LerpPosInterval(
                         nodePath=self.nodes["shadow"],
                         duration=dur,
-                        startPos=(xi, yi, min(0, zi - self.ball.params.R)),
-                        pos=(xi, yi, min(0, zi - self.ball.params.R)),
+                        startPos=(xi, yi, min(0, zi - self._ball.params.R)),
+                        pos=(xi, yi, min(0, zi - self._ball.params.R)),
                     )
                 )
 
@@ -230,7 +232,7 @@ class BallRender(Render):
                     LerpPosInterval(
                         nodePath=self.nodes["shadow"],
                         duration=playback_dts[i],
-                        pos=(x, y, min(0, z - self.ball.params.R)),
+                        pos=(x, y, min(0, z - self._ball.params.R)),
                     )
                 )
 
@@ -292,4 +294,4 @@ class BallRender(Render):
 
     def render(self):
         super().render()
-        self.init_sphere(self.ball)
+        self.init_sphere(self._ball)
