@@ -41,7 +41,7 @@ from pooltool.objects.ball.datatypes import BallParams
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
 from pooltool.system.datatypes import MultiSystem, System
-from pooltool.system.render import PlaybackMode
+from pooltool.system.render import PlaybackMode, visual
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -176,20 +176,16 @@ class Interface(ShowBase):
     def create_scene(self):
         """Create a scene from Global.multisystem"""
         Global.render.attachNewNode("scene")
-        Global.system.table.render()
+
+        visual.attach_system(Global.system)
+        visual.buildup()
+
         environment.init(Global.system.table)
-
-        # Render the balls of the active shot
-        for ball in Global.system.balls.values():
-            if not ball.render_obj.rendered:
-                ball.render_obj.render(ball)
-
-        Global.system.cue.render_obj.render()
 
         R = max([ball.params.R for ball in Global.system.balls.values()])
         cam.fixate(
             pos=(Global.system.table.w / 2, Global.system.table.l / 2, R),
-            node=Global.system.table.render_obj.get_node("table"),
+            node=visual.table.get_node("table"),
         )
 
     def monitor(self, task):

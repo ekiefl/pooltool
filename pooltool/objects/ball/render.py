@@ -27,7 +27,7 @@ from pooltool.utils import panda_path
 
 class BallRender(Render):
     def __init__(self, ball: Ball):
-        self._ball = Ball
+        self._ball = ball
         self.quats: list = []
         Render.__init__(self)
 
@@ -55,7 +55,7 @@ class BallRender(Render):
         # https://discourse.panda3d.org/t/visual-artifact-at-poles-of-uv-sphere-gltf-format/27975/8
         tex.set_minfilter(SamplerState.FT_linear)
 
-        sphere_node.setScale(self.get_scale_factor(sphere_node, self._ball))
+        sphere_node.setScale(self.get_scale_factor(sphere_node))
         position.setPos(*self._ball.state.rvw[0, :])
 
         self.nodes["sphere"] = sphere_node
@@ -63,7 +63,7 @@ class BallRender(Render):
         self.nodes["pos"] = position
         self.nodes["shadow"] = self.init_shadow()
 
-        self.set_orientation()
+        self.set_orientation(self._ball.initial_orientation)
 
     def set_object_state_as_render_state(self):
         """Set the object position based on the rendered position"""
@@ -288,4 +288,4 @@ class BallRender(Render):
 
     def render(self):
         super().render()
-        self.init_sphere(self._ball)
+        self.init_sphere()

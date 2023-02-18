@@ -3,6 +3,7 @@ import functools
 from direct.showbase import ShowBaseGlobal
 
 from pooltool.error import ConfigError
+from pooltool.system.datatypes import MultiSystem
 from pooltool.utils import classproperty
 
 
@@ -55,7 +56,7 @@ class Global:
     aspect2d = ShowBaseGlobal.aspect2d
     render2d = ShowBaseGlobal.render2d
 
-    multisystem = None
+    multisystem: MultiSystem = MultiSystem()
     game = None
     mode_mgr = None
 

@@ -6,8 +6,6 @@ from typing import Dict
 from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
 
-import pooltool.ani as ani
-from pooltool.error import ConfigError
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.render import CueRender
 from pooltool.objects.table.render import TableRender
@@ -36,10 +34,30 @@ class PlaybackMode(StrEnum):
 
 
 class SystemController:
-    def __init__(self, system: SystemRender):
-        self.system: SystemRender = system
-        self.reset_animation()
+    def __init__(self) -> None:
+        self.system: SystemRender
+        self.stroke_animation: Sequence = Sequence()
+        self.ball_animations: Parallel = Parallel()
+        self.shot_animation: Sequence = Sequence()
         self.paused: bool = False
+
+    @property
+    def table(self):
+        return self.system.table
+
+    @property
+    def balls(self):
+        return self.system.balls
+
+    @property
+    def cue(self):
+        return self.system.cue
+
+    def attach_system(self, system: System) -> None:
+        """Teardown existing system, attach and attach new system"""
+        if hasattr(self, "system"):
+            self.teardown()
+        self.system = SystemRender.from_system(system)
 
     def reset_animation(self) -> None:
         """Set objects to initial states, pause, and remove animations"""
@@ -49,9 +67,9 @@ class SystemController:
         self.stroke_animation.clearToInitial()
         self.ball_animations.clearToInitial()
 
-        self.stroke_animation: Sequence = Sequence()
-        self.ball_animations: Parallel = Parallel()
-        self.shot_animation: Sequence = Sequence()
+        self.stroke_animation = Sequence()
+        self.ball_animations = Parallel()
+        self.shot_animation = Sequence()
 
     @property
     def animation_finished(self):
@@ -64,6 +82,7 @@ class SystemController:
 
     def buildup(self) -> None:
         """Render all object nodes"""
+        self.system.table.render()
         for ball in self.system.balls.values():
             ball.render()
         self.system.cue.render()
@@ -149,3 +168,6 @@ class SystemController:
             self.ball_animations,
             Wait(trailing_buffer),
         )
+
+
+visual = SystemController()

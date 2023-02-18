@@ -11,7 +11,7 @@ class TableRender(Render):
     """A class for all pool table associated panda3d nodes"""
 
     def __init__(self, table: Table):
-        self._table = Table
+        self._table = table
         Render.__init__(self)
 
     def init_table(self):
