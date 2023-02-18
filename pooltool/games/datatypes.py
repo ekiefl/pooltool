@@ -4,7 +4,7 @@ import uuid
 from abc import ABC, abstractmethod
 
 import pooltool.constants as c
-from pooltool.system import System
+from pooltool.system.datatypes import System
 from pooltool.terminal import Timer
 
 

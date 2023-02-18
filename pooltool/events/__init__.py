@@ -10,9 +10,13 @@ import pooltool.constants as c
 import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.objects import NullObject
-from pooltool.objects.ball import Ball, BallState
-from pooltool.objects.cue import Cue
-from pooltool.objects.table import CushionSegment, Pocket
+from pooltool.objects.ball.datatypes import Ball, BallState
+from pooltool.objects.cue.datatypes import Cue
+from pooltool.objects.table.components import (
+    CircularCushionSegment,
+    LinearCushionSegment,
+    Pocket,
+)
 from pooltool.utils import strenum
 
 
@@ -117,7 +121,11 @@ def ball_ball_collision(ball1: Ball, ball2: Ball, time: float) -> Event:
     return Event(event_type=EventType.BALL_BALL, agents=[ball1, ball2], time=time)
 
 
-def ball_cushion_collision(ball: Ball, cushion: CushionSegment, time: float) -> Event:
+def ball_cushion_collision(
+    ball: Ball,
+    cushion: Union[LinearCushionSegment, CircularCushionSegment],
+    time: float,
+) -> Event:
     return Event(event_type=EventType.BALL_CUSHION, agents=[ball, cushion], time=time)
 
 

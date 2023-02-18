@@ -4,6 +4,7 @@ import numpy as np
 from direct.interval.IntervalGlobal import (
     LerpPosInterval,
     LerpPosQuatInterval,
+    MetaInterval,
     Parallel,
     Sequence,
 )
@@ -18,7 +19,7 @@ import pooltool.ani as ani
 import pooltool.ani.utils as autils
 import pooltool.constants as c
 from pooltool.ani.globals import Global
-from pooltool.objects.ball.datatypes import Ball, BallOrientation
+from pooltool.objects.ball.datatypes import Ball, BallHistory, BallOrientation
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.datatypes import Render
 from pooltool.utils import panda_path
@@ -27,8 +28,7 @@ from pooltool.utils import panda_path
 class BallRender(Render):
     def __init__(self, ball: Ball):
         self._ball = Ball
-        self.quats = None
-        self.playback_sequence = None
+        self.quats: list = []
         Render.__init__(self)
 
     def init_sphere(self):
@@ -138,7 +138,7 @@ class BallRender(Render):
         if quat is not None:
             self.nodes["pos"].setQuat(quat)
 
-    def set_render_state_from_history(self, i):
+    def set_render_state_from_history(self, ball_history: BallHistory, i: int):
         """Set the position of the rendered ball based on history index
 
         Parameters
@@ -148,8 +148,8 @@ class BallRender(Render):
             final state
         """
 
-        quat = self.quats[i] if self.quats is not None else None
-        self.set_render_state(self._ball_history[i].rvw[0], quat)
+        quat = self.quats[i] if len(self.quats) else None
+        self.set_render_state(ball_history[i].rvw[0], quat)
 
     def set_quats(self, history):
         """Set self.quats based on history
@@ -161,7 +161,7 @@ class BallRender(Render):
         ws = rvws[:, 2, :]
         self.quats = autils.as_quaternion(ws, ts)
 
-    def set_playback_sequence(self, playback_speed=1):
+    def get_playback_sequence(self, playback_speed=1) -> MetaInterval:
         """Creates the motion sequences of the ball for a given playback speed"""
         rvws, motion_states, ts = self._ball.history_cts.vectorize()
 
@@ -174,9 +174,8 @@ class BallRender(Render):
 
         if (xyzs == xyzs[0, :]).all() and (ws == ws[0, :]).all():
             # Ball has no motion. No need to create Lerp intervals
-            self.playback_sequence = Sequence()
             self.quats = autils.as_quaternion(ws, ts)
-            return
+            return Sequence()
 
         xyzs = autils.get_list_of_Vec3s_from_array(xyzs)
         self.quats = autils.as_quaternion(ws, ts)
@@ -241,7 +240,7 @@ class BallRender(Render):
                     energetic = False
                     j = i
 
-        self.playback_sequence = Parallel(
+        return Parallel(
             ball_sequence,
             shadow_sequence,
         )
@@ -286,11 +285,6 @@ class BallRender(Render):
         sphere.setQuat(sphere.getQuat() * ball.getQuat())
 
         ball.setHpr(0, 0, 0)
-
-    def teardown(self):
-        if self.playback_sequence is not None:
-            self.playback_sequence.pause()
-        self.remove_nodes()
 
     def render(self):
         super().render()

@@ -7,18 +7,16 @@ import numpy as np
 from pooltool.objects.table.components import (
     CircularCushionSegment,
     CushionDirection,
-    CushionSegment,
+    CushionSegments,
     LinearCushionSegment,
     Pocket,
 )
 
 
-def _create_billiard_table_cushion_segments(
-    specs,
-) -> Dict[str, Dict[str, CushionSegment]]:
+def _create_billiard_table_cushion_segments(specs) -> CushionSegments:
     h = specs.cushion_height
-    cushion_segments = {
-        "linear": {
+    return CushionSegments(
+        linear={
             # long segments
             "3": LinearCushionSegment(
                 "3_edge",
@@ -45,15 +43,11 @@ def _create_billiard_table_cushion_segments(
                 direction=CushionDirection.SIDE2,
             ),
         },
-        "circular": {},
-    }
-
-    return cushion_segments  # type: ignore
+        circular={},
+    )
 
 
-def _create_pocket_table_cushion_segments(
-    specs,
-) -> Dict[str, Dict[str, CushionSegment]]:
+def _create_pocket_table_cushion_segments(specs) -> CushionSegments:
     # https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times
     # for diagram
     cw = specs.cushion_width
@@ -67,8 +61,8 @@ def _create_pocket_table_cushion_segments(
     dc = specs.corner_jaw_radius / np.tan((np.pi / 2 + ca) / 2)
     ds = specs.side_jaw_radius / np.tan((np.pi / 2 + sa) / 2)
 
-    cushion_segments = {
-        "linear": {
+    return CushionSegments(
+        linear={
             # long segments
             "3": LinearCushionSegment(
                 "3_edge",
@@ -303,7 +297,7 @@ def _create_pocket_table_cushion_segments(
                 direction=CushionDirection.SIDE2,
             ),
         },
-        "circular": {
+        circular={
             "1t": CircularCushionSegment(
                 "1t",
                 center=np.array(
@@ -387,9 +381,7 @@ def _create_pocket_table_cushion_segments(
                 radius=rc,
             ),
         },
-    }
-
-    return cushion_segments  # type: ignore
+    )
 
 
 def _create_pocket_table_pockets(specs):

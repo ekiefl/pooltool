@@ -29,6 +29,7 @@ import pooltool.games as games
 import pooltool.terminal as terminal
 import pooltool.utils as utils
 from pooltool.ani.camera import CameraState, cam
+from pooltool.ani.collision import cue_avoid
 from pooltool.ani.environment import environment
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.hud import HUDElement, hud
@@ -36,10 +37,11 @@ from pooltool.ani.menu import GenericMenu, menus
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
 from pooltool.error import ConfigError
-from pooltool.objects.ball import BallParams
-from pooltool.objects.cue import Cue, cue_avoid
-from pooltool.objects.table import Table
-from pooltool.system import MultiSystem, PlaybackMode, System
+from pooltool.objects.ball.datatypes import BallParams
+from pooltool.objects.cue.datatypes import Cue
+from pooltool.objects.table.datatypes import Table
+from pooltool.system.datatypes import MultiSystem, System
+from pooltool.system.render import PlaybackMode
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -391,7 +393,7 @@ class ImageSaver(Interface):
         self,
         shot: System,
         save_dir: Union[str, Path],
-        camera_state: CameraState = None,
+        camera_state: CameraState = Optional[None],
         file_prefix: str = "shot",
         size: Tuple[int, int] = (230, 144),
         img_format: ImageFormat = ImageFormat.JPG,
@@ -439,7 +441,7 @@ class ImageSaver(Interface):
         # We don't want the cue in this
         shot.cue.render_obj.hide_nodes()
 
-        if camera_state:
+        if camera_state is not None:
             cam.load_state(camera_state)
 
         if show_hud:

@@ -12,7 +12,7 @@ from pooltool.objects.table._layout import (
     _create_pocket_table_cushion_segments,
     _create_pocket_table_pockets,
 )
-from pooltool.objects.table.components import CushionSegment, Pocket
+from pooltool.objects.table.components import CushionSegments, Pocket
 from pooltool.utils import panda_path, strenum
 
 
@@ -101,10 +101,10 @@ class PocketTableSpecs:
                 self, "model_descr", TableModelDescr.pocket_table_default()
             )
 
-    def create_cushion_segments(self):
+    def create_cushion_segments(self) -> CushionSegments:
         return _create_pocket_table_cushion_segments(self)
 
-    def create_pockets(self):
+    def create_pockets(self) -> Dict[str, Pocket]:
         return _create_pocket_table_pockets(self)
 
 
@@ -141,10 +141,10 @@ class BilliardTableSpecs:
             # even if it wasn't explictly requested.
             self.model_descr = TableModelDescr.billiard_table_default()
 
-    def create_cushion_segments(self):
+    def create_cushion_segments(self) -> CushionSegments:
         return _create_billiard_table_cushion_segments(self)
 
-    def create_pockets(self):
+    def create_pockets(self) -> Dict[str, Pocket]:
         return {}
 
 
@@ -162,7 +162,7 @@ class TableSpecs(Protocol):
 @dataclass
 class Table:
     specs: TableSpecs
-    cushion_segments: Dict[str, Dict[str, CushionSegment]]
+    cushion_segments: CushionSegments
     pockets: Dict[str, Pocket]
 
     @property

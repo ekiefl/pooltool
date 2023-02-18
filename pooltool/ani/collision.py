@@ -199,7 +199,7 @@ class CueAvoid:
         into_node_path_name = entry.get_into_node_path().name
         assert into_node_path_name.startswith(expected_suffix)
         cushion_id = into_node_path_name[len(expected_suffix) :]
-        return Global.system.table.cushion_segments["linear"][cushion_id]
+        return Global.system.table.cushion_segments.linear[cushion_id]
 
     def get_ball(self, entry):
         expected_suffix = "ball_csphere_"

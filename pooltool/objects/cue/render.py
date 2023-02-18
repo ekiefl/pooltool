@@ -19,7 +19,6 @@ class CueRender(Render):
         self._cue = cue
 
         self.follow = None
-        self.stroke_sequence = None
         self.stroke_clock = ClockObject()
         self.has_focus = False
 
@@ -117,11 +116,11 @@ class CueRender(Render):
         self.stroke_pos.append(self.get_node("cue_stick").getX())
         self.stroke_time.append(self.stroke_clock.getRealTime())
 
-    def set_stroke_sequence(self):
+    def get_stroke_sequence(self) -> Sequence:
         """Init a stroke sequence based off of self.stroke_pos and self.stroke_time"""
 
         cue_stick = self.get_node("cue_stick")
-        self.stroke_sequence = Sequence()
+        stroke_sequence = Sequence()
 
         # If the stroke is longer than max_time seconds, truncate to max_time
         max_time = 1.0
@@ -140,11 +139,13 @@ class CueRender(Render):
         y, z = cue_stick.getY(), cue_stick.getZ()
 
         for i in range(len(dts)):
-            self.stroke_sequence.append(
+            stroke_sequence.append(
                 LerpPosInterval(
                     nodePath=cue_stick, duration=dts[i], pos=Vec3(xs[i + 1], y, z)
                 )
             )
+
+        return stroke_sequence
 
     def get_stroke_times(self, as_index=False):
         """Get key moments in the trajectory of the stroke

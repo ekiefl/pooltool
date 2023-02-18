@@ -20,8 +20,8 @@ from pooltool.events import (
     null_event,
 )
 from pooltool.objects import NullObject
-from pooltool.objects.ball import Ball
-from pooltool.system import System
+from pooltool.objects.ball.datatypes import Ball
+from pooltool.system.datatypes import System
 
 DEFAULT_INCLUDE = {
     EventType.NONE,
@@ -187,7 +187,7 @@ def get_next_ball_circular_cushion_event(shot: System) -> Event:
         if ball.state.s in c.nontranslating:
             continue
 
-        for cushion in shot.table.cushion_segments["circular"].values():
+        for cushion in shot.table.cushion_segments.circular.values():
             collision_coeffs.append(
                 physics.get_ball_circular_cushion_collision_coeffs_fast(
                     rvw=ball.state.rvw,
@@ -217,7 +217,7 @@ def get_next_ball_circular_cushion_event(shot: System) -> Event:
     ball_id, cushion_id = agent_ids[index]
     ball, cushion = (
         shot.balls[ball_id],
-        shot.table.cushion_segments["circular"][cushion_id],
+        shot.table.cushion_segments.circular[cushion_id],
     )
 
     return ball_cushion_collision(ball, cushion, shot.t + dtau_E)
@@ -233,7 +233,7 @@ def get_next_ball_linear_cushion_collision(shot: System) -> Event:
         if ball.state.s in c.nontranslating:
             continue
 
-        for cushion in shot.table.cushion_segments["linear"].values():
+        for cushion in shot.table.cushion_segments.linear.values():
             dtau_E = physics.get_ball_linear_cushion_collision_time_fast(
                 rvw=ball.state.rvw,
                 s=ball.state.s,

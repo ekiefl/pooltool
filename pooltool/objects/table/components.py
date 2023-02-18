@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, field
-from typing import Union
+from typing import Dict, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -113,7 +113,10 @@ class CircularCushionSegment:
         return normal
 
 
-CushionSegment = Union[LinearCushionSegment, CircularCushionSegment]
+@dataclass
+class CushionSegments:
+    linear: Dict[str, LinearCushionSegment]
+    circular: Dict[str, CircularCushionSegment]
 
 
 @dataclass

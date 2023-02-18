@@ -43,7 +43,7 @@ class TableRender(Render):
         # For diagram of cushion ids, see
         # https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times
         for cushion_id in ["3", "9", "12", "18"]:
-            cushion = self._table.cushion_segments["linear"][cushion_id]
+            cushion = self._table.cushion_segments.linear[cushion_id]
 
             x1, y1, z1 = cushion.p1
             x2, y2, z2 = cushion.p2
@@ -68,7 +68,7 @@ class TableRender(Render):
         return collision_node
 
     def init_cushion_line(self, cushion_id):
-        cushion = self._table.cushion_segments["linear"][cushion_id]
+        cushion = self._table.cushion_segments.linear[cushion_id]
 
         self.cushion_drawer.moveTo(cushion.p1[0], cushion.p1[1], cushion.p1[2])
         self.cushion_drawer.drawTo(cushion.p2[0], cushion.p2[1], cushion.p2[2])
@@ -82,7 +82,7 @@ class TableRender(Render):
         self.nodes[f"cushion_{cushion_id}"] = node
 
     def init_cushion_circle(self, cushion_id):
-        cushion = self._table.cushion_segments["circular"][cushion_id]
+        cushion = self._table.cushion_segments.circular[cushion_id]
 
         radius = cushion.radius
         center_x, center_y, center_z = cushion.center
@@ -96,10 +96,10 @@ class TableRender(Render):
         self.nodes[f"cushion_{cushion_id}"] = node
 
     def init_cushion_edges(self):
-        for cushion_id in self._table.cushion_segments["linear"]:
+        for cushion_id in self._table.cushion_segments.linear:
             self.init_cushion_line(self._table, cushion_id)
 
-        for cushion_id in self._table.cushion_segments["circular"]:
+        for cushion_id in self._table.cushion_segments.circular:
             self.init_cushion_circle(self._table, cushion_id)
 
     def init_pocket(self, pocket_id):

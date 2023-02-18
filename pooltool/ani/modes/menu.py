@@ -17,7 +17,7 @@ class MenuMode(BaseMode):
         Action.new_game: False,
         Action.scroll_up: False,
         Action.scroll_down: False,
-        "click": False,
+        Action.click: False,
     }
 
     def enter(self):

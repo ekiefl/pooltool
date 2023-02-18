@@ -1,7 +1,7 @@
 import numpy as np
 
 from pooltool.constants import stationary
-from pooltool.objects.ball import BallState, _null_rvw
+from pooltool.objects.ball.datatypes import BallState, _null_rvw
 
 
 def test__null_rvw():

@@ -19,7 +19,7 @@ from pooltool.utils import from_json, to_json
 
 class Camera:
     @require_showbase
-    def init(self):
+    def init(self) -> None:
         self.node = Global.base.camera
         self.lens = Global.base.camLens
         self.lens.setNear(0.02)

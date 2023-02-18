@@ -14,7 +14,7 @@ def is_showbase_initialized() -> bool:
 
     https://docs.panda3d.org/1.10/python/reference/direct.showbase.ShowBaseGlobal#module-direct.showbase.ShowBaseGlobal
     """
-    return True if hasattr(ShowBaseGlobal, "base") else False
+    return hasattr(ShowBaseGlobal, "base")
 
 
 def require_showbase(func):

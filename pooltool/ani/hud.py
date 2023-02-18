@@ -17,7 +17,7 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 from pooltool.ani.globals import Global
-from pooltool.objects.cue import Cue
+from pooltool.objects.cue.datatypes import Cue
 from pooltool.utils import panda_path
 from pooltool.utils.strenum import StrEnum, auto
 

@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 import pooltool.constants as c
-from pooltool.objects.ball import Ball, BallParams
+from pooltool.objects.ball.datatypes import Ball, BallParams
 
 
 class Rack(ABC):
