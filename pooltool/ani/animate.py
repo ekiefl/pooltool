@@ -517,17 +517,17 @@ class Game(Interface):
     def create_system(self):
         """Create the Global.multisystem and game objects
 
-        FIXME this and its calls (setup_*) should probably be a method of some
-        MenuOptions class. Since this depends strictly on the menu options, it should
-        not belong in this class.
+        FIXME This is where menu options should plug into, rather than using these
+        hardcoded defaults like `table = Table.pocket_table()`
         """
         self.setup_options = menus.get_options()
 
-        game = self.setup_game()
+        game = games.game_classes[ani.options_sandbox]()
+        game.init()
 
-        table = self.setup_table()
-        balls = self.setup_balls(table, game.rack)
-        cue = self.setup_cue(balls, game)
+        table = Table.pocket_table()
+        balls = game.rack(table, ordered=True, params=BallParams()).get_balls_dict()
+        cue = Cue(cue_ball_id=game.get_initial_cueing_ball(balls).id)
         shot = System(table=table, balls=balls, cue=cue)
 
         shots = MultiSystem()
@@ -541,22 +541,3 @@ class Game(Interface):
 
     def start(self):
         Global.task_mgr.run()
-
-    def setup_table(self):
-        return Table.default()
-
-    @staticmethod
-    def setup_game():
-        """Setup the game class from pooltool.games"""
-        game = games.game_classes[ani.options_sandbox]()
-        game.init()
-        return game
-
-    @staticmethod
-    def setup_cue(balls, game):
-        return Cue(cue_ball_id=game.get_initial_cueing_ball(balls).id)
-
-    @staticmethod
-    def setup_balls(table, rack):
-        # FIXME Using default BallParams
-        return rack(table, ordered=True, params=BallParams()).get_balls_dict()
