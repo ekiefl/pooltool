@@ -3,7 +3,6 @@ import functools
 from direct.showbase import ShowBaseGlobal
 
 from pooltool.error import ConfigError
-from pooltool.system.datatypes import MultiSystem
 from pooltool.utils import classproperty
 
 
@@ -56,15 +55,8 @@ class Global:
     aspect2d = ShowBaseGlobal.aspect2d
     render2d = ShowBaseGlobal.render2d
 
-    multisystem: MultiSystem = MultiSystem()
     game = None
     mode_mgr = None
-
-    @classproperty
-    def system(self):
-        """Return the active system"""
-        assert self.multisystem
-        return self.multisystem.active
 
     @classproperty
     @require_showbase
@@ -85,10 +77,6 @@ class Global:
     @require_showbase
     def loader(self):
         return ShowBaseGlobal.base.loader
-
-    @classmethod
-    def register_multisystem(cls, multisystem):
-        cls.multisystem = multisystem
 
     @classmethod
     def register_game(cls, game):

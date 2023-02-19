@@ -40,7 +40,7 @@ from pooltool.error import ConfigError
 from pooltool.objects.ball.datatypes import BallParams
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
-from pooltool.system.datatypes import MultiSystem, System
+from pooltool.system.datatypes import MultiSystem, System, multisystem
 from pooltool.system.render import PlaybackMode, visual
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -159,9 +159,7 @@ class Interface(ShowBase):
 
         hud.destroy()
 
-        if len(Global.multisystem):
-            Global.multisystem.active_index = None
-            Global.multisystem._multisystem = []
+        multisystem.reset()
 
         cam.fixation = None
         cam.fixation_object = None
@@ -234,11 +232,11 @@ class ShotViewer(Interface):
         self.stop()
 
     def show(self, shot_or_shots=None, title=""):
+        multisystem.reset()
         if isinstance(shot_or_shots, System):
-            Global.register_multisystem(MultiSystem())
-            Global.multisystem.append(shot_or_shots)
+            multisystem.append(shot_or_shots)
         else:
-            Global.register_multisystem(shot_or_shots)
+            multisystem.extend(shot_or_shots)
 
         self.create_scene()
 
@@ -351,10 +349,8 @@ class ImageSaver(Interface):
 
     def _init_system_collection(self, shot):
         """Create system collection holding the shot. Register to Global"""
-        Global.register_multisystem(MultiSystem())
-        Global.multisystem.append(shot)
-        if Global.system is None:
-            Global.multisystem.set_active(0)
+        multisystem.reset()
+        multisystem.append(shot)
 
     def get_image_array(self):
         """Return array of current image texture, or None if texture has no RAM image"""
@@ -530,13 +526,10 @@ class Game(Interface):
         cue = Cue(cue_ball_id=game.get_initial_cueing_ball(balls).id)
         shot = System(table=table, balls=balls, cue=cue)
 
-        shots = MultiSystem()
-        shots.append(shot)
-        shots.set_active(-1)
+        multisystem.reset()
+        multisystem.append(shot)
 
         game.start(shot)
-
-        Global.register_multisystem(shots)
         Global.game = game
 
     def start(self):

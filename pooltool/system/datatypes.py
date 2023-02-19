@@ -366,11 +366,21 @@ class MultiSystem:
     def empty(self) -> bool:
         return not bool(len(self))
 
+    def reset(self) -> None:
+        self.active_index = None
+        self._multisystem = []
+
     def append(self, system: System) -> None:
         if self.empty:
             self.active_index = 0
 
         self._multisystem.append(system)
+
+    def extend(self, systems: List[System]) -> None:
+        if self.empty:
+            self.active_index = 0
+
+        self._multisystem.extend(systems)
 
     def append_copy_of_active(
         self, state="current", reset_history=True, as_active=False
@@ -434,3 +444,6 @@ class MultiSystem:
             i = len(self) - 1
 
         self.active_index = i
+
+
+multisystem = MultiSystem()
