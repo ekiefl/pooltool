@@ -1,4 +1,4 @@
-"""A module housing all of the components that make up a table (pockets, cushions, etc)"""
+"""Houses all components that make up a table (pockets, cushions, etc)"""
 
 from __future__ import annotations
 

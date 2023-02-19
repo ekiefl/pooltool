@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Optional
 
 
@@ -31,6 +31,10 @@ class Cue:
     cue_ball_id: Optional[str] = field(default=None)
 
     specs: CueSpecs = field(default_factory=CueSpecs.default)
+
+    def copy(self) -> Cue:
+        """Create a deep copy"""
+        return replace(self)
 
     def reset_state(self):
         """Reset V0, phi, theta, a and b to their defaults"""
