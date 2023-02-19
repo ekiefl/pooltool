@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import astuple, dataclass, field, replace
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -182,9 +182,22 @@ class Ball:
     history_cts: BallHistory = field(default_factory=BallHistory.factory)
 
     @staticmethod
-    def create() -> Ball:
-        """FIXME should allow parameters like xyz"""
-        raise NotImplementedError()
+    def create(id: str, *, xy: Optional[List[float]] = None, **kwargs) -> Ball:
+        """Create ball using a flattened parameter set
+
+        Args:
+            xy:
+                The x and y coordinates of the ball position.
+            **kwargs:
+                Parameters accepted by BallParams
+        """
+        params = BallParams(**kwargs)
+        ball = Ball(id=id, params=params)
+
+        if xy is not None:
+            ball.state.rvw[0] = [*xy, ball.params.R]
+
+        return ball
 
     @staticmethod
     def dummy() -> Ball:
