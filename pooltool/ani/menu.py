@@ -1,4 +1,6 @@
-#! /usr/bin/env python
+"""FIXME Complete rework necessary. From scratch might be best. XML could be good but
+maybe YAML is best. Perhaps starting with the desired dataclasses would be best, and
+then serializing them to determine the output format"""
 
 import configparser
 import sys
@@ -1240,7 +1242,6 @@ class GenericMenu:
         convert_factor=None,
         scale=ani.menu_text_scale,
     ):
-
         self.get_next_pos(move=self.move / 2)
 
         dropdown = make_dropdown(text, options, command, scale)
@@ -1261,7 +1262,6 @@ class GenericMenu:
     def add_direct_entry(
         self, text, command=None, initial="None", convert_factor=None, scale=None
     ):
-
         self.get_next_pos(move=self.move / 2)
 
         direct_entry = make_direct_entry(text, command, scale, initial)
