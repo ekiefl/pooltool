@@ -30,7 +30,7 @@ class EightBall(Game):
     def start(self, shot):
         self.active_player.ball_in_hand = ["cue"]
 
-    def set_initial_cueing_ball(self, balls):
+    def get_initial_cueing_ball(self, balls):
         return balls["cue"]
 
     def award_points(self, shot):

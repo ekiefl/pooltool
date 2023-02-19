@@ -186,5 +186,13 @@ class Table:
         )
 
     @staticmethod
-    def default():
+    def pocket_table() -> Table:
         return Table.from_table_specs(PocketTableSpecs())
+
+    @staticmethod
+    def billiard_table() -> Table:
+        return Table.from_table_specs(BilliardTableSpecs())
+
+    @staticmethod
+    def default() -> Table:
+        return Table.pocket_table()

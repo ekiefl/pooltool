@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 from direct.interval.IntervalGlobal import LerpPosInterval, Sequence
@@ -9,6 +9,7 @@ import pooltool.utils as utils
 from pooltool.ani.globals import Global
 from pooltool.error import ConfigError, StrokeError
 from pooltool.objects import Render
+from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.datatypes import Cue
 
 
@@ -16,9 +17,9 @@ class CueRender(Render):
     def __init__(self, cue: Cue):
         Render.__init__(self)
 
-        self._cue = cue
+        self.follow: BallRender
 
-        self.follow = None
+        self._cue = cue
         self.stroke_clock = ClockObject()
         self.has_focus = False
 
@@ -32,7 +33,7 @@ class CueRender(Render):
             self._cue.theta,
             self._cue.a,
             self._cue.b,
-            self._cue.cueing_ball,
+            self._cue.ball_id,
         ) = self.get_render_state()
 
         if not skip_V0:
@@ -46,8 +47,8 @@ class CueRender(Render):
 
         cue_stick_focus.setH(self._cue.phi + 180)  # phi
         cue_stick_focus.setR(-self._cue.theta)  # theta
-        cue_stick.setY(-self._cue.a * self.follow.params.R)  # a
-        cue_stick.setZ(self._cue.b * self.follow.params.R)  # b
+        cue_stick.setY(-self._cue.a * self.follow._ball.params.R)  # a
+        cue_stick.setZ(self._cue.b * self.follow._ball.params.R)  # b
 
     def init_model(self):
         path = utils.panda_path(ani.model_dir / "cue" / "cue.glb")
@@ -60,10 +61,10 @@ class CueRender(Render):
         self.nodes["cue_stick"] = cue_stick
         self.nodes["cue_stick_model"] = cue_stick_model
 
-    def init_focus(self, ball):
+    def init_focus(self, ball: BallRender):
         self.follow = ball
 
-        self.get_node("cue_stick_model").setPos(ball.params.R, 0, 0)
+        self.get_node("cue_stick_model").setPos(self.follow._ball.params.R, 0, 0)
 
         cue_stick_focus = (
             Global.render.find("scene").find("table").attachNewNode("cue_stick_focus")
@@ -244,7 +245,7 @@ class CueRender(Render):
         """Update the cue stick's position to match the cueing ball's position"""
         self.get_node("cue_stick_focus").setPos(self.follow.get_node("pos").getPos())
 
-    def get_render_state(self):
+    def get_render_state(self) -> Tuple[float, float, float, float, float, str]:
         """Return phi, theta, V0, a, and b as determined by the cue_stick node"""
 
         cue_stick = self.get_node("cue_stick")
@@ -257,12 +258,12 @@ class CueRender(Render):
         except StrokeError:
             V0 = 0.1
 
-        cueing_ball = self.follow
         theta = -cue_stick_focus.getR()
-        a = -cue_stick.getY() / self.follow.params.R
-        b = cue_stick.getZ() / self.follow.params.R
+        a = -cue_stick.getY() / self.follow._ball.params.R
+        b = cue_stick.getZ() / self.follow._ball.params.R
+        ball_id = self.follow._ball.id
 
-        return V0, phi, theta, a, b, cueing_ball
+        return V0, phi, theta, a, b, ball_id
 
     def render(self):
         super().render()

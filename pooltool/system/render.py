@@ -39,7 +39,8 @@ class SystemController:
         self.stroke_animation: Sequence = Sequence()
         self.ball_animations: Parallel = Parallel()
         self.shot_animation: Sequence = Sequence()
-        self.paused: bool = False
+        self.paused: bool = True
+        self.playback_speed: float = 1
 
     @property
     def table(self):
@@ -54,14 +55,15 @@ class SystemController:
         return self.system.cue
 
     def attach_system(self, system: System) -> None:
-        """Teardown existing system, attach and attach new system"""
+        """Teardown existing system and attach new system"""
         if hasattr(self, "system"):
             self.teardown()
         self.system = SystemRender.from_system(system)
 
     def reset_animation(self) -> None:
         """Set objects to initial states, pause, and remove animations"""
-        self.playback_speed: float = 1
+        self.playback_speed = 1
+        self.paused = True
 
         self.shot_animation.clearToInitial()
         self.stroke_animation.clearToInitial()
@@ -105,6 +107,8 @@ class SystemController:
         elif playback_mode == PlaybackMode.LOOP:
             self.shot_animation.loop()
 
+        self.paused = False
+
     def restart_animation(self) -> None:
         self.shot_animation.set_t(0)
 
@@ -117,6 +121,29 @@ class SystemController:
         else:
             self.resume_animation()
 
+    def slow_down(self):
+        self.change_speed(0.5)
+
+    def speed_up(self):
+        self.change_speed(2.0)
+
+    def change_speed(self, factor):
+        raise NotImplementedError()
+        self.playback_speed *= factor
+        for shot in self:
+            shot.playback_speed *= factor
+            shot.continuized = False
+
+        curr_time = self.shot_animation.get_t()
+        self.clear_animation()
+        self.set_animation()
+        self.shot_animation.setPlayRate(factor * self.shot_animation.getPlayRate())
+
+        if not self.paused:
+            self.start_animation(PlaybackMode.LOOP)
+
+        self.shot_animation.set_t(curr_time / factor)
+
     def offset_time(self, dt) -> None:
         old_t = self.shot_animation.get_t()
         new_t = max(0, min(old_t + dt, self.shot_animation.duration))
@@ -124,9 +151,18 @@ class SystemController:
 
     def pause_animation(self) -> None:
         self.shot_animation.pause()
+        self.paused = True
 
     def resume_animation(self) -> None:
         self.shot_animation.resume()
+        self.paused = False
+
+    def advance_to_end_of_stroke(self):
+        """Sets shot animation time to immediately after the stroke animation"""
+        if not len(self.stroke_animation):
+            return
+
+        self.shot_animation.set_t(self.stroke_animation.get_duration())
 
     def build_shot_animation(
         self,

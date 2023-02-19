@@ -163,7 +163,7 @@ class Game(ABC):
         pass
 
     @abstractmethod
-    def set_initial_cueing_ball(self, balls):
+    def get_initial_cueing_ball(self, balls):
         pass
 
     @abstractmethod

@@ -152,10 +152,7 @@ class Interface(ShowBase):
         tasks.register_event("toggle-help", hud.toggle_help)
 
     def close_scene(self):
-        for shot in Global.multisystem:
-            shot.table.render_obj.remove_nodes()
-            for ball in shot.balls.values():
-                ball.render_obj.teardown()
+        visual.teardown()
 
         environment.unload_room()
         environment.unload_lights()
@@ -163,7 +160,6 @@ class Interface(ShowBase):
         hud.destroy()
 
         if len(Global.multisystem):
-            Global.multisystem.render_obj.clear_animation(Global.multisystem)
             Global.multisystem.active_index = None
             Global.multisystem._multisystem = []
 
@@ -266,7 +262,7 @@ class ShotViewer(Interface):
             hud.elements[HUDElement.help_text].help_hint.hide()
 
         params = dict(
-            init_animations=True,
+            build_animations=True,
             playback_mode=PlaybackMode.LOOP,
         )
         Global.mode_mgr.update_event_baseline()
@@ -435,7 +431,7 @@ class ImageSaver(Interface):
         self.create_scene()
 
         # We don't want the cue in this
-        shot.cue.render_obj.hide_nodes()
+        visual.cue.hide_nodes()
 
         if camera_state is not None:
             cam.load_state(camera_state)
@@ -450,14 +446,14 @@ class ImageSaver(Interface):
         save_dir = self.make_save_dir(save_dir)
 
         # Set quaternions for each ball
-        for ball in Global.system.balls.values():
-            ball.render_obj.set_quats(ball.history_cts)
+        for ball in visual.balls.values():
+            ball.set_quats(ball._ball.history_cts)
 
         frames = int(shot.events[-1].time * fps) + 1
 
         for frame in range(frames):
-            for ball in Global.system.balls.values():
-                ball.render_obj.set_render_state_from_history(ball.history_cts, frame)
+            for ball in visual.balls.values():
+                ball.set_render_state_from_history(ball._ball.history_cts, frame)
 
             Global.task_mgr.step()
 
@@ -568,7 +564,7 @@ class Game(Interface):
 
     @staticmethod
     def setup_cue(balls, game):
-        return Cue(cueing_ball=game.set_initial_cueing_ball(balls))
+        return Cue(ball_id=game.get_initial_cueing_ball(balls).id)
 
     @staticmethod
     def setup_balls(table, rack):

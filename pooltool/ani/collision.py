@@ -4,6 +4,7 @@ from panda3d.core import CollisionHandlerQueue, CollisionTraverser
 import pooltool.ani as ani
 import pooltool.utils as utils
 from pooltool.ani.globals import Global
+from pooltool.system.render import visual
 
 
 class CueAvoid:
@@ -47,21 +48,22 @@ class CueAvoid:
         Global.base.cTrav = CollisionTraverser()
         self.collision_handler = CollisionHandlerQueue()
 
-        Global.system.cue.render_obj.init_collision_handling(self.collision_handler)
-        for ball in Global.system.balls.values():
-            ball.render_obj.init_collision(ball, Global.system.cue)
+        visual.cue.init_collision_handling(self.collision_handler)
+        for ball in visual.balls.values():
+            ball.init_collision(Global.system.cue)
 
         # The stick needs a focus ball
-        if not Global.system.cue.render_obj.has_focus:
-            Global.system.cue.render_obj.init_focus(Global.system.cue.cueing_ball)
+        if not visual.cue.has_focus:
+            ball_id = Global.system.cue.ball_id
+            visual.cue.init_focus(visual.balls[ball_id])
 
         # Declare frequently used nodes
         self.avoid_nodes = {
             "scene": Global.render.find("scene"),
-            "cue_collision_node": Global.system.cue.render_obj.get_node("cue_cseg"),
-            "cue_stick_model": Global.system.cue.render_obj.get_node("cue_stick_model"),
-            "cue_stick": Global.system.cue.render_obj.get_node("cue_stick"),
-            "cue_stick_focus": Global.system.cue.render_obj.get_node("cue_stick_focus"),
+            "cue_collision_node": visual.cue.get_node("cue_cseg"),
+            "cue_stick_model": visual.cue.get_node("cue_stick_model"),
+            "cue_stick": visual.cue.get_node("cue_stick"),
+            "cue_stick_focus": visual.cue.get_node("cue_stick_focus"),
         }
 
     def collision_task(self, task):
@@ -130,10 +132,12 @@ class CueAvoid:
 
     def process_ball_collision(self, entry):
         min_theta = 0
-        ball = self.get_ball(entry)
+        ball_id = self.get_ball_id(entry)
 
-        if ball == Global.system.cue.cueing_ball:
+        if ball_id == Global.system.cue.ball_id:
             return 0
+
+        ball = Global.system.balls[ball_id]
 
         scene = Global.render.find("scene")
 
@@ -183,7 +187,7 @@ class CueAvoid:
     def get_cue_radius(self, l):
         """Returns cue radius at collision point, given point is distance l from tip"""
 
-        bounds = Global.system.cue.render_obj.get_node("cue_stick").get_tight_bounds()
+        bounds = visual.cue.get_node("cue_stick").get_tight_bounds()
         L = bounds[1][0] - bounds[0][0]  # cue length
 
         r = Global.system.cue.specs.tip_radius
@@ -201,12 +205,11 @@ class CueAvoid:
         cushion_id = into_node_path_name[len(expected_suffix) :]
         return Global.system.table.cushion_segments.linear[cushion_id]
 
-    def get_ball(self, entry):
+    def get_ball_id(self, entry) -> str:
         expected_suffix = "ball_csphere_"
         into_node_path_name = entry.get_into_node_path().name
         assert into_node_path_name.startswith(expected_suffix)
-        ball_id = into_node_path_name[len(expected_suffix) :]
-        return Global.system.balls[ball_id]
+        return into_node_path_name[len(expected_suffix) :]
 
 
 cue_avoid = CueAvoid()

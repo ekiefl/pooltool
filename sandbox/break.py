@@ -13,11 +13,11 @@ def main(args):
     if args.seed:
         np.random.seed(args.seed)
 
+    cue = pt.Cue()
     table = pt.Table.default()
     balls = pt.get_nine_ball_rack(
         table, ordered=True, spacing_factor=args.spacing_factor
     )
-    cue = pt.Cue(cueing_ball=balls["cue"])
 
     # Aim at the head ball then strike the cue ball
     cue.aim_at_ball(balls["1"])

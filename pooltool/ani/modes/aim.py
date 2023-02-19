@@ -11,8 +11,7 @@ from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
-from pooltool.objects.ball.datatypes import Ball
-from pooltool.system.render import PlaybackMode
+from pooltool.system.render import visual
 
 
 class AimMode(BaseMode):
@@ -52,17 +51,18 @@ class AimMode(BaseMode):
     def enter(self, load_prev_cam=False):
         mouse.mode(MouseMode.RELATIVE)
 
-        if not Global.system.cue.render_obj.has_focus:
-            Global.system.cue.render_obj.init_focus(Global.system.cue.cueing_ball)
+        if not visual.cue.has_focus:
+            ball_id = Global.system.cue.ball_id
+            visual.cue.init_focus(visual.balls[ball_id])
         else:
-            Global.system.cue.render_obj.match_ball_position()
+            visual.cue.match_ball_position()
 
-        Global.system.cue.render_obj.show_nodes(ignore=("cue_cseg",))
-        Global.system.cue.render_obj.get_node("cue_stick").setX(0)
+        visual.cue.show_nodes(ignore=("cue_cseg",))
+        visual.cue.get_node("cue_stick").setX(0)
 
-        cam.move_fixation(
-            Global.system.cue.cueing_ball.render_obj.get_node("pos").getPos()
-        )
+        # Fixate the camera onto the cueing ball
+        cueing_ball_id = Global.system.cue.ball_id
+        cam.move_fixation(visual.balls[cueing_ball_id].get_node("pos").getPos())
 
         if load_prev_cam:
             cam.load_saved_state(Mode.aim)
@@ -138,17 +138,11 @@ class AimMode(BaseMode):
             self.aim_apply_power()
         elif self.keymap[Action.exec_shot]:
             Global.mode_mgr.mode_stroked_from = Mode.aim
-            Global.system.cue.set_object_state_as_render_state(skip_V0=True)
-            Global.system.cue.strike()
+            visual.cue.set_object_state_as_render_state(skip_V0=True)
+            Global.system.strike()
             Global.mode_mgr.change_mode(Mode.calculate)
         elif self.keymap[Action.prev_shot]:
-            self.keymap[Action.prev_shot] = False
-            if len(Global.multisystem) > 1:
-                self.change_animation(Global.multisystem.active_index - 1)
-                Global.mode_mgr.change_mode(
-                    Mode.shot, enter_kwargs=dict(init_animations=False)
-                )
-                return task.done
+            raise NotImplementedError()
         else:
             self.rotate()
 
@@ -166,12 +160,12 @@ class AimMode(BaseMode):
         self.cue_avoidance()
 
     def cue_avoidance(self):
-        _, _, theta, *_ = Global.system.cue.render_obj.get_render_state()
+        _, _, theta, *_ = visual.cue.get_render_state()
 
         if (theta < cue_avoid.min_theta) or self.magnet_theta:
             theta = cue_avoid.min_theta
             Global.system.cue.set_state(theta=theta)
-            Global.system.cue.set_render_state_as_object_state()
+            visual.cue.set_render_state_as_object_state()
             hud.update_cue(Global.system.cue)
 
         if cam.theta < theta + ani.min_camera:
@@ -180,7 +174,7 @@ class AimMode(BaseMode):
     def fix_cue_stick_to_camera(self):
         phi = (cam.fixation.getH() + 180) % 360
         Global.system.cue.set_state(phi=phi)
-        Global.system.cue.set_render_state_as_object_state()
+        visual.cue.set_render_state_as_object_state()
 
     def aim_apply_power(self):
         with mouse:
@@ -196,7 +190,7 @@ class AimMode(BaseMode):
         hud.update_cue(Global.system.cue)
 
     def aim_elevate_cue(self):
-        cue = Global.system.cue.render_obj.get_node("cue_stick_focus")
+        cue = visual.cue.get_node("cue_stick_focus")
 
         with mouse:
             delta_elevation = mouse.get_dy() * ani.elevate_sensitivity
@@ -224,9 +218,10 @@ class AimMode(BaseMode):
         with mouse:
             dx, dy = mouse.get_dx(), mouse.get_dy()
 
-        cue = Global.system.cue.render_obj.get_node("cue_stick")
-        cue_focus = Global.system.cue.render_obj.get_node("cue_stick_focus")
-        R = Global.system.cue.render_obj.follow.params.R
+        cue = visual.cue.get_node("cue_stick")
+        cue_focus = visual.cue.get_node("cue_stick_focus")
+
+        R = visual.cue.follow._ball.params.R
 
         delta_y, delta_z = dx * ani.english_sensitivity, dy * ani.english_sensitivity
 
@@ -259,35 +254,4 @@ class AimMode(BaseMode):
             theta=-cue_focus.getR(),
         )
 
-        hud.update_cue(Global.system.cue)
-
-    def change_animation(self, shot_index):
-        """Switch to a different system in the system collection"""
-        # Switch shots
-        Global.multisystem.render_obj.clear_animation(Global.multisystem)
-        Global.system.render_obj.teardown(Global.system)
-        Global.multisystem.set_active(shot_index)
-        Global.system.render_obj.buildup(Global.system)
-
-        # Initialize the animation
-        Global.multisystem.render_obj.set_animation(Global.multisystem)
-
-        # Changing to a different shot is considered advanced maneuvering, so we enter
-        # loop mode.
-        Global.multisystem.render_obj.start_animation(PlaybackMode.LOOP)
-
-        # A lot of dumb things to make the cue track the initial position of the ball
-        dummy = Ball("dummy")
-        dummy.R = Global.system.cue.cueing_ball.params.R
-        dummy.rvw = Global.system.cue.cueing_ball.history.rvw[0]
-        dummy.render()
-        Global.system.cue.render_obj.init_focus(dummy)
-        Global.system.cue.set_render_state_as_object_state()
-        Global.system.cue.render_obj.follow = None
-        dummy.remove_nodes()
-        del dummy
-
-        cue_avoid.init_collisions()
-
-        # Set the HUD
         hud.update_cue(Global.system.cue)

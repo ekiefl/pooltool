@@ -20,7 +20,7 @@ class Sandbox(Game):
             player.can_cue = [ball_id for ball_id in shot.balls]
             player.target_balls = [ball_id for ball_id in shot.balls]
 
-    def set_initial_cueing_ball(self, balls):
+    def get_initial_cueing_ball(self, balls):
         return balls["cue"]
 
     def award_points(self, shot):

@@ -53,7 +53,7 @@ class CalculateMode(BaseMode):
         if not tasks.has("run_simulation"):
             # simulation calculation is finished
             Global.mode_mgr.change_mode(
-                Mode.shot, enter_kwargs=dict(init_animations=True)
+                Mode.shot, enter_kwargs=dict(build_animations=True)
             )
         elif self.keymap[Action.zoom]:
             cam.zoom_via_mouse()
@@ -79,7 +79,7 @@ class CalculateMode(BaseMode):
 
         try:
             Global.system = simulate(
-                Global.system, continuize=False, quiet=False, raise_simulate_error=True
+                Global.system, continuize=True, quiet=False, raise_simulate_error=True
             )
         except SimulateError:
             # Failed to simulate shot. Return to aim mode. Not ideal but better than a

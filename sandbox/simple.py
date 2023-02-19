@@ -12,9 +12,6 @@ shot = pt.System(
     },
 )
 
-# Let's make sure the balls are not overlapping:
-assert not shot.is_balls_overlapping()
-
 # The balls are not in motion, so there is no energy in the system. Let's change that...
 assert shot.get_system_energy() == 0
 
