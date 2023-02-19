@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import random
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -41,9 +42,7 @@ class NineBallRack(Rack):
         self.eff_radius = self.radius + self.spacer + c.tol
 
         if not ordered:
-            self.balls = list(
-                np.random.choice(self.balls, replace=False, size=len(self.balls))
-            )
+            random.shuffle(self.balls)
 
         self.balls.append(Ball("cue", params=params))
         Rack.__init__(self, table)

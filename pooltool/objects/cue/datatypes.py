@@ -3,13 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
-
-import numpy as np
-
-import pooltool.events as events
-import pooltool.utils as utils
-from pooltool.error import ConfigError
+from typing import Optional
 
 
 @dataclass(frozen=True)

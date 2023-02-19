@@ -1,7 +1,5 @@
 """A place for horrible stuff to happen"""
 
-from typing import Dict
-
 import numpy as np
 
 from pooltool.objects.table.components import (

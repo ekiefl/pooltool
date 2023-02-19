@@ -11,6 +11,7 @@ from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.system.render import visual
 
 
 class PickBallMode(BaseMode):

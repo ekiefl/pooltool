@@ -149,8 +149,13 @@ class BilliardTableSpecs:
 
 
 class TableSpecs(Protocol):
-    l: float
-    w: float
+    @property
+    def l(self):
+        ...
+
+    @property
+    def w(self):
+        ...
 
     def create_cushion_segments(self):
         ...
