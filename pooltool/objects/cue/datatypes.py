@@ -34,7 +34,7 @@ class Cue:
     theta: float = field(default=0.0)
     a: float = field(default=0.0)
     b: float = field(default=0.25)
-    ball_id: Optional[str] = field(default=None)
+    cue_ball_id: Optional[str] = field(default=None)
 
     specs: CueSpecs = field(default_factory=CueSpecs.default)
 
@@ -47,7 +47,9 @@ class Cue:
         }
         self.set_state(**field_defaults)
 
-    def set_state(self, V0=None, phi=None, theta=None, a=None, b=None, ball_id=None):
+    def set_state(
+        self, V0=None, phi=None, theta=None, a=None, b=None, cue_ball_id=None
+    ):
         """Set the cueing parameters
 
         Notes
@@ -66,8 +68,8 @@ class Cue:
             self.a = a
         if b is not None:
             self.b = b
-        if ball_id is not None:
-            self.ball_id = ball_id
+        if cue_ball_id is not None:
+            self.cue_ball_id = cue_ball_id
 
     def __repr__(self):
         lines = [

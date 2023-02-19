@@ -235,8 +235,10 @@ class ViewMode(BaseMode):
 
         # Changing to a different shot is considered advanced maneuvering, we loop the
         # animation
-        visual.start_animation(PlaybackMode.LOOP)
+        visual.animate(PlaybackMode.LOOP)
 
+        # FIXME No idea what this garbage is. Dissect once you get here.
+        raise NotImplementedError()
         # A lot of dumb things to make the cue track the initial position of the ball
         dummy = Ball("dummy")
         dummy.R = Global.system.cue.cueing_ball.params.R

@@ -49,18 +49,17 @@ class ShotMode(BaseMode):
         Parameters
         ==========
         build_animations : bool, False
-            If True, the shot animations are built and played via
-            MultiSystem.init_animation() and MultiSystem.start_animation()
+            If True, the shot animations are built with visual.build_shot_animation.
         """
         mouse.mode(MouseMode.RELATIVE)
 
         if build_animations:
             visual.build_shot_animation()
-            visual.start_animation(PlaybackMode.SINGLE)
+            visual.animate(PlaybackMode.SINGLE)
             visual.advance_to_end_of_stroke()
 
         if playback_mode is not None:
-            visual.start_animation(playback_mode)
+            visual.animate(playback_mode)
 
         hud.update_cue(Global.system.cue)
 
@@ -192,7 +191,7 @@ class ShotMode(BaseMode):
                 ball.history = BallHistory()
                 ball.history_cts = BallHistory()
 
-            ball_id = Global.system.cue.ball_id
+            ball_id = Global.system.cue.cue_ball_id
             visual.cue.init_focus(visual.balls[ball_id])
 
         tasks.remove("shot_view_task")
@@ -200,10 +199,6 @@ class ShotMode(BaseMode):
         tasks.remove("shared_task")
 
     def shot_view_task(self, task):
-        print(visual.animation_finished)
-        print(f"      {visual.shot_animation.isPlaying()=}")
-        print(f"      {visual.paused=}")
-
         if self.keymap[Action.close_scene]:
             cam.store_state("last_scene", overwrite=True)
             Global.base.messenger.send("close-scene")
@@ -239,13 +234,14 @@ class ShotMode(BaseMode):
 
     def shot_animation_task(self, task):
         if self.keymap[Action.restart_ani]:
-            visual.start_animation(PlaybackMode.LOOP)
+            visual.playback(PlaybackMode.LOOP)
+            visual.restart_animation()
 
         elif self.keymap[Action.rewind]:
-            Global.multisystem.rewind()
+            raise NotImplementedError()
 
         elif self.keymap[Action.fast_forward]:
-            Global.multisystem.fast_forward()
+            raise NotImplementedError()
 
         elif self.keymap[Action.undo_shot]:
             Global.mode_mgr.change_mode(
@@ -301,7 +297,7 @@ class ShotMode(BaseMode):
 
         # Changing to a different shot is considered advanced maneuvering, so we enter
         # loop mode.
-        visual.start_animation(PlaybackMode.LOOP)
+        visual.animate(PlaybackMode.LOOP)
 
         # FIXME No idea what this garbage is. Dissect once you get here.
         raise NotImplementedError()

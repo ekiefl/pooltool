@@ -33,7 +33,7 @@ class CueRender(Render):
             self._cue.theta,
             self._cue.a,
             self._cue.b,
-            self._cue.ball_id,
+            self._cue.cue_ball_id,
         ) = self.get_render_state()
 
         if not skip_V0:

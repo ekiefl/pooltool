@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Optional
 
 from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
@@ -21,6 +21,11 @@ class SystemRender:
 
     @staticmethod
     def from_system(system: System) -> SystemRender:
+        # If you're making a SystemRender from your system that has already been
+        # simulated, you want it continuized
+        if system.simulated and not system.continuized:
+            system.continuize()
+
         return SystemRender(
             balls={ball_id: BallRender(ball) for ball_id, ball in system.balls.items()},
             table=TableRender(system.table),
@@ -41,6 +46,7 @@ class SystemController:
         self.shot_animation: Sequence = Sequence()
         self.paused: bool = True
         self.playback_speed: float = 1
+        self.playback_mode: PlaybackMode = PlaybackMode.SINGLE
 
     @property
     def table(self):
@@ -62,6 +68,7 @@ class SystemController:
 
     def reset_animation(self) -> None:
         """Set objects to initial states, pause, and remove animations"""
+        self.playback_mode: PlaybackMode = PlaybackMode.SINGLE
         self.playback_speed = 1
         self.paused = True
 
@@ -99,17 +106,29 @@ class SystemController:
         self.system.table.remove_nodes()
         self.system.cue.remove_nodes()
 
-    def start_animation(self, playback_mode: PlaybackMode) -> None:
+    def playback(self, mode: PlaybackMode) -> None:
+        """Set the playback mode (does not affect pause status)"""
+        self.playback_mode = mode
+
+    def animate(self, mode: Optional[PlaybackMode] = None):
+        """Start the animation"""
+
         assert len(self.shot_animation), "Must populate shot_animation"
 
-        if playback_mode == PlaybackMode.SINGLE:
-            self.shot_animation.start()
-        elif playback_mode == PlaybackMode.LOOP:
+        if mode is not None:
+            self.playback(mode)
+
+        if self.playback_mode == PlaybackMode.LOOP:
             self.shot_animation.loop()
+        elif self.playback_mode == PlaybackMode.SINGLE:
+            self.shot_animation.start()
+        else:
+            raise NotImplementedError()
 
         self.paused = False
 
     def restart_animation(self) -> None:
+        """Set the animation to t=0"""
         self.shot_animation.set_t(0)
 
     def restart_ball_animations(self) -> None:
@@ -140,7 +159,7 @@ class SystemController:
         self.shot_animation.setPlayRate(factor * self.shot_animation.getPlayRate())
 
         if not self.paused:
-            self.start_animation(PlaybackMode.LOOP)
+            self.animate(PlaybackMode.LOOP)
 
         self.shot_animation.set_t(curr_time / factor)
 

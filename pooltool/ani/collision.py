@@ -54,7 +54,7 @@ class CueAvoid:
 
         # The stick needs a focus ball
         if not visual.cue.has_focus:
-            ball_id = Global.system.cue.ball_id
+            ball_id = Global.system.cue.cue_ball_id
             visual.cue.init_focus(visual.balls[ball_id])
 
         # Declare frequently used nodes
@@ -134,7 +134,7 @@ class CueAvoid:
         min_theta = 0
         ball_id = self.get_ball_id(entry)
 
-        if ball_id == Global.system.cue.ball_id:
+        if ball_id == Global.system.cue.cue_ball_id:
             return 0
 
         ball = Global.system.balls[ball_id]

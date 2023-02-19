@@ -28,6 +28,10 @@ class System:
     def continuized(self):
         return all(not ball.history_cts.empty for ball in self.balls.values())
 
+    @property
+    def simulated(self):
+        return bool(len(self.events))
+
     def set_meta(self, meta):
         """Define any meta data for the shot
 
@@ -207,7 +211,7 @@ class System:
     def strike(self, **state_kwargs):
         """Strike a ball with the cue stick
 
-        The stricken ball is determined by the self.cue.ball_id.
+        The stricken ball is determined by the self.cue.cue_ball_id.
 
         state_kwargs: **kwargs
             Pass state parameters to be updated before the cue strike. Any parameters
@@ -215,9 +219,9 @@ class System:
         """
         self.cue.set_state(**state_kwargs)
 
-        assert self.cue.ball_id in self.balls
+        assert self.cue.cue_ball_id in self.balls
 
-        event = stick_ball_collision(self.cue, self.balls[self.cue.ball_id], time=0)
+        event = stick_ball_collision(self.cue, self.balls[self.cue.cue_ball_id], time=0)
         event.resolve()
 
         return event
@@ -232,9 +236,9 @@ class System:
             aimed at
         """
 
-        assert self.cue.ball_id in self.balls
+        assert self.cue.cue_ball_id in self.balls
 
-        cueing_ball = self.balls[self.cue.ball_id]
+        cueing_ball = self.balls[self.cue.cue_ball_id]
 
         direction = utils.angle_fast(
             utils.unit_vector_fast(np.array(pos) - cueing_ball.state.rvw[0])
@@ -252,9 +256,9 @@ class System:
             The cut angle in degrees, within [-89, 89]
         """
 
-        assert self.cue.ball_id in self.balls
+        assert self.cue.cue_ball_id in self.balls
 
-        cueing_ball = self.balls[self.cue.ball_id]
+        cueing_ball = self.balls[self.cue.cue_ball_id]
         object_ball = self.balls[ball_id]
 
         self.aim_at_pos(object_ball.state.rvw[0])

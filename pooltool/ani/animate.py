@@ -234,20 +234,11 @@ class ShotViewer(Interface):
         self.stop()
 
     def show(self, shot_or_shots=None, title=""):
-        if shot_or_shots is None:
-            if not len(Global.multisystem):
-                raise ConfigError(
-                    "ShotViewer.show :: No shots passed and no shots set."
-                )
+        if isinstance(shot_or_shots, System):
+            Global.register_multisystem(MultiSystem())
+            Global.multisystem.append(shot_or_shots)
         else:
-            if issubclass(type(shot_or_shots), System):
-                Global.register_multisystem(MultiSystem())
-                Global.multisystem.append(shot_or_shots)
-            elif issubclass(type(shot_or_shots), MultiSystem):
-                Global.register_multisystem(shot_or_shots)
-
-        if Global.system is None:
-            Global.multisystem.set_active(0)
+            Global.register_multisystem(shot_or_shots)
 
         self.create_scene()
 
@@ -258,8 +249,7 @@ class ShotViewer(Interface):
         self.title_node.show()
 
         if ani.settings["graphics"]["hud"]:
-            hud.init()
-            hud.elements[HUDElement.help_text].help_hint.hide()
+            hud.init(hide=[HUDElement.help_text])
 
         params = dict(
             build_animations=True,
@@ -564,7 +554,7 @@ class Game(Interface):
 
     @staticmethod
     def setup_cue(balls, game):
-        return Cue(ball_id=game.get_initial_cueing_ball(balls).id)
+        return Cue(cue_ball_id=game.get_initial_cueing_ball(balls).id)
 
     @staticmethod
     def setup_balls(table, rack):

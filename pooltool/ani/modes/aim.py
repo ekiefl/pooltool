@@ -52,7 +52,7 @@ class AimMode(BaseMode):
         mouse.mode(MouseMode.RELATIVE)
 
         if not visual.cue.has_focus:
-            ball_id = Global.system.cue.ball_id
+            ball_id = Global.system.cue.cue_ball_id
             visual.cue.init_focus(visual.balls[ball_id])
         else:
             visual.cue.match_ball_position()
@@ -61,7 +61,7 @@ class AimMode(BaseMode):
         visual.cue.get_node("cue_stick").setX(0)
 
         # Fixate the camera onto the cueing ball
-        cueing_ball_id = Global.system.cue.ball_id
+        cueing_ball_id = Global.system.cue.cue_ball_id
         cam.move_fixation(visual.balls[cueing_ball_id].get_node("pos").getPos())
 
         if load_prev_cam:

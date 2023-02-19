@@ -158,6 +158,8 @@ class BallHistory:
 
     def vectorize(self) -> Tuple[NDArray, NDArray, NDArray]:
         """Return rvw, s, and t as arrays"""
+        assert not self.empty, "History is empty"
+
         return tuple(  # type: ignore
             map(_float64_array, zip(*[astuple(x) for x in self.states]))
         )
