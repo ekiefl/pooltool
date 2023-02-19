@@ -11,6 +11,7 @@ from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.system.datatypes import multisystem
 from pooltool.system.render import visual
 
 
@@ -52,7 +53,7 @@ class AimMode(BaseMode):
         mouse.mode(MouseMode.RELATIVE)
 
         if not visual.cue.has_focus:
-            ball_id = Global.system.cue.cue_ball_id
+            ball_id = multisystem.active.cue.cue_ball_id
             visual.cue.init_focus(visual.balls[ball_id])
         else:
             visual.cue.match_ball_position()
@@ -61,7 +62,7 @@ class AimMode(BaseMode):
         visual.cue.get_node("cue_stick").setX(0)
 
         # Fixate the camera onto the cueing ball
-        cueing_ball_id = Global.system.cue.cue_ball_id
+        cueing_ball_id = multisystem.active.cue.cue_ball_id
         cam.move_fixation(visual.balls[cueing_ball_id].get_node("pos").getPos())
 
         if load_prev_cam:
@@ -139,7 +140,7 @@ class AimMode(BaseMode):
         elif self.keymap[Action.exec_shot]:
             Global.mode_mgr.mode_stroked_from = Mode.aim
             visual.cue.set_object_state_as_render_state(skip_V0=True)
-            Global.system.strike()
+            multisystem.active.strike()
             Global.mode_mgr.change_mode(Mode.calculate)
         elif self.keymap[Action.prev_shot]:
             raise NotImplementedError()
@@ -164,30 +165,30 @@ class AimMode(BaseMode):
 
         if (theta < cue_avoid.min_theta) or self.magnet_theta:
             theta = cue_avoid.min_theta
-            Global.system.cue.set_state(theta=theta)
+            multisystem.active.cue.set_state(theta=theta)
             visual.cue.set_render_state_as_object_state()
-            hud.update_cue(Global.system.cue)
+            hud.update_cue(multisystem.active.cue)
 
         if cam.theta < theta + ani.min_camera:
             cam.rotate(theta=theta + ani.min_camera)
 
     def fix_cue_stick_to_camera(self):
         phi = (cam.fixation.getH() + 180) % 360
-        Global.system.cue.set_state(phi=phi)
+        multisystem.active.cue.set_state(phi=phi)
         visual.cue.set_render_state_as_object_state()
 
     def aim_apply_power(self):
         with mouse:
             dy = mouse.get_dy()
 
-        V0 = Global.system.cue.V0 + dy * ani.power_sensitivity
+        V0 = multisystem.active.cue.V0 + dy * ani.power_sensitivity
         if V0 < ani.min_stroke_speed:
             V0 = ani.min_stroke_speed
         if V0 > ani.max_stroke_speed:
             V0 = ani.max_stroke_speed
 
-        Global.system.cue.set_state(V0=V0)
-        hud.update_cue(Global.system.cue)
+        multisystem.active.cue.set_state(V0=V0)
+        hud.update_cue(multisystem.active.cue)
 
     def aim_elevate_cue(self):
         cue = visual.cue.get_node("cue_stick_focus")
@@ -211,8 +212,8 @@ class AimMode(BaseMode):
         if cam.theta < (new_elevation + ani.min_camera):
             cam.rotate(theta=new_elevation + ani.min_camera)
 
-        Global.system.cue.set_state(theta=new_elevation)
-        hud.update_cue(Global.system.cue)
+        multisystem.active.cue.set_state(theta=new_elevation)
+        hud.update_cue(multisystem.active.cue)
 
     def apply_english(self):
         with mouse:
@@ -248,10 +249,10 @@ class AimMode(BaseMode):
         if cam.theta < (new_theta := -cue_focus.getR() + ani.min_camera):
             cam.rotate(theta=new_theta)
 
-        Global.system.cue.set_state(
+        multisystem.active.cue.set_state(
             a=-new_y / R,
             b=new_z / R,
             theta=-cue_focus.getR(),
         )
 
-        hud.update_cue(Global.system.cue)
+        hud.update_cue(multisystem.active.cue)

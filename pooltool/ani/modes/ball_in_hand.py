@@ -12,6 +12,7 @@ from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.system.datatypes import multisystem
 from pooltool.utils import panda_path
 
 
@@ -48,7 +49,7 @@ class BallInHandMode(BaseMode):
             # FIXME add message
             self.picking = "ball"
         elif num_options == 1:
-            self.grabbed_ball = Global.system.balls[
+            self.grabbed_ball = multisystem.active.balls[
                 Global.game.active_player.ball_in_hand[0]
             ]
             self.grab_ball_node = self.grabbed_ball.get_node("pos")
@@ -122,7 +123,7 @@ class BallInHandMode(BaseMode):
         """
         r, pos = self.grabbed_ball.params.R, np.array(self.grab_ball_node.getPos())
 
-        for ball in Global.system.balls.values():
+        for ball in multisystem.active.balls.values():
             if ball == self.grabbed_ball:
                 continue
             if np.linalg.norm(ball.state.rvw[0] - pos) <= (r + ball.params.R):
@@ -195,7 +196,7 @@ class BallInHandMode(BaseMode):
         cam_pos = cam.fixation.getPos()
         d_min = np.inf
         closest = None
-        for ball in Global.system.balls.values():
+        for ball in multisystem.active.balls.values():
             if ball.id not in Global.game.active_player.ball_in_hand:
                 continue
             if ball.state.s == c.pocketed:

@@ -40,7 +40,7 @@ from pooltool.error import ConfigError
 from pooltool.objects.ball.datatypes import BallParams
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
-from pooltool.system.datatypes import MultiSystem, System, multisystem
+from pooltool.system.datatypes import System, multisystem
 from pooltool.system.render import PlaybackMode, visual
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -168,17 +168,17 @@ class Interface(ShowBase):
         gc.collect()
 
     def create_scene(self):
-        """Create a scene from Global.multisystem"""
+        """Create a scene from multisystem"""
         Global.render.attachNewNode("scene")
 
-        visual.attach_system(Global.system)
+        visual.attach_system(multisystem.active)
         visual.buildup()
 
-        environment.init(Global.system.table)
+        environment.init(multisystem.active.table)
 
-        R = max([ball.params.R for ball in Global.system.balls.values()])
+        R = max([ball.params.R for ball in multisystem.active.balls.values()])
         cam.fixate(
-            pos=(Global.system.table.w / 2, Global.system.table.l / 2, R),
+            pos=(multisystem.active.table.w / 2, multisystem.active.table.l / 2, R),
             node=visual.table.get_node("table"),
         )
 
@@ -511,13 +511,11 @@ class Game(Interface):
         Global.mode_mgr.change_mode(Mode.aim)
 
     def create_system(self):
-        """Create the Global.multisystem and game objects
+        """Create the multisystem and game objects
 
         FIXME This is where menu options should plug into, rather than using these
         hardcoded defaults like `table = Table.pocket_table()`
         """
-        self.setup_options = menus.get_options()
-
         game = games.game_classes[ani.options_sandbox]()
         game.init()
 

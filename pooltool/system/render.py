@@ -68,7 +68,7 @@ class SystemController:
 
     def reset_animation(self) -> None:
         """Set objects to initial states, pause, and remove animations"""
-        self.playback_mode: PlaybackMode = PlaybackMode.SINGLE
+        self.playback_mode = PlaybackMode.SINGLE
         self.playback_speed = 1
         self.paused = True
 

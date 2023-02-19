@@ -12,6 +12,7 @@ from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.system.datatypes import multisystem
 from pooltool.utils import panda_path
 
 
@@ -145,7 +146,7 @@ class CallShotMode(BaseMode):
         fixation_pos = cam.fixation.getPos()
         d_min = np.inf
         closest = None
-        for pocket in Global.system.table.pockets.values():
+        for pocket in multisystem.active.table.pockets.values():
             d = np.linalg.norm(pocket.center - fixation_pos)
             if d < d_min:
                 d_min, closest = d, pocket
@@ -209,7 +210,7 @@ class CallShotMode(BaseMode):
         fixation_pos = cam.fixation.getPos()
         d_min = np.inf
         closest = None
-        for ball in Global.system.balls.values():
+        for ball in multisystem.active.balls.values():
             if ball.id not in Global.game.active_player.target_balls:
                 continue
             if ball.state.s == c.pocketed:

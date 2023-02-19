@@ -7,6 +7,7 @@ from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.system.datatypes import multisystem
 from pooltool.system.render import visual
 
 
@@ -48,7 +49,7 @@ class StrokeMode(BaseMode):
             if self.stroke_cue_stick():
                 # The cue stick has contacted the cue ball
                 visual.cue.set_object_state_as_render_state()
-                Global.system.strike()
+                multisystem.active.strike()
                 Global.mode_mgr.change_mode(Mode.calculate)
                 return
         else:
@@ -61,7 +62,9 @@ class StrokeMode(BaseMode):
 
     def stroke_cue_stick(self):
         max_speed_mouse = ani.max_stroke_speed / ani.stroke_sensitivity  # [px/s]
-        max_backstroke = Global.system.cue.specs.length * ani.backstroke_fraction  # [m]
+        max_backstroke = (
+            multisystem.active.cue.specs.length * ani.backstroke_fraction
+        )  # [m]
 
         with mouse:
             dt = mouse.get_dt()

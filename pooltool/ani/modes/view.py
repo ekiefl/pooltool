@@ -12,6 +12,7 @@ from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.objects.ball.datatypes import Ball
+from pooltool.system.datatypes import multisystem
 from pooltool.system.render import PlaybackMode, visual
 
 
@@ -51,7 +52,7 @@ class ViewMode(BaseMode):
     def enter(self, move_active=False, load_prev_cam=False):
         mouse.mode(MouseMode.RELATIVE)
 
-        if Global.system is not None:
+        if multisystem.active is not None:
             visual.cue.hide_nodes(ignore=("cue_cseg",))
 
         if load_prev_cam:
@@ -116,7 +117,7 @@ class ViewMode(BaseMode):
             self.keymap[Action.english] = False
             self.keymap[Action.elevation] = False
             self.keymap[Action.power] = False
-            if Global.system is not None:
+            if multisystem.active is not None:
                 visual.cue.hide_nodes(ignore=("cue_cseg",))
         elif self.keymap[Action.elevation]:
             self.view_elevate_cue()
@@ -128,13 +129,13 @@ class ViewMode(BaseMode):
             Global.mode_mgr.change_mode(Mode.aim, enter_kwargs=dict(load_prev_cam=True))
         elif self.keymap[Action.exec_shot]:
             Global.mode_mgr.mode_stroked_from = Mode.view
-            Global.system.cue.set_object_state_as_render_state(skip_V0=True)
-            Global.system.strike()
+            multisystem.active.cue.set_object_state_as_render_state(skip_V0=True)
+            multisystem.active.strike()
             Global.mode_mgr.change_mode(Mode.calculate)
         elif self.keymap[Action.prev_shot]:
             self.keymap[Action.prev_shot] = False
-            if len(Global.multisystem) > 1:
-                self.change_animation(Global.multisystem.active_index - 1)
+            if len(multisystem) > 1:
+                self.change_animation(multisystem.active_index - 1)
                 Global.mode_mgr.change_mode(
                     Mode.shot, enter_kwargs=dict(build_animations=False)
                 )
@@ -150,14 +151,14 @@ class ViewMode(BaseMode):
         with mouse:
             dy = mouse.get_dy()
 
-        V0 = Global.system.cue.V0 + dy * ani.power_sensitivity
+        V0 = multisystem.active.cue.V0 + dy * ani.power_sensitivity
         if V0 < ani.min_stroke_speed:
             V0 = ani.min_stroke_speed
         if V0 > ani.max_stroke_speed:
             V0 = ani.max_stroke_speed
 
-        Global.system.cue.set_state(V0=V0)
-        hud.update_cue(Global.system.cue)
+        multisystem.active.cue.set_state(V0=V0)
+        hud.update_cue(multisystem.active.cue)
 
     def view_elevate_cue(self):
         visual.cue.show_nodes(ignore=("cue_cseg",))
@@ -180,8 +181,8 @@ class ViewMode(BaseMode):
 
         cue.setR(-new_elevation)
 
-        Global.system.cue.set_state(theta=new_elevation)
-        hud.update_cue(Global.system.cue)
+        multisystem.active.cue.set_state(theta=new_elevation)
+        hud.update_cue(multisystem.active.cue)
 
     def view_apply_english(self):
         visual.cue.show_nodes(ignore=("cue_cseg",))
@@ -215,19 +216,19 @@ class ViewMode(BaseMode):
         ):
             cue_focus.setR(-cue_avoid.min_theta)
 
-        Global.system.cue.set_state(
+        multisystem.active.cue.set_state(
             a=-new_y / R,
             b=new_z / R,
             theta=-visual.cue.get_node("cue_stick_focus").getR(),
         )
 
-        hud.update_cue(Global.system.cue)
+        hud.update_cue(multisystem.active.cue)
 
     def change_animation(self, shot_index):
         """Switch to a different system in the system collection"""
         # Switch shots
-        Global.multisystem.set_active(shot_index)
-        visual.attach_system(Global.system)
+        multisystem.set_active(shot_index)
+        visual.attach_system(multisystem.active)
         visual.buildup()
 
         # Initialize the animation
@@ -241,11 +242,11 @@ class ViewMode(BaseMode):
         raise NotImplementedError()
         # A lot of dumb things to make the cue track the initial position of the ball
         dummy = Ball("dummy")
-        dummy.R = Global.system.cue.cueing_ball.params.R
-        dummy.rvw = Global.system.cue.cueing_ball.history.rvw[0]
+        dummy.R = multisystem.active.cue.cueing_ball.params.R
+        dummy.rvw = multisystem.active.cue.cueing_ball.history.rvw[0]
         dummy.render()
         visual.cue.init_focus(dummy)
-        Global.system.cue.set_render_state_as_object_state()
+        multisystem.active.cue.set_render_state_as_object_state()
         visual.cue.follow = None
         dummy.remove_nodes()
         del dummy
@@ -253,4 +254,4 @@ class ViewMode(BaseMode):
         cue_avoid.init_collisions()
 
         # Set the HUD
-        hud.update_cue(Global.system.cue)
+        hud.update_cue(multisystem.active.cue)

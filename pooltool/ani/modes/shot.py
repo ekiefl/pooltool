@@ -12,6 +12,7 @@ from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.objects.ball.datatypes import Ball, BallHistory
+from pooltool.system.datatypes import multisystem
 from pooltool.system.render import PlaybackMode, visual
 
 
@@ -61,7 +62,7 @@ class ShotMode(BaseMode):
         if playback_mode is not None:
             visual.animate(playback_mode)
 
-        hud.update_cue(Global.system.cue)
+        hud.update_cue(multisystem.active.cue)
 
         tasks.register_event("space", visual.toggle_pause)
         tasks.register_event("arrow_up", visual.speed_up)
@@ -118,22 +119,22 @@ class ShotMode(BaseMode):
             # If we are here, the plan is probably to return to 'aim' mode so another
             # shot can be taken. This shot needs to be defined by its own system that
             # has yet to be simulated. Depending how 'shot' mode was entered, this
-            # system may already exist in Global.multisystem. The following code checks
+            # system may already exist in multisystem. The following code checks
             # that by seeing whether the latest system has any events. If not, the
             # system is unsimulated and is perfectly fit for 'aim' mode, but if the
             # system has events, a fresh system needs to be appended to
-            # Global.multisystem.
-            make_new = bool(len(Global.multisystem[-1].events))
+            # multisystem.
+            make_new = bool(len(multisystem[-1].events))
             if make_new:
-                if Global.multisystem.active_index != len(Global.multisystem) - 1:
+                if multisystem.active_index != len(multisystem) - 1:
                     # Replaying shot that is not most recent. Teardown and then buildup
                     # most recent
                     # FIXME repeated below?
-                    Global.multisystem.set_active(-1)
-                    visual.attach_system(Global.system)
+                    multisystem.set_active(-1)
+                    visual.attach_system(multisystem.active)
                     visual.buildup()
 
-                Global.multisystem.append_copy_of_active(
+                multisystem.append_copy_of_active(
                     state="current",
                     reset_history=True,
                     as_active=False,
@@ -141,17 +142,17 @@ class ShotMode(BaseMode):
 
                 # Set the initial orientations of new shot to final orientations of old
                 # shot
-                for ball_id in Global.system.balls:
-                    old_ball = Global.system.balls[ball_id]
-                    new_ball = Global.multisystem[-1].balls[ball_id]
+                for ball_id in multisystem.active.balls:
+                    old_ball = multisystem.active.balls[ball_id]
+                    new_ball = multisystem[-1].balls[ball_id]
                     new_ball.initial_orientation = old_ball.get_final_orientation()
             else:
                 # The latest entry in the collection is an unsimulated shot. Perfect
                 pass
 
             # Switch shots
-            Global.multisystem.set_active(-1)
-            visual.attach_system(Global.system)
+            multisystem.set_active(-1)
+            visual.attach_system(multisystem.active)
             visual.buildup()
 
             cue_avoid.init_collisions()
@@ -159,19 +160,19 @@ class ShotMode(BaseMode):
             if make_new:
                 raise NotImplementedError()
                 # FIXME Is this needed?
-                Global.system.cue.reset_state()
+                multisystem.active.cue.reset_state()
 
-            Global.system.cue.set_render_state_as_object_state()
+            multisystem.active.cue.set_render_state_as_object_state()
 
             # Set the HUD
-            hud.update_cue(Global.system.cue)
+            hud.update_cue(multisystem.active.cue)
 
         elif key == "reset":
-            if Global.multisystem.active_index != len(Global.multisystem) - 1:
+            if multisystem.active_index != len(multisystem) - 1:
                 # Replaying shot that is not most recent. Teardown and then buildup most
                 # recent
-                Global.multisystem.set_active(-1)
-                visual.attach_system(Global.system)
+                multisystem.set_active(-1)
+                visual.attach_system(multisystem.active)
                 visual.buildup()
                 cue_avoid.init_collisions()
             else:
@@ -191,7 +192,7 @@ class ShotMode(BaseMode):
                 ball.history = BallHistory()
                 ball.history_cts = BallHistory()
 
-            ball_id = Global.system.cue.cue_ball_id
+            ball_id = multisystem.active.cue.cue_ball_id
             visual.cue.init_focus(visual.balls[ball_id])
 
         tasks.remove("shot_view_task")
@@ -208,7 +209,7 @@ class ShotMode(BaseMode):
         elif self.keymap[Action.aim] or visual.animation_finished:
             # Either the user has requested to start the next shot, or the animation has
             # finished
-            Global.game.advance(Global.multisystem[-1])
+            Global.game.advance(multisystem[-1])
             if Global.game.game_over:
                 Global.mode_mgr.change_mode(Mode.game_over)
             else:
@@ -257,13 +258,13 @@ class ShotMode(BaseMode):
 
         elif self.keymap[Action.prev_shot]:
             self.keymap[Action.prev_shot] = False
-            shot_index = Global.multisystem.active_index - 1
+            shot_index = multisystem.active_index - 1
             while True:
                 if shot_index < 0:
-                    shot_index = len(Global.multisystem) - 1
+                    shot_index = len(multisystem) - 1
                 if (
-                    len(Global.multisystem[shot_index].events)
-                    or shot_index != len(Global.multisystem) - 1
+                    len(multisystem[shot_index].events)
+                    or shot_index != len(multisystem) - 1
                 ):
                     break
                 shot_index -= 1
@@ -271,13 +272,13 @@ class ShotMode(BaseMode):
 
         elif self.keymap[Action.next_shot]:
             self.keymap[Action.next_shot] = False
-            shot_index = Global.multisystem.active_index + 1
+            shot_index = multisystem.active_index + 1
             while True:
-                if shot_index == len(Global.multisystem):
+                if shot_index == len(multisystem):
                     shot_index = 0
                 if (
-                    len(Global.multisystem[shot_index].events)
-                    or shot_index != len(Global.multisystem) - 1
+                    len(multisystem[shot_index].events)
+                    or shot_index != len(multisystem) - 1
                 ):
                     break
                 shot_index += 1
@@ -288,8 +289,8 @@ class ShotMode(BaseMode):
     def change_animation(self, shot_index):
         """Switch to a different system in the system collection"""
         # Switch shots
-        Global.multisystem.set_active(shot_index)
-        visual.attach_system(Global.system)
+        multisystem.set_active(shot_index)
+        visual.attach_system(multisystem.active)
         visual.buildup()
 
         # Initialize the animation
@@ -303,11 +304,11 @@ class ShotMode(BaseMode):
         raise NotImplementedError()
         # A lot of dumb things to make the cue track the initial position of the ball
         dummy = Ball("dummy")
-        dummy.params.R = Global.system.cue.cueing_ball.params.R
-        dummy.state.rvw = Global.system.cue.cueing_ball.history[0].rvw
+        dummy.params.R = multisystem.active.cue.cueing_ball.params.R
+        dummy.state.rvw = multisystem.active.cue.cueing_ball.history[0].rvw
         dummy.render_obj.render(dummy)
         visual.cue.init_focus(dummy)
-        Global.system.cue.set_render_state_as_object_state()
+        multisystem.active.cue.set_render_state_as_object_state()
         visual.cue.follow = None
         dummy.render_obj.remove_nodes()
         del dummy
@@ -315,4 +316,4 @@ class ShotMode(BaseMode):
         cue_avoid.init_collisions()
 
         # Set the HUD
-        hud.update_cue(Global.system.cue)
+        hud.update_cue(multisystem.active.cue)

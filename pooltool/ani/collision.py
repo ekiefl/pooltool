@@ -4,6 +4,7 @@ from panda3d.core import CollisionHandlerQueue, CollisionTraverser
 import pooltool.ani as ani
 import pooltool.utils as utils
 from pooltool.ani.globals import Global
+from pooltool.system.datatypes import multisystem
 from pooltool.system.render import visual
 
 
@@ -50,11 +51,11 @@ class CueAvoid:
 
         visual.cue.init_collision_handling(self.collision_handler)
         for ball in visual.balls.values():
-            ball.init_collision(Global.system.cue)
+            ball.init_collision(multisystem.active.cue)
 
         # The stick needs a focus ball
         if not visual.cue.has_focus:
-            ball_id = Global.system.cue.cue_ball_id
+            ball_id = multisystem.active.cue.cue_ball_id
             visual.cue.init_focus(visual.balls[ball_id])
 
         # Declare frequently used nodes
@@ -134,10 +135,10 @@ class CueAvoid:
         min_theta = 0
         ball_id = self.get_ball_id(entry)
 
-        if ball_id == Global.system.cue.cue_ball_id:
+        if ball_id == multisystem.active.cue.cue_ball_id:
             return 0
 
-        ball = Global.system.balls[ball_id]
+        ball = multisystem.active.balls[ball_id]
 
         scene = Global.render.find("scene")
 
@@ -146,12 +147,12 @@ class CueAvoid:
         phi = ((self.avoid_nodes["cue_stick_focus"].getH() + 180) % 360) * np.pi / 180
         c = np.array([np.cos(phi), np.sin(phi), 0])
         gamma = np.arccos(np.dot(n, c))
-        AB = (ball.params.R + Global.system.cue.specs.tip_radius) * np.cos(gamma)
+        AB = (ball.params.R + multisystem.active.cue.specs.tip_radius) * np.cos(gamma)
 
         # Center of blocking ball transect
         Ax, Ay, _ = entry.getSurfacePoint(scene)
-        Ax -= (AB + Global.system.cue.specs.tip_radius) * np.cos(phi)
-        Ay -= (AB + Global.system.cue.specs.tip_radius) * np.sin(phi)
+        Ax -= (AB + multisystem.active.cue.specs.tip_radius) * np.cos(phi)
+        Ay -= (AB + multisystem.active.cue.specs.tip_radius) * np.sin(phi)
         Az = ball.params.R
 
         # Center of aim, leveled to ball height
@@ -190,8 +191,8 @@ class CueAvoid:
         bounds = visual.cue.get_node("cue_stick").get_tight_bounds()
         L = bounds[1][0] - bounds[0][0]  # cue length
 
-        r = Global.system.cue.specs.tip_radius
-        R = Global.system.cue.specs.butt_radius
+        r = multisystem.active.cue.specs.tip_radius
+        R = multisystem.active.cue.specs.butt_radius
 
         m = (R - r) / L  # rise/run
         b = r  # intercept
@@ -203,7 +204,7 @@ class CueAvoid:
         into_node_path_name = entry.get_into_node_path().name
         assert into_node_path_name.startswith(expected_suffix)
         cushion_id = into_node_path_name[len(expected_suffix) :]
-        return Global.system.table.cushion_segments.linear[cushion_id]
+        return multisystem.active.table.cushion_segments.linear[cushion_id]
 
     def get_ball_id(self, entry) -> str:
         expected_suffix = "ball_csphere_"

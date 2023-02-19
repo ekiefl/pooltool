@@ -6,6 +6,7 @@ from typing import Dict
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.globals import Global, require_showbase
+from pooltool.system.datatypes import multisystem
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -51,7 +52,7 @@ class BaseMode(ABC):
 
         elif self.keymap.get(Action.introspect):
             self.keymap[Action.introspect] = False
-            shot = Global.system
+            shot = multisystem.active
             shot
             pdb.set_trace()
 

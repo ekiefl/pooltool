@@ -11,6 +11,7 @@ from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.system.datatypes import multisystem
 from pooltool.system.render import visual
 
 
@@ -56,12 +57,12 @@ class PickBallMode(BaseMode):
 
         if self.keymap["done"]:
             PickBallMode.remove_ball_highlight(self)
-            Global.system.cue.cueing_ball = self.closest_ball
-            if Global.system.cue.cueing_ball is not None:
-                ball_id = Global.system.cue.cue_ball_id
+            multisystem.active.cue.cueing_ball = self.closest_ball
+            if multisystem.active.cue.cueing_ball is not None:
+                ball_id = multisystem.active.cue.cue_ball_id
                 visual.cue.init_focus(visual.balls[ball_id])
                 Global.game.log.add_msg(
-                    f"Now cueing the {Global.system.cue.cueing_ball.id} ball",
+                    f"Now cueing the {multisystem.active.cue.cueing_ball.id} ball",
                     sentiment="neutral",
                 )
             Global.mode_mgr.change_mode(Mode.aim)
@@ -109,7 +110,7 @@ class PickBallMode(BaseMode):
         cam_fixation = cam.fixation.getPos()
         d_min = np.inf
         closest = None
-        for ball in Global.system.balls.values():
+        for ball in multisystem.active.balls.values():
             if ball.id not in Global.game.active_player.can_cue:
                 continue
             if ball.state.s == c.pocketed:

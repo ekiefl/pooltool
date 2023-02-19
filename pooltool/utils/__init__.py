@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-import collections
 import importlib.util
 import json
 import linecache
