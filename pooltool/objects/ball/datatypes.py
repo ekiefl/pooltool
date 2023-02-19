@@ -8,6 +8,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 import pooltool.constants as c
+from pooltool.utils.dataclasses import are_dataclasses_equal
 
 
 @dataclass(frozen=True)
@@ -80,29 +81,6 @@ def _null_rvw() -> NDArray[np.float64]:
     return np.array([[np.nan, np.nan, np.nan], [0, 0, 0], [0, 0, 0]], dtype=np.float64)
 
 
-def _array_safe_eq(a, b) -> bool:
-    """Check if a and b are equal, even if they are numpy arrays"""
-    if a is b:
-        return True
-    if isinstance(a, np.ndarray) and isinstance(b, np.ndarray):
-        return np.array_equal(a, b, equal_nan=True)
-    try:
-        return a == b
-    except TypeError:
-        return NotImplemented
-
-
-def _are_dataclasses_equal(dc1, dc2) -> bool:
-    """Check if two dataclasses which hold numpy arrays are equal"""
-    if dc1 is dc2:
-        return True
-    if dc1.__class__ is not dc2.__class__:
-        return NotImplemented  # better than False
-    t1 = astuple(dc1)
-    t2 = astuple(dc2)
-    return all(_array_safe_eq(a1, a2) for a1, a2 in zip(t1, t2))
-
-
 @dataclass(eq=False)
 class BallState:
     rvw: NDArray[np.float64]
@@ -110,7 +88,7 @@ class BallState:
     t: float
 
     def __eq__(self, other):
-        return _are_dataclasses_equal(self, other)
+        return are_dataclasses_equal(self, other)
 
     def set(self, rvw, s=None, t=None):
         self.rvw = rvw
@@ -142,6 +120,9 @@ class BallHistory:
 
     def __getitem__(self, idx: int) -> BallState:
         return self.states[idx]
+
+    def __len__(self) -> int:
+        return len(self.states)
 
     @property
     def empty(self) -> bool:
