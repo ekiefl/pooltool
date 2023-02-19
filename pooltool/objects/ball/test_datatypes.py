@@ -5,7 +5,9 @@ import pytest
 
 from pooltool.constants import stationary
 from pooltool.objects.ball.datatypes import (
+    Ball,
     BallHistory,
+    BallOrientation,
     BallParams,
     BallState,
     _null_rvw,
@@ -18,6 +20,14 @@ def test__null_rvw():
     rvw[0] = [1, 1, 1]
     rvw2 = _null_rvw()
     assert not np.array_equal(rvw, rvw2, equal_nan=True)
+
+
+def test_ball_orientation():
+    orientation = BallOrientation.random()
+
+    # Frozen
+    with pytest.raises(FrozenInstanceError):
+        orientation.pos = [1, 1, 1, 1]
 
 
 def test_ball_state_default():
@@ -68,6 +78,46 @@ def test_ball_history_equality():
     assert history1 != history2
 
 
+def test_ball_history_vectorize():
+    history = BallHistory()
+
+    # Cannot vectorize empty history
+    with pytest.raises(AssertionError):
+        history.vectorize()
+
+    # Append same state 10 times
+    state = BallState.default()
+    state.rvw[0] = [1, 1, 1]
+    for _ in range(10):
+        history.add(state)
+
+    rvws, motion_states, t = history.vectorize()
+
+    assert np.array_equal(rvws, np.array([state.rvw] * 10))
+    assert np.array_equal(motion_states, np.array([0] * 10))
+    assert np.array_equal(t, np.array([0] * 10))
+
+
+def test_ball_history_copy():
+    # Create a history of 10 states
+    history = BallHistory()
+    state = BallState.default()
+    state.rvw[0] = [1, 1, 1]
+    for _ in range(10):
+        history.add(state)
+
+    # Create a copy of history
+    copy = history.copy()
+
+    # Copy equals original
+    assert copy == history
+
+    # Modifying original does not modify copy
+    history.states[0].t = 100
+    history.states[0].rvw[0] = [0, 0, 0]
+    assert copy != history
+
+
 def test_ball_history_add():
     # Init history
     history = BallHistory()
@@ -114,3 +164,36 @@ def test_ball_params():
     assert params.R == other.R
     assert params.u_r == other.u_r
     assert params.u_sp == other.u_sp
+
+
+def test_ball_copy():
+    ball = Ball.create("cue", m=24, g=10.8, xy=[4, 2])
+    copy = ball.copy()
+
+    # Ball and copy equate
+    assert ball == copy
+
+    # Various changes to ball do not affect copy...
+
+    # Can't change `params` attributes period
+    with pytest.raises(FrozenInstanceError):
+        ball.params.m = 42
+
+    # Nor `initial_orientation` attributes
+    with pytest.raises(FrozenInstanceError):
+        ball.initial_orientation.pos = [1, 1, 1, 1]
+
+    # Assigning new params does not modify copy
+    assert ball.params == copy.params
+    ball.params = BallParams(m=42)
+    assert ball.params != copy.params
+
+    # Assigning new orientation does not modify copy
+    assert ball.initial_orientation == copy.initial_orientation
+    ball.initial_orientation = BallOrientation.random()
+    assert ball.initial_orientation != copy.initial_orientation
+
+    # Modifying state does not modify copy
+    assert ball.state == copy.state
+    ball.state.rvw[0] = [1, 1, 1]
+    assert ball.state != copy.state

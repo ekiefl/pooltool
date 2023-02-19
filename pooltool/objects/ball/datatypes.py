@@ -25,6 +25,10 @@ class BallOrientation:
             sphere=list((tmp := 2 * np.random.rand(4) - 1) / np.linalg.norm(tmp)),
         )
 
+    def copy(self) -> BallOrientation:
+        """Create a deep copy"""
+        return replace(self)
+
 
 @dataclass(frozen=True)
 class BallParams:
@@ -90,14 +94,15 @@ class BallState:
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
 
-    def set(self, rvw, s=None, t=None):
+    def set(self, rvw, s=None, t=None) -> None:
         self.rvw = rvw
         if s is not None:
             self.s = s
         if t is not None:
             self.t = t
 
-    def copy(self):
+    def copy(self) -> BallState:
+        """Create a deep copy"""
         # Twice as fast as copy.deepcopy(self)
         return replace(self, rvw=np.copy(self.rvw))
 
@@ -137,6 +142,14 @@ class BallHistory:
 
         self.states.append(new)
 
+    def copy(self) -> BallHistory:
+        """Create a deep copy"""
+        history = BallHistory()
+        for state in self.states:
+            history.add(state)
+
+        return history
+
     def vectorize(self) -> Tuple[NDArray, NDArray, NDArray]:
         """Return rvw, s, and t as arrays"""
         assert not self.empty, "History is empty"
@@ -161,6 +174,16 @@ class Ball:
 
     history: BallHistory = field(default_factory=BallHistory.factory)
     history_cts: BallHistory = field(default_factory=BallHistory.factory)
+
+    def copy(self) -> Ball:
+        """Create a deep copy"""
+        # `params` and `initial_orientation` are frozen
+        return replace(
+            self,
+            state=self.state.copy(),
+            history=self.history.copy(),
+            history_cts=self.history_cts.copy(),
+        )
 
     @staticmethod
     def create(id: str, *, xy: Optional[List[float]] = None, **kwargs) -> Ball:
