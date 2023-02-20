@@ -1,6 +1,7 @@
 """A place for horrible stuff to happen"""
 
 import numpy as np
+from numpy.typing import NDArray
 
 from pooltool.objects.table.components import (
     CircularCushionSegment,
@@ -11,6 +12,10 @@ from pooltool.objects.table.components import (
 )
 
 
+def _arr(*args) -> NDArray[np.float64]:
+    return np.array(args, dtype=np.float64)
+
+
 def _create_billiard_table_cushion_segments(specs) -> CushionSegments:
     h = specs.cushion_height
     return CushionSegments(
@@ -18,26 +23,26 @@ def _create_billiard_table_cushion_segments(specs) -> CushionSegments:
             # long segments
             "3": LinearCushionSegment(
                 "3_edge",
-                p1=np.array((0, 0, h), dtype=np.float64),
-                p2=np.array((0, specs.l, h), dtype=np.float64),
+                p1=_arr(0, 0, h),
+                p2=_arr(0, specs.l, h),
                 direction=CushionDirection.SIDE2,
             ),
             "12": LinearCushionSegment(
                 "12_edge",
-                p1=np.array((specs.w, specs.l, h), dtype=np.float64),
-                p2=np.array((specs.w, 0, h), dtype=np.float64),
+                p1=_arr(specs.w, specs.l, h),
+                p2=_arr(specs.w, 0, h),
                 direction=CushionDirection.SIDE1,
             ),
             "9": LinearCushionSegment(
                 "9_edge",
-                p1=np.array((0, specs.l, h), dtype=np.float64),
-                p2=np.array((specs.w, specs.l, h), dtype=np.float64),
+                p1=_arr(0, specs.l, h),
+                p2=_arr(specs.w, specs.l, h),
                 direction=CushionDirection.SIDE1,
             ),
             "18": LinearCushionSegment(
                 "18_edge",
-                p1=np.array((0, 0, h), dtype=np.float64),
-                p2=np.array((specs.w, 0, h), dtype=np.float64),
+                p1=_arr(0, 0, h),
+                p2=_arr(specs.w, 0, h),
                 direction=CushionDirection.SIDE2,
             ),
         },
@@ -64,233 +69,151 @@ def _create_pocket_table_cushion_segments(specs) -> CushionSegments:
             # long segments
             "3": LinearCushionSegment(
                 "3_edge",
-                p1=np.array((0, pw * np.cos(np.pi / 4) + dc, h), dtype=np.float64),
-                p2=np.array((0, (specs.l - sw) / 2 - ds, h), dtype=np.float64),
+                p1=_arr(0, pw * np.cos(np.pi / 4) + dc, h),
+                p2=_arr(0, (specs.l - sw) / 2 - ds, h),
                 direction=CushionDirection.SIDE2,
             ),
             "6": LinearCushionSegment(
                 "6_edge",
-                p1=np.array((0, (specs.l + sw) / 2 + ds, h), dtype=np.float64),
-                p2=np.array(
-                    (0, -pw * np.cos(np.pi / 4) + specs.l - dc, h), dtype=np.float64
-                ),
+                p1=_arr(0, (specs.l + sw) / 2 + ds, h),
+                p2=_arr(0, -pw * np.cos(np.pi / 4) + specs.l - dc, h),
                 direction=CushionDirection.SIDE2,
             ),
             "15": LinearCushionSegment(
                 "15_edge",
-                p1=np.array(
-                    (specs.w, pw * np.cos(np.pi / 4) + dc, h), dtype=np.float64
-                ),
-                p2=np.array((specs.w, (specs.l - sw) / 2 - ds, h), dtype=np.float64),
+                p1=_arr(specs.w, pw * np.cos(np.pi / 4) + dc, h),
+                p2=_arr(specs.w, (specs.l - sw) / 2 - ds, h),
                 direction=CushionDirection.SIDE1,
             ),
             "12": LinearCushionSegment(
                 "12_edge",
-                p1=np.array((specs.w, (specs.l + sw) / 2 + ds, h), dtype=np.float64),
-                p2=np.array(
-                    (specs.w, -pw * np.cos(np.pi / 4) + specs.l - dc, h),
-                    dtype=np.float64,
-                ),
+                p1=_arr(specs.w, (specs.l + sw) / 2 + ds, h),
+                p2=_arr(specs.w, -pw * np.cos(np.pi / 4) + specs.l - dc, h),
                 direction=CushionDirection.SIDE1,
             ),
             "18": LinearCushionSegment(
                 "18_edge",
-                p1=np.array((pw * np.cos(np.pi / 4) + dc, 0, h), dtype=np.float64),
-                p2=np.array(
-                    (-pw * np.cos(np.pi / 4) + specs.w - dc, 0, h), dtype=np.float64
-                ),
+                p1=_arr(pw * np.cos(np.pi / 4) + dc, 0, h),
+                p2=_arr(-pw * np.cos(np.pi / 4) + specs.w - dc, 0, h),
                 direction=CushionDirection.SIDE2,
             ),
             "9": LinearCushionSegment(
                 "9_edge",
-                p1=np.array(
-                    (pw * np.cos(np.pi / 4) + dc, specs.l, h), dtype=np.float64
-                ),
-                p2=np.array(
-                    (-pw * np.cos(np.pi / 4) + specs.w - dc, specs.l, h),
-                    dtype=np.float64,
-                ),
+                p1=_arr(pw * np.cos(np.pi / 4) + dc, specs.l, h),
+                p2=_arr(-pw * np.cos(np.pi / 4) + specs.w - dc, specs.l, h),
                 direction=CushionDirection.SIDE1,
             ),
             # side jaw segments
             "5": LinearCushionSegment(
                 "5_edge",
-                p1=np.array(
-                    (-cw, (specs.l + sw) / 2 - cw * np.sin(sa), h), dtype=np.float64
-                ),
-                p2=np.array(
-                    (-ds * np.cos(sa), (specs.l + sw) / 2 - ds * np.sin(sa), h),
-                    dtype=np.float64,
-                ),
+                p1=_arr(-cw, (specs.l + sw) / 2 - cw * np.sin(sa), h),
+                p2=_arr(-ds * np.cos(sa), (specs.l + sw) / 2 - ds * np.sin(sa), h),
                 direction=CushionDirection.SIDE1,
             ),
             "4": LinearCushionSegment(
                 "4_edge",
-                p1=np.array(
-                    (-cw, (specs.l - sw) / 2 + cw * np.sin(sa), h), dtype=np.float64
-                ),
-                p2=np.array(
-                    (-ds * np.cos(sa), (specs.l - sw) / 2 + ds * np.sin(sa), h),
-                    dtype=np.float64,
-                ),
+                p1=_arr(-cw, (specs.l - sw) / 2 + cw * np.sin(sa), h),
+                p2=_arr(-ds * np.cos(sa), (specs.l - sw) / 2 + ds * np.sin(sa), h),
                 direction=CushionDirection.SIDE2,
             ),
             "13": LinearCushionSegment(
                 "13_edge",
-                p1=np.array(
-                    (specs.w + cw, (specs.l + sw) / 2 - cw * np.sin(sa), h),
-                    dtype=np.float64,
-                ),
-                p2=np.array(
-                    (
-                        specs.w + ds * np.cos(sa),
-                        (specs.l + sw) / 2 - ds * np.sin(sa),
-                        h,
-                    ),
-                    dtype=np.float64,
+                p1=_arr(specs.w + cw, (specs.l + sw) / 2 - cw * np.sin(sa), h),
+                p2=_arr(
+                    specs.w + ds * np.cos(sa),
+                    (specs.l + sw) / 2 - ds * np.sin(sa),
+                    h,
                 ),
                 direction=CushionDirection.SIDE1,
             ),
             "14": LinearCushionSegment(
                 "14_edge",
-                p1=np.array(
-                    (specs.w + cw, (specs.l - sw) / 2 + cw * np.sin(sa), h),
-                    dtype=np.float64,
-                ),
-                p2=np.array(
-                    (
-                        specs.w + ds * np.cos(sa),
-                        (specs.l - sw) / 2 + ds * np.sin(sa),
-                        h,
-                    ),
-                    dtype=np.float64,
+                p1=_arr(specs.w + cw, (specs.l - sw) / 2 + cw * np.sin(sa), h),
+                p2=_arr(
+                    specs.w + ds * np.cos(sa),
+                    (specs.l - sw) / 2 + ds * np.sin(sa),
+                    h,
                 ),
                 direction=CushionDirection.SIDE2,
             ),
             # corner jaw segments
             "1": LinearCushionSegment(
                 "1_edge",
-                p1=np.array(
-                    (pw * np.cos(np.pi / 4) - cw * np.tan(ca), -cw, h), dtype=np.float64
-                ),
-                p2=np.array(
-                    (pw * np.cos(np.pi / 4) - dc * np.sin(ca), -dc * np.cos(ca), h),
-                    dtype=np.float64,
-                ),
+                p1=_arr(pw * np.cos(np.pi / 4) - cw * np.tan(ca), -cw, h),
+                p2=_arr(pw * np.cos(np.pi / 4) - dc * np.sin(ca), -dc * np.cos(ca), h),
                 direction=CushionDirection.SIDE2,
             ),
             "2": LinearCushionSegment(
                 "2_edge",
-                p1=np.array(
-                    (-cw, pw * np.cos(np.pi / 4) - cw * np.tan(ca), h), dtype=np.float64
-                ),
-                p2=np.array(
-                    (-dc * np.cos(ca), pw * np.cos(np.pi / 4) - dc * np.sin(ca), h),
-                    dtype=np.float64,
-                ),
+                p1=_arr(-cw, pw * np.cos(np.pi / 4) - cw * np.tan(ca), h),
+                p2=_arr(-dc * np.cos(ca), pw * np.cos(np.pi / 4) - dc * np.sin(ca), h),
                 direction=CushionDirection.SIDE1,
             ),
             "8": LinearCushionSegment(
                 "8_edge",
-                p1=np.array(
-                    (pw * np.cos(np.pi / 4) - cw * np.tan(ca), cw + specs.l, h),
-                    dtype=np.float64,
-                ),
-                p2=np.array(
-                    (
-                        pw * np.cos(np.pi / 4) - dc * np.sin(ca),
-                        specs.l + dc * np.cos(ca),
-                        h,
-                    ),
-                    dtype=np.float64,
+                p1=_arr(pw * np.cos(np.pi / 4) - cw * np.tan(ca), cw + specs.l, h),
+                p2=_arr(
+                    pw * np.cos(np.pi / 4) - dc * np.sin(ca),
+                    specs.l + dc * np.cos(ca),
+                    h,
                 ),
                 direction=CushionDirection.SIDE1,
             ),
             "7": LinearCushionSegment(
                 "7_edge",
-                p1=np.array(
-                    (-cw, -pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.l, h),
-                    dtype=np.float64,
-                ),
-                p2=np.array(
-                    (
-                        -dc * np.cos(ca),
-                        -pw * np.cos(np.pi / 4) + specs.l + dc * np.sin(ca),
-                        h,
-                    ),
-                    dtype=np.float64,
+                p1=_arr(-cw, -pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.l, h),
+                p2=_arr(
+                    -dc * np.cos(ca),
+                    -pw * np.cos(np.pi / 4) + specs.l + dc * np.sin(ca),
+                    h,
                 ),
                 direction=CushionDirection.SIDE2,
             ),
             "11": LinearCushionSegment(
                 "11_edge",
-                p1=np.array(
-                    (
-                        cw + specs.w,
-                        -pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.l,
-                        h,
-                    ),
-                    dtype=np.float64,
+                p1=_arr(
+                    cw + specs.w,
+                    -pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.l,
+                    h,
                 ),
-                p2=np.array(
-                    (
-                        specs.w + dc * np.cos(ca),
-                        -pw * np.cos(np.pi / 4) + specs.l + dc * np.sin(ca),
-                        h,
-                    ),
-                    dtype=np.float64,
+                p2=_arr(
+                    specs.w + dc * np.cos(ca),
+                    -pw * np.cos(np.pi / 4) + specs.l + dc * np.sin(ca),
+                    h,
                 ),
                 direction=CushionDirection.SIDE2,
             ),
             "10": LinearCushionSegment(
                 "10_edge",
-                p1=np.array(
-                    (
-                        -pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.w,
-                        cw + specs.l,
-                        h,
-                    ),
-                    dtype=np.float64,
+                p1=_arr(
+                    -pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.w,
+                    cw + specs.l,
+                    h,
                 ),
-                p2=np.array(
-                    (
-                        -pw * np.cos(np.pi / 4) + specs.w + dc * np.sin(ca),
-                        specs.l + dc * np.cos(ca),
-                        h,
-                    ),
-                    dtype=np.float64,
+                p2=_arr(
+                    -pw * np.cos(np.pi / 4) + specs.w + dc * np.sin(ca),
+                    specs.l + dc * np.cos(ca),
+                    h,
                 ),
                 direction=CushionDirection.SIDE1,
             ),
             "16": LinearCushionSegment(
                 "16_edge",
-                p1=np.array(
-                    (cw + specs.w, +pw * np.cos(np.pi / 4) - cw * np.tan(ca), h),
-                    dtype=np.float64,
-                ),
-                p2=np.array(
-                    (
-                        specs.w + dc * np.cos(ca),
-                        pw * np.cos(np.pi / 4) - dc * np.sin(ca),
-                        h,
-                    ),
-                    dtype=np.float64,
+                p1=_arr(cw + specs.w, +pw * np.cos(np.pi / 4) - cw * np.tan(ca), h),
+                p2=_arr(
+                    specs.w + dc * np.cos(ca),
+                    pw * np.cos(np.pi / 4) - dc * np.sin(ca),
+                    h,
                 ),
                 direction=CushionDirection.SIDE1,
             ),
             "17": LinearCushionSegment(
                 "17_edge",
-                p1=np.array(
-                    (-pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.w, -cw, h),
-                    dtype=np.float64,
-                ),
-                p2=np.array(
-                    (
-                        -pw * np.cos(np.pi / 4) + specs.w + dc * np.sin(ca),
-                        -dc * np.cos(ca),
-                        h,
-                    ),
-                    dtype=np.float64,
+                p1=_arr(-pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.w, -cw, h),
+                p2=_arr(
+                    -pw * np.cos(np.pi / 4) + specs.w + dc * np.sin(ca),
+                    -dc * np.cos(ca),
+                    h,
                 ),
                 direction=CushionDirection.SIDE2,
             ),
@@ -298,84 +221,62 @@ def _create_pocket_table_cushion_segments(specs) -> CushionSegments:
         circular={
             "1t": CircularCushionSegment(
                 "1t",
-                center=np.array(
-                    (pw * np.cos(np.pi / 4) + dc, -rc, h), dtype=np.float64
-                ),
+                center=_arr(pw * np.cos(np.pi / 4) + dc, -rc, h),
                 radius=rc,
             ),
             "2t": CircularCushionSegment(
                 "2t",
-                center=np.array(
-                    (-rc, pw * np.cos(np.pi / 4) + dc, h), dtype=np.float64
-                ),
+                center=_arr(-rc, pw * np.cos(np.pi / 4) + dc, h),
                 radius=rc,
             ),
             "4t": CircularCushionSegment(
                 "4t",
-                center=np.array((-rs, specs.l / 2 - sw / 2 - ds, h), dtype=np.float64),
+                center=_arr(-rs, specs.l / 2 - sw / 2 - ds, h),
                 radius=rs,
             ),
             "5t": CircularCushionSegment(
                 "5t",
-                center=np.array((-rs, specs.l / 2 + sw / 2 + ds, h), dtype=np.float64),
+                center=_arr(-rs, specs.l / 2 + sw / 2 + ds, h),
                 radius=rs,
             ),
             "7t": CircularCushionSegment(
                 "7t",
-                center=np.array(
-                    (-rc, specs.l - (pw * np.cos(np.pi / 4) + dc), h), dtype=np.float64
-                ),
+                center=_arr(-rc, specs.l - (pw * np.cos(np.pi / 4) + dc), h),
                 radius=rc,
             ),
             "8t": CircularCushionSegment(
                 "8t",
-                center=np.array(
-                    (pw * np.cos(np.pi / 4) + dc, specs.l + rc, h), dtype=np.float64
-                ),
+                center=_arr(pw * np.cos(np.pi / 4) + dc, specs.l + rc, h),
                 radius=rc,
             ),
             "10t": CircularCushionSegment(
                 "10t",
-                center=np.array(
-                    (specs.w - pw * np.cos(np.pi / 4) - dc, specs.l + rc, h),
-                    dtype=np.float64,
-                ),
+                center=_arr(specs.w - pw * np.cos(np.pi / 4) - dc, specs.l + rc, h),
                 radius=rc,
             ),
             "11t": CircularCushionSegment(
                 "11t",
-                center=np.array(
-                    (specs.w + rc, specs.l - (pw * np.cos(np.pi / 4) + dc), h),
-                    dtype=np.float64,
-                ),
+                center=_arr(specs.w + rc, specs.l - (pw * np.cos(np.pi / 4) + dc), h),
                 radius=rc,
             ),
             "13t": CircularCushionSegment(
                 "13t",
-                center=np.array(
-                    (specs.w + rs, specs.l / 2 + sw / 2 + ds, h), dtype=np.float64
-                ),
+                center=_arr(specs.w + rs, specs.l / 2 + sw / 2 + ds, h),
                 radius=rs,
             ),
             "14t": CircularCushionSegment(
                 "14t",
-                center=np.array(
-                    (specs.w + rs, specs.l / 2 - sw / 2 - ds, h), dtype=np.float64
-                ),
+                center=_arr(specs.w + rs, specs.l / 2 - sw / 2 - ds, h),
                 radius=rs,
             ),
             "16t": CircularCushionSegment(
                 "16t",
-                center=np.array(
-                    (specs.w + rc, pw * np.cos(np.pi / 4) + dc, h), dtype=np.float64
-                ),
+                center=_arr(specs.w + rc, pw * np.cos(np.pi / 4) + dc, h),
                 radius=rc,
             ),
             "17t": CircularCushionSegment(
                 "17t",
-                center=np.array(
-                    (specs.w - pw * np.cos(np.pi / 4) - dc, -rc, h), dtype=np.float64
-                ),
+                center=_arr(specs.w - pw * np.cos(np.pi / 4) - dc, -rc, h),
                 radius=rc,
             ),
         },
@@ -393,18 +294,20 @@ def _create_pocket_table_pockets(specs):
     sD = sr + sd
 
     pockets = {
-        "lb": Pocket("lb", center=(-cD / np.sqrt(2), -cD / np.sqrt(2), 0), radius=cr),
-        "lc": Pocket("lc", center=(-sD, specs.l / 2, 0), radius=sr),
+        "lb": Pocket(
+            "lb", center=_arr(-cD / np.sqrt(2), -cD / np.sqrt(2), 0), radius=cr
+        ),
+        "lc": Pocket("lc", center=_arr(-sD, specs.l / 2, 0), radius=sr),
         "lt": Pocket(
-            "lt", center=(-cD / np.sqrt(2), specs.l + cD / np.sqrt(2), 0), radius=cr
+            "lt", center=_arr(-cD / np.sqrt(2), specs.l + cD / np.sqrt(2), 0), radius=cr
         ),
         "rb": Pocket(
-            "rb", center=(specs.w + cD / np.sqrt(2), -cD / np.sqrt(2), 0), radius=cr
+            "rb", center=_arr(specs.w + cD / np.sqrt(2), -cD / np.sqrt(2), 0), radius=cr
         ),
-        "rc": Pocket("rc", center=(specs.w + sD, specs.l / 2, 0), radius=sr),
+        "rc": Pocket("rc", center=_arr(specs.w + sD, specs.l / 2, 0), radius=sr),
         "rt": Pocket(
             "rt",
-            center=(specs.w + cD / np.sqrt(2), specs.l + cD / np.sqrt(2), 0),
+            center=_arr(specs.w + cD / np.sqrt(2), specs.l + cD / np.sqrt(2), 0),
             radius=cr,
         ),
     }

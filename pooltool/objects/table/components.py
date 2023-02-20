@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import enum
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Dict
 
 import numpy as np
 from numpy.typing import NDArray
 
 import pooltool.utils as utils
+from pooltool.utils.dataclasses import are_dataclasses_equal
 
 
 class CushionDirection(enum.Enum):
@@ -29,7 +30,7 @@ class CushionDirection(enum.Enum):
     BOTH = 2
 
 
-@dataclass
+@dataclass(eq=False, frozen=True)
 class LinearCushionSegment:
     """A linear cushion segment defined by the line between points p1 and p2
 
@@ -48,8 +49,11 @@ class LinearCushionSegment:
     direction: CushionDirection = field(default=CushionDirection.BOTH)
 
     def __post_init__(self):
-        self.p1 = np.array(self.p1, dtype=np.float64)
-        self.p2 = np.array(self.p2, dtype=np.float64)
+        # Segment must have constant height
+        assert self.p1[2] == self.p2[2]
+
+    def __eq__(self, other):
+        return are_dataclasses_equal(self, other)
 
     @property
     def height(self):
@@ -78,14 +82,22 @@ class LinearCushionSegment:
     def get_normal(self, rvw):
         return self.normal
 
+    def copy(self):
+        """Create a deep copy"""
+        return replace(
+            self,
+            p1=np.copy(self.p1),
+            p2=np.copy(self.p2),
+        )
 
-@dataclass
+
+@dataclass(frozen=True, eq=False)
 class CircularCushionSegment:
     """A circular cushion segment defined a circle center and radius
 
     Attributes:
         center:
-            A length-3 array that defines a 3D point in space of the circle center.
+            A length-3 tuple that defines a 3D point in space of the circle center.
             starts. The last component (z-axis) is the height of the cushion segment.
         radius:
             The radius of the circular cushion segment.
@@ -95,22 +107,32 @@ class CircularCushionSegment:
     center: NDArray[np.float64]
     radius: float
 
+    def __eq__(self, other):
+        return are_dataclasses_equal(self, other)
+
+    def __post_init__(self):
+        assert len(self.center) == 3
+
     @property
-    def height(self):
+    def height(self) -> float:
         return self.center[2]
 
     @property
-    def a(self):
+    def a(self) -> float:
         return self.center[0]
 
     @property
-    def b(self):
+    def b(self) -> float:
         return self.center[1]
 
-    def get_normal(self, rvw):
+    def get_normal(self, rvw) -> NDArray[np.float64]:
         normal = utils.unit_vector_fast(rvw[0, :] - self.center)
         normal[2] = 0  # remove z-component
         return normal
+
+    def copy(self) -> CircularCushionSegment:
+        """Create a deepcopy"""
+        return replace(self, center=np.copy(self.center))
 
 
 @dataclass
@@ -118,8 +140,16 @@ class CushionSegments:
     linear: Dict[str, LinearCushionSegment]
     circular: Dict[str, CircularCushionSegment]
 
+    def copy(self) -> CushionSegments:
+        """Create a deepcopy"""
+        return replace(
+            self,
+            linear={k: v.copy() for k, v in self.linear.items()},
+            circular={k: v for k, v in self.circular.items()},
+        )
 
-@dataclass
+
+@dataclass(eq=False, frozen=True)
 class Pocket:
     id: str
     center: NDArray[np.float64]
@@ -127,16 +157,27 @@ class Pocket:
     depth: float = field(default=0.08)
     contains: set = field(default_factory=set)
 
+    def __post_init__(self):
+        assert len(self.center) == 3
+        assert self.center[2] == 0
+
+    def __eq__(self, other):
+        return are_dataclasses_equal(self, other)
+
     @property
-    def a(self):
+    def a(self) -> float:
         return self.center[0]
 
     @property
-    def b(self):
+    def b(self) -> float:
         return self.center[1]
 
-    def add(self, ball_id):
+    def add(self, ball_id) -> None:
         self.contains.add(ball_id)
 
-    def remove(self, ball_id):
+    def remove(self, ball_id) -> None:
         self.contains.remove(ball_id)
+
+    def copy(self) -> Pocket:
+        """Create a deepcopy"""
+        return replace(self, center=np.copy(self.center))
