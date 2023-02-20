@@ -253,18 +253,18 @@ class BallRender(Render):
     def randomize_orientation(self):
         self.get_node("sphere").setHpr(*np.random.uniform(-180, 180, size=3))
 
-    def get_orientation(self):
+    def get_orientation(self) -> BallOrientation:
         """Get the quaternions required to define the ball's rendered orientation"""
         return BallOrientation(
-            pos=[x for x in self.nodes["pos"].getQuat()],
-            sphere=[x for x in self.nodes["sphere"].getQuat()],
+            pos=tuple([float(x) for x in self.nodes["pos"].getQuat()]),
+            sphere=tuple([float(x) for x in self.nodes["sphere"].getQuat()]),
         )
 
     def get_final_orientation(self):
         """Get the ball's quaternions of the final state in the history"""
         return BallOrientation(
-            pos=[x for x in self.quats[-1]],
-            sphere=[x for x in self.nodes["sphere"].getQuat()],
+            pos=tuple([float(x) for x in self.quats[-1]]),
+            sphere=tuple([float(x) for x in self.nodes["sphere"].getQuat()]),
         )
 
     def set_orientation(self, orientation: BallOrientation):

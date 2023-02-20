@@ -15,14 +15,16 @@ from pooltool.utils.dataclasses import are_dataclasses_equal
 class BallOrientation:
     """Stores a ball's rendered orientation"""
 
-    pos: List[float]
-    sphere: List[float]
+    pos: Tuple[float, ...]
+    sphere: Tuple[float, ...]
 
     @staticmethod
     def random() -> BallOrientation:
+        quat = (tmp := 2 * np.random.rand(4) - 1) / np.linalg.norm(tmp)
+        q0, qx, qy, qz = quat
         return BallOrientation(
-            pos=[1, 0, 0, 0],
-            sphere=list((tmp := 2 * np.random.rand(4) - 1) / np.linalg.norm(tmp)),
+            pos=(1, 0, 0, 0),
+            sphere=(q0, qx, qy, qz),
         )
 
     def copy(self) -> BallOrientation:
