@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Dict, Optional, Protocol
+from dataclasses import dataclass, field, replace
+from typing import Dict, Optional, Protocol, Tuple
 
 import pooltool.ani as ani
 from pooltool.error import ConfigError
@@ -179,8 +179,16 @@ class Table:
         return self.specs.l
 
     @property
-    def center(self):
+    def center(self) -> Tuple[float, float]:
         return self.w / 2, self.l / 2
+
+    def copy(self) -> Table:
+        """Create a deepcopy"""
+        return replace(
+            self,
+            cushion_segments=self.cushion_segments.copy(),
+            pockets={k: v.copy() for k, v in self.pockets.items()},
+        )
 
     @staticmethod
     def from_table_specs(specs: TableSpecs) -> Table:
