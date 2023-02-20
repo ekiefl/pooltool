@@ -14,19 +14,25 @@ from pooltool.events import (
     Event,
     EventType,
     ball_ball_collision,
-    ball_cushion_collision,
+    ball_circular_cushion_collision,
+    ball_linear_cushion_collision,
     ball_pocket_collision,
     get_next_transition_event,
     null_event,
 )
-from pooltool.objects import NullObject
 from pooltool.objects.ball.datatypes import Ball
+from pooltool.objects.table.components import (
+    CircularCushionSegment,
+    LinearCushionSegment,
+    Pocket,
+)
 from pooltool.system.datatypes import System
 
 DEFAULT_INCLUDE = {
     EventType.NONE,
     EventType.BALL_BALL,
-    EventType.BALL_CUSHION,
+    EventType.BALL_LINEAR_CUSHION,
+    EventType.BALL_CIRCULAR_CUSHION,
     EventType.BALL_POCKET,
     EventType.STICK_BALL,
     EventType.SPINNING_STATIONARY,
@@ -65,7 +71,7 @@ def simulate(
             shot.evolve(event.time - shot.t)
 
             if event.event_type in include:
-                event.resolve()
+                shot.resolve_event(event)
 
             shot.update_history(event)
 
@@ -210,7 +216,9 @@ def get_next_ball_circular_cushion_event(shot: System) -> Event:
 
     if not len(collision_coeffs):
         # There are no collisions to test for
-        return ball_cushion_collision(Ball.dummy(), NullObject(), shot.t + dtau_E)
+        return ball_circular_cushion_collision(
+            Ball.dummy(), CircularCushionSegment.dummy(), shot.t + dtau_E
+        )
 
     dtau_E, index = utils.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
 
@@ -220,14 +228,14 @@ def get_next_ball_circular_cushion_event(shot: System) -> Event:
         shot.table.cushion_segments.circular[cushion_id],
     )
 
-    return ball_cushion_collision(ball, cushion, shot.t + dtau_E)
+    return ball_circular_cushion_collision(ball, cushion, shot.t + dtau_E)
 
 
 def get_next_ball_linear_cushion_collision(shot: System) -> Event:
     """Returns next ball-cushion collision (linear cushion segment)"""
 
     dtau_E_min = np.inf
-    involved_agents = (Ball.dummy(), NullObject())
+    involved_agents = (Ball.dummy(), LinearCushionSegment.dummy())
 
     for ball in shot.balls.values():
         if ball.state.s in c.nontranslating:
@@ -255,7 +263,7 @@ def get_next_ball_linear_cushion_collision(shot: System) -> Event:
 
     dtau_E = dtau_E_min
 
-    return ball_cushion_collision(*involved_agents, shot.t + dtau_E)
+    return ball_linear_cushion_collision(*involved_agents, shot.t + dtau_E)
 
 
 def get_next_ball_pocket_collision(shot: System) -> Event:
@@ -292,7 +300,7 @@ def get_next_ball_pocket_collision(shot: System) -> Event:
 
     if not len(collision_coeffs):
         # There are no collisions to test for
-        return ball_pocket_collision(Ball.dummy(), NullObject(), shot.t + dtau_E)
+        return ball_pocket_collision(Ball.dummy(), Pocket.dummy(), shot.t + dtau_E)
 
     dtau_E, index = utils.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
 

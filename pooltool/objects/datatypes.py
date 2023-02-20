@@ -1,22 +1,4 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-
-import numpy as np
-
-import pooltool.constants as c
-
-
-@dataclass
-class NullObject:
-    id: str = field(default="NA")
-
-    @property
-    def s(self):
-        return c.stationary
-
-    @property
-    def rvw(self):
-        return np.zeros((3, 3))
 
 
 class Render(ABC):

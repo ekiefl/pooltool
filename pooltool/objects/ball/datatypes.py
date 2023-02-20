@@ -206,5 +206,5 @@ class Ball:
         return ball
 
     @staticmethod
-    def dummy() -> Ball:
-        return Ball(id="dummy")
+    def dummy(id: str = "dummy") -> Ball:
+        return Ball(id=id)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, field, replace
-from typing import Dict
+from typing import Dict, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -90,6 +90,12 @@ class LinearCushionSegment:
             p2=np.copy(self.p2),
         )
 
+    @staticmethod
+    def dummy() -> LinearCushionSegment:
+        return LinearCushionSegment(
+            id="dummy", p1=np.array([0, 0, 1]), p2=np.array([1, 1, 1])
+        )
+
 
 @dataclass(frozen=True, eq=False)
 class CircularCushionSegment:
@@ -133,6 +139,13 @@ class CircularCushionSegment:
     def copy(self) -> CircularCushionSegment:
         """Create a deepcopy"""
         return replace(self, center=np.copy(self.center))
+
+    @staticmethod
+    def dummy() -> CircularCushionSegment:
+        return CircularCushionSegment(id="dummy", center=np.array([0, 0, 0]), radius=10)
+
+
+CushionSegment = Union[LinearCushionSegment, CircularCushionSegment]
 
 
 @dataclass
@@ -181,3 +194,7 @@ class Pocket:
     def copy(self) -> Pocket:
         """Create a deepcopy"""
         return replace(self, center=np.copy(self.center))
+
+    @staticmethod
+    def dummy() -> Pocket:
+        return Pocket(id="dummy", center=np.array([0, 0, 0]), radius=10)

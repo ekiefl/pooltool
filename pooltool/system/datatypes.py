@@ -8,9 +8,10 @@ import numpy as np
 import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.error import ConfigError
-from pooltool.events import Event, filter_ball, stick_ball_collision
+from pooltool.events import Event, event_resolvers, filter_ball, stick_ball_collision
 from pooltool.objects.ball.datatypes import Ball, BallHistory, BallState
 from pooltool.objects.cue.datatypes import Cue
+from pooltool.objects.table.components import Pocket
 from pooltool.objects.table.datatypes import Table
 
 
@@ -106,10 +107,10 @@ class System:
 
             # Get all events that the ball is involved in, even the null_event events
             # that mark the start and end times
-            events = filter_ball(self.events, ball, keep_nonevent=True)
+            events = filter_ball(self.events, ball.id, keep_nonevent=True)
 
             # Tracks which event is currently being handled
-            event_counter = 0
+            count = 0
 
             # The elapsed simulation time (as of the last timepoint)
             elapsed = 0
@@ -121,7 +122,7 @@ class System:
                     assert events[-1].time - elapsed < dt
                     break
 
-                if events[event_counter + 1].time - elapsed > dt:
+                if events[count + 1].time - elapsed > dt:
                     # This is the easy case. There is no upcoming event so we simply
                     # evolve the state an amount dt
                     evolve_time = dt
@@ -134,31 +135,29 @@ class System:
                     # timestamp
 
                     while True:
-                        event_counter += 1
+                        count += 1
 
-                        if events[event_counter + 1].time - elapsed > dt:
+                        if events[count + 1].time - elapsed > dt:
                             # OK, we found the last event between the current timestamp
-                            # and the next timestamp. It is events[event_counter].
+                            # and the next timestamp. It is events[count].
                             break
 
                     # We need to get the ball's outgoing state from the event. We'll
                     # evolve the system from this state.
-                    if events[event_counter].event_type.is_transition():
-                        state = events[event_counter].final_states[0]
-                    elif events[event_counter].event_type.is_collision():
-                        if ball == events[event_counter].agents[0]:
-                            state = events[event_counter].final_states[0]
+                    if events[count].event_type.is_transition():
+                        state = events[count].agents[0].final.state
+                    elif events[count].event_type.is_collision():
+                        if isinstance(events[count].agents[0].final, Ball):
+                            state = events[count].agents[0].final.state
                         else:
-                            state = events[event_counter].final_states[1]
+                            state = events[count].agents[1].final.state
                     else:
-                        raise NotImplementedError(
-                            f"Can't handle {events[event_counter]}"
-                        )
+                        raise NotImplementedError(f"Can't handle {events[count]}")
                     rvw, s = state.rvw, state.s
 
                     # Since this event occurs between two timestamps, we won't be
                     # evolving a full dt. Instead, we evolve this much:
-                    evolve_time = elapsed + dt - events[event_counter].time
+                    evolve_time = elapsed + dt - events[count].time
 
                 # Whether it was the hard path or the easy path, the ball state is
                 # properly defined and we know how much we need to simulate.
@@ -202,13 +201,25 @@ class System:
             )
             ball.state.set(rvw, s=s, t=(self.t + dt))
 
+    def resolve_event(self, event: Event) -> None:
+        event.resolve()
+
+        # The final states of the agents are solved, but the system objects still need
+        # to be updated with these states.
+        for agent in event.agents:
+            final = agent.final
+            if isinstance(final, Ball):
+                self.balls[final.id].state = final.state
+            if isinstance(final, Pocket):
+                self.table.pockets[final.id] = final
+
     def reset_balls(self):
         """Reset balls to their initial states"""
         for ball in self.balls.values():
             if not ball.history.empty:
                 ball.state = ball.history[0].copy()
 
-    def strike(self, **state_kwargs):
+    def strike(self, **state_kwargs) -> None:
         """Strike a ball with the cue stick
 
         The stricken ball is determined by the self.cue.cue_ball_id.
@@ -222,9 +233,7 @@ class System:
         assert self.cue.cue_ball_id in self.balls
 
         event = stick_ball_collision(self.cue, self.balls[self.cue.cue_ball_id], time=0)
-        event.resolve()
-
-        return event
+        self.resolve_event(event)
 
     def aim_at_pos(self, pos):
         """Set phi to aim at a 3D position

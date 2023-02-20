@@ -1,16 +1,15 @@
 #! /usr/bin/env python
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Union
+from dataclasses import dataclass, field, replace
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
 import pooltool.constants as c
 import pooltool.physics as physics
 import pooltool.utils as utils
-from pooltool.objects import NullObject
-from pooltool.objects.ball.datatypes import Ball, BallState
+from pooltool.objects.ball.datatypes import Ball, BallHistory, BallState
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.components import (
     CircularCushionSegment,
@@ -23,7 +22,8 @@ from pooltool.utils import strenum
 class EventType(strenum.StrEnum):
     NONE = strenum.auto()
     BALL_BALL = strenum.auto()
-    BALL_CUSHION = strenum.auto()
+    BALL_LINEAR_CUSHION = strenum.auto()
+    BALL_CIRCULAR_CUSHION = strenum.auto()
     BALL_POCKET = strenum.auto()
     STICK_BALL = strenum.auto()
     SPINNING_STATIONARY = strenum.auto()
@@ -34,7 +34,8 @@ class EventType(strenum.StrEnum):
     def is_collision(self):
         return self in (
             EventType.BALL_BALL,
-            EventType.BALL_CUSHION,
+            EventType.BALL_CIRCULAR_CUSHION,
+            EventType.BALL_LINEAR_CUSHION,
             EventType.BALL_POCKET,
             EventType.STICK_BALL,
         )
@@ -47,110 +48,166 @@ class EventType(strenum.StrEnum):
             EventType.SLIDING_ROLLING,
         )
 
-    def ball_transition_motion_states(self):
-        """Return the ball motion states before and after a transition
 
-        For example, if self == EventType.SPINNING_STATIONARY, return (c.spinning,
-        c.stationary). Raises AssertionError if event is not a transition.
-        """
-        assert self.is_transition()
-
-        if self == EventType.SPINNING_STATIONARY:
-            return c.spinning, c.stationary
-        elif self == EventType.ROLLING_STATIONARY:
-            return c.rolling, c.stationary
-        elif self == EventType.ROLLING_SPINNING:
-            return c.rolling, c.spinning
-        elif self == EventType.SLIDING_ROLLING:
-            return c.sliding, c.rolling
-        else:
-            raise NotImplementedError()
+Snapshot = Optional[
+    Union[
+        Ball,
+        Cue,
+        CircularCushionSegment,
+        LinearCushionSegment,
+        Pocket,
+    ]
+]
 
 
-def _get_state(agent) -> Optional[BallState]:
-    if isinstance(agent, Ball):
-        return agent.state.copy()
-    return None
+@dataclass
+class Agent:
+    initial: Snapshot
+    final: Optional[Snapshot] = field(default=None)
+
+    @staticmethod
+    def null() -> Agent:
+        return Agent(initial=None)
+
+    @staticmethod
+    def from_cue(cue: Cue) -> Agent:
+        return Agent(initial=cue.copy())
+
+    @staticmethod
+    def from_ball(ball: Ball) -> Agent:
+        snapshot = ball.copy()
+        snapshot.history = BallHistory()
+        snapshot.history_cts = BallHistory()
+
+        return Agent(initial=snapshot)
+
+    @staticmethod
+    def from_pocket(pocket: Pocket) -> Agent:
+        return Agent(initial=pocket.copy())
+
+    @staticmethod
+    def from_linear_cushion(linear_seg: LinearCushionSegment) -> Agent:
+        return Agent(initial=linear_seg.copy())
+
+    @staticmethod
+    def from_circular_cushion(circ_seg: CircularCushionSegment) -> Agent:
+        return Agent(initial=circ_seg.copy())
 
 
 @dataclass
 class Event:
     event_type: EventType
-    agents: List[Any]
-    time: float = 0
-
-    initial_states: List[Optional[BallState]] = field(init=False)
-    final_states: List[Optional[BallState]] = field(init=False, default_factory=list)
-
-    def __post_init__(self):
-        self.initial_states = [_get_state(agent) for agent in self.agents]
+    agents: Tuple[Agent, ...]
+    time: float
 
     def __repr__(self):
-        agents = [(agent.id if agent is not None else None) for agent in self.agents]
+        agents = [
+            (agent.initial.id if agent.initial is not None else None)
+            for agent in self.agents
+        ]
         lines = [
             f"<{self.__class__.__name__} object at {hex(id(self))}>",
             f" ├── type   : {self.event_type}",
             f" ├── time   : {self.time}",
             f" └── agents : {agents}",
         ]
-
         return "\n".join(lines) + "\n"
-
-    def assert_not_partial(self):
-        """Raise AssertionError if agents are invalid
-
-        In order to call resolve, there must exist at least one agent and it may not be
-        a NullObject.
-        """
-        assert len(self.agents)
-        for agent in self.agents:
-            assert not isinstance(agent, NullObject)
 
     def resolve(self):
         event_resolvers[self.event_type](self)
 
-    def save(self, path):
-        raise NotImplementedError()
-
 
 def null_event(time: float) -> Event:
-    return Event(event_type=EventType.NONE, agents=[], time=time)
+    return Event(
+        event_type=EventType.NONE,
+        agents=(Agent.null(),),
+        time=time,
+    )
 
 
 def ball_ball_collision(ball1: Ball, ball2: Ball, time: float) -> Event:
-    return Event(event_type=EventType.BALL_BALL, agents=[ball1, ball2], time=time)
+    return Event(
+        event_type=EventType.BALL_BALL,
+        agents=(
+            Agent.from_ball(ball1),
+            Agent.from_ball(ball2),
+        ),
+        time=time,
+    )
 
 
-def ball_cushion_collision(
-    ball: Ball,
-    cushion: Union[LinearCushionSegment, CircularCushionSegment],
-    time: float,
+def ball_linear_cushion_collision(
+    ball: Ball, cushion: LinearCushionSegment, time: float
 ) -> Event:
-    return Event(event_type=EventType.BALL_CUSHION, agents=[ball, cushion], time=time)
+    return Event(
+        event_type=EventType.BALL_LINEAR_CUSHION,
+        agents=(Agent.from_ball(ball), Agent.from_linear_cushion(cushion)),
+        time=time,
+    )
+
+
+def ball_circular_cushion_collision(
+    ball: Ball, cushion: CircularCushionSegment, time: float
+) -> Event:
+    return Event(
+        event_type=EventType.BALL_CIRCULAR_CUSHION,
+        agents=(Agent.from_ball(ball), Agent.from_circular_cushion(cushion)),
+        time=time,
+    )
 
 
 def ball_pocket_collision(ball: Ball, pocket: Pocket, time: float) -> Event:
-    return Event(event_type=EventType.BALL_POCKET, agents=[ball, pocket], time=time)
+    return Event(
+        event_type=EventType.BALL_POCKET,
+        agents=(
+            Agent.from_ball(ball),
+            Agent.from_pocket(pocket),
+        ),
+        time=time,
+    )
 
 
 def stick_ball_collision(stick: Cue, ball: Ball, time: float) -> Event:
-    return Event(event_type=EventType.STICK_BALL, agents=[stick, ball], time=time)
+    return Event(
+        event_type=EventType.STICK_BALL,
+        agents=(
+            Agent.from_cue(stick),
+            Agent.from_ball(ball),
+        ),
+        time=time,
+    )
 
 
 def spinning_stationary_transition(ball: Ball, time: float) -> Event:
-    return Event(event_type=EventType.SPINNING_STATIONARY, agents=[ball], time=time)
+    return Event(
+        event_type=EventType.SPINNING_STATIONARY,
+        agents=(Agent.from_ball(ball),),
+        time=time,
+    )
 
 
 def rolling_stationary_transition(ball: Ball, time: float) -> Event:
-    return Event(event_type=EventType.ROLLING_STATIONARY, agents=[ball], time=time)
+    return Event(
+        event_type=EventType.ROLLING_STATIONARY,
+        agents=(Agent.from_ball(ball),),
+        time=time,
+    )
 
 
 def rolling_spinning_transition(ball: Ball, time: float) -> Event:
-    return Event(event_type=EventType.ROLLING_SPINNING, agents=[ball], time=time)
+    return Event(
+        event_type=EventType.ROLLING_SPINNING,
+        agents=(Agent.from_ball(ball),),
+        time=time,
+    )
 
 
 def sliding_rolling_transition(ball: Ball, time: float) -> Event:
-    return Event(event_type=EventType.SLIDING_ROLLING, agents=[ball], time=time)
+    return Event(
+        event_type=EventType.SLIDING_ROLLING,
+        agents=(Agent.from_ball(ball),),
+        time=time,
+    )
 
 
 def get_next_transition_event(ball: Ball) -> Event:
@@ -186,100 +243,135 @@ def get_next_transition_event(ball: Ball) -> Event:
         raise NotImplementedError(f"Unknown '{ball.state.s=}'")
 
 
-def resolve_ball_ball(event):
-    event.assert_not_partial()
+def resolve_ball_ball(event: Event):
     ball1, ball2 = event.agents
 
-    rvw1, rvw2 = physics.resolve_ball_ball_collision(ball1.state.rvw, ball2.state.rvw)
-    s1, s2 = c.sliding, c.sliding
+    assert isinstance(ball1.initial, Ball)
+    assert isinstance(ball2.initial, Ball)
 
-    ball1.state.set(rvw1, s1, event.time)
-    ball2.state.set(rvw2, s2, event.time)
+    rvw1, rvw2 = physics.resolve_ball_ball_collision(
+        ball1.initial.state.rvw, ball2.initial.state.rvw
+    )
 
-    event.final_states = [ball1.state.copy(), ball2.state.copy()]
-
-
-def resolve_null(event):
-    event.assert_not_partial()
+    ball1.final = replace(ball1.initial, state=BallState(rvw1, c.sliding, event.time))
+    ball2.final = replace(ball2.initial, state=BallState(rvw2, c.sliding, event.time))
 
 
-def resolve_ball_cushion(event):
-    event.assert_not_partial()
+def resolve_null(event: Event):
+    pass
+
+
+def resolve_linear_ball_cushion(event: Event):
+    _resolve_ball_cushion(event)
+
+
+def resolve_circular_ball_cushion(event: Event):
+    _resolve_ball_cushion(event)
+
+
+def _resolve_ball_cushion(event: Event):
     ball, cushion = event.agents
-    normal = cushion.get_normal(ball.state.rvw)
+
+    assert isinstance(ball.initial, Ball)
+    assert isinstance(cushion.initial, (LinearCushionSegment, CircularCushionSegment))
+
+    rvw = ball.initial.state.rvw
+    normal = cushion.initial.get_normal(rvw)
 
     rvw = physics.resolve_ball_cushion_collision(
-        rvw=ball.state.rvw,
+        rvw=rvw,
         normal=normal,
-        R=ball.params.R,
-        m=ball.params.m,
-        h=cushion.height,
-        e_c=ball.params.e_c,
-        f_c=ball.params.f_c,
+        R=ball.initial.params.R,
+        m=ball.initial.params.m,
+        h=cushion.initial.height,
+        e_c=ball.initial.params.e_c,
+        f_c=ball.initial.params.f_c,
     )
-    s = c.sliding
 
-    ball.state.set(rvw, s, t=event.time)
-
-    event.final_states = [ball.state.copy(), None]
+    ball.final = replace(ball.initial, state=BallState(rvw, c.sliding, event.time))
+    cushion.final = None
 
 
-def resolve_ball_pocket(event):
-    event.assert_not_partial()
+def resolve_ball_pocket(event: Event):
     ball, pocket = event.agents
 
+    assert isinstance(ball.initial, Ball)
+    assert isinstance(pocket.initial, Pocket)
+
     # Ball is placed at the pocket center
-    rvw = np.array([[pocket.a, pocket.b, -pocket.depth], [0, 0, 0], [0, 0, 0]])
+    rvw = np.array(
+        [
+            [pocket.initial.a, pocket.initial.b, -pocket.initial.depth],
+            [0, 0, 0],
+            [0, 0, 0],
+        ]
+    )
 
-    ball.state.set(rvw, c.pocketed)
-
-    pocket.add(ball.id)
-
-    event.final_states = [ball.state.copy(), None]
+    ball.final = replace(ball.initial, state=BallState(rvw, c.pocketed, event.time))
+    pocket.final = pocket.initial.copy()
+    pocket.final.add(ball.final.id)
 
 
-def resolve_stick_ball(event):
-    event.assert_not_partial()
-    cue_stick, ball = event.agents
+def resolve_stick_ball(event: Event):
+    cue, ball = event.agents
+
+    assert isinstance(ball.initial, Ball)
+    assert isinstance(cue.initial, Cue)
 
     v, w = physics.cue_strike(
-        ball.params.m,
-        cue_stick.specs.M,
-        ball.params.R,
-        cue_stick.V0,
-        cue_stick.phi,
-        cue_stick.theta,
-        cue_stick.a,
-        cue_stick.b,
+        ball.initial.params.m,
+        cue.initial.specs.M,
+        ball.initial.params.R,
+        cue.initial.V0,
+        cue.initial.phi,
+        cue.initial.theta,
+        cue.initial.a,
+        cue.initial.b,
     )
-    rvw = np.array([ball.state.rvw[0], v, w])
 
+    rvw = np.array([ball.initial.state.rvw[0], v, w])
     s = (
         c.rolling
-        if abs(np.sum(utils.get_rel_velocity_fast(rvw, ball.params.R))) <= c.tol
+        if abs(np.sum(utils.get_rel_velocity_fast(rvw, ball.initial.params.R))) <= c.tol
         else c.sliding
     )
 
-    ball.state.set(rvw, s)
+    ball.final = replace(ball.initial, state=BallState(rvw, s, event.time))
+    cue.final = None
 
-    event.final_states = [ball.state.copy(), None]
 
-
-def resolve_transition(event):
-    event.assert_not_partial()
-
-    start, end = event.event_type.ball_transition_motion_states()
-
+def resolve_transition(event: Event):
     ball = event.agents[0]
-    ball.state.s = end
 
-    event.final_states = [ball.state.copy()]
+    assert isinstance(ball.initial, Ball)
+
+    start, end = _ball_transition_motion_states(event.event_type)
+
+    ball.final = ball.initial.copy()
+    ball.final.state.s = end
+
+
+def _ball_transition_motion_states(event_type: EventType) -> Tuple[int, int]:
+    """Return the ball motion states before and after a transition"""
+    assert event_type.is_transition()
+
+    if event_type == EventType.SPINNING_STATIONARY:
+        return c.spinning, c.stationary
+    elif event_type == EventType.ROLLING_STATIONARY:
+        return c.rolling, c.stationary
+    elif event_type == EventType.ROLLING_SPINNING:
+        return c.rolling, c.spinning
+    elif event_type == EventType.SLIDING_ROLLING:
+        return c.sliding, c.rolling
+
+    raise NotImplementedError()
 
 
 event_resolvers: Dict[EventType, Callable] = {
     EventType.NONE: resolve_null,
     EventType.BALL_BALL: resolve_ball_ball,
-    EventType.BALL_CUSHION: resolve_ball_cushion,
+    EventType.BALL_LINEAR_CUSHION: resolve_linear_ball_cushion,
+    EventType.BALL_CIRCULAR_CUSHION: resolve_circular_ball_cushion,
     EventType.BALL_POCKET: resolve_ball_pocket,
     EventType.STICK_BALL: resolve_stick_ball,
     EventType.SPINNING_STATIONARY: resolve_transition,
@@ -297,8 +389,9 @@ def filter_type(
     Parameters
     ==========
     types : str or list of str
-        Event types to be filtered by. E.g. pooltool.events.EventType.BALL_CUSHION
-        or equivalently, 'ball_cushion'
+        Event types to be filtered by. E.g.
+        pooltool.events.EventType.BALL_CIRCULAR_CUSHION or equivalently,
+        'ball_circular_cushion'
 
     Returns
     =======
@@ -318,7 +411,7 @@ def filter_type(
 
 
 def filter_ball(
-    events: List[Event], balls: Union[Ball, List[Ball]], keep_nonevent: bool = False
+    events: List[Event], balls: Union[str, List[str]], keep_nonevent: bool = False
 ) -> List[Event]:
     """Return events in chronological order that involve a collection of balls
 
@@ -333,7 +426,7 @@ def filter_ball(
         A subset of events involving specified balls.
     """
 
-    if isinstance(balls, Ball):
+    if isinstance(balls, str):
         balls = [balls]
 
     new: List[Event] = []
@@ -341,8 +434,8 @@ def filter_ball(
         if keep_nonevent and event.event_type == EventType.NONE:
             new.append(event)
         else:
-            for ball in balls:
-                if ball in event.agents:
+            for agent in event.agents:
+                if isinstance(agent.initial, Ball) and agent.initial.id in balls:
                     new.append(event)
                     break
 

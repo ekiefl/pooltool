@@ -83,7 +83,7 @@ class EightBall(Game):
 
     def is_object_ball_hit_first(self, shot):
         cue = shot.balls["cue"]
-        cue_ball_events = e.filter_ball(shot.events, cue)
+        cue_ball_events = e.filter_ball(shot.events, cue.id)
         collisions = e.filter_type(cue_ball_events, e.EventType.BALL_BALL)
         if not len(collisions):
             return False
@@ -115,9 +115,12 @@ class EightBall(Game):
         return True if (ball_pocketed or enough_cushions) else False
 
     def numbered_balls_that_hit_cushion(self, shot):
-        numbered_balls = [ball for ball in shot.balls.values() if ball.id != "cue"]
+        numbered_balls = [ball.id for ball in shot.balls.values() if ball.id != "cue"]
 
-        cushion_events = e.filter_type(shot.events, e.EventType.BALL_CUSHION)
+        cushion_events = e.filter_type(
+            shot.events,
+            [e.EventType.BALL_LINEAR_CUSHION, e.EventType.BALL_CIRCULAR_CUSHION],
+        )
         numbered_ball_cushion_events = e.filter_ball(cushion_events, numbered_balls)
 
         return set([event.agents[0].id for event in numbered_ball_cushion_events])
@@ -129,14 +132,17 @@ class EightBall(Game):
         if not self.is_object_ball_hit_first(shot):
             return False
 
-        cue_events = e.filter_ball(shot.events, shot.balls["cue"])
+        cue_events = e.filter_ball(shot.events, shot.balls["cue"].id)
         first_contact = e.filter_type(cue_events, e.EventType.BALL_BALL)[0]
         after_first_contact = e.filter_time(first_contact.time)
-        cushion_events = e.filter_type(after_first_contact, e.EventType.BALL_CUSHION)
+        cushion_events = e.filter_type(
+            after_first_contact,
+            [e.EventType.BALL_LINEAR_CUSHION, e.EventType.BALL_CIRCULAR_CUSHION],
+        )
 
         cushion_hit = True if len(cushion_events) else False
 
-        numbered_balls = [ball for ball in shot.balls.values() if ball.id != "cue"]
+        numbered_balls = [ball.id for ball in shot.balls.values() if ball.id != "cue"]
 
         balls_pocketed = e.filter_type(shot.events, e.EventType.BALL_POCKET)
         numbered_balls_pocketed = e.filter_ball(balls_pocketed, numbered_balls)

@@ -8,9 +8,9 @@ import pooltool.ani as ani
 import pooltool.utils as utils
 from pooltool.ani.globals import Global
 from pooltool.error import ConfigError, StrokeError
-from pooltool.objects import Render
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.datatypes import Cue
+from pooltool.objects.datatypes import Render
 
 
 class CueRender(Render):
