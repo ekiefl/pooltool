@@ -70,8 +70,11 @@ def boop(frames=1):
 
 
 @require_showbase
-def window_resize(win=None):
-    """Maintain aspect ratio when user resizes window
+def window_task(win=None):
+    """Routine for managing window activity/resizing
+
+    Determines whether window is active or not. If not, purgatory mode is entered, a
+    reduced FPS state.
 
     The user can modify the game window to be whatever size they want. Ideally, they
     would be able to pick arbitrary aspect ratios, however this project has been
@@ -83,6 +86,10 @@ def window_resize(win=None):
     user, this will override their resizing, and resize the window to one with an
     area equal to that requested, but at the required aspect ratio.
     """
+    is_window_active = Global.base.win.get_properties().foreground
+    if not is_window_active and Global.mode_mgr.mode != Mode.purgatory:
+        Global.mode_mgr.change_mode(Mode.purgatory)
+
     requested_width = Global.base.win.getXSize()
     requested_height = Global.base.win.getYSize()
 
@@ -102,10 +109,6 @@ def window_resize(win=None):
     properties = WindowProperties()
     properties.setSize(int(width), int(height))
     Global.base.win.requestProperties(properties)
-
-    is_window_active = Global.base.win.get_properties().foreground
-    if not is_window_active and Global.mode_mgr.mode != Mode.purgatory:
-        Global.mode_mgr.change_mode(Mode.purgatory)
 
 
 class Interface(ShowBase):
@@ -147,7 +150,7 @@ class Interface(ShowBase):
 
     def listen_constant_events(self):
         """Listen for events that are mode independent"""
-        tasks.register_event("window-event", window_resize)
+        tasks.register_event("window-event", window_task)
         tasks.register_event("close-scene", self.close_scene)
         tasks.register_event("toggle-help", hud.toggle_help)
 
