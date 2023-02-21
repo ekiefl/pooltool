@@ -150,6 +150,7 @@ class ShotMode(BaseMode):
             visual.buildup()
 
             cue_avoid.init_collisions()
+            multisystem.active.cue.reset_state()
             visual.cue.set_render_state_as_object_state()
 
             # Set the HUD
@@ -181,7 +182,6 @@ class ShotMode(BaseMode):
                 ball.history_cts = BallHistory()
 
             ball_id = multisystem.active.cue.cue_ball_id
-            visual.cue.init_focus(visual.balls[ball_id])
 
         tasks.remove("shot_view_task")
         tasks.remove("shot_animation_task")
