@@ -1,4 +1,15 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field, replace
+
+
+@dataclass
+class NullObject:
+    id: str = field(default="dummy")
+
+    def copy(self) -> NullObject:
+        return replace(self)
 
 
 class Render(ABC):

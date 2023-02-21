@@ -97,10 +97,10 @@ class TableRender(Render):
 
     def init_cushion_edges(self):
         for cushion_id in self._table.cushion_segments.linear:
-            self.init_cushion_line(self._table, cushion_id)
+            self.init_cushion_line(cushion_id)
 
         for cushion_id in self._table.cushion_segments.circular:
-            self.init_cushion_circle(self._table, cushion_id)
+            self.init_cushion_circle(cushion_id)
 
     def init_pocket(self, pocket_id):
         pocket = self._table.pockets[pocket_id]
@@ -111,7 +111,7 @@ class TableRender(Render):
 
     def init_pockets(self):
         for pocket_id in self._table.pockets:
-            self.init_pocket(self._table, pocket_id)
+            self.init_pocket(pocket_id)
 
     def render(self):
         super().render()

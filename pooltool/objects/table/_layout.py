@@ -22,25 +22,25 @@ def _create_billiard_table_cushion_segments(specs) -> CushionSegments:
         linear={
             # long segments
             "3": LinearCushionSegment(
-                "3_edge",
+                "3",
                 p1=_arr(0, 0, h),
                 p2=_arr(0, specs.l, h),
                 direction=CushionDirection.SIDE2,
             ),
             "12": LinearCushionSegment(
-                "12_edge",
+                "12",
                 p1=_arr(specs.w, specs.l, h),
                 p2=_arr(specs.w, 0, h),
                 direction=CushionDirection.SIDE1,
             ),
             "9": LinearCushionSegment(
-                "9_edge",
+                "9",
                 p1=_arr(0, specs.l, h),
                 p2=_arr(specs.w, specs.l, h),
                 direction=CushionDirection.SIDE1,
             ),
             "18": LinearCushionSegment(
-                "18_edge",
+                "18",
                 p1=_arr(0, 0, h),
                 p2=_arr(specs.w, 0, h),
                 direction=CushionDirection.SIDE2,
@@ -68,56 +68,56 @@ def _create_pocket_table_cushion_segments(specs) -> CushionSegments:
         linear={
             # long segments
             "3": LinearCushionSegment(
-                "3_edge",
+                "3",
                 p1=_arr(0, pw * np.cos(np.pi / 4) + dc, h),
                 p2=_arr(0, (specs.l - sw) / 2 - ds, h),
                 direction=CushionDirection.SIDE2,
             ),
             "6": LinearCushionSegment(
-                "6_edge",
+                "6",
                 p1=_arr(0, (specs.l + sw) / 2 + ds, h),
                 p2=_arr(0, -pw * np.cos(np.pi / 4) + specs.l - dc, h),
                 direction=CushionDirection.SIDE2,
             ),
             "15": LinearCushionSegment(
-                "15_edge",
+                "15",
                 p1=_arr(specs.w, pw * np.cos(np.pi / 4) + dc, h),
                 p2=_arr(specs.w, (specs.l - sw) / 2 - ds, h),
                 direction=CushionDirection.SIDE1,
             ),
             "12": LinearCushionSegment(
-                "12_edge",
+                "12",
                 p1=_arr(specs.w, (specs.l + sw) / 2 + ds, h),
                 p2=_arr(specs.w, -pw * np.cos(np.pi / 4) + specs.l - dc, h),
                 direction=CushionDirection.SIDE1,
             ),
             "18": LinearCushionSegment(
-                "18_edge",
+                "18",
                 p1=_arr(pw * np.cos(np.pi / 4) + dc, 0, h),
                 p2=_arr(-pw * np.cos(np.pi / 4) + specs.w - dc, 0, h),
                 direction=CushionDirection.SIDE2,
             ),
             "9": LinearCushionSegment(
-                "9_edge",
+                "9",
                 p1=_arr(pw * np.cos(np.pi / 4) + dc, specs.l, h),
                 p2=_arr(-pw * np.cos(np.pi / 4) + specs.w - dc, specs.l, h),
                 direction=CushionDirection.SIDE1,
             ),
             # side jaw segments
             "5": LinearCushionSegment(
-                "5_edge",
+                "5",
                 p1=_arr(-cw, (specs.l + sw) / 2 - cw * np.sin(sa), h),
                 p2=_arr(-ds * np.cos(sa), (specs.l + sw) / 2 - ds * np.sin(sa), h),
                 direction=CushionDirection.SIDE1,
             ),
             "4": LinearCushionSegment(
-                "4_edge",
+                "4",
                 p1=_arr(-cw, (specs.l - sw) / 2 + cw * np.sin(sa), h),
                 p2=_arr(-ds * np.cos(sa), (specs.l - sw) / 2 + ds * np.sin(sa), h),
                 direction=CushionDirection.SIDE2,
             ),
             "13": LinearCushionSegment(
-                "13_edge",
+                "13",
                 p1=_arr(specs.w + cw, (specs.l + sw) / 2 - cw * np.sin(sa), h),
                 p2=_arr(
                     specs.w + ds * np.cos(sa),
@@ -127,7 +127,7 @@ def _create_pocket_table_cushion_segments(specs) -> CushionSegments:
                 direction=CushionDirection.SIDE1,
             ),
             "14": LinearCushionSegment(
-                "14_edge",
+                "14",
                 p1=_arr(specs.w + cw, (specs.l - sw) / 2 + cw * np.sin(sa), h),
                 p2=_arr(
                     specs.w + ds * np.cos(sa),
@@ -138,19 +138,19 @@ def _create_pocket_table_cushion_segments(specs) -> CushionSegments:
             ),
             # corner jaw segments
             "1": LinearCushionSegment(
-                "1_edge",
+                "1",
                 p1=_arr(pw * np.cos(np.pi / 4) - cw * np.tan(ca), -cw, h),
                 p2=_arr(pw * np.cos(np.pi / 4) - dc * np.sin(ca), -dc * np.cos(ca), h),
                 direction=CushionDirection.SIDE2,
             ),
             "2": LinearCushionSegment(
-                "2_edge",
+                "2",
                 p1=_arr(-cw, pw * np.cos(np.pi / 4) - cw * np.tan(ca), h),
                 p2=_arr(-dc * np.cos(ca), pw * np.cos(np.pi / 4) - dc * np.sin(ca), h),
                 direction=CushionDirection.SIDE1,
             ),
             "8": LinearCushionSegment(
-                "8_edge",
+                "8",
                 p1=_arr(pw * np.cos(np.pi / 4) - cw * np.tan(ca), cw + specs.l, h),
                 p2=_arr(
                     pw * np.cos(np.pi / 4) - dc * np.sin(ca),
@@ -160,7 +160,7 @@ def _create_pocket_table_cushion_segments(specs) -> CushionSegments:
                 direction=CushionDirection.SIDE1,
             ),
             "7": LinearCushionSegment(
-                "7_edge",
+                "7",
                 p1=_arr(-cw, -pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.l, h),
                 p2=_arr(
                     -dc * np.cos(ca),
@@ -170,7 +170,7 @@ def _create_pocket_table_cushion_segments(specs) -> CushionSegments:
                 direction=CushionDirection.SIDE2,
             ),
             "11": LinearCushionSegment(
-                "11_edge",
+                "11",
                 p1=_arr(
                     cw + specs.w,
                     -pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.l,
@@ -184,7 +184,7 @@ def _create_pocket_table_cushion_segments(specs) -> CushionSegments:
                 direction=CushionDirection.SIDE2,
             ),
             "10": LinearCushionSegment(
-                "10_edge",
+                "10",
                 p1=_arr(
                     -pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.w,
                     cw + specs.l,
@@ -198,7 +198,7 @@ def _create_pocket_table_cushion_segments(specs) -> CushionSegments:
                 direction=CushionDirection.SIDE1,
             ),
             "16": LinearCushionSegment(
-                "16_edge",
+                "16",
                 p1=_arr(cw + specs.w, +pw * np.cos(np.pi / 4) - cw * np.tan(ca), h),
                 p2=_arr(
                     specs.w + dc * np.cos(ca),
@@ -208,7 +208,7 @@ def _create_pocket_table_cushion_segments(specs) -> CushionSegments:
                 direction=CushionDirection.SIDE1,
             ),
             "17": LinearCushionSegment(
-                "17_edge",
+                "17",
                 p1=_arr(-pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.w, -cw, h),
                 p2=_arr(
                     -pw * np.cos(np.pi / 4) + specs.w + dc * np.sin(ca),

@@ -138,6 +138,7 @@ def test_pocket_copy(pocket):
     copy = pocket.copy()
 
     # pocket and copy equate
+    assert pocket.contains is not copy.contains
     assert pocket is not copy
     assert pocket == copy
 

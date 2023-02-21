@@ -93,6 +93,9 @@ class BallState:
     s: float
     t: float
 
+    def __post_init__(self):
+        self.rvw = np.copy(self.rvw)
+
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
 

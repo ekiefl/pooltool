@@ -43,6 +43,7 @@ def test_ball_state_copy():
     other = state.copy()
 
     # The states are equal but they are different objects
+    assert state.rvw is not other.rvw
     assert state is not other
     assert state == other
 

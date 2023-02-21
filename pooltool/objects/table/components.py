@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import enum
 from dataclasses import dataclass, field, replace
 from typing import Dict, Union
@@ -193,7 +194,9 @@ class Pocket:
 
     def copy(self) -> Pocket:
         """Create a deepcopy"""
-        return replace(self, center=np.copy(self.center))
+        return replace(
+            self, center=np.copy(self.center), contains=copy.deepcopy(self.contains)
+        )
 
     @staticmethod
     def dummy() -> Pocket:
