@@ -181,8 +181,6 @@ class ShotMode(BaseMode):
                 ball.history = BallHistory()
                 ball.history_cts = BallHistory()
 
-            ball_id = multisystem.active.cue.cue_ball_id
-
         tasks.remove("shot_view_task")
         tasks.remove("shot_animation_task")
         tasks.remove("shared_task")
