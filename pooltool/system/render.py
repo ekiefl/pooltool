@@ -70,7 +70,6 @@ class SystemController:
     def reset_animation(self) -> None:
         """Set objects to initial states, pause, and remove animations"""
         self.playback_mode = PlaybackMode.SINGLE
-        self.playback_speed = 1
         self.paused = True
 
         self.shot_animation.clearToInitial()
@@ -92,6 +91,8 @@ class SystemController:
 
     def buildup(self) -> None:
         """Render all object nodes"""
+        self.playback_speed = 1
+
         # FIXME See the FIXME in teardown for an explanation
         for child in Global.render.find("scene").getChildren():
             if child.name == "table":
@@ -161,21 +162,17 @@ class SystemController:
         self.change_speed(2.0)
 
     def change_speed(self, factor):
-        raise NotImplementedError()
-        self.playback_speed *= factor
-        for shot in self:
-            shot.playback_speed *= factor
-            shot.continuized = False
-
         curr_time = self.shot_animation.get_t()
-        self.clear_animation()
-        self.set_animation()
+
+        self.reset_animation()
+        self.playback_speed *= factor
+        self.build_shot_animation()
+
         self.shot_animation.setPlayRate(factor * self.shot_animation.getPlayRate())
 
-        if not self.paused:
-            self.animate(PlaybackMode.LOOP)
-
+        self.animate(PlaybackMode.LOOP)
         self.shot_animation.set_t(curr_time / factor)
+        self.pause_animation()
 
     def offset_time(self, dt) -> None:
         old_t = self.shot_animation.get_t()
