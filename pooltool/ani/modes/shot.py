@@ -11,7 +11,7 @@ from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
-from pooltool.objects.ball.datatypes import Ball, BallHistory
+from pooltool.objects.ball.datatypes import BallHistory
 from pooltool.system.datatypes import multisystem
 from pooltool.system.render import PlaybackMode, visual
 
@@ -274,7 +274,8 @@ class ShotMode(BaseMode):
 
         return task.cont
 
-    def change_animation(self, shot_index):
+    @staticmethod
+    def change_animation(shot_index):
         """Switch to a different system in the system collection"""
         # Switch shots
         multisystem.set_active(shot_index)
@@ -287,19 +288,6 @@ class ShotMode(BaseMode):
         # Changing to a different shot is considered advanced maneuvering, so we enter
         # loop mode.
         visual.animate(PlaybackMode.LOOP)
-
-        # FIXME No idea what this garbage is. Dissect once you get here.
-        raise NotImplementedError()
-        # A lot of dumb things to make the cue track the initial position of the ball
-        dummy = Ball("dummy")
-        dummy.params.R = multisystem.active.cue.cueing_ball.params.R
-        dummy.state.rvw = multisystem.active.cue.cueing_ball.history[0].rvw
-        dummy.render_obj.render(dummy)
-        visual.cue.init_focus(dummy)
-        multisystem.active.cue.set_render_state_as_object_state()
-        visual.cue.follow = None
-        dummy.render_obj.remove_nodes()
-        del dummy
 
         cue_avoid.init_collisions()
 
