@@ -133,7 +133,7 @@ class Camera:
         # create the fixation object. It's just the panda3d built in smiley sphere. The
         # smile faces away from the camera.
         self.fixation_object = Global.loader.loadModel("smiley.egg")
-        self.fixation_object.setScale(0.005)
+        self.fixation_object.setScale(0.0025)
         self.fixation_object.setTransparency(TransparencyAttrib.MAlpha)
         self.fixation_object.setAlphaScale(0.4)
         self.fixation_object.setH(-90)
@@ -188,7 +188,7 @@ class Camera:
         # to: cam_pos, focus_pos = camera.node.getPos(render),
         # camera.fixation_object.getPos(render) dist = (cam_pos - focus_pos).length()
         dist = self.node.getX()
-        self.fixation_object.setScale(0.002 * dist)
+        self.fixation_object.setScale(0.0012 * min(dist, 1.5))
 
 
 Vec3D = Tuple[float, float, float]
