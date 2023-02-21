@@ -101,6 +101,7 @@ class SystemController:
 
         for ball in self.system.balls.values():
             ball.render()
+            ball.reset_angular_integration()
         self.system.cue.render()
 
     def teardown(self) -> None:
