@@ -64,7 +64,7 @@ def from_json(filepath: Path) -> dict:
         return json.load(openfile)
 
 
-def panda_path(path):
+def panda_path(path) -> str:
     return str(Filename.fromOsSpecific(str(path)))
 
 

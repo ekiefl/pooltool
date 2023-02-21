@@ -26,10 +26,21 @@ from pooltool.utils import panda_path
 
 
 class BallRender(Render):
+    fallback_path = ani.model_dir / "balls" / "set_1" / "1.glb"
+
     def __init__(self, ball: Ball):
         self._ball = ball
         self.quats: list = []
         Render.__init__(self)
+
+    @property
+    def model_path(self) -> str:
+        expected_path = ani.model_dir / "balls" / "set_1" / f"{self._ball.id}.glb"
+        return (
+            panda_path(expected_path)
+            if expected_path.exists()
+            else panda_path(self.fallback_path)
+        )
 
     def init_sphere(self):
         """Initialize the ball's nodes"""
@@ -40,15 +51,11 @@ class BallRender(Render):
         )
         ball_node = position.attachNewNode(f"ball_{self._ball.id}")
 
-        fallback_path = ani.model_dir / "balls" / "set_1" / "1.glb"
-        expected_path = ani.model_dir / "balls" / "set_1" / f"{self._ball.id}.glb"
-        path = expected_path if expected_path.exists() else fallback_path
-
-        sphere_node = Global.loader.loadModel(panda_path(path))
+        sphere_node = Global.loader.loadModel(self.model_path)
         sphere_node.reparentTo(position)
 
-        if path == fallback_path:
-            tex = sphere_node.find_texture(Path(fallback_path).stem)
+        if self.model_path == self.fallback_path:
+            tex = sphere_node.find_texture(self.fallback_path.stem)
         else:
             tex = sphere_node.find_texture(self._ball.id)
 
