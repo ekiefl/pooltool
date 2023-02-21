@@ -37,7 +37,7 @@ class PickBallMode(BaseMode):
         tasks.add(self.shared_task, "shared_task")
 
     def exit(self):
-        PickBallMode.remove_ball_highlight(self)
+        self.remove_ball_highlight()
         tasks.remove("shared_task")
         tasks.remove("pick_ball_task")
 
@@ -48,21 +48,21 @@ class PickBallMode(BaseMode):
 
         cam.move_fixation_via_mouse()
 
-        closest = PickBallMode.find_closest_ball(self)
+        closest = self.find_closest_ball()
         if closest != self.closest_ball:
-            PickBallMode.remove_ball_highlight(self)
+            self.remove_ball_highlight()
             self.closest_ball = closest
             self.ball_highlight = self.closest_ball.get_node("pos")
-            PickBallMode.add_ball_highlight(self)
+            self.add_ball_highlight()
 
         if self.keymap["done"]:
-            PickBallMode.remove_ball_highlight(self)
-            multisystem.active.cue.cueing_ball = self.closest_ball
-            if multisystem.active.cue.cueing_ball is not None:
-                ball_id = multisystem.active.cue.cue_ball_id
+            self.remove_ball_highlight()
+            ball_id = self.closest_ball._ball.id
+            if ball_id is not None:
+                multisystem.active.cue.cue_ball_id = ball_id
                 visual.cue.init_focus(visual.balls[ball_id])
                 Global.game.log.add_msg(
-                    f"Now cueing the {multisystem.active.cue.cueing_ball.id} ball",
+                    f"Now cueing the {multisystem.active.cue.cue_ball_id} ball",
                     sentiment="neutral",
                 )
             Global.mode_mgr.change_mode(Mode.aim)
@@ -110,12 +110,12 @@ class PickBallMode(BaseMode):
         cam_fixation = cam.fixation.getPos()
         d_min = np.inf
         closest = None
-        for ball in multisystem.active.balls.values():
-            if ball.id not in Global.game.active_player.can_cue:
+        for ball_id, ball in visual.balls.items():
+            if ball_id not in Global.game.active_player.can_cue:
                 continue
-            if ball.state.s == c.pocketed:
+            if ball._ball.state.s == c.pocketed:
                 continue
-            d = np.linalg.norm(ball.state.rvw[0] - cam_fixation)
+            d = np.linalg.norm(ball._ball.state.rvw[0] - cam_fixation)
             if d < d_min:
                 d_min, closest = d, ball
 
