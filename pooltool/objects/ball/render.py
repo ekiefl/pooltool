@@ -260,7 +260,7 @@ class BallRender(Render):
             sphere=tuple([float(x) for x in self.nodes["sphere"].getQuat()]),
         )
 
-    def get_final_orientation(self):
+    def get_final_orientation(self) -> BallOrientation:
         """Get the ball's quaternions of the final state in the history"""
         return BallOrientation(
             pos=tuple([float(x) for x in self.quats[-1]]),

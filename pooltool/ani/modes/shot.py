@@ -115,40 +115,34 @@ class ShotMode(BaseMode):
         assert key in {"advance", "reset", "soft"}
 
         if key == "advance":
-            raise NotImplementedError()
-            # If we are here, the plan is probably to return to 'aim' mode so another
-            # shot can be taken. This shot needs to be defined by its own system that
-            # has yet to be simulated. Depending how 'shot' mode was entered, this
-            # system may already exist in multisystem. The following code checks
-            # that by seeing whether the latest system has any events. If not, the
-            # system is unsimulated and is perfectly fit for 'aim' mode, but if the
-            # system has events, a fresh system needs to be appended to
-            # multisystem.
-            make_new = bool(len(multisystem[-1].events))
-            if make_new:
-                if multisystem.active_index != len(multisystem) - 1:
-                    # Replaying shot that is not most recent. Teardown and then buildup
-                    # most recent
-                    # FIXME repeated below?
+            # New shot means new system. Depending how ShotMode was entered, it may
+            # already exist in multisystem. If the most recently added system is
+            # unsimulated, it already exists. Otherwise, it needs to be created, using
+            # most recent system as template.
+            if multisystem[-1].simulated:
+                if multisystem.active_index != multisystem.max_index:
+                    # The currently rendered shot isn't the most recent shot, and it's
+                    # the most recent shot we want to advance from. So render it.
                     multisystem.set_active(-1)
                     visual.attach_system(multisystem.active)
                     visual.buildup()
 
-                multisystem.append_copy_of_active(
-                    state="current",
-                    reset_history=True,
-                    as_active=False,
-                )
+                    # self.quats is a vestige held in BallRender. We need to calculate
+                    # it so we know the final orientation of each ball. We don't have it
+                    # because visual.buildup() was just called.
+                    for ball_render in visual.balls.values():
+                        ball_render.set_quats(ball_render._ball.history_cts)
 
-                # Set the initial orientations of new shot to final orientations of old
-                # shot
-                for ball_id in multisystem.active.balls:
-                    old_ball = multisystem.active.balls[ball_id]
-                    new_ball = multisystem[-1].balls[ball_id]
-                    new_ball.initial_orientation = old_ball.get_final_orientation()
-            else:
-                # The latest entry in the collection is an unsimulated shot. Perfect
-                pass
+                # Copy the shot
+                new = multisystem.active.copy()
+
+                for ball, old_render in zip(new.balls.values(), visual.balls.values()):
+                    # Set the initial ball orientations of the new shot to match the
+                    # final ball orientations of the old shot
+                    ball.initial_orientation = old_render.get_final_orientation()
+
+                new.reset_history()
+                multisystem.append(new)
 
             # Switch shots
             multisystem.set_active(-1)
@@ -156,13 +150,7 @@ class ShotMode(BaseMode):
             visual.buildup()
 
             cue_avoid.init_collisions()
-
-            if make_new:
-                raise NotImplementedError()
-                # FIXME Is this needed?
-                multisystem.active.cue.reset_state()
-
-            multisystem.active.cue.set_render_state_as_object_state()
+            visual.cue.set_render_state_as_object_state()
 
             # Set the HUD
             hud.update_cue(multisystem.active.cue)

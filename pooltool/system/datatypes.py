@@ -381,6 +381,10 @@ class MultiSystem:
     def empty(self) -> bool:
         return not bool(len(self))
 
+    @property
+    def max_index(self):
+        return len(self) - 1
+
     def reset(self) -> None:
         self.active_index = None
         self._multisystem = []
@@ -396,47 +400,6 @@ class MultiSystem:
             self.active_index = 0
 
         self._multisystem.extend(systems)
-
-    def append_copy_of_active(
-        self, state="current", reset_history=True, as_active=False
-    ) -> None:
-        """Append a copy of the active System
-
-        Parameters
-        ==========
-        state : str, 'current'
-            Must be any of {'initial', 'final', 'current'}. The copy state will be set
-            according to this value. If 'initial', the system state will be set
-            according to the active system's state at t=0, e.g.
-            balls['cue'].history.rvw[0]. If 'final', the system will be set to the final
-            state of the active system, e.g. balls['cue'].history.rvw[-1]. If 'current',
-            the system will be set to the current state of the active system, e.g.
-            balls['cue'].rvw
-
-        reset_history : bool, True
-            If True, the history of the copy state will be reset (erased and
-            reinitialized).
-
-        as_active : bool, False
-            If True, the newly appended System will be set as the active state
-        """
-        raise NotImplementedError()
-        assert state in {"initial", "final", "current"}
-
-        set_to_initial = False if state == "current" else True
-        new = self.active.copy(set_to_initial=set_to_initial)
-
-        idx = 0 if state == "initial" else -1
-        for ball in new.balls.values():
-            ball.state = ball.history[idx].copy()
-
-        if reset_history:
-            new.reset_history()
-
-        self.append(new)
-
-        if as_active:
-            self.set_active(-1)
 
     def set_active(self, i) -> None:
         """Change the active system in the collection

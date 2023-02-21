@@ -2,7 +2,6 @@
 """This is a basic example of saving and loading a system state"""
 
 import pooltool as pt
-from pooltool.objects.ball.datatypes import BallHistory
 
 
 def main():
