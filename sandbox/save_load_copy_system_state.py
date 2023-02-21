@@ -2,42 +2,31 @@
 """This is a basic example of saving and loading a system state"""
 
 import pooltool as pt
+from pooltool.objects.ball.datatypes import BallHistory
 
 
 def main():
     # Initialize the GUI
     interface = pt.ShotViewer()
 
-    # Create a system state
-    table = pt.Table.default()
-    balls = pt.get_nine_ball_rack(table, ordered=True)
-    cue = pt.Cue(cueing_ball=balls["cue"])
+    # Create a system
+    shot = pt.System(
+        table=(table := pt.Table.pocket_table()),
+        balls=pt.get_nine_ball_rack(table, ordered=True),
+        cue=pt.Cue(cue_ball_id="cue"),
+    )
+    shot.aim_at_ball(ball_id="1")
+    shot.strike(V0=8)
 
-    # Set up a shot
-    shot = pt.System(cue=cue, table=table, balls=balls)
-    shot.cue.aim_at_ball(shot.balls["1"])
-    shot.cue.strike(V0=8)
+    # Simulate
+    pt.simulate(shot)
 
-    # Now instead of simulating, save the system as a pickle file
-    filepath = pt.utils.get_temp_file_path()
-    shot.save(filepath)
-
-    # Ok now make a new system and attach the old state
-    shot2 = pt.System()
-    shot2.load(filepath)
-
-    # Now simulate the first
-    shot.simulate(continuize=True)
+    # Visualize it
     interface.show(shot, title="Original system state")
 
-    # Now simulate the second
-    shot2.simulate(continuize=True)
-    interface.show(shot2, title="Pickled system state")
-
-    # Now make a copy of the second. This is a 'deep' copy, and
-    # uses the same underlying methods that created shot2
-    shot3 = shot2.copy()
-    interface.show(shot3, title="Copied system state")
+    # You can copy it and visualize the copy
+    new = shot.copy()
+    interface.show(new, title="A deepcopy of the original")
 
 
 if __name__ == "__main__":

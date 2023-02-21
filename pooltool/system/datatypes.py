@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 
@@ -30,7 +32,6 @@ class System:
 
     t: float = field(default=0)
     events: List[Event] = field(default_factory=list)
-    meta: Any = field(default=None)
 
     @property
     def continuized(self):
@@ -41,22 +42,8 @@ class System:
         return bool(len(self.events))
 
     def set_meta(self, meta):
-        """Define any meta data for the shot
-
-        This method provides the opportunity to associate information to the system. If
-        the system is saved or copied, this information will be retained under the
-        attribute `meta`.
-
-        Parameters
-        ==========
-        meta : pickleable object
-             Any information can be stored, so long as it is pickleable.
-        """
-
-        if not utils.is_pickleable(meta):
-            raise ConfigError("System.set_meta :: Cannot set unpickleable object")
-
-        self.meta = meta
+        """Define any meta data for the shot"""
+        raise NotImplementedError()
 
     def update_history(self, event: Event):
         """Updates the history for all balls"""
@@ -362,17 +349,15 @@ class System:
 
         return False
 
-    def copy(self, set_to_initial=True):
-        """Make a fresh copy of this system state
-
-        Parameters
-        ==========
-        set_to_initial : bool, True
-            Prior to copying, this method sets the ball states the initial states in the
-            history.  However, this can be prevented by setting this to False, causing
-            the ball states to be copied as is.
-        """
-        raise NotImplementedError()
+    def copy(self) -> System:
+        """Make deepcopy of the system"""
+        return System(
+            cue=self.cue.copy(),
+            table=self.table.copy(),
+            balls={k: v.copy() for k, v in self.balls.items()},
+            t=self.t,
+            events=[event.copy() for event in self.events],
+        )
 
 
 @dataclass

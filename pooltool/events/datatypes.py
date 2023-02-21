@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Dict, Optional, Tuple, Type, Union
 
 from pooltool.objects.ball.datatypes import Ball, BallHistory
@@ -114,6 +114,10 @@ class Agent:
     def from_object(obj: Object) -> Agent:
         return Agent(id=obj.id, agent_type=_class_to_type[type(obj)])
 
+    def copy(self) -> Agent:
+        """Create a deepcopy"""
+        return replace(self)
+
 
 @dataclass
 class Event:
@@ -133,3 +137,7 @@ class Event:
             f" └── agents : {agents}",
         ]
         return "\n".join(lines) + "\n"
+
+    def copy(self) -> Event:
+        """Create a deepcopy"""
+        return replace(self)
