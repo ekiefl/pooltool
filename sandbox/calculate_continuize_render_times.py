@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+raise NotImplementedError("Needs a fixing after shot serialization is refactored")
+
 import pooltool as pt
 
 
