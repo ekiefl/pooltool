@@ -1,14 +1,20 @@
 """Two balls, a cue, and a table"""
+import numpy as np
 
 import pooltool as pt
+from pooltool.constants import R, table_length, table_width
 
-# Create a system
+# Create a 2-ball system (randomly placed balls)
+cx = np.random.uniform(0, table_width - 2 * R)
+cy = np.random.uniform(0, table_length - 2 * R)
+bx = np.random.uniform(0, table_width - 2 * R)
+by = np.random.uniform(0, table_length - 2 * R)
 shot = pt.System(
     table=pt.Table.pocket_table(),
     cue=pt.Cue(),
     balls={
-        "cue": pt.Ball.create("cue", xy=[0.5, 1]),
-        "1": pt.Ball.create("1", xy=[0.16, 1.4]),
+        "cue": pt.Ball.create("cue", xy=(0.5, 1)),
+        "1": pt.Ball.create("1", xy=(0.16, 1.4)),
     },
 )
 
@@ -29,7 +35,7 @@ shot.cue.set_state(
 assert shot.cue.phi == 0
 
 # So let's Aim at the 1-ball, with a 30 degree cut to the left
-shot.aim_at_ball(ball_id="1", cut=-30)
+shot.aim_for_best_pocket(ball_id="1")
 
 # Now the direction is set!
 assert shot.cue.phi != 0
@@ -54,6 +60,3 @@ print(shot.events)
 # We can visualize the shot like so (press r to replay):
 interface = pt.ShotViewer()
 interface.show(shot)
-
-# Oh no! it's a scratch. Try avoiding the scratch by modifying the cue ball's spin in
-# the code above

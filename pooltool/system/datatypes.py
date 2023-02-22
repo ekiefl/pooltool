@@ -22,6 +22,7 @@ from pooltool.objects.ball.datatypes import Ball, BallHistory, BallState
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.components import Pocket
 from pooltool.objects.table.datatypes import Table
+from pooltool.potting import PottingConfig
 
 
 @dataclass
@@ -324,6 +325,35 @@ class System:
                 )
 
         self.cue.phi = (self.cue.phi + 180 / np.pi * (dphi if left else -dphi)) % 360
+
+    def aim_for_pocket(
+        self,
+        ball_id: str,
+        pocket_id: str,
+        config: PottingConfig = PottingConfig.default(),
+    ):
+        """Set phi to pot a given ball into a given pocket"""
+        self.cue.set_state(
+            phi=config.calculate_angle(
+                self.balls[ball_id], self.table.pockets[pocket_id]
+            )
+        )
+
+    def aim_for_best_pocket(
+        self, ball_id: str, config: PottingConfig = PottingConfig.default()
+    ):
+        """Set phi to pot a given ball into the best/easiest pocket"""
+        assert self.cue.cue_ball_id
+
+        cue_ball = self.balls[self.cue.cue_ball_id]
+        object_ball = self.balls[ball_id]
+        pockets = self.table.pockets.values()
+
+        self.aim_for_pocket(
+            ball_id=ball_id,
+            pocket_id=config.choose_pocket(cue_ball, object_ball, pockets),
+            config=config,
+        )
 
     def get_system_energy(self):
         """FIXME should be moved to physics.py"""
