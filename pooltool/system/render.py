@@ -67,10 +67,12 @@ class SystemController:
             self.teardown()
         self.system = SystemRender.from_system(system)
 
-    def reset_animation(self) -> None:
+    def reset_animation(self, reset_pause: bool = True) -> None:
         """Set objects to initial states, pause, and remove animations"""
         self.playback_mode = PlaybackMode.SINGLE
-        self.paused = True
+
+        if reset_pause:
+            self.paused = True
 
         self.shot_animation.clearToInitial()
         self.stroke_animation.clearToInitial()
@@ -163,15 +165,19 @@ class SystemController:
     def change_speed(self, factor):
         curr_time = self.shot_animation.get_t()
 
-        self.reset_animation()
+        self.reset_animation(reset_pause=False)
         self.playback_speed *= factor
         self.build_shot_animation()
 
         self.shot_animation.setPlayRate(factor * self.shot_animation.getPlayRate())
 
-        self.animate(PlaybackMode.LOOP)
+        if self.paused:
+            self.animate(PlaybackMode.LOOP)
+            self.pause_animation()
+        else:
+            self.animate(PlaybackMode.LOOP)
+
         self.shot_animation.set_t(curr_time / factor)
-        self.pause_animation()
 
     def offset_time(self, dt) -> None:
         old_t = self.shot_animation.get_t()
