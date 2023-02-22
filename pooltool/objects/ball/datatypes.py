@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import astuple, dataclass, field, replace
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional, Sequence, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -191,7 +191,7 @@ class Ball:
         )
 
     @staticmethod
-    def create(id: str, *, xy: Optional[List[float]] = None, **kwargs) -> Ball:
+    def create(id: str, *, xy: Optional[Sequence[float]] = None, **kwargs) -> Ball:
         """Create ball using a flattened parameter set
 
         Args:
