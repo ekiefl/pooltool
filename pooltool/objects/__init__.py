@@ -5,9 +5,7 @@ from pooltool.objects.ball.datatypes import (
     BallParams,
     BallState,
 )
-from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.datatypes import Cue, CueSpecs
-from pooltool.objects.cue.render import CueRender
 from pooltool.objects.table.components import (
     CircularCushionSegment,
     CushionDirection,
@@ -22,7 +20,6 @@ from pooltool.objects.table.datatypes import (
     TableModelDescr,
     TableType,
 )
-from pooltool.objects.table.render import TableRender
 
 __all__ = [
     "Ball",
@@ -30,10 +27,8 @@ __all__ = [
     "BallParams",
     "BallHistory",
     "BallOrientation",
-    "BallRender",
     "CueSpecs",
     "Cue",
-    "CueRender",
     "Pocket",
     "LinearCushionSegment",
     "CircularCushionSegment",
@@ -44,5 +39,4 @@ __all__ = [
     "TableType",
     "PocketTableSpecs",
     "BilliardTableSpecs",
-    "TableRender",
 ]

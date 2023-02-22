@@ -5,7 +5,6 @@ from pooltool.objects.ball.datatypes import (
     BallParams,
     BallState,
 )
-from pooltool.objects.ball.render import BallRender
 
 __all__ = [
     "Ball",
@@ -13,5 +12,4 @@ __all__ = [
     "BallParams",
     "BallHistory",
     "BallOrientation",
-    "BallRender",
 ]

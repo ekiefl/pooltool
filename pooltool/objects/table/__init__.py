@@ -12,7 +12,6 @@ from pooltool.objects.table.datatypes import (
     TableModelDescr,
     TableType,
 )
-from pooltool.objects.table.render import TableRender
 
 __all__ = [
     "Pocket",
@@ -25,5 +24,4 @@ __all__ = [
     "TableType",
     "PocketTableSpecs",
     "BilliardTableSpecs",
-    "TableRender",
 ]

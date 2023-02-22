@@ -34,12 +34,10 @@ from pooltool.objects import (
     BallHistory,
     BallOrientation,
     BallParams,
-    BallRender,
     BallState,
     BilliardTableSpecs,
     CircularCushionSegment,
     Cue,
-    CueRender,
     CueSpecs,
     CushionDirection,
     CushionSegments,
@@ -48,17 +46,9 @@ from pooltool.objects import (
     PocketTableSpecs,
     Table,
     TableModelDescr,
-    TableRender,
     TableType,
 )
-from pooltool.system import (
-    MultiSystem,
-    System,
-    SystemController,
-    SystemRender,
-    multisystem,
-    visual,
-)
+from pooltool.system import MultiSystem, System, SystemController, multisystem, visual
 
 run = terminal.Run()
 progress = terminal.Progress()
@@ -71,7 +61,6 @@ __all__ = [
     "System",
     "MultiSystem",
     "multisystem",
-    "SystemRender",
     "SystemController",
     "visual",
     "filter_ball",
@@ -98,10 +87,8 @@ __all__ = [
     "BallParams",
     "BallHistory",
     "BallOrientation",
-    "BallRender",
     "CueSpecs",
     "Cue",
-    "CueRender",
     "Pocket",
     "LinearCushionSegment",
     "CircularCushionSegment",
@@ -112,7 +99,6 @@ __all__ = [
     "TableType",
     "PocketTableSpecs",
     "BilliardTableSpecs",
-    "TableRender",
     "Game",
     "ImageSaver",
     "ShotViewer",
