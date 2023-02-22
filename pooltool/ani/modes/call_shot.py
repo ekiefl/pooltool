@@ -194,7 +194,9 @@ class CallShotMode(BaseMode):
         return task.cont
 
     def add_transparent_ball(self):
-        self.trans_ball = Global.loader.loadModel(self.closest_ball.model_path)
+        self.trans_ball = Global.loader.loadModel(
+            panda_path(self.closest_ball.model_path)
+        )
         self.trans_ball.reparentTo(Global.render.find("scene").find("table"))
         self.trans_ball.setTransparency(TransparencyAttrib.MAlpha)
         self.trans_ball.setAlphaScale(0.4)

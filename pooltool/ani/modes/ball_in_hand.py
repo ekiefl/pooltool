@@ -13,6 +13,7 @@ from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.system.render import visual
+from pooltool.utils import panda_path
 
 
 class BallInHandMode(BaseMode):
@@ -179,7 +180,9 @@ class BallInHandMode(BaseMode):
         return task.cont
 
     def add_transparent_ball(self):
-        self.trans_ball = Global.loader.loadModel(self.grabbed_ball.model_path)
+        self.trans_ball = Global.loader.loadModel(
+            panda_path(self.grabbed_ball.model_path)
+        )
         self.trans_ball.reparentTo(Global.render.find("scene").find("table"))
         self.trans_ball.setTransparency(TransparencyAttrib.MAlpha)
         self.trans_ball.setAlphaScale(0.4)

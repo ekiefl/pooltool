@@ -33,5 +33,6 @@ __all__ = [
     "get_next_transition_event",
     "Event",
     "EventType",
+    "AgentType",
     "Agent",
 ]

@@ -27,7 +27,7 @@ def main():
     new = shot.copy()
     interface.show(new, title="A deepcopy of the original")
 
-    raise NotADirectoryError("Need to implement save and load")
+    raise NotImplementedError("Need to implement save and load")
 
 
 if __name__ == "__main__":

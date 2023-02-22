@@ -247,7 +247,7 @@ class ShotMode(BaseMode):
         elif self.keymap[Action.parallel]:
             # FIXME Implementing parallel would involve code here and throughout shot.py
             # and view.py
-            raise NotImplementedError()
+            raise NotImplementedError("This will one day be re-implemented")
 
         elif self.keymap[Action.prev_shot]:
             self.keymap[Action.prev_shot] = False
