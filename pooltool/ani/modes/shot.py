@@ -28,6 +28,7 @@ class ShotMode(BaseMode):
         Action.zoom: False,
         Action.rewind: False,
         Action.fast_forward: False,
+        Action.fine_control: False,
         Action.cam_save: False,
         Action.cam_load: False,
         Action.show_help: False,
@@ -87,6 +88,8 @@ class ShotMode(BaseMode):
         self.register_keymap_event("arrow_left-up", Action.rewind, False)
         self.register_keymap_event("arrow_right", Action.fast_forward, True)
         self.register_keymap_event("arrow_right-up", Action.fast_forward, False)
+        self.register_keymap_event("f", Action.fine_control, True)
+        self.register_keymap_event("f-up", Action.fine_control, False)
         self.register_keymap_event("1", Action.cam_save, True)
         self.register_keymap_event("2", Action.cam_load, True)
         self.register_keymap_event("h", Action.show_help, True)
@@ -225,10 +228,14 @@ class ShotMode(BaseMode):
             visual.restart_animation()
 
         elif self.keymap[Action.rewind]:
-            raise NotImplementedError()
+            dt = 0.008 if self.keymap[Action.fine_control] else 0.03
+            if visual.paused:
+                visual.offset_time(-dt)
 
         elif self.keymap[Action.fast_forward]:
-            raise NotImplementedError()
+            dt = 0.008 if self.keymap[Action.fine_control] else 0.03
+            if visual.paused:
+                visual.offset_time(dt)
 
         elif self.keymap[Action.undo_shot]:
             Global.mode_mgr.change_mode(

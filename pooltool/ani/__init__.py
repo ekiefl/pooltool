@@ -37,8 +37,6 @@ backstroke_fraction = 0.5
 max_elevate = 80
 # number of seconds that camera rotation is disabled when shot is being calculated
 rotate_downtime = 0.3
-rewind_dt = 0.02
-fast_forward_dt = 0.02
 
 options_8_ball = "8 ball"
 options_9_ball = "9 ball"
