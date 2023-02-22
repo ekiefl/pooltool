@@ -22,7 +22,7 @@ class ThreeCushion(Game):
         self.players[1].can_cue = ["yellow"]
         self.players[1].target_balls = ["white", "red"]
 
-    def set_initial_cueing_ball(self, balls):
+    def get_initial_cueing_ball(self, balls):
         return balls["white"]
 
     def award_points(self, shot):

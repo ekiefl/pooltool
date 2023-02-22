@@ -7,6 +7,8 @@ from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.system.datatypes import multisystem
+from pooltool.system.render import visual
 
 
 class StrokeMode(BaseMode):
@@ -20,8 +22,8 @@ class StrokeMode(BaseMode):
         mouse.mode(MouseMode.RELATIVE)
         Global.mode_mgr.mode_stroked_from = Global.mode_mgr.last_mode
 
-        Global.shots.active.cue.track_stroke()
-        Global.shots.active.cue.show_nodes(ignore=("cue_cseg",))
+        visual.cue.track_stroke()
+        visual.cue.show_nodes(ignore=("cue_cseg",))
 
         self.register_keymap_event("f", Action.fine_control, True)
         self.register_keymap_event("f-up", Action.fine_control, False)
@@ -46,14 +48,13 @@ class StrokeMode(BaseMode):
 
             if self.stroke_cue_stick():
                 # The cue stick has contacted the cue ball
-                Global.shots.active.cue.set_object_state_as_render_state()
-                Global.shots.active.cue.strike()
-                Global.shots.active.user_stroke = True
+                visual.cue.set_object_state_as_render_state()
+                multisystem.active.strike()
                 Global.mode_mgr.change_mode(Mode.calculate)
                 return
         else:
-            Global.shots.active.cue.get_node("cue_stick").setX(0)
-            Global.shots.active.cue.hide_nodes(ignore=("cue_cseg",))
+            visual.cue.get_node("cue_stick").setX(0)
+            visual.cue.hide_nodes(ignore=("cue_cseg",))
             Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
             return
 
@@ -61,7 +62,9 @@ class StrokeMode(BaseMode):
 
     def stroke_cue_stick(self):
         max_speed_mouse = ani.max_stroke_speed / ani.stroke_sensitivity  # [px/s]
-        max_backstroke = Global.shots.active.cue.length * ani.backstroke_fraction  # [m]
+        max_backstroke = (
+            multisystem.active.cue.specs.length * ani.backstroke_fraction
+        )  # [m]
 
         with mouse:
             dt = mouse.get_dt()
@@ -71,16 +74,16 @@ class StrokeMode(BaseMode):
         if speed_mouse > max_speed_mouse:
             dx *= max_speed_mouse / speed_mouse
 
-        cue_stick_node = Global.shots.active.cue.get_node("cue_stick")
+        cue_stick_node = visual.cue.get_node("cue_stick")
         newX = min(max_backstroke, cue_stick_node.getX() - dx * ani.stroke_sensitivity)
 
         if newX < 0:
             newX = 0
-            collision = True if Global.shots.active.cue.is_shot() else False
+            collision = True if visual.cue.is_shot() else False
         else:
             collision = False
 
         cue_stick_node.setX(newX)
-        Global.shots.active.cue.append_stroke_data()
+        visual.cue.append_stroke_data()
 
         return True if collision else False

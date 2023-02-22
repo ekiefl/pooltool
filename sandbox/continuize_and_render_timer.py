@@ -2,6 +2,8 @@
 
 import pooltool as pt
 
+raise NotImplementedError("Needs a fixing after shot serialization is refactored")
+
 
 def main(args):
     shot = pt.System(path=args.path)

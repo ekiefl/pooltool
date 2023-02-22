@@ -14,7 +14,7 @@ def is_showbase_initialized() -> bool:
 
     https://docs.panda3d.org/1.10/python/reference/direct.showbase.ShowBaseGlobal#module-direct.showbase.ShowBaseGlobal
     """
-    return True if hasattr(ShowBaseGlobal, "base") else False
+    return hasattr(ShowBaseGlobal, "base")
 
 
 def require_showbase(func):
@@ -55,7 +55,6 @@ class Global:
     aspect2d = ShowBaseGlobal.aspect2d
     render2d = ShowBaseGlobal.render2d
 
-    shots = None
     game = None
     mode_mgr = None
 
@@ -78,10 +77,6 @@ class Global:
     @require_showbase
     def loader(self):
         return ShowBaseGlobal.base.loader
-
-    @classmethod
-    def register_shots(cls, shots):
-        cls.shots = shots
 
     @classmethod
     def register_game(cls, game):

@@ -13,19 +13,20 @@ def main(args):
     if args.seed:
         np.random.seed(args.seed)
 
-    table = pt.PocketTable(model_name="7_foot")
-    balls = pt.get_nine_ball_rack(
-        table, ordered=True, spacing_factor=args.spacing_factor
+    shot = pt.System(
+        cue=pt.Cue(cue_ball_id="cue"),
+        table=(table := pt.Table.pocket_table()),
+        balls=pt.get_nine_ball_rack(
+            table, ordered=True, spacing_factor=args.spacing_factor
+        ),
     )
-    cue = pt.Cue(cueing_ball=balls["cue"])
 
     # Aim at the head ball then strike the cue ball
-    cue.aim_at_ball(balls["1"])
-    cue.strike(V0=args.V0)
+    shot.aim_at_ball(ball_id="1")
+    shot.strike(V0=args.V0)
 
     # Evolve the shot
-    shot = pt.System(cue=cue, table=table, balls=balls)
-    shot.simulate()
+    shot = pt.simulate(shot)
 
     if not args.no_viz:
         interface.show(shot)

@@ -3,12 +3,11 @@ room = 0
 floor = 0
 table = 1
 shadows = 0
-shader = 1
+shader = 0
 lights = 1
 physical_based_rendering = 0
 debug = 0
-angular_vectors = 0
-fps = 60
+fps = 30
 fps_inactive = 5
 hud = 1
 

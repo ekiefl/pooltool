@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections import deque
+from typing import List
 
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.gui.OnscreenText import OnscreenText
@@ -17,7 +18,7 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 from pooltool.ani.globals import Global
-from pooltool.objects.cue import Cue
+from pooltool.objects.cue.datatypes import Cue
 from pooltool.utils import panda_path
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -37,7 +38,7 @@ class HUD:
         self.elements = None
         self.initialized = False
 
-    def init(self):
+    def init(self, hide: List[HUDElement] = list()):
         """Initialize HUD elements and start the HUD update task"""
 
         self.elements = {
@@ -52,6 +53,9 @@ class HUD:
 
         for element in self.elements.values():
             element.init()
+
+        for element in hide:
+            hud.elements[element].hide()
 
         self.initialized = True
         tasks.add(self.update_hud, "update_hud")

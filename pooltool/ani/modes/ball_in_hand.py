@@ -12,6 +12,7 @@ from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.system.render import visual
 from pooltool.utils import panda_path
 
 
@@ -48,9 +49,7 @@ class BallInHandMode(BaseMode):
             # FIXME add message
             self.picking = "ball"
         elif num_options == 1:
-            self.grabbed_ball = Global.shots.active.balls[
-                Global.game.active_player.ball_in_hand[0]
-            ]
+            self.grabbed_ball = visual.balls[Global.game.active_player.ball_in_hand[0]]
             self.grab_ball_node = self.grabbed_ball.get_node("pos")
             self.grab_ball_shadow_node = self.grabbed_ball.get_node("shadow")
             self.picking = "placement"
@@ -64,10 +63,10 @@ class BallInHandMode(BaseMode):
         tasks.remove("ball_in_hand_task")
         tasks.remove("shared_task")
 
-        BallInHandMode.remove_transparent_ball(self)
+        self.remove_transparent_ball()
 
         if self.picking == "ball":
-            BallInHandMode.remove_grab_selection_highlight(self)
+            self.remove_grab_selection_highlight()
 
         if self.picking == "placement" and not success:
             self.grabbed_ball.set_render_state_as_object_state()
@@ -85,21 +84,21 @@ class BallInHandMode(BaseMode):
         cam.move_fixation_via_mouse()
 
         if self.picking == "ball":
-            closest = BallInHandMode.find_closest_ball(self)
+            closest = self.find_closest_ball()
             if closest != self.grabbed_ball:
-                BallInHandMode.remove_grab_selection_highlight(self)
+                self.remove_grab_selection_highlight()
                 self.grabbed_ball = closest
                 self.grab_ball_node = self.grabbed_ball.get_node("pos")
                 self.grab_ball_shadow_node = self.grabbed_ball.get_node("shadow")
-                BallInHandMode.add_grab_selection_highlight(self)
+                self.add_grab_selection_highlight()
 
             if self.keymap["next"]:
                 self.keymap["next"] = False
                 if self.grabbed_ball:
                     self.picking = "placement"
                     cam.move_fixation(self.grab_ball_node.getPos())
-                    BallInHandMode.remove_grab_selection_highlight(self)
-                    BallInHandMode.add_transparent_ball(self)
+                    self.remove_grab_selection_highlight()
+                    self.add_transparent_ball()
 
         elif self.picking == "placement":
             self.move_grabbed_ball()
@@ -120,12 +119,16 @@ class BallInHandMode(BaseMode):
 
         If no, places and returns True. If yes, returns False
         """
-        r, pos = self.grabbed_ball.R, np.array(self.grab_ball_node.getPos())
+        r, pos = self.grabbed_ball._ball.params.R, np.array(
+            self.grab_ball_node.getPos()
+        )
 
-        for ball in Global.shots.active.balls.values():
+        for ball in visual.balls.values():
             if ball == self.grabbed_ball:
                 continue
-            if np.linalg.norm(ball.rvw[0] - pos) <= (r + ball.R):
+            if np.linalg.norm(ball._ball.state.rvw[0] - pos) <= (
+                r + ball._ball.params.R
+            ):
                 return False
 
         self.grabbed_ball.set_object_state_as_render_state()
@@ -178,9 +181,9 @@ class BallInHandMode(BaseMode):
 
     def add_transparent_ball(self):
         self.trans_ball = Global.loader.loadModel(
-            panda_path(ani.model_dir / "balls" / self.grabbed_ball.rel_model_path)
+            panda_path(self.grabbed_ball.model_path)
         )
-        self.trans_ball.reparentTo(Global.render.find("scene").find("cloth"))
+        self.trans_ball.reparentTo(Global.render.find("scene").find("table"))
         self.trans_ball.setTransparency(TransparencyAttrib.MAlpha)
         self.trans_ball.setAlphaScale(0.4)
         self.trans_ball.setPos(self.grabbed_ball.get_node("pos").getPos())
@@ -195,12 +198,12 @@ class BallInHandMode(BaseMode):
         cam_pos = cam.fixation.getPos()
         d_min = np.inf
         closest = None
-        for ball in Global.shots.active.balls.values():
-            if ball.id not in Global.game.active_player.ball_in_hand:
+        for ball_id, ball in visual.balls.items():
+            if ball_id not in Global.game.active_player.ball_in_hand:
                 continue
-            if ball.s == c.pocketed:
+            if ball._ball.state.s == c.pocketed:
                 continue
-            d = np.linalg.norm(ball.rvw[0] - cam_pos)
+            d = np.linalg.norm(ball._ball.state.rvw[0] - cam_pos)
             if d < d_min:
                 d_min, closest = d, ball
 

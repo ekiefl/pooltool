@@ -981,7 +981,7 @@ def evolve_perpendicular_spin_component(wz, R, u_sp, g, t):
 
 @jit(nopython=True, cache=const.numba_cache)
 def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
-    # Otherwise ball.rvw will be modified and corresponding entry in self.history
+    # Otherwise ball.state.rvw will be modified and corresponding entry in self.history
     # FIXME framework has changed, this may not be true. EDIT This is still true.
     rvw = rvw.copy()
 

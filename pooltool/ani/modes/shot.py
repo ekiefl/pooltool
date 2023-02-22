@@ -6,13 +6,14 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
+from pooltool.ani.collision import cue_avoid
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
-from pooltool.objects.ball import Ball
-from pooltool.objects.cue import cue_avoid
-from pooltool.system import PlaybackMode
+from pooltool.objects.ball.datatypes import BallHistory
+from pooltool.system.datatypes import multisystem
+from pooltool.system.render import PlaybackMode, visual
 
 
 class ShotMode(BaseMode):
@@ -27,6 +28,7 @@ class ShotMode(BaseMode):
         Action.zoom: False,
         Action.rewind: False,
         Action.fast_forward: False,
+        Action.fine_control: False,
         Action.cam_save: False,
         Action.cam_load: False,
         Action.show_help: False,
@@ -42,31 +44,30 @@ class ShotMode(BaseMode):
     view_only = False
 
     def enter(
-        self, init_animations=False, playback_mode: Optional[PlaybackMode] = None
+        self, build_animations=False, playback_mode: Optional[PlaybackMode] = None
     ):
         """Enter method for Shot
 
         Parameters
         ==========
-        init_animations : bool, False
-            If True, the shot animations are built and played via
-            SystemCollection.init_animation() and SystemCollection.start_animation()
+        build_animations : bool, False
+            If True, the shot animations are built with visual.build_shot_animation.
         """
         mouse.mode(MouseMode.RELATIVE)
 
-        if init_animations:
-            Global.shots.set_animation()
-            Global.shots.start_animation(PlaybackMode.SINGLE)
-            Global.shots.skip_stroke()
+        if build_animations:
+            visual.build_shot_animation()
+            visual.animate(PlaybackMode.SINGLE)
+            visual.advance_to_end_of_stroke()
 
         if playback_mode is not None:
-            Global.shots.start_animation(playback_mode)
+            visual.animate(playback_mode)
 
-        hud.update_cue(Global.shots.active.cue)
+        hud.update_cue(multisystem.active.cue)
 
-        tasks.register_event("space", Global.shots.toggle_pause)
-        tasks.register_event("arrow_up", Global.shots.speed_up)
-        tasks.register_event("arrow_down", Global.shots.slow_down)
+        tasks.register_event("space", visual.toggle_pause)
+        tasks.register_event("arrow_up", visual.speed_up)
+        tasks.register_event("arrow_down", visual.slow_down)
 
         if self.view_only:
             self.register_keymap_event("escape", Action.close_scene, True)
@@ -87,6 +88,8 @@ class ShotMode(BaseMode):
         self.register_keymap_event("arrow_left-up", Action.rewind, False)
         self.register_keymap_event("arrow_right", Action.fast_forward, True)
         self.register_keymap_event("arrow_right-up", Action.fast_forward, False)
+        self.register_keymap_event("f", Action.fine_control, True)
+        self.register_keymap_event("f-up", Action.fine_control, False)
         self.register_keymap_event("1", Action.cam_save, True)
         self.register_keymap_event("2", Action.cam_load, True)
         self.register_keymap_event("h", Action.show_help, True)
@@ -115,83 +118,71 @@ class ShotMode(BaseMode):
         assert key in {"advance", "reset", "soft"}
 
         if key == "advance":
-            if Global.shots.parallel:
-                Global.shots.toggle_parallel()
+            # New shot means new system. Depending how ShotMode was entered, it may
+            # already exist in multisystem. If the most recently added system is
+            # unsimulated, it already exists. Otherwise, it needs to be created, using
+            # most recent system as template.
+            if multisystem[-1].simulated:
+                if multisystem.active_index != multisystem.max_index:
+                    # The currently rendered shot isn't the most recent shot, and it's
+                    # the most recent shot we want to advance from. So render it.
+                    multisystem.set_active(-1)
+                    visual.attach_system(multisystem.active)
+                    visual.buildup()
 
-            # If we are here, the plan is probably to return to 'aim' mode so another
-            # shot can be taken. This shot needs to be defined by its own system that
-            # has yet to be simulated. Depending how 'shot' mode was entered, this
-            # system may already exist in Global.shots. The following code checks that
-            # by seeing whether the latest system has any events. If not, the system is
-            # unsimulated and is perfectly fit for 'aim' mode, but if the system has
-            # events, a fresh system needs to be appended to Global.shots.
-            make_new = True if len(Global.shots[-1].events) else False
-            if make_new:
-                if Global.shots.active_index != len(Global.shots) - 1:
-                    # Replaying shot that is not most recent. Teardown and then buildup
-                    # most recent
-                    Global.shots.clear_animation()
-                    Global.shots.active.teardown()
-                    Global.shots.set_active(-1)
-                    Global.shots.active.buildup()
+                    # self.quats is a vestige held in BallRender. We need to calculate
+                    # it so we know the final orientation of each ball. We don't have it
+                    # because visual.buildup() was just called.
+                    for ball_render in visual.balls.values():
+                        ball_render.set_quats(ball_render._ball.history_cts)
 
-                Global.shots.append_copy_of_active(
-                    state="current",
-                    reset_history=True,
-                    as_active=False,
-                )
+                # Copy the shot
+                new = multisystem.active.copy()
 
-                # Set the initial orientations of new shot to final orientations of old
-                # shot
-                for ball_id in Global.shots.active.balls:
-                    old_ball = Global.shots.active.balls[ball_id]
-                    new_ball = Global.shots[-1].balls[ball_id]
-                    new_ball.initial_orientation = old_ball.get_final_orientation()
-            else:
-                # The latest entry in the collection is an unsimulated shot. Perfect
-                pass
+                for ball, old_render in zip(new.balls.values(), visual.balls.values()):
+                    # Set the initial ball orientations of the new shot to match the
+                    # final ball orientations of the old shot
+                    ball.initial_orientation = old_render.get_final_orientation()
+
+                new.reset_history()
+                multisystem.append(new)
 
             # Switch shots
-            Global.shots.clear_animation()
-            Global.shots.active.teardown()
-            Global.shots.set_active(-1)
-            Global.shots.active.buildup()
+            multisystem.set_active(-1)
+            visual.attach_system(multisystem.active)
+            visual.buildup()
 
             cue_avoid.init_collisions()
-
-            if make_new:
-                Global.shots.active.cue.reset_state()
-            Global.shots.active.cue.set_render_state_as_object_state()
+            multisystem.active.cue.reset_state()
+            visual.cue.set_render_state_as_object_state()
 
             # Set the HUD
-            hud.update_cue(Global.shots.active.cue)
+            hud.update_cue(multisystem.active.cue)
 
         elif key == "reset":
-            if Global.shots.parallel:
-                Global.shots.toggle_parallel()
-
-            Global.shots.clear_animation()
-            if Global.shots.active_index != len(Global.shots) - 1:
+            if multisystem.active_index != len(multisystem) - 1:
                 # Replaying shot that is not most recent. Teardown and then buildup most
                 # recent
-                Global.shots.active.teardown()
-                Global.shots.set_active(-1)
-                Global.shots.active.buildup()
+                multisystem.set_active(-1)
+                visual.attach_system(multisystem.active)
+                visual.buildup()
                 cue_avoid.init_collisions()
+            else:
+                visual.reset_animation()
 
             cam.load_saved_state(Global.mode_mgr.mode_stroked_from)
-            for ball in Global.shots.active.balls.values():
-                if ball.history.is_populated():
-                    ball.set(
-                        rvw=ball.history.rvw[0],
-                        s=ball.history.s[0],
+            for ball_render in visual.balls.values():
+                ball = ball_render._ball
+                if not ball.history.empty:
+                    ball.state.set(
+                        rvw=ball.history[0].rvw,
+                        s=ball.history[0].s,
                         t=0,
                     )
-                    ball.get_node("pos").setQuat(ball.quats[0])
-                ball.set_render_state_as_object_state()
-                ball.history.reset()
-
-            Global.shots.active.cue.init_focus(Global.shots.active.cue.cueing_ball)
+                    ball_render.get_node("pos").setQuat(ball_render.quats[0])
+                ball_render.set_render_state_as_object_state()
+                ball.history = BallHistory()
+                ball.history_cts = BallHistory()
 
         tasks.remove("shot_view_task")
         tasks.remove("shot_animation_task")
@@ -204,10 +195,10 @@ class ShotMode(BaseMode):
             Global.mode_mgr.end_mode()
             Global.base.messenger.send("stop")
 
-        elif self.keymap[Action.aim] or Global.shots.animation_finished:
+        elif self.keymap[Action.aim] or visual.animation_finished:
             # Either the user has requested to start the next shot, or the animation has
             # finished
-            Global.game.advance(Global.shots[-1])
+            Global.game.advance(multisystem[-1])
             if Global.game.game_over:
                 Global.mode_mgr.change_mode(Mode.game_over)
             else:
@@ -233,13 +224,18 @@ class ShotMode(BaseMode):
 
     def shot_animation_task(self, task):
         if self.keymap[Action.restart_ani]:
-            Global.shots.start_animation(PlaybackMode.LOOP)
+            visual.playback(PlaybackMode.LOOP)
+            visual.restart_animation()
 
         elif self.keymap[Action.rewind]:
-            Global.shots.rewind()
+            dt = 0.008 if self.keymap[Action.fine_control] else 0.03
+            if visual.paused:
+                visual.offset_time(-dt)
 
         elif self.keymap[Action.fast_forward]:
-            Global.shots.fast_forward()
+            dt = 0.008 if self.keymap[Action.fine_control] else 0.03
+            if visual.paused:
+                visual.offset_time(dt)
 
         elif self.keymap[Action.undo_shot]:
             Global.mode_mgr.change_mode(
@@ -249,78 +245,56 @@ class ShotMode(BaseMode):
             )
 
         elif self.keymap[Action.parallel]:
-            self.keymap[Action.parallel] = False
-            Global.shots.toggle_parallel()
-            if not Global.shots.parallel:
-                self.change_animation(Global.shots.active_index)
+            # FIXME Implementing parallel would involve code here and throughout shot.py
+            # and view.py
+            raise NotImplementedError("This will one day be re-implemented")
 
         elif self.keymap[Action.prev_shot]:
             self.keymap[Action.prev_shot] = False
-            shot_index = Global.shots.active_index - 1
+            shot_index = multisystem.active_index - 1
             while True:
                 if shot_index < 0:
-                    shot_index = len(Global.shots) - 1
+                    shot_index = len(multisystem) - 1
                 if (
-                    len(Global.shots[shot_index].events)
-                    or shot_index != len(Global.shots) - 1
+                    len(multisystem[shot_index].events)
+                    or shot_index != len(multisystem) - 1
                 ):
                     break
                 shot_index -= 1
-            if not Global.shots.parallel:
-                self.change_animation(shot_index)
-            else:
-                Global.shots.set_active(shot_index)
-                Global.shots.highlight_system(shot_index)
-                hud.update_cue(Global.shots.active.cue)
+            self.change_animation(shot_index)
 
         elif self.keymap[Action.next_shot]:
             self.keymap[Action.next_shot] = False
-            shot_index = Global.shots.active_index + 1
+            shot_index = multisystem.active_index + 1
             while True:
-                if shot_index == len(Global.shots):
+                if shot_index == len(multisystem):
                     shot_index = 0
                 if (
-                    len(Global.shots[shot_index].events)
-                    or shot_index != len(Global.shots) - 1
+                    len(multisystem[shot_index].events)
+                    or shot_index != len(multisystem) - 1
                 ):
                     break
                 shot_index += 1
-            if not Global.shots.parallel:
-                self.change_animation(shot_index)
-            else:
-                Global.shots.set_active(shot_index)
-                Global.shots.highlight_system(shot_index)
-                hud.update_cue(Global.shots.active.cue)
+            self.change_animation(shot_index)
 
         return task.cont
 
-    def change_animation(self, shot_index):
+    @staticmethod
+    def change_animation(shot_index):
         """Switch to a different system in the system collection"""
         # Switch shots
-        Global.shots.clear_animation()
-        Global.shots.active.teardown()
-        Global.shots.set_active(shot_index)
-        Global.shots.active.buildup()
+        multisystem.set_active(shot_index)
+        visual.attach_system(multisystem.active)
+        visual.buildup()
 
         # Initialize the animation
-        Global.shots.set_animation()
+        visual.build_shot_animation()
 
         # Changing to a different shot is considered advanced maneuvering, so we enter
         # loop mode.
-        Global.shots.start_animation(PlaybackMode.LOOP)
-
-        # A lot of dumb things to make the cue track the initial position of the ball
-        dummy = Ball("dummy")
-        dummy.R = Global.shots.active.cue.cueing_ball.R
-        dummy.rvw = Global.shots.active.cue.cueing_ball.history.rvw[0]
-        dummy.render()
-        Global.shots.active.cue.init_focus(dummy)
-        Global.shots.active.cue.set_render_state_as_object_state()
-        Global.shots.active.cue.follow = None
-        dummy.remove_nodes()
-        del dummy
+        visual.animate(PlaybackMode.LOOP)
 
         cue_avoid.init_collisions()
 
         # Set the HUD
-        hud.update_cue(Global.shots.active.cue)
+        hud.update_cue(multisystem.active.cue)

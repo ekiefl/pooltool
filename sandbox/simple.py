@@ -2,24 +2,25 @@
 import numpy as np
 
 import pooltool as pt
-from pooltool.constants import R, table_length, table_width
+
+
+def rand_pos(table):
+    return (
+        np.random.uniform(pt.BallParams.R, table.w - pt.BallParams.R),
+        np.random.uniform(pt.BallParams.R, table.l - pt.BallParams.R),
+    )
+
 
 # Create a 2-ball system (randomly placed balls)
-cx = np.random.uniform(0, table_width - 2 * R)
-cy = np.random.uniform(0, table_length - 2 * R)
-bx = np.random.uniform(0, table_width - 2 * R)
-by = np.random.uniform(0, table_length - 2 * R)
+table = pt.Table.pocket_table()
 shot = pt.System(
-    table=pt.PocketTable(model_name="7_foot"),
+    table=table,
     cue=pt.Cue(),
     balls={
-        "cue": pt.Ball("cue", xyz=[cx, cy]),
-        "1": pt.Ball("1", xyz=[bx, by]),
+        "cue": pt.Ball.create("cue", xy=rand_pos(table)),
+        "1": pt.Ball.create("1", xy=rand_pos(table)),
     },
 )
-
-# Let's make sure the balls are not overlapping:
-assert not shot.is_balls_overlapping()
 
 # The balls are not in motion, so there is no energy in the system. Let's change that...
 assert shot.get_system_energy() == 0
@@ -27,7 +28,7 @@ assert shot.get_system_energy() == 0
 # Let's set the cue-stick parameters. Let's strike the cue ball with a strike of 1.5m/s
 # (V0), with bottom english (b), a bit of left spin (a), and a level cue (theta)
 shot.cue.set_state(
-    cueing_ball=shot.balls["cue"],
+    cue_ball_id="cue",
     V0=1.5,
     b=-0.1,
     a=0.2,
@@ -38,8 +39,7 @@ shot.cue.set_state(
 assert shot.cue.phi == 0
 
 # So let's Aim at the 1-ball, with a 30 degree cut to the left
-target_ball = shot.balls["1"]
-shot.cue.aim_for_best_pocket(target_ball, shot.table.pockets.values())
+shot.aim_for_best_pocket(ball_id="1")
 
 # Now the direction is set!
 assert shot.cue.phi != 0
@@ -49,14 +49,14 @@ assert shot.cue.phi != 0
 assert shot.get_system_energy() == 0
 
 # Let's strike the cue ball, giving the system some initial energy
-shot.cue.strike()
+shot.strike()
 assert shot.get_system_energy() > 0
 
-# The shot hasn't been simulated yet, so time doesn't exist
-assert shot.t is None
+# The shot hasn't been simulated yet, so time is t=0
+assert shot.t == 0
 
 # Let's simulate the shot
-shot.simulate()
+pt.simulate(shot)
 
 # The shot has been simulated. Here are the series of events that took place:
 print(shot.events)

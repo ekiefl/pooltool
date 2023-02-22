@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+from typing import List
+
 import numpy as np
 from direct.gui.DirectGui import DGG
 from direct.gui.DirectGuiBase import DirectGuiWidget
@@ -17,7 +19,7 @@ def get_list_of_Vec3s_from_array(array):
     return vec3s
 
 
-def as_quaternion(w, t, dQ_0=None):
+def as_quaternion(w, t, dQ_0=None) -> List:
     """Convert angular velocities to quaternions
 
     Notes

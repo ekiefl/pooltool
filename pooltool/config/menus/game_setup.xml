@@ -8,31 +8,10 @@
         <func>func_play_now</func>
         <description>Enter the game with the currently selected settings</description>
     </button>
-    <subtitle>Type</subtitle>
-        <dropdown name="game_type" selection="9-ball">
-            <name>Game</name>
-            <option>8-ball</option>
-            <option>9-ball</option>
-            <description>What kind of billiards game do you want to play?</description>
-        </dropdown>
-        <checkbox checked="true" name="sandbox">
-            <name>Sandbox</name>
-            <description>If selected, no rules are enforced and full control is given</description>
-        </checkbox>
-    <subtitle>Table</subtitle>
-        <text>Pick an existing table, view the table parameters, or create a new table.</text>
-    <dropdown from_yaml="config/tables" name="table_type" selection="7_foot">
-        <name>Table</name>
-        <description>Choose from an existing table</description>
-    </dropdown>
-    <button>
-        <name>View selected</name>
-        <func>func_go_view_table</func>
-        <description>View the parameters of the selected table</description>
-    </button>
-    <button>
-        <name>New table</name>
-        <func>func_go_new_table</func>
-        <description>Don't like the options? Create a new table</description>
-    </button>
+    <text>
+        There used to be some customizable options here, but due to some dramatic
+        changes to the codebase, the archaic menu system no longer plugs into the
+        backend. That will change one day, but today is not that day :( For now, just
+        click "Play now"
+    </text>
 </menu>

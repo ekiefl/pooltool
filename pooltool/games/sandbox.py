@@ -20,7 +20,7 @@ class Sandbox(Game):
             player.can_cue = [ball_id for ball_id in shot.balls]
             player.target_balls = [ball_id for ball_id in shot.balls]
 
-    def set_initial_cueing_ball(self, balls):
+    def get_initial_cueing_ball(self, balls):
         return balls["cue"]
 
     def award_points(self, shot):
@@ -33,9 +33,13 @@ class Sandbox(Game):
         self.shot_info["ball_in_hand"] = [ball.id for ball in shot.balls.values()]
 
     def respot_balls(self, shot):
-        if shot.balls["cue"].s == c.pocketed:
+        if shot.balls["cue"].state.s == c.pocketed:
             self.respot(
-                shot, "cue", shot.table.w / 2, shot.table.l * 1 / 4, shot.balls["cue"].R
+                shot,
+                "cue",
+                shot.table.w / 2,
+                shot.table.l * 1 / 4,
+                shot.balls["cue"].params.R,
             )
 
     def is_turn_over(self, shot):

@@ -4,6 +4,7 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.globals import Global
+from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 
@@ -36,8 +37,16 @@ class PurgatoryMode(BaseMode):
 
         self.is_window_active = None
 
+        self.dim_overlay = GenericMenu(
+            title="Click to continue...",
+            frame_color=(0, 0, 0, 0.4),
+            title_pos=(0, 0, -0.2),
+        )
+        self.dim_overlay.hide()
+
     def enter(self):
         mouse.mode(MouseMode.ABSOLUTE)
+        self.dim_overlay.show()
 
         self.register_keymap_event("mouse1-up", Action.regain_control, True)
         self.register_keymap_event("mouse1-down", Action.regain_control, False)
@@ -51,6 +60,8 @@ class PurgatoryMode(BaseMode):
 
         # Set the framerate to pre-purgatory levels
         Global.clock.setFrameRate(ani.settings["graphics"]["fps"])
+
+        self.dim_overlay.hide()
 
     def purgatory_task(self, task):
         if self.keymap[Action.regain_control]:

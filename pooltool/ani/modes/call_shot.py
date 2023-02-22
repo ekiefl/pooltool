@@ -12,6 +12,8 @@ from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.system.datatypes import multisystem
+from pooltool.system.render import visual
 from pooltool.utils import panda_path
 
 
@@ -57,8 +59,8 @@ class CallShotMode(BaseMode):
         tasks.remove("shared_task")
 
         if self.picking in ("ball", "pocket"):
-            CallShotMode.remove_ball_highlight(self)
-        CallShotMode.remove_transparent_ball(self)
+            self.remove_ball_highlight()
+        self.remove_transparent_ball()
         self.ball_highlight_sequence.pause()
         cam.rotate(theta=cam.theta - self.head_raise)
 
@@ -70,19 +72,20 @@ class CallShotMode(BaseMode):
         cam.move_fixation_via_mouse()
 
         if self.picking == "ball":
-            closest = CallShotMode.find_closest_ball(self)
+            closest = self.find_closest_ball()
             if closest != self.closest_ball:
-                CallShotMode.remove_ball_highlight(self)
+                self.remove_ball_highlight()
                 self.closest_ball = closest
                 self.ball_highlight = self.closest_ball.get_node("pos")
-                CallShotMode.add_ball_highlight(self)
+                self.add_ball_highlight()
 
             if self.keymap["next"]:
                 self.keymap["next"] = False
                 Global.game.ball_call = self.closest_ball
                 if self.closest_ball is not None:
                     Global.game.log.add_msg(
-                        f"Calling the {self.closest_ball.id} ball", sentiment="neutral"
+                        f"Calling the {self.closest_ball._ball.id} ball",
+                        sentiment="neutral",
                     )
                 self.picking = "pocket"
                 self.trans_ball.show()
@@ -145,7 +148,7 @@ class CallShotMode(BaseMode):
         fixation_pos = cam.fixation.getPos()
         d_min = np.inf
         closest = None
-        for pocket in Global.shots.active.table.pockets.values():
+        for pocket in multisystem.active.table.pockets.values():
             d = np.linalg.norm(pocket.center - fixation_pos)
             if d < d_min:
                 d_min, closest = d, pocket
@@ -163,7 +166,7 @@ class CallShotMode(BaseMode):
 
     def add_ball_highlight(self):
         if self.closest_ball is not None:
-            CallShotMode.add_transparent_ball(self)
+            self.add_transparent_ball()
             self.trans_ball.hide()
             tasks.add(
                 self.call_shot_ball_highlight_animation,
@@ -192,9 +195,9 @@ class CallShotMode(BaseMode):
 
     def add_transparent_ball(self):
         self.trans_ball = Global.loader.loadModel(
-            panda_path(ani.model_dir / "balls" / self.closest_ball.rel_model_path)
+            panda_path(self.closest_ball.model_path)
         )
-        self.trans_ball.reparentTo(Global.render.find("scene").find("cloth"))
+        self.trans_ball.reparentTo(Global.render.find("scene").find("table"))
         self.trans_ball.setTransparency(TransparencyAttrib.MAlpha)
         self.trans_ball.setAlphaScale(0.4)
         self.trans_ball.setPos(self.closest_ball.get_node("pos").getPos())
@@ -209,12 +212,12 @@ class CallShotMode(BaseMode):
         fixation_pos = cam.fixation.getPos()
         d_min = np.inf
         closest = None
-        for ball in Global.shots.active.balls.values():
-            if ball.id not in Global.game.active_player.target_balls:
+        for ball_id, ball in visual.balls.items():
+            if ball_id not in Global.game.active_player.target_balls:
                 continue
-            if ball.s == c.pocketed:
+            if ball._ball.state.s == c.pocketed:
                 continue
-            d = np.linalg.norm(ball.rvw[0] - fixation_pos)
+            d = np.linalg.norm(ball._ball.state.rvw[0] - fixation_pos)
             if d < d_min:
                 d_min, closest = d, ball
 

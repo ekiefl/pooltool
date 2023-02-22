@@ -29,6 +29,7 @@ import pooltool.games as games
 import pooltool.terminal as terminal
 import pooltool.utils as utils
 from pooltool.ani.camera import CameraState, cam
+from pooltool.ani.collision import cue_avoid
 from pooltool.ani.environment import environment
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.hud import HUDElement, hud
@@ -36,9 +37,11 @@ from pooltool.ani.menu import GenericMenu, menus
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
 from pooltool.error import ConfigError
-from pooltool.objects.cue import Cue, cue_avoid
-from pooltool.objects.table import table_types
-from pooltool.system import PlaybackMode, System, SystemCollection
+from pooltool.objects.ball.datatypes import BallParams
+from pooltool.objects.cue.datatypes import Cue
+from pooltool.objects.table.datatypes import Table
+from pooltool.system.datatypes import System, multisystem
+from pooltool.system.render import PlaybackMode, visual
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -67,8 +70,11 @@ def boop(frames=1):
 
 
 @require_showbase
-def window_resize(win=None):
-    """Maintain aspect ratio when user resizes window
+def window_task(win=None):
+    """Routine for managing window activity/resizing
+
+    Determines whether window is active or not. If not, purgatory mode is entered, a
+    reduced FPS state.
 
     The user can modify the game window to be whatever size they want. Ideally, they
     would be able to pick arbitrary aspect ratios, however this project has been
@@ -80,6 +86,10 @@ def window_resize(win=None):
     user, this will override their resizing, and resize the window to one with an
     area equal to that requested, but at the required aspect ratio.
     """
+    is_window_active = Global.base.win.get_properties().foreground
+    if not is_window_active and Global.mode_mgr.mode != Mode.purgatory:
+        Global.mode_mgr.change_mode(Mode.purgatory)
+
     requested_width = Global.base.win.getXSize()
     requested_height = Global.base.win.getYSize()
 
@@ -99,10 +109,6 @@ def window_resize(win=None):
     properties = WindowProperties()
     properties.setSize(int(width), int(height))
     Global.base.win.requestProperties(properties)
-
-    is_window_active = Global.base.win.get_properties().foreground
-    if not is_window_active and Global.mode_mgr.mode != Mode.purgatory:
-        Global.mode_mgr.change_mode(Mode.purgatory)
 
 
 class Interface(ShowBase):
@@ -144,24 +150,19 @@ class Interface(ShowBase):
 
     def listen_constant_events(self):
         """Listen for events that are mode independent"""
-        tasks.register_event("window-event", window_resize)
+        tasks.register_event("window-event", window_task)
         tasks.register_event("close-scene", self.close_scene)
         tasks.register_event("toggle-help", hud.toggle_help)
 
     def close_scene(self):
-        for shot in Global.shots:
-            shot.table.remove_nodes()
-            for ball in shot.balls.values():
-                ball.teardown()
+        visual.teardown()
 
         environment.unload_room()
         environment.unload_lights()
 
         hud.destroy()
 
-        if len(Global.shots):
-            Global.shots.clear_animation()
-            Global.shots.clear()
+        multisystem.reset()
 
         cam.fixation = None
         cam.fixation_object = None
@@ -170,22 +171,18 @@ class Interface(ShowBase):
         gc.collect()
 
     def create_scene(self):
-        """Create a scene from Global.shots"""
+        """Create a scene from multisystem"""
         Global.render.attachNewNode("scene")
-        Global.shots.active.table.render()
-        environment.init(Global.shots.active.table)
 
-        # Render the balls of the active shot
-        for ball in Global.shots.active.balls.values():
-            if not ball.rendered:
-                ball.render()
+        visual.attach_system(multisystem.active)
+        visual.buildup()
 
-        Global.shots.active.cue.render()
+        environment.init(multisystem.active.table)
 
-        R = max([ball.R for ball in Global.shots.active.balls.values()])
+        R = max([ball.params.R for ball in multisystem.active.balls.values()])
         cam.fixate(
-            pos=(Global.shots.active.table.w / 2, Global.shots.active.table.l / 2, R),
-            node=Global.shots.active.table.get_node("cloth"),
+            pos=(multisystem.active.table.w / 2, multisystem.active.table.l / 2, R),
+            node=visual.table.get_node("table"),
         )
 
     def monitor(self, task):
@@ -238,20 +235,11 @@ class ShotViewer(Interface):
         self.stop()
 
     def show(self, shot_or_shots=None, title=""):
-        if shot_or_shots is None:
-            if not len(Global.shots):
-                raise ConfigError(
-                    "ShotViewer.show :: No shots passed and no shots set."
-                )
+        multisystem.reset()
+        if isinstance(shot_or_shots, System):
+            multisystem.append(shot_or_shots)
         else:
-            if issubclass(type(shot_or_shots), System):
-                Global.register_shots(SystemCollection())
-                Global.shots.append(shot_or_shots)
-            elif issubclass(type(shot_or_shots), SystemCollection):
-                Global.register_shots(shot_or_shots)
-
-        if Global.shots.active is None:
-            Global.shots.set_active(0)
+            multisystem.extend(shot_or_shots)
 
         self.create_scene()
 
@@ -262,11 +250,10 @@ class ShotViewer(Interface):
         self.title_node.show()
 
         if ani.settings["graphics"]["hud"]:
-            hud.init()
-            hud.elements[HUDElement.help_text].help_hint.hide()
+            hud.init(hide=[HUDElement.help_text])
 
         params = dict(
-            init_animations=True,
+            build_animations=True,
             playback_mode=PlaybackMode.LOOP,
         )
         Global.mode_mgr.update_event_baseline()
@@ -365,10 +352,8 @@ class ImageSaver(Interface):
 
     def _init_system_collection(self, shot):
         """Create system collection holding the shot. Register to Global"""
-        Global.register_shots(SystemCollection())
-        Global.shots.append(shot)
-        if Global.shots.active is None:
-            Global.shots.set_active(0)
+        multisystem.reset()
+        multisystem.append(shot)
 
     def get_image_array(self):
         """Return array of current image texture, or None if texture has no RAM image"""
@@ -389,7 +374,7 @@ class ImageSaver(Interface):
         self,
         shot: System,
         save_dir: Union[str, Path],
-        camera_state: CameraState = None,
+        camera_state: CameraState = Optional[None],
         file_prefix: str = "shot",
         size: Tuple[int, int] = (230, 144),
         img_format: ImageFormat = ImageFormat.JPG,
@@ -401,10 +386,10 @@ class ImageSaver(Interface):
 
         Args:
             shot:
-                The shot you would like visualized. It should already by simulated (e.g.
-                shot.simulate()). It is OK if you have continuized the shot (you can
-                check with shot.continuized), but the continuization will be overwritten
-                to match the `fps` chosen in this method.
+                The shot you would like visualized. It should already by simulated. It
+                is OK if you have continuized the shot (you can check with
+                shot.continuized), but the continuization will be overwritten to match
+                the `fps` chosen in this method.
             save_dir:
                 The directory that you would like to save the shots in. It must not
                 already exist.
@@ -435,9 +420,9 @@ class ImageSaver(Interface):
         self.create_scene()
 
         # We don't want the cue in this
-        shot.cue.hide_nodes()
+        visual.cue.hide_nodes()
 
-        if camera_state:
+        if camera_state is not None:
             cam.load_state(camera_state)
 
         if show_hud:
@@ -450,14 +435,14 @@ class ImageSaver(Interface):
         save_dir = self.make_save_dir(save_dir)
 
         # Set quaternions for each ball
-        for ball in Global.shots.active.balls.values():
-            ball.set_quats()
+        for ball in visual.balls.values():
+            ball.set_quats(ball._ball.history_cts)
 
         frames = int(shot.events[-1].time * fps) + 1
 
         for frame in range(frames):
-            for ball in Global.shots.active.balls.values():
-                ball.set_render_state_from_history(frame)
+            for ball in visual.balls.values():
+                ball.set_render_state_from_history(ball._ball.history_cts, frame)
 
             Global.task_mgr.step()
 
@@ -529,61 +514,24 @@ class Game(Interface):
         Global.mode_mgr.change_mode(Mode.aim)
 
     def create_system(self):
-        """Create the Global shots and game objects
+        """Create the multisystem and game objects
 
-        FIXME this and its calls (setup_*) should probably be a method of some
-        MenuOptions class. Since this depends strictly on the menu options, it should
-        not belong in this class.
+        FIXME This is where menu options should plug into, rather than using these
+        hardcoded defaults like `table = Table.pocket_table()`
         """
-        self.setup_options = menus.get_options()
+        game = games.game_classes[ani.options_sandbox]()
+        game.init()
 
-        game = self.setup_game()
-
-        table = self.setup_table()
-        balls = self.setup_balls(table, game.rack)
-        cue = self.setup_cue(balls, game)
+        table = Table.pocket_table()
+        balls = game.rack(table, ordered=True, params=BallParams()).get_balls_dict()
+        cue = Cue(cue_ball_id=game.get_initial_cueing_ball(balls).id)
         shot = System(table=table, balls=balls, cue=cue)
 
-        shots = SystemCollection()
-        shots.append(shot)
-        shots.set_active(-1)
+        multisystem.reset()
+        multisystem.append(shot)
 
         game.start(shot)
-
-        Global.register_shots(shots)
         Global.game = game
 
     def start(self):
         Global.task_mgr.run()
-
-    def setup_table(self):
-        selected_table = self.setup_options["table_type"]
-        table_config = ani.load_config("tables")
-        table_params = table_config[selected_table]
-        table_params["model_name"] = selected_table
-        table_type = table_params.pop("type")
-        return table_types[table_type](**table_params)
-
-    @staticmethod
-    def setup_game():
-        """Setup the game class from pooltool.games"""
-        game = games.game_classes[ani.options_sandbox]()
-        game.init()
-        return game
-
-    @staticmethod
-    def setup_cue(balls, game):
-        return Cue(cueing_ball=game.set_initial_cueing_ball(balls))
-
-    @staticmethod
-    def setup_balls(table, rack):
-        # FIXME hardcoded
-        ball_kwargs = dict(
-            R=0.028575,  # ball radius
-            u_s=0.2,  # sliding friction
-            u_r=0.01,  # rolling friction
-            u_sp=10 * 2 / 5 * 0.028575 / 9,  # spinning friction
-            f_c=0.2,  # cushion coeffiient of friction
-            e_c=0.85,  # cushion coeffiient of restitution
-        )
-        return rack(table, ordered=True, **ball_kwargs).balls

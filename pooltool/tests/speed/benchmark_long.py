@@ -3,8 +3,6 @@
 
 from pathlib import Path
 
-import pprofile
-
 import pooltool as pt
 
 path = Path(pt.__file__).parent / "tests" / "speed" / "benchmark_long.pkl"

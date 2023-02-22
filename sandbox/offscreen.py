@@ -16,19 +16,20 @@ def main(args):
     if args.seed:
         np.random.seed(args.seed)
 
-    table = pt.PocketTable(model_name="7_foot")
-    balls = pt.get_nine_ball_rack(
-        table, ordered=True, spacing_factor=args.spacing_factor
+    system = pt.System(
+        cue=pt.Cue(cue_ball_id="cue"),
+        table=(table := pt.Table.pocket_table()),
+        balls=pt.get_nine_ball_rack(
+            table, ordered=True, spacing_factor=args.spacing_factor
+        ),
     )
-    cue = pt.Cue(cueing_ball=balls["cue"])
 
     # Aim at the head ball then strike the cue ball
-    cue.aim_at_ball(balls["1"])
-    cue.strike(V0=args.V0)
+    system.aim_at_ball(ball_id="1")
+    system.strike(V0=args.V0)
 
     # Evolve the shot
-    shot = pt.System(cue=cue, table=table, balls=balls)
-    shot.simulate()
+    pt.simulate(system)
 
     output = Path(__file__).parent / "offscreen_out"
     if output.exists():
@@ -45,7 +46,7 @@ def main(args):
         "rack",
     ]:
         interface.save(
-            shot=shot,
+            shot=system,
             save_dir=output / camera_state,
             camera_state=camera_states[camera_state],
             file_prefix=camera_state,
@@ -68,7 +69,8 @@ if __name__ == "__main__":
         "--spacing-factor",
         type=float,
         default=1e-3,
-        help="What fraction of the ball radius should each ball be randomly separated by in the rack?",
+        help="What fraction of the ball radius should each ball be randomly separated "
+        "by in the rack?",
     )
     ap.add_argument(
         "--V0",
