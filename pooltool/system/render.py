@@ -94,10 +94,9 @@ class SystemController:
         self.playback_speed = 1
 
         # FIXME See the FIXME in teardown for an explanation
-        for child in Global.render.find("scene").getChildren():
-            if child.name == "table":
-                break
-        else:
+        if not any(
+            child.name == "table" for child in Global.render.find("scene").getChildren()
+        ):
             self.system.table.render()
 
         for ball in self.system.balls.values():
