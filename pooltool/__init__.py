@@ -5,6 +5,7 @@ All units are SI unless otherwise stated.
 
 __version__ = "0.1"
 
+from pooltool import terminal
 from pooltool.ani.animate import Game, ImageSaver, ShotViewer
 from pooltool.events import Event, EventType
 from pooltool.evolution import simulate
@@ -35,3 +36,6 @@ from pooltool.objects.table.datatypes import (
     TableType,
 )
 from pooltool.system.datatypes import MultiSystem, System
+
+run = terminal.Run()
+progress = terminal.Progress()

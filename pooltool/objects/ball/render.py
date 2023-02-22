@@ -36,11 +36,7 @@ class BallRender(Render):
     @property
     def model_path(self) -> str:
         expected_path = ani.model_dir / "balls" / "set_1" / f"{self._ball.id}.glb"
-        return (
-            panda_path(expected_path)
-            if expected_path.exists()
-            else panda_path(self.fallback_path)
-        )
+        return expected_path if expected_path.exists() else self.fallback_path
 
     def init_sphere(self):
         """Initialize the ball's nodes"""
@@ -51,11 +47,11 @@ class BallRender(Render):
         )
         ball_node = position.attachNewNode(f"ball_{self._ball.id}")
 
-        sphere_node = Global.loader.loadModel(self.model_path)
+        sphere_node = Global.loader.loadModel(panda_path(self.model_path))
         sphere_node.reparentTo(position)
 
         if self.model_path == self.fallback_path:
-            tex = sphere_node.find_texture(self.fallback_path.stem)
+            tex = sphere_node.find_texture("1")
         else:
             tex = sphere_node.find_texture(self._ball.id)
 

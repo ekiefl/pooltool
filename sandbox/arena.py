@@ -5,8 +5,6 @@ import numpy as np
 
 import pooltool as pt
 
-run = pt.terminal.Run()
-
 get_pos = lambda table, ball: (
     (table.w - 2 * ball.params.R) * np.random.rand() + ball.params.R,
     (table.l - 2 * ball.params.R) * np.random.rand() + ball.params.R,
@@ -33,31 +31,24 @@ def main(args):
     if not args.no_viz:
         interface = pt.ShotViewer()
     while True:
-        # setup table, cue, and cue ball
+        # Setup the system
         table = pt.Table.from_table_specs(pt.PocketTableSpecs(l=4, w=2))
-
         balls = {}
         balls["cue"] = place_ball("cue", balls, table)
         for i in range(args.N):
             balls[str(i)] = place_ball(str(i), balls, table)
-
-        cue = pt.Cue(cueing_ball=balls["cue"])
+        cue = pt.Cue(cue_ball_id="cue")
+        shot = pt.System(cue=cue, table=table, balls=balls)
 
         # Aim at the head ball then strike the cue ball
-        cue.aim_at_ball(balls["1"])
-        cue.strike(V0=40)
+        shot.aim_at_ball("1")
+        shot.strike(V0=40)
 
         # Evolve the shot
-        shot = pt.System(cue=cue, table=table, balls=balls)
         try:
-            shot.simulate(continuize=False, quiet=False)
+            pt.simulate(shot, continuize=False, quiet=False)
         except KeyboardInterrupt:
-            shot.progress.end()
             break
-        except:
-            shot.progress.end()
-            shot.run.info("Shot calculation failed", ":(")
-            continue
 
         if not args.no_viz:
             interface.show(shot)
