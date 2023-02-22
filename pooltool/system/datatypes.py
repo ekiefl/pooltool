@@ -333,9 +333,13 @@ class System:
         config: PottingConfig = PottingConfig.default(),
     ):
         """Set phi to pot a given ball into a given pocket"""
+        assert self.cue.cue_ball_id
+
         self.cue.set_state(
             phi=config.calculate_angle(
-                self.balls[ball_id], self.table.pockets[pocket_id]
+                self.balls[self.cue.cue_ball_id],
+                self.balls[ball_id],
+                self.table.pockets[pocket_id],
             )
         )
 
@@ -347,11 +351,11 @@ class System:
 
         cue_ball = self.balls[self.cue.cue_ball_id]
         object_ball = self.balls[ball_id]
-        pockets = self.table.pockets.values()
+        pockets = list(self.table.pockets.values())
 
         self.aim_for_pocket(
             ball_id=ball_id,
-            pocket_id=config.choose_pocket(cue_ball, object_ball, pockets),
+            pocket_id=config.choose_pocket(cue_ball, object_ball, pockets).id,
             config=config,
         )
 

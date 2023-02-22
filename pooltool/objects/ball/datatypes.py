@@ -180,6 +180,11 @@ class Ball:
     history: BallHistory = field(default_factory=BallHistory.factory)
     history_cts: BallHistory = field(default_factory=BallHistory.factory)
 
+    @property
+    def xyz(self):
+        """Return the coordinate vector of the ball"""
+        return np.copy(self.state.rvw[0])
+
     def copy(self) -> Ball:
         """Create a deep copy"""
         # `params` and `initial_orientation` are frozen
