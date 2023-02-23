@@ -53,6 +53,10 @@ class LinearCushionSegment:
         # Segment must have constant height
         assert self.p1[2] == self.p2[2]
 
+        # p1 and p2 are read only
+        self.p1.flags["WRITEABLE"] = False
+        self.p2.flags["WRITEABLE"] = False
+
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
 
@@ -84,12 +88,13 @@ class LinearCushionSegment:
         return self.normal
 
     def copy(self):
-        """Create a deep copy"""
-        return replace(
-            self,
-            p1=np.copy(self.p1),
-            p2=np.copy(self.p2),
-        )
+        """Create a deep-ish copy
+
+        LinearCushionSegment is a frozen instance, and its attributes are either (a)
+        immutable, or (b) have read-only flags set. It is sufficient to simply return
+        oneself.
+        """
+        return self
 
     @staticmethod
     def dummy() -> LinearCushionSegment:
@@ -120,6 +125,9 @@ class CircularCushionSegment:
     def __post_init__(self):
         assert len(self.center) == 3
 
+        # center is read only
+        self.center.flags["WRITEABLE"] = False
+
     @property
     def height(self) -> float:
         return self.center[2]
@@ -138,8 +146,13 @@ class CircularCushionSegment:
         return normal
 
     def copy(self) -> CircularCushionSegment:
-        """Create a deepcopy"""
-        return replace(self, center=np.copy(self.center))
+        """Create a deep-ish copy
+
+        CircularCushionSegment is a frozen instance, and its attributes are either (a)
+        immutable, or (b) have read-only flags set. It is sufficient to simply return
+        oneself.
+        """
+        return self
 
     @staticmethod
     def dummy() -> CircularCushionSegment:
@@ -155,11 +168,17 @@ class CushionSegments:
     circular: Dict[str, CircularCushionSegment]
 
     def copy(self) -> CushionSegments:
-        """Create a deepcopy"""
+        """Create a deep-ish copy
+
+        Delegates the deep-ish copying of LinearCushionSegment and
+        CircularCushionSegment elements to their respective copy() methods. Uses
+        dictionary comprehensions to construct equal but different `linear` and
+        `circular` attributes.
+        """
         return replace(
             self,
             linear={k: v.copy() for k, v in self.linear.items()},
-            circular={k: v for k, v in self.circular.items()},
+            circular={k: v.copy() for k, v in self.circular.items()},
         )
 
 
@@ -174,6 +193,9 @@ class Pocket:
     def __post_init__(self):
         assert len(self.center) == 3
         assert self.center[2] == 0
+
+        # center is read only
+        self.center.flags["WRITEABLE"] = False
 
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
@@ -209,17 +231,21 @@ class Pocket:
 
         return np.array([x, y], dtype=np.float64)
 
-    def add(self, ball_id) -> None:
+    def add(self, ball_id: str) -> None:
         self.contains.add(ball_id)
 
-    def remove(self, ball_id) -> None:
+    def remove(self, ball_id: str) -> None:
         self.contains.remove(ball_id)
 
     def copy(self) -> Pocket:
-        """Create a deepcopy"""
-        return replace(
-            self, center=np.copy(self.center), contains=copy.deepcopy(self.contains)
-        )
+        """Create a deep-ish copy
+
+        Pocket is a frozen instance, and except for `contains`, its attributes are
+        either (a) immutable, or (b) have read-only flags set. Therefore, only a copy of
+        `contains` needs to be made. Since it's members are strs (immutable), a shallow
+        copy suffices.
+        """
+        return replace(self, contains=copy.copy(self.contains))
 
     @staticmethod
     def dummy() -> Pocket:

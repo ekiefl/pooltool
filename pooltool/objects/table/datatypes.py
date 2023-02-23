@@ -79,27 +79,10 @@ class PocketTableSpecs:
     side_jaw_radius: float = field(default=0.0159 / 2)
 
     # For visualization
-    model_descr: Optional[TableModelDescr] = None
     height: float = field(default=0.708)
     lights_height: float = field(default=1.99)
 
     table_type: TableType = field(init=False, default=TableType.POCKET)
-
-    def __post_init__(self):
-        field_defaults = {
-            fname: field.default
-            for fname, field in self.__dataclass_fields__.items()
-            if field.init
-        }
-
-        if all(
-            getattr(self, fname) == default for fname, default in field_defaults.items()
-        ):
-            # All parameters match the default table, and so the TableModelDescr is used
-            # even if it wasn't explictly requested.
-            object.__setattr__(
-                self, "model_descr", TableModelDescr.pocket_table_default()
-            )
 
     def create_cushion_segments(self) -> CushionSegments:
         return _create_pocket_table_cushion_segments(self)
@@ -121,25 +104,10 @@ class BilliardTableSpecs:
     cushion_height: float = field(default=0.64 * 2 * 0.028575)
 
     # For visualization
-    model_descr: Optional[TableModelDescr] = None
     height: float = field(default=0.708)
     lights_height: float = field(default=1.99)
 
     table_type: TableType = field(init=False, default=TableType.BILLIARD)
-
-    def __post_init__(self):
-        field_defaults = {
-            fname: field.default
-            for fname, field in self.__dataclass_fields__.items()
-            if field.init
-        }
-
-        if all(
-            getattr(self, fname) == default for fname, default in field_defaults.items()
-        ):
-            # All parameters match the default table, and so the TableModelDescr is used
-            # even if it wasn't explictly requested.
-            self.model_descr = TableModelDescr.billiard_table_default()
 
     def create_cushion_segments(self) -> CushionSegments:
         return _create_billiard_table_cushion_segments(self)
@@ -148,13 +116,18 @@ class BilliardTableSpecs:
         return {}
 
 
+@dataclass
 class TableSpecs(Protocol):
     @property
-    def l(self):
+    def table_type(self):
         ...
 
     @property
-    def w(self):
+    def height(self):
+        ...
+
+    @property
+    def lights_height(self):
         ...
 
     def create_cushion_segments(self):
@@ -166,24 +139,37 @@ class TableSpecs(Protocol):
 
 @dataclass
 class Table:
-    specs: TableSpecs
     cushion_segments: CushionSegments
     pockets: Dict[str, Pocket]
+    table_type: TableType
+    model_descr: Optional[TableModelDescr] = field(default=None)
+    height: float = field(default=0.708)
+    lights_height: float = field(default=1.99)
 
     @property
     def w(self) -> float:
-        return self.specs.w
+        """The width of the table"""
+        x2 = self.cushion_segments.linear["15"].p1[0]
+        x1 = self.cushion_segments.linear["3"].p1[0]
+        return x2 - x1
 
     @property
     def l(self) -> float:
-        return self.specs.l
+        y2 = self.cushion_segments.linear["9"].p1[1]
+        y1 = self.cushion_segments.linear["18"].p1[1]
+        return y2 - y1
 
     @property
     def center(self) -> Tuple[float, float]:
         return self.w / 2, self.l / 2
 
     def copy(self) -> Table:
-        """Create a deepcopy"""
+        """Create a deep-ish copy
+
+        Delegates the deep-ish copying of CushionSegments and Pocket to their respective
+        copy() methods. Uses dictionary comprehension to construct equal but different
+        `pockets` attribute.  All other attributes are frozen or immutable.
+        """
         return replace(
             self,
             cushion_segments=self.cushion_segments.copy(),
@@ -192,10 +178,34 @@ class Table:
 
     @staticmethod
     def from_table_specs(specs: TableSpecs) -> Table:
+        field_defaults = {
+            fname: field.default
+            for fname, field in specs.__dataclass_fields__.items()
+            if field.init
+        }
+
+        if all(
+            getattr(specs, fname) == default
+            for fname, default in field_defaults.items()
+        ):
+            # All parameters match the default table, for which a model exists. So use
+            # the corresponding TableModelDescr
+            if specs.table_type == TableType.BILLIARD:
+                model_descr = TableModelDescr.billiard_table_default()
+            elif specs.table_type == TableType.POCKET:
+                model_descr = TableModelDescr.pocket_table_default()
+            else:
+                raise NotImplementedError()
+        else:
+            model_descr = None
+
         return Table(
-            specs=specs,
             cushion_segments=specs.create_cushion_segments(),
             pockets=specs.create_pockets(),
+            table_type=specs.table_type,
+            height=specs.height,
+            lights_height=specs.lights_height,
+            model_descr=model_descr,
         )
 
     @staticmethod

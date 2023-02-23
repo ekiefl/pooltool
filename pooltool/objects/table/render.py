@@ -16,8 +16,8 @@ class TableRender(Render):
 
     def init_table(self):
         if (
-            not self._table.specs.model_descr
-            or self._table.specs.model_descr == TableModelDescr.null()
+            not self._table.model_descr
+            or self._table.model_descr == TableModelDescr.null()
             or not ani.settings["graphics"]["table"]
         ):
             model = Global.loader.loadModel(TableModelDescr.null().path)
@@ -25,7 +25,7 @@ class TableRender(Render):
             model.reparentTo(node)
             model.setScale(self._table.w, self._table.l, 1)
         else:
-            node = Global.loader.loadModel(self._table.specs.model_descr.path)
+            node = Global.loader.loadModel(self._table.model_descr.path)
             node.reparentTo(Global.render.find("scene"))
             node.setName("table")
 
@@ -36,7 +36,7 @@ class TableRender(Render):
         if not ani.settings["gameplay"]["cue_collision"]:
             return
 
-        if self._table.specs.table_type not in (TableType.BILLIARD, TableType.POCKET):
+        if self._table.table_type not in (TableType.BILLIARD, TableType.POCKET):
             raise NotImplementedError()
 
         # Make 4 planes
@@ -120,8 +120,8 @@ class TableRender(Render):
         self.init_table()
 
         if (
-            not self._table.specs.model_descr
-            or self._table.specs.model_descr == TableModelDescr.null()
+            not self._table.model_descr
+            or self._table.model_descr == TableModelDescr.null()
             or not ani.settings["graphics"]["table"]
         ):
             # draw cushion_segments as edges

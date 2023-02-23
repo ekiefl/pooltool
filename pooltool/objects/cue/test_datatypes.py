@@ -9,12 +9,13 @@ def test_cue_copy():
     cue = Cue()
     copy = cue.copy()
 
-    # `specs` is frozen
-    with pytest.raises(FrozenInstanceError):
-        cue.specs.brand = "brunswick"
-
     # cue and copy equate
     assert cue == copy
+
+    # The specs are the same object but thats ok because `specs` is frozen
+    assert cue.specs is copy.specs
+    with pytest.raises(FrozenInstanceError):
+        cue.specs.brand = "brunswick"
 
     # modifying cue doesn't affect copy
     cue.phi += 1

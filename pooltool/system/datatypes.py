@@ -192,7 +192,7 @@ class System:
                 g=ball.params.g,
                 t=dt,
             )
-            ball.state.set(rvw, s=s, t=(self.t + dt))
+            ball.state = BallState(rvw, s, self.t + dt)
 
     def resolve_event(self, event: Event) -> None:
         if event.event_type == EventType.NONE:

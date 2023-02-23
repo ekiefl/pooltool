@@ -94,17 +94,12 @@ class BallState:
     t: float
 
     def __post_init__(self):
+        # FIXME this is safest, but in my preliminary tests, it is not necessary. If
+        # np.copy calls are bogging down shot calculation, this should be looked into
         self.rvw = np.copy(self.rvw)
 
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
-
-    def set(self, rvw, s=None, t=None) -> None:
-        self.rvw = rvw
-        if s is not None:
-            self.s = s
-        if t is not None:
-            self.t = t
 
     def copy(self) -> BallState:
         """Create a deep copy"""
