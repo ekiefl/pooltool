@@ -164,7 +164,12 @@ class Table:
         return self.w / 2, self.l / 2
 
     def copy(self) -> Table:
-        """Create a deepcopy"""
+        """Create a deep-ish copy
+
+        Delegates the deep-ish copying of CushionSegments and Pocket to their respective
+        copy() methods. Uses dictionary comprehension to construct equal but different
+        `pockets` attribute.  All other attributes are frozen or immutable.
+        """
         return replace(
             self,
             cushion_segments=self.cushion_segments.copy(),
