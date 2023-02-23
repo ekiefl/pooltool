@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
 from typing import Dict, Optional, Tuple, Type, Union
+
+from attrs import define, evolve, field
 
 from pooltool.objects.ball.datatypes import Ball, BallHistory
 from pooltool.objects.cue.datatypes import Cue
@@ -73,7 +74,7 @@ _class_to_type: Dict[Type[Object], AgentType] = {
 }
 
 
-@dataclass
+@define
 class Agent:
     id: str
     agent_type: AgentType
@@ -116,10 +117,10 @@ class Agent:
 
     def copy(self) -> Agent:
         """Create a deepcopy"""
-        return replace(self)
+        return evolve(self)
 
 
-@dataclass
+@define
 class Event:
     event_type: EventType
     agents: Tuple[Agent, ...]
@@ -140,4 +141,4 @@ class Event:
 
     def copy(self) -> Event:
         """Create a deepcopy"""
-        return replace(self)
+        return evolve(self)

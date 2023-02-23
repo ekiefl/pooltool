@@ -1,7 +1,7 @@
-from dataclasses import replace
 from typing import Callable, Dict, Tuple
 
 import numpy as np
+from attrs import evolve
 
 import pooltool.constants as c
 import pooltool.physics as physics
@@ -26,8 +26,8 @@ def resolve_ball_ball(event: Event) -> Event:
         ball1.initial.state.rvw, ball2.initial.state.rvw
     )
 
-    ball1.final = replace(ball1.initial, state=BallState(rvw1, c.sliding, event.time))
-    ball2.final = replace(ball2.initial, state=BallState(rvw2, c.sliding, event.time))
+    ball1.final = evolve(ball1.initial, state=BallState(rvw1, c.sliding, event.time))
+    ball2.final = evolve(ball2.initial, state=BallState(rvw2, c.sliding, event.time))
 
     return event
 
@@ -63,7 +63,7 @@ def _resolve_ball_cushion(event: Event) -> Event:
         f_c=ball.initial.params.f_c,
     )
 
-    ball.final = replace(ball.initial, state=BallState(rvw, c.sliding, event.time))
+    ball.final = evolve(ball.initial, state=BallState(rvw, c.sliding, event.time))
     cushion.final = None
 
     return event
@@ -84,7 +84,7 @@ def resolve_ball_pocket(event: Event) -> Event:
         ]
     )
 
-    ball.final = replace(ball.initial, state=BallState(rvw, c.pocketed, event.time))
+    ball.final = evolve(ball.initial, state=BallState(rvw, c.pocketed, event.time))
     pocket.final = pocket.initial.copy()
     pocket.final.add(ball.final.id)
 
@@ -115,7 +115,7 @@ def resolve_stick_ball(event: Event) -> Event:
         else c.sliding
     )
 
-    ball.final = replace(ball.initial, state=BallState(rvw, s, event.time))
+    ball.final = evolve(ball.initial, state=BallState(rvw, s, event.time))
     cue.final = None
 
     return event

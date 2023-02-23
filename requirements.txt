@@ -7,4 +7,5 @@ panda3d-gltf
 panda3d-simplepbr
 Pillow
 cattrs
+attrs
 matplotlib

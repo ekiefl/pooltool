@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
 from typing import Optional
 
+from attrs import define, evolve, field, fields_dict
 
-@dataclass(frozen=True)
+
+@define(frozen=True)
 class CueSpecs:
     brand: str = field(default="Predator")
     M: float = field(default=0.567)  # 20oz
@@ -19,7 +20,7 @@ class CueSpecs:
         return CueSpecs()
 
 
-@dataclass
+@define
 class Cue:
     id: str = field(default="cue_stick")
 
@@ -30,7 +31,7 @@ class Cue:
     b: float = field(default=0.25)
     cue_ball_id: Optional[str] = field(default=None)
 
-    specs: CueSpecs = field(default_factory=CueSpecs.default)
+    specs: CueSpecs = field(factory=CueSpecs.default)
 
     def copy(self) -> Cue:
         """Create a deep-ish copy
@@ -38,13 +39,13 @@ class Cue:
         `specs` is shared between self and the copy, but that's ok because it's frozen
         and has no mutable attributes
         """
-        return replace(self)
+        return evolve(self)
 
     def reset_state(self):
         """Reset V0, phi, theta, a and b to their defaults"""
         field_defaults = {
             fname: field.default
-            for fname, field in self.__dataclass_fields__.items()
+            for fname, field in fields_dict(self.__class__).items()
             if fname in ("V0", "phi", "theta", "a", "b")
         }
         self.set_state(**field_defaults)

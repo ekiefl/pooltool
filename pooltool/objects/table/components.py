@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import copy
 import enum
-from dataclasses import dataclass, field, replace
 from typing import Dict, Union
 
 import numpy as np
+from attrs import define, evolve, field
 from numpy.typing import NDArray
 
 import pooltool.utils as utils
@@ -31,7 +31,7 @@ class CushionDirection(enum.Enum):
     BOTH = 2
 
 
-@dataclass(eq=False, frozen=True)
+@define(eq=False, frozen=True)
 class LinearCushionSegment:
     """A linear cushion segment defined by the line between points p1 and p2
 
@@ -103,7 +103,7 @@ class LinearCushionSegment:
         )
 
 
-@dataclass(frozen=True, eq=False)
+@define(frozen=True, eq=False)
 class CircularCushionSegment:
     """A circular cushion segment defined a circle center and radius
 
@@ -162,7 +162,7 @@ class CircularCushionSegment:
 CushionSegment = Union[LinearCushionSegment, CircularCushionSegment]
 
 
-@dataclass
+@define
 class CushionSegments:
     linear: Dict[str, LinearCushionSegment]
     circular: Dict[str, CircularCushionSegment]
@@ -175,20 +175,20 @@ class CushionSegments:
         dictionary comprehensions to construct equal but different `linear` and
         `circular` attributes.
         """
-        return replace(
+        return evolve(
             self,
             linear={k: v.copy() for k, v in self.linear.items()},
             circular={k: v.copy() for k, v in self.circular.items()},
         )
 
 
-@dataclass(eq=False, frozen=True)
+@define(eq=False, frozen=True)
 class Pocket:
     id: str
     center: NDArray[np.float64]
     radius: float
     depth: float = field(default=0.08)
-    contains: set = field(default_factory=set)
+    contains: set = field(factory=set)
 
     def __post_init__(self):
         assert len(self.center) == 3
@@ -245,7 +245,7 @@ class Pocket:
         `contains` needs to be made. Since it's members are strs (immutable), a shallow
         copy suffices.
         """
-        return replace(self, contains=copy.copy(self.contains))
+        return evolve(self, contains=copy.copy(self.contains))
 
     @staticmethod
     def dummy() -> Pocket:
