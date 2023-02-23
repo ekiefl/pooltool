@@ -94,6 +94,8 @@ class BallState:
     t: float
 
     def __post_init__(self):
+        # FIXME this is safest, but in my preliminary tests, it is not necessary. If
+        # np.copy calls are bogging down shot calculation, this should be looked into
         self.rvw = np.copy(self.rvw)
 
     def __eq__(self, other):
