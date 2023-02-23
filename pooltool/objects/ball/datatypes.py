@@ -99,13 +99,6 @@ class BallState:
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
 
-    def set(self, rvw, s=None, t=None) -> None:
-        self.rvw = rvw
-        if s is not None:
-            self.s = s
-        if t is not None:
-            self.t = t
-
     def copy(self) -> BallState:
         """Create a deep copy"""
         # Twice as fast as copy.deepcopy(self)

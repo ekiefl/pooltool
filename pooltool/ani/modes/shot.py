@@ -174,11 +174,7 @@ class ShotMode(BaseMode):
             for ball_render in visual.balls.values():
                 ball = ball_render._ball
                 if not ball.history.empty:
-                    ball.state.set(
-                        rvw=ball.history[0].rvw,
-                        s=ball.history[0].s,
-                        t=0,
-                    )
+                    ball.state = ball.history[0]
                     ball_render.get_node("pos").setQuat(ball_render.quats[0])
                 ball_render.set_render_state_as_object_state()
                 ball.history = BallHistory()
