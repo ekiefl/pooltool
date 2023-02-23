@@ -9,3 +9,4 @@ Pillow
 cattrs
 attrs
 matplotlib
+pprofile
