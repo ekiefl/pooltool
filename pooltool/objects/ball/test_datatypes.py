@@ -1,7 +1,6 @@
-from dataclasses import FrozenInstanceError
-
 import numpy as np
 import pytest
+from attrs.exceptions import FrozenInstanceError
 
 from pooltool.constants import stationary
 from pooltool.objects.ball.datatypes import (
@@ -30,6 +29,9 @@ def test_ball_orientation():
         orientation.pos = [1, 1, 1, 1]
 
 
+# ------ BallState
+
+
 def test_ball_state_default():
     ball = BallState.default()
 
@@ -51,6 +53,9 @@ def test_ball_state_copy():
 
     # After modifying original they are no longer equal
     assert state != other
+
+
+# ------ BallHistory
 
 
 def test_ball_history_empty():
@@ -152,6 +157,9 @@ def test_ball_history_add():
     assert len(history) == 2
 
 
+# ------ BallParams
+
+
 def test_ball_params():
     params = BallParams()
 
@@ -165,6 +173,9 @@ def test_ball_params():
     assert params.R == other.R
     assert params.u_r == other.u_r
     assert params.u_sp == other.u_sp
+
+
+# ------ Ball
 
 
 def test_ball_copy():

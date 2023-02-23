@@ -1,7 +1,6 @@
-from dataclasses import FrozenInstanceError
-
 import numpy as np
 import pytest
+from attrs.exceptions import FrozenInstanceError
 
 from pooltool.objects.table.components import (
     CircularCushionSegment,

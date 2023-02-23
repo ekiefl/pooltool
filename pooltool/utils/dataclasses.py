@@ -1,6 +1,5 @@
-from dataclasses import astuple
-
 import numpy as np
+from attrs import astuple
 
 
 def _array_safe_eq(a, b) -> bool:
