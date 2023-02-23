@@ -33,7 +33,11 @@ class Cue:
     specs: CueSpecs = field(default_factory=CueSpecs.default)
 
     def copy(self) -> Cue:
-        """Create a deep copy"""
+        """Create a deep-ish copy
+
+        `specs` is shared between self and the copy, but that's ok because it's frozen
+        and has no mutable attributes
+        """
         return replace(self)
 
     def reset_state(self):
