@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Union
 
 import cattr
 import numpy as np
+from attrs import define
 from panda3d.core import LVecBase3f, TransparencyAttrib
 
 import pooltool.ani as ani
@@ -198,7 +198,7 @@ def _vec_to_tuple(vec: LVecBase3f) -> Vec3D:
     return vec.x, vec.y, vec.z
 
 
-@dataclass(frozen=True)
+@define(frozen=True)
 class CameraState:
     cam_hpr: Vec3D
     cam_pos: Vec3D

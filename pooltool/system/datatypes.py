@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 import numpy as np
+from attrs import define, field
 
 import pooltool.physics as physics
 import pooltool.utils as utils
@@ -25,14 +25,14 @@ from pooltool.objects.table.datatypes import Table
 from pooltool.potting import PottingConfig
 
 
-@dataclass
+@define
 class System:
     cue: Cue
     table: Table
     balls: Dict[str, Ball]
 
     t: float = field(default=0)
-    events: List[Event] = field(default_factory=list)
+    events: List[Event] = field(factory=list)
 
     @property
     def continuized(self):
@@ -64,7 +64,7 @@ class System:
         for ball in self.balls.values():
             ball.history = BallHistory()
             ball.history_cts = BallHistory()
-            ball.t = 0
+            ball.state.t = 0
 
         self.events = []
 
@@ -394,9 +394,9 @@ class System:
         )
 
 
-@dataclass
+@define
 class MultiSystem:
-    _multisystem: List[System] = field(default_factory=list)
+    _multisystem: List[System] = field(factory=list)
 
     active_index: Optional[int] = field(init=False, default=None)
 

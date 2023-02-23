@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
 from typing import Dict, Optional, Protocol, Tuple
+
+from attrs import define, evolve, field, fields_dict
 
 import pooltool.ani as ani
 from pooltool.error import ConfigError
@@ -16,7 +17,7 @@ from pooltool.objects.table.components import CushionSegments, Pocket
 from pooltool.utils import panda_path, strenum
 
 
-@dataclass(frozen=True)
+@define(frozen=True)
 class TableModelDescr:
     name: str
 
@@ -57,8 +58,29 @@ class TableType(strenum.StrEnum):
     BILLIARD = strenum.auto()
 
 
-@dataclass(frozen=True)
-class PocketTableSpecs:
+@define
+class TableSpecs(Protocol):
+    @property
+    def table_type(self):
+        ...
+
+    @property
+    def height(self):
+        ...
+
+    @property
+    def lights_height(self):
+        ...
+
+    def create_cushion_segments(self):
+        ...
+
+    def create_pockets(self):
+        ...
+
+
+@define(frozen=True)
+class PocketTableSpecs(TableSpecs):
     """Parameters that specify a pocket table"""
 
     # 7-foot table (78x39 in^2 playing surface)
@@ -91,8 +113,8 @@ class PocketTableSpecs:
         return _create_pocket_table_pockets(self)
 
 
-@dataclass(frozen=True)
-class BilliardTableSpecs:
+@define(frozen=True)
+class BilliardTableSpecs(TableSpecs):
     """Parameters that specify a billiard (pocketless) table"""
 
     # 10-foot table (imprecise)
@@ -116,28 +138,7 @@ class BilliardTableSpecs:
         return {}
 
 
-@dataclass
-class TableSpecs(Protocol):
-    @property
-    def table_type(self):
-        ...
-
-    @property
-    def height(self):
-        ...
-
-    @property
-    def lights_height(self):
-        ...
-
-    def create_cushion_segments(self):
-        ...
-
-    def create_pockets(self):
-        ...
-
-
-@dataclass
+@define
 class Table:
     cushion_segments: CushionSegments
     pockets: Dict[str, Pocket]
@@ -170,7 +171,7 @@ class Table:
         copy() methods. Uses dictionary comprehension to construct equal but different
         `pockets` attribute.  All other attributes are frozen or immutable.
         """
-        return replace(
+        return evolve(
             self,
             cushion_segments=self.cushion_segments.copy(),
             pockets={k: v.copy() for k, v in self.pockets.items()},
@@ -180,7 +181,7 @@ class Table:
     def from_table_specs(specs: TableSpecs) -> Table:
         field_defaults = {
             fname: field.default
-            for fname, field in specs.__dataclass_fields__.items()
+            for fname, field in fields_dict(specs.__class__).items()
             if field.init
         }
 

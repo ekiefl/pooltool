@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Dict, Optional
 
+from attrs import define
 from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
 
@@ -14,7 +14,7 @@ from pooltool.system.datatypes import System
 from pooltool.utils.strenum import StrEnum, auto
 
 
-@dataclass
+@define
 class SystemRender:
     balls: Dict[str, BallRender]
     table: TableRender

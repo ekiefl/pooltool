@@ -1,17 +1,17 @@
 #! /usr/bin/env python
 from __future__ import annotations
 
-from dataclasses import astuple, dataclass, field, replace
 from typing import Any, List, Optional, Sequence, Tuple
 
 import numpy as np
+from attrs import astuple, define, evolve, field
 from numpy.typing import NDArray
 
 import pooltool.constants as c
 from pooltool.utils.dataclasses import are_dataclasses_equal
 
 
-@dataclass(frozen=True)
+@define(frozen=True)
 class BallOrientation:
     """Stores a ball's rendered orientation"""
 
@@ -29,10 +29,10 @@ class BallOrientation:
 
     def copy(self) -> BallOrientation:
         """Create a deep copy"""
-        return replace(self)
+        return evolve(self)
 
 
-@dataclass(frozen=True)
+@define(frozen=True)
 class BallParams:
     """Pool ball parameters and physical constants
 
@@ -87,7 +87,7 @@ def _null_rvw() -> NDArray[np.float64]:
     return np.array([[np.nan, np.nan, np.nan], [0, 0, 0], [0, 0, 0]], dtype=np.float64)
 
 
-@dataclass(eq=False)
+@define(eq=False)
 class BallState:
     rvw: NDArray[np.float64]
     s: float
@@ -104,7 +104,7 @@ class BallState:
     def copy(self) -> BallState:
         """Create a deep copy"""
         # Twice as fast as copy.deepcopy(self)
-        return replace(self, rvw=np.copy(self.rvw))
+        return evolve(self, rvw=np.copy(self.rvw))
 
     @staticmethod
     def default() -> BallState:
@@ -119,9 +119,9 @@ def _float64_array(x: Any) -> NDArray[np.float64]:
     return np.array(x, dtype=np.float64)
 
 
-@dataclass
+@define
 class BallHistory:
-    states: List[BallState] = field(default_factory=list)
+    states: List[BallState] = field(factory=list)
 
     def __getitem__(self, idx: int) -> BallState:
         return self.states[idx]
@@ -163,17 +163,17 @@ class BallHistory:
         return BallHistory()
 
 
-@dataclass
+@define
 class Ball:
     """A pool ball"""
 
     id: str
-    state: BallState = field(default_factory=BallState.default)
-    params: BallParams = field(default_factory=BallParams.default)
-    initial_orientation: BallOrientation = field(default_factory=BallOrientation.random)
+    state: BallState = field(factory=BallState.default)
+    params: BallParams = field(factory=BallParams.default)
+    initial_orientation: BallOrientation = field(factory=BallOrientation.random)
 
-    history: BallHistory = field(default_factory=BallHistory.factory)
-    history_cts: BallHistory = field(default_factory=BallHistory.factory)
+    history: BallHistory = field(factory=BallHistory.factory)
+    history_cts: BallHistory = field(factory=BallHistory.factory)
 
     @property
     def xyz(self):
@@ -183,7 +183,7 @@ class Ball:
     def copy(self) -> Ball:
         """Create a deep copy"""
         # `params` and `initial_orientation` are frozen
-        return replace(
+        return evolve(
             self,
             state=self.state.copy(),
             history=self.history.copy(),

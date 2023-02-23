@@ -2,7 +2,6 @@
 
 import gc
 import sys
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
@@ -10,6 +9,7 @@ import gltf  # FIXME at first glance this does nothing?
 import matplotlib.pyplot as plt
 import numpy as np
 import simplepbr
+from attrs import define
 from direct.gui.OnscreenText import OnscreenText
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import (
@@ -45,7 +45,7 @@ from pooltool.system.render import PlaybackMode, visual
 from pooltool.utils.strenum import StrEnum, auto
 
 
-@dataclass
+@define
 class ShowBaseConfig:
     window_type: Optional[str] = None
     window_size: Optional[Tuple[int, int]] = None
