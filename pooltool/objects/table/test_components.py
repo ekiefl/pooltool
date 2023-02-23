@@ -53,20 +53,16 @@ def test_linear_segment_frozen(lin_seg):
     with pytest.raises(FrozenInstanceError):
         lin_seg.p1 = np.array([10, 10, 10])
 
-    # Unfortunately, this is allowed
-    lin_seg.p1[0] = 10
+    # Cannot even modify array elements
+    with pytest.raises(ValueError, match="assignment destination is read-only"):
+        lin_seg.p1[0] = 10
 
 
 def test_linear_segment_copy(lin_seg):
     copy = lin_seg.copy()
 
     # lin_seg and copy equate
-    assert lin_seg is not copy
     assert lin_seg == copy
-
-    # modifying lin_seg doesn't affect copy
-    lin_seg.p1[0] = 10
-    assert lin_seg != copy
 
 
 def test_circular_segment_creation():

@@ -53,6 +53,10 @@ class LinearCushionSegment:
         # Segment must have constant height
         assert self.p1[2] == self.p2[2]
 
+        # p1 and p2 are read only
+        self.p1.flags["WRITEABLE"] = False
+        self.p2.flags["WRITEABLE"] = False
+
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
 
@@ -85,11 +89,7 @@ class LinearCushionSegment:
 
     def copy(self):
         """Create a deep copy"""
-        return replace(
-            self,
-            p1=np.copy(self.p1),
-            p2=np.copy(self.p2),
-        )
+        return replace(self)
 
     @staticmethod
     def dummy() -> LinearCushionSegment:
