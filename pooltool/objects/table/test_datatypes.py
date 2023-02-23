@@ -20,4 +20,3 @@ def test_table_copy(table):
 
     # `model_descr` object _is_ shared, but its frozen so its OK
     assert new.model_descr is table.model_descr
-    assert new.model_descr.__dataclass_params__.frozen

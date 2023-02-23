@@ -49,7 +49,7 @@ class LinearCushionSegment:
     p2: NDArray[np.float64]
     direction: CushionDirection = field(default=CushionDirection.BOTH)
 
-    def __post_init__(self):
+    def __attrs_post_init__(self):
         # Segment must have constant height
         assert self.p1[2] == self.p2[2]
 
@@ -122,7 +122,7 @@ class CircularCushionSegment:
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
 
-    def __post_init__(self):
+    def __attrs_post_init__(self):
         assert len(self.center) == 3
 
         # center is read only
@@ -190,7 +190,7 @@ class Pocket:
     depth: float = field(default=0.08)
     contains: set = field(factory=set)
 
-    def __post_init__(self):
+    def __attrs_post_init__(self):
         assert len(self.center) == 3
         assert self.center[2] == 0
 

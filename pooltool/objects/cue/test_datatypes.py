@@ -1,6 +1,5 @@
-from dataclasses import FrozenInstanceError
-
 import pytest
+from attrs.exceptions import FrozenInstanceError
 
 from pooltool.objects.cue.datatypes import Cue
 
