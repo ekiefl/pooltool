@@ -90,8 +90,8 @@ def _null_rvw() -> NDArray[np.float64]:
 @define(eq=False)
 class BallState:
     rvw: NDArray[np.float64]
-    s: float
-    t: float
+    s: int = field(converter=int)
+    t: float = field(converter=float)
 
     def __attrs_post_init__(self):
         # FIXME this is safest, but in my preliminary tests, it is not necessary. If
