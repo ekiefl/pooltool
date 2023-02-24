@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Union
 
-import cattr
+import cattrs
 import numpy as np
 from attrs import define
 from panda3d.core import LVecBase3f, TransparencyAttrib
@@ -14,7 +14,7 @@ import pooltool.ani as ani
 import pooltool.ani.utils as autils
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.mouse import mouse
-from pooltool.utils import from_json, to_json
+from pooltool.serialize._json import from_json, to_json
 
 
 class Camera:
@@ -206,7 +206,7 @@ class CameraState:
     fixation_pos: Optional[Vec3D]
 
     def to_json(self, path: Union[str, Path]):
-        to_json(cattr.unstructure(self), Path(path))
+        to_json(cattrs.unstructure(self), Path(path))
 
     @classmethod
     def from_camera(cls, camera: Camera) -> CameraState:
@@ -223,4 +223,4 @@ class CameraState:
 
     @classmethod
     def from_json(cls, path: Union[str, Path]) -> CameraState:
-        return cattr.structure(from_json(Path(path)), cls)
+        return cattrs.structure(from_json(Path(path)), cls)
