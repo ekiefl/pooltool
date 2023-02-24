@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Dict, Optional, Tuple, Type, Union
 
 from attrs import define, evolve, field
+import pooltool.serialize as serialize
 
 from pooltool.objects.ball.datatypes import Ball, BallHistory
 from pooltool.objects.cue.datatypes import Cue
@@ -73,6 +74,8 @@ _class_to_type: Dict[Type[Object], AgentType] = {
     CircularCushionSegment: AgentType.CIRCULAR_CUSHION_SEGMENT,
 }
 
+_type_to_class = {v: k for k, v in _class_to_type.items()}
+
 
 @define
 class Agent:
@@ -118,6 +121,33 @@ class Agent:
     def copy(self) -> Agent:
         """Create a deepcopy"""
         return evolve(self)
+
+
+def disambiguate_agent_structuring(uo: Any, _) -> Agent:
+    id = serialize.converter.structure(uo["id"], str)
+    agent_type=serialize.converter.structure(uo["agent_type"], AgentType)
+
+    # All agents but the NULL agent have initial states
+    if agent_type == AgentType.NULL:
+        initial = None
+    else:
+        initial = serialize.converter.structure(uo["initial"], _type_to_class[agent_type])
+
+    # Only BALL and POCKET have final states
+    if agent_type in (AgentType.BALL, AgentType.POCKET):
+        final = serialize.converter.structure(uo["final"], _type_to_class[agent_type])
+    else:
+        final = None
+
+    return Agent(
+        id=id,
+        agent_type=agent_type,
+        initial=initial,
+        final=final,
+    )
+
+
+serialize.converter.register_structure_hook(Agent, disambiguate_agent_structuring)
 
 
 @define
