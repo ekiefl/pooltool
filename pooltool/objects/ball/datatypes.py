@@ -23,7 +23,7 @@ class BallOrientation:
         quat = (tmp := 2 * np.random.rand(4) - 1) / np.linalg.norm(tmp)
         q0, qx, qy, qz = quat
         return BallOrientation(
-            pos=(1, 0, 0, 0),
+            pos=(1.0, 1.0, 1.0, 1.0),
             sphere=(q0, qx, qy, qz),
         )
 
@@ -90,7 +90,7 @@ def _null_rvw() -> NDArray[np.float64]:
 @define(eq=False)
 class BallState:
     rvw: NDArray[np.float64]
-    s: float
+    s: int
     t: float
 
     def __attrs_post_init__(self):
@@ -111,7 +111,7 @@ class BallState:
         return BallState(
             rvw=_null_rvw(),
             s=c.stationary,
-            t=0,
+            t=0.0,
         )
 
 
