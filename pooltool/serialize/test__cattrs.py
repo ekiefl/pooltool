@@ -4,6 +4,7 @@ from attrs import define
 from numpy.typing import NDArray
 
 from pooltool.serialize._cattrs import converter
+from pooltool.utils.dataclasses import are_dataclasses_equal
 
 
 @define
@@ -21,9 +22,12 @@ class StandardTypes:
     d: list
 
 
-@define
+@define(eq=False)
 class WithNumpyArray(StandardTypes):
     e: NDArray[np.float64]
+
+    def __eq__(self, other):
+        return are_dataclasses_equal(self, other)
 
 
 @pytest.fixture
@@ -47,14 +51,11 @@ def numpy_obj(standard_obj):
     )
 
 
-def test_unstructure_structure(standard_obj):
+def test_unstructure_structure(standard_obj, numpy_obj):
     """Test unstructure/structure round trip"""
     assert standard_obj == converter.structure(
         converter.unstructure(standard_obj), StandardTypes
     )
-
-
-def test_numpy_unstructure_structure(numpy_obj):
-    """Test unstructure/structure round trip with numpy array fields"""
-    with pytest.raises(NotImplementedError):
-        raise NotImplementedError
+    assert numpy_obj == converter.structure(
+        converter.unstructure(numpy_obj), WithNumpyArray
+    )
