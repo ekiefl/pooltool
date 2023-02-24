@@ -3,7 +3,7 @@ import pytest
 from attrs import define
 from numpy.typing import NDArray
 
-from pooltool.serialize._cattrs import converter
+from pooltool.serialize import converter
 from pooltool.utils.dataclasses import are_dataclasses_equal
 
 

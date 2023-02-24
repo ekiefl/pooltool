@@ -14,7 +14,7 @@ import pooltool.ani as ani
 import pooltool.ani.utils as autils
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.mouse import mouse
-from pooltool.serialize._json import from_json, to_json
+from pooltool.serialize import from_json, to_json
 
 
 class Camera:
