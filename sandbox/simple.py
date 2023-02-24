@@ -5,9 +5,10 @@ import pooltool as pt
 
 
 def rand_pos(table):
+    params = pt.BallParams()
     return (
-        np.random.uniform(pt.BallParams.R, table.w - pt.BallParams.R),
-        np.random.uniform(pt.BallParams.R, table.l - pt.BallParams.R),
+        np.random.uniform(params.R, table.w - params.R),
+        np.random.uniform(params.R, table.l - params.R),
     )
 
 
