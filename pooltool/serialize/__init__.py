@@ -2,16 +2,16 @@ import json
 from pathlib import Path
 from typing import Any, Union
 
-import cattrs
 import msgpack
 import msgpack_numpy as m
 import numpy as np
+from cattrs.preconf.json import make_converter
 
 from pooltool.utils.strenum import StrEnum
 
 Pathish = Union[str, Path]
 
-converter = cattrs.GenConverter()
+converter = make_converter()
 
 # Numpy arrays
 # https://github.com/python-attrs/cattrs/issues/194
@@ -33,7 +33,7 @@ converter.register_unstructure_hook(
 
 def to_json(o: Any, path: Pathish) -> None:
     with open(path, "w") as fp:
-        json.dump(o, fp, indent=4)
+        json.dump(o, fp, indent=2)
 
 
 def from_json(path: Pathish) -> Any:
