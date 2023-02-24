@@ -25,9 +25,9 @@ converter.register_unstructure_hook_func(
 )
 
 # StrEnum
-converter.register_structure_hook_func(
-    lambda t: issubclass(t, StrEnum),
-    lambda v, t: t(v),
+converter.register_unstructure_hook(
+    StrEnum,
+    lambda v: v.value,
 )
 
 

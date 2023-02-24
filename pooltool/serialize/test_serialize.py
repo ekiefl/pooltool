@@ -5,6 +5,7 @@ from numpy.typing import NDArray
 
 from pooltool.serialize import converter
 from pooltool.utils.dataclasses import are_dataclasses_equal
+from pooltool.utils.strenum import StrEnum, auto
 
 
 @define
@@ -23,11 +24,17 @@ class StandardTypes:
 
 
 @define(eq=False)
-class WithNumpyArray(StandardTypes):
-    e: NDArray[np.float64]
+class WithNumpyArray:
+    array: NDArray[np.float64]
 
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
+
+
+class Categories(StrEnum):
+    one = auto()
+    two = auto()
+    three = auto()
 
 
 @pytest.fixture
@@ -51,11 +58,31 @@ def numpy_obj(standard_obj):
     )
 
 
-def test_unstructure_structure(standard_obj, numpy_obj):
-    """Test unstructure/structure round trip"""
+def test_standard(standard_obj):
+    """Test unstructure/structure round trip with standard types"""
     assert standard_obj == converter.structure(
         converter.unstructure(standard_obj), StandardTypes
     )
     assert numpy_obj == converter.structure(
         converter.unstructure(numpy_obj), WithNumpyArray
     )
+
+
+def test_numpy(numpy_obj):
+    """Test unstructure/structure round trip with numpy types"""
+    assert numpy_obj == converter.structure(
+        converter.unstructure(numpy_obj), WithNumpyArray
+    )
+
+
+def test_strenum():
+    """Test unstructure/structure round trip with strenum subclasses"""
+    # Unstructured StrEnum is a string but not a StrEnum
+    unstruct = converter.unstructure(Categories.one)
+    assert isinstance(unstruct, str)
+    assert not isinstance(unstruct, Categories)
+
+    # StrEnum structured from string is a string and a StrEnum
+    struct = converter.structure("two", Categories)
+    assert isinstance(struct, str)
+    assert isinstance(struct, Categories)
