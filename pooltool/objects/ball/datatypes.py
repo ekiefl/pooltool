@@ -90,7 +90,7 @@ def _null_rvw() -> NDArray[np.float64]:
 @define(eq=False)
 class BallState:
     rvw: NDArray[np.float64]
-    s: int
+    s: float
     t: float
 
     def __attrs_post_init__(self):
@@ -111,7 +111,7 @@ class BallState:
         return BallState(
             rvw=_null_rvw(),
             s=c.stationary,
-            t=0.0,
+            t=0,
         )
 
 
