@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Dict, Optional, Tuple, Type, Union
+from functools import partial
 
 from attrs import define, evolve, field
 import pooltool.serialize as serialize
@@ -123,19 +124,19 @@ class Agent:
         return evolve(self)
 
 
-def disambiguate_agent_structuring(uo: Any, _) -> Agent:
-    id = serialize.converter.structure(uo["id"], str)
-    agent_type=serialize.converter.structure(uo["agent_type"], AgentType)
+def disambiguate_agent_structuring(uo: Any, _, converter) -> Agent:
+    id = serialize.converter_json.structure(uo["id"], str)
+    agent_type=serialize.converter_json.structure(uo["agent_type"], AgentType)
 
     # All agents but the NULL agent have initial states
     if agent_type == AgentType.NULL:
         initial = None
     else:
-        initial = serialize.converter.structure(uo["initial"], _type_to_class[agent_type])
+        initial = serialize.converter_json.structure(uo["initial"], _type_to_class[agent_type])
 
     # Only BALL and POCKET have final states
     if agent_type in (AgentType.BALL, AgentType.POCKET):
-        final = serialize.converter.structure(uo["final"], _type_to_class[agent_type])
+        final = serialize.converter_json.structure(uo["final"], _type_to_class[agent_type])
     else:
         final = None
 
@@ -147,7 +148,8 @@ def disambiguate_agent_structuring(uo: Any, _) -> Agent:
     )
 
 
-serialize.converter.register_structure_hook(Agent, disambiguate_agent_structuring)
+serialize.converter_json.register_structure_hook(Agent, partial(disambiguate_agent_structuring, converter=serialize.converter_json))
+serialize.converter_msgpack.register_structure_hook(Agent, partial(disambiguate_agent_structuring, converter=serialize.converter_msgpack))
 
 
 @define

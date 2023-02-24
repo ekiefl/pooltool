@@ -1,7 +1,8 @@
 from pathlib import Path
 
 import pooltool as pt
-from pooltool.serialize import unstructure_to_json, structure_from_json
+from pooltool.serialize import unstructure_to_json, structure_from_json, structure_from_msgpack, unstructure_to_msgpack
+from pooltool.terminal import TimeCode
 
 interface = pt.ShotViewer()
 
@@ -16,14 +17,29 @@ shot.aim_at_ball(ball_id="1")
 shot.strike(V0=8)
 
 # Evolve the shot
-pt.simulate(shot)
+with TimeCode(success_msg="Simulated in "):
+    pt.simulate(shot)
+
+with TimeCode(success_msg="Continuized in "):
+    shot.continuize()
 
 interface.show(shot, title="Original shot")
 
-path = Path(__file__).parent / "serialized_shot.json"
-unstructure_to_json(shot, path)
-new = structure_from_json(path, pt.System)
+json_path = Path(__file__).parent / "serialized_shot.json"
+msgpack_path = Path(__file__).parent / "serialized_shot.msgpack"
 
-assert new == shot
+with TimeCode(success_msg="Serialized to JSON in "):
+    unstructure_to_json(shot, json_path)
 
-interface.show(new, title="Serialized/deserialized shot")
+with TimeCode(success_msg="Deserialized from JSON in "):
+    json_hydrated = structure_from_json(json_path, pt.System)
+
+with TimeCode(success_msg="Serialized to MSGPACK in "):
+    unstructure_to_msgpack(shot, msgpack_path)
+
+with TimeCode(success_msg="Deserialized from MSGPACK in "):
+    msgpack_hydrated = structure_from_msgpack(msgpack_path, pt.System)
+
+assert json_hydrated == msgpack_hydrated == shot
+
+interface.show(json_hydrated, title="Serialized/deserialized shot")
