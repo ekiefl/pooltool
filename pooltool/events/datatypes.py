@@ -5,6 +5,8 @@ from functools import partial
 
 from attrs import define, evolve, field
 import pooltool.serialize as serialize
+from cattrs.converters import Converter
+from typing import Any, TypeVar, Type
 
 from pooltool.objects.ball.datatypes import Ball, BallHistory
 from pooltool.objects.cue.datatypes import Cue
@@ -16,6 +18,7 @@ from pooltool.objects.table.components import (
 )
 from pooltool.utils import strenum
 
+T = TypeVar("T")
 
 class EventType(strenum.StrEnum):
     NONE = strenum.auto()
@@ -124,32 +127,46 @@ class Agent:
         return evolve(self)
 
 
-def disambiguate_agent_structuring(uo: Any, _, converter) -> Agent:
-    id = serialize.converter_json.structure(uo["id"], str)
-    agent_type=serialize.converter_json.structure(uo["agent_type"], AgentType)
+def disambiguate_agent_structuring(uo: Any, t: Type[T], con: Converter) -> Agent:
+    id = con.structure(uo["id"], str)
+    agent_type = con.structure(uo["agent_type"], AgentType)
 
     # All agents but the NULL agent have initial states
     if agent_type == AgentType.NULL:
         initial = None
     else:
-        initial = serialize.converter_json.structure(uo["initial"], _type_to_class[agent_type])
+        initial = con.structure(uo["initial"], _type_to_class[agent_type])
 
     # Only BALL and POCKET have final states
     if agent_type in (AgentType.BALL, AgentType.POCKET):
-        final = serialize.converter_json.structure(uo["final"], _type_to_class[agent_type])
+        final = con.structure(uo["final"], _type_to_class[agent_type])
     else:
         final = None
 
     return Agent(
         id=id,
         agent_type=agent_type,
-        initial=initial,
-        final=final,
+        initial=initial,  # type: ignore
+        final=final,  # type: ignore
     )
 
 
-serialize.converter_json.register_structure_hook(Agent, partial(disambiguate_agent_structuring, converter=serialize.converter_json))
-serialize.converter_msgpack.register_structure_hook(Agent, partial(disambiguate_agent_structuring, converter=serialize.converter_msgpack))
+serialize.conversion.register_structure_hook(
+    cl=Agent,
+    func=partial(
+        disambiguate_agent_structuring,
+        con=serialize.conversion[serialize.SerializeFormat.JSON],
+    ),
+    which=(serialize.SerializeFormat.JSON,),
+)
+serialize.conversion.register_structure_hook(
+    cl=Agent,
+    func=partial(
+        disambiguate_agent_structuring,
+        con=serialize.conversion[serialize.SerializeFormat.MSGPACK],
+    ),
+    which=(serialize.SerializeFormat.MSGPACK,),
+)
 
 
 @define
