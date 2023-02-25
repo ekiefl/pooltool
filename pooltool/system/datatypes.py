@@ -395,7 +395,26 @@ class System:
             events=[event.copy() for event in self.events],
         )
 
-    def save(self, path: Pathish):
+    def save(self, path: Pathish, drop_continuized_history: bool = False):
+        """Save a System in a serialized format (e.g. json, msgpack)
+
+        Args:
+            drop_continuized_history:
+                If True, the `history_cts` attribute is not saved, which can save a lot
+                of disk space. If deserializing at a later time, these `history_cts`
+                attributes can be regenerated with a `shot.system()` call.
+        """
+        if drop_continuized_history:
+            # We're dropping the continuized histories. To avoid losing them in `self`,
+            # we make a copy.
+            copy = self.copy()
+
+            for ball in copy.balls.values():
+                ball.history_cts = BallHistory()
+
+            conversion.unstructure_to(copy, path)
+            return
+
         conversion.unstructure_to(self, path)
 
     @classmethod

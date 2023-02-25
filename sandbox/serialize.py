@@ -37,4 +37,4 @@ with TimeCode(success_msg="Deserialized from MSGPACK in "):
 
 assert json_hydrated == msgpack_hydrated == shot
 
-interface.show(json_hydrated, title="Serialized/deserialized shot")
+interface.show(shot, title="Serialized/deserialized shot")
