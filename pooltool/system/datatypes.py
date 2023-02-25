@@ -23,6 +23,8 @@ from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.components import Pocket
 from pooltool.objects.table.datatypes import Table
 from pooltool.potting import PottingConfig
+from pooltool.serialize import conversion
+from pooltool.serialize.serializers import Pathish
 
 
 @define
@@ -392,6 +394,13 @@ class System:
             t=self.t,
             events=[event.copy() for event in self.events],
         )
+
+    def save(self, path: Pathish):
+        conversion.unstructure_to(self, path)
+
+    @classmethod
+    def load(cls, path: Pathish) -> System:
+        return conversion.structure_from(path, cls)
 
 
 @define

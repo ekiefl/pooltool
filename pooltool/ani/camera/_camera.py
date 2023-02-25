@@ -14,7 +14,7 @@ import pooltool.ani as ani
 import pooltool.ani.utils as autils
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.mouse import mouse
-from pooltool.serialize import from_json, to_json
+from pooltool.serialize import conversion, SerializeFormat
 
 
 class Camera:
@@ -206,7 +206,11 @@ class CameraState:
     fixation_pos: Optional[Vec3D]
 
     def to_json(self, path: Union[str, Path]):
-        to_json(cattrs.unstructure(self), Path(path))
+        conversion.unstructure_to(self, path, fmt="json")
+
+    @classmethod
+    def from_json(cls, path: Union[str, Path]) -> CameraState:
+        return conversion.structure_from(path, cls, fmt="json")
 
     @classmethod
     def from_camera(cls, camera: Camera) -> CameraState:
@@ -220,7 +224,3 @@ class CameraState:
             if camera.fixated
             else None,
         )
-
-    @classmethod
-    def from_json(cls, path: Union[str, Path]) -> CameraState:
-        return cattrs.structure(from_json(Path(path)), cls)
