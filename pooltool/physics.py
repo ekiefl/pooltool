@@ -312,6 +312,7 @@ def get_ball_ball_collision_coeffs_fast(
     =====
     - Speed comparison in pooltool/tests/speed/get_ball_ball_collision_coeffs.py
     """
+
     c1x, c1y = rvw1[0, 0], rvw1[0, 1]
     c2x, c2y = rvw2[0, 0], rvw2[0, 1]
 
