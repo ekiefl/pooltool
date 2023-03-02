@@ -1,7 +1,8 @@
 __version__ = "0.1"
 
 from pooltool import terminal
-from pooltool.ani.animate import Game, ImageSaver, ShotViewer
+from pooltool.ani.animate import Game, ShotViewer
+from pooltool.ani.image import ImageSaver
 from pooltool.events import (
     Agent,
     AgentType,
