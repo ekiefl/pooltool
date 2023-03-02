@@ -26,6 +26,7 @@ for x in np.linspace(0, 0.7, 20):
 # Just showing off that you can save and load the multisystem
 collection.save("collection.json")
 new_collection = pt.MultiSystem.load("collection.json")
+assert new_collection == collection
 
 interface = pt.ShotViewer()
 interface.show(new_collection)
