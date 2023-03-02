@@ -51,10 +51,10 @@ def main(args):
             camera_state=camera_states[camera_state],
             file_prefix=camera_state,
             img_format="jpg",
-            size=(480 * 1.6, 480),
+            size=(360 * 1.6, 360),
             show_hud=False,
-            fps=10,
-            make_gif=True,
+            fps=5,
+            make_gif=False,
         )
 
 
