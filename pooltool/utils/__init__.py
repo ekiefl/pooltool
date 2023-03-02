@@ -6,7 +6,6 @@ import os
 import pickle
 import tempfile
 import tracemalloc
-from pathlib import Path
 
 import numpy as np
 import pprofile
