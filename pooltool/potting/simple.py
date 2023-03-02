@@ -6,7 +6,7 @@ ignored. Bank shots are not supported. Interfering balls are not detected.
 """
 
 import math
-from typing import Optional, Sequence
+from typing import Sequence
 
 import numpy as np
 from numpy.typing import NDArray
