@@ -56,11 +56,15 @@ class Convert:
         for fmt in which:
             self.converters[fmt].register_unstructure_hook_func(check_func, func)
 
-    def unstructure_to(self, obj: Any, path: Pathish, fmt: Optional[str] = None) -> None:
+    def unstructure_to(
+        self, obj: Any, path: Pathish, fmt: Optional[str] = None
+    ) -> None:
         fmt = SerializeFormat(fmt) if fmt is not None else self._infer_ext(path)
         serializers[fmt](self.converters[fmt].unstructure(obj), path)
 
-    def structure_from(self, path: Pathish, cl: Type[T], fmt: Optional[str] = None) -> T:
+    def structure_from(
+        self, path: Pathish, cl: Type[T], fmt: Optional[str] = None
+    ) -> T:
         assert Path(path).exists()
         fmt = SerializeFormat(fmt) if fmt is not None else self._infer_ext(path)
         return self.converters[fmt].structure(deserializers[fmt](path), cl)
