@@ -1,8 +1,9 @@
+"""Demos serialization and deserialization to/from JSON and/or MSGPACK"""
+
 from pathlib import Path
 
 import pooltool as pt
 from pooltool.system import System
-from pooltool.terminal import TimeCode
 
 interface = pt.ShotViewer()
 
@@ -17,24 +18,16 @@ shot.aim_at_ball(ball_id="1")
 shot.strike(V0=8)
 
 # Evolve the shot
-with TimeCode(success_msg="Simulated in "):
-    pt.simulate(shot)
+pt.simulate(shot)
 
 json_path = Path(__file__).parent / "serialized_shot.json"
 msgpack_path = Path(__file__).parent / "serialized_shot.msgpack"
 
-with TimeCode(success_msg="Serialized to JSON in "):
-    shot.save(json_path)
+shot.save(json_path)
+shot.save(msgpack_path)
 
-with TimeCode(success_msg="Deserialized from JSON in "):
-    json_hydrated = System.load(json_path)
-
-with TimeCode(success_msg="Serialized to MSGPACK in "):
-    shot.save(msgpack_path)
-
-with TimeCode(success_msg="Deserialized from MSGPACK in "):
-    msgpack_hydrated = System.load(msgpack_path)
-
+json_hydrated = System.load(json_path)
+msgpack_hydrated = System.load(msgpack_path)
 assert json_hydrated == msgpack_hydrated == shot
 
 interface.show(shot, title="Serialized/deserialized shot")
