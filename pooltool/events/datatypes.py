@@ -6,7 +6,6 @@ from typing import Any, Dict, Optional, Tuple, Type, Union
 from attrs import define, evolve, field
 from cattrs.converters import Converter
 
-import pooltool.serialize as serialize
 from pooltool.objects.ball.datatypes import Ball, BallHistory
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.datatypes import NullObject
@@ -15,6 +14,7 @@ from pooltool.objects.table.components import (
     LinearCushionSegment,
     Pocket,
 )
+from pooltool.serialize import SerializeFormat, conversion
 from pooltool.utils import strenum
 
 
@@ -151,21 +151,21 @@ def disambiguate_agent_structuring(
     )
 
 
-serialize.conversion.register_structure_hook(
+conversion.register_structure_hook(
     cl=Agent,
     func=partial(
         disambiguate_agent_structuring,
-        con=serialize.conversion[serialize.SerializeFormat.JSON],
+        con=conversion[SerializeFormat.JSON],
     ),
-    which=(serialize.SerializeFormat.JSON,),
+    which=(SerializeFormat.JSON,),
 )
-serialize.conversion.register_structure_hook(
+conversion.register_structure_hook(
     cl=Agent,
     func=partial(
         disambiguate_agent_structuring,
-        con=serialize.conversion[serialize.SerializeFormat.MSGPACK],
+        con=conversion[SerializeFormat.MSGPACK],
     ),
-    which=(serialize.SerializeFormat.MSGPACK,),
+    which=(SerializeFormat.MSGPACK,),
 )
 
 
