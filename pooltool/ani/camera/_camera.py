@@ -5,7 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Union
 
-import cattrs
 import numpy as np
 from attrs import define
 from panda3d.core import LVecBase3f, TransparencyAttrib
@@ -14,7 +13,7 @@ import pooltool.ani as ani
 import pooltool.ani.utils as autils
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.mouse import mouse
-from pooltool.serialize import conversion, SerializeFormat
+from pooltool.serialize import conversion
 
 
 class Camera:
