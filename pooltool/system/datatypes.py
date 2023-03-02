@@ -485,5 +485,13 @@ class MultiSystem:
 
         self.active_index = i
 
+    def save(self, path: Pathish):
+        """Save a MultiSystem in a serialized format (e.g. json, msgpack)"""
+        conversion.unstructure_to(self, path)
+
+    @classmethod
+    def load(cls, path: Pathish) -> MultiSystem:
+        return conversion.structure_from(path, cls)
+
 
 multisystem = MultiSystem()

@@ -23,5 +23,9 @@ for x in np.linspace(0, 0.7, 20):
     pt.simulate(shot)
     collection.append(shot)
 
+# Just showing off that you can save and load the multisystem
+collection.save("collection.json")
+new_collection = pt.MultiSystem.load("collection.json")
+
 interface = pt.ShotViewer()
-interface.show(collection)
+interface.show(new_collection)
