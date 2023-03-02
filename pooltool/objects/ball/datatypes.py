@@ -150,13 +150,28 @@ class BallHistory:
 
         return history
 
-    def vectorize(self) -> Tuple[NDArray, NDArray, NDArray]:
+    def vectorize(self) -> Optional[Tuple[NDArray, NDArray, NDArray]]:
         """Return rvw, s, and t as arrays"""
-        assert not self.empty, "History is empty"
+        if self.empty:
+            return None
 
         return tuple(  # type: ignore
             map(_float64_array, zip(*[astuple(x) for x in self.states]))
         )
+
+    @staticmethod
+    def from_vectorization(
+        vectorization: Optional[Tuple[NDArray, NDArray, NDArray]]
+    ) -> BallHistory:
+        history = BallHistory()
+
+        if vectorization is None:
+            return history
+
+        for args in zip(*vectorization):
+            history.add(BallState(*args))
+
+        return history
 
     @staticmethod
     def factory() -> BallHistory:
