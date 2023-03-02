@@ -8,6 +8,7 @@ from attrs import astuple, define, evolve, field
 from numpy.typing import NDArray
 
 import pooltool.constants as c
+from pooltool.serialize import SerializeFormat, conversion
 from pooltool.utils.dataclasses import are_dataclasses_equal
 
 
@@ -176,6 +177,16 @@ class BallHistory:
     @staticmethod
     def factory() -> BallHistory:
         return BallHistory()
+
+
+conversion.register_unstructure_hook(
+    BallHistory, lambda v: v.vectorize(), which=(SerializeFormat.MSGPACK,)
+)
+conversion.register_structure_hook(
+    BallHistory,
+    lambda v, t: BallHistory.from_vectorization(v),
+    which=(SerializeFormat.MSGPACK,),
+)
 
 
 @define
