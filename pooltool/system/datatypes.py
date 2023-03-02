@@ -402,7 +402,7 @@ class System:
             drop_continuized_history:
                 If True, the `history_cts` attribute is not saved, which can save a lot
                 of disk space. If deserializing at a later time, these `history_cts`
-                attributes can be regenerated with a `shot.system()` call.
+                attributes can be regenerated with a `shot.continuize()` call.
         """
         if drop_continuized_history:
             # We're dropping the continuized histories. To avoid losing them in `self`,
