@@ -1,4 +1,6 @@
 
+sandbox/collection.json*
+sandbox/serialize/serialized_shot*
 sandbox/offscreen_out
 cachegrind*
 

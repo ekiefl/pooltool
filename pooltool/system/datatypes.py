@@ -23,6 +23,8 @@ from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.components import Pocket
 from pooltool.objects.table.datatypes import Table
 from pooltool.potting import PottingConfig
+from pooltool.serialize import conversion
+from pooltool.serialize.serializers import Pathish
 
 
 @define
@@ -393,23 +395,49 @@ class System:
             events=[event.copy() for event in self.events],
         )
 
+    def save(self, path: Pathish, drop_continuized_history: bool = False):
+        """Save a System in a serialized format (e.g. json, msgpack)
+
+        Args:
+            drop_continuized_history:
+                If True, the `history_cts` attribute is not saved, which can save a lot
+                of disk space. If deserializing at a later time, these `history_cts`
+                attributes can be regenerated with a `shot.continuize()` call.
+        """
+        if drop_continuized_history:
+            # We're dropping the continuized histories. To avoid losing them in `self`,
+            # we make a copy.
+            copy = self.copy()
+
+            for ball in copy.balls.values():
+                ball.history_cts = BallHistory()
+
+            conversion.unstructure_to(copy, path)
+            return
+
+        conversion.unstructure_to(self, path)
+
+    @classmethod
+    def load(cls, path: Pathish) -> System:
+        return conversion.structure_from(path, cls)
+
 
 @define
 class MultiSystem:
-    _multisystem: List[System] = field(factory=list)
+    multisystem: List[System] = field(factory=list)
 
-    active_index: Optional[int] = field(init=False, default=None)
+    active_index: Optional[int] = field(default=None)
 
     def __len__(self) -> int:
-        return len(self._multisystem)
+        return len(self.multisystem)
 
     def __getitem__(self, idx: int) -> System:
-        return self._multisystem[idx]
+        return self.multisystem[idx]
 
     @property
     def active(self) -> System:
         assert self.active_index is not None
-        return self._multisystem[self.active_index]
+        return self.multisystem[self.active_index]
 
     @property
     def empty(self) -> bool:
@@ -421,19 +449,19 @@ class MultiSystem:
 
     def reset(self) -> None:
         self.active_index = None
-        self._multisystem = []
+        self.multisystem = []
 
     def append(self, system: System) -> None:
         if self.empty:
             self.active_index = 0
 
-        self._multisystem.append(system)
+        self.multisystem.append(system)
 
     def extend(self, systems: List[System]) -> None:
         if self.empty:
             self.active_index = 0
 
-        self._multisystem.extend(systems)
+        self.multisystem.extend(systems)
 
     def set_active(self, i) -> None:
         """Change the active system in the collection
@@ -456,6 +484,14 @@ class MultiSystem:
             i = len(self) - 1
 
         self.active_index = i
+
+    def save(self, path: Pathish):
+        """Save a MultiSystem in a serialized format (e.g. json, msgpack)"""
+        conversion.unstructure_to(self, path)
+
+    @classmethod
+    def load(cls, path: Pathish) -> MultiSystem:
+        return conversion.structure_from(path, cls)
 
 
 multisystem = MultiSystem()

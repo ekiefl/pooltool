@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from typing import Dict, Optional, Tuple, Type, Union
+from functools import partial
+from typing import Any, Dict, Optional, Tuple, Type, Union
 
 from attrs import define, evolve, field
+from cattrs.converters import Converter
 
 from pooltool.objects.ball.datatypes import Ball, BallHistory
 from pooltool.objects.cue.datatypes import Cue
@@ -12,6 +14,7 @@ from pooltool.objects.table.components import (
     LinearCushionSegment,
     Pocket,
 )
+from pooltool.serialize import SerializeFormat, conversion
 from pooltool.utils import strenum
 
 
@@ -73,6 +76,8 @@ _class_to_type: Dict[Type[Object], AgentType] = {
     CircularCushionSegment: AgentType.CIRCULAR_CUSHION_SEGMENT,
 }
 
+_type_to_class = {v: k for k, v in _class_to_type.items()}
+
 
 @define
 class Agent:
@@ -118,6 +123,50 @@ class Agent:
     def copy(self) -> Agent:
         """Create a deepcopy"""
         return evolve(self)
+
+
+def disambiguate_agent_structuring(
+    uo: Dict[str, Any], t: Type[Agent], con: Converter
+) -> Agent:
+    id = con.structure(uo["id"], str)
+    agent_type = con.structure(uo["agent_type"], AgentType)
+
+    # All agents but the NULL agent have initial states
+    if agent_type == AgentType.NULL:
+        initial = None
+    else:
+        initial = con.structure(uo["initial"], _type_to_class[agent_type])
+
+    # Only BALL and POCKET have final states
+    if agent_type in (AgentType.BALL, AgentType.POCKET):
+        final = con.structure(uo["final"], _type_to_class[agent_type])
+    else:
+        final = None
+
+    return Agent(
+        id=id,
+        agent_type=agent_type,
+        initial=initial,  # type: ignore
+        final=final,  # type: ignore
+    )
+
+
+conversion.register_structure_hook(
+    cl=Agent,
+    func=partial(
+        disambiguate_agent_structuring,
+        con=conversion[SerializeFormat.JSON],
+    ),
+    which=(SerializeFormat.JSON,),
+)
+conversion.register_structure_hook(
+    cl=Agent,
+    func=partial(
+        disambiguate_agent_structuring,
+        con=conversion[SerializeFormat.MSGPACK],
+    ),
+    which=(SerializeFormat.MSGPACK,),
+)
 
 
 @define

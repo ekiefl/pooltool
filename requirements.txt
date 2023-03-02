@@ -10,3 +10,5 @@ cattrs
 attrs
 matplotlib
 pprofile
+msgpack
+msgpack-numpy

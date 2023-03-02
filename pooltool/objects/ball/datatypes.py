@@ -8,6 +8,7 @@ from attrs import astuple, define, evolve, field
 from numpy.typing import NDArray
 
 import pooltool.constants as c
+from pooltool.serialize import SerializeFormat, conversion
 from pooltool.utils.dataclasses import are_dataclasses_equal
 
 
@@ -23,7 +24,7 @@ class BallOrientation:
         quat = (tmp := 2 * np.random.rand(4) - 1) / np.linalg.norm(tmp)
         q0, qx, qy, qz = quat
         return BallOrientation(
-            pos=(1, 0, 0, 0),
+            pos=(1.0, 1.0, 1.0, 1.0),
             sphere=(q0, qx, qy, qz),
         )
 
@@ -90,8 +91,8 @@ def _null_rvw() -> NDArray[np.float64]:
 @define(eq=False)
 class BallState:
     rvw: NDArray[np.float64]
-    s: float
-    t: float
+    s: int = field(converter=int)
+    t: float = field(converter=float)
 
     def __attrs_post_init__(self):
         # FIXME this is safest, but in my preliminary tests, it is not necessary. If
@@ -150,17 +151,42 @@ class BallHistory:
 
         return history
 
-    def vectorize(self) -> Tuple[NDArray, NDArray, NDArray]:
+    def vectorize(self) -> Optional[Tuple[NDArray, NDArray, NDArray]]:
         """Return rvw, s, and t as arrays"""
-        assert not self.empty, "History is empty"
+        if self.empty:
+            return None
 
         return tuple(  # type: ignore
             map(_float64_array, zip(*[astuple(x) for x in self.states]))
         )
 
     @staticmethod
+    def from_vectorization(
+        vectorization: Optional[Tuple[NDArray, NDArray, NDArray]]
+    ) -> BallHistory:
+        history = BallHistory()
+
+        if vectorization is None:
+            return history
+
+        for args in zip(*vectorization):
+            history.add(BallState(*args))
+
+        return history
+
+    @staticmethod
     def factory() -> BallHistory:
         return BallHistory()
+
+
+conversion.register_unstructure_hook(
+    BallHistory, lambda v: v.vectorize(), which=(SerializeFormat.MSGPACK,)
+)
+conversion.register_structure_hook(
+    BallHistory,
+    lambda v, t: BallHistory.from_vectorization(v),
+    which=(SerializeFormat.MSGPACK,),
+)
 
 
 @define
