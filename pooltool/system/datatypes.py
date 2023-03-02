@@ -424,20 +424,20 @@ class System:
 
 @define
 class MultiSystem:
-    _multisystem: List[System] = field(factory=list)
+    multisystem: List[System] = field(factory=list)
 
-    active_index: Optional[int] = field(init=False, default=None)
+    active_index: Optional[int] = field(default=None)
 
     def __len__(self) -> int:
-        return len(self._multisystem)
+        return len(self.multisystem)
 
     def __getitem__(self, idx: int) -> System:
-        return self._multisystem[idx]
+        return self.multisystem[idx]
 
     @property
     def active(self) -> System:
         assert self.active_index is not None
-        return self._multisystem[self.active_index]
+        return self.multisystem[self.active_index]
 
     @property
     def empty(self) -> bool:
@@ -449,19 +449,19 @@ class MultiSystem:
 
     def reset(self) -> None:
         self.active_index = None
-        self._multisystem = []
+        self.multisystem = []
 
     def append(self, system: System) -> None:
         if self.empty:
             self.active_index = 0
 
-        self._multisystem.append(system)
+        self.multisystem.append(system)
 
     def extend(self, systems: List[System]) -> None:
         if self.empty:
             self.active_index = 0
 
-        self._multisystem.extend(systems)
+        self.multisystem.extend(systems)
 
     def set_active(self, i) -> None:
         """Change the active system in the collection
