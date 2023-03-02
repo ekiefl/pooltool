@@ -27,12 +27,11 @@ shot.continuize()
 json_path = Path(__file__).parent / "serialized_shot.json"
 msgpack_path = Path(__file__).parent / "serialized_shot.msgpack"
 
-
 N = 100
 
 with TimeCode(success_msg=f"Serialized {N} shots to JSON in "):
     for _ in range(N):
-        shot.save(json_path)
+        shot.save(json_path, drop_continuized_history=True)
 
 with TimeCode(success_msg=f"Deserialized {N} shots from JSON in "):
     for _ in range(N):
@@ -40,7 +39,7 @@ with TimeCode(success_msg=f"Deserialized {N} shots from JSON in "):
 
 with TimeCode(success_msg=f"Serialized {N} shots to MSGPACK in "):
     for _ in range(N):
-        shot.save(msgpack_path)
+        shot.save(msgpack_path, drop_continuized_history=True)
 
 with TimeCode(success_msg=f"Deserialized {N} shots from MSGPACK in "):
     for _ in range(N):
