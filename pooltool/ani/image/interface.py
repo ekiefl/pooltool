@@ -8,6 +8,7 @@ from pooltool.ani.animate import Interface, ShowBaseConfig
 from pooltool.ani.camera import CameraState, cam, camera_states
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import HUDElement, hud
+from pooltool.ani.image.exporters import DataPack
 from pooltool.system.datatypes import System, multisystem
 from pooltool.system.render import visual
 
@@ -25,13 +26,13 @@ DEFAULT_SHOWBASE_CONFIG = ShowBaseConfig(
 DEFAULT_CAMERA = camera_states["7_foot_offcenter"]
 
 
-def _resize_window(size):
+def _resize_window(size: Tuple[int, int]):
     """Changes window size when provided the dimensions (x, y) in pixels"""
     Global.base.win.setSize(*[int(dim) for dim in size])
 
 
 class Exporter(Protocol):
-    def save(self, img: NDArray[np.uint8]) -> Any:
+    def save(self, data: DataPack) -> Any:
         ...
 
 
@@ -51,7 +52,7 @@ class ImageSaver(Interface):
         Global.clock.setMode(ClockObject.MLimited)
         Global.clock.setFrameRate(1000)
 
-    def get_image_array(self) -> NDArray[np.uint8]:
+    def image_array(self) -> NDArray[np.uint8]:
         """Return array of current image texture"""
         assert self.tex.hasRamImage()
 
@@ -65,16 +66,16 @@ class ImageSaver(Interface):
         # This flips things rightside up and orders RGB correctly
         return array[::-1, :, ::-1]
 
-    def save(
+    def gen_datapack(
         self,
         shot: System,
-        exporter: Exporter,
+        *,
         camera_state: CameraState = DEFAULT_CAMERA,
         size: Tuple[int, int] = (230, 144),
         show_hud: bool = False,
         fps: float = 30.0,
-    ):
-        """Save a shot as a series of images
+    ) -> DataPack:
+        """Returns the datapack to be saved by an exporter
 
         Args:
             shot:
@@ -82,8 +83,6 @@ class ImageSaver(Interface):
                 is OK if you have continuized the shot (you can check with
                 shot.continuized), but the continuization will be overwritten to match
                 the `fps` chosen in this method.
-            exporter:
-                The exporter used to save the shot frames.
             camera_state:
                 A camera state specifying the camera's view of the table.
             size:
@@ -122,9 +121,27 @@ class ImageSaver(Interface):
 
         frames = int(shot.events[-1].time * fps) + 1
 
+        # Initialize a numpy array image stack
+        x, y = size
+        imgs = np.empty((frames, int(y), int(x), 3), dtype=np.uint8)
+
         for frame in range(frames):
             for ball in visual.balls.values():
                 ball.set_render_state_from_history(ball._ball.history_cts, frame)
 
             Global.task_mgr.step()
-            exporter.save(self.get_image_array())
+            imgs[frame, :, :, :] = self.image_array()
+
+        return DataPack(
+            system=shot,
+            imgs=imgs,
+            fps=fps,
+        )
+
+    def save(
+        self,
+        shot: System,
+        exporter: Exporter,
+        **kwargs,
+    ) -> None:
+        exporter.save(self.gen_datapack(shot, **kwargs))

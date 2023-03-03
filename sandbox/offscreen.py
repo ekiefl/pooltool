@@ -8,7 +8,7 @@ import numpy as np
 
 import pooltool as pt
 from pooltool.ani.camera import camera_states
-from pooltool.ani.image.utils import gif
+from pooltool.ani.image.exporters import HDF5Exporter
 
 
 def main(args):
@@ -45,7 +45,9 @@ def main(args):
         "7_foot_offcenter",
         "rack",
     ]:
-        exporter = pt.ImageDirExporter(save_dir / camera_state, ext="jpg")
+        exporter = pt.ImageDirExporter(
+            save_dir / camera_state, ext="jpg", save_gif=True
+        )
 
         interface.save(
             shot=system,
@@ -53,13 +55,6 @@ def main(args):
             camera_state=camera_states[camera_state],
             size=(360 * 1.6, 360),
             show_hud=False,
-            fps=5,
-        )
-
-        # Just for kicks, we can create a GIF of the exported images
-        gif(
-            paths=exporter.paths,
-            output=exporter.save_dir / f"_{exporter.prefix}.gif",
             fps=5,
         )
 
