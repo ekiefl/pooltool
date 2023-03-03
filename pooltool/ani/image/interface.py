@@ -1,20 +1,18 @@
 from pathlib import Path
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import Tuple, Union
 
-import attrs
-import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 from panda3d.core import ClockObject, FrameBufferProperties, GraphicsOutput, Texture
-from PIL import Image
 
 from pooltool.ani.animate import Interface, ShowBaseConfig
 from pooltool.ani.camera import CameraState, cam, camera_states
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import HUDElement, hud
+from pooltool.ani.image.exporters import ImageDirExporter
+from pooltool.ani.image.utils import gif
 from pooltool.system.datatypes import System, multisystem
 from pooltool.system.render import visual
-from pooltool.utils.strenum import StrEnum, auto
 
 DEFAULT_FBP = FrameBufferProperties()
 DEFAULT_FBP.setRgbColor(True)
@@ -28,11 +26,6 @@ DEFAULT_SHOWBASE_CONFIG = ShowBaseConfig(
 )
 
 
-class ImageExt(StrEnum):
-    PNG = auto()
-    JPG = auto()
-
-
 def _resize_window(size):
     """Changes window size when provided the dimensions (x, y) in pixels"""
     Global.base.win.setSize(*[int(dim) for dim in size])
@@ -42,58 +35,6 @@ def _init_system_collection(shot):
     """Reset the multisystem and add the shot of interest"""
     multisystem.reset()
     multisystem.append(shot)
-
-
-@attrs.define
-class ImageExport:
-    save_dir: Union[str, Path] = attrs.field(converter=Path)
-    ext: ImageExt = attrs.field(converter=ImageExt)
-    prefix: str = attrs.field(default="shot")
-    image_count: int = attrs.field(default=0)
-    paths: List[Path] = attrs.field(factory=list)
-
-    def __attrs_post_init__(self):
-        if not self.save_dir.exists():
-            self.save_dir.mkdir(parents=True)
-
-    def save(self, img: NDArray[np.uint8]) -> Path:
-        """Save an image"""
-        path = self._get_filepath()
-        assert not path.exists()
-
-        plt.imsave(path, img)
-
-        # Increment
-        self.image_count += 1
-        self.paths.append(path)
-
-        return path
-
-    def _get_filepath(self) -> Path:
-        stem = f"{self.prefix}_{self.image_count:06d}"
-        name = f"{stem}.{self.ext}"
-        return Path(self.save_dir) / name
-
-
-def gif(
-    paths: Sequence[Union[str, Path]], output: Union[str, Path], fps: float
-) -> Path:
-    """Create a gif from a sequence of image paths"""
-
-    output = Path(output)
-
-    imgs = (Image.open(Path(path)) for path in paths)
-    img = next(imgs)
-    img.save(
-        fp=output,
-        format="GIF",
-        append_images=imgs,
-        save_all=True,
-        duration=(1 / fps) * 1e3,
-        loop=0,  # loop infinitely
-    )
-
-    return output
 
 
 class ImageSaver(Interface):
@@ -169,7 +110,7 @@ class ImageSaver(Interface):
                 should play in realtime, however in practice this is only the case for
                 low res and low fps GIFs.
         """
-        exporter = ImageExport(
+        exporter = ImageDirExporter(
             save_dir=save_dir,
             ext=fmt,
             prefix=prefix,
