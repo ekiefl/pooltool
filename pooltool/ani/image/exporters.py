@@ -9,19 +9,13 @@ from numpy.typing import NDArray
 
 from pooltool.ani.image.utils import ImageExt, gif
 from pooltool.system.datatypes import System
-from pooltool.utils.strenum import StrEnum, auto
 
 
 @attrs.define
 class DataPack:
-    system: System
     imgs: NDArray[np.uint8]
-    fps: float
-
-
-class ExporterType(StrEnum):
-    IMAGE_DIR = auto()
-    HDF5 = auto()
+    system: Optional[System] = attrs.field(default=None)
+    fps: float = attrs.field(default=10)
 
 
 @attrs.define
@@ -51,7 +45,8 @@ class ImageDirExporter:
             self.image_count += 1
             self.paths.append(path)
 
-        data.system.save(self.save_dir / f"_{self.prefix}.msgpack")
+        if data.system is not None:
+            data.system.save(self.save_dir / f"_{self.prefix}.msgpack")
 
         if self.save_gif:
             gif(
@@ -64,3 +59,14 @@ class ImageDirExporter:
         stem = f"{self.prefix}_{self.image_count:06d}"
         name = f"{stem}.{self.ext}"
         return Path(self.save_dir) / name
+
+
+@attrs.define
+class HDF5Exporter:
+    path: Path = attrs.field(converter=Path)
+
+    def save(self, data: DataPack) -> None:
+        with h5py.File(self.path, "w") as fp:
+            fp.create_dataset(
+                "images", np.shape(data.imgs), h5py.h5t.STD_U8BE, data=data.imgs
+            )

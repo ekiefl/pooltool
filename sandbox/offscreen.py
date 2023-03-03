@@ -8,7 +8,7 @@ import numpy as np
 
 import pooltool as pt
 from pooltool.ani.camera import camera_states
-from pooltool.ani.image.exporters import HDF5Exporter
+from pooltool.ani.image.exporters import HDF5Exporter, ImageDirExporter
 
 
 def main(args):
@@ -35,6 +35,7 @@ def main(args):
     save_dir = Path(__file__).parent / "offscreen_out"
     if save_dir.exists():
         shutil.rmtree(save_dir)
+    save_dir.mkdir()
 
     # These camera states can be found in pooltool/ani/camera/camera_states. You can
     # make your own by creating a new JSON in that directory. Reach out if you want to
@@ -45,9 +46,12 @@ def main(args):
         "7_foot_offcenter",
         "rack",
     ]:
-        exporter = pt.ImageDirExporter(
-            save_dir / camera_state, ext="jpg", save_gif=True
-        )
+        if args.exporter == "dir":
+            exporter = ImageDirExporter(
+                save_dir / camera_state, ext="png", save_gif=True
+            )
+        elif args.exporter == "h5":
+            exporter = HDF5Exporter(save_dir / f"{camera_state}.h5")
 
         interface.save(
             shot=system,
@@ -75,6 +79,13 @@ if __name__ == "__main__":
         type=float,
         default=8,
         help="With what speed should the cue stick strike the cue ball?",
+    )
+    ap.add_argument(
+        "--exporter",
+        type=str,
+        default="dir",
+        choices=("h5", "dir"),
+        help="Which export strategy do you want to use?",
     )
     ap.add_argument(
         "--seed",
