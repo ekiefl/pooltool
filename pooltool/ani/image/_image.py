@@ -1,75 +1,99 @@
 from pathlib import Path
-from typing import Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
+import attrs
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.typing import NDArray
 from panda3d.core import ClockObject, FrameBufferProperties, GraphicsOutput, Texture
 from PIL import Image
 
 from pooltool.ani.animate import Interface, ShowBaseConfig
-from pooltool.ani.camera import CameraState, cam
+from pooltool.ani.camera import CameraState, cam, camera_states
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import HUDElement, hud
-from pooltool.error import ConfigError
 from pooltool.system.datatypes import System, multisystem
 from pooltool.system.render import visual
 from pooltool.utils.strenum import StrEnum, auto
 
+DEFAULT_FBP = FrameBufferProperties()
+DEFAULT_FBP.setRgbColor(True)
+DEFAULT_FBP.setRgbaBits(8, 8, 8, 0)
+DEFAULT_FBP.setDepthBits(24)
 
-class ImageFormat(StrEnum):
+DEFAULT_SHOWBASE_CONFIG = ShowBaseConfig(
+    window_type="offscreen",
+    monitor=False,
+    fb_prop=DEFAULT_FBP,
+)
+
+
+class ImageExt(StrEnum):
     PNG = auto()
     JPG = auto()
+
+
+def _resize_window(size):
+    """Changes window size when provided the dimensions (x, y) in pixels"""
+    Global.base.win.setSize(*[int(dim) for dim in size])
+
+
+def _init_system_collection(shot):
+    """Reset the multisystem and add the shot of interest"""
+    multisystem.reset()
+    multisystem.append(shot)
+
+
+@attrs.define
+class ImageExport:
+    save_dir: Union[str, Path] = attrs.field(converter=Path)
+    ext: ImageExt = attrs.field(converter=ImageExt)
+    prefix: str = attrs.field(default="shot")
+    image_count: int = attrs.field(default=0)
+    paths: List[Path] = attrs.field(factory=list)
+
+    def __attrs_post_init__(self):
+        if not self.save_dir.exists():
+            self.save_dir.mkdir(parents=True)
+
+    def save(self, img: NDArray[np.uint8]) -> Path:
+        """Save an image"""
+        path = self._get_filepath()
+        assert not path.exists()
+
+        plt.imsave(path, img)
+
+        # Increment
+        self.image_count += 1
+        self.paths.append(path)
+
+        return path
+
+    def _get_filepath(self) -> Path:
+        stem = f"{self.prefix}_{self.image_count:06d}"
+        name = f"{stem}.{self.ext}"
+        return Path(self.save_dir) / name
 
 
 class ImageSaver(Interface):
     """An interface for saving shots as series of images"""
 
-    def __init__(self, config=None):
-        if config is None:
-            config = ShowBaseConfig(
-                window_type="offscreen",
-                monitor=False,
-                fb_prop=self.frame_buffer_properties(),
-            )
-
+    def __init__(self, config: ShowBaseConfig = DEFAULT_SHOWBASE_CONFIG):
         Interface.__init__(self, config=config)
-        self.init_image_texture()
 
-        Global.clock.setMode(ClockObject.MLimited)
-        Global.clock.setFrameRate(1000)
-
-    def init_image_texture(self):
+        # Create and setup the image texture
         self.tex = Texture()
-
         Global.base.win.addRenderTexture(
             self.tex, GraphicsOutput.RTMCopyRam, GraphicsOutput.RTPColor
         )
 
-    def make_save_dir(self, save_dir: Union[str, Path]):
-        save_dir = Path(save_dir)
+        # Aim to render 1000 FPS so the clock doesn't sleep between frames
+        Global.clock.setMode(ClockObject.MLimited)
+        Global.clock.setFrameRate(1000)
 
-        if save_dir.exists():
-            raise ConfigError(f"'{self.save_dir}' exists")
-
-        save_dir.mkdir()
-        return save_dir
-
-    def _get_filepath(self, save_dir, file_prefix, frame, img_format):
-        return f"{save_dir}/{file_prefix}_{frame:06d}.{img_format}"
-
-    def _resize_window(self, size):
-        """Changes window size when provided the dimensions (x, y) in pixels"""
-        Global.base.win.setSize(*[int(dim) for dim in size])
-
-    def _init_system_collection(self, shot):
-        """Create system collection holding the shot. Register to Global"""
-        multisystem.reset()
-        multisystem.append(shot)
-
-    def get_image_array(self):
-        """Return array of current image texture, or None if texture has no RAM image"""
-        if not self.tex.hasRamImage():
-            return None
+    def get_image_array(self) -> NDArray[np.uint8]:
+        """Return array of current image texture"""
+        assert self.tex.hasRamImage()
 
         array = np.frombuffer(self.tex.getRamImage(), dtype=np.uint8)
         array.shape = (
@@ -85,10 +109,10 @@ class ImageSaver(Interface):
         self,
         shot: System,
         save_dir: Union[str, Path],
-        camera_state: Optional[CameraState] = None,
-        file_prefix: str = "shot",
+        camera_state: CameraState = camera_states["7_foot_offcenter"],
+        prefix: str = "shot",
         size: Tuple[int, int] = (230, 144),
-        img_format: ImageFormat = ImageFormat.JPG,
+        fmt: str = "jpg",
         show_hud: bool = False,
         fps: float = 30.0,
         make_gif: bool = False,
@@ -106,13 +130,13 @@ class ImageSaver(Interface):
                 already exist.
             camera_state:
                 A camera state specifying the camera's view of the table.
-            file_prefix:
+            prefix:
                 The image filenames will be prefixed with this string. By default, the
                 prefix is "shot".
             size:
                 The number of pixels in x and y. If x:y != 1.6, the aspect ratio will
                 look distorted.
-            img_format:
+            fmt:
                 The image format, e.g. "jpg".
             show_hud:
                 If True, the HUD will appear in the images.
@@ -124,17 +148,23 @@ class ImageSaver(Interface):
                 should play in realtime, however in practice this is only the case for
                 low res and low fps GIFs.
         """
+        exporter = ImageExport(
+            save_dir=save_dir,
+            ext=fmt,
+            prefix=prefix,
+        )
+
         shot.continuize(dt=1 / fps)
 
-        self._init_system_collection(shot)
-        self._resize_window(size)
+        _init_system_collection(shot)
+        _resize_window(size)
+
         self.create_scene()
 
         # We don't want the cue in this
         visual.cue.hide_nodes()
 
-        if camera_state is not None:
-            cam.load_state(camera_state)
+        cam.load_state(camera_state)
 
         if show_hud:
             hud.init()
@@ -142,8 +172,6 @@ class ImageSaver(Interface):
             hud.update_cue(shot.cue)
         else:
             hud.destroy()
-
-        save_dir = self.make_save_dir(save_dir)
 
         # Set quaternions for each ball
         for ball in visual.balls.values():
@@ -156,11 +184,7 @@ class ImageSaver(Interface):
                 ball.set_render_state_from_history(ball._ball.history_cts, frame)
 
             Global.task_mgr.step()
-
-            plt.imsave(
-                self._get_filepath(save_dir, file_prefix, frame, img_format),
-                self.get_image_array(),
-            )
+            exporter.save(self.get_image_array())
 
         if not make_gif:
             return
@@ -168,7 +192,7 @@ class ImageSaver(Interface):
         imgs = (
             Image.open(fp)
             for fp in (
-                self._get_filepath(save_dir, file_prefix, frame, img_format)
+                self._get_filepath(save_dir, prefix, frame, img_format)
                 for frame in range(frames)
             )
         )
@@ -176,19 +200,10 @@ class ImageSaver(Interface):
         img = next(imgs)
 
         img.save(
-            fp=f"{save_dir}/{file_prefix}.gif",
+            fp=f"{save_dir}/{prefix}.gif",
             format="GIF",
             append_images=imgs,
             save_all=True,
             duration=(1 / fps) * 1e3,
             loop=0,  # loop infinitely
         )
-
-    @staticmethod
-    def frame_buffer_properties():
-        fb_prop = FrameBufferProperties()
-        fb_prop.setRgbColor(True)
-        fb_prop.setRgbaBits(8, 8, 8, 0)
-        fb_prop.setDepthBits(24)
-
-        return fb_prop
