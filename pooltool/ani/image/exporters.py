@@ -70,3 +70,16 @@ class HDF5Exporter:
             fp.create_dataset(
                 "images", np.shape(data.imgs), h5py.h5t.STD_U8BE, data=data.imgs
             )
+
+        if data.system is not None:
+            data.system.save(self.path.with_suffix(".msgpack"))
+
+
+@attrs.define
+class NPYExporter:
+    path: Path = attrs.field(converter=Path)
+
+    def save(self, data: DataPack) -> None:
+        np.save(self.path, data.imgs)
+        if data.system is not None:
+            data.system.save(self.path.with_suffix(".msgpack"))

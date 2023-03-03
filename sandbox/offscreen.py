@@ -8,7 +8,7 @@ import numpy as np
 
 import pooltool as pt
 from pooltool.ani.camera import camera_states
-from pooltool.ani.image.exporters import HDF5Exporter, ImageDirExporter
+from pooltool.ani.image.exporters import HDF5Exporter, ImageDirExporter, NPYExporter
 
 
 def main(args):
@@ -52,6 +52,8 @@ def main(args):
             )
         elif args.exporter == "h5":
             exporter = HDF5Exporter(save_dir / f"{camera_state}.h5")
+        elif args.exporter == "npy":
+            exporter = NPYExporter(save_dir / f"{camera_state}.npy")
 
         interface.save(
             shot=system,
@@ -84,7 +86,7 @@ if __name__ == "__main__":
         "--exporter",
         type=str,
         default="dir",
-        choices=("h5", "dir"),
+        choices=("h5", "dir", "npy"),
         help="Which export strategy do you want to use?",
     )
     ap.add_argument(
