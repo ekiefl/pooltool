@@ -2,7 +2,7 @@ __version__ = "0.1"
 
 from pooltool import terminal
 from pooltool.ani.animate import Game, ShotViewer
-from pooltool.ani.image import ImageSaver
+from pooltool.ani.image import ImageDirExporter, ImageSaver
 from pooltool.events import (
     Agent,
     AgentType,
@@ -95,6 +95,7 @@ __all__ = [
     "CircularCushionSegment",
     "CushionSegments",
     "CushionDirection",
+    "ImageDirExporter",
     "Table",
     "TableModelDescr",
     "TableType",

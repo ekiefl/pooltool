@@ -1,5 +1,4 @@
-from pathlib import Path
-from typing import Tuple, Union
+from typing import Any, Protocol, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -9,8 +8,6 @@ from pooltool.ani.animate import Interface, ShowBaseConfig
 from pooltool.ani.camera import CameraState, cam, camera_states
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import HUDElement, hud
-from pooltool.ani.image.exporters import ImageDirExporter
-from pooltool.ani.image.utils import gif
 from pooltool.system.datatypes import System, multisystem
 from pooltool.system.render import visual
 
@@ -25,16 +22,17 @@ DEFAULT_SHOWBASE_CONFIG = ShowBaseConfig(
     fb_prop=DEFAULT_FBP,
 )
 
+DEFAULT_CAMERA = camera_states["7_foot_offcenter"]
+
 
 def _resize_window(size):
     """Changes window size when provided the dimensions (x, y) in pixels"""
     Global.base.win.setSize(*[int(dim) for dim in size])
 
 
-def _init_system_collection(shot):
-    """Reset the multisystem and add the shot of interest"""
-    multisystem.reset()
-    multisystem.append(shot)
+class Exporter(Protocol):
+    def save(self, img: NDArray[np.uint8]) -> Any:
+        ...
 
 
 class ImageSaver(Interface):
@@ -70,11 +68,9 @@ class ImageSaver(Interface):
     def save(
         self,
         shot: System,
-        save_dir: Union[str, Path],
-        camera_state: CameraState = camera_states["7_foot_offcenter"],
-        prefix: str = "shot",
+        exporter: Exporter,
+        camera_state: CameraState = DEFAULT_CAMERA,
         size: Tuple[int, int] = (230, 144),
-        fmt: str = "jpg",
         show_hud: bool = False,
         fps: float = 30.0,
         make_gif: bool = False,
@@ -110,15 +106,11 @@ class ImageSaver(Interface):
                 should play in realtime, however in practice this is only the case for
                 low res and low fps GIFs.
         """
-        exporter = ImageDirExporter(
-            save_dir=save_dir,
-            ext=fmt,
-            prefix=prefix,
-        )
-
         shot.continuize(dt=1 / fps)
 
-        _init_system_collection(shot)
+        multisystem.reset()
+        multisystem.append(shot)
+
         _resize_window(size)
 
         self.create_scene()
@@ -147,7 +139,3 @@ class ImageSaver(Interface):
 
             Global.task_mgr.step()
             exporter.save(self.get_image_array())
-
-        if make_gif:
-            gif_path = exporter.save_dir / f"_{prefix}.gif"  # type: ignore
-            gif(exporter.paths, gif_path, fps=fps)

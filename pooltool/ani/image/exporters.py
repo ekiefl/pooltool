@@ -26,7 +26,7 @@ class ImageDirExporter:
     def save(self, img: NDArray[np.uint8]) -> Path:
         """Save an image"""
         path = self._get_filepath()
-        assert not path.exists()
+        assert not path.exists(), f"{path} already exists!"
 
         plt.imsave(path, img)
 

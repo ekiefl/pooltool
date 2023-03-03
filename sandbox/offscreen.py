@@ -31,10 +31,9 @@ def main(args):
     # Evolve the shot
     pt.simulate(system)
 
-    output = Path(__file__).parent / "offscreen_out"
-    if output.exists():
-        shutil.rmtree(output)
-    output.mkdir()
+    save_dir = Path(__file__).parent / "offscreen_out"
+    if save_dir.exists():
+        shutil.rmtree(save_dir)
 
     # These camera states can be found in pooltool/ani/camera/camera_states. You can
     # make your own by creating a new JSON in that directory. Reach out if you want to
@@ -47,10 +46,8 @@ def main(args):
     ]:
         interface.save(
             shot=system,
-            save_dir=output / camera_state,
+            exporter=pt.ImageDirExporter(save_dir / camera_state, ext="jpg"),
             camera_state=camera_states[camera_state],
-            prefix=camera_state,
-            fmt="jpg",
             size=(360 * 1.6, 360),
             show_hud=False,
             fps=5,
