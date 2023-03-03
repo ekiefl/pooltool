@@ -73,7 +73,6 @@ class ImageSaver(Interface):
         size: Tuple[int, int] = (230, 144),
         show_hud: bool = False,
         fps: float = 30.0,
-        make_gif: bool = False,
     ):
         """Save a shot as a series of images
 
@@ -83,28 +82,18 @@ class ImageSaver(Interface):
                 is OK if you have continuized the shot (you can check with
                 shot.continuized), but the continuization will be overwritten to match
                 the `fps` chosen in this method.
-            save_dir:
-                The directory that you would like to save the shots in. It must not
-                already exist.
+            exporter:
+                The exporter used to save the shot frames.
             camera_state:
                 A camera state specifying the camera's view of the table.
-            prefix:
-                The image filenames will be prefixed with this string. By default, the
-                prefix is "shot".
             size:
                 The number of pixels in x and y. If x:y != 1.6, the aspect ratio will
                 look distorted.
-            fmt:
-                The image format, e.g. "jpg".
             show_hud:
                 If True, the HUD will appear in the images.
             fps:
                 This is the rate (in frames per second) that an image of the shot is
                 taken.
-            make_gif:
-                If True, a GIF will be created in addition to the image files. The GIF
-                should play in realtime, however in practice this is only the case for
-                low res and low fps GIFs.
         """
         shot.continuize(dt=1 / fps)
 

@@ -8,6 +8,7 @@ import numpy as np
 
 import pooltool as pt
 from pooltool.ani.camera import camera_states
+from pooltool.ani.image.utils import gif
 
 
 def main(args):
@@ -44,14 +45,22 @@ def main(args):
         "7_foot_offcenter",
         "rack",
     ]:
+        exporter = pt.ImageDirExporter(save_dir / camera_state, ext="jpg")
+
         interface.save(
             shot=system,
-            exporter=pt.ImageDirExporter(save_dir / camera_state, ext="jpg"),
+            exporter=exporter,
             camera_state=camera_states[camera_state],
             size=(360 * 1.6, 360),
             show_hud=False,
             fps=5,
-            make_gif=False,
+        )
+
+        # Just for kicks, we can create a GIF of the exported images
+        gif(
+            paths=exporter.paths,
+            output=exporter.save_dir / f"_{exporter.prefix}.gif",
+            fps=5,
         )
 
 
@@ -59,9 +68,6 @@ if __name__ == "__main__":
     import argparse
 
     ap = argparse.ArgumentParser("A good old 9-ball break")
-    ap.add_argument(
-        "--no-viz", action="store_true", help="If set, the break will not be visualized"
-    )
     ap.add_argument(
         "--spacing-factor",
         type=float,
