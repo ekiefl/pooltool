@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union
 
 import attrs
 import matplotlib.pyplot as plt
@@ -73,6 +73,27 @@ class ImageExport:
         stem = f"{self.prefix}_{self.image_count:06d}"
         name = f"{stem}.{self.ext}"
         return Path(self.save_dir) / name
+
+
+def gif(
+    paths: Sequence[Union[str, Path]], output: Union[str, Path], fps: float
+) -> Path:
+    """Create a gif from a sequence of image paths"""
+
+    output = Path(output)
+
+    imgs = (Image.open(Path(path)) for path in paths)
+    img = next(imgs)
+    img.save(
+        fp=output,
+        format="GIF",
+        append_images=imgs,
+        save_all=True,
+        duration=(1 / fps) * 1e3,
+        loop=0,  # loop infinitely
+    )
+
+    return output
 
 
 class ImageSaver(Interface):
@@ -186,24 +207,6 @@ class ImageSaver(Interface):
             Global.task_mgr.step()
             exporter.save(self.get_image_array())
 
-        if not make_gif:
-            return
-
-        imgs = (
-            Image.open(fp)
-            for fp in (
-                self._get_filepath(save_dir, prefix, frame, img_format)
-                for frame in range(frames)
-            )
-        )
-
-        img = next(imgs)
-
-        img.save(
-            fp=f"{save_dir}/{prefix}.gif",
-            format="GIF",
-            append_images=imgs,
-            save_all=True,
-            duration=(1 / fps) * 1e3,
-            loop=0,  # loop infinitely
-        )
+        if make_gif:
+            gif_path = exporter.save_dir / f"_{prefix}.gif"  # type: ignore
+            gif(exporter.paths, gif_path, fps=fps)
