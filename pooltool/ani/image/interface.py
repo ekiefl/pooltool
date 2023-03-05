@@ -8,7 +8,7 @@ from pooltool.ani.animate import Interface, ShowBaseConfig
 from pooltool.ani.camera import CameraState, cam, camera_states
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import HUDElement, hud
-from pooltool.ani.image.exporters import DataPack
+from pooltool.ani.image.io import DataPack
 from pooltool.system.datatypes import System, multisystem
 from pooltool.system.render import visual
 

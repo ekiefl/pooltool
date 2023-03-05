@@ -8,7 +8,7 @@ import numpy as np
 
 import pooltool as pt
 from pooltool.ani.camera import camera_states
-from pooltool.ani.image.exporters import HDF5Exporter, ImageDirExporter, NPYExporter
+from pooltool.ani.image.io import HDF5Images, ImageDir, NpyImages
 
 
 def main(args):
@@ -32,10 +32,10 @@ def main(args):
     # Evolve the shot
     pt.simulate(system)
 
-    save_dir = Path(__file__).parent / "offscreen_out"
-    if save_dir.exists():
-        shutil.rmtree(save_dir)
-    save_dir.mkdir()
+    image_dir = Path(__file__).parent / "offscreen_out"
+    if image_dir.exists():
+        shutil.rmtree(image_dir)
+    image_dir.mkdir()
 
     # These camera states can be found in pooltool/ani/camera/camera_states. You can
     # make your own by creating a new JSON in that directory. Reach out if you want to
@@ -47,22 +47,25 @@ def main(args):
         "rack",
     ]:
         if args.exporter == "dir":
-            exporter = ImageDirExporter(
-                save_dir / camera_state, ext="png", save_gif=True
-            )
+            exporter = ImageDir(image_dir / camera_state, ext="png", save_gif=True)
         elif args.exporter == "h5":
-            exporter = HDF5Exporter(save_dir / f"{camera_state}.h5")
+            exporter = HDF5Images(image_dir / f"{camera_state}.h5")
         elif args.exporter == "npy":
-            exporter = NPYExporter(save_dir / f"{camera_state}.npy")
+            exporter = NpyImages(image_dir / f"{camera_state}.npy")
 
-        interface.save(
+        datapack = interface.gen_datapack(
             shot=system,
-            exporter=exporter,
             camera_state=camera_states[camera_state],
             size=(360 * 1.6, 360),
             show_hud=False,
             fps=5,
         )
+
+        exporter.save(datapack)
+
+        # Verify the images can be read back
+        read_from_disk = exporter.read(exporter.image_dir)
+        assert np.array_equal(datapack.imgs, read_from_disk)
 
 
 if __name__ == "__main__":

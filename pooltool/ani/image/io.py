@@ -1,28 +1,22 @@
+import re
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Union
 
 import attrs
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
+from PIL import Image
 
-from pooltool.ani.image.utils import ImageExt, gif
-from pooltool.system.datatypes import System
-
-
-@attrs.define
-class DataPack:
-    imgs: NDArray[np.uint8]
-    system: Optional[System] = attrs.field(default=None)
-    fps: float = attrs.field(default=10)
+from pooltool.ani.image.utils import DataPack, ImageExt, gif
 
 
 @attrs.define
-class ImageDirExporter:
+class ImageDir:
     """Exporter for creating a directory of images"""
 
-    save_dir: Path = attrs.field(converter=Path)
+    image_dir: Path = attrs.field(converter=Path)
     ext: ImageExt = attrs.field(converter=ImageExt)
     prefix: str = attrs.field(default="shot")
     save_gif: bool = attrs.field(default=False)
@@ -30,8 +24,8 @@ class ImageDirExporter:
     paths: List[Path] = attrs.field(init=False, factory=list)
 
     def __attrs_post_init__(self):
-        if not self.save_dir.exists():
-            self.save_dir.mkdir(parents=True)
+        if not self.image_dir.exists():
+            self.image_dir.mkdir(parents=True)
 
     def save(self, data: DataPack) -> None:
         frames = np.shape(data.imgs)[0]
@@ -46,23 +40,40 @@ class ImageDirExporter:
             self.paths.append(path)
 
         if data.system is not None:
-            data.system.save(self.save_dir / f"_{self.prefix}.msgpack")
+            data.system.save(self.image_dir / f"_{self.prefix}.msgpack")
 
         if self.save_gif:
             gif(
                 paths=self.paths,
-                output=self.save_dir / f"_{self.prefix}.gif",
+                output=self.image_dir / f"_{self.prefix}.gif",
                 fps=data.fps,
             )
 
     def _get_filepath(self) -> Path:
         stem = f"{self.prefix}_{self.image_count:06d}"
         name = f"{stem}.{self.ext}"
-        return Path(self.save_dir) / name
+        return Path(self.image_dir) / name
+
+    @staticmethod
+    def read(image_dir: Union[str, Path]) -> NDArray[np.uint8]:
+        image_dir = Path(image_dir)
+
+        assert image_dir.exists(), f"{image_dir} is not a directory"
+
+        img_pattern = re.compile(r".*_[0-9]{6,6}\." + ImageExt.regex())
+
+        return np.array(
+            [
+                np.asarray(Image.open(img_path))[:, :, :3]
+                for img_path in sorted(image_dir.glob("*"))
+                if img_pattern.match(str(img_path))
+            ],
+            dtype=np.uint8,
+        )
 
 
 @attrs.define
-class HDF5Exporter:
+class HDF5Images:
     path: Path = attrs.field(converter=Path)
 
     def save(self, data: DataPack) -> None:
@@ -76,7 +87,7 @@ class HDF5Exporter:
 
 
 @attrs.define
-class NPYExporter:
+class NpyImages:
     path: Path = attrs.field(converter=Path)
 
     def save(self, data: DataPack) -> None:
