@@ -16,7 +16,7 @@ from pooltool.ani.image.utils import DataPack, ImageExt, gif
 class ImageDir:
     """Exporter for creating a directory of images"""
 
-    image_dir: Path = attrs.field(converter=Path)
+    path: Path = attrs.field(converter=Path)
     ext: ImageExt = attrs.field(converter=ImageExt)
     prefix: str = attrs.field(default="shot")
     save_gif: bool = attrs.field(default=False)
@@ -24,8 +24,8 @@ class ImageDir:
     paths: List[Path] = attrs.field(init=False, factory=list)
 
     def __attrs_post_init__(self):
-        if not self.image_dir.exists():
-            self.image_dir.mkdir(parents=True)
+        if not self.path.exists():
+            self.path.mkdir(parents=True)
 
     def save(self, data: DataPack) -> None:
         frames = np.shape(data.imgs)[0]
@@ -40,32 +40,32 @@ class ImageDir:
             self.paths.append(path)
 
         if data.system is not None:
-            data.system.save(self.image_dir / f"_{self.prefix}.msgpack")
+            data.system.save(self.path / f"_{self.prefix}.msgpack")
 
         if self.save_gif:
             gif(
                 paths=self.paths,
-                output=self.image_dir / f"_{self.prefix}.gif",
+                output=self.path / f"_{self.prefix}.gif",
                 fps=data.fps,
             )
 
     def _get_filepath(self) -> Path:
         stem = f"{self.prefix}_{self.image_count:06d}"
         name = f"{stem}.{self.ext}"
-        return Path(self.image_dir) / name
+        return Path(self.path) / name
 
     @staticmethod
-    def read(image_dir: Union[str, Path]) -> NDArray[np.uint8]:
-        image_dir = Path(image_dir)
+    def read(path: Union[str, Path]) -> NDArray[np.uint8]:
+        path = Path(path)
 
-        assert image_dir.exists(), f"{image_dir} is not a directory"
+        assert path.exists(), f"{path} is not a directory"
 
         img_pattern = re.compile(r".*_[0-9]{6,6}\." + ImageExt.regex())
 
         return np.array(
             [
                 np.asarray(Image.open(img_path))[:, :, :3]
-                for img_path in sorted(image_dir.glob("*"))
+                for img_path in sorted(path.glob("*"))
                 if img_pattern.match(str(img_path))
             ],
             dtype=np.uint8,
@@ -85,6 +85,11 @@ class HDF5Images:
         if data.system is not None:
             data.system.save(self.path.with_suffix(".msgpack"))
 
+    @staticmethod
+    def read(path: Union[str, Path]) -> NDArray[np.uint8]:
+        with h5py.File(path, "r+") as fp:
+            return np.array(fp["/images"]).astype("uint8")
+
 
 @attrs.define
 class NpyImages:
@@ -94,3 +99,7 @@ class NpyImages:
         np.save(self.path, data.imgs)
         if data.system is not None:
             data.system.save(self.path.with_suffix(".msgpack"))
+
+    @staticmethod
+    def read(path: Union[str, Path]) -> NDArray[np.uint8]:
+        return np.load(path)
