@@ -20,6 +20,12 @@ ap.add_argument(
     help="How resolved should the image be? E.g. 144, 360, 480, 720",
 )
 ap.add_argument(
+    "--fps",
+    type=int,
+    default=10,
+    help="How many frames per second?",
+)
+ap.add_argument(
     "--gray",
     action="store_true",
     help="Whether image is stored as grayscale",
@@ -54,6 +60,8 @@ system.strike(V0=8)
 with pt.terminal.TimeCode("Time to simulate 9-ball break: "):
     pt.simulate(system)
 
+# -------------------------------------------------------------------------------------
+
 # Make the output directory
 path = Path(__file__).parent / "timing"
 if path.exists():
@@ -75,8 +83,10 @@ with pt.terminal.TimeCode("Time to render the images: "):
         size=(args.res * 1.6, args.res),
         show_hud=False,
         gray=args.gray,
-        fps=10,
+        fps=args.fps,
     )
+
+# -------------------------------------------------------------------------------------
 
 run = pt.terminal.Run()
 
@@ -91,7 +101,10 @@ for exporter in exporters:
         run.info(
             f"Size of {exporter.__class__.__name__}",
             human_readable_file_size(
-                sum(file.stat().st_size for file in Path(exporter.path).glob("*.png"))
+                sum(
+                    file.stat().st_size
+                    for file in Path(exporter.path).glob(f"*.{exporter.ext}")
+                )
             ),
             nl_before=1,
             nl_after=1,
