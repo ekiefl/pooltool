@@ -33,7 +33,7 @@ class ImageDir:
             path = self._get_filepath()
             assert not path.exists(), f"{path} already exists!"
 
-            plt.imsave(path, data.imgs[frame, :, :, :])
+            Image.fromarray(data.imgs[frame, ...]).save(path)
 
             # Increment
             self.image_count += 1
@@ -62,14 +62,20 @@ class ImageDir:
 
         img_pattern = re.compile(r".*_[0-9]{6,6}\." + ImageExt.regex())
 
-        return np.array(
-            [
-                np.asarray(Image.open(img_path))[:, :, :3]
-                for img_path in sorted(path.glob("*"))
-                if img_pattern.match(str(img_path))
-            ],
-            dtype=np.uint8,
-        )
+        img_array: List[NDArray] = []
+        for img_path in sorted(path.glob("*")):
+            if not img_pattern.match(str(img_path)):
+                continue
+
+            img = Image.open(img_path)
+
+            if img.mode == "RGB":
+                # Snuff out the alpha channel
+                img_array.append(np.asarray(img)[:, :, :3])
+            else:
+                img_array.append(np.asarray(img))
+
+        return np.array(img_array, dtype=np.uint8)
 
 
 @attrs.define

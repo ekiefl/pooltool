@@ -3,7 +3,6 @@
 
 import argparse
 import shutil
-import timeit
 from pathlib import Path
 
 import numpy as np

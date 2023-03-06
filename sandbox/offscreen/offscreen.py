@@ -42,7 +42,8 @@ def main(args):
     # create a camera state from within the interactive interface (this is also
     # possible).
     for camera_state in [
-        "7_foot_overhead_zoom",
+        "7_foot_overhead",
+        "7_foot_offcenter",
     ]:
         if args.exporter == "dir":
             exporter = ImageDir(path / camera_state, ext="png", save_gif=True)
@@ -56,6 +57,7 @@ def main(args):
             camera_state=camera_states[camera_state],
             size=(80 * 1.6, 80),
             show_hud=False,
+            gray=False,
             fps=10,
         )
 

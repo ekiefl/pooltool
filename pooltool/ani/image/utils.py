@@ -45,3 +45,8 @@ def gif(
     )
 
     return output
+
+
+def rgb2gray(rgb: NDArray[np.uint8]) -> NDArray[np.uint8]:
+    """Convert an image (or image stack) to grayscale"""
+    return np.array(Image.fromarray(rgb).convert(mode="L"))

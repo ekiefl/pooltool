@@ -9,6 +9,7 @@ from pooltool.ani.camera import CameraState, cam, camera_states
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.image.io import DataPack
+from pooltool.ani.image.utils import rgb2gray
 from pooltool.system.datatypes import System, multisystem
 from pooltool.system.render import visual
 
@@ -72,6 +73,7 @@ class ImageSaver(Interface):
         *,
         camera_state: CameraState = DEFAULT_CAMERA,
         size: Tuple[int, int] = (230, 144),
+        gray: bool = False,
         show_hud: bool = False,
         fps: float = 30.0,
     ) -> DataPack:
@@ -88,6 +90,8 @@ class ImageSaver(Interface):
             size:
                 The number of pixels in x and y. If x:y != 1.6, the aspect ratio will
                 look distorted.
+            gray:
+                Whether image should be saved in grayscale or not.
             show_hud:
                 If True, the HUD will appear in the images.
             fps:
@@ -123,14 +127,23 @@ class ImageSaver(Interface):
 
         # Initialize a numpy array image stack
         x, y = size
-        imgs = np.empty((frames, int(y), int(x), 3), dtype=np.uint8)
+        if gray:
+            imgs = np.empty((frames, int(y), int(x)), dtype=np.uint8)
+        else:
+            imgs = np.empty((frames, int(y), int(x), 3), dtype=np.uint8)
 
         for frame in range(frames):
             for ball in visual.balls.values():
                 ball.set_render_state_from_history(ball._ball.history_cts, frame)
 
             Global.task_mgr.step()
-            imgs[frame, :, :, :] = self.image_array()
+
+            img = self.image_array()
+
+            if gray:
+                img = rgb2gray(img)
+
+            imgs[frame, ...] = img
 
         return DataPack(
             system=shot,
