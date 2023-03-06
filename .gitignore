@@ -2,8 +2,7 @@
 sandbox/collection.json*
 sandbox/serialize/serialized_shot*
 sandbox/offscreen/offscreen_out
-sandbox/offscreen/timing/image_array*
-sandbox/offscreen/timing/image_dir*
+sandbox/offscreen/timing/*
 cachegrind*
 
 *.blend1

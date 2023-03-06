@@ -1,3 +1,4 @@
+import gzip
 import re
 from pathlib import Path
 from typing import List, Union
@@ -108,3 +109,20 @@ class NpyImages:
     @staticmethod
     def read(path: Union[str, Path]) -> NDArray[np.uint8]:
         return np.load(path)
+
+
+@attrs.define
+class GzipArrayImages:
+    path: Path = attrs.field(converter=Path)
+
+    def save(self, data: DataPack) -> None:
+        with open(self.path, "wb") as fp:
+            fp.write(gzip.compress(memoryview(data.imgs), compresslevel=1))
+
+        if data.system is not None:
+            data.system.save(self.path.with_suffix(".msgpack"))
+
+    @staticmethod
+    def read(path: Union[str, Path]) -> NDArray[np.uint8]:
+        with open(path, "rb") as fp:
+            return np.frombuffer(gzip.decompress(fp.read()), dtype=np.uint8)

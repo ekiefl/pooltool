@@ -9,7 +9,7 @@ import numpy as np
 
 import pooltool as pt
 from pooltool.ani.camera import camera_states
-from pooltool.ani.image.io import ImageDir, NpyImages
+from pooltool.ani.image.io import GzipArrayImages, ImageDir, NpyImages
 from pooltool.utils import human_readable_file_size
 
 ap = argparse.ArgumentParser("A good old 9-ball break")
@@ -61,8 +61,11 @@ if path.exists():
 path.mkdir()
 
 # Create the exporters
-npy_exporter = NpyImages(path / "image_array.npy")
-img_exporter = ImageDir(path / "image_dir", ext="png", save_gif=True)
+exporters = [
+    NpyImages(path / "image_array.npy"),
+    ImageDir(path / "image_dir", ext="png", save_gif=True),
+    GzipArrayImages(path / "images.array.gz"),
+]
 
 # Generate the image data
 with pt.terminal.TimeCode("Time to render the images: "):
@@ -75,28 +78,28 @@ with pt.terminal.TimeCode("Time to render the images: "):
         fps=10,
     )
 
-with pt.terminal.TimeCode("Time to write npy file: "):
-    npy_exporter.save(datapack)
-
-with pt.terminal.TimeCode("Time to read npy file: "):
-    NpyImages.read(npy_exporter.path)
-
-with pt.terminal.TimeCode("Time to write img directory: "):
-    img_exporter.save(datapack)
-
-with pt.terminal.TimeCode("Time to read img directory: "):
-    ImageDir.read(img_exporter.path)
-
 run = pt.terminal.Run()
 
-run.info(
-    "Size of npy file",
-    human_readable_file_size(npy_exporter.path.stat().st_size),
-    nl_before=1,
-)
-run.info(
-    "Size of image directory",
-    human_readable_file_size(
-        sum(file.stat().st_size for file in Path(img_exporter.path).glob("*.png"))
-    ),
-)
+for exporter in exporters:
+    with pt.terminal.TimeCode(f"Time to write {exporter.__class__.__name__}: "):
+        exporter.save(datapack)
+
+    with pt.terminal.TimeCode(f"Time to read {exporter.__class__.__name__}: "):
+        exporter.read(exporter.path)
+
+    if isinstance(exporter, ImageDir):
+        run.info(
+            f"Size of {exporter.__class__.__name__}",
+            human_readable_file_size(
+                sum(file.stat().st_size for file in Path(exporter.path).glob("*.png"))
+            ),
+            nl_before=1,
+            nl_after=1,
+        )
+    else:
+        run.info(
+            f"Size of {exporter.__class__.__name__}",
+            human_readable_file_size(exporter.path.stat().st_size),
+            nl_before=1,
+            nl_after=1,
+        )
