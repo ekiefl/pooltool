@@ -8,7 +8,7 @@ panda3d-simplepbr
 Pillow
 cattrs
 attrs
-matplotlib
 pprofile
 msgpack
 msgpack-numpy
+h5py

@@ -8,6 +8,7 @@ import numpy as np
 
 import pooltool as pt
 from pooltool.ani.camera import camera_states
+from pooltool.ani.image.io import HDF5Images, ImageDir, NpyImages
 
 
 def main(args):
@@ -31,10 +32,10 @@ def main(args):
     # Evolve the shot
     pt.simulate(system)
 
-    output = Path(__file__).parent / "offscreen_out"
-    if output.exists():
-        shutil.rmtree(output)
-    output.mkdir()
+    path = Path(__file__).parent / "offscreen_out"
+    if path.exists():
+        shutil.rmtree(path)
+    path.mkdir()
 
     # These camera states can be found in pooltool/ani/camera/camera_states. You can
     # make your own by creating a new JSON in that directory. Reach out if you want to
@@ -43,28 +44,34 @@ def main(args):
     for camera_state in [
         "7_foot_overhead",
         "7_foot_offcenter",
-        "rack",
     ]:
-        interface.save(
+        if args.exporter == "dir":
+            exporter = ImageDir(path / camera_state, ext="png", save_gif=True)
+        elif args.exporter == "h5":
+            exporter = HDF5Images(path / f"{camera_state}.h5")
+        elif args.exporter == "npy":
+            exporter = NpyImages(path / f"{camera_state}.npy")
+
+        datapack = interface.gen_datapack(
             shot=system,
-            save_dir=output / camera_state,
             camera_state=camera_states[camera_state],
-            file_prefix=camera_state,
-            img_format="jpg",
-            size=(480 * 1.6, 480),
+            size=(80 * 1.6, 80),
             show_hud=False,
+            gray=False,
             fps=10,
-            make_gif=True,
         )
+
+        exporter.save(datapack)
+
+        # Verify the images can be read back
+        read_from_disk = exporter.read(exporter.path)
+        assert np.array_equal(datapack.imgs, read_from_disk)
 
 
 if __name__ == "__main__":
     import argparse
 
     ap = argparse.ArgumentParser("A good old 9-ball break")
-    ap.add_argument(
-        "--no-viz", action="store_true", help="If set, the break will not be visualized"
-    )
     ap.add_argument(
         "--spacing-factor",
         type=float,
@@ -77,6 +84,13 @@ if __name__ == "__main__":
         type=float,
         default=8,
         help="With what speed should the cue stick strike the cue ball?",
+    )
+    ap.add_argument(
+        "--exporter",
+        type=str,
+        default="dir",
+        choices=("h5", "dir", "npy"),
+        help="Which export strategy do you want to use?",
     )
     ap.add_argument(
         "--seed",
