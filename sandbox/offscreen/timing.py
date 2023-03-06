@@ -11,6 +11,7 @@ import numpy as np
 import pooltool as pt
 from pooltool.ani.camera import camera_states
 from pooltool.ani.image.io import ImageDir, NpyImages
+from pooltool.utils import human_readable_file_size
 
 ap = argparse.ArgumentParser("A good old 9-ball break")
 ap.add_argument(
@@ -92,6 +93,9 @@ npy_read_time = timeit.timeit(
 )
 print(f"Average time to read npy file: {npy_read_time/trials}")
 
+npy_size = human_readable_file_size(npy_exporter.path.stat().st_size)
+print(f"Size of npy file: {npy_size}")
+
 img_write_time = timeit.timeit(
     "img_exporter.save(datapack)", globals=globals(), number=trials
 )
@@ -101,3 +105,8 @@ img_read_time = timeit.timeit(
     "ImageDir.read(img_exporter.path)", globals=globals(), number=trials
 )
 print(f"Average time to read image dir: {img_read_time/trials}")
+
+dir_size = human_readable_file_size(
+    sum(file.stat().st_size for file in Path(img_exporter.path).rglob("*"))
+)
+print(f"Size of image dir: {dir_size}")
