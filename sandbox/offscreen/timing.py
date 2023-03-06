@@ -46,11 +46,9 @@ system = pt.System(
 system.aim_at_ball(ball_id="1")
 system.strike(V0=8)
 
-trials = 1
-
 # Evolve the shot
-simulate_time = timeit.timeit("pt.simulate(system)", globals=globals(), number=trials)
-print(f"Average time to simulate 9-ball break (intensive): {simulate_time/trials}")
+with pt.terminal.TimeCode("Time to simulate 9-ball break: "):
+    pt.simulate(system)
 
 # Make the output directory
 path = Path(__file__).parent / "timing"
@@ -63,50 +61,37 @@ npy_exporter = NpyImages(path / "image_array.npy")
 img_exporter = ImageDir(path / "image_dir", ext="png", save_gif=True)
 
 # Generate the image data
-s = """\
-datapack = interface.gen_datapack(
-    shot=system,
-    camera_state=camera_states["7_foot_overhead_zoom"],
-    size=(args.res * 1.6, args.res),
-    show_hud=False,
-    fps=10,
-)
-"""
-gen_images = timeit.timeit(s, globals=globals(), number=trials)
-print(f"Average time to render the images: {gen_images/trials}")
+with pt.terminal.TimeCode("Time to render the images: "):
+    datapack = interface.gen_datapack(
+        shot=system,
+        camera_state=camera_states["7_foot_overhead_zoom"],
+        size=(args.res * 1.6, args.res),
+        show_hud=False,
+        fps=10,
+    )
 
-datapack = interface.gen_datapack(
-    shot=system,
-    camera_state=camera_states["7_foot_overhead_zoom"],
-    size=(args.res * 1.6, args.res),
-    show_hud=False,
-    fps=10,
-)
+with pt.terminal.TimeCode("Time to write npy file: "):
+    npy_exporter.save(datapack)
 
-npy_write_time = timeit.timeit(
-    "npy_exporter.save(datapack)", globals=globals(), number=trials
-)
-print(f"Average time to write npy file: {npy_write_time/trials}")
+with pt.terminal.TimeCode("Time to read npy file: "):
+    NpyImages.read(npy_exporter.path)
 
-npy_read_time = timeit.timeit(
-    "NpyImages.read(npy_exporter.path)", globals=globals(), number=trials
-)
-print(f"Average time to read npy file: {npy_read_time/trials}")
+with pt.terminal.TimeCode("Time to write img directory: "):
+    img_exporter.save(datapack)
 
-npy_size = human_readable_file_size(npy_exporter.path.stat().st_size)
-print(f"Size of npy file: {npy_size}")
+with pt.terminal.TimeCode("Time to read img directory: "):
+    ImageDir.read(img_exporter.path)
 
-img_write_time = timeit.timeit(
-    "img_exporter.save(datapack)", globals=globals(), number=trials
-)
-print(f"Average time to write image dir: {img_write_time/trials}")
+run = pt.terminal.Run()
 
-img_read_time = timeit.timeit(
-    "ImageDir.read(img_exporter.path)", globals=globals(), number=trials
+run.info(
+    "Size of npy file",
+    human_readable_file_size(npy_exporter.path.stat().st_size),
+    nl_before=1,
 )
-print(f"Average time to read image dir: {img_read_time/trials}")
-
-dir_size = human_readable_file_size(
-    sum(file.stat().st_size for file in Path(img_exporter.path).rglob("*"))
+run.info(
+    "Size of image directory",
+    human_readable_file_size(
+        sum(file.stat().st_size for file in Path(img_exporter.path).glob("*.png"))
+    ),
 )
-print(f"Size of image dir: {dir_size}")
