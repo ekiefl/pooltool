@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from typing import List, Union
+from typing import List, Optional, Union
 
 import attrs
 import h5py

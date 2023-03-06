@@ -42,9 +42,7 @@ def main(args):
     # create a camera state from within the interactive interface (this is also
     # possible).
     for camera_state in [
-        "7_foot_overhead",
-        "7_foot_offcenter",
-        "rack",
+        "7_foot_overhead_zoom",
     ]:
         if args.exporter == "dir":
             exporter = ImageDir(path / camera_state, ext="png", save_gif=True)
@@ -56,9 +54,9 @@ def main(args):
         datapack = interface.gen_datapack(
             shot=system,
             camera_state=camera_states[camera_state],
-            size=(360 * 1.6, 360),
+            size=(80 * 1.6, 80),
             show_hud=False,
-            fps=5,
+            fps=10,
         )
 
         exporter.save(datapack)
