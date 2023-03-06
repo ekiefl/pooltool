@@ -1,10 +1,9 @@
 import re
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Union
 
 import attrs
 import h5py
-import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
 from PIL import Image
