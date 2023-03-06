@@ -4,12 +4,18 @@
 import argparse
 import shutil
 from pathlib import Path
+from typing import Dict
 
 import numpy as np
 
 import pooltool as pt
 from pooltool.ani.camera import camera_states
-from pooltool.ani.image.io import GzipArrayImages, ImageDir, NpyImages
+from pooltool.ani.image.io import (
+    GzipArrayImages,
+    ImageDir,
+    ImageStorageMethod,
+    NpyImages,
+)
 from pooltool.utils import human_readable_file_size
 
 ap = argparse.ArgumentParser("A good old 9-ball break")
@@ -69,11 +75,12 @@ if path.exists():
 path.mkdir()
 
 # Create the exporters
-exporters = [
-    NpyImages(path / "image_array.npy"),
-    ImageDir(path / "image_dir", ext="png", save_gif=True),
-    GzipArrayImages(path / "images.array.gz"),
-]
+exporters: Dict[str, ImageStorageMethod] = {
+    "npy": NpyImages(path / "image_array.npy"),
+    "image dir (PNG)": ImageDir(path / "image_dir", ext="png"),
+    "image dir (JPG)": ImageDir(path / "image_dir", ext="jpg"),
+    "gzip array": GzipArrayImages(path / "images.array.gz"),
+}
 
 # Generate the image data
 with pt.terminal.TimeCode("Time to render the images: "):
@@ -90,16 +97,16 @@ with pt.terminal.TimeCode("Time to render the images: "):
 
 run = pt.terminal.Run()
 
-for exporter in exporters:
-    with pt.terminal.TimeCode(f"Time to write {exporter.__class__.__name__}: "):
+for name, exporter in exporters.items():
+    with pt.terminal.TimeCode(f"Time to write {name}: "):
         exporter.save(datapack)
 
-    with pt.terminal.TimeCode(f"Time to read {exporter.__class__.__name__}: "):
+    with pt.terminal.TimeCode(f"Time to read {name}: "):
         exporter.read(exporter.path)
 
     if isinstance(exporter, ImageDir):
         run.info(
-            f"Size of {exporter.__class__.__name__}",
+            f"Size of {name}",
             human_readable_file_size(
                 sum(
                     file.stat().st_size
@@ -111,7 +118,7 @@ for exporter in exporters:
         )
     else:
         run.info(
-            f"Size of {exporter.__class__.__name__}",
+            f"Size of {name}",
             human_readable_file_size(exporter.path.stat().st_size),
             nl_before=1,
             nl_after=1,

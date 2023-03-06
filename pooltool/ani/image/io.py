@@ -13,7 +13,7 @@ from PIL import Image
 from pooltool.ani.image.utils import DataPack, ImageExt, gif
 
 
-class ImageIO(ABC):
+class ImageStorageMethod(ABC):
     path: Path
 
     @abstractmethod
@@ -27,7 +27,7 @@ class ImageIO(ABC):
 
 
 @attrs.define
-class ImageDir(ImageIO):
+class ImageDir(ImageStorageMethod):
     """Exporter for creating a directory of images"""
 
     path: Path = attrs.field(converter=Path)
@@ -93,7 +93,7 @@ class ImageDir(ImageIO):
 
 
 @attrs.define
-class HDF5Images(ImageIO):
+class HDF5Images(ImageStorageMethod):
     path: Path = attrs.field(converter=Path)
 
     def save(self, data: DataPack) -> None:
@@ -112,7 +112,7 @@ class HDF5Images(ImageIO):
 
 
 @attrs.define
-class NpyImages(ImageIO):
+class NpyImages(ImageStorageMethod):
     path: Path = attrs.field(converter=Path)
 
     def save(self, data: DataPack) -> None:
@@ -126,12 +126,14 @@ class NpyImages(ImageIO):
 
 
 @attrs.define
-class GzipArrayImages(ImageIO):
+class GzipArrayImages(ImageStorageMethod):
     path: Path = attrs.field(converter=Path)
 
     def save(self, data: DataPack) -> None:
         with open(self.path, "wb") as fp:
-            fp.write(gzip.compress(memoryview(data.imgs), compresslevel=1))
+            fp.write(
+                gzip.compress(memoryview(data.imgs), compresslevel=1)  # type: ignore
+            )
 
         if data.system is not None:
             data.system.save(self.path.with_suffix(".msgpack"))
