@@ -16,8 +16,13 @@ ap = argparse.ArgumentParser("A good old 9-ball break")
 ap.add_argument(
     "--res",
     type=int,
-    default=80,
+    default=144,
     help="How resolved should the image be? E.g. 144, 360, 480, 720",
+)
+ap.add_argument(
+    "--gray",
+    action="store_true",
+    help="Whether image is stored as grayscale",
 )
 ap.add_argument(
     "--seed",
@@ -66,6 +71,7 @@ with pt.terminal.TimeCode("Time to render the images: "):
         camera_state=camera_states["7_foot_overhead_zoom"],
         size=(args.res * 1.6, args.res),
         show_hud=False,
+        gray=args.gray,
         fps=10,
     )
 
