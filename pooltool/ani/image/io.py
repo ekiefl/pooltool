@@ -1,7 +1,8 @@
 import gzip
 import re
+from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Union
+from typing import Any, List, Union
 
 import attrs
 import h5py
@@ -12,8 +13,21 @@ from PIL import Image
 from pooltool.ani.image.utils import DataPack, ImageExt, gif
 
 
+class ImageIO(ABC):
+    path: Path
+
+    @abstractmethod
+    def save(self, data: DataPack) -> Any:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def read(path: Union[str, Path]) -> NDArray[np.uint8]:
+        pass
+
+
 @attrs.define
-class ImageDir:
+class ImageDir(ImageIO):
     """Exporter for creating a directory of images"""
 
     path: Path = attrs.field(converter=Path)
@@ -79,7 +93,7 @@ class ImageDir:
 
 
 @attrs.define
-class HDF5Images:
+class HDF5Images(ImageIO):
     path: Path = attrs.field(converter=Path)
 
     def save(self, data: DataPack) -> None:
@@ -98,7 +112,7 @@ class HDF5Images:
 
 
 @attrs.define
-class NpyImages:
+class NpyImages(ImageIO):
     path: Path = attrs.field(converter=Path)
 
     def save(self, data: DataPack) -> None:
@@ -112,7 +126,7 @@ class NpyImages:
 
 
 @attrs.define
-class GzipArrayImages:
+class GzipArrayImages(ImageIO):
     path: Path = attrs.field(converter=Path)
 
     def save(self, data: DataPack) -> None:
