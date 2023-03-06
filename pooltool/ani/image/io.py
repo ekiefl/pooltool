@@ -1,6 +1,8 @@
+import gzip
 import re
+from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Union
+from typing import Any, List, Union
 
 import attrs
 import h5py
@@ -11,8 +13,21 @@ from PIL import Image
 from pooltool.ani.image.utils import DataPack, ImageExt, gif
 
 
+class ImageStorageMethod(ABC):
+    path: Path
+
+    @abstractmethod
+    def save(self, data: DataPack) -> Any:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def read(path: Union[str, Path]) -> NDArray[np.uint8]:
+        pass
+
+
 @attrs.define
-class ImageDir:
+class ImageDir(ImageStorageMethod):
     """Exporter for creating a directory of images"""
 
     path: Path = attrs.field(converter=Path)
@@ -78,7 +93,7 @@ class ImageDir:
 
 
 @attrs.define
-class HDF5Images:
+class HDF5Images(ImageStorageMethod):
     path: Path = attrs.field(converter=Path)
 
     def save(self, data: DataPack) -> None:
@@ -97,7 +112,7 @@ class HDF5Images:
 
 
 @attrs.define
-class NpyImages:
+class NpyImages(ImageStorageMethod):
     path: Path = attrs.field(converter=Path)
 
     def save(self, data: DataPack) -> None:
@@ -108,3 +123,22 @@ class NpyImages:
     @staticmethod
     def read(path: Union[str, Path]) -> NDArray[np.uint8]:
         return np.load(path)
+
+
+@attrs.define
+class GzipArrayImages(ImageStorageMethod):
+    path: Path = attrs.field(converter=Path)
+
+    def save(self, data: DataPack) -> None:
+        with open(self.path, "wb") as fp:
+            fp.write(
+                gzip.compress(memoryview(data.imgs), compresslevel=1)  # type: ignore
+            )
+
+        if data.system is not None:
+            data.system.save(self.path.with_suffix(".msgpack"))
+
+    @staticmethod
+    def read(path: Union[str, Path]) -> NDArray[np.uint8]:
+        with open(path, "rb") as fp:
+            return np.frombuffer(gzip.decompress(fp.read()), dtype=np.uint8)

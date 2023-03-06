@@ -4,12 +4,18 @@
 import argparse
 import shutil
 from pathlib import Path
+from typing import Dict
 
 import numpy as np
 
 import pooltool as pt
 from pooltool.ani.camera import camera_states
-from pooltool.ani.image.io import ImageDir, NpyImages
+from pooltool.ani.image.io import (
+    GzipArrayImages,
+    ImageDir,
+    ImageStorageMethod,
+    NpyImages,
+)
 from pooltool.utils import human_readable_file_size
 
 ap = argparse.ArgumentParser("A good old 9-ball break")
@@ -18,6 +24,12 @@ ap.add_argument(
     type=int,
     default=144,
     help="How resolved should the image be? E.g. 144, 360, 480, 720",
+)
+ap.add_argument(
+    "--fps",
+    type=int,
+    default=10,
+    help="How many frames per second?",
 )
 ap.add_argument(
     "--gray",
@@ -54,6 +66,8 @@ system.strike(V0=8)
 with pt.terminal.TimeCode("Time to simulate 9-ball break: "):
     pt.simulate(system)
 
+# -------------------------------------------------------------------------------------
+
 # Make the output directory
 path = Path(__file__).parent / "timing"
 if path.exists():
@@ -61,8 +75,12 @@ if path.exists():
 path.mkdir()
 
 # Create the exporters
-npy_exporter = NpyImages(path / "image_array.npy")
-img_exporter = ImageDir(path / "image_dir", ext="png", save_gif=True)
+exporters: Dict[str, ImageStorageMethod] = {
+    "npy": NpyImages(path / "image_array.npy"),
+    "image dir (PNG)": ImageDir(path / "image_dir", ext="png"),
+    "image dir (JPG)": ImageDir(path / "image_dir", ext="jpg"),
+    "gzip array": GzipArrayImages(path / "images.array.gz"),
+}
 
 # Generate the image data
 with pt.terminal.TimeCode("Time to render the images: "):
@@ -72,31 +90,36 @@ with pt.terminal.TimeCode("Time to render the images: "):
         size=(args.res * 1.6, args.res),
         show_hud=False,
         gray=args.gray,
-        fps=10,
+        fps=args.fps,
     )
 
-with pt.terminal.TimeCode("Time to write npy file: "):
-    npy_exporter.save(datapack)
-
-with pt.terminal.TimeCode("Time to read npy file: "):
-    NpyImages.read(npy_exporter.path)
-
-with pt.terminal.TimeCode("Time to write img directory: "):
-    img_exporter.save(datapack)
-
-with pt.terminal.TimeCode("Time to read img directory: "):
-    ImageDir.read(img_exporter.path)
+# -------------------------------------------------------------------------------------
 
 run = pt.terminal.Run()
 
-run.info(
-    "Size of npy file",
-    human_readable_file_size(npy_exporter.path.stat().st_size),
-    nl_before=1,
-)
-run.info(
-    "Size of image directory",
-    human_readable_file_size(
-        sum(file.stat().st_size for file in Path(img_exporter.path).glob("*.png"))
-    ),
-)
+for name, exporter in exporters.items():
+    with pt.terminal.TimeCode(f"Time to write {name}: "):
+        exporter.save(datapack)
+
+    with pt.terminal.TimeCode(f"Time to read {name}: "):
+        exporter.read(exporter.path)
+
+    if isinstance(exporter, ImageDir):
+        run.info(
+            f"Size of {name}",
+            human_readable_file_size(
+                sum(
+                    file.stat().st_size
+                    for file in Path(exporter.path).glob(f"*.{exporter.ext}")
+                )
+            ),
+            nl_before=1,
+            nl_after=1,
+        )
+    else:
+        run.info(
+            f"Size of {name}",
+            human_readable_file_size(exporter.path.stat().st_size),
+            nl_before=1,
+            nl_after=1,
+        )
