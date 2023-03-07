@@ -46,7 +46,7 @@ def main(args):
         "7_foot_offcenter",
     ]:
         if args.exporter == "dir":
-            exporter = ImageZip(path / camera_state, ext="png", save_gif=True)
+            exporter = ImageZip(path / f"{camera_state}.zip", ext="png", save_gif=True)
         elif args.exporter == "h5":
             exporter = HDF5Images(path / f"{camera_state}.h5")
         elif args.exporter == "npy":
