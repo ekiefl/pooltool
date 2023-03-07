@@ -1,5 +1,7 @@
 import gzip
 import re
+import shutil
+import zipfile
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, List, Union
@@ -10,7 +12,7 @@ import numpy as np
 from numpy.typing import NDArray
 from PIL import Image
 
-from pooltool.ani.image.utils import DataPack, ImageExt, gif
+from pooltool.ani.image.utils import DataPack, ImageExt, gif, img2array, path2imgarray
 
 
 class ImageStorageMethod(ABC):
@@ -27,24 +29,39 @@ class ImageStorageMethod(ABC):
 
 
 @attrs.define
-class ImageDir(ImageStorageMethod):
-    """Exporter for creating a directory of images"""
+class ImageZip(ImageStorageMethod):
+    """Exporter for creating a zipfile of images"""
 
     path: Path = attrs.field(converter=Path)
     ext: ImageExt = attrs.field(converter=ImageExt)
     prefix: str = attrs.field(default="shot")
+    compress: bool = attrs.field(default=True)
     save_gif: bool = attrs.field(default=False)
     image_count: int = attrs.field(init=False, default=0)
     paths: List[Path] = attrs.field(init=False, factory=list)
 
     def __attrs_post_init__(self):
-        if not self.path.exists():
-            self.path.mkdir(parents=True)
+        if self.path.exists():
+            raise FileExistsError(f"{self.path} shouldn't exist, but does.")
+
+        if self.compress:
+            assert (
+                self.path.suffix == ".zip"
+            ), f"{self.path} must end with .zip if compress is True"
 
     def save(self, data: DataPack) -> None:
+        if self.compress:
+            # Write contents to a temp directory that will be deleted after the contents
+            # have been zipped
+            save_dir = self.path.parent / "tmp"
+        else:
+            save_dir = self.path
+
+        save_dir.mkdir(parents=True)
+
         frames = np.shape(data.imgs)[0]
         for frame in range(frames):
-            path = self._get_filepath()
+            path = self._get_filepath(root=save_dir)
             assert not path.exists(), f"{path} already exists!"
 
             Image.fromarray(data.imgs[frame, ...]).save(path)
@@ -54,42 +71,71 @@ class ImageDir(ImageStorageMethod):
             self.paths.append(path)
 
         if data.system is not None:
-            data.system.save(self.path / f"_{self.prefix}.msgpack")
+            data.system.save(save_dir / f"_{self.prefix}.msgpack")
 
         if self.save_gif:
             gif(
                 paths=self.paths,
-                output=self.path / f"_{self.prefix}.gif",
+                output=save_dir / f"_{self.prefix}.gif",
                 fps=data.fps,
             )
 
-    def _get_filepath(self) -> Path:
+        if not self.compress:
+            return
+
+        # Compress the directory as a zip file and delete tmp dir
+        with zipfile.ZipFile(self.path, mode="w") as archive:
+            for path in save_dir.iterdir():
+                archive.write(path, arcname=path.name)
+        shutil.rmtree(save_dir)
+
+    def _get_filepath(self, root: Path) -> Path:
         stem = f"{self.prefix}_{self.image_count:06d}"
         name = f"{stem}.{self.ext}"
-        return Path(self.path) / name
+        return root / name
+
+    @staticmethod
+    def _img_regex_pattern():
+        return re.compile(r".*_[0-9]{6,6}\." + ImageExt.regex())
 
     @staticmethod
     def read(path: Union[str, Path]) -> NDArray[np.uint8]:
         path = Path(path)
+        assert path.exists(), f"{path} doesn't exist"
 
-        assert path.exists(), f"{path} is not a directory"
+        if path.is_dir():
+            return ImageZip._read_dir(path)
+        else:
+            assert path.suffix == ".zip"
+            return ImageZip._read_zip(path)
 
-        img_pattern = re.compile(r".*_[0-9]{6,6}\." + ImageExt.regex())
+    @staticmethod
+    def _read_dir(path: Path) -> NDArray[np.uint8]:
+        img_pattern = ImageZip._img_regex_pattern()
 
-        img_array: List[NDArray] = []
+        img_arrays: List[NDArray] = []
         for img_path in sorted(path.glob("*")):
             if not img_pattern.match(str(img_path)):
                 continue
+            img_arrays.append(path2imgarray(img_path))
 
-            img = Image.open(img_path)
+        return np.array(img_arrays, dtype=np.uint8)
 
-            if img.mode == "RGB":
-                # Snuff out the alpha channel
-                img_array.append(np.asarray(img)[:, :, :3])
-            else:
-                img_array.append(np.asarray(img))
+    @staticmethod
+    def _read_zip(path: Path) -> NDArray[np.uint8]:
+        img_pattern = ImageZip._img_regex_pattern()
 
-        return np.array(img_array, dtype=np.uint8)
+        img_arrays: List[NDArray] = []
+        with zipfile.ZipFile(path, "r") as archive:
+            content_list = sorted(archive.namelist())
+
+            for filename in content_list:
+                if not img_pattern.match(filename):
+                    continue
+
+                img_arrays.append(img2array(Image.open(archive.open(filename))))
+
+        return np.array(img_arrays, dtype=np.uint8)
 
 
 @attrs.define
@@ -117,6 +163,7 @@ class NpyImages(ImageStorageMethod):
 
     def save(self, data: DataPack) -> None:
         np.save(self.path, data.imgs)
+
         if data.system is not None:
             data.system.save(self.path.with_suffix(".msgpack"))
 

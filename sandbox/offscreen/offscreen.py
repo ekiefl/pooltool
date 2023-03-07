@@ -8,7 +8,7 @@ import numpy as np
 
 import pooltool as pt
 from pooltool.ani.camera import camera_states
-from pooltool.ani.image.io import HDF5Images, ImageDir, NpyImages
+from pooltool.ani.image.io import HDF5Images, ImageZip, NpyImages
 
 
 def main(args):
@@ -46,7 +46,7 @@ def main(args):
         "7_foot_offcenter",
     ]:
         if args.exporter == "dir":
-            exporter = ImageDir(path / camera_state, ext="png", save_gif=True)
+            exporter = ImageZip(path / camera_state, ext="png", save_gif=True)
         elif args.exporter == "h5":
             exporter = HDF5Images(path / f"{camera_state}.h5")
         elif args.exporter == "npy":
