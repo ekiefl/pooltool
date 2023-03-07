@@ -1,30 +1,32 @@
 #! /usr/bin/env python
 """This illustrates the speed of reading/writing image versus array data"""
 
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    raise ImportError(
+        "This script requires matplotlib. `pip install matplotlib` if interested"
+    )
+
 import argparse
 import shutil
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 import numpy as np
+import pandas as pd
 
 import pooltool as pt
 from pooltool.ani.camera import camera_states
 from pooltool.ani.image.io import (
     GzipArrayImages,
+    HDF5Images,
     ImageStorageMethod,
     ImageZip,
     NpyImages,
 )
-from pooltool.utils import human_readable_file_size
 
 ap = argparse.ArgumentParser("A good old 9-ball break")
-ap.add_argument(
-    "--res",
-    type=int,
-    default=144,
-    help="How resolved should the image be? E.g. 144, 360, 480, 720",
-)
 ap.add_argument(
     "--fps",
     type=int,
@@ -39,13 +41,19 @@ ap.add_argument(
 ap.add_argument(
     "--seed",
     type=int,
-    default=None,
+    default=42,
     help="Provide a random seed if you want reproducible results",
 )
 
 args = ap.parse_args()
 
+
+def _dir_size(path):
+    return sum(file.stat().st_size for file in path.glob(f"*.{exporter.ext}"))
+
+
 # -------------------------------------------------------------------------------------
+
 
 interface = pt.ImageSaver()
 
@@ -62,20 +70,30 @@ system = pt.System(
 system.aim_at_ball(ball_id="1")
 system.strike(V0=8)
 
-# Evolve the shot
-with pt.terminal.TimeCode("Time to simulate 9-ball break: "):
+# Simulate the system once to load cached numba functions
+pt.simulate(system.copy())
+
+# Time shot simulation
+with pt.terminal.TimeCode(quiet=True) as t:
     pt.simulate(system)
+sim_time = t.time.total_seconds()
 
 # -------------------------------------------------------------------------------------
 
-# Make the output directory
+
+def clear_and_make_dir():
+    # Make the output directory
+    if path.exists():
+        shutil.rmtree(path)
+    path.mkdir()
+
+
 path = Path(__file__).parent / "timing"
-if path.exists():
-    shutil.rmtree(path)
-path.mkdir()
+clear_and_make_dir()
 
 # Create the exporters
 exporters: Dict[str, ImageStorageMethod] = {
+    "HDF5 uncompressed": HDF5Images(path / "images.hdf5"),
     "image dir (PNG)": ImageZip(path / "png_images", ext="png", compress=False),
     "image zip (PNG)": ImageZip(path / "png_images.zip", ext="png"),
     "image dir (JPG)": ImageZip(path / "jpg_images", ext="jpg", compress=False),
@@ -84,44 +102,112 @@ exporters: Dict[str, ImageStorageMethod] = {
     "gzip array": GzipArrayImages(path / "images.array.gz"),
 }
 
-# Generate the image data
-with pt.terminal.TimeCode("Time to render the images: "):
-    datapack = interface.gen_datapack(
-        shot=system,
-        camera_state=camera_states["7_foot_overhead_zoom"],
-        size=(args.res * 1.6, args.res),
-        show_hud=False,
-        gray=args.gray,
-        fps=args.fps,
-    )
-
-# Set to none to avoid being calculated in storage format sizes
-datapack.system = None
+# Initialize the time data
+stats: Dict[str, List[float]] = {}
+stats["resolution"] = []
+stats["frames"] = []
+stats["gray"] = []
+stats["fps"] = []
+stats["simulate"] = []
+stats["gen image"] = []
+for name in exporters:
+    stats[name + " read"] = []
+for name in exporters:
+    stats[name + " write"] = []
+for name in exporters:
+    stats[name + " size"] = []
 
 # -------------------------------------------------------------------------------------
 
-
-def _dir_size(path):
-    return human_readable_file_size(
-        sum(file.stat().st_size for file in path.glob(f"*.{exporter.ext}"))
-    )
-
+# Run one to avoid cache loading
+interface.gen_datapack(
+    shot=system,
+    size=(int(80 * 1.6), 80),
+    show_hud=False,
+    gray=args.gray,
+    fps=args.fps,
+)
 
 run = pt.terminal.Run()
+resolutions = [80, 144, 240, 360, 480, 720, 1080]
 
-for name, exporter in exporters.items():
-    run.warning("", header=f"{name} read/write/disk stats")
+for res in resolutions:
+    stats["resolution"].append(res)
+    stats["simulate"].append(sim_time)
+    stats["fps"].append(args.fps)
+    stats["gray"].append(args.gray)
 
-    with pt.terminal.TimeCode(f"Time to write {name}: "):
-        exporter.save(datapack)
+    with pt.terminal.TimeCode(quiet=True) as t:
+        datapack = interface.gen_datapack(
+            shot=system,
+            camera_state=camera_states["7_foot_overhead"],
+            size=(int(res * 1.6), res),
+            show_hud=False,
+            gray=args.gray,
+            fps=args.fps,
+        )
+    stats["gen image"].append(t.time.total_seconds())
+    stats["frames"].append(np.shape(datapack.imgs)[0])
 
-    with pt.terminal.TimeCode(f"Time to read {name}: "):
-        exporter.read(exporter.path)
+    # Set to none to avoid being calculated in storage format sizes
+    datapack.system = None
 
-    if name in ("image dir (PNG)", "image dir (JPG)"):
-        assert isinstance(exporter, ImageZip)
-        size = _dir_size(Path(exporter.path))
-    else:
-        size = human_readable_file_size(exporter.path.stat().st_size)
+    for name, exporter in exporters.items():
+        with pt.terminal.TimeCode(quiet=True) as t:
+            exporter.save(datapack)
+        stats[name + " write"].append(t.time.total_seconds())
 
-    run.info(f"Size of {name}", size, nl_before=1, nl_after=1)
+        with pt.terminal.TimeCode(quiet=True):
+            exporter.read(exporter.path)
+        stats[name + " read"].append(t.time.total_seconds())
+
+        if name in ("image dir (PNG)", "image dir (JPG)"):
+            assert isinstance(exporter, ImageZip)
+            size = _dir_size(Path(exporter.path))
+        else:
+            size = exporter.path.stat().st_size
+
+        stats[name + " size"].append(size / 1e6)
+
+    clear_and_make_dir()
+
+results_path = Path(__file__).parent / "timing_results"
+results_path.mkdir(exist_ok=True)
+
+results = pd.DataFrame(stats)
+
+
+def plot(x, y, ax, log=True):
+    results.plot(x=x, y=y, ax=ax, kind="scatter", logy=log)
+    results.plot(x=x, y=y, ax=ax, kind="line", logy=log)
+
+
+fig, ax = plt.subplots()
+
+plot(x="resolution", y="image zip (JPG) size", ax=ax)
+plot(x="resolution", y="image zip (PNG) size", ax=ax)
+plot(x="resolution", y="npy size", ax=ax)
+plot(x="resolution", y="gzip array size", ax=ax)
+plt.ylabel("Size [mb]")
+
+plt.savefig(results_path / "size.png")
+fig, ax = plt.subplots()
+
+plot(x="resolution", y="image zip (JPG) read", ax=ax)
+plot(x="resolution", y="image zip (PNG) read", ax=ax)
+plot(x="resolution", y="npy read", ax=ax)
+plot(x="resolution", y="gzip array read", ax=ax)
+plt.ylabel("Read time [s]")
+
+plt.savefig(results_path / "read.png")
+fig, ax = plt.subplots()
+
+plot(x="resolution", y="image zip (JPG) write", ax=ax)
+plot(x="resolution", y="image zip (PNG) write", ax=ax)
+plot(x="resolution", y="npy write", ax=ax)
+plot(x="resolution", y="gzip array write", ax=ax)
+plt.ylabel("Write time [s]")
+
+plt.savefig(results_path / "write.png")
+
+results.to_csv(results_path / "timing_results.txt", sep="\t")
