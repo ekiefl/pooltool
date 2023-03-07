@@ -12,8 +12,8 @@ import pooltool as pt
 from pooltool.ani.camera import camera_states
 from pooltool.ani.image.io import (
     GzipArrayImages,
-    ImageDir,
     ImageStorageMethod,
+    ImageZip,
     NpyImages,
 )
 from pooltool.utils import human_readable_file_size
@@ -76,9 +76,11 @@ path.mkdir()
 
 # Create the exporters
 exporters: Dict[str, ImageStorageMethod] = {
+    "image dir (PNG)": ImageZip(path / "png_images", ext="png", compress=False),
+    "image zip (PNG)": ImageZip(path / "png_images.zip", ext="png"),
+    "image dir (JPG)": ImageZip(path / "jpg_images", ext="jpg", compress=False),
+    "image zip (JPG)": ImageZip(path / "jpg_images.zip", ext="jpg"),
     "npy": NpyImages(path / "image_array.npy"),
-    "image dir (PNG)": ImageDir(path / "image_dir", ext="png"),
-    "image dir (JPG)": ImageDir(path / "image_dir", ext="jpg"),
     "gzip array": GzipArrayImages(path / "images.array.gz"),
 }
 
@@ -93,33 +95,33 @@ with pt.terminal.TimeCode("Time to render the images: "):
         fps=args.fps,
     )
 
+# Set to none to avoid being calculated in storage format sizes
+datapack.system = None
+
 # -------------------------------------------------------------------------------------
+
+
+def _dir_size(path):
+    return human_readable_file_size(
+        sum(file.stat().st_size for file in path.glob(f"*.{exporter.ext}"))
+    )
+
 
 run = pt.terminal.Run()
 
 for name, exporter in exporters.items():
+    run.warning("", header=f"{name} read/write/disk stats")
+
     with pt.terminal.TimeCode(f"Time to write {name}: "):
         exporter.save(datapack)
 
     with pt.terminal.TimeCode(f"Time to read {name}: "):
         exporter.read(exporter.path)
 
-    if isinstance(exporter, ImageDir):
-        run.info(
-            f"Size of {name}",
-            human_readable_file_size(
-                sum(
-                    file.stat().st_size
-                    for file in Path(exporter.path).glob(f"*.{exporter.ext}")
-                )
-            ),
-            nl_before=1,
-            nl_after=1,
-        )
+    if name in ("image dir (PNG)", "image dir (JPG)"):
+        assert isinstance(exporter, ImageZip)
+        size = _dir_size(Path(exporter.path))
     else:
-        run.info(
-            f"Size of {name}",
-            human_readable_file_size(exporter.path.stat().st_size),
-            nl_before=1,
-            nl_after=1,
-        )
+        size = human_readable_file_size(exporter.path.stat().st_size)
+
+    run.info(f"Size of {name}", size, nl_before=1, nl_after=1)

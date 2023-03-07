@@ -50,3 +50,18 @@ def gif(
 def rgb2gray(rgb: NDArray[np.uint8]) -> NDArray[np.uint8]:
     """Convert an image (or image stack) to grayscale"""
     return np.array(Image.fromarray(rgb).convert(mode="L"))
+
+
+def path2imgarray(img_path: Path):
+    """Read an image from a file as a numpy array"""
+    return img2array(Image.open(img_path))
+
+
+def img2array(img):
+    """Get the alpha-snuffed numpy array from a PIL Image"""
+    try:
+        return np.asarray(img)[:, :, :3] if img.mode == "RGB" else np.asarray(img)
+    except:
+        import ipdb
+
+        ipdb.set_trace()
