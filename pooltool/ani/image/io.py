@@ -28,6 +28,10 @@ class ImageStorageMethod(ABC):
         pass
 
 
+def _img_regex_pattern():
+    return re.compile(r".*_[0-9]{6,6}\." + ImageExt.regex())
+
+
 @attrs.define
 class ImageZip(ImageStorageMethod):
     """Exporter for creating a zipfile of images"""
@@ -95,10 +99,6 @@ class ImageZip(ImageStorageMethod):
         return root / name
 
     @staticmethod
-    def _img_regex_pattern():
-        return re.compile(r".*_[0-9]{6,6}\." + ImageExt.regex())
-
-    @staticmethod
     def read(path: Union[str, Path]) -> NDArray[np.uint8]:
         path = Path(path)
         assert path.exists(), f"{path} doesn't exist"
@@ -111,7 +111,7 @@ class ImageZip(ImageStorageMethod):
 
     @staticmethod
     def _read_dir(path: Path) -> NDArray[np.uint8]:
-        img_pattern = ImageZip._img_regex_pattern()
+        img_pattern = _img_regex_pattern()
 
         img_arrays: List[NDArray] = []
         for img_path in sorted(path.glob("*")):
@@ -123,7 +123,7 @@ class ImageZip(ImageStorageMethod):
 
     @staticmethod
     def _read_zip(path: Path) -> NDArray[np.uint8]:
-        img_pattern = ImageZip._img_regex_pattern()
+        img_pattern = _img_regex_pattern()
 
         img_arrays: List[NDArray] = []
         with zipfile.ZipFile(path, "r") as archive:
