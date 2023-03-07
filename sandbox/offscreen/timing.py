@@ -157,7 +157,7 @@ for res in resolutions:
             exporter.save(datapack)
         stats[name + " write"].append(t.time.total_seconds())
 
-        with pt.terminal.TimeCode(quiet=True):
+        with pt.terminal.TimeCode(quiet=True) as t:
             exporter.read(exporter.path)
         stats[name + " read"].append(t.time.total_seconds())
 
