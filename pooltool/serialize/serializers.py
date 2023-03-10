@@ -5,7 +5,6 @@ import msgpack_numpy as m
 from typing import Union, Any, Dict, Callable
 from pooltool.utils.strenum import StrEnum, auto
 
-
 Pathish = Union[str, Path]
 
 
