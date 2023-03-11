@@ -371,20 +371,6 @@ class System:
 
         return energy
 
-    def is_balls_overlapping(self):
-        """FIXME should be moved to physics.py"""
-        for ball1 in self.balls.values():
-            for ball2 in self.balls.values():
-                if ball1 is ball2:
-                    continue
-
-                if physics.is_overlapping(
-                    ball1.state.rvw, ball2.state.rvw, ball1.params.R, ball2.params.R
-                ):
-                    return True
-
-        return False
-
     def copy(self) -> System:
         """Make deepcopy of the system"""
         return System(
