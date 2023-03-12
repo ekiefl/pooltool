@@ -362,7 +362,6 @@ class System:
         )
 
     def get_system_energy(self):
-        """FIXME should be moved to physics.py"""
         energy = 0
         for ball in self.balls.values():
             energy += physics.get_ball_energy(
@@ -371,12 +370,42 @@ class System:
 
         return energy
 
+    def randomize_positions(self, niter=100) -> bool:
+        """Randomize ball positions on the table--ensure no overlap
+
+        This "algorithm" initializes a random state, and checks that all the balls are
+        non-overlapping. If any are, a new state is initialized and the process is
+        repeated. This is an inefficient algorithm, in case that needs to be said.
+
+        Args:
+            niter:
+                The number of iterations tried until the algorithm gives up.
+
+        Returns:
+            True if all balls are non-overlapping. Returns False otherwise.
+        """
+
+        for _ in range(niter):
+            for ball in self.balls.values():
+                R = ball.params.R
+                ball.state.rvw[0] = [
+                    np.random.uniform(R, self.table.w - R),
+                    np.random.uniform(R, self.table.l - R),
+                    R
+                ]
+
+            if not self.is_balls_overlapping():
+                return True
+
+        return False
+
     def is_balls_overlapping(self):
-        """FIXME should be moved to physics.py"""
         for ball1 in self.balls.values():
             for ball2 in self.balls.values():
                 if ball1 is ball2:
                     continue
+
+                assert ball1.params.R == ball2.params.R, "Balls are assumed to be equal radii"
 
                 if physics.is_overlapping(
                     ball1.state.rvw, ball2.state.rvw, ball1.params.R, ball2.params.R

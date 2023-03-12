@@ -7,7 +7,7 @@ from attrs import define
 from numpy.typing import NDArray
 import tempfile
 
-from pooltool.serialize import conversion, SerializeFormat, to_json, from_json, to_msgpack, from_msgpack
+from pooltool.serialize import conversion, SerializeFormat, to_json, from_json, to_msgpack, from_msgpack, from_yaml, to_yaml
 from pooltool.utils.dataclasses import are_dataclasses_equal
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -72,16 +72,22 @@ def complex_obj(simple_obj):
 # --------------------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("fmt", [SerializeFormat.JSON, SerializeFormat.MSGPACK])
-def test_round_python_trip(simple_obj, complex_obj, fmt: SerializeFormat):
+@pytest.mark.parametrize("fmt", [SerializeFormat.JSON, SerializeFormat.MSGPACK, SerializeFormat.YAML])
+def test_round_python_trip_simple(simple_obj, fmt: SerializeFormat):
     """Round trip: structure -> unstructure -> structure"""
     c = conversion[fmt]
     assert c.structure(c.unstructure(simple_obj), SimpleObj) == simple_obj
-    assert c.structure(c.unstructure(complex_obj), ComplexObj) == complex_obj
 
 
 @pytest.mark.parametrize("fmt", [SerializeFormat.JSON, SerializeFormat.MSGPACK])
-def test_round_filesystem_trip(simple_obj, complex_obj, fmt: SerializeFormat):
+def test_round_python_trip_complex(complex_obj, fmt: SerializeFormat):
+    """Round trip: structure -> unstructure -> structure"""
+    c = conversion[fmt]
+    assert c.structure(c.unstructure(complex_obj), ComplexObj) == complex_obj
+
+
+@pytest.mark.parametrize("fmt", [SerializeFormat.JSON, SerializeFormat.MSGPACK, SerializeFormat.YAML])
+def test_round_filesystem_trip_simple(simple_obj, fmt: SerializeFormat):
     """Round trip: structure -> unstructure -> filesystem -> unstructure -> structure"""
 
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -92,6 +98,11 @@ def test_round_filesystem_trip(simple_obj, complex_obj, fmt: SerializeFormat):
 
         # Read from file
         assert simple_obj == conversion.structure_from(path, SimpleObj, fmt)
+
+
+@pytest.mark.parametrize("fmt", [SerializeFormat.JSON, SerializeFormat.MSGPACK])
+def test_round_filesystem_trip_complex(complex_obj, fmt: SerializeFormat):
+    """Round trip: structure -> unstructure -> filesystem -> unstructure -> structure"""
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         path = Path(tmp_dir) / f"tmp.{fmt.ext}"
