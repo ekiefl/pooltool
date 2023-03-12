@@ -12,3 +12,4 @@ pprofile
 msgpack
 msgpack-numpy
 h5py
+pyyaml
