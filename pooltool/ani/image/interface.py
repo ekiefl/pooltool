@@ -146,7 +146,6 @@ class ImageSaver(Interface):
             imgs[frame, ...] = img
 
         return DataPack(
-            system=shot,
             imgs=imgs,
             fps=fps,
         )

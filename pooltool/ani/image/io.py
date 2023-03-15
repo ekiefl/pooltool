@@ -74,9 +74,6 @@ class ImageZip(ImageStorageMethod):
             self.image_count += 1
             self.paths.append(path)
 
-        if data.system is not None:
-            data.system.save(save_dir / f"_{self.prefix}.msgpack")
-
         if self.save_gif:
             gif(
                 paths=self.paths,
@@ -148,9 +145,6 @@ class HDF5Images(ImageStorageMethod):
                 "images", np.shape(data.imgs), h5py.h5t.STD_U8BE, data=data.imgs
             )
 
-        if data.system is not None:
-            data.system.save(self.path.with_suffix(".msgpack"))
-
     @staticmethod
     def read(path: Union[str, Path]) -> NDArray[np.uint8]:
         with h5py.File(path, "r+") as fp:
@@ -163,9 +157,6 @@ class NpyImages(ImageStorageMethod):
 
     def save(self, data: DataPack) -> None:
         np.save(self.path, data.imgs)
-
-        if data.system is not None:
-            data.system.save(self.path.with_suffix(".msgpack"))
 
     @staticmethod
     def read(path: Union[str, Path]) -> NDArray[np.uint8]:
@@ -181,9 +172,6 @@ class GzipArrayImages(ImageStorageMethod):
             fp.write(
                 gzip.compress(memoryview(data.imgs), compresslevel=1)  # type: ignore
             )
-
-        if data.system is not None:
-            data.system.save(self.path.with_suffix(".msgpack"))
 
     @staticmethod
     def read(path: Union[str, Path]) -> NDArray[np.uint8]:

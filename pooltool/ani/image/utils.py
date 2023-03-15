@@ -6,7 +6,6 @@ import numpy as np
 from numpy.typing import NDArray
 from PIL import Image
 
-from pooltool.system import System
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -22,7 +21,6 @@ class ImageExt(StrEnum):
 @attrs.define
 class DataPack:
     imgs: NDArray[np.uint8]
-    system: Optional[System] = attrs.field(default=None)
     fps: float = attrs.field(default=10)
 
 
