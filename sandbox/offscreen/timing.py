@@ -55,7 +55,7 @@ def _dir_size(path):
 # -------------------------------------------------------------------------------------
 
 
-interface = pt.ImageSaver()
+stepper = pt.FrameStepper()
 
 if args.seed:
     np.random.seed(args.seed)
@@ -120,12 +120,13 @@ for name in exporters:
 # -------------------------------------------------------------------------------------
 
 # Run one to avoid cache loading
-interface.gen_datapack(
-    shot=system,
+pt.image_stack(
+    system,
+    stepper,
     size=(int(80 * 1.6), 80),
-    show_hud=False,
-    gray=args.gray,
     fps=args.fps,
+    gray=args.gray,
+    show_hud=False,
 )
 
 run = pt.terminal.Run()
@@ -138,23 +139,22 @@ for res in resolutions:
     stats["gray"].append(args.gray)
 
     with pt.terminal.TimeCode(quiet=True) as t:
-        datapack = interface.gen_datapack(
-            shot=system,
+        imgs = pt.image_stack(
+            system=system,
+            interface=stepper,
             camera_state=camera_states["7_foot_overhead"],
             size=(int(res * 1.6), res),
-            show_hud=False,
-            gray=args.gray,
             fps=args.fps,
+            gray=args.gray,
+            show_hud=False,
         )
-    stats["gen image"].append(t.time.total_seconds())
-    stats["frames"].append(np.shape(datapack.imgs)[0])
 
-    # Set to none to avoid being calculated in storage format sizes
-    datapack.system = None
+    stats["gen image"].append(t.time.total_seconds())
+    stats["frames"].append(np.shape(imgs)[0])
 
     for name, exporter in exporters.items():
         with pt.terminal.TimeCode(quiet=True) as t:
-            exporter.save(datapack)
+            exporter.save(imgs)
         stats[name + " write"].append(t.time.total_seconds())
 
         with pt.terminal.TimeCode(quiet=True) as t:

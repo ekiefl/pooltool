@@ -1,8 +1,15 @@
 __version__ = "0.1"
 
 from pooltool import terminal
-from pooltool.ani.animate import Game, ShotViewer
-from pooltool.ani.image import ImageSaver, ImageZip
+from pooltool.ani.animate import FrameStepper, Game, ShotViewer
+from pooltool.ani.image import (
+    GzipArrayImages,
+    HDF5Images,
+    ImageZip,
+    NpyImages,
+    image_stack,
+    save_images,
+)
 from pooltool.events import (
     Agent,
     AgentType,
@@ -67,6 +74,7 @@ __all__ = [
     "filter_ball",
     "filter_time",
     "filter_type",
+    "FrameStepper",
     "event_resolvers",
     "null_event",
     "ball_ball_collision",
@@ -96,13 +104,17 @@ __all__ = [
     "CushionSegments",
     "CushionDirection",
     "ImageZip",
+    "HDF5Images",
+    "GzipArrayImages",
+    "NpyImages",
     "Table",
     "TableModelDescr",
     "TableType",
     "PocketTableSpecs",
     "BilliardTableSpecs",
     "Game",
-    "ImageSaver",
+    "save_images",
+    "image_stack",
     "ShotViewer",
     "simulate",
 ]

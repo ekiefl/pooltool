@@ -12,14 +12,14 @@ import numpy as np
 from numpy.typing import NDArray
 from PIL import Image
 
-from pooltool.ani.image.utils import DataPack, ImageExt, gif, img2array, path2imgarray
+from pooltool.ani.image.utils import ImageExt, img2array, path2imgarray
 
 
 class ImageStorageMethod(ABC):
     path: Path
 
     @abstractmethod
-    def save(self, data: DataPack) -> Any:
+    def save(self, imgs: NDArray[np.uint8]) -> Any:
         pass
 
     @staticmethod
@@ -40,7 +40,6 @@ class ImageZip(ImageStorageMethod):
     ext: ImageExt = attrs.field(converter=ImageExt)
     prefix: str = attrs.field(default="shot")
     compress: bool = attrs.field(default=True)
-    save_gif: bool = attrs.field(default=False)
     image_count: int = attrs.field(init=False, default=0)
     paths: List[Path] = attrs.field(init=False, factory=list)
 
@@ -53,7 +52,9 @@ class ImageZip(ImageStorageMethod):
                 self.path.suffix == ".zip"
             ), f"{self.path} must end with .zip if compress is True"
 
-    def save(self, data: DataPack) -> None:
+    def save(self, imgs: NDArray[np.uint8]) -> None:
+        self.image_count = 0
+
         if self.compress:
             # Write contents to a temp directory that will be deleted after the contents
             # have been zipped
@@ -63,23 +64,16 @@ class ImageZip(ImageStorageMethod):
 
         save_dir.mkdir(parents=True)
 
-        frames = np.shape(data.imgs)[0]
+        frames = np.shape(imgs)[0]
         for frame in range(frames):
             path = self._get_filepath(root=save_dir)
             assert not path.exists(), f"{path} already exists!"
 
-            Image.fromarray(data.imgs[frame, ...]).save(path)
+            Image.fromarray(imgs[frame, ...]).save(path)
 
             # Increment
             self.image_count += 1
             self.paths.append(path)
-
-        if self.save_gif:
-            gif(
-                paths=self.paths,
-                output=save_dir / f"_{self.prefix}.gif",
-                fps=data.fps,
-            )
 
         if not self.compress:
             return
@@ -139,11 +133,9 @@ class ImageZip(ImageStorageMethod):
 class HDF5Images(ImageStorageMethod):
     path: Path = attrs.field(converter=Path)
 
-    def save(self, data: DataPack) -> None:
+    def save(self, imgs: NDArray[np.uint8]) -> None:
         with h5py.File(self.path, "w") as fp:
-            fp.create_dataset(
-                "images", np.shape(data.imgs), h5py.h5t.STD_U8BE, data=data.imgs
-            )
+            fp.create_dataset("images", np.shape(imgs), h5py.h5t.STD_U8BE, data=imgs)
 
     @staticmethod
     def read(path: Union[str, Path]) -> NDArray[np.uint8]:
@@ -155,8 +147,8 @@ class HDF5Images(ImageStorageMethod):
 class NpyImages(ImageStorageMethod):
     path: Path = attrs.field(converter=Path)
 
-    def save(self, data: DataPack) -> None:
-        np.save(self.path, data.imgs)
+    def save(self, imgs: NDArray[np.uint8]) -> None:
+        np.save(self.path, imgs)
 
     @staticmethod
     def read(path: Union[str, Path]) -> NDArray[np.uint8]:
@@ -167,11 +159,9 @@ class NpyImages(ImageStorageMethod):
 class GzipArrayImages(ImageStorageMethod):
     path: Path = attrs.field(converter=Path)
 
-    def save(self, data: DataPack) -> None:
+    def save(self, imgs: NDArray[np.uint8]) -> None:
         with open(self.path, "wb") as fp:
-            fp.write(
-                gzip.compress(memoryview(data.imgs), compresslevel=1)  # type: ignore
-            )
+            fp.write(gzip.compress(memoryview(imgs), compresslevel=1))  # type: ignore
 
     @staticmethod
     def read(path: Union[str, Path]) -> NDArray[np.uint8]:

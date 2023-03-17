@@ -8,11 +8,11 @@ import numpy as np
 
 import pooltool as pt
 from pooltool.ani.camera import camera_states
-from pooltool.ani.image.io import HDF5Images, ImageZip, NpyImages
+from pooltool.ani.image import HDF5Images, ImageZip, NpyImages, image_stack
 
 
 def main(args):
-    interface = pt.ImageSaver()
+    stepper = pt.FrameStepper()
 
     if args.seed:
         np.random.seed(args.seed)
@@ -32,6 +32,7 @@ def main(args):
     # Evolve the shot
     pt.simulate(system)
 
+    # Make an dump dir
     path = Path(__file__).parent / "offscreen_out"
     if path.exists():
         shutil.rmtree(path)
@@ -46,26 +47,26 @@ def main(args):
         "7_foot_offcenter",
     ]:
         if args.exporter == "dir":
-            exporter = ImageZip(path / f"{camera_state}.zip", ext="png", save_gif=True)
+            exporter = ImageZip(path / f"{camera_state}.zip", ext="png")
         elif args.exporter == "h5":
             exporter = HDF5Images(path / f"{camera_state}.h5")
         elif args.exporter == "npy":
             exporter = NpyImages(path / f"{camera_state}.npy")
 
-        datapack = interface.gen_datapack(
-            shot=system,
+        imgs = image_stack(
+            system=system,
+            interface=stepper,
+            size=(720 * 1.6, 720),
+            fps=10,
             camera_state=camera_states[camera_state],
-            size=(80 * 1.6, 80),
             show_hud=False,
             gray=False,
-            fps=10,
         )
-
-        exporter.save(datapack)
+        exporter.save(imgs)
 
         # Verify the images can be read back
         read_from_disk = exporter.read(exporter.path)
-        assert np.array_equal(datapack.imgs, read_from_disk)
+        assert np.array_equal(imgs, read_from_disk)
 
 
 if __name__ == "__main__":
