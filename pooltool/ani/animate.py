@@ -2,7 +2,7 @@
 
 import gc
 import sys
-from typing import Optional, Tuple
+from typing import Generator, Optional, Tuple
 
 import gltf  # FIXME at first glance this does nothing?
 import simplepbr
@@ -101,6 +101,11 @@ def window_task(win=None):
     properties = WindowProperties()
     properties.setSize(int(width), int(height))
     Global.base.win.requestProperties(properties)
+
+
+def _resize_window(size: Tuple[int, int]):
+    """Changes window size when provided the dimensions (x, y) in pixels"""
+    Global.base.win.setSize(*[int(dim) for dim in size])
 
 
 class Interface(ShowBase):
@@ -210,6 +215,87 @@ class Interface(ShowBase):
     def stop(self):
         """Called when window exited. Subclasses can avoid by overwriting this method"""
         sys.exit()
+
+
+FBF_FBP = FrameBufferProperties()
+FBF_FBP.setRgbColor(True)
+FBF_FBP.setRgbaBits(8, 8, 8, 0)
+FBF_FBP.setDepthBits(24)
+
+DEFAULT_FBF_CONFIG = ShowBaseConfig(
+    window_type="offscreen",
+    monitor=False,
+    fb_prop=FBF_FBP,
+)
+
+
+class FrameStepper(Interface):
+    """An interface for doing frame-by-frame analyses"""
+
+    def __init__(self, config: ShowBaseConfig = DEFAULT_FBF_CONFIG):
+        Interface.__init__(self, config=config)
+
+        # Aim to render 10000 FPS so the clock doesn't sleep between frames
+        Global.clock.setMode(ClockObject.MLimited)
+        Global.clock.setFrameRate(10000)
+
+    def _iterator(
+        self,
+        system: System,
+        size: Tuple[int, int] = (230, 144),
+        fps: float = 30.0,
+    ) -> Generator:
+        """Iterate through each frame
+
+        Args:
+            shot:
+                The shot you would like to iterate through. It should already by
+                simulated. It is OK if you have continuized the shot (you can check with
+                shot.continuized), but the continuization will be overwritten to match
+                the `fps` chosen in this method.
+            size:
+                The number of pixels in x and y. If x:y != 1.6, the aspect ratio will
+                look distorted.
+            fps:
+                This is the rate (in frames per second) that the shot is iterated
+                through.
+
+        Yields:
+            The frame number.
+        """
+        system.continuize(dt=1 / fps)
+
+        multisystem.reset()
+        multisystem.append(system)
+
+        _resize_window(size)
+
+        self.create_scene()
+
+        # We don't want the cue in this
+        visual.cue.hide_nodes()
+
+        # Set quaternions for each ball
+        for ball in visual.balls.values():
+            ball.set_quats(ball._ball.history_cts)
+
+        frames = int(system.events[-1].time * fps) + 1
+
+        yield frames
+
+        for frame in range(frames):
+            for ball in visual.balls.values():
+                ball.set_render_state_from_history(ball._ball.history_cts, frame)
+
+            Global.task_mgr.step()
+
+            yield frame
+
+    def iterator(self, *args, **kwargs) -> Tuple[Generator, int]:
+        """Return the iterator and the number of frames"""
+        iterator = self._iterator(*args, **kwargs)
+        frames = next(iterator)
+        return iterator, frames
 
 
 class ShotViewer(Interface):

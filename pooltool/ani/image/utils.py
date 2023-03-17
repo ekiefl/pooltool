@@ -18,12 +18,6 @@ class ImageExt(StrEnum):
         return "(" + "|".join(ext.value for ext in cls) + ")"
 
 
-@attrs.define
-class DataPack:
-    imgs: NDArray[np.uint8]
-    fps: float = attrs.field(default=10)
-
-
 def gif(
     paths: Sequence[Union[str, Path]], output: Union[str, Path], fps: float
 ) -> Path:
