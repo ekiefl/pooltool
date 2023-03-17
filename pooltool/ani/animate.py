@@ -103,7 +103,7 @@ def window_task(win=None):
     Global.base.win.requestProperties(properties)
 
 
-def _resize_window(size: Tuple[int, int]):
+def _resize_offscreen_window(size: Tuple[int, int]):
     """Changes window size when provided the dimensions (x, y) in pixels"""
     Global.base.win.setSize(*[int(dim) for dim in size])
 
@@ -230,7 +230,7 @@ DEFAULT_FBF_CONFIG = ShowBaseConfig(
 
 
 class FrameStepper(Interface):
-    """An interface for doing frame-by-frame analyses"""
+    """Step through a shot frame-by-frame"""
 
     def __init__(self, config: ShowBaseConfig = DEFAULT_FBF_CONFIG):
         Interface.__init__(self, config=config)
@@ -242,33 +242,15 @@ class FrameStepper(Interface):
     def _iterator(
         self,
         system: System,
-        size: Tuple[int, int] = (230, 144),
+        size: Tuple[int, int] = (int(1.6 * 720), 720),
         fps: float = 30.0,
     ) -> Generator:
-        """Iterate through each frame
-
-        Args:
-            shot:
-                The shot you would like to iterate through. It should already by
-                simulated. It is OK if you have continuized the shot (you can check with
-                shot.continuized), but the continuization will be overwritten to match
-                the `fps` chosen in this method.
-            size:
-                The number of pixels in x and y. If x:y != 1.6, the aspect ratio will
-                look distorted.
-            fps:
-                This is the rate (in frames per second) that the shot is iterated
-                through.
-
-        Yields:
-            The frame number.
-        """
         system.continuize(dt=1 / fps)
 
         multisystem.reset()
         multisystem.append(system)
 
-        _resize_window(size)
+        _resize_offscreen_window(size)
 
         self.create_scene()
 
@@ -292,7 +274,29 @@ class FrameStepper(Interface):
             yield frame
 
     def iterator(self, *args, **kwargs) -> Tuple[Generator, int]:
-        """Return the iterator and the number of frames"""
+        """Iterate through each frame
+
+        Args:
+            shot:
+                The shot you would like to iterate through. It should already by
+                simulated. It is OK if you have continuized the shot (you can check with
+                shot.continuized), but the continuization will be overwritten to match
+                the `fps` chosen in this method.
+            size:
+                The number of pixels in x and y. If x:y != 1.6, the aspect ratio will
+                look distorted.
+            fps:
+                This is the rate (in frames per second) that the shot is iterated
+                through.
+
+        Returns:
+            iterator:
+                This is an iterator. `next(iterator)` will advance the rendered objects
+                to the next frame.
+            frames:
+                This is the length of the iterator (by the time you receive it). Useful
+                for things like `for frame in frames: next(iterator)`.
+        """
         iterator = self._iterator(*args, **kwargs)
         frames = next(iterator)
         return iterator, frames
