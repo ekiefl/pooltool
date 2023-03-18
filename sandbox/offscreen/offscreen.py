@@ -56,7 +56,7 @@ def main(args):
         imgs = image_stack(
             system=system,
             interface=stepper,
-            size=(720 * 1.6, 720),
+            size=(360 * 1.6, 360),
             fps=10,
             camera_state=camera_states[camera_state],
             show_hud=False,

@@ -268,6 +268,7 @@ class FrameStepper(Interface):
         for frame in range(frames):
             for ball in visual.balls.values():
                 ball.set_render_state_from_history(ball._ball.history_cts, frame)
+                ball._ball.state = ball._ball.history_cts[frame]
 
             Global.task_mgr.step()
 
