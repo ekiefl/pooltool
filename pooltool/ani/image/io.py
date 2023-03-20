@@ -44,9 +44,6 @@ class ImageZip(ImageStorageMethod):
     paths: List[Path] = attrs.field(init=False, factory=list)
 
     def __attrs_post_init__(self):
-        if self.path.exists():
-            raise FileExistsError(f"{self.path} shouldn't exist, but does.")
-
         if self.compress:
             assert (
                 self.path.suffix == ".zip"
@@ -62,7 +59,7 @@ class ImageZip(ImageStorageMethod):
         else:
             save_dir = self.path
 
-        save_dir.mkdir(parents=True)
+        save_dir.mkdir(parents=True, exist_ok=True)
 
         frames = np.shape(imgs)[0]
         for frame in range(frames):
