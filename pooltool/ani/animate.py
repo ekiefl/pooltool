@@ -257,6 +257,10 @@ class FrameStepper(Interface):
         # We don't want the cue in this
         visual.cue.hide_nodes()
 
+        # Or the camera fixation point object
+        if cam.fixation_object is not None:
+            cam.fixation_object.removeNode()
+
         # Set quaternions for each ball
         for ball in visual.balls.values():
             ball.set_quats(ball._ball.history_cts)
