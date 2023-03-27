@@ -13,7 +13,9 @@ import pooltool.ani as ani
 import pooltool.ani.utils as autils
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.mouse import mouse
+from pooltool.objects.table.datatypes import Table
 from pooltool.serialize import conversion
+from pooltool.utils import wiggle
 
 
 class Camera:
@@ -222,4 +224,37 @@ class CameraState:
             fixation_pos=_vec_to_tuple(camera.fixation.getPos())
             if camera.fixated
             else None,
+        )
+
+    @classmethod
+    def random(cls, table: Table) -> CameraState:
+        """Generate a random camera state, within reason
+
+        Args:
+            table:
+                This is needed so the fixation point is somewhere on the playing surface
+        """
+
+        def rand(m, M):
+            return (M - m) * np.random.rand() + m
+
+        # The camera fixates on a point (fix_x, fix_y) that is within 1/4 the table's
+        # width from the table's center
+        fix_rad = table.w / 4
+        r = rand(0, fix_rad)
+        ang = rand(0, 2 * np.pi)
+        fix_x = r * np.cos(ang) + table.w / 2
+        fix_y = r * np.sin(ang) + table.l / 2
+
+        # Rotate the camera about the fixation point such that it faces the center, with
+        # some added variation
+        deg = wiggle(
+            np.rad2deg(np.arctan2(table.l / 2 - fix_y, table.w / 2 - fix_x)) + 180, 20
+        )
+
+        return CameraState(
+            cam_hpr=(90, 0, rand(-10, 10)),
+            cam_pos=(rand(1.5, 3.0), 0, 0),
+            fixation_hpr=(deg, 0, rand(-45, -10)),
+            fixation_pos=(fix_x, fix_y, 0),
         )
