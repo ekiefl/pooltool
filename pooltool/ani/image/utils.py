@@ -51,9 +51,4 @@ def path2imgarray(img_path: Path):
 
 def img2array(img):
     """Get the alpha-snuffed numpy array from a PIL Image"""
-    try:
-        return np.asarray(img)[:, :, :3] if img.mode == "RGB" else np.asarray(img)
-    except:
-        import ipdb
-
-        ipdb.set_trace()
+    return np.asarray(img)[:, :, :3] if img.mode == "RGB" else np.asarray(img)
