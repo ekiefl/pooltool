@@ -164,7 +164,9 @@ class BallRender(Render):
 
     def get_playback_sequence(self, playback_speed=1) -> MetaInterval:
         """Creates the motion sequences of the ball for a given playback speed"""
-        rvws, motion_states, ts = self._ball.history_cts.vectorize()
+        vectors = self._ball.history_cts.vectorize()
+        assert vectors is not None
+        rvws, motion_states, ts = vectors
 
         dts = np.diff(ts)
         playback_dts = dts / playback_speed
@@ -193,9 +195,20 @@ class BallRender(Render):
             x, y, z = xyzs[i]
             Qm, Qx, Qy, Qz = self.quats[i]
 
-            if not energetic and motion_states[i] in c.energetic:
+            stationary_to_stationary = (
+                not energetic
+                and motion_states[i] not in c.energetic
+                and motion_states[i] != motion_states[j]
+            )
+
+            if (
+                stationary_to_energetic := not energetic
+                and motion_states[i] in c.energetic
+            ):
                 # The ball wasn't energetic, but now it is
                 energetic = True
+
+            if stationary_to_energetic or stationary_to_stationary:
                 xi, yi, zi = xyzs[j]
                 Qmi, Qxi, Qyi, Qzi = self.quats[j]
                 dur = playback_dts[j:i].sum()
@@ -219,7 +232,7 @@ class BallRender(Render):
                     )
                 )
 
-            if energetic:
+            if energetic or stationary_to_stationary:
                 ball_sequence.append(
                     LerpPosQuatInterval(
                         nodePath=self.nodes["pos"],
@@ -237,7 +250,6 @@ class BallRender(Render):
                 )
 
                 if motion_states[i] not in c.energetic:
-                    # The ball was energetic, but now it is not
                     energetic = False
                     j = i
 
