@@ -118,7 +118,9 @@ class Agent:
 
     @staticmethod
     def from_object(obj: Object) -> Agent:
-        return Agent(id=obj.id, agent_type=_class_to_type[type(obj)])
+        agent = Agent(id=obj.id, agent_type=_class_to_type[type(obj)])
+        agent.set_initial(obj)
+        return agent
 
     def copy(self) -> Agent:
         """Create a deepcopy"""
