@@ -163,3 +163,7 @@ event_resolvers: Dict[EventType, Callable] = {
     EventType.ROLLING_SPINNING: resolve_transition,
     EventType.SLIDING_ROLLING: resolve_transition,
 }
+
+
+def resolve_event(event: Event) -> Event:
+    return event_resolvers[event.event_type](event)

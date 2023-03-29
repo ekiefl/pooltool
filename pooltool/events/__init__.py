@@ -13,13 +13,13 @@ from pooltool.events._events import (
 )
 from pooltool.events.datatypes import Agent, AgentType, Event, EventType
 from pooltool.events.filter import filter_ball, filter_time, filter_type
-from pooltool.events.resolve import event_resolvers
+from pooltool.events.resolve import resolve_event
 
 __all__ = [
     "filter_ball",
     "filter_time",
     "filter_type",
-    "event_resolvers",
+    "resolve_event",
     "null_event",
     "ball_ball_collision",
     "ball_linear_cushion_collision",
