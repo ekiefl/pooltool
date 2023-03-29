@@ -101,6 +101,13 @@ class Agent:
             self.initial.history = BallHistory()
             self.initial.history_cts = BallHistory()
 
+    def get_initial(self) -> Optional[Object]:
+        """Return a copy of the object post-event"""
+        if self.initial is None:
+            return None
+
+        return self.initial.copy()
+
     def get_final(self) -> Optional[Object]:
         """Return a copy of the object post-event"""
         if self.final is None:
