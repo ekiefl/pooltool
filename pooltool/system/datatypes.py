@@ -76,15 +76,8 @@ class System:
         Notes
         =====
         - All balls share the same timepoints.
-        - All timepoints are uniformly spaced.
-        - FIXME There exists no timepoint for the final state of the system (t_f). The
-          time difference between t_f and the last timepoint is less than dt. This could
-          be improved by providing an optional like `include_final`, or perhaps the
-          default behavior could be to add one more timepoint that is dt away from the
-          current implementation's last time point, and set the ball state to the final
-          state.  This latter idea achieves both uniformly spaced timepoints and
-          physical accuracy (the system ends in a 0 energy state, rather than an
-          _almost_ 0 energy state)
+        - All timepoints are uniformly spaced (except for the last timepoint, which
+          occurs within <dt of the second last timepoint)
         - FIXME This is a very inefficient function that could be radically sped up if
           physics.evolve_ball_motion and/or its functions had vectorized operations for
           arrays of time values.
@@ -170,6 +163,12 @@ class System:
 
                 history.add(BallState(rvw, s, elapsed + dt))
                 elapsed += dt
+
+            # There is a finale. The final state is missing from the continuous history,
+            # whose final state is within dt of the true final state. We add the final
+            # state to the continous history even though this breaks the promise of
+            # uniformly spaced timestamps
+            history.add(ball.history[-1])
 
             # Attach the newly created history to the ball
             ball.history_cts = history
@@ -391,7 +390,7 @@ class System:
                 ball.state.rvw[0] = [
                     np.random.uniform(R, self.table.w - R),
                     np.random.uniform(R, self.table.l - R),
-                    R
+                    R,
                 ]
 
             if not self.is_balls_overlapping():
@@ -405,7 +404,9 @@ class System:
                 if ball1 is ball2:
                     continue
 
-                assert ball1.params.R == ball2.params.R, "Balls are assumed to be equal radii"
+                assert (
+                    ball1.params.R == ball2.params.R
+                ), "Balls are assumed to be equal radii"
 
                 if physics.is_overlapping(
                     ball1.state.rvw, ball2.state.rvw, ball1.params.R, ball2.params.R
