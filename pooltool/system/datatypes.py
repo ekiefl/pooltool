@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 import numpy as np
 from attrs import define, field
 
+import pooltool.constants as constants
 import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.error import ConfigError
@@ -142,7 +143,12 @@ def continuize_heterogeneous(system: System, dt: float = 0.01) -> None:
         history = BallHistory()
         history.add(ball.history[0])
 
-        events = system.events.filter_ball(ball, keep_nonevent=True)
+        state = ball.history[0].copy()
+
+        # Get all events that the ball is involved in, even the null_event events
+        # that mark the start and end times
+        events = filter_ball(system.events, ball.id, keep_nonevent=True)
+
         for n in range(len(events) - 1):
             curr_event = events[n]
             next_event = events[n + 1]
@@ -151,72 +157,60 @@ def continuize_heterogeneous(system: System, dt: float = 0.01) -> None:
             if not dtau_E:
                 continue
 
-            # The first step is to establish the rvw and s states of the ball at the
-            # timepoint of curr_event, since all calculated timepoints between
-            # curr_event and next_event will be calculated by evolving from this
-            # state.
-            if curr_event.event_class == class_transition:
-                rvw, s = curr_event.agent_state_initial
-            elif curr_event.event_class == class_collision:
-                if ball == curr_event.agents[0]:
-                    rvw, s = curr_event.agent1_state_final
-                else:
-                    rvw, s = curr_event.agent2_state_final
-            elif curr_event.event_class == class_none:
-                # This is a special case that should happen only once. It is the
-                # initial event, which contains no agents. We therefore grab rvw and
-                # s from the ball's history.
-                rvw, s = ball.history.rvw[0], ball.history.s[0]
+            # We need to get the ball's outgoing state from the event. We'll
+            # evolve the system from this state.
+            for agent in curr_event.agents:
+                if agent.matches(ball):
+                    state = agent.get_final().state
+                    break
             else:
-                raise NotImplementedError(
-                    f"SystemHistory.continuize :: event class "
-                    f"'{curr_event.event_class}' is not implemented"
-                )
+                assert curr_event.event_type == EventType.NONE
 
-            step = 0
+            rvw, s = state.rvw, state.s
+
+            step = 0.0
             while step < dtau_E:
                 rvw, s = physics.evolve_ball_motion(
                     state=s,
                     rvw=rvw,
-                    R=ball.R,
-                    m=ball.m,
-                    u_s=ball.u_s,
-                    u_sp=ball.u_sp,
-                    u_r=ball.u_r,
-                    g=ball.g,
+                    R=ball.params.R,
+                    m=ball.params.m,
+                    u_s=ball.params.u_s,
+                    u_sp=ball.params.u_sp,
+                    u_r=ball.params.u_r,
+                    g=ball.params.g,
                     t=dt,
                 )
 
-                history.add(rvw, s, curr_event.time + step)
+                history.add(BallState(rvw, s, curr_event.time + step))
                 step += dt
 
             # By this point the history has been populated with equally spaced
             # timesteps `dt` starting from curr_event.time up until--but not
-            # including--next_event.time.  There still exists a `remainder` of time
+            # including--next_event.time. There still exists a `remainder` of time
             # that is strictly less than `dt`. I evolve the state this additional
             # amount which gives the state of the system at the time of the next
             # event. This makes sure there exists a timepoint precisely at each
             # event, which is helpful for things like smooth, nonintersecting
             # animations
             remainder = dtau_E - step
+
             rvw, s = physics.evolve_ball_motion(
                 state=s,
                 rvw=rvw,
-                R=ball.R,
-                m=ball.m,
-                u_s=ball.u_s,
-                u_sp=ball.u_sp,
-                u_r=ball.u_r,
-                g=ball.g,
+                R=ball.params.R,
+                m=ball.params.m,
+                u_s=ball.params.u_s,
+                u_sp=ball.params.u_sp,
+                u_r=ball.params.u_r,
+                g=ball.params.g,
                 t=remainder,
             )
 
-            history.add(rvw, s, next_event.time - c.tol)
+            history.add(BallState(rvw, s, next_event.time - constants.tol))
 
-        # Attach the newly created history to the ball, overwriting the existing
-        # history
-        ball.attach_history_cts(history)
-        ball.history_cts.vectorize()
+        # Attach the newly created history to the ball
+        ball.history_cts = history
 
 
 @define
@@ -269,9 +263,10 @@ class System:
         radically sped up if physics.evolve_ball_motion and/or its functions had
         vectorized operations for arrays of time values.
         """
-        continuize_homogeneous(self, dt=dt) if homogenize else continuize_heterogeneous(
-            self, dt=dt
-        )
+        if homogenize:
+            continuize_homogeneous(self, dt=dt)
+        else:
+            continuize_heterogeneous(self, dt=dt)
 
     def evolve(self, dt: float):
         """Evolves current ball an amount of time dt
