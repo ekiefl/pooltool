@@ -6,9 +6,10 @@ import pytest
 from pooltool.events import (
     ball_ball_collision,
     ball_linear_cushion_collision,
+    ball_pocket_collision,
     resolve_event,
 )
-from pooltool.objects import Ball, LinearCushionSegment
+from pooltool.objects import Ball, LinearCushionSegment, Pocket
 
 
 @pytest.fixture
@@ -64,6 +65,18 @@ def cue_colliding_into_cushion() -> Tuple[Ball, LinearCushionSegment]:
     )
 
     return cue, cushion
+
+
+@pytest.fixture
+def cue_colliding_with_pocket() -> Tuple[Ball, Pocket]:
+    """Return ball and pocket at the point of collision"""
+
+    # Create ball and linear cushion segment
+    cue = Ball.create("cue", xy=(1, 0), R=1)
+    cue.state.rvw[1] = (-1, 0, 0)
+    pocket = Pocket("pocket", center=np.array([0, 0, 0]), radius=1)
+
+    return cue, pocket
 
 
 def test_ball_ball_collision(cue_colliding_into_one_ball):
@@ -128,6 +141,8 @@ def test_ball_linear_cushion_collision(cue_colliding_into_cushion):
 
     # Cue ball initial
     assert np.array_equal(event.agents[0].get_initial().state.rvw, cue_initial_expected)
+
+    # Cue ball final
     assert event.agents[0].get_final() is not None
 
     # Cushion initial
@@ -135,3 +150,40 @@ def test_ball_linear_cushion_collision(cue_colliding_into_cushion):
 
     # Cushion final remains None because it's assumed to be constant
     assert event.agents[1].get_final() is None
+
+
+def test_ball_pocket_collision(cue_colliding_with_pocket):
+    ball, pocket = cue_colliding_with_pocket
+    event = ball_pocket_collision(ball, pocket, time=0)
+
+    # Before the resolution, the initial states should be set and the final states
+    # shouldn't be
+
+    # Cue ball initial
+    cue_initial_expected = np.array([[1, 0, 1], [-1, 0, 0], [0, 0, 0]])
+    assert np.array_equal(event.agents[0].get_initial().state.rvw, cue_initial_expected)
+
+    # Cue ball final
+    assert event.agents[0].get_final() is None
+
+    # Pocket initial
+    assert event.agents[1].get_initial().contains == set()
+
+    # Pocket final
+    assert event.agents[1].get_final() is None
+
+    # Now resolve the event and re-assess
+    event = resolve_event(event)
+
+    # Cue ball initial
+    assert np.array_equal(event.agents[0].get_initial().state.rvw, cue_initial_expected)
+
+    # Cue ball final
+    expected_pos = np.array([pocket.center[0], pocket.center[1], -pocket.depth])
+    assert np.array_equal(event.agents[0].get_final().state.rvw[0], expected_pos)
+
+    # Pocket initial
+    assert event.agents[1].get_initial().contains == set()
+
+    # Pocket final
+    assert event.agents[1].get_final().contains == {"cue"}
