@@ -10,7 +10,7 @@ from pooltool.ani.globals import Global
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.render import CueRender
 from pooltool.objects.table.render import TableRender
-from pooltool.system.datatypes import System
+from pooltool.system.datatypes import System, multisystem
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -167,6 +167,10 @@ class SystemController:
 
         self.reset_animation(reset_pause=False)
         self.playback_speed *= factor
+
+        # Recontinuize to adjust for change in speed
+        multisystem.active.continuize(dt=0.01 * self.playback_speed)
+
         self.build_shot_animation()
 
         self.shot_animation.setPlayRate(factor * self.shot_animation.getPlayRate())
