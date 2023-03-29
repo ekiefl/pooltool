@@ -28,13 +28,22 @@ from pooltool.serialize import conversion
 from pooltool.serialize.serializers import Pathish
 
 
-def continuize_homogeneous(system: System, dt: float = 0.01) -> None:
+def continuize(system: System, dt: float = 0.01) -> None:
     """Create BallHistory for each ball with many timepoints
 
     All balls share the same timepoints, and the timepoints are uniformly spaced, except
     for the last timepoint, which occurs within <dt of the second last timepoint.
 
-    See also: continuize_heterogeneous
+    The old continuize did not have uniform and equally spaced time points. That
+    implementation can be found with
+
+        git checkout 7b2f7440f7d9ad18cba65c9e4862ee6bdc620631
+
+    (Look for pooltool.system.datatypes.continuize_heterogeneous)
+
+    FIXME This is a very inefficient function, and could be
+    radically sped up if physics.evolve_ball_motion and/or its functions had
+    vectorized operations for arrays of time values.
     """
 
     # This is the exact number of timepoints that the ball histories will contain
@@ -126,93 +135,6 @@ def continuize_homogeneous(system: System, dt: float = 0.01) -> None:
         ball.history_cts = history
 
 
-def continuize_heterogeneous(system: System, dt: float = 0.01) -> None:
-    """Create BallHistory for each ball with many timepoints
-
-    This does not create uniform time spacings between shots. For example, all events
-    are sandwiched between two time points, one immediately before the event, and one
-    immediately after. This ensures that during lerp (linear interpolation) operations,
-    the event is never interpolated over with any significant amount of time. This
-    creates a smoother, more realistic-looking animation.
-
-    See also: continuize_homogeneous
-    """
-
-    for ball in system.balls.values():
-        # Create a new history and add the zeroth event
-        history = BallHistory()
-        history.add(ball.history[0])
-
-        state = ball.history[0].copy()
-
-        # Get all events that the ball is involved in, even the null_event events
-        # that mark the start and end times
-        events = filter_ball(system.events, ball.id, keep_nonevent=True)
-
-        for n in range(len(events) - 1):
-            curr_event = events[n]
-            next_event = events[n + 1]
-
-            dtau_E = next_event.time - curr_event.time
-            if not dtau_E:
-                continue
-
-            # We need to get the ball's outgoing state from the event. We'll
-            # evolve the system from this state.
-            for agent in curr_event.agents:
-                if agent.matches(ball):
-                    state = agent.get_final().state
-                    break
-            else:
-                assert curr_event.event_type == EventType.NONE
-
-            rvw, s = state.rvw, state.s
-
-            step = 0.0
-            while step < dtau_E:
-                rvw, s = physics.evolve_ball_motion(
-                    state=s,
-                    rvw=rvw,
-                    R=ball.params.R,
-                    m=ball.params.m,
-                    u_s=ball.params.u_s,
-                    u_sp=ball.params.u_sp,
-                    u_r=ball.params.u_r,
-                    g=ball.params.g,
-                    t=dt,
-                )
-
-                history.add(BallState(rvw, s, curr_event.time + step))
-                step += dt
-
-            # By this point the history has been populated with equally spaced
-            # timesteps `dt` starting from curr_event.time up until--but not
-            # including--next_event.time. There still exists a `remainder` of time
-            # that is strictly less than `dt`. I evolve the state this additional
-            # amount which gives the state of the system at the time of the next
-            # event. This makes sure there exists a timepoint precisely at each
-            # event, which is helpful for things like smooth, nonintersecting
-            # animations
-            remainder = dtau_E - step
-
-            rvw, s = physics.evolve_ball_motion(
-                state=s,
-                rvw=rvw,
-                R=ball.params.R,
-                m=ball.params.m,
-                u_s=ball.params.u_s,
-                u_sp=ball.params.u_sp,
-                u_r=ball.params.u_r,
-                g=ball.params.g,
-                t=remainder,
-            )
-
-            history.add(BallState(rvw, s, next_event.time - constants.tol))
-
-        # Attach the newly created history to the ball
-        ball.history_cts = history
-
-
 @define
 class System:
     cue: Cue
@@ -256,17 +178,9 @@ class System:
 
         self.events = []
 
-    def continuize(self, dt: float = 0.01, homogenize: bool = True):
-        """Create BallHistory for each ball with many timepoints
-
-        FIXME This is a very inefficient function, the child functions could be
-        radically sped up if physics.evolve_ball_motion and/or its functions had
-        vectorized operations for arrays of time values.
-        """
-        if homogenize:
-            continuize_homogeneous(self, dt=dt)
-        else:
-            continuize_heterogeneous(self, dt=dt)
+    def continuize(self, dt: float = 0.01):
+        """Create BallHistory for each ball with many timepoints"""
+        continuize(self, dt=dt)
 
     def evolve(self, dt: float):
         """Evolves current ball an amount of time dt
