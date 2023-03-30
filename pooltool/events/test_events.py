@@ -8,8 +8,9 @@ from pooltool.events import (
     ball_linear_cushion_collision,
     ball_pocket_collision,
     resolve_event,
+    stick_ball_collision,
 )
-from pooltool.objects import Ball, LinearCushionSegment, Pocket
+from pooltool.objects import Ball, Cue, LinearCushionSegment, Pocket
 
 
 @pytest.fixture
@@ -77,6 +78,18 @@ def cue_colliding_with_pocket() -> Tuple[Ball, Pocket]:
     pocket = Pocket("pocket", center=np.array([0, 0, 0]), radius=1)
 
     return cue, pocket
+
+
+@pytest.fixture
+def cue_struck_by_cuestick() -> Tuple[Cue, Ball]:
+    """Return cuestick and ball"""
+
+    cue = Ball.create("cue", xy=(0, 0), R=1)
+    stick = Cue()
+
+    stick.set_state(V0=1, phi=0)
+
+    return stick, cue
 
 
 def test_ball_ball_collision(cue_colliding_into_one_ball):
@@ -187,3 +200,43 @@ def test_ball_pocket_collision(cue_colliding_with_pocket):
 
     # Pocket final
     assert event.agents[1].get_final().contains == {"cue"}
+
+
+def test_stick_ball_collision(cue_struck_by_cuestick):
+    stick, cue = cue_struck_by_cuestick
+
+    event = stick_ball_collision(stick, cue, time=0)
+
+    # Before the resolution, the initial states should be set and the final states
+    # shouldn't be
+
+    # Cue ball initial
+    cue_initial_expected = np.array([[0, 0, 1], [0, 0, 0], [0, 0, 0]])
+    assert np.array_equal(event.agents[1].get_initial().state.rvw, cue_initial_expected)
+
+    # Cue ball final
+    assert event.agents[1].get_final() is None
+
+    # Stick initial
+    assert event.agents[0].get_initial() == stick
+    assert event.agents[0].get_initial() is not stick
+
+    # Stick final
+    assert event.agents[0].get_final() is None
+
+    # Now resolve the event and re-assess
+    event = resolve_event(event)
+
+    # Cue ball initial
+    assert np.array_equal(event.agents[1].get_initial().state.rvw, cue_initial_expected)
+
+    # Cue ball final
+    rvw_final = event.agents[1].get_final().state.rvw
+    assert np.array_equal(rvw_final[0], cue_initial_expected[0])
+
+    # Stick initial
+    assert event.agents[0].get_initial() == stick
+    assert event.agents[0].get_initial() is not stick
+
+    # Stick final
+    assert event.agents[0].get_final() is None
