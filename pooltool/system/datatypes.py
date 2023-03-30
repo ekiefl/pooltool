@@ -7,7 +7,6 @@ from typing import Dict, List, Optional
 import numpy as np
 from attrs import define, field
 
-import pooltool.constants as constants
 import pooltool.physics as physics
 import pooltool.utils as utils
 from pooltool.error import ConfigError
@@ -15,8 +14,8 @@ from pooltool.events import (
     AgentType,
     Event,
     EventType,
-    event_resolvers,
     filter_ball,
+    resolve_event,
     stick_ball_collision,
 )
 from pooltool.objects.ball.datatypes import Ball, BallHistory, BallState
@@ -208,7 +207,8 @@ class System:
         if event.event_type == EventType.NONE:
             return
 
-        # The initial states need to be snapshotted
+        # The system has evolved since the event was created, so the initial states need
+        # to be snapshotted according to the current state
         for agent in event.agents:
             if agent.agent_type == AgentType.CUE:
                 agent.set_initial(self.cue)
@@ -221,7 +221,7 @@ class System:
             elif agent.agent_type == AgentType.CIRCULAR_CUSHION_SEGMENT:
                 agent.set_initial(self.table.cushion_segments.circular[agent.id])
 
-        event = event_resolvers[event.event_type](event)
+        event = resolve_event(event)
 
         # The final states of the agents are solved, but the system objects still need
         # to be updated with these states.

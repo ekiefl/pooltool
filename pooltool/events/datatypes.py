@@ -101,6 +101,13 @@ class Agent:
             self.initial.history = BallHistory()
             self.initial.history_cts = BallHistory()
 
+    def get_initial(self) -> Optional[Object]:
+        """Return a copy of the object post-event"""
+        if self.initial is None:
+            return None
+
+        return self.initial.copy()
+
     def get_final(self) -> Optional[Object]:
         """Return a copy of the object post-event"""
         if self.final is None:
@@ -118,7 +125,9 @@ class Agent:
 
     @staticmethod
     def from_object(obj: Object) -> Agent:
-        return Agent(id=obj.id, agent_type=_class_to_type[type(obj)])
+        agent = Agent(id=obj.id, agent_type=_class_to_type[type(obj)])
+        agent.set_initial(obj)
+        return agent
 
     def copy(self) -> Agent:
         """Create a deepcopy"""
