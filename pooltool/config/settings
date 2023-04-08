@@ -1,13 +1,13 @@
 [graphics]
-room = 0
-floor = 0
+room = 1
+floor = 1
 table = 1
 shadows = 0
-shader = 0
+shader = 1
 lights = 1
-physical_based_rendering = 0
+physical_based_rendering = 1
 debug = 0
-fps = 30
+fps = 45
 fps_inactive = 5
 hud = 1
 
