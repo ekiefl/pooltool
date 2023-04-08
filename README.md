@@ -75,20 +75,25 @@ You can also use the API. Here is a small python script that runs a shot simulat
 
 import pooltool as pt
 
+# Start an instance of the ShotViewer
 interface = pt.ShotViewer()
 
+# We need a table, some balls, and a cue stick
 table = pt.Table.default()
 balls = pt.get_nine_ball_rack(table, ordered=True)
-cue = pt.Cue(cueing_ball=balls['cue'])
+cue = pt.Cue(cue_ball_id="cue")
+
+# Wrap it up as a System
+shot = pt.System(table=table, balls=balls, cue=cue)
 
 # Aim at the head ball then strike the cue ball
-cue.aim_at_ball(balls['1'])
-cue.strike(V0=8)
+shot.aim_at_ball("1")
+shot.strike(V0=8)
 
-# Evolve the shot
-shot = pt.System(cue=cue, table=table, balls=balls)
-shot.simulate(continuize=True)
+# Evolve the shot. This modifies the system in-place
+pt.simulate(shot)
 
+# Open up the shot in the GUI
 interface.show(shot)
 ```
 

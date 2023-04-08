@@ -180,7 +180,7 @@ class EightBallRack(Rack):
         self.balls[-1].state.rvw[0] = [
             table.center[0] + 0.2,
             table.l / 4,
-            self.balls[-1].R,
+            self.balls[-1].params.R,
         ]
 
 
