@@ -168,8 +168,7 @@ export PATH=\$PATH:$(pwd)
 EOF
 ```
 
-The next time you activate your conda environment (`conda activate pooltool`), `run_pooltool` is now a binary
-that can be run anywhere in your filesystem whenever you are in the `pooltool` conda environment. Test it out:
+The next time you activate your conda environment (`conda activate pooltool`), `run_pooltool` (or `run_pooltool.bat` if you're on Windows) is now a binary that can be run anywhere in your filesystem whenever you are in the `pooltool` conda environment. Test it out:
 
 ```
 conda activate pooltool
