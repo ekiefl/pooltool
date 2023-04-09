@@ -1,4 +1,6 @@
 include pooltool/config/*
+include pooltool/config/menus/*.xml
+recursive-include pooltool/ani/camera/states *.json
 recursive-include pooltool/logo *
 recursive-include pooltool/models *
 recursive-exclude pooltool/models *.blend *.blend1 *.pptx *.svg

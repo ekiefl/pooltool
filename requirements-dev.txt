@@ -6,3 +6,4 @@ pre-commit
 black
 isort
 types-Pillow
+twine
