@@ -53,7 +53,9 @@ def is_pickleable(obj):
 
 
 def panda_path(path) -> str:
-    return str(Filename.fromOsSpecific(str(path)))
+    panda_path = Filename.fromOsSpecific(str(path))
+    panda_path.makeTrueCase()
+    return str(panda_path)
 
 
 def get_temp_file_path():
