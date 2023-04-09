@@ -4,7 +4,6 @@ import importlib.util
 import linecache
 import os
 import pickle
-import tempfile
 import tracemalloc
 
 import numpy as np
@@ -56,13 +55,6 @@ def panda_path(path) -> str:
     panda_path = Filename.fromOsSpecific(str(path))
     panda_path.makeTrueCase()
     return str(panda_path)
-
-
-def get_temp_file_path():
-    f = tempfile.NamedTemporaryFile(delete=False)
-    temp_file_name = f.name
-    f.close()
-    return temp_file_name
 
 
 def get_total_memory_usage(keep_raw=False):
