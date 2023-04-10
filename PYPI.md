@@ -28,7 +28,7 @@ conda activate asdf
 
 7. Change version to X.X.X in `setup.py`, then **back in the development environment** create dist: `python setup.py sdist`
 
-8. Upload to pypi `twine upload dist/pooltool-billiards-X.X.tar.gz`
+8. Upload to pypi `twine upload dist/pooltool-billiards-X.X.X.tar.gz`
 
 9. Create a new python environment
 
@@ -37,6 +37,7 @@ conda deactivate
 conda env remove --name asdf
 conda create -y -n asdf python=3.8.10
 conda activate asdf
+cd ~
 ```
 
 10. Test installation: `pip install pooltool-billiards==X.X.X` (you may need to wait for version to be live)

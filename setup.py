@@ -4,9 +4,9 @@ from setuptools import find_packages, setup
 
 setup(
     name="pooltool-billiards",
-    version="0.2.0",
+    version="0.2.1.dev0",
     packages=find_packages(),
-    scripts=["run_pooltool"],
+    scripts=["run_pooltool", "run_pooltool.bat"],
     author_email="kiefl.evan@gmail.com",
     author="Evan Kiefl",
     url="https://github.com/ekiefl/pooltool",

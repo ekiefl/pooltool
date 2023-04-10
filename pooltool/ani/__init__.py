@@ -96,4 +96,7 @@ def save_config(name, config: Dict, overwrite=False):
         config_obj.write(configfile)
 
 
-settings = load_config("settings")
+if (Path(__file__).parent.parent / "config/settings.local").exists():
+    settings = load_config("settings.local")
+else:
+    settings = load_config("settings")
