@@ -20,7 +20,7 @@ This project is very much a work-in-progress. Your OS may have partially support
 |--------|-------|---------|-------|
 | API    | ✅    | ✅      | 🔶    |
 | GUI    | ✅    | ❌      | 🔶    |
-| pip    | ✅    | ❌      | 🔶    |
+| pip    | ✅    | ✅      | 🔶    |
 
 ✅ = works
 ❌ = doesn't work
@@ -36,21 +36,19 @@ Installation instructions vary depending on how you want to interact with poolto
 
 | Method    | GUI | API | Develop |
 |-----------|-----|-----|---------|
-| Installer | ✅   | ❌   | ❌       |
+| Installer | ✅  | ❌  | ❌      |
 
 This is by far the easiest option. If you want to play and experiment with billiards using the graphical user interface (GUI), this option is for you. You won't have access to the python API, or be able to edit the source code. In other words, this is the non-coding option.
 
 ### Install option (2): PIP
 
-**NOTE**: This option doesn't work on Windows, and might not work on other machines too. With any luck, this will be resolved when the next version (0.2) is released.
-
 | Method    | GUI | API | Develop |
 |-----------|-----|-----|---------|
-| PIP       | ✅   | ✅   | ❌       |
+| PIP       | ✅  | ✅  | ❌      |
 
 This installation uses `pip`. With this option, you have access to the python API so that you can code up billiards simulations. You also have command-line access to the GUI.
 
-This installation has been tested with the following python versions:
+Pooltool is incompatible with Python <3.8 and has been tested with the following versions:
 
 - Python 3.8.10 (default, May 19 2021, 11:01:55)
 - Python 3.9.0 (default, Nov 15 2020, 06:25:35)
@@ -66,6 +64,12 @@ After installing, the GUI can be opened at any time via
 
 ```bash
 run_pooltool
+```
+
+Or, if you're on Windows:
+
+```bash
+run_pooltool.bat
 ```
 
 You can also use the API. Here is a small python script that runs a shot simulation and then visualizes the results.
@@ -103,7 +107,7 @@ I haven't spent much time on the API yet but hopefully you get the idea.
 
 | Method    | GUI | API | Develop |
 |-----------|-----|-----|---------|
-| Developer | ✅   | ✅   | ✅       |
+| Developer | ✅  | ✅  | ✅      |
 
 If you want to develop for pooltool, have access to the most up-to-date version of the codebase, or modify the code to your liking, this is for you.
 
