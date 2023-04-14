@@ -28,9 +28,9 @@ This project is very much a work-in-progress. Your OS may have partially support
 
 # Installation
 
-Installation instructions vary depending on how you want to interact with pooltool. There are 3 current options: _(1) Installer_, _(2) PIP_, and _(3) Developer_. Read on for descriptions and instructions for each installation method.
+Installation instructions vary depending on how you want to interact with pooltool. There are 3 current options: _(1) Installer_, _(2) PIP_, and _(3) Developer_. Click on the following options to pull up descriptions and instructions for each installation method.
 
-### Install option (1): Installer
+<details><summary">Install option (1): Installer</summary>
 
 **NOTE**: I haven't sorted out this step yet, but eventually there will be OS-specific installers available for download here. Until then, please follow the PIP or Developer instructions below.
 
@@ -40,7 +40,9 @@ Installation instructions vary depending on how you want to interact with poolto
 
 This is by far the easiest option. If you want to play and experiment with billiards using the graphical user interface (GUI), this option is for you. You won't have access to the python API, or be able to edit the source code. In other words, this is the non-coding option.
 
-### Install option (2): PIP
+</details>
+
+<details><summary>Install option (2): PIP</summary>
 
 | Method    | GUI | API | Develop |
 |-----------|-----|-----|---------|
@@ -103,7 +105,9 @@ interface.show(shot)
 
 I haven't spent much time on the API yet but hopefully you get the idea.
 
-### Install option (3): Developer
+</details>
+
+<details><summary>Install option (3): Developer</summary>
 
 | Method    | GUI | API | Develop |
 |-----------|-----|-----|---------|
@@ -179,6 +183,8 @@ conda activate pooltool
 cd ~
 run_pooltool
 ```
+
+</details>
 
 ## Tutorials
 
