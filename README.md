@@ -189,3 +189,9 @@ run_pooltool
 ## Tutorials
 
 There are some tutorials for pooltool that can be viewed in [the wiki](https://github.com/ekiefl/pooltool/wiki).
+
+## Support
+
+You can buy me a coffee if this project was helpful to you.
+
+[<img src="https://www.buymeacoffee.com/assets/img/guidelines/download-assets-sm-1.svg" alt="Show your support" width="180"/>](https://www.buymeacoffee.com/kieflevan)
