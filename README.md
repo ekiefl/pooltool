@@ -30,7 +30,7 @@ This project is very much a work-in-progress. Your OS may have partially support
 
 Installation instructions vary depending on how you want to interact with pooltool. There are 3 current options: _(1) Installer_, _(2) PIP_, and _(3) Developer_. Click on the following options to pull up descriptions and instructions for each installation method.
 
-<details><summary">Install option (1): Installer</summary>
+<details><summary>Install option (1): Installer</summary>
 
 **NOTE**: I haven't sorted out this step yet, but eventually there will be OS-specific installers available for download here. Until then, please follow the PIP or Developer instructions below.
 
