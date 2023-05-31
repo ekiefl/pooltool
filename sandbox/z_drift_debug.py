@@ -90,8 +90,15 @@ def has_drift(multisystem: MultiSystem) -> bool:
                 if state.rvw[0, 2] != ball.params.R:
                     return True
 
+            for state in ball.history_cts:
+                if state.s == pocketed:
+                    continue
+
+                if state.rvw[0, 2] != ball.params.R:
+                    return True
+
     return False
 
 
 if __name__ == "__main__":
-    assert not any(has_drift(simulate_game()) for _ in range(100))
+    assert not any(has_drift(simulate_game()) for _ in range(30))
