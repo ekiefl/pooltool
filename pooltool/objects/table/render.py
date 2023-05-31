@@ -166,5 +166,5 @@ class TableRender(Render):
 
     def set_render_state_as_object_state(self):
         raise NotImplementedError(
-            "Can't call set_object_state_as_render_state for class 'TableRender'"
+            "Can't call set_render_state_as_object_state for class 'TableRender'"
         )
