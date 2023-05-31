@@ -131,7 +131,7 @@ class BallInHandMode(BaseMode):
             ):
                 return False
 
-        self.grabbed_ball.set_object_state_as_render_state()
+        self.grabbed_ball.set_object_state_as_render_state(patch=True)
         return True
 
     def move_grabbed_ball(self):

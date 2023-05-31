@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Tuple
 
 import numpy as np
 from direct.interval.IntervalGlobal import (
@@ -68,11 +69,38 @@ class BallRender(Render):
 
         self.set_orientation(self._ball.initial_orientation)
 
-    def set_object_state_as_render_state(self):
-        """Set the object position based on the rendered position"""
-        pos = self.get_render_state()
-        assert (diff := pos[2] - self._ball.params.R) == 0, f"{diff}"
-        self._ball.state.rvw[0] = pos
+    def set_object_state_as_render_state(self, patch: bool = False):
+        """Set the object position based on the rendered position
+
+        NOTE:
+
+        TL;DR The z-component of displacement is manually set to self._ball.params.R
+        when `patch` is True
+
+        This method contains an untruthful patch in order to prevent leaky float
+        operations likely caused by an unavoidable mixup between single and double float
+        precision:
+
+        https://discourse.panda3d.org/t/precision-of-coordinates-in-panda3d/11247
+
+        When the render state is fetched for a ball on the table, the z-component of the
+        displacement should be exactly the ball's radius. However, the following
+        assertion fails:
+
+        >>> assert (diff := pos[2] - self._ball.params.R) == 0, f"{diff}"
+
+        Propagated over several shots, dramatic z-drift is observed.
+
+        The patch simply sets the object state z-component of displacement to the ball's
+        radius. This would be problematic if this method is called while the ball is
+        airborne.
+        """
+        x, y, z = self.get_render_state()
+
+        if patch:
+            z = self._ball.params.R
+
+        self._ball.state.rvw[0] = (x, y, z)
 
     def set_render_state_as_object_state(self):
         """Set rendered position based on the object's position (self.state.rvw[0,:])"""
@@ -114,31 +142,18 @@ class BallRender(Render):
 
         return shadow_node
 
-    def get_scale_factor(self, node):
-        """Find scale factor to match model size to ball's SI radius
-
-        NOTE: This is a leaky float operation that can have huge consequences. For
-        example, in some instances this returns 1.0000000202332482 when it should return
-        1. This is impactful when setting the object state as the render state, because
-        the z-value of the ball's position will not be set to exactly it's radius, but
-        rather some non-zero albeit small value. Propagated over several shots, dramatic
-        z-drift is observed.
-
-        This may be a consequence of the following issue:
-
-        https://discourse.panda3d.org/t/precision-of-coordinates-in-panda3d/11247
-        """
+    def get_scale_factor(self, node) -> float:
         m, M = node.getTightBounds()
         model_R = (M - m)[0] / 2
 
         return self._ball.params.R / model_R
 
-    def get_render_state(self):
+    def get_render_state(self) -> Tuple[float, float, float]:
         """Return the position of the rendered ball"""
         x, y, z = self.nodes["pos"].getPos()
         return x, y, z
 
-    def set_render_state(self, pos, quat=None):
+    def set_render_state(self, pos, quat=None) -> None:
         """Set the position (and quaternion) of the rendered ball
 
         Parameters
