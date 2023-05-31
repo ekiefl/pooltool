@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional
+from typing import Dict, Iterator, List, Optional
 
 import numpy as np
 from attrs import define, field
@@ -472,6 +472,10 @@ class MultiSystem:
 
     def __getitem__(self, idx: int) -> System:
         return self.multisystem[idx]
+
+    def __iter__(self) -> Iterator[System]:
+        for system in self.multisystem:
+            yield system
 
     @property
     def active(self) -> System:
