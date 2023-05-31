@@ -92,8 +92,8 @@ class BallRender(Render):
         Propagated over several shots, dramatic z-drift is observed.
 
         The patch simply sets the object state z-component of displacement to the ball's
-        radius. This would be problematic if this method is called while the ball is
-        airborne.
+        radius. If this method is called with patch=True while the rendered ball is
+        airborne, that would be very be problematic.
         """
         x, y, z = self.get_render_state()
 
@@ -143,6 +143,7 @@ class BallRender(Render):
         return shadow_node
 
     def get_scale_factor(self, node) -> float:
+        """Find scale factor to match model size to ball's SI radius"""
         m, M = node.getTightBounds()
         model_R = (M - m)[0] / 2
 
