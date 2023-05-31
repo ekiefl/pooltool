@@ -10,3 +10,8 @@ repos:
         entry: black
         language: system
         types_or: [python, pyi]
+      - id: pytest
+        name: pytest
+        entry: pytest
+        language: system
+        pass_filenames: false

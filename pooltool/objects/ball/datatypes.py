@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 from __future__ import annotations
 
-from typing import Any, List, Optional, Sequence, Tuple
+from typing import Any, Iterator, List, Optional, Sequence, Tuple
 
 import numpy as np
 from attrs import astuple, define, evolve, field
@@ -129,6 +129,10 @@ class BallHistory:
 
     def __len__(self) -> int:
         return len(self.states)
+
+    def __iter__(self) -> Iterator[BallState]:
+        for state in self.states:
+            yield state
 
     @property
     def empty(self) -> bool:
