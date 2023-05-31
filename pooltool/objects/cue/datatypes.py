@@ -33,6 +33,18 @@ class Cue:
 
     specs: CueSpecs = field(factory=CueSpecs.default)
 
+    def __repr__(self):
+        lines = [
+            f"<{self.__class__.__name__} object at {hex(id(self))}>",
+            f" ├── V0    : {self.V0}",
+            f" ├── phi   : {self.phi}",
+            f" ├── a     : {self.a}",
+            f" ├── b     : {self.b}",
+            f" └── theta : {self.theta}",
+        ]
+
+        return "\n".join(lines) + "\n"
+
     def copy(self) -> Cue:
         """Create a deep-ish copy
 
@@ -74,14 +86,6 @@ class Cue:
         if cue_ball_id is not None:
             self.cue_ball_id = cue_ball_id
 
-    def __repr__(self):
-        lines = [
-            f"<{self.__class__.__name__} object at {hex(id(self))}>",
-            f" ├── V0    : {self.V0}",
-            f" ├── phi   : {self.phi}",
-            f" ├── a     : {self.a}",
-            f" ├── b     : {self.b}",
-            f" └── theta : {self.theta}",
-        ]
-
-        return "\n".join(lines) + "\n"
+    @classmethod
+    def default(cls) -> Cue:
+        return Cue()
