@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 from direct.interval.IntervalGlobal import (
     LerpPosInterval,
@@ -32,7 +34,7 @@ class BallRender(Render):
         Render.__init__(self)
 
     @property
-    def model_path(self) -> str:
+    def model_path(self) -> Path:
         expected_path = ani.model_dir / "balls" / "set_1" / f"{self._ball.id}.glb"
         return expected_path if expected_path.exists() else self.fallback_path
 
