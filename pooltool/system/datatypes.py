@@ -378,7 +378,9 @@ class System:
 
         return energy
 
-    def randomize_positions(self, niter=100) -> bool:
+    def randomize_positions(
+        self, ball_ids: Optional[List[str]] = None, niter=100
+    ) -> bool:
         """Randomize ball positions on the table--ensure no overlap
 
         This "algorithm" initializes a random state, and checks that all the balls are
@@ -386,6 +388,8 @@ class System:
         repeated. This is an inefficient algorithm, in case that needs to be said.
 
         Args:
+            ball_ids:
+                Only these balls will be randomized.
             niter:
                 The number of iterations tried until the algorithm gives up.
 
@@ -393,8 +397,12 @@ class System:
             True if all balls are non-overlapping. Returns False otherwise.
         """
 
+        if ball_ids is None:
+            ball_ids = list(self.balls.keys())
+
         for _ in range(niter):
-            for ball in self.balls.values():
+            for ball_id in ball_ids:
+                ball = self.balls[ball_id]
                 R = ball.params.R
                 ball.state.rvw[0] = [
                     np.random.uniform(R, self.table.w - R),
