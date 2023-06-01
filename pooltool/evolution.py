@@ -45,8 +45,6 @@ DEFAULT_INCLUDE = {
 def simulate(
     shot: System,
     include: Set[EventType] = DEFAULT_INCLUDE,
-    name: str = "NA",
-    quiet: bool = False,
     raise_simulate_error: bool = False,
     t_final=None,
     continuize=False,
@@ -80,8 +78,12 @@ def simulate(
 
         if continuize:
             shot.continuize(dt=dt)
-    except:
-        raise SimulateError()
+
+    except Exception as exc:
+        if raise_simulate_error:
+            raise SimulateError()
+        else:
+            raise exc
 
     return shot
 

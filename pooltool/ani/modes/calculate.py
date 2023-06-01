@@ -82,7 +82,6 @@ class CalculateMode(BaseMode):
             simulate(
                 multisystem.active,
                 continuize=True,
-                quiet=False,
                 raise_simulate_error=True,
             )
         except SimulateError:
