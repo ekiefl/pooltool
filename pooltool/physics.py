@@ -173,11 +173,11 @@ def get_ball_cushion_friction(rvw, f_c):
 
 
 @jit(nopython=True, cache=const.numba_cache)
-def get_rel_velocity(rvw, R):
+def rel_velocity(rvw, R):
     """
     Notes
     =====
-    - Speed comparison in pooltool/tests/speed/get_rel_velocity.py
+    - Speed comparison in pooltool/tests/speed/rel_velocity.py
     """
     _, v, w = rvw
     return v + R * math.cross(np.array([0.0, 0.0, 1.0], dtype=np.float64), w)
@@ -188,7 +188,7 @@ def get_u_vec(rvw, phi, R, s):
     if s == const.rolling:
         return np.array([1.0, 0.0, 0.0])
 
-    rel_vel = get_rel_velocity(rvw, R)
+    rel_vel = rel_velocity(rvw, R)
 
     if (rel_vel == 0.0).all():
         return np.array([1.0, 0.0, 0.0])
@@ -198,7 +198,7 @@ def get_u_vec(rvw, phi, R, s):
 
 @jit(nopython=True, cache=const.numba_cache)
 def get_slide_time(rvw, R, u_s, g):
-    return 2 * np.linalg.norm(get_rel_velocity(rvw, R)) / (7 * u_s * g)
+    return 2 * np.linalg.norm(rel_velocity(rvw, R)) / (7 * u_s * g)
 
 
 @jit(nopython=True, cache=const.numba_cache)
@@ -274,7 +274,7 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     rvw_B0 = math.coordinate_rotation(rvw.T, -phi).T
 
     # Relative velocity unit vector in ball frame
-    u_0 = math.coordinate_rotation(math.unit_vector(get_rel_velocity(rvw, R)), -phi)
+    u_0 = math.coordinate_rotation(math.unit_vector(rel_velocity(rvw, R)), -phi)
 
     # Calculate quantities according to the ball frame. NOTE w_B in this code block
     # is only accurate of the x and y evolution of angular velocity. z evolution of

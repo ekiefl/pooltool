@@ -90,7 +90,7 @@ def ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
             np.array([1, 0, 0], dtype=np.float64)
             if s1 == const.rolling
             else math.coordinate_rotation(
-                math.unit_vector(physics.get_rel_velocity(rvw1, R)), -phi1
+                math.unit_vector(physics.rel_velocity(rvw1, R)), -phi1
             )
         )
 
@@ -113,7 +113,7 @@ def ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
             np.array([1, 0, 0], dtype=np.float64)
             if s2 == const.rolling
             else math.coordinate_rotation(
-                math.unit_vector(physics.get_rel_velocity(rvw2, R)), -phi2
+                math.unit_vector(physics.rel_velocity(rvw2, R)), -phi2
             )
         )
 
@@ -218,7 +218,7 @@ def ball_linear_cushion_collision_time(
         np.array([1, 0, 0], dtype=np.float64)
         if s == const.rolling
         else math.coordinate_rotation(
-            math.unit_vector(physics.get_rel_velocity(rvw, R)), -phi
+            math.unit_vector(physics.rel_velocity(rvw, R)), -phi
         )
     )
 
@@ -286,7 +286,7 @@ def ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
         np.array([1, 0, 0], dtype=np.float64)
         if s == const.rolling
         else math.coordinate_rotation(
-            math.unit_vector(physics.get_rel_velocity(rvw, R)), -phi
+            math.unit_vector(physics.rel_velocity(rvw, R)), -phi
         )
     )
 
@@ -333,7 +333,7 @@ def ball_circular_cushion_collision_coeffs_slow(rvw, s, a, b, r, mu, m, g, R):
         [1, 0, 0]
         if s == const.rolling
         else math.coordinate_rotation(
-            math.unit_vector(physics.get_rel_velocity(rvw, R)), -phi
+            math.unit_vector(physics.rel_velocity(rvw, R)), -phi
         )
     )
 
@@ -400,7 +400,7 @@ def ball_pocket_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
         np.array([1, 0, 0], dtype=np.float64)
         if s == const.rolling
         else math.coordinate_rotation(
-            math.unit_vector(physics.get_rel_velocity(rvw, R)), -phi
+            math.unit_vector(physics.rel_velocity(rvw, R)), -phi
         )
     )
 
@@ -447,7 +447,7 @@ def ball_pocket_collision_coeffs_slow(rvw, s, a, b, r, mu, m, g, R):
         np.array([1, 0, 0])
         if s == const.rolling
         else math.coordinate_rotation(
-            math.unit_vector(physics.get_rel_velocity(rvw, R)), -phi
+            math.unit_vector(physics.rel_velocity(rvw, R)), -phi
         )
     )
 
