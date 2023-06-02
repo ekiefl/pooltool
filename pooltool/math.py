@@ -154,7 +154,7 @@ def angle(v2, v1=(1, 0)):
 
 
 @jit(nopython=True, cache=c.numba_cache)
-def coordinate_rotation_fast(v, phi):
+def coordinate_rotation(v, phi):
     """Rotate vector/matrix from one frame of reference to another (3D FIXME)
 
     (just-in-time compiled)

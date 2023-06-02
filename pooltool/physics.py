@@ -56,7 +56,7 @@ def resolve_ball_ball_collision(rvw1, rvw2):
     v_mag = np.linalg.norm(v_rel)
 
     n = math.unit_vector(r2 - r1)
-    t = math.coordinate_rotation_fast(n, np.pi / 2)
+    t = math.coordinate_rotation(n, np.pi / 2)
 
     beta = math.angle(v_rel, n)
 
@@ -75,7 +75,7 @@ def resolve_ball_cushion_collision(rvw, normal, R, m, h, e_c, f_c):
     # Change from the table frame to the cushion frame. The cushion frame is defined by
     # the normal vector is parallel with <1,0,0>.
     psi = math.angle(normal)
-    rvw_R = math.coordinate_rotation_fast(rvw.T, -psi).T
+    rvw_R = math.coordinate_rotation(rvw.T, -psi).T
 
     # The incidence angle--called theta_0 in paper
     phi = math.angle(rvw_R[1]) % (2 * np.pi)
@@ -131,7 +131,7 @@ def resolve_ball_cushion_collision(rvw, normal, R, m, h, e_c, f_c):
     rvw_R[2, 2] += R / I * PY * np.cos(theta_a)
 
     # Change back to table reference frame
-    rvw = math.coordinate_rotation_fast(rvw_R.T, psi).T
+    rvw = math.coordinate_rotation(rvw_R.T, psi).T
 
     return rvw
 
@@ -250,7 +250,7 @@ def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2,
         u1 = (
             np.array([1, 0, 0])
             if s1 == const.rolling
-            else math.coordinate_rotation_fast(
+            else math.coordinate_rotation(
                 math.unit_vector(get_rel_velocity(rvw1, R)), -phi1
             )
         )
@@ -273,7 +273,7 @@ def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2,
         u2 = (
             np.array([1, 0, 0])
             if s2 == const.rolling
-            else math.coordinate_rotation_fast(
+            else math.coordinate_rotation(
                 math.unit_vector(get_rel_velocity(rvw2, R)), -phi2
             )
         )
@@ -321,7 +321,7 @@ def get_u_vec(rvw, phi, R, s):
     if (rel_vel == 0.0).all():
         return np.array([1.0, 0.0, 0.0])
 
-    return math.coordinate_rotation_fast(math.unit_vector(rel_vel), -phi)
+    return math.coordinate_rotation(math.unit_vector(rel_vel), -phi)
 
 
 @jit(nopython=True, cache=const.numba_cache)
@@ -349,7 +349,7 @@ def get_ball_ball_collision_coeffs_fast(
         u1 = (
             np.array([1, 0, 0], dtype=np.float64)
             if s1 == const.rolling
-            else math.coordinate_rotation_fast(
+            else math.coordinate_rotation(
                 math.unit_vector(get_rel_velocity(rvw1, R)), -phi1
             )
         )
@@ -372,7 +372,7 @@ def get_ball_ball_collision_coeffs_fast(
         u2 = (
             np.array([1, 0, 0], dtype=np.float64)
             if s2 == const.rolling
-            else math.coordinate_rotation_fast(
+            else math.coordinate_rotation(
                 math.unit_vector(get_rel_velocity(rvw2, R)), -phi2
             )
         )
@@ -471,9 +471,7 @@ def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g,
     u = np.array(
         [1, 0, 0]
         if s == const.rolling
-        else math.coordinate_rotation_fast(
-            math.unit_vector(get_rel_velocity(rvw, R)), -phi
-        )
+        else math.coordinate_rotation(math.unit_vector(get_rel_velocity(rvw, R)), -phi)
     )
 
     ax = -0.5 * mu * g * (u[0] * np.cos(phi) - u[1] * np.sin(phi))
@@ -532,9 +530,7 @@ def get_ball_linear_cushion_collision_time_fast(
     u = (
         np.array([1, 0, 0], dtype=np.float64)
         if s == const.rolling
-        else math.coordinate_rotation_fast(
-            math.unit_vector(get_rel_velocity(rvw, R)), -phi
-        )
+        else math.coordinate_rotation(math.unit_vector(get_rel_velocity(rvw, R)), -phi)
     )
 
     K = -0.5 * mu * g
@@ -608,9 +604,7 @@ def get_ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     u = np.array(
         [1, 0, 0]
         if s == const.rolling
-        else math.coordinate_rotation_fast(
-            math.unit_vector(get_rel_velocity(rvw, R)), -phi
-        )
+        else math.coordinate_rotation(math.unit_vector(get_rel_velocity(rvw, R)), -phi)
     )
 
     K = -0.5 * mu * g
@@ -652,9 +646,7 @@ def get_ball_circular_cushion_collision_coeffs_fast(rvw, s, a, b, r, mu, m, g, R
     u = (
         np.array([1, 0, 0], dtype=np.float64)
         if s == const.rolling
-        else math.coordinate_rotation_fast(
-            math.unit_vector(get_rel_velocity(rvw, R)), -phi
-        )
+        else math.coordinate_rotation(math.unit_vector(get_rel_velocity(rvw, R)), -phi)
     )
 
     K = -0.5 * mu * g
@@ -727,9 +719,7 @@ def get_ball_pocket_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     u = (
         np.array([1, 0, 0])
         if s == const.rolling
-        else math.coordinate_rotation_fast(
-            math.unit_vector(get_rel_velocity(rvw, R)), -phi
-        )
+        else math.coordinate_rotation(math.unit_vector(get_rel_velocity(rvw, R)), -phi)
     )
 
     K = -0.5 * mu * g
@@ -771,9 +761,7 @@ def get_ball_pocket_collision_coeffs_fast(rvw, s, a, b, r, mu, m, g, R):
     u = (
         np.array([1, 0, 0], dtype=np.float64)
         if s == const.rolling
-        else math.coordinate_rotation_fast(
-            math.unit_vector(get_rel_velocity(rvw, R)), -phi
-        )
+        else math.coordinate_rotation(math.unit_vector(get_rel_velocity(rvw, R)), -phi)
     )
 
     K = -0.5 * mu * g
@@ -926,12 +914,10 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     # Angle of initial velocity in table frame
     phi = math.angle(rvw[1])
 
-    rvw_B0 = math.coordinate_rotation_fast(rvw.T, -phi).T
+    rvw_B0 = math.coordinate_rotation(rvw.T, -phi).T
 
     # Relative velocity unit vector in ball frame
-    u_0 = math.coordinate_rotation_fast(
-        math.unit_vector(get_rel_velocity(rvw, R)), -phi
-    )
+    u_0 = math.coordinate_rotation(math.unit_vector(get_rel_velocity(rvw, R)), -phi)
 
     # Calculate quantities according to the ball frame. NOTE w_B in this code block
     # is only accurate of the x and y evolution of angular velocity. z evolution of
@@ -951,7 +937,7 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     rvw_B = evolve_perpendicular_spin_state(rvw_B, R, u_sp, g, t)
 
     # Rotate to table reference
-    rvw_T = math.coordinate_rotation_fast(rvw_B.T, phi).T
+    rvw_T = math.coordinate_rotation(rvw_B.T, phi).T
     rvw_T[0] += rvw[0]  # Add initial ball position
 
     return rvw_T
@@ -968,7 +954,7 @@ def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
 
     r = r_0 + v_0 * t - 0.5 * u_r * g * t**2 * v_0_hat
     v = v_0 - u_r * g * t * v_0_hat
-    w = math.coordinate_rotation_fast(v / R, np.pi / 2)
+    w = math.coordinate_rotation(v / R, np.pi / 2)
 
     # Independently evolve the z spin
     temp = evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)
@@ -1102,8 +1088,8 @@ def cue_strike(m, M, R, V0, phi, theta, a, b):
 
     # Rotate to table reference
     rot_angle = phi + np.pi / 2
-    v_T = math.coordinate_rotation_fast(v_B, rot_angle)
-    w_T = math.coordinate_rotation_fast(w_B, rot_angle)
+    v_T = math.coordinate_rotation(v_B, rot_angle)
+    w_T = math.coordinate_rotation(w_B, rot_angle)
 
     return v_T, w_T
 
