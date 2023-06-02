@@ -236,70 +236,6 @@ def skip_ball_ball_collision(rvw1, rvw2, s1, s2, R1, R2):
     return False
 
 
-def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
-    """Get the quartic coeffs required to determine the ball-ball collision time"""
-    c1x, c1y = rvw1[0, 0], rvw1[0, 1]
-    c2x, c2y = rvw2[0, 0], rvw2[0, 1]
-
-    if s1 in const.nontranslating:
-        a1x, a1y, b1x, b1y = 0, 0, 0, 0
-    else:
-        phi1 = math.angle(rvw1[1])
-        v1 = np.linalg.norm(rvw1[1])
-
-        u1 = (
-            np.array([1, 0, 0])
-            if s1 == const.rolling
-            else math.coordinate_rotation(
-                math.unit_vector(get_rel_velocity(rvw1, R)), -phi1
-            )
-        )
-
-        K1 = -0.5 * mu1 * g1
-        cos_phi1 = np.cos(phi1)
-        sin_phi1 = np.sin(phi1)
-
-        a1x = K1 * (u1[0] * cos_phi1 - u1[1] * sin_phi1)
-        a1y = K1 * (u1[0] * sin_phi1 + u1[1] * cos_phi1)
-        b1x = v1 * cos_phi1
-        b1y = v1 * sin_phi1
-
-    if s2 in const.nontranslating:
-        a2x, a2y, b2x, b2y = 0, 0, 0, 0
-    else:
-        phi2 = math.angle(rvw2[1])
-        v2 = np.linalg.norm(rvw2[1])
-
-        u2 = (
-            np.array([1, 0, 0])
-            if s2 == const.rolling
-            else math.coordinate_rotation(
-                math.unit_vector(get_rel_velocity(rvw2, R)), -phi2
-            )
-        )
-
-        K2 = -0.5 * mu2 * g2
-        cos_phi2 = np.cos(phi2)
-        sin_phi2 = np.sin(phi2)
-
-        a2x = K2 * (u2[0] * cos_phi2 - u2[1] * sin_phi2)
-        a2y = K2 * (u2[0] * sin_phi2 + u2[1] * cos_phi2)
-        b2x = v2 * cos_phi2
-        b2y = v2 * sin_phi2
-
-    Ax, Ay = a2x - a1x, a2y - a1y
-    Bx, By = b2x - b1x, b2y - b1y
-    Cx, Cy = c2x - c1x, c2y - c1y
-
-    a = Ax**2 + Ay**2
-    b = 2 * Ax * Bx + 2 * Ay * By
-    c = Bx**2 + 2 * Ax * Cx + 2 * Ay * Cy + By**2
-    d = 2 * Bx * Cx + 2 * By * Cy
-    e = Cx**2 + Cy**2 - 4 * R**2
-
-    return a, b, c, d, e
-
-
 @jit(nopython=True, cache=const.numba_cache)
 def get_rel_velocity(rvw, R):
     """
@@ -325,16 +261,10 @@ def get_u_vec(rvw, phi, R, s):
 
 
 @jit(nopython=True, cache=const.numba_cache)
-def get_ball_ball_collision_coeffs_fast(
-    rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
-):
+def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
     """Get quartic coeffs required to determine the ball-ball collision time
 
     (just-in-time compiled)
-
-    Notes
-    =====
-    - Speed comparison in pooltool/tests/speed/get_ball_ball_collision_coeffs.py
     """
 
     c1x, c1y = rvw1[0, 0], rvw1[0, 1]
@@ -460,56 +390,8 @@ def skip_ball_linear_cushion_collision(rvw, s, u_r, g, R, p1, p2, normal):
     return False
 
 
-def get_ball_linear_cushion_collision_time(rvw, s, lx, ly, l0, p1, p2, mu, m, g, R):
-    """Get the time until collision between ball and linear cushion segment"""
-    if s in const.nontranslating:
-        return np.inf
-
-    phi = math.angle(rvw[1])
-    v = np.linalg.norm(rvw[1])
-
-    u = np.array(
-        [1, 0, 0]
-        if s == const.rolling
-        else math.coordinate_rotation(math.unit_vector(get_rel_velocity(rvw, R)), -phi)
-    )
-
-    ax = -0.5 * mu * g * (u[0] * np.cos(phi) - u[1] * np.sin(phi))
-    ay = -0.5 * mu * g * (u[0] * np.sin(phi) + u[1] * np.cos(phi))
-    bx, by = v * np.cos(phi), v * np.sin(phi)
-    cx, cy = rvw[0, 0], rvw[0, 1]
-
-    A = lx * ax + ly * ay
-    B = lx * bx + ly * by
-    C1 = l0 + lx * cx + ly * cy + R * np.sqrt(lx**2 + ly**2)
-    C2 = l0 + lx * cx + ly * cy - R * np.sqrt(lx**2 + ly**2)
-
-    root1, root2 = math.quadratic(A, B, C1)
-    root3, root4 = math.quadratic(A, B, C2)
-    roots = np.array(
-        [
-            root1,
-            root2,
-            root3,
-            root4,
-        ]
-    )
-
-    roots = roots[(abs(roots.imag) <= const.tol) & (roots.real > const.tol)].real
-
-    # All roots beyond this point are real and positive
-
-    for i, root in enumerate(roots):
-        rvw_dtau, _ = evolve_state_motion(s, rvw, R, m, mu, 1, mu, g, root)
-        s_score = -np.dot(p1 - rvw_dtau[0], p2 - p1) / np.dot(p2 - p1, p2 - p1)
-        if not (0 <= s_score <= 1):
-            roots[i] = np.inf
-
-    return roots.min() if len(roots) else np.inf
-
-
 @jit(nopython=True, cache=const.numba_cache)
-def get_ball_linear_cushion_collision_time_fast(
+def get_ball_linear_cushion_collision_time(
     rvw, s, lx, ly, l0, p1, p2, direction, mu, m, g, R
 ):
     """Get time until collision between ball and linear cushion segment
@@ -580,7 +462,49 @@ def get_ball_linear_cushion_collision_time_fast(
     return min_time
 
 
+@jit(nopython=True, cache=const.numba_cache)
 def get_ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
+    """Get quartic coeffs required to determine the ball-circular-cushion collision time
+
+    (just-in-time compiled)
+
+    Notes
+    =====
+    - Speed comparison in
+      pooltool/tests/speed/get_ball_circular_cushion_collision_coeffs.py
+    """
+
+    if s == const.spinning or s == const.pocketed or s == const.stationary:
+        return np.inf, np.inf, np.inf, np.inf, np.inf
+
+    phi = math.angle(rvw[1])
+    v = np.linalg.norm(rvw[1])
+
+    u = (
+        np.array([1, 0, 0], dtype=np.float64)
+        if s == const.rolling
+        else math.coordinate_rotation(math.unit_vector(get_rel_velocity(rvw, R)), -phi)
+    )
+
+    K = -0.5 * mu * g
+    cos_phi = np.cos(phi)
+    sin_phi = np.sin(phi)
+
+    ax = K * (u[0] * cos_phi - u[1] * sin_phi)
+    ay = K * (u[0] * sin_phi + u[1] * cos_phi)
+    bx, by = v * cos_phi, v * sin_phi
+    cx, cy = rvw[0, 0], rvw[0, 1]
+
+    A = 0.5 * (ax**2 + ay**2)
+    B = ax * bx + ay * by
+    C = ax * (cx - a) + ay * (cy - b) + 0.5 * (bx**2 + by**2)
+    D = bx * (cx - a) + by * (cy - b)
+    E = 0.5 * (a**2 + b**2 + cx**2 + cy**2 - (r + R) ** 2) - (cx * a + cy * b)
+
+    return A, B, C, D, E
+
+
+def get_ball_circular_cushion_collision_coeffs_slow(rvw, s, a, b, r, mu, m, g, R):
     """Get quartic coeffs required to determine the ball-circular-cushion collision time
 
     Parameters
@@ -625,9 +549,37 @@ def get_ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     return A, B, C, D, E
 
 
+def get_ball_circular_cushion_collision_time(rvw, s, a, b, r, mu, m, g, R):
+    """Get the time until collision between ball and circular cushion segment
+
+    NOTE This is deprecated. Rather than solve the roots of a single polynomial
+    equation, as is done in this function, all roots of a given collision class are
+    solved simultaneously via math.roots
+
+    Parameters
+    ==========
+    a : float
+        The x-coordinate of the cushion segment's center
+    b : float
+        The y-coordinate of the cushion segment's center
+    r : float
+        The radius of the cushion segment's center
+    mu : float
+        The rolling or sliding coefficient of friction. Should match the value of s
+    """
+    A, B, C, D, E = get_ball_circular_cushion_collision_coeffs_slow(
+        rvw, s, a, b, r, mu, m, g, R
+    )
+    roots = np.roots([A, B, C, D, E])
+
+    roots = roots[(abs(roots.imag) <= const.tol) & (roots.real > const.tol)].real
+
+    return roots.min() if len(roots) else np.inf
+
+
 @jit(nopython=True, cache=const.numba_cache)
-def get_ball_circular_cushion_collision_coeffs_fast(rvw, s, a, b, r, mu, m, g, R):
-    """Get quartic coeffs required to determine the ball-circular-cushion collision time
+def get_ball_pocket_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
+    """Get quartic coeffs required to determine the ball-pocket collision time
 
     (just-in-time compiled)
 
@@ -662,40 +614,12 @@ def get_ball_circular_cushion_collision_coeffs_fast(rvw, s, a, b, r, mu, m, g, R
     B = ax * bx + ay * by
     C = ax * (cx - a) + ay * (cy - b) + 0.5 * (bx**2 + by**2)
     D = bx * (cx - a) + by * (cy - b)
-    E = 0.5 * (a**2 + b**2 + cx**2 + cy**2 - (r + R) ** 2) - (cx * a + cy * b)
+    E = 0.5 * (a**2 + b**2 + cx**2 + cy**2 - r**2) - (cx * a + cy * b)
 
     return A, B, C, D, E
 
 
-def get_ball_circular_cushion_collision_time(rvw, s, a, b, r, mu, m, g, R):
-    """Get the time until collision between ball and circular cushion segment
-
-    NOTE This is deprecated. Rather than solve the roots of a single polynomial
-    equation, as is done in this function, all roots of a given collision class are
-    solved simultaneously via math.roots
-
-    Parameters
-    ==========
-    a : float
-        The x-coordinate of the cushion segment's center
-    b : float
-        The y-coordinate of the cushion segment's center
-    r : float
-        The radius of the cushion segment's center
-    mu : float
-        The rolling or sliding coefficient of friction. Should match the value of s
-    """
-    A, B, C, D, E = get_ball_circular_cushion_collision_coeffs(
-        rvw, s, a, b, r, mu, m, g, R
-    )
-    roots = np.roots([A, B, C, D, E])
-
-    roots = roots[(abs(roots.imag) <= const.tol) & (roots.real > const.tol)].real
-
-    return roots.min() if len(roots) else np.inf
-
-
-def get_ball_pocket_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
+def get_ball_pocket_collision_coeffs_slow(rvw, s, a, b, r, mu, m, g, R):
     """Get the quartic coeffs required to determine the ball-pocket collision time
 
     Parameters
@@ -740,48 +664,6 @@ def get_ball_pocket_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     return A, B, C, D, E
 
 
-@jit(nopython=True, cache=const.numba_cache)
-def get_ball_pocket_collision_coeffs_fast(rvw, s, a, b, r, mu, m, g, R):
-    """Get quartic coeffs required to determine the ball-pocket collision time
-
-    (just-in-time compiled)
-
-    Notes
-    =====
-    - Speed comparison in
-      pooltool/tests/speed/get_ball_circular_cushion_collision_coeffs.py
-    """
-
-    if s == const.spinning or s == const.pocketed or s == const.stationary:
-        return np.inf, np.inf, np.inf, np.inf, np.inf
-
-    phi = math.angle(rvw[1])
-    v = np.linalg.norm(rvw[1])
-
-    u = (
-        np.array([1, 0, 0], dtype=np.float64)
-        if s == const.rolling
-        else math.coordinate_rotation(math.unit_vector(get_rel_velocity(rvw, R)), -phi)
-    )
-
-    K = -0.5 * mu * g
-    cos_phi = np.cos(phi)
-    sin_phi = np.sin(phi)
-
-    ax = K * (u[0] * cos_phi - u[1] * sin_phi)
-    ay = K * (u[0] * sin_phi + u[1] * cos_phi)
-    bx, by = v * cos_phi, v * sin_phi
-    cx, cy = rvw[0, 0], rvw[0, 1]
-
-    A = 0.5 * (ax**2 + ay**2)
-    B = ax * bx + ay * by
-    C = ax * (cx - a) + ay * (cy - b) + 0.5 * (bx**2 + by**2)
-    D = bx * (cx - a) + by * (cy - b)
-    E = 0.5 * (a**2 + b**2 + cx**2 + cy**2 - r**2) - (cx * a + cy * b)
-
-    return A, B, C, D, E
-
-
 def get_ball_pocket_collision_time(rvw, s, a, b, r, mu, m, g, R):
     """Get the time until collision between ball and pocket
 
@@ -801,7 +683,7 @@ def get_ball_pocket_collision_time(rvw, s, a, b, r, mu, m, g, R):
         The rolling or sliding coefficient of friction. Should match the value of s
     """
 
-    A, B, C, D, E = get_ball_pocket_collision_coeffs(rvw, s, a, b, r, mu, m, g, R)
+    A, B, C, D, E = get_ball_pocket_collision_coeffs_slow(rvw, s, a, b, r, mu, m, g, R)
     roots = np.roots([A, B, C, D, E])
 
     roots = roots[(abs(roots.imag) <= const.tol) & (roots.real > const.tol)].real
@@ -809,51 +691,21 @@ def get_ball_pocket_collision_time(rvw, s, a, b, r, mu, m, g, R):
     return roots.min() if len(roots) else np.inf
 
 
+@jit(nopython=True, cache=const.numba_cache)
 def get_slide_time(rvw, R, u_s, g):
     return 2 * np.linalg.norm(get_rel_velocity(rvw, R)) / (7 * u_s * g)
 
 
+@jit(nopython=True, cache=const.numba_cache)
 def get_roll_time(rvw, u_r, g):
     _, v, _ = rvw
     return np.linalg.norm(v) / (u_r * g)
 
 
+@jit(nopython=True, cache=const.numba_cache)
 def get_spin_time(rvw, R, u_sp, g):
     _, _, w = rvw
     return np.abs(w[2]) * 2 / 5 * R / u_sp / g
-
-
-@jit(nopython=True, cache=const.numba_cache)
-def get_slide_time_fast(rvw, R, u_s, g):
-    return 2 * np.linalg.norm(get_rel_velocity(rvw, R)) / (7 * u_s * g)
-
-
-@jit(nopython=True, cache=const.numba_cache)
-def get_roll_time_fast(rvw, u_r, g):
-    _, v, _ = rvw
-    return np.linalg.norm(v) / (u_r * g)
-
-
-@jit(nopython=True, cache=const.numba_cache)
-def get_spin_time_fast(rvw, R, u_sp, g):
-    _, _, w = rvw
-    return np.abs(w[2]) * 2 / 5 * R / u_sp / g
-
-
-def get_ball_energy(rvw, R, m):
-    """Get the energy of a ball
-
-    Currently calculating linear and rotational kinetic energy. Need to add potential
-    energy if z-axis is freed
-    """
-    # Linear
-    LKE = m * np.linalg.norm(rvw[1]) ** 2 / 2
-
-    # Rotational
-    I = 2 / 5 * m * R**2
-    RKE = I * np.linalg.norm(rvw[2]) ** 2 / 2
-
-    return LKE + RKE
 
 
 @jit(nopython=True, cache=const.numba_cache)
@@ -862,7 +714,7 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
         return rvw, state
 
     if state == const.sliding:
-        dtau_E_slide = get_slide_time_fast(rvw, R, u_s, g)
+        dtau_E_slide = get_slide_time(rvw, R, u_s, g)
 
         if t >= dtau_E_slide:
             rvw = evolve_slide_state(rvw, R, m, u_s, u_sp, g, dtau_E_slide)
@@ -872,7 +724,7 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
             return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), const.sliding
 
     if state == const.rolling:
-        dtau_E_roll = get_roll_time_fast(rvw, u_r, g)
+        dtau_E_roll = get_roll_time(rvw, u_r, g)
 
         if t >= dtau_E_roll:
             rvw = evolve_roll_state(rvw, R, u_r, u_sp, g, dtau_E_roll)
@@ -882,7 +734,7 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
             return evolve_roll_state(rvw, R, u_r, u_sp, g, t), const.rolling
 
     if state == const.spinning:
-        dtau_E_spin = get_spin_time_fast(rvw, R, u_sp, g)
+        dtau_E_spin = get_spin_time(rvw, R, u_sp, g)
 
         if t >= dtau_E_spin:
             return (
@@ -1092,6 +944,22 @@ def cue_strike(m, M, R, V0, phi, theta, a, b):
     w_T = math.coordinate_rotation(w_B, rot_angle)
 
     return v_T, w_T
+
+
+def get_ball_energy(rvw, R, m):
+    """Get the energy of a ball
+
+    Currently calculating linear and rotational kinetic energy. Need to add potential
+    energy if z-axis is freed
+    """
+    # Linear
+    LKE = m * np.linalg.norm(rvw[1]) ** 2 / 2
+
+    # Rotational
+    I = 2 / 5 * m * R**2
+    RKE = I * np.linalg.norm(rvw[2]) ** 2 / 2
+
+    return LKE + RKE
 
 
 def is_overlapping(rvw1, rvw2, R1, R2):

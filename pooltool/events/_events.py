@@ -116,16 +116,16 @@ def get_next_transition_event(ball: Ball) -> Event:
         return null_event(time=np.inf)
 
     elif ball.state.s == c.spinning:
-        dtau_E = physics.get_spin_time_fast(
+        dtau_E = physics.get_spin_time(
             ball.state.rvw, ball.params.R, ball.params.u_sp, ball.params.g
         )
         return spinning_stationary_transition(ball, ball.state.t + dtau_E)
 
     elif ball.state.s == c.rolling:
-        dtau_E_spin = physics.get_spin_time_fast(
+        dtau_E_spin = physics.get_spin_time(
             ball.state.rvw, ball.params.R, ball.params.u_sp, ball.params.g
         )
-        dtau_E_roll = physics.get_roll_time_fast(
+        dtau_E_roll = physics.get_roll_time(
             ball.state.rvw, ball.params.u_r, ball.params.g
         )
 
@@ -135,7 +135,7 @@ def get_next_transition_event(ball: Ball) -> Event:
             return rolling_stationary_transition(ball, ball.state.t + dtau_E_roll)
 
     elif ball.state.s == c.sliding:
-        dtau_E = physics.get_slide_time_fast(
+        dtau_E = physics.get_slide_time(
             ball.state.rvw, ball.params.R, ball.params.u_s, ball.params.g
         )
         return sliding_rolling_transition(ball, ball.state.t + dtau_E)
