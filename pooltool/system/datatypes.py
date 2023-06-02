@@ -7,8 +7,8 @@ from typing import Dict, Iterator, List, Optional
 import numpy as np
 from attrs import define, field
 
+import pooltool.math as math
 import pooltool.physics as physics
-import pooltool.utils as utils
 from pooltool.error import ConfigError
 from pooltool.events import (
     AgentType,
@@ -268,8 +268,8 @@ class System:
 
         cueing_ball = self.balls[self.cue.cue_ball_id]
 
-        direction = utils.angle_fast(
-            utils.unit_vector_fast(np.array(pos) - cueing_ball.state.rvw[0])
+        direction = math.angle(
+            math.unit_vector(np.array(pos) - cueing_ball.state.rvw[0])
         )
         self.cue.set_state(phi=direction * 180 / np.pi)
 

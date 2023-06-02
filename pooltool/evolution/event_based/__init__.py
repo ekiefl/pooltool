@@ -7,8 +7,8 @@ from typing import Set
 import numpy as np
 
 import pooltool.constants as c
+import pooltool.math as math
 import pooltool.physics as physics
-import pooltool.utils as utils
 from pooltool.error import SimulateError
 from pooltool.events import (
     Event,
@@ -176,7 +176,7 @@ def get_next_ball_ball_collision(shot: System) -> Event:
         # There are no collisions to test for
         return ball_ball_collision(Ball.dummy(), Ball.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = utils.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
+    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
 
     ball1_id, ball2_id = ball_ids[index]
     ball1, ball2 = shot.balls[ball1_id], shot.balls[ball2_id]
@@ -222,7 +222,7 @@ def get_next_ball_circular_cushion_event(shot: System) -> Event:
             Ball.dummy(), CircularCushionSegment.dummy(), shot.t + dtau_E
         )
 
-    dtau_E, index = utils.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
+    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
 
     ball_id, cushion_id = agent_ids[index]
     ball, cushion = (
@@ -304,7 +304,7 @@ def get_next_ball_pocket_collision(shot: System) -> Event:
         # There are no collisions to test for
         return ball_pocket_collision(Ball.dummy(), Pocket.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = utils.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
+    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
 
     ball_id, pocket_id = agent_ids[index]
     ball, pocket = shot.balls[ball_id], shot.table.pockets[pocket_id]

@@ -11,8 +11,8 @@ from typing import Sequence
 import numpy as np
 from numpy.typing import NDArray
 
+from pooltool.math import unit_vector_slow
 from pooltool.objects import Ball, Pocket
-from pooltool.utils import unit_vector
 
 
 def angle_between_points(p1, p2) -> float:
@@ -36,7 +36,7 @@ def calc_shadow_ball_center(ball: Ball, pocket: Pocket) -> NDArray:
     """Return coordinates of shadow ball for potting into specific pocket"""
 
     # Calculate the unit vector drawn from the object ball to the pocket
-    ball_to_pocket_vector = unit_vector(pocket.potting_point - ball.xyz[:2])
+    ball_to_pocket_vector = unit_vector_slow(pocket.potting_point - ball.xyz[:2])
 
     # The shadow ball center is two ball radii away from the object ball center
     magnitude = ball.params.R * 2

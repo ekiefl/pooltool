@@ -1,13 +1,22 @@
 from __future__ import annotations
+
 import filecmp
-import numpy as np
+import tempfile
 from pathlib import Path
+
+import numpy as np
 import pytest
 from attrs import define
 from numpy.typing import NDArray
-import tempfile
 
-from pooltool.serialize import conversion, SerializeFormat, to_json, from_json, to_msgpack, from_msgpack, from_yaml, to_yaml
+from pooltool.serialize import (
+    SerializeFormat,
+    conversion,
+    from_json,
+    from_msgpack,
+    to_json,
+    to_msgpack,
+)
 from pooltool.utils.dataclasses import are_dataclasses_equal
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -72,7 +81,9 @@ def complex_obj(simple_obj):
 # --------------------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("fmt", [SerializeFormat.JSON, SerializeFormat.MSGPACK, SerializeFormat.YAML])
+@pytest.mark.parametrize(
+    "fmt", [SerializeFormat.JSON, SerializeFormat.MSGPACK, SerializeFormat.YAML]
+)
 def test_round_python_trip_simple(simple_obj, fmt: SerializeFormat):
     """Round trip: structure -> unstructure -> structure"""
     c = conversion[fmt]
@@ -86,7 +97,9 @@ def test_round_python_trip_complex(complex_obj, fmt: SerializeFormat):
     assert c.structure(c.unstructure(complex_obj), ComplexObj) == complex_obj
 
 
-@pytest.mark.parametrize("fmt", [SerializeFormat.JSON, SerializeFormat.MSGPACK, SerializeFormat.YAML])
+@pytest.mark.parametrize(
+    "fmt", [SerializeFormat.JSON, SerializeFormat.MSGPACK, SerializeFormat.YAML]
+)
 def test_round_filesystem_trip_simple(simple_obj, fmt: SerializeFormat):
     """Round trip: structure -> unstructure -> filesystem -> unstructure -> structure"""
 

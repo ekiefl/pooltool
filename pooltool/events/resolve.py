@@ -5,7 +5,6 @@ from attrs import evolve
 
 import pooltool.constants as c
 import pooltool.physics as physics
-import pooltool.utils as utils
 from pooltool.events.datatypes import Event, EventType
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.cue.datatypes import Cue
