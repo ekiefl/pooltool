@@ -109,11 +109,7 @@ def resolve_stick_ball(event: Event) -> Event:
     )
 
     rvw = np.array([ball.initial.state.rvw[0], v, w])
-    s = (
-        c.rolling
-        if abs(np.sum(utils.get_rel_velocity_fast(rvw, ball.initial.params.R))) <= c.tol
-        else c.sliding
-    )
+    s = c.sliding
 
     ball.final = evolve(ball.initial, state=BallState(rvw, s, event.time))
     cue.final = None

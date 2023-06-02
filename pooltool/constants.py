@@ -29,4 +29,4 @@ state_dict = {
 nontranslating = {stationary, spinning, pocketed}
 energetic = {spinning, sliding, rolling}
 
-english_fraction = 0.5
+english_fraction = 0.5000001
