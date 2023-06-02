@@ -8,7 +8,6 @@ import numpy as np
 
 import pooltool.constants as c
 import pooltool.math as math
-import pooltool.physics as physics
 from pooltool.error import SimulateError
 from pooltool.events import (
     Event,
@@ -20,6 +19,7 @@ from pooltool.events import (
     get_next_transition_event,
     null_event,
 )
+from pooltool.evolution.event_based import solve
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
     CircularCushionSegment,
@@ -147,7 +147,7 @@ def get_next_ball_ball_collision(shot: System) -> Event:
                 continue
 
             collision_coeffs.append(
-                physics.get_ball_ball_collision_coeffs(
+                solve.ball_ball_collision_coeffs(
                     rvw1=ball1.state.rvw,
                     rvw2=ball2.state.rvw,
                     s1=ball1.state.s,
@@ -197,7 +197,7 @@ def get_next_ball_circular_cushion_event(shot: System) -> Event:
 
         for cushion in shot.table.cushion_segments.circular.values():
             collision_coeffs.append(
-                physics.get_ball_circular_cushion_collision_coeffs(
+                solve.ball_circular_cushion_collision_coeffs(
                     rvw=ball.state.rvw,
                     s=ball.state.s,
                     a=cushion.a,
@@ -244,7 +244,7 @@ def get_next_ball_linear_cushion_collision(shot: System) -> Event:
             continue
 
         for cushion in shot.table.cushion_segments.linear.values():
-            dtau_E = physics.get_ball_linear_cushion_collision_time(
+            dtau_E = solve.ball_linear_cushion_collision_time(
                 rvw=ball.state.rvw,
                 s=ball.state.s,
                 lx=cushion.lx,
@@ -281,7 +281,7 @@ def get_next_ball_pocket_collision(shot: System) -> Event:
 
         for pocket in shot.table.pockets.values():
             collision_coeffs.append(
-                physics.get_ball_pocket_collision_coeffs(
+                solve.ball_pocket_collision_coeffs(
                     rvw=ball.state.rvw,
                     s=ball.state.s,
                     a=pocket.a,
