@@ -301,7 +301,10 @@ def get_ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2,
 
 
 @jit(nopython=True, cache=const.numba_cache)
-def get_u_vec(rvw, phi, R):
+def get_u_vec(rvw, phi, R, s):
+    if s == const.rolling:
+        return np.array([1.0, 0.0, 0.0])
+
     rel_vel = utils.get_rel_velocity_fast(rvw, R)
 
     if (rel_vel == 0.0).all():
