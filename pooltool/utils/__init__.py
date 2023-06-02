@@ -286,7 +286,7 @@ def roots_fast(p):
     return roots
 
 
-def min_real_root(p, tol=1e-12):
+def min_real_root(p, tol=c.tol):
     """Given an array of polynomial coefficients, find the minimum real root
 
     Parameters
@@ -296,8 +296,8 @@ def min_real_root(p, tol=1e-12):
         n-1 is the order of the polynomial. If n is 5 (4th order polynomial), the
         columns are in the order a, b, c, d, e, where these coefficients make up the
         polynomial equation at^4 + bt^3 + ct^2 + dt + e = 0
-    tol : float, 1e-12
-        Roots are considered if they have
+    tol : float
+        Roots are real if their imaginary components are less than than tol.
 
     Returns
     =======
