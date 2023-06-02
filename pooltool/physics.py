@@ -174,10 +174,9 @@ def get_ball_cushion_friction(rvw, f_c):
 
 @jit(nopython=True, cache=const.numba_cache)
 def rel_velocity(rvw, R):
-    """
-    Notes
-    =====
-    - Speed comparison in pooltool/tests/speed/rel_velocity.py
+    """Compute velocity of cloth with respect to ball's point of contact
+
+    This vector is non-zero whenever the ball is sliding
     """
     _, v, w = rvw
     return v + R * math.cross(np.array([0.0, 0.0, 1.0], dtype=np.float64), w)
