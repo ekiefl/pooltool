@@ -7,7 +7,7 @@ from direct.gui.DirectGui import DGG
 from direct.gui.DirectGuiBase import DirectGuiWidget
 from panda3d.core import LVector3, NodePath, PGItem, Quat, Vec3, Vec4
 
-import pooltool.utils as utils
+import pooltool.math as math
 
 
 def get_list_of_Vec3s_from_array(array):
@@ -41,7 +41,7 @@ def as_quaternion(w, t, dQ_0=None) -> List:
 
 def get_infinitesimal_quaternions(w, t, dQ_0=None):
     w_norm = np.linalg.norm(w, axis=1)
-    w_unit = utils.unit_vector(w, handle_zero=True)
+    w_unit = math.unit_vector_slow(w, handle_zero=True)
 
     dt = np.diff(t)
     theta = w_norm[1:] * dt

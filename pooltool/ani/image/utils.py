@@ -1,7 +1,6 @@
 from pathlib import Path
-from typing import Optional, Sequence, Union
+from typing import Sequence, Union
 
-import attrs
 import numpy as np
 from numpy.typing import NDArray
 from PIL import Image

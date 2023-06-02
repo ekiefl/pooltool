@@ -25,8 +25,30 @@ def main(args):
     shot.aim_at_ball(ball_id="1")
     shot.strike(V0=args.V0)
 
+    # Time the shot
+    if args.time_it:
+        N = 10
+        times = np.zeros(N)
+
+        # Burn a run (numba cache loading)
+        copy = shot.copy()
+        pt.simulate(copy)
+
+        for i in range(N):
+            copy = shot.copy()
+            with pt.terminal.TimeCode(quiet=True) as timer:
+                pt.simulate(copy)
+            times[i] = timer.time.total_seconds()
+
+        mu = np.mean(times)
+        stderr = np.std(times) / np.sqrt(N)
+        run = pt.terminal.Run()
+        run.info_single(
+            f"Shot evolution algorithm: ({mu:.3f} +- {stderr:.3f}) ({N} trials)"
+        )
+
     # Evolve the shot
-    shot = pt.simulate(shot)
+    pt.simulate(shot)
 
     if not args.no_viz:
         interface.show(shot)
@@ -62,6 +84,11 @@ if __name__ == "__main__":
     )
     ap.add_argument(
         "--save", type=str, default=None, help="Filepath that shot will be saved to"
+    )
+    ap.add_argument(
+        "--time-it",
+        action="store_true",
+        help="Simulate multiple times, calculating the average calculation time (w/o continuize)",
     )
 
     args = ap.parse_args()

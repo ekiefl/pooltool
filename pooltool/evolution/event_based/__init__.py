@@ -7,8 +7,7 @@ from typing import Set
 import numpy as np
 
 import pooltool.constants as c
-import pooltool.physics as physics
-import pooltool.utils as utils
+import pooltool.math as math
 from pooltool.error import SimulateError
 from pooltool.events import (
     Event,
@@ -20,6 +19,7 @@ from pooltool.events import (
     get_next_transition_event,
     null_event,
 )
+from pooltool.evolution.event_based import solve
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
     CircularCushionSegment,
@@ -45,8 +45,6 @@ DEFAULT_INCLUDE = {
 def simulate(
     shot: System,
     include: Set[EventType] = DEFAULT_INCLUDE,
-    name: str = "NA",
-    quiet: bool = False,
     raise_simulate_error: bool = False,
     t_final=None,
     continuize=False,
@@ -80,8 +78,12 @@ def simulate(
 
         if continuize:
             shot.continuize(dt=dt)
-    except:
-        raise SimulateError()
+
+    except Exception as exc:
+        if raise_simulate_error:
+            raise SimulateError()
+        else:
+            raise exc
 
     return shot
 
@@ -145,7 +147,7 @@ def get_next_ball_ball_collision(shot: System) -> Event:
                 continue
 
             collision_coeffs.append(
-                physics.get_ball_ball_collision_coeffs_fast(
+                solve.ball_ball_collision_coeffs(
                     rvw1=ball1.state.rvw,
                     rvw2=ball2.state.rvw,
                     s1=ball1.state.s,
@@ -174,7 +176,7 @@ def get_next_ball_ball_collision(shot: System) -> Event:
         # There are no collisions to test for
         return ball_ball_collision(Ball.dummy(), Ball.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = utils.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
+    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
 
     ball1_id, ball2_id = ball_ids[index]
     ball1, ball2 = shot.balls[ball1_id], shot.balls[ball2_id]
@@ -195,7 +197,7 @@ def get_next_ball_circular_cushion_event(shot: System) -> Event:
 
         for cushion in shot.table.cushion_segments.circular.values():
             collision_coeffs.append(
-                physics.get_ball_circular_cushion_collision_coeffs_fast(
+                solve.ball_circular_cushion_collision_coeffs(
                     rvw=ball.state.rvw,
                     s=ball.state.s,
                     a=cushion.a,
@@ -220,7 +222,7 @@ def get_next_ball_circular_cushion_event(shot: System) -> Event:
             Ball.dummy(), CircularCushionSegment.dummy(), shot.t + dtau_E
         )
 
-    dtau_E, index = utils.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
+    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
 
     ball_id, cushion_id = agent_ids[index]
     ball, cushion = (
@@ -242,7 +244,7 @@ def get_next_ball_linear_cushion_collision(shot: System) -> Event:
             continue
 
         for cushion in shot.table.cushion_segments.linear.values():
-            dtau_E = physics.get_ball_linear_cushion_collision_time_fast(
+            dtau_E = solve.ball_linear_cushion_collision_time(
                 rvw=ball.state.rvw,
                 s=ball.state.s,
                 lx=cushion.lx,
@@ -279,7 +281,7 @@ def get_next_ball_pocket_collision(shot: System) -> Event:
 
         for pocket in shot.table.pockets.values():
             collision_coeffs.append(
-                physics.get_ball_pocket_collision_coeffs_fast(
+                solve.ball_pocket_collision_coeffs(
                     rvw=ball.state.rvw,
                     s=ball.state.s,
                     a=pocket.a,
@@ -302,7 +304,7 @@ def get_next_ball_pocket_collision(shot: System) -> Event:
         # There are no collisions to test for
         return ball_pocket_collision(Ball.dummy(), Pocket.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = utils.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
+    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
 
     ball_id, pocket_id = agent_ids[index]
     ball, pocket = shot.balls[ball_id], shot.table.pockets[pocket_id]
