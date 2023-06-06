@@ -63,7 +63,7 @@ def simulate(
             event = get_next_event(shot)
 
             if event.time == np.inf:
-                shot.update_history(null_event(time=shot.t + c.tol))
+                shot.update_history(null_event(time=shot.t))
                 break
 
             shot.evolve(event.time - shot.t)
