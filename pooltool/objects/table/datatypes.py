@@ -150,7 +150,7 @@ class Table:
     @property
     def w(self) -> float:
         """The width of the table"""
-        x2 = self.cushion_segments.linear["15"].p1[0]
+        x2 = self.cushion_segments.linear["12"].p1[0]
         x1 = self.cushion_segments.linear["3"].p1[0]
         return x2 - x1
 
