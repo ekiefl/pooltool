@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from itertools import combinations
 from typing import Set
 
 import numpy as np
 
-import pooltool.constants as c
+import pooltool.constants as const
 import pooltool.math as math
 from pooltool.error import SimulateError
 from pooltool.events import (
@@ -123,50 +124,47 @@ def get_next_ball_ball_collision(shot: System) -> Event:
     ball_ids = []
     collision_coeffs = []
 
-    for i, ball1 in enumerate(shot.balls.values()):
-        for j, ball2 in enumerate(shot.balls.values()):
-            if i >= j:
-                continue
+    for ball1, ball2 in combinations(shot.balls.values(), 2):
+        if ball1.state.s == const.pocketed or ball2.state.s == const.pocketed:
+            continue
 
-            if ball1.state.s == c.pocketed or ball2.state.s == c.pocketed:
-                continue
+        if (
+            ball1.state.s in const.nontranslating
+            and ball2.state.s in const.nontranslating
+        ):
+            continue
 
-            if ball1.state.s in c.nontranslating and ball2.state.s in c.nontranslating:
-                continue
-
-            collision_coeffs.append(
-                solve.ball_ball_collision_coeffs(
-                    rvw1=ball1.state.rvw,
-                    rvw2=ball2.state.rvw,
-                    s1=ball1.state.s,
-                    s2=ball2.state.s,
-                    mu1=(
-                        ball1.params.u_s
-                        if ball1.state.s == c.sliding
-                        else ball1.params.u_r
-                    ),
-                    mu2=(
-                        ball2.params.u_s
-                        if ball2.state.s == c.sliding
-                        else ball2.params.u_r
-                    ),
-                    m1=ball1.params.m,
-                    m2=ball2.params.m,
-                    g1=ball1.params.g,
-                    g2=ball2.params.g,
-                    R=ball1.params.R,
-                )
+        collision_coeffs.append(
+            solve.ball_ball_collision_coeffs(
+                rvw1=ball1.state.rvw,
+                rvw2=ball2.state.rvw,
+                s1=ball1.state.s,
+                s2=ball2.state.s,
+                mu1=(
+                    ball1.params.u_s
+                    if ball1.state.s == const.sliding
+                    else ball1.params.u_r
+                ),
+                mu2=(
+                    ball2.params.u_s
+                    if ball2.state.s == const.sliding
+                    else ball2.params.u_r
+                ),
+                m1=ball1.params.m,
+                m2=ball2.params.m,
+                g1=ball1.params.g,
+                g2=ball2.params.g,
+                R=ball1.params.R,
             )
+        )
 
-            ball_ids.append((ball1.id, ball2.id))
+        ball_ids.append((ball1.id, ball2.id))
 
     if not len(collision_coeffs):
         # There are no collisions to test for
         return ball_ball_collision(Ball.dummy(), Ball.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = math.min_real_root(
-        p=np.array(collision_coeffs), solver=SOLVER, tol=c.tol
-    )
+    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), solver=SOLVER)
 
     ball1_id, ball2_id = ball_ids[index]
     ball1, ball2 = shot.balls[ball1_id], shot.balls[ball2_id]
@@ -182,7 +180,7 @@ def get_next_ball_circular_cushion_event(shot: System) -> Event:
     collision_coeffs = []
 
     for ball in shot.balls.values():
-        if ball.state.s in c.nontranslating:
+        if ball.state.s in const.nontranslating:
             continue
 
         for cushion in shot.table.cushion_segments.circular.values():
@@ -195,7 +193,7 @@ def get_next_ball_circular_cushion_event(shot: System) -> Event:
                     r=cushion.radius,
                     mu=(
                         ball.params.u_s
-                        if ball.state.s == c.sliding
+                        if ball.state.s == const.sliding
                         else ball.params.u_r
                     ),
                     m=ball.params.m,
@@ -212,7 +210,7 @@ def get_next_ball_circular_cushion_event(shot: System) -> Event:
             Ball.dummy(), CircularCushionSegment.dummy(), shot.t + dtau_E
         )
 
-    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
+    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs))
 
     ball_id, cushion_id = agent_ids[index]
     ball, cushion = (
@@ -230,7 +228,7 @@ def get_next_ball_linear_cushion_collision(shot: System) -> Event:
     involved_agents = (Ball.dummy(), LinearCushionSegment.dummy())
 
     for ball in shot.balls.values():
-        if ball.state.s in c.nontranslating:
+        if ball.state.s in const.nontranslating:
             continue
 
         for cushion in shot.table.cushion_segments.linear.values():
@@ -243,7 +241,11 @@ def get_next_ball_linear_cushion_collision(shot: System) -> Event:
                 p1=cushion.p1,
                 p2=cushion.p2,
                 direction=cushion.direction.value,
-                mu=(ball.params.u_s if ball.state.s == c.sliding else ball.params.u_r),
+                mu=(
+                    ball.params.u_s
+                    if ball.state.s == const.sliding
+                    else ball.params.u_r
+                ),
                 m=ball.params.m,
                 g=ball.params.g,
                 R=ball.params.R,
@@ -266,7 +268,7 @@ def get_next_ball_pocket_collision(shot: System) -> Event:
     collision_coeffs = []
 
     for ball in shot.balls.values():
-        if ball.state.s in c.nontranslating:
+        if ball.state.s in const.nontranslating:
             continue
 
         for pocket in shot.table.pockets.values():
@@ -279,7 +281,7 @@ def get_next_ball_pocket_collision(shot: System) -> Event:
                     r=pocket.radius,
                     mu=(
                         ball.params.u_s
-                        if ball.state.s == c.sliding
+                        if ball.state.s == const.sliding
                         else ball.params.u_r
                     ),
                     m=ball.params.m,
@@ -294,7 +296,7 @@ def get_next_ball_pocket_collision(shot: System) -> Event:
         # There are no collisions to test for
         return ball_pocket_collision(Ball.dummy(), Pocket.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
+    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs))
 
     ball_id, pocket_id = agent_ids[index]
     ball, pocket = shot.balls[ball_id], shot.table.pockets[pocket_id]

@@ -3,8 +3,6 @@ from numba import jit
 
 import pooltool.constants as const
 
-EPS = np.finfo(float).eps
-
 
 @jit(nopython=True, cache=const.numba_cache)
 def roots_quadratic(a, b, c):
@@ -54,7 +52,7 @@ def roots_quartic_single(a, b, c, d, e):
     x29 = 2 * x28
     x30 = 2 * x27 / (3 * x28)
     x31 = -x29 + x30
-    x32 = np.emath.sqrt(-x18 - x31) or EPS
+    x32 = np.emath.sqrt(-x18 - x31) or const.EPS
     x33 = x17 / x32
     x34 = np.emath.sqrt(x22 + x31 + x33) / 2
     x35 = x32 / 2
@@ -162,7 +160,7 @@ def roots_quartic(p):
     x30 = 2 * x27 / (3 * x28)
     x31 = -x29 + x30
     x32 = np.sqrt(-x18 - x31)
-    x32[x32 == 0] = EPS
+    x32[x32 == 0] = const.EPS
     x33 = x17 / x32
     x34 = np.sqrt(x22 + x31 + x33) / 2
     x35 = x32 / 2
@@ -173,7 +171,7 @@ def roots_quartic(p):
     x40 = -x25
 
     roots = np.zeros((p.shape[0], 4), dtype=np.complex128)
-    cond = np.abs(e / a - b * d / (4 * a**2) + c**2 / (12 * a**2)) < EPS
+    cond = np.abs(e / a - b * d / (4 * a**2) + c**2 / (12 * a**2)) < const.EPS
 
     for i in range(len(cond)):
         if cond[i]:
@@ -220,7 +218,7 @@ def roots_numerical(p):
     return np.linalg.eigvals(A)
 
 
-def min_real_root(p, solver="numeric", tol=const.tol):
+def min_real_root(p, solver="numeric", tol=1e-12):
     """Given an array of polynomial coefficients, find the minimum real root
 
     Parameters
