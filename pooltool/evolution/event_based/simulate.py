@@ -20,6 +20,7 @@ from pooltool.events import (
     null_event,
 )
 from pooltool.evolution.event_based import solve
+from pooltool.evolution.event_based.config import INCLUDED_EVENTS, SOLVER
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
     CircularCushionSegment,
@@ -28,23 +29,10 @@ from pooltool.objects.table.components import (
 )
 from pooltool.system.datatypes import System
 
-DEFAULT_INCLUDE = {
-    EventType.NONE,
-    EventType.BALL_BALL,
-    EventType.BALL_LINEAR_CUSHION,
-    EventType.BALL_CIRCULAR_CUSHION,
-    EventType.BALL_POCKET,
-    EventType.STICK_BALL,
-    EventType.SPINNING_STATIONARY,
-    EventType.ROLLING_STATIONARY,
-    EventType.ROLLING_SPINNING,
-    EventType.SLIDING_ROLLING,
-}
-
 
 def simulate(
     shot: System,
-    include: Set[EventType] = DEFAULT_INCLUDE,
+    include: Set[EventType] = INCLUDED_EVENTS,
     raise_simulate_error: bool = False,
     t_final=None,
     continuize=False,
@@ -177,7 +165,7 @@ def get_next_ball_ball_collision(shot: System) -> Event:
         return ball_ball_collision(Ball.dummy(), Ball.dummy(), shot.t + dtau_E)
 
     dtau_E, index = math.min_real_root(
-        p=np.array(collision_coeffs), solver="numeric", tol=c.tol
+        p=np.array(collision_coeffs), solver=SOLVER, tol=c.tol
     )
 
     ball1_id, ball2_id = ball_ids[index]
