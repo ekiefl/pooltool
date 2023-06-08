@@ -236,17 +236,17 @@ def ball_linear_cushion_collision_time(
 
     if direction == 0:
         C = l0 + lx * cx + ly * cy + R * np.sqrt(lx**2 + ly**2)
-        root1, root2 = math.quadratic(A, B, C)
+        root1, root2 = math.roots_quadratic(A, B, C)
         roots = [root1, root2]
     elif direction == 1:
         C = l0 + lx * cx + ly * cy - R * np.sqrt(lx**2 + ly**2)
-        root1, root2 = math.quadratic(A, B, C)
+        root1, root2 = math.roots_quadratic(A, B, C)
         roots = [root1, root2]
     else:
         C1 = l0 + lx * cx + ly * cy + R * np.sqrt(lx**2 + ly**2)
         C2 = l0 + lx * cx + ly * cy - R * np.sqrt(lx**2 + ly**2)
-        root1, root2 = math.quadratic(A, B, C1)
-        root3, root4 = math.quadratic(A, B, C2)
+        root1, root2 = math.roots_quadratic(A, B, C1)
+        root3, root4 = math.roots_quadratic(A, B, C2)
         roots = [root1, root2, root3, root4]
 
     min_time = np.inf

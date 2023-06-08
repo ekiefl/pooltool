@@ -176,7 +176,9 @@ def get_next_ball_ball_collision(shot: System) -> Event:
         # There are no collisions to test for
         return ball_ball_collision(Ball.dummy(), Ball.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), tol=c.tol)
+    dtau_E, index = math.min_real_root(
+        p=np.array(collision_coeffs), solver="numeric", tol=c.tol
+    )
 
     ball1_id, ball2_id = ball_ids[index]
     ball1, ball2 = shot.balls[ball1_id], shot.balls[ball2_id]
