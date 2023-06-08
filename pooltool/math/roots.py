@@ -2,7 +2,6 @@ import numpy as np
 from numba import jit
 
 import pooltool.constants as const
-from pooltool.utils.strenum import StrEnum, auto
 
 EPS = np.finfo(float).eps
 
@@ -133,13 +132,20 @@ def roots_quartic(p):
     x39 = np.sqrt(-x29 + x30 - x33 - x37) / 2
     x40 = -x25
 
-    cond = e / a - b * d / (4 * a**2) + c**2 / (12 * a**2) == 0
-
     roots = np.zeros((p.shape[0], 4), dtype=np.complex128)
-    roots[:, 0] = -x34 - x36
-    roots[:, 1] = x34 - x36
-    roots[:, 2] = -x25 + x35 - x39
-    roots[:, 3] = x35 + x39 + x40
+    cond = np.abs(e / a - b * d / (4 * a**2) + c**2 / (12 * a**2)) < EPS
+
+    for i in range(len(cond)):
+        if cond[i]:
+            roots[i, 0] = -x23[i] - x26[i]
+            roots[i, 1] = x23[i] - x26[i]
+            roots[i, 2] = x24[i] - x25[i] - x38[i]
+            roots[i, 3] = x24[i] + x38[i] + x40[i]
+        else:
+            roots[i, 0] = -x34[i] - x36[i]
+            roots[i, 1] = x34[i] - x36[i]
+            roots[i, 2] = -x25[i] + x35[i] - x39[i]
+            roots[i, 3] = x35[i] + x39[i] + x40[i]
 
     return roots
 
