@@ -71,6 +71,18 @@ def skip_ball_ball_collision(rvw1, rvw2, s1, s2, R1, R2):
 
 
 @jit(nopython=True, cache=const.numba_cache)
+def get_u(rvw, R, phi, s):
+    if s == const.rolling:
+        return np.array([1, 0, 0], dtype=np.float64)
+
+    rel_vel = physics.rel_velocity(rvw, R)
+    if (rel_vel == 0).all():
+        return np.array([1, 0, 0], dtype=np.float64)
+
+    return math.coordinate_rotation(math.unit_vector(rel_vel), -phi)
+
+
+@jit(nopython=True, cache=const.numba_cache)
 def ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
     """Get quartic coeffs required to determine the ball-ball collision time
 
@@ -86,13 +98,7 @@ def ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
         phi1 = math.angle(rvw1[1])
         v1 = np.linalg.norm(rvw1[1])
 
-        u1 = (
-            np.array([1, 0, 0], dtype=np.float64)
-            if s1 == const.rolling
-            else math.coordinate_rotation(
-                math.unit_vector(physics.rel_velocity(rvw1, R)), -phi1
-            )
-        )
+        u1 = get_u(rvw1, R, phi1, s1)
 
         K1 = -0.5 * mu1 * g1
         cos_phi1 = np.cos(phi1)
@@ -109,13 +115,7 @@ def ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
         phi2 = math.angle(rvw2[1])
         v2 = np.linalg.norm(rvw2[1])
 
-        u2 = (
-            np.array([1, 0, 0], dtype=np.float64)
-            if s2 == const.rolling
-            else math.coordinate_rotation(
-                math.unit_vector(physics.rel_velocity(rvw2, R)), -phi2
-            )
-        )
+        u2 = get_u(rvw2, R, phi2, s2)
 
         K2 = -0.5 * mu2 * g2
         cos_phi2 = np.cos(phi2)
@@ -151,7 +151,7 @@ def ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
     )
     roots = np.roots([a, b, c, d, e])
 
-    roots = roots[(abs(roots.imag) <= const.tol) & (roots.real > const.tol)].real
+    roots = roots[(abs(roots.imag) <= const.EPS) & (roots.real > const.EPS)].real
 
     return roots.min() if len(roots) else np.inf
 
@@ -214,13 +214,7 @@ def ball_linear_cushion_collision_time(
     phi = math.angle(rvw[1])
     v = np.linalg.norm(rvw[1])
 
-    u = (
-        np.array([1, 0, 0], dtype=np.float64)
-        if s == const.rolling
-        else math.coordinate_rotation(
-            math.unit_vector(physics.rel_velocity(rvw, R)), -phi
-        )
-    )
+    u = get_u(rvw, R, phi, s)
 
     K = -0.5 * mu * g
     cos_phi = np.cos(phi)
@@ -236,25 +230,25 @@ def ball_linear_cushion_collision_time(
 
     if direction == 0:
         C = l0 + lx * cx + ly * cy + R * np.sqrt(lx**2 + ly**2)
-        root1, root2 = math.quadratic(A, B, C)
+        root1, root2 = math.roots_quadratic(A, B, C)
         roots = [root1, root2]
     elif direction == 1:
         C = l0 + lx * cx + ly * cy - R * np.sqrt(lx**2 + ly**2)
-        root1, root2 = math.quadratic(A, B, C)
+        root1, root2 = math.roots_quadratic(A, B, C)
         roots = [root1, root2]
     else:
         C1 = l0 + lx * cx + ly * cy + R * np.sqrt(lx**2 + ly**2)
         C2 = l0 + lx * cx + ly * cy - R * np.sqrt(lx**2 + ly**2)
-        root1, root2 = math.quadratic(A, B, C1)
-        root3, root4 = math.quadratic(A, B, C2)
+        root1, root2 = math.roots_quadratic(A, B, C1)
+        root3, root4 = math.roots_quadratic(A, B, C2)
         roots = [root1, root2, root3, root4]
 
     min_time = np.inf
     for root in roots:
-        if np.abs(root.imag) > const.tol:
+        if np.abs(root.imag) > const.EPS:
             continue
 
-        if root.real <= const.tol:
+        if root.real <= const.EPS:
             continue
 
         rvw_dtau, _ = physics.evolve_state_motion(s, rvw, R, m, mu, 1, mu, g, root)
@@ -282,13 +276,7 @@ def ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     phi = math.angle(rvw[1])
     v = np.linalg.norm(rvw[1])
 
-    u = (
-        np.array([1, 0, 0], dtype=np.float64)
-        if s == const.rolling
-        else math.coordinate_rotation(
-            math.unit_vector(physics.rel_velocity(rvw, R)), -phi
-        )
-    )
+    u = get_u(rvw, R, phi, s)
 
     K = -0.5 * mu * g
     cos_phi = np.cos(phi)
@@ -329,13 +317,7 @@ def ball_circular_cushion_collision_coeffs_slow(rvw, s, a, b, r, mu, m, g, R):
     phi = math.angle(rvw[1])
     v = np.linalg.norm(rvw[1])
 
-    u = np.array(
-        [1, 0, 0]
-        if s == const.rolling
-        else math.coordinate_rotation(
-            math.unit_vector(physics.rel_velocity(rvw, R)), -phi
-        )
-    )
+    u = get_u(rvw, R, phi, s)
 
     K = -0.5 * mu * g
     cos_phi = np.cos(phi)
@@ -378,7 +360,7 @@ def ball_circular_cushion_collision_time(rvw, s, a, b, r, mu, m, g, R):
     )
     roots = np.roots([A, B, C, D, E])
 
-    roots = roots[(abs(roots.imag) <= const.tol) & (roots.real > const.tol)].real
+    roots = roots[(abs(roots.imag) <= const.EPS) & (roots.real > const.EPS)].real
 
     return roots.min() if len(roots) else np.inf
 
@@ -396,13 +378,7 @@ def ball_pocket_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     phi = math.angle(rvw[1])
     v = np.linalg.norm(rvw[1])
 
-    u = (
-        np.array([1, 0, 0], dtype=np.float64)
-        if s == const.rolling
-        else math.coordinate_rotation(
-            math.unit_vector(physics.rel_velocity(rvw, R)), -phi
-        )
-    )
+    u = get_u(rvw, R, phi, s)
 
     K = -0.5 * mu * g
     cos_phi = np.cos(phi)
@@ -443,13 +419,7 @@ def ball_pocket_collision_coeffs_slow(rvw, s, a, b, r, mu, m, g, R):
     phi = math.angle(rvw[1])
     v = np.linalg.norm(rvw[1])
 
-    u = (
-        np.array([1, 0, 0])
-        if s == const.rolling
-        else math.coordinate_rotation(
-            math.unit_vector(physics.rel_velocity(rvw, R)), -phi
-        )
-    )
+    u = get_u(rvw, R, phi, s)
 
     K = -0.5 * mu * g
     cos_phi = np.cos(phi)
@@ -491,6 +461,6 @@ def ball_pocket_collision_time(rvw, s, a, b, r, mu, m, g, R):
     A, B, C, D, E = ball_pocket_collision_coeffs_slow(rvw, s, a, b, r, mu, m, g, R)
     roots = np.roots([A, B, C, D, E])
 
-    roots = roots[(abs(roots.imag) <= const.tol) & (roots.real > const.tol)].real
+    roots = roots[(abs(roots.imag) <= const.EPS) & (roots.real > const.EPS)].real
 
     return roots.min() if len(roots) else np.inf

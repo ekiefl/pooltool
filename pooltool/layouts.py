@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-import pooltool.constants as c
 from pooltool.objects.ball.datatypes import Ball, BallParams
 
 
@@ -39,7 +38,7 @@ class NineBallRack(Rack):
         self.balls = [Ball(id=str(i), params=params) for i in range(1, 10)]
         self.radius = params.R
         self.spacer = spacing_factor * self.radius
-        self.eff_radius = self.radius + self.spacer + c.tol
+        self.eff_radius = self.radius + self.spacer
 
         if not ordered:
             random.shuffle(self.balls)
@@ -105,7 +104,7 @@ class EightBallRack(Rack):
         self.balls = [Ball(id=str(i), params=params) for i in range(1, 16)]
         self.radius = params.R
         self.spacer = spacing_factor * self.radius
-        self.eff_radius = self.radius + self.spacer + c.tol
+        self.eff_radius = self.radius + self.spacer
 
         if not ordered:
             self.balls = list(

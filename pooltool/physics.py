@@ -44,17 +44,21 @@ import pooltool.constants as const
 import pooltool.math as math
 
 
-def resolve_ball_ball_collision(rvw1, rvw2):
+def resolve_ball_ball_collision(rvw1, rvw2, R):
     """FIXME Instantaneous, elastic, equal mass collision"""
 
     r1, r2 = rvw1[0], rvw2[0]
     v1, v2 = rvw1[1], rvw2[1]
 
-    v_rel = v1 - v2
-    v_mag = np.linalg.norm(v_rel)
-
     n = math.unit_vector(r2 - r1)
     t = math.coordinate_rotation(n, np.pi / 2)
+
+    correction = 2 * R - np.linalg.norm(r2 - r1)
+    rvw2[0] += correction / 2 * n
+    rvw1[0] -= correction / 2 * n
+
+    v_rel = v1 - v2
+    v_mag = np.linalg.norm(v_rel)
 
     beta = math.angle(v_rel, n)
 
@@ -330,7 +334,7 @@ def evolve_perpendicular_spin_component(wz, R, u_sp, g, t):
     if t == 0:
         return wz
 
-    if np.abs(wz) < const.tol:
+    if np.abs(wz) < const.EPS:
         return wz
 
     alpha = 5 * u_sp * g / (2 * R)
