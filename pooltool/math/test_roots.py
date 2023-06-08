@@ -252,3 +252,5 @@ PROBLEMATIC_QUARTIC_COEFFS = [
         -0.00015717179048493684,
     ),
 ]
+
+# FIXME add tests
