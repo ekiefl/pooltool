@@ -130,6 +130,9 @@ def ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
     Bx, By = b2x - b1x, b2y - b1y
     Cx, Cy = c2x - c1x, c2y - c1y
 
+    # if (dd := (np.linalg.norm(rvw2[0] - rvw1[0]) - 2*R)) < const.EPS_SPACE:
+    #    Ax = Ay = 1e-16
+
     a = Ax**2 + Ay**2
     b = 2 * Ax * Bx + 2 * Ay * By
     c = Bx**2 + 2 * Ax * Cx + 2 * Ay * Cy + By**2
@@ -151,7 +154,7 @@ def ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
     )
     roots = np.roots([a, b, c, d, e])
 
-    roots = roots[(abs(roots.imag) <= const.tol) & (roots.real > const.tol)].real
+    roots = roots[(abs(roots.imag) <= const.EPS) & (roots.real > const.EPS)].real
 
     return roots.min() if len(roots) else np.inf
 
@@ -251,10 +254,10 @@ def ball_linear_cushion_collision_time(
 
     min_time = np.inf
     for root in roots:
-        if np.abs(root.imag) > const.tol:
+        if np.abs(root.imag) > const.EPS:
             continue
 
-        if root.real <= const.tol:
+        if root.real <= const.EPS:
             continue
 
         rvw_dtau, _ = physics.evolve_state_motion(s, rvw, R, m, mu, 1, mu, g, root)
@@ -378,7 +381,7 @@ def ball_circular_cushion_collision_time(rvw, s, a, b, r, mu, m, g, R):
     )
     roots = np.roots([A, B, C, D, E])
 
-    roots = roots[(abs(roots.imag) <= const.tol) & (roots.real > const.tol)].real
+    roots = roots[(abs(roots.imag) <= const.EPS) & (roots.real > const.EPS)].real
 
     return roots.min() if len(roots) else np.inf
 
@@ -491,6 +494,6 @@ def ball_pocket_collision_time(rvw, s, a, b, r, mu, m, g, R):
     A, B, C, D, E = ball_pocket_collision_coeffs_slow(rvw, s, a, b, r, mu, m, g, R)
     roots = np.roots([A, B, C, D, E])
 
-    roots = roots[(abs(roots.imag) <= const.tol) & (roots.real > const.tol)].real
+    roots = roots[(abs(roots.imag) <= const.EPS) & (roots.real > const.EPS)].real
 
     return roots.min() if len(roots) else np.inf

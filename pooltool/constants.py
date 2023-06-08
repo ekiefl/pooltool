@@ -9,7 +9,9 @@ import numpy as np
 numba_cache = True
 np.set_printoptions(precision=10, suppress=True)
 
-EPS = np.finfo(float).eps
+EPS = np.finfo(float).eps * 100
+EPS_TIME = 1e-9
+EPS_SPACE = 1e-6
 
 # Ball states
 stationary = 0
