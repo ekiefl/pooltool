@@ -130,9 +130,6 @@ def ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
     Bx, By = b2x - b1x, b2y - b1y
     Cx, Cy = c2x - c1x, c2y - c1y
 
-    # if (dd := (np.linalg.norm(rvw2[0] - rvw1[0]) - 2*R)) < const.EPS_SPACE:
-    #    Ax = Ay = 1e-16
-
     a = Ax**2 + Ay**2
     b = 2 * Ax * Bx + 2 * Ay * By
     c = Bx**2 + 2 * Ax * Cx + 2 * Ay * Cy + By**2
