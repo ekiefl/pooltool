@@ -84,6 +84,46 @@ def roots_quartic_single(a, b, c, d, e):
 
 @jit(nopython=True, cache=const.numba_cache)
 def roots_quartic(p):
+    """Analytic solutions to the quartic polynomial
+
+    This function was created with the help of sympy.
+
+    To start, I solved the general quartic polynomial roots:
+
+    >>> from sympy import symbols, Eq, solve
+    >>> x, a, b, c, d, e = symbols('x a b c d e')
+    >>> general_solution = solve(a*x**4 + b*x**3 + c*x**2 + d*x + e, x)
+
+    This yields 4 expressions, one for each root. Each expression is piecewise
+    conditional, where if the following equality is true, the first expression is used,
+    and otherwise the second expression is used.
+
+    >>> general_solution[0].args[0][1]
+    Eq(e/a - b*d/(4*a**2) + c**2/(12*a**2), 0)
+
+    So in total there are 8 expressions, 2 for each root, and the expression used for
+    each root is determined based on whether the above equality holds true. These
+    expressions are huge, so to better digest them, I used the following common
+    subexpression elimination:
+
+    >>> from sympy import cse
+    >>> cse(
+    >>>     [
+    >>>         general_solution[0].args[0][0],
+    >>>         general_solution[0].args[1][0],
+    >>>         general_solution[1].args[0][0],
+    >>>         general_solution[1].args[1][0],
+    >>>         general_solution[2].args[0][0],
+    >>>         general_solution[2].args[1][0],
+    >>>         general_solution[3].args[0][0],
+    >>>         general_solution[3].args[1][0],
+    >>>     ]
+    >>> )
+
+    Then I used a vim macro to convert these subexpressions into the lines of python
+    code you see below.
+    """
+
     cp = p.astype(np.complex128)
     a, b, c, d, e = cp.T
 
