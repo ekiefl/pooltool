@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Tuple
 
 import numpy as np
+from direct.motiontrail.MotionTrail import MotionTrail
 from direct.interval.IntervalGlobal import (
     LerpPosInterval,
     LerpPosQuatInterval,
@@ -9,7 +10,10 @@ from direct.interval.IntervalGlobal import (
     Parallel,
     Sequence,
 )
+
 from panda3d.core import (
+    Point3, 
+    Vec4,
     CollisionCapsule,
     CollisionNode,
     SamplerState,
@@ -66,6 +70,7 @@ class BallRender(Render):
         self.nodes["ball"] = ball_node
         self.nodes["pos"] = position
         self.nodes["shadow"] = self.init_shadow()
+        self.nodes["trail"] = self.init_trail()
 
         self.set_orientation(self._ball.initial_orientation)
 
@@ -118,6 +123,48 @@ class BallRender(Render):
             collision_node.show()
 
         self.nodes[f"ball_csphere_{self._ball.id}"] = collision_node
+
+    def init_trail(self):
+        name = f"ball_{self._ball.id}_trail"
+        trail_node = MotionTrail(name, self.nodes["pos"])
+
+        x, y, _ = self._ball.state.rvw[0]
+        trail_node.setPos(x, y, 0)
+        trail_node.reparentTo(self.nodes["pos"])
+
+        if ani.settings["graphics"]["debug"]:
+            trail_node.show()
+
+        trail_node.register_motion_trail()
+
+        #??trail_node.set_texture(loader.load_texture("models/plasma.png"))
+        trail_node.time_window = 3 # Length of trail
+
+        # The example provided by panda3d for building a circular cross section for the trail
+        # A simple flat line, tron lightcycle-style, would be like so:
+
+
+        # A circle as the trail's shape, by plotting a NodePath in a circle.
+        center = render.attach_new_node("center")
+        around = center.attach_new_node("around")
+        around.set_z(1)
+        res = 8 # Amount of angles in "circle". Higher is smoother.
+        for i in range(res + 1):
+            center.set_r((360 / res) * i)
+            vertex_pos = around.get_pos(render)
+            trail_node.add_vertex(vertex_pos)
+
+            start_color = Vec4(1.0, 0.2, 0.0, 1)
+            end_color = Vec4(1, 1, 0, 1)
+            trail_node.set_vertex_color(i, start_color, end_color)
+        # trail_node.add_vertex(Point3(0, 0, 1))
+        # trail_node.add_vertex(Point3(0, 0,-1))
+        # trail_node.set_vertex_color(0, Vec4(1.0, 0.2, 0.0, 1), Vec4(1.0, 0.2, 0.0, 1))
+        # trail_node.set_vertex_color(1, Vec4(1.0, 1.0, 0.0, 1), Vec4(1.0, 1.0, 0.0, 1))
+
+        trail_node.update_vertices()
+
+        return trail_node
 
     def init_shadow(self):
         N = 20
@@ -218,6 +265,7 @@ class BallRender(Render):
         # Init the animation sequences
         ball_sequence = Sequence()
         shadow_sequence = Sequence()
+        trail_sequence = Sequence()
 
         self.set_render_state_from_history(self._ball.history_cts, 0)
 
@@ -263,6 +311,14 @@ class BallRender(Render):
                         pos=(xi, yi, min(0, zi - self._ball.params.R)),
                     )
                 )
+                trail_sequence.append(
+                    LerpPosInterval(
+                        nodePath=self.nodes["trail"],
+                        duration=dur,
+                        startPos=(xi, yi, zi),
+                        pos=(xi, yi, zi),
+                    )
+                )
 
             if energetic or stationary_to_stationary:
                 ball_sequence.append(
@@ -280,6 +336,13 @@ class BallRender(Render):
                         pos=(x, y, min(0, z - self._ball.params.R)),
                     )
                 )
+                trail_sequence.append(
+                    LerpPosInterval(
+                        nodePath=self.nodes["trail"],
+                        duration=playback_dts[i],
+                        pos=(x, y, z)
+                    )
+                )
 
                 if motion_states[i] not in c.energetic:
                     energetic = False
@@ -288,6 +351,7 @@ class BallRender(Render):
         return Parallel(
             ball_sequence,
             shadow_sequence,
+            trail_sequence
         )
 
     def set_alpha(self, alpha):

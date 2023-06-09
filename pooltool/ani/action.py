@@ -22,6 +22,7 @@ class Action(StrEnum):
     show_help = auto()
     click = auto()
     new_game = auto()
+    toggle_trails = auto()
     toggle_pause = auto()
     restart_ani = auto()
     undo_shot = auto()

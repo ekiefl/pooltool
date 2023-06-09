@@ -156,6 +156,13 @@ class SystemController:
         else:
             self.resume_animation()
 
+    def toggle_trails(self) -> None:
+        global_enable = True
+        if global_enable == True:
+            global_enable = False
+        else:
+            global_enable = True
+            
     def slow_down(self):
         self.change_speed(0.5)
 
