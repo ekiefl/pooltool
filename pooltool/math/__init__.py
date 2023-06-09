@@ -8,7 +8,7 @@ from pooltool.math._math import (
 )
 from pooltool.math.roots import (
     min_real_root,
+    quartic_analytic,
     roots_numerical,
     roots_quadratic,
-    roots_quartic,
 )
