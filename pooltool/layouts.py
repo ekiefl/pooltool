@@ -108,7 +108,9 @@ class EightBallRack(Rack):
 
         if not ordered:
             self.balls = list(
-                np.random.choice(self.balls, replace=False, size=len(self.balls))
+                np.random.choice(
+                    np.array(self.balls), replace=False, size=len(self.balls)
+                )
             )
 
         self.balls.append(Ball("cue", params=params))

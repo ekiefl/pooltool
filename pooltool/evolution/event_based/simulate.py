@@ -21,7 +21,8 @@ from pooltool.events import (
     null_event,
 )
 from pooltool.evolution.event_based import solve
-from pooltool.evolution.event_based.config import INCLUDED_EVENTS, SOLVER
+from pooltool.evolution.event_based.config import INCLUDED_EVENTS
+from pooltool.math.roots import QuarticSolver
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
     CircularCushionSegment,
@@ -77,7 +78,9 @@ def simulate(
     return shot
 
 
-def get_next_event(shot: System) -> Event:
+def get_next_event(
+    shot: System, quartic_solver: QuarticSolver = QuarticSolver.NUMERIC
+) -> Event:
     # Start by assuming next event doesn't happen
     event = null_event(time=np.inf)
 
@@ -85,7 +88,7 @@ def get_next_event(shot: System) -> Event:
     if transition_event.time < event.time:
         event = transition_event
 
-    ball_ball_event = get_next_ball_ball_collision(shot)
+    ball_ball_event = get_next_ball_ball_collision(shot, solver=quartic_solver)
     if ball_ball_event.time < event.time:
         event = ball_ball_event
 
@@ -93,11 +96,13 @@ def get_next_event(shot: System) -> Event:
     if ball_linear_cushion_event.time < event.time:
         event = ball_linear_cushion_event
 
-    ball_circular_cushion_event = get_next_ball_circular_cushion_event(shot)
+    ball_circular_cushion_event = get_next_ball_circular_cushion_event(
+        shot, solver=quartic_solver
+    )
     if ball_circular_cushion_event.time < event.time:
         event = ball_circular_cushion_event
 
-    ball_pocket_event = get_next_ball_pocket_collision(shot)
+    ball_pocket_event = get_next_ball_pocket_collision(shot, solver=quartic_solver)
     if ball_pocket_event.time < event.time:
         event = ball_pocket_event
 
@@ -117,7 +122,9 @@ def get_next_transition(shot: System) -> Event:
     return event
 
 
-def get_next_ball_ball_collision(shot: System) -> Event:
+def get_next_ball_ball_collision(
+    shot: System, solver: QuarticSolver = QuarticSolver.NUMERIC
+) -> Event:
     """Returns next ball-ball collision"""
 
     dtau_E = np.inf
@@ -164,7 +171,7 @@ def get_next_ball_ball_collision(shot: System) -> Event:
         # There are no collisions to test for
         return ball_ball_collision(Ball.dummy(), Ball.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), solver=SOLVER)
+    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), solver=solver)
 
     ball1_id, ball2_id = ball_ids[index]
     ball1, ball2 = shot.balls[ball1_id], shot.balls[ball2_id]
@@ -172,7 +179,9 @@ def get_next_ball_ball_collision(shot: System) -> Event:
     return ball_ball_collision(ball1, ball2, shot.t + dtau_E)
 
 
-def get_next_ball_circular_cushion_event(shot: System) -> Event:
+def get_next_ball_circular_cushion_event(
+    shot: System, solver: QuarticSolver = QuarticSolver.NUMERIC
+) -> Event:
     """Returns next ball-cushion collision (circular cushion segment)"""
 
     dtau_E = np.inf
@@ -210,7 +219,7 @@ def get_next_ball_circular_cushion_event(shot: System) -> Event:
             Ball.dummy(), CircularCushionSegment.dummy(), shot.t + dtau_E
         )
 
-    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs))
+    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), solver=solver)
 
     ball_id, cushion_id = agent_ids[index]
     ball, cushion = (
@@ -260,7 +269,9 @@ def get_next_ball_linear_cushion_collision(shot: System) -> Event:
     return ball_linear_cushion_collision(*involved_agents, shot.t + dtau_E)
 
 
-def get_next_ball_pocket_collision(shot: System) -> Event:
+def get_next_ball_pocket_collision(
+    shot: System, solver: QuarticSolver = QuarticSolver.NUMERIC
+) -> Event:
     """Returns next ball-pocket collision"""
 
     dtau_E = np.inf
@@ -296,7 +307,7 @@ def get_next_ball_pocket_collision(shot: System) -> Event:
         # There are no collisions to test for
         return ball_pocket_collision(Ball.dummy(), Pocket.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs))
+    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), solver=solver)
 
     ball_id, pocket_id = agent_ids[index]
     ball, pocket = shot.balls[ball_id], shot.table.pockets[pocket_id]

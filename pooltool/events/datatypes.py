@@ -192,7 +192,7 @@ class Event:
         lines = [
             f"<{self.__class__.__name__} object at {hex(id(self))}>",
             f" ├── type   : {self.event_type}",
-            f" ├── time   : {self.time}",
+            f" ├── time   : {self.time:.9f}",
             f" └── agents : {agents}",
         ]
         return "\n".join(lines) + "\n"

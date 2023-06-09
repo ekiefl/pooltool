@@ -1,7 +1,5 @@
 from pooltool.events.datatypes import EventType
 
-SOLVER = "numeric"
-
 INCLUDED_EVENTS = {
     EventType.NONE,
     EventType.BALL_BALL,
