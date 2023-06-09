@@ -35,6 +35,7 @@ from pooltool.system.datatypes import System
 def simulate(
     shot: System,
     include: Set[EventType] = INCLUDED_EVENTS,
+    quartic_solver: QuarticSolver = QuarticSolver.NUMERIC,
     raise_simulate_error: bool = False,
     t_final=None,
     continuize=False,
@@ -50,7 +51,7 @@ def simulate(
             dt = 0.01
 
         while True:
-            event = get_next_event(shot)
+            event = get_next_event(shot, quartic_solver=quartic_solver)
 
             if event.time == np.inf:
                 shot.update_history(null_event(time=shot.t))
