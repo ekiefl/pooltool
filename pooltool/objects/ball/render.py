@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Tuple
 
 import numpy as np
-from direct.motiontrail.MotionTrail import MotionTrail
 from direct.interval.IntervalGlobal import (
     LerpPosInterval,
     LerpPosQuatInterval,
@@ -10,14 +9,14 @@ from direct.interval.IntervalGlobal import (
     Parallel,
     Sequence,
 )
-
+from direct.motiontrail.MotionTrail import MotionTrail
 from panda3d.core import (
-    Point3, 
-    Vec4,
     CollisionCapsule,
     CollisionNode,
+    Point3,
     SamplerState,
     TransparencyAttrib,
+    Vec4,
 )
 
 import pooltool.ani as ani
@@ -137,18 +136,17 @@ class BallRender(Render):
 
         trail_node.register_motion_trail()
 
-        #??trail_node.set_texture(loader.load_texture("models/plasma.png"))
-        trail_node.time_window = 3 # Length of trail
+        # ??trail_node.set_texture(loader.load_texture("models/plasma.png"))
+        trail_node.time_window = 3  # Length of trail
 
         # The example provided by panda3d for building a circular cross section for the trail
         # A simple flat line, tron lightcycle-style, would be like so:
-
 
         # A circle as the trail's shape, by plotting a NodePath in a circle.
         center = render.attach_new_node("center")
         around = center.attach_new_node("around")
         around.set_z(1)
-        res = 8 # Amount of angles in "circle". Higher is smoother.
+        res = 8  # Amount of angles in "circle". Higher is smoother.
         for i in range(res + 1):
             center.set_r((360 / res) * i)
             vertex_pos = around.get_pos(render)
@@ -265,7 +263,6 @@ class BallRender(Render):
         # Init the animation sequences
         ball_sequence = Sequence()
         shadow_sequence = Sequence()
-        trail_sequence = Sequence()
 
         self.set_render_state_from_history(self._ball.history_cts, 0)
 
@@ -311,14 +308,6 @@ class BallRender(Render):
                         pos=(xi, yi, min(0, zi - self._ball.params.R)),
                     )
                 )
-                trail_sequence.append(
-                    LerpPosInterval(
-                        nodePath=self.nodes["trail"],
-                        duration=dur,
-                        startPos=(xi, yi, zi),
-                        pos=(xi, yi, zi),
-                    )
-                )
 
             if energetic or stationary_to_stationary:
                 ball_sequence.append(
@@ -336,13 +325,6 @@ class BallRender(Render):
                         pos=(x, y, min(0, z - self._ball.params.R)),
                     )
                 )
-                trail_sequence.append(
-                    LerpPosInterval(
-                        nodePath=self.nodes["trail"],
-                        duration=playback_dts[i],
-                        pos=(x, y, z)
-                    )
-                )
 
                 if motion_states[i] not in c.energetic:
                     energetic = False
@@ -351,7 +333,6 @@ class BallRender(Render):
         return Parallel(
             ball_sequence,
             shadow_sequence,
-            trail_sequence
         )
 
     def set_alpha(self, alpha):
