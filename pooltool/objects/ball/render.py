@@ -125,42 +125,42 @@ class BallRender(Render):
 
     def init_trail(self):
         name = f"ball_{self._ball.id}_trail"
+
+        flame_colors = (
+            Vec4(1.0, 0.0, 0.0, 1),
+            Vec4(1.0, 0.2, 0.0, 1),
+            Vec4(1.0, 0.7, 0.0, 1),
+            Vec4(0.0, 0.0, 0.2, 1),
+        )
+
         trail_node = MotionTrail(name, self.nodes["pos"])
-
-        x, y, _ = self._ball.state.rvw[0]
-        trail_node.setPos(x, y, 0)
-        trail_node.reparentTo(self.nodes["pos"])
-
-        if ani.settings["graphics"]["debug"]:
-            trail_node.show()
-
         trail_node.register_motion_trail()
+        trail_node.geom_node_path.reparent_to(Global.render.find("scene").find("table"))
 
-        # ??trail_node.set_texture(loader.load_texture("models/plasma.png"))
-        trail_node.time_window = 3  # Length of trail
-
-        # The example provided by panda3d for building a circular cross section for the trail
-        # A simple flat line, tron lightcycle-style, would be like so:
+        trail_node.time_window = 2  # Length of trail
 
         # A circle as the trail's shape, by plotting a NodePath in a circle.
-        center = render.attach_new_node("center")
-        around = center.attach_new_node("around")
-        around.set_z(1)
-        res = 8  # Amount of angles in "circle". Higher is smoother.
+        center = (
+            Global.render.find("scene")
+            .find("table")
+            .attach_new_node("center_trail_{self._ball.id}")
+        )
+        around = center.attach_new_node("around_trail_{self._ball.id}")
+        around.set_z(10)
+        res = 3  # Amount of angles in "circle". Higher is smoother.
         for i in range(res + 1):
             center.set_r((360 / res) * i)
-            vertex_pos = around.get_pos(render)
+            vertex_pos = around.get_pos(Global.render.find("scene").find("table"))
             trail_node.add_vertex(vertex_pos)
 
-            start_color = Vec4(1.0, 0.2, 0.0, 1)
+            start_color = flame_colors[i % len(flame_colors)] * 1.7
             end_color = Vec4(1, 1, 0, 1)
             trail_node.set_vertex_color(i, start_color, end_color)
-        # trail_node.add_vertex(Point3(0, 0, 1))
-        # trail_node.add_vertex(Point3(0, 0,-1))
-        # trail_node.set_vertex_color(0, Vec4(1.0, 0.2, 0.0, 1), Vec4(1.0, 0.2, 0.0, 1))
-        # trail_node.set_vertex_color(1, Vec4(1.0, 1.0, 0.0, 1), Vec4(1.0, 1.0, 0.0, 1))
+        # -------------------------------
 
         trail_node.update_vertices()
+
+        trail_node.show()
 
         return trail_node
 
