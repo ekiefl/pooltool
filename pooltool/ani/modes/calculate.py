@@ -78,16 +78,11 @@ class CalculateMode(BaseMode):
     def run_simulation(self, task):
         """Run a pool simulation"""
 
-        try:
-            simulate(
-                multisystem.active,
-                continuize=True,
-                raise_simulate_error=True,
-            )
-        except SimulateError:
-            # Failed to simulate shot. Return to aim mode. Not ideal but better than a
-            # runtime error
-            Global.mode_mgr.change_mode(Mode.aim)
+        simulate(
+            multisystem.active,
+            continuize=True,
+            raise_simulate_error=True,
+        )
 
         Global.game.process_shot(multisystem.active)
 
