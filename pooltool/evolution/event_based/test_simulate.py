@@ -8,7 +8,7 @@ from pooltool.math.roots import QuarticSolver
 from pooltool.system import System
 
 
-@pytest.mark.parametrize("solver", [QuarticSolver.NUMERIC, QuarticSolver.ANALYTIC])
+@pytest.mark.parametrize("solver", [QuarticSolver.OLD, QuarticSolver.NEW])
 def test_case1(solver: QuarticSolver):
     """
     In this shot, the next event should be:
@@ -17,12 +17,6 @@ def test_case1(solver: QuarticSolver):
          ├── type   : ball_ball
          ├── time   : 0.048943195
          └── agents : ['1', 'cue']
-
-    Added this event because it was the cause of a failed collision when using the
-    analytic quartic root solver. The collision was retained by lowering the imaginary
-    tolerance from 1e-12 to 1e-9. However, I am no longer hopeful of developing a robust
-    analytic quartic solver, which despite having a closed-form solution, is far less
-    numerically stable than numerical methods.
     """
     shot = prep_shot(TEST_DIR / "case1.msgpack", 0)
 
@@ -35,7 +29,7 @@ def test_case1(solver: QuarticSolver):
     assert next_event.time == pytest.approx(expected.time, rel=1e-3)
 
 
-@pytest.mark.parametrize("solver", [QuarticSolver.NUMERIC, QuarticSolver.ANALYTIC])
+@pytest.mark.parametrize("solver", [QuarticSolver.OLD, QuarticSolver.NEW])
 def test_case2(solver: QuarticSolver):
     """
     In this shot, the next event should be:
@@ -44,10 +38,6 @@ def test_case2(solver: QuarticSolver):
          ├── type   : ball_pocket
          ├── time   : 0.089330336
          └── agents : ['8', 'lc']
-
-    However, I am no longer hopeful of developing a robust analytic quartic solver,
-    which despite having a closed-form solution, is far less numerically stable than
-    numerical methods.
     """
     shot = System.load(TEST_DIR / "case2.msgpack")
 
@@ -56,7 +46,7 @@ def test_case2(solver: QuarticSolver):
         shot.balls["8"], shot.table.pockets["lc"], 0.08933033587481054
     )
 
-    if solver == QuarticSolver.NUMERIC:
+    if solver == QuarticSolver.OLD:
         assert next_event == expected
-    elif solver == QuarticSolver.ANALYTIC:
+    elif solver == QuarticSolver.NEW:
         assert next_event != expected

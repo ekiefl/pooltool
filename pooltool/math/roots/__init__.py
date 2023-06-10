@@ -2,32 +2,11 @@ from typing import Callable, Dict
 
 import numpy as np
 from numba import jit
-from sympy import Eq, solve, symbols
 
 import pooltool.constants as const
+import pooltool.math.roots.quadratic as quadratic
+import pooltool.math.roots.quartic as quartic
 from pooltool.utils.strenum import StrEnum, auto
-
-
-@jit(nopython=True, cache=const.numba_cache)
-def roots_quadratic(a, b, c):
-    """Solve a quadratic equation At^2 + Bt + C = 0 (just-in-time compiled)"""
-    if a == 0:
-        u = -c / b
-        return u, u
-    bp = b / 2
-    delta = bp * bp - a * c
-    u1 = (-bp - delta**0.5) / a
-    u2 = -u1 - b / a
-    return u1, u2
-
-
-def quartic_truth(a_val, b_val, c_val, d_val, e_val, digits=40):
-    x, a, b, c, d, e = symbols("x a b c d e")
-    general_solution = solve(a * x**4 + b * x**3 + c * x**2 + d * x + e, x)
-    return [
-        sol.evalf(digits, subs={a: a_val, b: b_val, c: c_val, d: d_val, e: e_val})
-        for sol in general_solution
-    ]
 
 
 @jit(nopython=True, cache=const.numba_cache)
@@ -70,42 +49,9 @@ def quartic_analytic(p):
 
     Then I used a vim macro to convert these subexpressions into the lines of python
     code you see below.
-
-    Note:
-
-    This will never be ready for primetime and here is why. The formula for the roots of
-    a quartic polynomial, just like the quadratic formula we learn in school, gives an
-    exact answer in terms of the coefficients. However, to compute this formula on a
-    computer, we have to perform a sequence of arithmetic operations (additions,
-    multiplications, divisions, square roots, etc.). Each of these operations introduces
-    a small amount of round-off error due to the finite precision of floating-point
-    arithmetic.
-
-    The crux of the issue is that the formulas for the roots of a cubic or quartic
-    polynomial involve operations like subtracting two nearly equal numbers (leading to
-    loss of significance, aka catastrophic cancellation) or taking the square root of a
-    small negative number that should have been zero (resulting in a spurious imaginary
-    part).  These errors can get amplified in a way that makes the computed roots very
-    inaccurate, especially for "ill-conditioned" polynomials where the roots are very
-    sensitive to the coefficients.
-
-    On the other hand, numerical algorithms like the one used in numpy's roots function
-    are designed to minimize these round-off errors and make the result as accurate as
-    possible, even if the polynomial is ill-conditioned. This can make them more
-    accurate than the direct formula in practice, even though they are only
-    approximations.
-
-    For example, the companion matrix method used by numpy computes the roots as the
-    eigenvalues of a matrix. This avoids the problematic operations in the direct
-    formula and makes the result more accurate.
-
-    In other words, the formulas are exact in the realm of pure mathematics where we can
-    do arithmetic with infinite precision. But when we bring them into the world of
-    floating-point arithmetic with its inherent round-off errors, they can behave badly.
     """
 
-    cp = p.astype(np.complex128)
-    a, b, c, d, e = cp.T
+    a, b, c, d, e = p.astype(np.complex128).T
 
     x0 = 1 / a
     x1 = c * x0
@@ -201,17 +147,17 @@ def roots_numerical(p):
 
 
 class QuarticSolver(StrEnum):
-    ANALYTIC = auto()
-    NUMERIC = auto()
+    NEW = auto()
+    OLD = auto()
 
 
 _routine: Dict[QuarticSolver, Callable] = {
-    QuarticSolver.NUMERIC: roots_numerical,
-    QuarticSolver.ANALYTIC: quartic_analytic,
+    QuarticSolver.OLD: roots_numerical,
+    QuarticSolver.NEW: quartic_analytic,
 }
 
 
-def min_real_root(p, solver: QuarticSolver = QuarticSolver.NUMERIC, tol=1e-9):
+def min_real_root(p, solver: QuarticSolver = QuarticSolver.OLD, tol=1e-9):
     """Given an array of polynomial coefficients, find the minimum real root
 
     Parameters
