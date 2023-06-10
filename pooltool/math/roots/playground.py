@@ -8,10 +8,13 @@ from numpy.typing import NDArray
 import pooltool.constants as const
 
 
-def analytic(coeffs: NDArray[np.float64]) -> NDArray[np.complex128]:
-    ans = solve_poly(coeffs.astype(np.complex128))
-    if len(ans) != 4:
-        print(ans.shape)
+def analytic(coeffs: NDArray[np.complex128]) -> NDArray[np.complex128]:
+    ans = solve_poly(coeffs[::-1])
+
+    if (num_roots := ans.shape[0]) < 4:
+        nans = np.full(4 - num_roots, np.nan, dtype=np.complex128)
+        return np.concatenate((ans, nans))
+
     return ans
 
 
@@ -131,28 +134,3 @@ def solve_depressed_cubic(q, p):
     return np.array(
         [r, r * third_root_unity, r * third_root_unity**2], dtype=np.complex128
     )
-
-
-if __name__ == "__main__":
-    from pooltool.math.roots import quartic
-
-    coeffs = np.array(
-        [
-            0.9604000000000001,
-            -22.342459712735774,
-            131.1430067191817,
-            -13.968966072700297,
-            0.37215503307938314,
-        ]
-    )
-    coeffs = np.random.rand(5)
-    revcoeffs = coeffs[::-1]
-    ccoeffs = coeffs.astype(np.complex128)
-
-    quartic.analytic(coeffs)
-    quartic.numeric(ccoeffs)
-    analytic(revcoeffs)
-
-    # for _ in range(100000):
-    #    coeffs = np.random.rand(5)
-    #    ans = analytic(coeffs)

@@ -6,15 +6,14 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
+from pooltool.math.roots.playground import analytic
 
 
-@jit(nopython=True, cache=const.numba_cache)
 def solve_many(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
     roots, indicators = _solve_many(ps.astype(np.complex128))
     return roots
 
 
-@jit(nopython=True, cache=const.numba_cache)
 def _solve_many(
     ps: NDArray[np.complex128],
 ) -> Tuple[NDArray[np.complex128], NDArray[np.uint8]]:
@@ -29,12 +28,10 @@ def _solve_many(
     return all_roots, indicators
 
 
-@jit(nopython=True, cache=const.numba_cache)
 def solve(p: NDArray[np.float64]) -> NDArray[np.complex128]:
     return _solve(p.astype(np.complex128))[0]
 
 
-@jit(nopython=True, cache=const.numba_cache)
 def _solve(p: NDArray[np.complex128]) -> Tuple[NDArray[np.complex128], int]:
     # Guess which of the two isomorphic polynomial equations is more likely to be
     # numerically stable
@@ -48,7 +45,7 @@ def _solve(p: NDArray[np.complex128]) -> Tuple[NDArray[np.complex128], int]:
 
     # Check whether the solved roots are genuine
     for root in soln_1:
-        if abs(evaluate(p, root)) > const.EPS:
+        if abs(evaluate(p, root)) > 1e-5:
             break
     else:
         return soln_1, 0
@@ -61,7 +58,7 @@ def _solve(p: NDArray[np.complex128]) -> Tuple[NDArray[np.complex128], int]:
 
     # Check whether the solved roots are genuine
     for root in soln_2:
-        if abs(evaluate(p, root)) > const.EPS:
+        if abs(evaluate(p, root)) > 1e-5:
             break
     else:
         return soln_2, 1
@@ -70,12 +67,10 @@ def _solve(p: NDArray[np.complex128]) -> Tuple[NDArray[np.complex128], int]:
     return numeric(p), 2
 
 
-@jit(nopython=True, cache=const.numba_cache)
 def evaluate(p: NDArray[np.complex128], val: complex) -> complex:
     return p[0] * val**4 + p[1] * val**3 + p[2] * val**2 + p[3] * val + p[4]
 
 
-@jit(nopython=True, cache=const.numba_cache)
 def instability(p: NDArray[np.complex128]) -> float:
     """Range is from [0, inf], 0 is most stable"""
     a, b = p[:2]
@@ -87,13 +82,11 @@ def instability(p: NDArray[np.complex128]) -> float:
     return t + 1 / t
 
 
-@jit(nopython=True, cache=const.numba_cache)
 def numeric(p: NDArray[np.complex128]) -> NDArray[np.complex128]:
     return np.roots(p)
 
 
-@jit(nopython=True, cache=const.numba_cache)
-def analytic(p: NDArray[np.complex128]) -> NDArray[np.complex128]:
+def analytic_old(p: NDArray[np.complex128]) -> NDArray[np.complex128]:
     # Convert to complex so we can take cubic root of negatives
     a, b, c, d, e = p
 
