@@ -2,17 +2,21 @@ from typing import Tuple
 
 import numpy as np
 import sympy
+from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
 
 
+@jit(nopython=True, cache=const.numba_cache)
 def solve_many(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
-    return _solve_many(ps)[0]
+    roots, indicators = _solve_many(ps.astype(np.complex128))
+    return roots
 
 
+@jit(nopython=True, cache=const.numba_cache)
 def _solve_many(
-    ps: NDArray[np.float64],
+    ps: NDArray[np.complex128],
 ) -> Tuple[NDArray[np.complex128], NDArray[np.uint8]]:
     num_eqn = ps.shape[0]
 
@@ -25,11 +29,13 @@ def _solve_many(
     return all_roots, indicators
 
 
+@jit(nopython=True, cache=const.numba_cache)
 def solve(p: NDArray[np.float64]) -> NDArray[np.complex128]:
-    return _solve(p)[0]
+    return _solve(p.astype(np.complex128))[0]
 
 
-def _solve(p: NDArray[np.float64]) -> Tuple[NDArray[np.complex128], int]:
+@jit(nopython=True, cache=const.numba_cache)
+def _solve(p: NDArray[np.complex128]) -> Tuple[NDArray[np.complex128], int]:
     # Guess which of the two isomorphic polynomial equations is more likely to be
     # numerically stable
     reverse = instability(p[::-1]) < instability(p)
@@ -64,11 +70,13 @@ def _solve(p: NDArray[np.float64]) -> Tuple[NDArray[np.complex128], int]:
     return numeric(p), 2
 
 
-def evaluate(p: NDArray[np.float64], val: complex) -> complex:
+@jit(nopython=True, cache=const.numba_cache)
+def evaluate(p: NDArray[np.complex128], val: complex) -> complex:
     return p[0] * val**4 + p[1] * val**3 + p[2] * val**2 + p[3] * val + p[4]
 
 
-def instability(p: NDArray[np.float64]) -> float:
+@jit(nopython=True, cache=const.numba_cache)
+def instability(p: NDArray[np.complex128]) -> float:
     """Range is from [0, inf], 0 is most stable"""
     a, b = p[:2]
 
@@ -79,13 +87,15 @@ def instability(p: NDArray[np.float64]) -> float:
     return t + 1 / t
 
 
-def numeric(p: NDArray[np.float64]) -> NDArray[np.complex128]:
-    return np.roots(p).astype(np.complex128)
+@jit(nopython=True, cache=const.numba_cache)
+def numeric(p: NDArray[np.complex128]) -> NDArray[np.complex128]:
+    return np.roots(p)
 
 
-def analytic(p: NDArray[np.float64]) -> NDArray[np.complex128]:
+@jit(nopython=True, cache=const.numba_cache)
+def analytic(p: NDArray[np.complex128]) -> NDArray[np.complex128]:
     # Convert to complex so we can take cubic root of negatives
-    a, b, c, d, e = p.astype(np.complex128)
+    a, b, c, d, e = p
 
     x0 = 1 / a
     x1 = c * x0

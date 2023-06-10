@@ -8,4 +8,4 @@ from pooltool.math._math import (
     unit_vector_slow,
     wiggle,
 )
-from pooltool.math.roots import min_real_root, quartic_analytic, roots_numerical
+from pooltool.math.roots import min_real_root
