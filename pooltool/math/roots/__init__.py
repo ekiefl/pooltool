@@ -7,17 +7,17 @@ from pooltool.utils.strenum import StrEnum, auto
 
 
 class QuarticSolver(StrEnum):
-    NEW = auto()
-    OLD = auto()
+    HYBRID = auto()
+    NUMERIC = auto()
 
 
 _routine: Dict[QuarticSolver, Callable] = {
-    QuarticSolver.OLD: quartic.solve_many_numerical,
-    QuarticSolver.NEW: quartic.solve_many,
+    QuarticSolver.NUMERIC: quartic.solve_many_numerical,
+    QuarticSolver.HYBRID: quartic.solve_many,
 }
 
 
-def min_real_root(p, solver: QuarticSolver = QuarticSolver.OLD, tol=1e-9):
+def min_real_root(p, solver: QuarticSolver = QuarticSolver.NUMERIC, tol=1e-9):
     """Given an array of polynomial coefficients, find the minimum real root
 
     Parameters

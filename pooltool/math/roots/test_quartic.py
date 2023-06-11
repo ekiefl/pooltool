@@ -4,7 +4,9 @@ import pytest
 import pooltool.math.roots as roots
 
 
-@pytest.mark.parametrize("solver", [roots.QuarticSolver.OLD, roots.QuarticSolver.NEW])
+@pytest.mark.parametrize(
+    "solver", [roots.QuarticSolver.NUMERIC, roots.QuarticSolver.HYBRID]
+)
 def test_case1(solver: roots.QuarticSolver):
     coeffs = (
         0.9604000000000001,

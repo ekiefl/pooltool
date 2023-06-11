@@ -34,7 +34,7 @@ from pooltool.system.datatypes import System
 def simulate(
     shot: System,
     include: Set[EventType] = INCLUDED_EVENTS,
-    quartic_solver: QuarticSolver = QuarticSolver.OLD,
+    quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
     t_final=None,
     continuize=False,
     dt=None,
@@ -71,7 +71,7 @@ def simulate(
 
 
 def get_next_event(
-    shot: System, quartic_solver: QuarticSolver = QuarticSolver.OLD
+    shot: System, quartic_solver: QuarticSolver = QuarticSolver.HYBRID
 ) -> Event:
     # Start by assuming next event doesn't happen
     event = null_event(time=np.inf)
@@ -115,7 +115,7 @@ def get_next_transition(shot: System) -> Event:
 
 
 def get_next_ball_ball_collision(
-    shot: System, solver: QuarticSolver = QuarticSolver.OLD
+    shot: System, solver: QuarticSolver = QuarticSolver.HYBRID
 ) -> Event:
     """Returns next ball-ball collision"""
 
@@ -176,7 +176,7 @@ def get_next_ball_ball_collision(
 
 
 def get_next_ball_circular_cushion_event(
-    shot: System, solver: QuarticSolver = QuarticSolver.OLD
+    shot: System, solver: QuarticSolver = QuarticSolver.HYBRID
 ) -> Event:
     """Returns next ball-cushion collision (circular cushion segment)"""
 
@@ -266,7 +266,7 @@ def get_next_ball_linear_cushion_collision(shot: System) -> Event:
 
 
 def get_next_ball_pocket_collision(
-    shot: System, solver: QuarticSolver = QuarticSolver.OLD
+    shot: System, solver: QuarticSolver = QuarticSolver.HYBRID
 ) -> Event:
     """Returns next ball-pocket collision"""
 

@@ -8,7 +8,7 @@ from pooltool.math.roots import QuarticSolver
 from pooltool.system import System
 
 
-@pytest.mark.parametrize("solver", [QuarticSolver.OLD, QuarticSolver.NEW])
+@pytest.mark.parametrize("solver", [QuarticSolver.NUMERIC, QuarticSolver.HYBRID])
 def test_case1(solver: QuarticSolver):
     """
     In this shot, the next event should be:
@@ -29,7 +29,7 @@ def test_case1(solver: QuarticSolver):
     assert next_event.time == pytest.approx(expected.time, rel=1e-3)
 
 
-@pytest.mark.parametrize("solver", [QuarticSolver.OLD, QuarticSolver.NEW])
+@pytest.mark.parametrize("solver", [QuarticSolver.NUMERIC, QuarticSolver.HYBRID])
 def test_case2(solver: QuarticSolver):
     """
     In this shot, the next event should be:
@@ -46,7 +46,7 @@ def test_case2(solver: QuarticSolver):
         shot.balls["8"], shot.table.pockets["lc"], 0.08933033587481054
     )
 
-    if solver == QuarticSolver.OLD:
+    if solver == QuarticSolver.NUMERIC:
         assert next_event == expected
-    elif solver == QuarticSolver.NEW:
+    elif solver == QuarticSolver.HYBRID:
         assert next_event != expected
