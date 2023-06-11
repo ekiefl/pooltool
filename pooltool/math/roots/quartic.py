@@ -90,7 +90,19 @@ def _solve_many(
 
 
 @jit(nopython=True, cache=const.numba_cache)
-def _solve(p: NDArray[np.complex128]) -> Tuple[NDArray[np.complex128], int]:
+def _solve(p: NDArray[np.complex128], tol=1e-5) -> Tuple[NDArray[np.complex128], int]:
+    """Solve a quartic with mixed strategy
+
+    Args:
+        tol:
+            This is a very sensitive parameter and controls whether or not the
+            analytically calcualted roots sufficiently satisfy the polynomial. After
+            much testing, I've determined that when the root evaluates to <1e-5, it's
+            nearly always numerically similar to the true root. I didn't find any bad
+            roots with <1e-5. I did find good/decent roots with >1e-5, but I'm happy to
+            play it conservative and keep it at 1e-5.
+    """
+
     # The analytic solutions don't like 0s
     if (p == 0).any():
         return numeric(p), 2
@@ -107,7 +119,7 @@ def _solve(p: NDArray[np.complex128]) -> Tuple[NDArray[np.complex128], int]:
 
     # Check whether the solved roots are genuine
     for root in soln_1:
-        if abs(evaluate(p, root)) > 1e-5:
+        if abs(evaluate(p, root)) > tol:
             break
     else:
         return soln_1, 0
@@ -120,7 +132,7 @@ def _solve(p: NDArray[np.complex128]) -> Tuple[NDArray[np.complex128], int]:
 
     # Check whether the solved roots are genuine
     for root in soln_2:
-        if abs(evaluate(p, root)) > 1e-5:
+        if abs(evaluate(p, root)) > tol:
             break
     else:
         return soln_2, 1
