@@ -2,12 +2,15 @@ import numpy as np
 import pytest
 
 import pooltool.constants as const
-from pooltool.events import ball_ball_collision, ball_pocket_collision
-from pooltool.evolution.event_based.simulate import get_next_event
+from pooltool.events import Event, EventType, ball_ball_collision, ball_pocket_collision
+from pooltool.evolution.event_based.simulate import (
+    get_next_ball_ball_collision,
+    get_next_event,
+)
 from pooltool.evolution.event_based.solve import ball_ball_collision_coeffs
 from pooltool.evolution.event_based.test_data import TEST_DIR
 from pooltool.math.roots import QuarticSolver, min_real_root
-from pooltool.objects import Ball, Cue, Table
+from pooltool.objects import Ball, BilliardTableSpecs, Cue, Table
 from pooltool.system import System
 
 
@@ -141,3 +144,46 @@ def _move_cue(system: System, phi: float) -> None:
         0,
     ]
     system.balls["cue"].state.s = 3
+
+
+@pytest.mark.parametrize("solver", [QuarticSolver.NUMERIC, QuarticSolver.HYBRID])
+def test_no_ball_ball_collisions_for_intersecting_balls(solver: QuarticSolver):
+    """Two already intersecting balls don't collide
+
+    In this instance, no further collision is detected because the balls are already
+    interesecting. Otherwise perpetual internal collisions occur, keeping the two balls
+    locked.
+
+    This test doesn't make sure that balls don't intersect, it tests the safeguard that
+    prevents already intersecting balls from colliding with their internal walls, which
+    keeps them intersected like links in a chain.
+
+            , - ~  ,        , - ~  ,
+        , '          ' ,, '          ' ,
+      ,               ,                  ,
+     ,               ,                    ,
+    ,               ,                      ,
+    ,          one  ,      <---cue         ,
+    ,               ,                      ,
+     ,               ,                    ,
+      ,               ,                  ,
+        ,               ,               '
+          ' - , _ , - '   ' - , _ , - '
+    """
+
+    system = System(
+        cue=Cue.default(),
+        table=(table := Table.from_table_specs(BilliardTableSpecs(l=10, w=10))),
+        balls={
+            "1": (ball := Ball.create("1", xy=(table.w / 2, table.l / 2))),
+            "cue": Ball.create("cue", xy=(table.w / 2 + ball.params.R, table.l / 2)),
+        },
+    )
+
+    system.balls["cue"].state.rvw[1] = [-0.5, 0, 0]
+    system.balls["cue"].state.s = const.rolling
+
+    assert (
+        get_next_event(system, quartic_solver=solver).event_type != EventType.BALL_BALL
+    )
+    assert get_next_ball_ball_collision(system, solver=solver).time == np.inf
