@@ -6,43 +6,13 @@ import pooltool.math.roots.quartic as quartic
 from pooltool.utils.strenum import StrEnum, auto
 
 
-def roots_numerical(p):
-    """Solve multiple polynomial equations
-
-    This is a vectorized implementation of numpy.roots that can solve multiple
-    polynomials in a vectorized fashion. The solution is taken from this wonderful
-    stackoverflow answer: https://stackoverflow.com/a/35853977
-
-    Parameters
-    ==========
-    p : array
-        A mxn array of polynomial coefficients, where m is the number of equations and
-        n-1 is the order of the polynomial. If n is 5 (4th order polynomial), the
-        columns are in the order a, b, c, d, e, where these coefficients make up the
-        polynomial equation at^4 + bt^3 + ct^2 + dt + e = 0
-
-    Notes
-    =====
-    - This function is not amenable to numbaization (0.54.1). There are a couple of
-      hurdles to address. p[...,None,0] needs to be refactored since None/np.newaxis
-      cause compile error. But even bigger an issue is that np.linalg.eigvals is only
-      supported for 2D arrays, but the strategy here is to pass np.lingalg.eigvals a
-      vectorized 3D array.
-    """
-    n = p.shape[-1]
-    A = np.zeros(p.shape[:1] + (n - 1, n - 1), np.float64)
-    A[..., 1:, :-1] = np.eye(n - 2)
-    A[..., 0, :] = -p[..., 1:] / p[..., None, 0]
-    return np.linalg.eigvals(A)
-
-
 class QuarticSolver(StrEnum):
     NEW = auto()
     OLD = auto()
 
 
 _routine: Dict[QuarticSolver, Callable] = {
-    QuarticSolver.OLD: roots_numerical,
+    QuarticSolver.OLD: quartic.solve_many_numerical,
     QuarticSolver.NEW: quartic.solve_many,
 }
 

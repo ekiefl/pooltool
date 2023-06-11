@@ -6,7 +6,36 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
-from pooltool.math.roots.playground import analytic
+
+
+def solve_many_numerical(p):
+    """Solve multiple polynomial equations
+
+    This is a vectorized implementation of numpy.roots that can solve multiple
+    polynomials in a vectorized fashion. The solution is taken from this wonderful
+    stackoverflow answer: https://stackoverflow.com/a/35853977
+
+    Parameters
+    ==========
+    p : array
+        A mxn array of polynomial coefficients, where m is the number of equations and
+        n-1 is the order of the polynomial. If n is 5 (4th order polynomial), the
+        columns are in the order a, b, c, d, e, where these coefficients make up the
+        polynomial equation at^4 + bt^3 + ct^2 + dt + e = 0
+
+    Notes
+    =====
+    - This function is not amenable to numbaization (0.54.1). There are a couple of
+      hurdles to address. p[...,None,0] needs to be refactored since None/np.newaxis
+      cause compile error. But even bigger an issue is that np.linalg.eigvals is only
+      supported for 2D arrays, but the strategy here is to pass np.lingalg.eigvals a
+      vectorized 3D array.
+    """
+    n = p.shape[-1]
+    A = np.zeros(p.shape[:1] + (n - 1, n - 1), np.float64)
+    A[..., 1:, :-1] = np.eye(n - 2)
+    A[..., 0, :] = -p[..., 1:] / p[..., None, 0]
+    return np.linalg.eigvals(A)
 
 
 def solve_many(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
@@ -14,6 +43,7 @@ def solve_many(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
     return roots
 
 
+@jit(nopython=True, cache=const.numba_cache)
 def _solve_many(
     ps: NDArray[np.complex128],
 ) -> Tuple[NDArray[np.complex128], NDArray[np.uint8]]:
@@ -28,11 +58,17 @@ def _solve_many(
     return all_roots, indicators
 
 
+@jit(nopython=True, cache=const.numba_cache)
 def solve(p: NDArray[np.float64]) -> NDArray[np.complex128]:
     return _solve(p.astype(np.complex128))[0]
 
 
+@jit(nopython=True, cache=const.numba_cache)
 def _solve(p: NDArray[np.complex128]) -> Tuple[NDArray[np.complex128], int]:
+    # The analytic solutions don't like 0s
+    if (p == 0).any():
+        return numeric(p), 2
+
     # Guess which of the two isomorphic polynomial equations is more likely to be
     # numerically stable
     reverse = instability(p[::-1]) < instability(p)
@@ -67,10 +103,12 @@ def _solve(p: NDArray[np.complex128]) -> Tuple[NDArray[np.complex128], int]:
     return numeric(p), 2
 
 
+@jit(nopython=True, cache=const.numba_cache)
 def evaluate(p: NDArray[np.complex128], val: complex) -> complex:
     return p[0] * val**4 + p[1] * val**3 + p[2] * val**2 + p[3] * val + p[4]
 
 
+@jit(nopython=True, cache=const.numba_cache)
 def instability(p: NDArray[np.complex128]) -> float:
     """Range is from [0, inf], 0 is most stable"""
     a, b = p[:2]
@@ -82,13 +120,18 @@ def instability(p: NDArray[np.complex128]) -> float:
     return t + 1 / t
 
 
+@jit(nopython=True, cache=const.numba_cache)
 def numeric(p: NDArray[np.complex128]) -> NDArray[np.complex128]:
-    return np.roots(p)
+    return np.roots(p).astype(np.complex128)
 
 
-def analytic_old(p: NDArray[np.complex128]) -> NDArray[np.complex128]:
+@jit(nopython=True, cache=const.numba_cache)
+def analytic(p: NDArray[np.complex128]) -> NDArray[np.complex128]:
     # Convert to complex so we can take cubic root of negatives
     a, b, c, d, e = p
+
+    if a == 0:
+        return np.array([0, 0, 0, 0], dtype=np.complex128)
 
     x0 = 1 / a
     x1 = c * x0
