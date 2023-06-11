@@ -9,27 +9,35 @@ import pooltool.constants as const
 
 
 def solve_many_numerical(p):
-    """Solve multiple polynomial equations
+    """Solve multiple polynomial equations using companion matrix eigenvalues
 
     This is a vectorized implementation of numpy.roots that can solve multiple
     polynomials in a vectorized fashion. The solution is taken from this wonderful
     stackoverflow answer: https://stackoverflow.com/a/35853977
 
-    Parameters
-    ==========
-    p : array
-        A mxn array of polynomial coefficients, where m is the number of equations and
-        n-1 is the order of the polynomial. If n is 5 (4th order polynomial), the
-        columns are in the order a, b, c, d, e, where these coefficients make up the
-        polynomial equation at^4 + bt^3 + ct^2 + dt + e = 0
+    Args:
+        p:
+            A mxn array of polynomial coefficients, where m is the number of equations
+            and n-1 is the order of the polynomial. If n is 5 (4th order polynomial),
+            the columns are in the order a, b, c, d, e, where these coefficients make up
+            the polynomial equation at^4 + bt^3 + ct^2 + dt + e = 0
 
     Notes
     =====
-    - This function is not amenable to numbaization (0.54.1). There are a couple of
-      hurdles to address. p[...,None,0] needs to be refactored since None/np.newaxis
-      cause compile error. But even bigger an issue is that np.linalg.eigvals is only
-      supported for 2D arrays, but the strategy here is to pass np.lingalg.eigvals a
-      vectorized 3D array.
+    - Not yet amenable to numbaization (0.56.4). Problem is the numba implementation of
+      np.linalg.eigvals, which only supports 2D arrays, but the strategy here is to pass
+      np.lingalg.eigvals as a vectorized 3D array. Nevertheless, here is a numba
+      implementation that is just slightly slower (7% slower) than this function:
+
+          n = p.shape[-1]
+          A = np.zeros(p.shape[:1] + (n - 1, n - 1), dtype=np.complex128)
+          A[:, 1:, :-1] = np.eye(n - 2)
+          p0 = np.copy(p[:, 0]).reshape((-1, 1))
+          A[:, 0, :] = -p[:, 1:] / p0
+          roots = np.zeros((p.shape[0], n - 1), dtype=np.complex128)
+          for i in range(p.shape[0]):
+              roots[i, :] = np.linalg.eigvals(A[i, :, :])
+          return roots
     """
     n = p.shape[-1]
     A = np.zeros(p.shape[:1] + (n - 1, n - 1), np.float64)
@@ -39,8 +47,31 @@ def solve_many_numerical(p):
 
 
 def solve_many(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
+    """Solve multiple quartic equations using analytical solutions when possible
+
+    Closed-form analytical solutions exist for the quartic polynomial equation, but can
+    suffer from severe numerical instability. Fortunately, the quality of an
+    analytically calculated roots can be determined by plugging them back into the
+    quartic and ensuring they evaluate the function to 0.
+
+    This function calculates roots to a quartic by analytically solving the quartic
+    polynomials. If the roots are inaccurate, an isomorphic polynomial is solved
+    analytically. If those roots are also inaccurate, the roots are solved using the
+    companion matrix eigenvalue method, which is very reliable, but slower.
+
+    Args:
+        p:
+            A mx5 array of polynomial coefficients, where m is the number of equations.
+            The columns are in the order a, b, c, d, e, where these coefficients make up
+            the polynomial equation at^4 + bt^3 + ct^2 + dt + e = 0
+    """
     roots, indicators = _solve_many(ps.astype(np.complex128))
     return roots
+
+
+@jit(nopython=True, cache=const.numba_cache)
+def solve(p: NDArray[np.float64]) -> NDArray[np.complex128]:
+    return _solve(p.astype(np.complex128))[0]
 
 
 @jit(nopython=True, cache=const.numba_cache)
@@ -56,11 +87,6 @@ def _solve_many(
         all_roots[i, :], indicators[i] = _solve(ps[i, :])
 
     return all_roots, indicators
-
-
-@jit(nopython=True, cache=const.numba_cache)
-def solve(p: NDArray[np.float64]) -> NDArray[np.complex128]:
-    return _solve(p.astype(np.complex128))[0]
 
 
 @jit(nopython=True, cache=const.numba_cache)
