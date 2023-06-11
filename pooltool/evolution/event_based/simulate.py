@@ -9,7 +9,6 @@ import numpy as np
 
 import pooltool.constants as const
 import pooltool.math as math
-from pooltool.error import SimulateError
 from pooltool.events import (
     Event,
     EventType,
@@ -36,7 +35,6 @@ def simulate(
     shot: System,
     include: Set[EventType] = INCLUDED_EVENTS,
     quartic_solver: QuarticSolver = QuarticSolver.OLD,
-    raise_simulate_error: bool = False,
     t_final=None,
     continuize=False,
     dt=None,
@@ -46,35 +44,28 @@ def simulate(
     shot.reset_history()
     shot.update_history(null_event(time=0))
 
-    try:
-        if dt is None:
-            dt = 0.01
+    if dt is None:
+        dt = 0.01
 
-        while True:
-            event = get_next_event(shot, quartic_solver=quartic_solver)
+    while True:
+        event = get_next_event(shot, quartic_solver=quartic_solver)
 
-            if event.time == np.inf:
-                shot.update_history(null_event(time=shot.t))
-                break
+        if event.time == np.inf:
+            shot.update_history(null_event(time=shot.t))
+            break
 
-            shot.evolve(event.time - shot.t)
+        shot.evolve(event.time - shot.t)
 
-            if event.event_type in include:
-                shot.resolve_event(event)
+        if event.event_type in include:
+            shot.resolve_event(event)
 
-            shot.update_history(event)
+        shot.update_history(event)
 
-            if t_final is not None and shot.t >= t_final:
-                break
+        if t_final is not None and shot.t >= t_final:
+            break
 
-        if continuize:
-            shot.continuize(dt=dt)
-
-    except Exception as exc:
-        if raise_simulate_error:
-            raise SimulateError()
-        else:
-            raise exc
+    if continuize:
+        shot.continuize(dt=dt)
 
     return shot
 

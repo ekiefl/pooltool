@@ -8,7 +8,6 @@ from pooltool.ani.globals import Global
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
-from pooltool.error import SimulateError
 from pooltool.evolution import simulate
 from pooltool.system.datatypes import multisystem
 
@@ -81,7 +80,6 @@ class CalculateMode(BaseMode):
         simulate(
             multisystem.active,
             continuize=True,
-            raise_simulate_error=True,
         )
 
         Global.game.process_shot(multisystem.active)
