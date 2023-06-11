@@ -70,8 +70,8 @@ def solve_many(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
 
 
 @jit(nopython=True, cache=const.numba_cache)
-def solve(p: NDArray[np.float64]) -> NDArray[np.complex128]:
-    return _solve(p.astype(np.complex128))[0]
+def solve(a, b, c, d, e) -> NDArray[np.complex128]:
+    return _solve(np.array([a, b, c, d, e], dtype=np.complex128))[0]
 
 
 @jit(nopython=True, cache=const.numba_cache)
