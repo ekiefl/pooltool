@@ -1,6 +1,7 @@
-from typing import Callable, Dict
+from typing import Callable, Dict, Tuple
 
 import numpy as np
+from numpy.typing import NDArray
 
 import pooltool.math.roots.quartic as quartic
 from pooltool.utils.strenum import StrEnum, auto
@@ -17,12 +18,14 @@ _routine: Dict[QuarticSolver, Callable] = {
 }
 
 
-def min_real_root(p, solver: QuarticSolver = QuarticSolver.NUMERIC, tol=1e-9):
+def min_real_root(
+    ps: NDArray[np.float64], solver: QuarticSolver = QuarticSolver.NUMERIC, tol=1e-9
+) -> Tuple[float, int]:
     """Given an array of polynomial coefficients, find the minimum real root
 
     Parameters
     ==========
-    p:
+    ps:
         A mxn array of polynomial coefficients, where m is the number of equations and
         n-1 is the order of the polynomial. If n is 5 (4th order polynomial), the
         columns are in the order a, b, c, d, e, where these coefficients make up the
@@ -39,11 +42,11 @@ def min_real_root(p, solver: QuarticSolver = QuarticSolver.NUMERIC, tol=1e-9):
     output : (time, index)
         `time` is the minimum real root from the set of polynomials, and `index`
         specifies the index of the responsible polynomial. i.e. the polynomial with the
-        root `time` is p[index]
+        root `time` is ps[index, :]
     """
     # Get the roots for the polynomials
     assert QuarticSolver(solver)
-    times = _routine[solver](p)
+    times = _routine[solver](ps)
 
     # If the root has a nonzero imaginary component, set to infinity
     # If the root has a nonpositive real component, set to infinity
