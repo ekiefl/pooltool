@@ -53,7 +53,7 @@ def resolve_ball_ball_collision(rvw1, rvw2, R):
     n = math.unit_vector(r2 - r1)
     t = math.coordinate_rotation(n, np.pi / 2)
 
-    correction = 2 * R - np.linalg.norm(r2 - r1)
+    correction = 2 * R - np.linalg.norm(r2 - r1) + const.EPS_SPACE
     rvw2[0] += correction / 2 * n
     rvw1[0] -= correction / 2 * n
 

@@ -11,7 +11,7 @@ np.set_printoptions(precision=16, suppress=True)
 
 EPS = np.finfo(float).eps * 100
 EPS_TIME = 1e-9
-EPS_SPACE = 1e-9
+EPS_SPACE = 1e-12
 
 # Ball states
 stationary = 0

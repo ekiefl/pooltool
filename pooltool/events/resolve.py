@@ -25,6 +25,7 @@ def resolve_ball_ball(event: Event) -> Event:
         np.copy(ball1.initial.state.rvw),
         np.copy(ball2.initial.state.rvw),
         ball1.initial.params.R,
+        spacer=False,
     )
 
     ball1.final = evolve(ball1.initial, state=BallState(rvw1, c.sliding, event.time))
