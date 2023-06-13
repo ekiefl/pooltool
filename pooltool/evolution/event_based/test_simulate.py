@@ -64,6 +64,63 @@ def test_case2(solver: QuarticSolver):
 
 
 @pytest.mark.parametrize("solver", [QuarticSolver.NUMERIC, QuarticSolver.HYBRID])
+def test_case3(solver: QuarticSolver):
+    """A case that the HYBRID solver struggles with
+
+    In this shot, the next event should be:
+
+        <Event object at 0x7ff54a6bd940>
+         ├── type   : ball_ball
+         ├── time   : 0.000005810
+         └── agents : ['2', '5']
+
+    The other observed candidate was
+
+        <Event object at 0x7ff54a70f840>
+         ├── type   : ball_ball
+         ├── time   : 0.000006211
+         └── agents : ['6', '8']
+
+    However, if this event is chosen, balls 2 and 5 end up intersecting.
+    """
+
+    shot = System.load(TEST_DIR / "case3.msgpack")
+
+    ball1 = shot.balls["2"]
+    ball2 = shot.balls["5"]
+
+    event = get_next_event(shot, quartic_solver=solver)
+
+    coeffs = ball_ball_collision_coeffs(
+        rvw1=ball1.state.rvw,
+        rvw2=ball2.state.rvw,
+        s1=ball1.state.s,
+        s2=ball2.state.s,
+        mu1=(ball1.params.u_s if ball1.state.s == const.sliding else ball1.params.u_r),
+        mu2=(ball2.params.u_s if ball2.state.s == const.sliding else ball2.params.u_r),
+        m1=ball1.params.m,
+        m2=ball2.params.m,
+        g1=ball1.params.g,
+        g2=ball2.params.g,
+        R=ball1.params.R,
+    )
+
+    coeffs_array = np.array([coeffs], dtype=np.float64)
+
+    expected = pytest.approx(5.810383731499328e-06, abs=1e-9)
+
+    if solver == QuarticSolver.NUMERIC:
+        assert event.time == expected
+        assert min_real_root(coeffs_array, solver=solver)[0] == expected
+    elif solver == QuarticSolver.HYBRID:
+        # THIS IS A SHORTCOMING OF THE HYBRD MODEL. It sees the wrong next event because
+        # the calculated root with the analytical formula fails to have a rtol < 1e-3
+        # (the actual value is like 3e-3).
+        assert event.time != expected
+        assert min_real_root(coeffs_array, solver=solver)[0] != expected
+
+
+@pytest.mark.parametrize("solver", [QuarticSolver.NUMERIC, QuarticSolver.HYBRID])
 def test_grazing_ball_ball_collision(solver: QuarticSolver):
     """A very narrow hit
 
