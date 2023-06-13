@@ -168,8 +168,8 @@ def analytic(p: NDArray[np.complex128]) -> NDArray[np.complex128]:
     # Convert to complex so we can take cubic root of negatives
     a, b, c, d, e = p
 
-    if a == 0:
-        return np.array([0, 0, 0, 0], dtype=np.complex128)
+    if e == 0:
+        return np.array([0, np.nan, np.nan, np.nan], dtype=np.complex128)
 
     x0 = 1 / a
     x1 = c * x0
