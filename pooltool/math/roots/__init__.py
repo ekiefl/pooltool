@@ -66,8 +66,7 @@ def min_real_root(
     assert QuarticSolver(solver)
     times = _routine[solver](ps)
 
-    # FIXME This should be 0 eventually, not 1e-9
-    negative = times.real < 1e-9
+    negative = times.real < 0.0
 
     imag_mag = np.abs(times.imag)
     real_mag = np.abs(times.real)
