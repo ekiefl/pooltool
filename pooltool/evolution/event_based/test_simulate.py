@@ -113,15 +113,8 @@ def test_case3(solver: QuarticSolver):
 
     expected = pytest.approx(5.810383731499328e-06, abs=1e-9)
 
-    if solver == QuarticSolver.NUMERIC:
-        assert event.time == expected
-        assert min_real_root(coeffs_array, solver=solver)[0] == expected
-    elif solver == QuarticSolver.HYBRID:
-        # THIS IS A SHORTCOMING OF THE HYBRD MODEL. It sees the wrong next event because
-        # the calculated root with the analytical formula fails to have a rtol < 1e-3
-        # (the actual value is like 3e-3).
-        assert event.time != expected
-        assert min_real_root(coeffs_array, solver=solver)[0] != expected
+    assert event.time == expected
+    assert min_real_root(coeffs_array, solver=solver)[0] == expected
 
 
 def _assert_rolling(rvw: NDArray[np.float64], R: float) -> None:
@@ -223,7 +216,7 @@ def test_grazing_ball_ball_collision(solver: QuarticSolver):
 
 
 @pytest.mark.parametrize("solver", [QuarticSolver.NUMERIC, QuarticSolver.HYBRID])
-def test_touching_ball_ball_collision(solver: QuarticSolver):
+def test_almost_touching_ball_ball_collision(solver: QuarticSolver):
     """A hit with two touching/almost touching balls
 
     In this example, a cue ball is hit into the 1 ball at point blank with various
@@ -315,19 +308,11 @@ def test_touching_ball_ball_collision(solver: QuarticSolver):
 
         coeffs_array = np.array([coeffs], dtype=np.float64)
 
-        # NOTE This is missing actual tests, or perhaps this test should be deleted. So
-        # far I've been using this as a playground to compare the different methods
-
-        numeric = min_real_root(coeffs_array, solver=QuarticSolver.NUMERIC)[0]
-        newton = -coeffs[-1] / coeffs[-2]
         truth = true_time_to_collision(eps, V0, ball1.params.u_r, ball1.params.g)
-        hybrid = min_real_root(coeffs_array, solver=QuarticSolver.HYBRID)[0]
-        pct_diff = lambda x: f"{(abs(x - truth) / truth * 100):.4f}"
-        print(f"-- {eps=}")
-        print(f" Truth: {truth}")
-        print(f" Newton (% diff): {pct_diff(newton)}%")
-        print(f" Hybrid (% diff): {pct_diff(hybrid)}%")
-        print(f" Numeric (% diff): {pct_diff(numeric)}%")
+        calculated = min_real_root(coeffs_array, solver=solver)[0]
+        diff = abs(calculated - truth)
+
+        assert diff < 10e-12  # Less than 10 femptosecond difference
 
 
 @pytest.mark.parametrize("solver", [QuarticSolver.NUMERIC, QuarticSolver.HYBRID])

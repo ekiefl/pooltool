@@ -91,23 +91,32 @@ def _solve_many(
 
 @jit(nopython=True, cache=const.numba_cache)
 def _solve(
-    p: NDArray[np.complex128], tol: float = 1e-5
+    p: NDArray[np.complex128], ftol: float = 1e-5
 ) -> Tuple[NDArray[np.complex128], int]:
     """Solve a quartic with mixed strategy
 
     Args:
-        tol:
+        ftol:
             This is a very sensitive parameter and controls whether or not the
-            analytically calcualted roots sufficiently satisfy the polynomial. After
+            analytically calculated roots sufficiently satisfy the polynomial. After
             much testing, I've determined that when the root evaluates to <1e-5, it's
             nearly always numerically similar to the true root. I didn't find any bad
-            roots with <1e-5. I did find good/decent roots with >1e-5, but I'm happy to
-            play it conservative and keep it at 1e-5.
+            roots that evaluate to <1e-5. I did find good/decent roots evaluating to
+            >1e-5, but I'm happy to play it conservative and keep it at 1e-5--those
+            roots will always be caught by the numerical solution.
     """
 
+    a = p[-1].real
+
     # This means t=0 is a root. No point solving the other roots, just return all 0s
-    if p[-1].real == 0.0:
+    if a == 0.0:
         return np.zeros(4, dtype=np.complex128), 0
+
+    # Round-off error is especially problematic for analytic solutions when a is small,
+    # because the first substituted variable is x0 = 1/a. The imprecision in this first
+    # variable propagates each successive intermediate variable
+    if a < 1e-7:
+        return numeric(p), 3
 
     # The analytic solutions don't like 0s
     if (p == 0).any():
@@ -125,7 +134,7 @@ def _solve(
 
     # Check whether the solved roots are genuine
     for root in soln_1:
-        if abs(evaluate(p, root)) > tol:
+        if abs(evaluate(p, root)) > ftol:
             break
     else:
         return soln_1, 1
@@ -138,7 +147,7 @@ def _solve(
 
     # Check whether the solved roots are genuine
     for root in soln_2:
-        if abs(evaluate(p, root)) > tol:
+        if abs(evaluate(p, root)) > ftol:
             break
     else:
         return soln_2, 2
