@@ -90,7 +90,9 @@ def _solve_many(
 
 
 @jit(nopython=True, cache=const.numba_cache)
-def _solve(p: NDArray[np.complex128], tol=1e-5) -> Tuple[NDArray[np.complex128], int]:
+def _solve(
+    p: NDArray[np.complex128], tol: float = 1e-5
+) -> Tuple[NDArray[np.complex128], int]:
     """Solve a quartic with mixed strategy
 
     Args:
@@ -103,9 +105,13 @@ def _solve(p: NDArray[np.complex128], tol=1e-5) -> Tuple[NDArray[np.complex128],
             play it conservative and keep it at 1e-5.
     """
 
+    # This means t=0 is a root. No point solving the other roots, just return all 0s
+    if p[-1].real == 0.0:
+        return np.zeros(4, dtype=np.complex128), 0
+
     # The analytic solutions don't like 0s
     if (p == 0).any():
-        return numeric(p), 2
+        return numeric(p), 3
 
     # Guess which of the two isomorphic polynomial equations is more likely to be
     # numerically stable
@@ -122,7 +128,7 @@ def _solve(p: NDArray[np.complex128], tol=1e-5) -> Tuple[NDArray[np.complex128],
         if abs(evaluate(p, root)) > tol:
             break
     else:
-        return soln_1, 0
+        return soln_1, 1
 
     # The roots were bad. Try the other polynomial equation
     if reverse:
@@ -135,10 +141,10 @@ def _solve(p: NDArray[np.complex128], tol=1e-5) -> Tuple[NDArray[np.complex128],
         if abs(evaluate(p, root)) > tol:
             break
     else:
-        return soln_2, 1
+        return soln_2, 2
 
     # The roots were bad. Resorting to companion matrix eigenvalues
-    return numeric(p), 2
+    return numeric(p), 3
 
 
 @jit(nopython=True, cache=const.numba_cache)
