@@ -77,11 +77,66 @@ def resolve_ball_ball_collision(rvw1, rvw2, R, spacer: bool = True):
     return rvw1, rvw2
 
 
-def resolve_ball_cushion_collision(rvw, normal, R, m, h, e_c, f_c):
-    """Inhwan Han (2005) 'Dynamics in Carom and Three Cushion Billiards'"""
+def resolve_ball_linear_cushion_collision(
+    rvw, normal, p1, p2, R, m, h, e_c, f_c, spacer: bool = True
+):
+    """Resolve the ball linear cushion collision
 
+    Args:
+        spacer:
+            A correction is made such that if the ball is not a distance R from the
+            cushion, the ball is moved along the normal such that it is, at least to
+            within float precision error. That's where this paramter comes in. If spacer
+            is True, a small epsilon of additional distance (constants.EPS_SPACE) is put
+            between them, ensuring the cushion and ball are separated post-resolution.
+    """
     # orient the normal so it points away from playing surface
     normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
+
+    rvw = _resolve_ball_cushion_collision(rvw, normal, R, m, h, e_c, f_c)
+
+    # Calculate the point on cushion line where contact should be made, then set the
+    # z-component to match the ball's height
+    c = math.point_on_line_closest_to_point(p1, p2, rvw[0])
+    c[2] = rvw[0, 2]
+
+    # Move the ball to meet the cushion
+    correction = R - np.linalg.norm(rvw[0] - c) + (const.EPS_SPACE if spacer else 0.0)
+    rvw[0] -= correction * normal
+
+    return rvw
+
+
+def resolve_ball_circular_cushion_collision(
+    rvw, normal, center, radius, R, m, h, e_c, f_c, spacer: bool = True
+):
+    """Resolve the ball linear cushion collision
+
+    Args:
+        spacer:
+            A correction is made such that if the ball is not a distance R from the
+            cushion, the ball is moved along the normal such that it is, at least to
+            within float precision error. That's where this paramter comes in. If spacer
+            is True, a small epsilon of additional distance (constants.EPS_SPACE) is put
+            between them, ensuring the cushion and ball are separated post-resolution.
+    """
+    # orient the normal so it points away from playing surface
+    normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
+
+    rvw = _resolve_ball_cushion_collision(rvw, normal, R, m, h, e_c, f_c)
+
+    c = np.array([center[0], center[1], rvw[0, 2]])
+    correction = (
+        R + radius - np.linalg.norm(rvw[0] - c) - (const.EPS_SPACE if spacer else 0.0)
+    )
+
+    rvw[0] += correction * normal
+
+    return rvw
+
+
+def _resolve_ball_cushion_collision(rvw, normal, R, m, h, e_c, f_c):
+    """Inhwan Han (2005) 'Dynamics in Carom and Three Cushion Billiards'"""
 
     # Change from the table frame to the cushion frame. The cushion frame is defined by
     # the normal vector is parallel with <1,0,0>.

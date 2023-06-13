@@ -25,7 +25,6 @@ def resolve_ball_ball(event: Event) -> Event:
         np.copy(ball1.initial.state.rvw),
         np.copy(ball2.initial.state.rvw),
         ball1.initial.params.R,
-        spacer=False,
     )
 
     ball1.final = evolve(ball1.initial, state=BallState(rvw1, c.sliding, event.time))
@@ -39,25 +38,46 @@ def resolve_null(event: Event) -> Event:
 
 
 def resolve_linear_ball_cushion(event: Event) -> Event:
-    return _resolve_ball_cushion(event)
-
-
-def resolve_circular_ball_cushion(event: Event) -> Event:
-    return _resolve_ball_cushion(event)
-
-
-def _resolve_ball_cushion(event: Event) -> Event:
     ball, cushion = event.agents
 
     assert isinstance(ball.initial, Ball)
-    assert isinstance(cushion.initial, (LinearCushionSegment, CircularCushionSegment))
+    assert isinstance(cushion.initial, LinearCushionSegment)
 
     rvw = ball.initial.state.rvw
     normal = cushion.initial.get_normal(rvw)
 
-    rvw = physics.resolve_ball_cushion_collision(
+    rvw = physics.resolve_ball_linear_cushion_collision(
         rvw=rvw,
         normal=normal,
+        p1=cushion.initial.p1,
+        p2=cushion.initial.p2,
+        R=ball.initial.params.R,
+        m=ball.initial.params.m,
+        h=cushion.initial.height,
+        e_c=ball.initial.params.e_c,
+        f_c=ball.initial.params.f_c,
+    )
+
+    ball.final = evolve(ball.initial, state=BallState(rvw, c.sliding, event.time))
+    cushion.final = None
+
+    return event
+
+
+def resolve_circular_ball_cushion(event: Event) -> Event:
+    ball, cushion = event.agents
+
+    assert isinstance(ball.initial, Ball)
+    assert isinstance(cushion.initial, CircularCushionSegment)
+
+    rvw = ball.initial.state.rvw
+    normal = cushion.initial.get_normal(rvw)
+
+    rvw = physics.resolve_ball_circular_cushion_collision(
+        rvw=rvw,
+        normal=normal,
+        center=cushion.initial.center,
+        radius=cushion.initial.radius,
         R=ball.initial.params.R,
         m=ball.initial.params.m,
         h=cushion.initial.height,

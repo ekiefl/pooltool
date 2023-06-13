@@ -3,6 +3,7 @@ from typing import Tuple
 import numpy as np
 import pytest
 
+import pooltool.constants as const
 from pooltool.events import (
     ball_ball_collision,
     ball_linear_cushion_collision,
@@ -120,14 +121,26 @@ def test_ball_ball_collision(cue_colliding_into_one_ball):
 
     # Cue ball final
     cue_final_expected = np.array([[-2, 0, 1], [0, 0, 0], [0, 0, 0]])
-    assert np.array_equal(event.agents[0].get_final().state.rvw, cue_final_expected)
+    assert (
+        np.isclose(
+            event.agents[0].get_final().state.rvw,
+            cue_final_expected,
+            atol=const.EPS_SPACE + const.EPS,
+        )
+    ).all()
 
     # One ball initial
     assert np.array_equal(event.agents[1].get_initial().state.rvw, one_initial_expected)
 
     # One ball final
     one_final_expected = np.array([[0, 0, 1], [1, 0, 0], [0, 0, 0]])
-    assert np.array_equal(event.agents[1].get_final().state.rvw, one_final_expected)
+    assert (
+        np.isclose(
+            event.agents[1].get_final().state.rvw,
+            one_final_expected,
+            atol=const.EPS_SPACE + const.EPS,
+        )
+    ).all()
 
 
 def test_ball_linear_cushion_collision(cue_colliding_into_cushion):
