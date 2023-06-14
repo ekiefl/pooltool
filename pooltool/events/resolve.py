@@ -150,6 +150,28 @@ def resolve_transition(event: Event) -> Event:
     ball.final.state.s = end
     ball.initial.state.s = start
 
+    if end == c.spinning:
+        # Assert that the velocity components are nearly 0, and that the x and y angular
+        # velocity components are nearly 0. Then set them to exactly 0.
+        v = ball.final.state.rvw[1]
+        w = ball.final.state.rvw[2]
+        assert (np.abs(v) < c.EPS_SPACE).all()
+        assert (np.abs(w[:2]) < c.EPS_SPACE).all()
+
+        ball.final.state.rvw[1, :] = [0.0, 0.0, 0.0]
+        ball.final.state.rvw[2, :2] = [0.0, 0.0]
+
+    if end == c.stationary:
+        # Assert that the linear and angular velocity components are nearly 0, then set
+        # them to exactly 0.
+        v = ball.final.state.rvw[1]
+        w = ball.final.state.rvw[2]
+        assert (np.abs(v) < c.EPS_SPACE).all()
+        assert (np.abs(w) < c.EPS_SPACE).all()
+
+        ball.final.state.rvw[1, :] = [0.0, 0.0, 0.0]
+        ball.final.state.rvw[2, :] = [0.0, 0.0, 0.0]
+
     return event
 
 
