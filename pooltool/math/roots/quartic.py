@@ -148,16 +148,15 @@ def _solve(
             roots will always be caught by the numerical solution.
     """
 
-    a = p[-1].real
+    e = p[-1].real
 
     # This means t=0 is a root. No point solving the other roots, just return all 0s
-    if a == 0.0:
+    if e == 0.0:
         return np.zeros(4, dtype=np.complex128), 0
 
-    # Round-off error is especially problematic for analytic solutions when a is small,
-    # because the first substituted variable is x0 = 1/a. The imprecision in this first
-    # variable propagates each successive intermediate variable
-    if a < 1e-7:
+    # Round-off error seems to be especially problematic for analytic solutions when e
+    # is small
+    if abs(e) < 1e-7:
         return numeric(p), 3
 
     # The analytic solutions don't like 0s
