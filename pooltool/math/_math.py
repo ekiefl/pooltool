@@ -96,7 +96,7 @@ def coordinate_rotation(v, phi):
     return np.dot(rotation, v)
 
 
-# @jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.numba_cache)
 def point_on_line_closest_to_point(p1, p2, p0):
     """Returns point on line defined by points p1 and p2 closest to the point p0
 
