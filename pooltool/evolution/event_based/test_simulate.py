@@ -74,7 +74,7 @@ def test_case2(solver: quartic.QuarticSolver):
     "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
 )
 def test_case3(solver: quartic.QuarticSolver):
-    """A case that the HYBRID solver struggles with
+    """A case that the HYBRID solver has struggled with
 
     In this shot, the next event should be:
 
@@ -120,6 +120,57 @@ def test_case3(solver: quartic.QuarticSolver):
 
     assert event.time == expected
     assert quartic.minimum_quartic_root(coeffs_array, solver=solver)[0] == expected
+
+
+@pytest.mark.parametrize(
+    "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
+)
+def test_case4(solver: quartic.QuarticSolver):
+    """An UNSOLVED case that leads to a near-infinite event loop
+
+    The infinite loop being:
+
+        <Event object at 0x7f8714dbc5c0>
+         ├── type   : ball_ball
+         ├── time   : 6.991592338
+         └── agents : ['5', '6']
+        <Event object at 0x7f8714dbc440>
+         ├── type   : sliding_rolling
+         ├── time   : 6.991593919
+         └── agents : ['6']
+        <Event object at 0x7f8714db0700>
+         ├── type   : sliding_rolling
+         ├── time   : 6.991593919
+         └── agents : ['5']
+        <Event object at 0x7f8714dbc540>
+         ├── type   : ball_ball
+         ├── time   : 6.991709979
+         └── agents : ['5', '7']
+        <Event object at 0x7f8714db0a40>
+         ├── type   : sliding_rolling
+         ├── time   : 6.991710759
+         └── agents : ['7']
+        <Event object at 0x7f8714db0d80>
+         ├── type   : rolling_stationary
+         ├── time   : 6.991749764
+         └── agents : ['7']
+        <Event object at 0x7f8714db3200>
+         ├── type   : ball_ball
+         ├── time   : 6.991835060
+         └── agents : ['5', '6']
+        (...)
+
+    This is not caused by overlapping balls.
+
+    Using sandbox/break_forever.py, it tends to happen every 200 breaks or so with a cut
+    angle of 45 (and not once in 4500 shots with a cut angle of 0)
+    """
+
+    shot = System.load(TEST_DIR / "case4.msgpack")
+
+    # FIXME This will go on for a very, very, very long time. To introspect, add an
+    # early break after 8 events. This represents one cycle of the loop
+    # simulate(shot)
 
 
 def _assert_rolling(rvw: NDArray[np.float64], R: float) -> None:
