@@ -1,13 +1,16 @@
 #! /usr/bin/env python
 """This is a basic example of the pooltool API"""
 
+import sys
+from pathlib import Path
+
 import numpy as np
 
 import pooltool as pt
 
 
 def main(args):
-    if not args.no_viz:
+    if not args.no_viz and not args.profile_it:
         interface = pt.ShotViewer()
 
     if args.seed:
@@ -46,6 +49,22 @@ def main(args):
         run.info_single(
             f"Shot evolution algorithm: ({mu:.3f} +- {stderr:.3f}) ({N} trials)"
         )
+
+    # Time the shot
+    if args.profile_it:
+        # Burn a run (numba cache loading)
+        copy = shot.copy()
+        pt.simulate(copy)
+
+        run = pt.terminal.Run()
+        run.info_single("Profiling `simulate` and `continuize` (may take awhile)")
+
+        with pt.utils.PProfile(Path("cachegrind.out.simulate")):
+            pt.simulate(shot)
+        with pt.utils.PProfile(Path("cachegrind.out.continuize")):
+            shot.continuize()
+
+        sys.exit()
 
     # Evolve the shot
     pt.simulate(shot)
@@ -89,6 +108,11 @@ if __name__ == "__main__":
         "--time-it",
         action="store_true",
         help="Simulate multiple times, calculating the average calculation time (w/o continuize)",
+    )
+    ap.add_argument(
+        "--profile-it",
+        action="store_true",
+        help="Profile and spit out a cachegrind file (cachegrind.out.break)",
     )
 
     args = ap.parse_args()
