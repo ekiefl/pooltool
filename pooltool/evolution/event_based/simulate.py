@@ -62,6 +62,7 @@ def simulate(
         shot.update_history(event)
 
         if t_final is not None and shot.t >= t_final:
+            shot.update_history(null_event(time=shot.t))
             break
 
     if continuize:
