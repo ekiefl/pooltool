@@ -13,7 +13,7 @@ from pooltool.evolution.event_based.simulate import (
 )
 from pooltool.evolution.event_based.solve import ball_ball_collision_coeffs
 from pooltool.evolution.event_based.test_data import TEST_DIR
-from pooltool.math.roots import QuarticSolver, min_real_root
+from pooltool.math.roots import QuarticSolver, minimum_quartic_root
 from pooltool.objects import Ball, BilliardTableSpecs, Cue, Table
 from pooltool.system import System
 
@@ -114,7 +114,7 @@ def test_case3(solver: QuarticSolver):
     expected = pytest.approx(5.810383731499328e-06, abs=1e-9)
 
     assert event.time == expected
-    assert min_real_root(coeffs_array, solver=solver)[0] == expected
+    assert minimum_quartic_root(coeffs_array, solver=solver)[0] == expected
 
 
 def _assert_rolling(rvw: NDArray[np.float64], R: float) -> None:
@@ -207,7 +207,7 @@ def test_grazing_ball_ball_collision(solver: QuarticSolver):
 
         coeffs_array = np.array([coeffs], dtype=np.float64)
 
-        root = min_real_root(coeffs_array)[0]
+        root = minimum_quartic_root(coeffs_array)[0]
 
         if phi < 90:
             assert root == np.inf
@@ -309,7 +309,7 @@ def test_almost_touching_ball_ball_collision(solver: QuarticSolver):
         coeffs_array = np.array([coeffs], dtype=np.float64)
 
         truth = true_time_to_collision(eps, V0, ball1.params.u_r, ball1.params.g)
-        calculated = min_real_root(coeffs_array, solver=solver)[0]
+        calculated = minimum_quartic_root(coeffs_array, solver=solver)[0]
         diff = abs(calculated - truth)
 
         assert diff < 10e-12  # Less than 10 femptosecond difference

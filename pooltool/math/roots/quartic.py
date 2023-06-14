@@ -6,6 +6,12 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
+from pooltool.utils.strenum import StrEnum, auto
+
+
+class QuarticSolver(StrEnum):
+    HYBRID = auto()
+    NUMERIC = auto()
 
 
 def solve_many_numerical(p):

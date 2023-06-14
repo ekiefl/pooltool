@@ -167,7 +167,9 @@ def get_next_ball_ball_collision(
         # There are no collisions to test for
         return ball_ball_collision(Ball.dummy(), Ball.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = math.min_real_root(ps=np.array(collision_coeffs), solver=solver)
+    dtau_E, index = math.minimum_quartic_root(
+        ps=np.array(collision_coeffs), solver=solver
+    )
 
     ball1_id, ball2_id = ball_ids[index]
     ball1, ball2 = shot.balls[ball1_id], shot.balls[ball2_id]
@@ -215,7 +217,9 @@ def get_next_ball_circular_cushion_event(
             Ball.dummy(), CircularCushionSegment.dummy(), shot.t + dtau_E
         )
 
-    dtau_E, index = math.min_real_root(ps=np.array(collision_coeffs), solver=solver)
+    dtau_E, index = math.minimum_quartic_root(
+        ps=np.array(collision_coeffs), solver=solver
+    )
 
     ball_id, cushion_id = agent_ids[index]
     ball, cushion = (
@@ -303,7 +307,9 @@ def get_next_ball_pocket_collision(
         # There are no collisions to test for
         return ball_pocket_collision(Ball.dummy(), Pocket.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = math.min_real_root(ps=np.array(collision_coeffs), solver=solver)
+    dtau_E, index = math.minimum_quartic_root(
+        ps=np.array(collision_coeffs), solver=solver
+    )
 
     ball_id, pocket_id = agent_ids[index]
     ball, pocket = shot.balls[ball_id], shot.table.pockets[pocket_id]
