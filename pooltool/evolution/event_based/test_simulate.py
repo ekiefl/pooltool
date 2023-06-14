@@ -5,21 +5,22 @@ from numpy.typing import NDArray
 import pooltool.constants as const
 import pooltool.math as math
 import pooltool.physics as physics
-from pooltool.events import Event, EventType, ball_ball_collision, ball_pocket_collision
+from pooltool.events import EventType, ball_ball_collision, ball_pocket_collision
 from pooltool.evolution.event_based.simulate import (
     get_next_ball_ball_collision,
     get_next_event,
-    simulate,
 )
 from pooltool.evolution.event_based.solve import ball_ball_collision_coeffs
 from pooltool.evolution.event_based.test_data import TEST_DIR
-from pooltool.math.roots import QuarticSolver, minimum_quartic_root
+from pooltool.math.roots import quadratic, quartic
 from pooltool.objects import Ball, BilliardTableSpecs, Cue, Table
 from pooltool.system import System
 
 
-@pytest.mark.parametrize("solver", [QuarticSolver.NUMERIC, QuarticSolver.HYBRID])
-def test_case1(solver: QuarticSolver):
+@pytest.mark.parametrize(
+    "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
+)
+def test_case1(solver: quartic.QuarticSolver):
     """A case that once broke the game
 
     In this shot, the next event should be:
@@ -44,8 +45,10 @@ def test_case1(solver: QuarticSolver):
     assert next_event.time == pytest.approx(expected.time, abs=1e-9)
 
 
-@pytest.mark.parametrize("solver", [QuarticSolver.NUMERIC, QuarticSolver.HYBRID])
-def test_case2(solver: QuarticSolver):
+@pytest.mark.parametrize(
+    "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
+)
+def test_case2(solver: quartic.QuarticSolver):
     """A case that once broke the game
 
     In this shot, the next event should be:
@@ -67,8 +70,10 @@ def test_case2(solver: QuarticSolver):
     assert next_event.time == pytest.approx(expected.time, abs=1e-9)
 
 
-@pytest.mark.parametrize("solver", [QuarticSolver.NUMERIC, QuarticSolver.HYBRID])
-def test_case3(solver: QuarticSolver):
+@pytest.mark.parametrize(
+    "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
+)
+def test_case3(solver: quartic.QuarticSolver):
     """A case that the HYBRID solver struggles with
 
     In this shot, the next event should be:
@@ -114,15 +119,17 @@ def test_case3(solver: QuarticSolver):
     expected = pytest.approx(5.810383731499328e-06, abs=1e-9)
 
     assert event.time == expected
-    assert minimum_quartic_root(coeffs_array, solver=solver)[0] == expected
+    assert quartic.minimum_quartic_root(coeffs_array, solver=solver)[0] == expected
 
 
 def _assert_rolling(rvw: NDArray[np.float64], R: float) -> None:
     assert np.isclose(physics.rel_velocity(rvw, R), 0).all()
 
 
-@pytest.mark.parametrize("solver", [QuarticSolver.NUMERIC, QuarticSolver.HYBRID])
-def test_grazing_ball_ball_collision(solver: QuarticSolver):
+@pytest.mark.parametrize(
+    "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
+)
+def test_grazing_ball_ball_collision(solver: quartic.QuarticSolver):
     """A very narrow hit
 
     In this example, a cue ball is hit in the direction pictured below. In one case, phi
@@ -207,7 +214,7 @@ def test_grazing_ball_ball_collision(solver: QuarticSolver):
 
         coeffs_array = np.array([coeffs], dtype=np.float64)
 
-        root = minimum_quartic_root(coeffs_array)[0]
+        root = quartic.minimum_quartic_root(coeffs_array)[0]
 
         if phi < 90:
             assert root == np.inf
@@ -215,8 +222,10 @@ def test_grazing_ball_ball_collision(solver: QuarticSolver):
             assert root != np.inf
 
 
-@pytest.mark.parametrize("solver", [QuarticSolver.NUMERIC, QuarticSolver.HYBRID])
-def test_almost_touching_ball_ball_collision(solver: QuarticSolver):
+@pytest.mark.parametrize(
+    "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
+)
+def test_almost_touching_ball_ball_collision(solver: quartic.QuarticSolver):
     """A hit with two touching/almost touching balls
 
     In this example, a cue ball is hit into the 1 ball at point blank with various
@@ -275,7 +284,7 @@ def test_almost_touching_ball_ball_collision(solver: QuarticSolver):
         Solve for tf, where rx(tf) = 2 * R and r0x = 2 * R + eps
         """
         collision_time = np.inf
-        for t in math.quadratic.solve(0.5 * mu_r * g, -V0, eps):
+        for t in quadratic.solve(0.5 * mu_r * g, -V0, eps):
             if t >= 0 and t < collision_time:
                 collision_time = t
         return collision_time
@@ -309,14 +318,16 @@ def test_almost_touching_ball_ball_collision(solver: QuarticSolver):
         coeffs_array = np.array([coeffs], dtype=np.float64)
 
         truth = true_time_to_collision(eps, V0, ball1.params.u_r, ball1.params.g)
-        calculated = minimum_quartic_root(coeffs_array, solver=solver)[0]
+        calculated = quartic.minimum_quartic_root(coeffs_array, solver=solver)[0]
         diff = abs(calculated - truth)
 
         assert diff < 10e-12  # Less than 10 femptosecond difference
 
 
-@pytest.mark.parametrize("solver", [QuarticSolver.NUMERIC, QuarticSolver.HYBRID])
-def test_no_ball_ball_collisions_for_intersecting_balls(solver: QuarticSolver):
+@pytest.mark.parametrize(
+    "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
+)
+def test_no_ball_ball_collisions_for_intersecting_balls(solver: quartic.QuarticSolver):
     """Two already intersecting balls don't collide
 
     In this instance, no further collision is detected because the balls are already

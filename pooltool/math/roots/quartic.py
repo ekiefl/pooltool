@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Callable, Dict, Tuple
 
 import numpy as np
 import sympy
@@ -6,12 +6,48 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
+from pooltool.math.roots.core import find_first_row_with_value, min_real_root
 from pooltool.utils.strenum import StrEnum, auto
 
 
 class QuarticSolver(StrEnum):
     HYBRID = auto()
     NUMERIC = auto()
+
+
+def minimum_quartic_root(
+    ps: NDArray[np.float64], solver: QuarticSolver = QuarticSolver.HYBRID
+) -> Tuple[float, int]:
+    """Solves an array of quartic coefficients, returns smallest, real, positive root
+
+    Args:
+        ps:
+            A mx5 array of polynomial coefficients, where m is the number of equations.
+            The columns are in the order a, b, c, d, e, where these coefficients make up
+            the quartic polynomial equation at^4 + bt^3 + ct^2 + dt + e = 0.
+        solver:
+            The method used to calculate the roots. See
+            pooltool.math.roots.quartic.QuarticSolver.
+
+    Returns:
+        (real_root, index):
+            real_root is the minimum real root from the set of polynomials, and `index`
+            specifies the index of the responsible polynomial. i.e. the polynomial with
+            the root real_root is ps[index, :]
+    """
+    # Get the roots for the polynomials
+    assert QuarticSolver(solver)
+    roots = _quartic_routine[solver](ps)
+
+    best_root = min_real_root(roots.flatten())
+
+    if best_root == np.inf:
+        return np.inf, 0
+
+    index = find_first_row_with_value(roots, best_root)
+    assert index > -1
+
+    return best_root.real, index
 
 
 def solve_many_numerical(p):
@@ -261,3 +297,9 @@ def _truth(a_val, b_val, c_val, d_val, e_val, digits=50):
         sol.evalf(digits, subs={a: a_val, b: b_val, c: c_val, d: d_val, e: e_val})
         for sol in general_solution
     ]
+
+
+_quartic_routine: Dict[QuarticSolver, Callable] = {
+    QuarticSolver.NUMERIC: solve_many_numerical,
+    QuarticSolver.HYBRID: solve_many,
+}

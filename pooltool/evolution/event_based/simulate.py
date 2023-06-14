@@ -21,7 +21,7 @@ from pooltool.events import (
 )
 from pooltool.evolution.event_based import solve
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
-from pooltool.math.roots import QuarticSolver
+from pooltool.math.roots.quartic import QuarticSolver
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
     CircularCushionSegment,
@@ -167,7 +167,7 @@ def get_next_ball_ball_collision(
         # There are no collisions to test for
         return ball_ball_collision(Ball.dummy(), Ball.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = math.minimum_quartic_root(
+    dtau_E, index = math.roots.quartic.minimum_quartic_root(
         ps=np.array(collision_coeffs), solver=solver
     )
 
@@ -217,7 +217,7 @@ def get_next_ball_circular_cushion_event(
             Ball.dummy(), CircularCushionSegment.dummy(), shot.t + dtau_E
         )
 
-    dtau_E, index = math.minimum_quartic_root(
+    dtau_E, index = math.roots.quartic.minimum_quartic_root(
         ps=np.array(collision_coeffs), solver=solver
     )
 
@@ -307,7 +307,7 @@ def get_next_ball_pocket_collision(
         # There are no collisions to test for
         return ball_pocket_collision(Ball.dummy(), Pocket.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = math.minimum_quartic_root(
+    dtau_E, index = math.roots.quartic.minimum_quartic_root(
         ps=np.array(collision_coeffs), solver=solver
     )
 

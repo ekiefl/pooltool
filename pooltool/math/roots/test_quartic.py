@@ -1,14 +1,13 @@
 import numpy as np
 import pytest
 
-import pooltool.math.roots as roots
-from pooltool.math import quartic
+from pooltool.math.roots import quartic
 
 
 @pytest.mark.parametrize(
-    "solver", [roots.QuarticSolver.NUMERIC, roots.QuarticSolver.HYBRID]
+    "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
 )
-def test_case1(solver: roots.QuarticSolver):
+def test_case1(solver: quartic.QuarticSolver):
     coeffs = (
         0.9604000000000001,
         -22.342459712735774,
@@ -19,7 +18,7 @@ def test_case1(solver: roots.QuarticSolver):
 
     expected = 0.048943195217641386
     coeffs_array = np.array(coeffs)[np.newaxis, :]
-    assert roots.minimum_quartic_root(coeffs_array, solver)[0] == pytest.approx(
+    assert quartic.minimum_quartic_root(coeffs_array, solver)[0] == pytest.approx(
         expected, rel=1e-4
     )
 
