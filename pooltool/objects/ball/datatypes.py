@@ -208,7 +208,7 @@ class Ball:
     @property
     def xyz(self):
         """Return the coordinate vector of the ball"""
-        return np.copy(self.state.rvw[0])
+        return self.state.rvw[0]
 
     def copy(self) -> Ball:
         """Create a deep copy"""

@@ -141,9 +141,9 @@ class CircularCushionSegment:
         return self.center[1]
 
     def get_normal(self, rvw) -> NDArray[np.float64]:
-        normal = math.unit_vector(rvw[0, :] - self.center)
+        normal = rvw[0, :] - self.center
         normal[2] = 0  # remove z-component
-        return normal
+        return math.unit_vector(normal)
 
     def copy(self) -> CircularCushionSegment:
         """Create a deep-ish copy
@@ -156,7 +156,9 @@ class CircularCushionSegment:
 
     @staticmethod
     def dummy() -> CircularCushionSegment:
-        return CircularCushionSegment(id="dummy", center=np.array([0, 0, 0]), radius=10)
+        return CircularCushionSegment(
+            id="dummy", center=np.array([0, 0, 0], dtype=np.float64), radius=10.0
+        )
 
 
 CushionSegment = Union[LinearCushionSegment, CircularCushionSegment]

@@ -38,25 +38,46 @@ def resolve_null(event: Event) -> Event:
 
 
 def resolve_linear_ball_cushion(event: Event) -> Event:
-    return _resolve_ball_cushion(event)
-
-
-def resolve_circular_ball_cushion(event: Event) -> Event:
-    return _resolve_ball_cushion(event)
-
-
-def _resolve_ball_cushion(event: Event) -> Event:
     ball, cushion = event.agents
 
     assert isinstance(ball.initial, Ball)
-    assert isinstance(cushion.initial, (LinearCushionSegment, CircularCushionSegment))
+    assert isinstance(cushion.initial, LinearCushionSegment)
 
     rvw = ball.initial.state.rvw
     normal = cushion.initial.get_normal(rvw)
 
-    rvw = physics.resolve_ball_cushion_collision(
+    rvw = physics.resolve_ball_linear_cushion_collision(
         rvw=rvw,
         normal=normal,
+        p1=cushion.initial.p1,
+        p2=cushion.initial.p2,
+        R=ball.initial.params.R,
+        m=ball.initial.params.m,
+        h=cushion.initial.height,
+        e_c=ball.initial.params.e_c,
+        f_c=ball.initial.params.f_c,
+    )
+
+    ball.final = evolve(ball.initial, state=BallState(rvw, c.sliding, event.time))
+    cushion.final = None
+
+    return event
+
+
+def resolve_circular_ball_cushion(event: Event) -> Event:
+    ball, cushion = event.agents
+
+    assert isinstance(ball.initial, Ball)
+    assert isinstance(cushion.initial, CircularCushionSegment)
+
+    rvw = ball.initial.state.rvw
+    normal = cushion.initial.get_normal(rvw)
+
+    rvw = physics.resolve_ball_circular_cushion_collision(
+        rvw=rvw,
+        normal=normal,
+        center=cushion.initial.center,
+        radius=cushion.initial.radius,
         R=ball.initial.params.R,
         m=ball.initial.params.m,
         h=cushion.initial.height,
@@ -128,6 +149,28 @@ def resolve_transition(event: Event) -> Event:
     ball.final = ball.initial.copy()
     ball.final.state.s = end
     ball.initial.state.s = start
+
+    if end == c.spinning:
+        # Assert that the velocity components are nearly 0, and that the x and y angular
+        # velocity components are nearly 0. Then set them to exactly 0.
+        v = ball.final.state.rvw[1]
+        w = ball.final.state.rvw[2]
+        assert (np.abs(v) < c.EPS_SPACE).all()
+        assert (np.abs(w[:2]) < c.EPS_SPACE).all()
+
+        ball.final.state.rvw[1, :] = [0.0, 0.0, 0.0]
+        ball.final.state.rvw[2, :2] = [0.0, 0.0]
+
+    if end == c.stationary:
+        # Assert that the linear and angular velocity components are nearly 0, then set
+        # them to exactly 0.
+        v = ball.final.state.rvw[1]
+        w = ball.final.state.rvw[2]
+        assert (np.abs(v) < c.EPS_SPACE).all()
+        assert (np.abs(w) < c.EPS_SPACE).all()
+
+        ball.final.state.rvw[1, :] = [0.0, 0.0, 0.0]
+        ball.final.state.rvw[2, :] = [0.0, 0.0, 0.0]
 
     return event
 

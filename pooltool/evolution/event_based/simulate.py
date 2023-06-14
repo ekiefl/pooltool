@@ -9,7 +9,6 @@ import numpy as np
 
 import pooltool.constants as const
 import pooltool.math as math
-from pooltool.error import SimulateError
 from pooltool.events import (
     Event,
     EventType,
@@ -22,7 +21,7 @@ from pooltool.events import (
 )
 from pooltool.evolution.event_based import solve
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
-from pooltool.math.roots import QuarticSolver
+from pooltool.math.roots.quartic import QuarticSolver
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
     CircularCushionSegment,
@@ -35,8 +34,7 @@ from pooltool.system.datatypes import System
 def simulate(
     shot: System,
     include: Set[EventType] = INCLUDED_EVENTS,
-    quartic_solver: QuarticSolver = QuarticSolver.NUMERIC,
-    raise_simulate_error: bool = False,
+    quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
     t_final=None,
     continuize=False,
     dt=None,
@@ -46,41 +44,35 @@ def simulate(
     shot.reset_history()
     shot.update_history(null_event(time=0))
 
-    try:
-        if dt is None:
-            dt = 0.01
+    if dt is None:
+        dt = 0.01
 
-        while True:
-            event = get_next_event(shot, quartic_solver=quartic_solver)
+    while True:
+        event = get_next_event(shot, quartic_solver=quartic_solver)
 
-            if event.time == np.inf:
-                shot.update_history(null_event(time=shot.t))
-                break
+        if event.time == np.inf:
+            shot.update_history(null_event(time=shot.t))
+            break
 
-            shot.evolve(event.time - shot.t)
+        shot.evolve(event.time - shot.t)
 
-            if event.event_type in include:
-                shot.resolve_event(event)
+        if event.event_type in include:
+            shot.resolve_event(event)
 
-            shot.update_history(event)
+        shot.update_history(event)
 
-            if t_final is not None and shot.t >= t_final:
-                break
+        if t_final is not None and shot.t >= t_final:
+            shot.update_history(null_event(time=shot.t))
+            break
 
-        if continuize:
-            shot.continuize(dt=dt)
-
-    except Exception as exc:
-        if raise_simulate_error:
-            raise SimulateError()
-        else:
-            raise exc
+    if continuize:
+        shot.continuize(dt=dt)
 
     return shot
 
 
 def get_next_event(
-    shot: System, quartic_solver: QuarticSolver = QuarticSolver.NUMERIC
+    shot: System, quartic_solver: QuarticSolver = QuarticSolver.HYBRID
 ) -> Event:
     # Start by assuming next event doesn't happen
     event = null_event(time=np.inf)
@@ -124,7 +116,7 @@ def get_next_transition(shot: System) -> Event:
 
 
 def get_next_ball_ball_collision(
-    shot: System, solver: QuarticSolver = QuarticSolver.NUMERIC
+    shot: System, solver: QuarticSolver = QuarticSolver.HYBRID
 ) -> Event:
     """Returns next ball-ball collision"""
 
@@ -140,6 +132,10 @@ def get_next_ball_ball_collision(
             ball1.state.s in const.nontranslating
             and ball2.state.s in const.nontranslating
         ):
+            continue
+
+        if np.linalg.norm(ball1.xyz - ball2.xyz) < ball1.params.R + ball2.params.R:
+            # If balls are intersecting, avoid internal collisions
             continue
 
         collision_coeffs.append(
@@ -172,7 +168,9 @@ def get_next_ball_ball_collision(
         # There are no collisions to test for
         return ball_ball_collision(Ball.dummy(), Ball.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), solver=solver)
+    dtau_E, index = math.roots.quartic.minimum_quartic_root(
+        ps=np.array(collision_coeffs), solver=solver
+    )
 
     ball1_id, ball2_id = ball_ids[index]
     ball1, ball2 = shot.balls[ball1_id], shot.balls[ball2_id]
@@ -181,7 +179,7 @@ def get_next_ball_ball_collision(
 
 
 def get_next_ball_circular_cushion_event(
-    shot: System, solver: QuarticSolver = QuarticSolver.NUMERIC
+    shot: System, solver: QuarticSolver = QuarticSolver.HYBRID
 ) -> Event:
     """Returns next ball-cushion collision (circular cushion segment)"""
 
@@ -220,7 +218,9 @@ def get_next_ball_circular_cushion_event(
             Ball.dummy(), CircularCushionSegment.dummy(), shot.t + dtau_E
         )
 
-    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), solver=solver)
+    dtau_E, index = math.roots.quartic.minimum_quartic_root(
+        ps=np.array(collision_coeffs), solver=solver
+    )
 
     ball_id, cushion_id = agent_ids[index]
     ball, cushion = (
@@ -271,7 +271,7 @@ def get_next_ball_linear_cushion_collision(shot: System) -> Event:
 
 
 def get_next_ball_pocket_collision(
-    shot: System, solver: QuarticSolver = QuarticSolver.NUMERIC
+    shot: System, solver: QuarticSolver = QuarticSolver.HYBRID
 ) -> Event:
     """Returns next ball-pocket collision"""
 
@@ -308,7 +308,9 @@ def get_next_ball_pocket_collision(
         # There are no collisions to test for
         return ball_pocket_collision(Ball.dummy(), Pocket.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = math.min_real_root(p=np.array(collision_coeffs), solver=solver)
+    dtau_E, index = math.roots.quartic.minimum_quartic_root(
+        ps=np.array(collision_coeffs), solver=solver
+    )
 
     ball_id, pocket_id = agent_ids[index]
     ball, pocket = shot.balls[ball_id], shot.table.pockets[pocket_id]

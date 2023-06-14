@@ -1,5 +1,6 @@
 import numpy as np
 from numba import jit
+from numpy.typing import NDArray
 
 import pooltool.constants as const
 
@@ -93,3 +94,14 @@ def coordinate_rotation(v, phi):
     rotation[2, 2] = 1
 
     return np.dot(rotation, v)
+
+
+@jit(nopython=True, cache=const.numba_cache)
+def point_on_line_closest_to_point(p1, p2, p0):
+    """Returns point on line defined by points p1 and p2 closest to the point p0
+
+    Equations from https://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
+    """
+    diff = p2 - p1
+    t = -np.dot(p1 - p0, diff) / np.dot(diff, diff)
+    return p1 + diff * t

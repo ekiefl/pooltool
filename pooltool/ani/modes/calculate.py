@@ -8,7 +8,6 @@ from pooltool.ani.globals import Global
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
-from pooltool.error import SimulateError
 from pooltool.evolution import simulate
 from pooltool.system.datatypes import multisystem
 
@@ -78,16 +77,10 @@ class CalculateMode(BaseMode):
     def run_simulation(self, task):
         """Run a pool simulation"""
 
-        try:
-            simulate(
-                multisystem.active,
-                continuize=True,
-                raise_simulate_error=True,
-            )
-        except SimulateError:
-            # Failed to simulate shot. Return to aim mode. Not ideal but better than a
-            # runtime error
-            Global.mode_mgr.change_mode(Mode.aim)
+        simulate(
+            multisystem.active,
+            continuize=True,
+        )
 
         Global.game.process_shot(multisystem.active)
 
