@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import enum
+from functools import cached_property
 from typing import Dict, Union
 
 import numpy as np
@@ -31,7 +32,7 @@ class CushionDirection(enum.Enum):
     BOTH = 2
 
 
-@define(eq=False, frozen=True)
+@define(eq=False, frozen=True, slots=False)
 class LinearCushionSegment:
     """A linear cushion segment defined by the line between points p1 and p2
 
@@ -60,27 +61,27 @@ class LinearCushionSegment:
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
 
-    @property
+    @cached_property
     def height(self):
         return self.p1[2]
 
-    @property
+    @cached_property
     def lx(self):
         p1x, p1y, _ = self.p1
         p2x, p2y, _ = self.p2
         return 1 if (p2x - p1x) == 0 else -(p2y - p1y) / (p2x - p1x)
 
-    @property
+    @cached_property
     def ly(self):
         return 0 if (self.p2[0] - self.p1[0]) == 0 else 1
 
-    @property
+    @cached_property
     def l0(self):
         p1x, p1y, _ = self.p1
         p2x, p2y, _ = self.p2
         return -p1x if (p2x - p1x) == 0 else (p2y - p1y) / (p2x - p1x) * p1x - p1y
 
-    @property
+    @cached_property
     def normal(self):
         return math.unit_vector(np.array([self.lx, self.ly, 0]))
 
@@ -103,7 +104,7 @@ class LinearCushionSegment:
         )
 
 
-@define(frozen=True, eq=False)
+@define(frozen=True, eq=False, slots=False)
 class CircularCushionSegment:
     """A circular cushion segment defined a circle center and radius
 
@@ -128,15 +129,15 @@ class CircularCushionSegment:
         # center is read only
         self.center.flags["WRITEABLE"] = False
 
-    @property
+    @cached_property
     def height(self) -> float:
         return self.center[2]
 
-    @property
+    @cached_property
     def a(self) -> float:
         return self.center[0]
 
-    @property
+    @cached_property
     def b(self) -> float:
         return self.center[1]
 
@@ -184,7 +185,7 @@ class CushionSegments:
         )
 
 
-@define(eq=False, frozen=True)
+@define(eq=False, frozen=True, slots=False)
 class Pocket:
     id: str
     center: NDArray[np.float64]
@@ -202,15 +203,15 @@ class Pocket:
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
 
-    @property
+    @cached_property
     def a(self) -> float:
         return self.center[0]
 
-    @property
+    @cached_property
     def b(self) -> float:
         return self.center[1]
 
-    @property
+    @cached_property
     def potting_point(self) -> NDArray[np.float64]:
         """The 2D coordinates that should be aimed at for the ball to be sunk
 
