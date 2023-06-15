@@ -189,40 +189,49 @@ def get_next_ball_ball_collision(
     collision_coeffs = []
 
     for ball1, ball2 in combinations(shot.balls.values(), 2):
-        if ball1.state.s == const.pocketed or ball2.state.s == const.pocketed:
+        ball1_state = ball1.state
+        ball1_params = ball1.params
+
+        ball2_state = ball2.state
+        ball2_params = ball2.params
+
+        if ball1_state.s == const.pocketed or ball2_state.s == const.pocketed:
             continue
 
         if (
-            ball1.state.s in const.nontranslating
-            and ball2.state.s in const.nontranslating
+            ball1_state.s in const.nontranslating
+            and ball2_state.s in const.nontranslating
         ):
             continue
 
-        if math.norm3d(ball1.xyz - ball2.xyz) < ball1.params.R + ball2.params.R:
+        if (
+            math.norm3d(ball1_state.rvw[0] - ball2_state.rvw[0])
+            < ball1_params.R + ball2_params.R
+        ):
             # If balls are intersecting, avoid internal collisions
             continue
 
         collision_coeffs.append(
             solve.ball_ball_collision_coeffs(
-                rvw1=ball1.state.rvw,
-                rvw2=ball2.state.rvw,
-                s1=ball1.state.s,
-                s2=ball2.state.s,
+                rvw1=ball1_state.rvw,
+                rvw2=ball2_state.rvw,
+                s1=ball1_state.s,
+                s2=ball2_state.s,
                 mu1=(
-                    ball1.params.u_s
-                    if ball1.state.s == const.sliding
-                    else ball1.params.u_r
+                    ball1_params.u_s
+                    if ball1_state.s == const.sliding
+                    else ball1_params.u_r
                 ),
                 mu2=(
-                    ball2.params.u_s
-                    if ball2.state.s == const.sliding
-                    else ball2.params.u_r
+                    ball2_params.u_s
+                    if ball2_state.s == const.sliding
+                    else ball2_params.u_r
                 ),
-                m1=ball1.params.m,
-                m2=ball2.params.m,
-                g1=ball1.params.g,
-                g2=ball2.params.g,
-                R=ball1.params.R,
+                m1=ball1_params.m,
+                m2=ball2_params.m,
+                g1=ball1_params.g,
+                g2=ball2_params.g,
+                R=ball1_params.R,
             )
         )
 
@@ -255,22 +264,21 @@ def get_next_ball_circular_cushion_event(
         if ball.state.s in const.nontranslating:
             continue
 
+        state = ball.state
+        params = ball.params
+
         for cushion in shot.table.cushion_segments.circular.values():
             collision_coeffs.append(
                 solve.ball_circular_cushion_collision_coeffs(
-                    rvw=ball.state.rvw,
-                    s=ball.state.s,
+                    rvw=state.rvw,
+                    s=state.s,
                     a=cushion.a,
                     b=cushion.b,
                     r=cushion.radius,
-                    mu=(
-                        ball.params.u_s
-                        if ball.state.s == const.sliding
-                        else ball.params.u_r
-                    ),
-                    m=ball.params.m,
-                    g=ball.params.g,
-                    R=ball.params.R,
+                    mu=(params.u_s if state.s == const.sliding else params.u_r),
+                    m=params.m,
+                    g=params.g,
+                    R=params.R,
                 )
             )
 
@@ -305,24 +313,23 @@ def get_next_ball_linear_cushion_collision(shot: System) -> Event:
         if ball.state.s in const.nontranslating:
             continue
 
+        state = ball.state
+        params = ball.params
+
         for cushion in shot.table.cushion_segments.linear.values():
             dtau_E = solve.ball_linear_cushion_collision_time(
-                rvw=ball.state.rvw,
-                s=ball.state.s,
+                rvw=state.rvw,
+                s=state.s,
                 lx=cushion.lx,
                 ly=cushion.ly,
                 l0=cushion.l0,
                 p1=cushion.p1,
                 p2=cushion.p2,
                 direction=cushion.direction,
-                mu=(
-                    ball.params.u_s
-                    if ball.state.s == const.sliding
-                    else ball.params.u_r
-                ),
-                m=ball.params.m,
-                g=ball.params.g,
-                R=ball.params.R,
+                mu=(params.u_s if state.s == const.sliding else params.u_r),
+                m=params.m,
+                g=params.g,
+                R=params.R,
             )
 
             if dtau_E < dtau_E_min:
@@ -347,22 +354,21 @@ def get_next_ball_pocket_collision(
         if ball.state.s in const.nontranslating:
             continue
 
+        state = ball.state
+        params = ball.params
+
         for pocket in shot.table.pockets.values():
             collision_coeffs.append(
                 solve.ball_pocket_collision_coeffs(
-                    rvw=ball.state.rvw,
-                    s=ball.state.s,
+                    rvw=state.rvw,
+                    s=state.s,
                     a=pocket.a,
                     b=pocket.b,
                     r=pocket.radius,
-                    mu=(
-                        ball.params.u_s
-                        if ball.state.s == const.sliding
-                        else ball.params.u_r
-                    ),
-                    m=ball.params.m,
-                    g=ball.params.g,
-                    R=ball.params.R,
+                    mu=(params.u_s if state.s == const.sliding else params.u_r),
+                    m=params.m,
+                    g=params.g,
+                    R=params.R,
                 )
             )
 
