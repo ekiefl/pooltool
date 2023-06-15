@@ -9,6 +9,7 @@ import numpy as np
 
 import pooltool.constants as const
 import pooltool.math as math
+import pooltool.physics as physics
 from pooltool.events import (
     Event,
     EventType,
@@ -16,8 +17,11 @@ from pooltool.events import (
     ball_circular_cushion_collision,
     ball_linear_cushion_collision,
     ball_pocket_collision,
-    get_next_transition_event,
     null_event,
+    rolling_spinning_transition,
+    rolling_stationary_transition,
+    sliding_rolling_transition,
+    spinning_stationary_transition,
 )
 from pooltool.evolution.event_based import solve
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
@@ -108,11 +112,44 @@ def get_next_transition(shot: System) -> Event:
     event = null_event(time=np.inf)
 
     for ball in shot.balls.values():
-        trans_event = get_next_transition_event(ball)
+        trans_event = _next_transition(ball)
         if trans_event.time <= event.time:
             event = trans_event
 
     return event
+
+
+def _next_transition(ball: Ball) -> Event:
+    if ball.state.s == const.stationary or ball.state.s == const.pocketed:
+        return null_event(time=np.inf)
+
+    elif ball.state.s == const.spinning:
+        dtau_E = physics.get_spin_time(
+            ball.state.rvw, ball.params.R, ball.params.u_sp, ball.params.g
+        )
+        return spinning_stationary_transition(ball, ball.state.t + dtau_E)
+
+    elif ball.state.s == const.rolling:
+        dtau_E_spin = physics.get_spin_time(
+            ball.state.rvw, ball.params.R, ball.params.u_sp, ball.params.g
+        )
+        dtau_E_roll = physics.get_roll_time(
+            ball.state.rvw, ball.params.u_r, ball.params.g
+        )
+
+        if dtau_E_spin > dtau_E_roll:
+            return rolling_spinning_transition(ball, ball.state.t + dtau_E_roll)
+        else:
+            return rolling_stationary_transition(ball, ball.state.t + dtau_E_roll)
+
+    elif ball.state.s == const.sliding:
+        dtau_E = physics.get_slide_time(
+            ball.state.rvw, ball.params.R, ball.params.u_s, ball.params.g
+        )
+        return sliding_rolling_transition(ball, ball.state.t + dtau_E)
+
+    else:
+        raise NotImplementedError(f"Unknown '{ball.state.s=}'")
 
 
 def get_next_ball_ball_collision(

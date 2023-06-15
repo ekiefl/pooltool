@@ -30,8 +30,11 @@ class BallOrientation:
         )
 
     def copy(self) -> BallOrientation:
-        """Create a deep copy"""
-        return evolve(self)
+        """Create a deepish copy
+
+        Class is frozen and attributes are immutable. Just return self
+        """
+        return self
 
 
 @define(frozen=True)
@@ -79,6 +82,13 @@ class BallParams:
     def u_sp(self) -> float:
         """Coefficient of spinning friction (radius dependent)"""
         return self.u_sp_proportionality * self.R
+
+    def copy(self) -> BallParams:
+        """Return deepish copy
+
+        Class is frozen and attributes are immutable. Just return self
+        """
+        return self
 
     @staticmethod
     def default() -> BallParams:
@@ -214,6 +224,7 @@ class Ball:
     def copy(self) -> Ball:
         """Create a deep copy"""
         # `params` and `initial_orientation` are frozen
+        # This is the same speed as as Ball(...)
         return evolve(
             self,
             state=self.state.copy(),
