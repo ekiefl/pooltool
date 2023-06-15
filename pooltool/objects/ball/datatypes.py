@@ -100,15 +100,20 @@ class BallState:
 
     def copy(self) -> BallState:
         """Create a deep copy"""
-        # Twice as fast as copy.deepcopy(self)
-        return evolve(self, rvw=np.copy(self.rvw))
+        # 3X faster than copy.deepcopy(self)
+        # 1.5X faster than evolve(self, rvw=np.copy(self.rvw))
+        return BallState(
+            rvw=np.copy(self.rvw),
+            s=self.s,
+            t=self.t,
+        )
 
     @staticmethod
     def default() -> BallState:
         return BallState(
             rvw=_null_rvw(),
             s=c.stationary,
-            t=0,
+            t=0.0,
         )
 
 
