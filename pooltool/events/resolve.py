@@ -22,8 +22,8 @@ def resolve_ball_ball(event: Event) -> Event:
     assert isinstance(ball2.initial, Ball)
 
     rvw1, rvw2 = physics.resolve_ball_ball_collision(
-        np.copy(ball1.initial.state.rvw),
-        np.copy(ball2.initial.state.rvw),
+        ball1.initial.state.rvw.copy(),
+        ball2.initial.state.rvw.copy(),
         ball1.initial.params.R,
     )
 

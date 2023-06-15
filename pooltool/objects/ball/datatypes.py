@@ -113,7 +113,7 @@ class BallState:
         # 3X faster than copy.deepcopy(self)
         # 1.5X faster than evolve(self, rvw=np.copy(self.rvw))
         return BallState(
-            rvw=np.copy(self.rvw),
+            rvw=self.rvw.copy(),
             s=self.s,
             t=self.t,
         )
