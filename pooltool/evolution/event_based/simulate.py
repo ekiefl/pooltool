@@ -134,7 +134,7 @@ def get_next_ball_ball_collision(
         ):
             continue
 
-        if np.linalg.norm(ball1.xyz - ball2.xyz) < ball1.params.R + ball2.params.R:
+        if math.norm3d(ball1.xyz - ball2.xyz) < ball1.params.R + ball2.params.R:
             # If balls are intersecting, avoid internal collisions
             continue
 

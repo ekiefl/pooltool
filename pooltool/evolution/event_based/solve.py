@@ -38,7 +38,7 @@ def skip_ball_ball_collision(rvw1, rvw2, s1, s2, R1, R2):
 
         # ball2 is not moving, so we can pinpoint the range of angles ball1 must be
         # headed in for a collision
-        d = np.linalg.norm(r12)
+        d = math.norm3d(r12)
         unit_d = r12 / d
         unit_v = math.unit_vector(rvw1[1])
 
@@ -56,7 +56,7 @@ def skip_ball_ball_collision(rvw1, rvw2, s1, s2, R1, R2):
 
         # ball1 is not moving, so we can pinpoint the range of angles ball2 must be
         # headed in for a collision
-        d = np.linalg.norm(r21)
+        d = math.norm3d(r21)
         unit_d = r21 / d
         unit_v = math.unit_vector(rvw2[1])
 
@@ -96,7 +96,7 @@ def ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
         a1x, a1y, b1x, b1y = 0, 0, 0, 0
     else:
         phi1 = math.angle(rvw1[1])
-        v1 = np.linalg.norm(rvw1[1])
+        v1 = math.norm3d(rvw1[1])
 
         u1 = get_u(rvw1, R, phi1, s1)
 
@@ -113,7 +113,7 @@ def ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
         a2x, a2y, b2x, b2y = 0.0, 0.0, 0.0, 0.0
     else:
         phi2 = math.angle(rvw2[1])
-        v2 = np.linalg.norm(rvw2[1])
+        v2 = math.norm3d(rvw2[1])
 
         u2 = get_u(rvw2, R, phi2, s2)
 
@@ -175,7 +175,7 @@ def skip_ball_linear_cushion_collision(rvw, s, u_r, g, R, p1, p2, normal):
         p21 = p2 + R * normal
         p22 = p2 - R * normal
 
-        t = np.linalg.norm(rvw[1]) / (u_r * g)
+        t = math.norm3d(rvw[1]) / (u_r * g)
         v_0_hat = math.unit_vector(rvw[1])
         r1 = rvw[0]
         r2 = r1 + rvw[1] * t - 0.5 * u_r * g * t**2 * v_0_hat
@@ -212,7 +212,7 @@ def ball_linear_cushion_collision_time(
         return np.inf
 
     phi = math.angle(rvw[1])
-    v = np.linalg.norm(rvw[1])
+    v = math.norm3d(rvw[1])
 
     u = get_u(rvw, R, phi, s)
 
@@ -274,7 +274,7 @@ def ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
         return np.inf, np.inf, np.inf, np.inf, np.inf
 
     phi = math.angle(rvw[1])
-    v = np.linalg.norm(rvw[1])
+    v = math.norm3d(rvw[1])
 
     u = get_u(rvw, R, phi, s)
 
@@ -307,7 +307,7 @@ def ball_pocket_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
         return np.inf, np.inf, np.inf, np.inf, np.inf
 
     phi = math.angle(rvw[1])
-    v = np.linalg.norm(rvw[1])
+    v = math.norm3d(rvw[1])
 
     u = get_u(rvw, R, phi, s)
 
