@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 from itertools import combinations
-from typing import Set
+from typing import Dict, Optional, Set
 
+import attrs
 import numpy as np
 
 import pooltool.constants as const
 import pooltool.math as math
 import pooltool.physics as physics
 from pooltool.events import (
+    AgentType,
     Event,
     EventType,
     ball_ball_collision,
@@ -51,8 +53,12 @@ def simulate(
     if dt is None:
         dt = 0.01
 
+    transition_cache = TransitionCache.create(shot)
+
     while True:
-        event = get_next_event(shot, quartic_solver=quartic_solver)
+        event = get_next_event(
+            shot, transition_cache=transition_cache, quartic_solver=quartic_solver
+        )
 
         if event.time == np.inf:
             shot.update_history(null_event(time=shot.t))
@@ -62,6 +68,7 @@ def simulate(
 
         if event.event_type in include:
             shot.resolve_event(event)
+            transition_cache.update(event)
 
         shot.update_history(event)
 
@@ -76,12 +83,18 @@ def simulate(
 
 
 def get_next_event(
-    shot: System, quartic_solver: QuarticSolver = QuarticSolver.HYBRID
+    shot: System,
+    *,
+    transition_cache: Optional[TransitionCache] = None,
+    quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
     # Start by assuming next event doesn't happen
     event = null_event(time=np.inf)
 
-    transition_event = get_next_transition(shot)
+    if transition_cache is None:
+        transition_cache = TransitionCache.create(shot)
+
+    transition_event = transition_cache.get_next()
     if transition_event.time < event.time:
         event = transition_event
 
@@ -106,17 +119,31 @@ def get_next_event(
     return event
 
 
-def get_next_transition(shot: System) -> Event:
-    """Returns next ball transition event"""
+@attrs.define
+class TransitionCache:
+    transitions: Dict[str, Event] = attrs.field()
 
-    event = null_event(time=np.inf)
+    @transitions.default
+    def _null(self):
+        return {"null": null_event(time=np.inf)}
 
-    for ball in shot.balls.values():
-        trans_event = _next_transition(ball)
-        if trans_event.time <= event.time:
-            event = trans_event
+    def get_next(self) -> Event:
+        return min(
+            (trans for trans in self.transitions.values()), key=lambda event: event.time
+        )
 
-    return event
+    def update(self, event: Event) -> None:
+        """Update transition cache for all balls in Event"""
+        for agent in event.agents:
+            if agent.agent_type == AgentType.BALL:
+                assert isinstance(ball := agent.final, Ball)
+                self.transitions[agent.id] = _next_transition(ball)
+
+    @classmethod
+    def create(cls, shot: System) -> TransitionCache:
+        return cls(
+            {ball_id: _next_transition(ball) for ball_id, ball in shot.balls.items()}
+        )
 
 
 def _next_transition(ball: Ball) -> Event:

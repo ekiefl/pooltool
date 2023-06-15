@@ -36,7 +36,7 @@ def test_case1(solver: quartic.QuarticSolver):
         ball.state = ball.history[0]
     shot.reset_history()
 
-    next_event = get_next_event(shot, solver)
+    next_event = get_next_event(shot, quartic_solver=solver)
 
     expected = ball_ball_collision(
         shot.balls["1"], shot.balls["cue"], 0.048943195217641386
@@ -60,7 +60,7 @@ def test_case2(solver: quartic.QuarticSolver):
     """
     shot = System.load(TEST_DIR / "case2.msgpack")
 
-    next_event = get_next_event(shot, solver)
+    next_event = get_next_event(shot, quartic_solver=solver)
 
     expected = ball_pocket_collision(
         shot.balls["8"], shot.table.pockets["lc"], 0.08933033587481054
