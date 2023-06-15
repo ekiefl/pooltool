@@ -124,9 +124,12 @@ class Agent:
         return correct_class and obj.id == self.id
 
     @staticmethod
-    def from_object(obj: Object) -> Agent:
+    def from_object(obj: Object, set_initial: bool = False) -> Agent:
         agent = Agent(id=obj.id, agent_type=_class_to_type[type(obj)])
-        agent.set_initial(obj)
+
+        if set_initial:
+            agent.set_initial(obj)
+
         return agent
 
     def copy(self) -> Agent:
