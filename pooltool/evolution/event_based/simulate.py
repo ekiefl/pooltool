@@ -314,7 +314,7 @@ def get_next_ball_linear_cushion_collision(shot: System) -> Event:
                 l0=cushion.l0,
                 p1=cushion.p1,
                 p2=cushion.p2,
-                direction=cushion.direction.value,
+                direction=cushion.direction,
                 mu=(
                     ball.params.u_s
                     if ball.state.s == const.sliding

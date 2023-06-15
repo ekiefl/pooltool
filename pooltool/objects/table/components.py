@@ -15,7 +15,7 @@ import pooltool.math as math
 from pooltool.utils.dataclasses import are_dataclasses_equal
 
 
-class CushionDirection(enum.Enum):
+class CushionDirection:
     """An Enum for the direction of a cushion
 
     For most table geometries, the playing surface only exists on one side of the
@@ -25,6 +25,10 @@ class CushionDirection(enum.Enum):
     "left or right of the vector from p1 to p2"). By default, both collision directions
     are checked, which can be specified explicitly by passing 2, however this makes
     collision checks twice as slow for event-based shot evolution algorithms.
+
+    NOTE: This used to be an Enum, but accessing the cushion direction in
+    `get_next_ball_linear_cushion_collision` somehow took up 20% of the functions
+    runtime so I removed it.
     """
 
     SIDE1 = 0
@@ -48,7 +52,7 @@ class LinearCushionSegment:
     id: str
     p1: NDArray[np.float64]
     p2: NDArray[np.float64]
-    direction: CushionDirection = field(default=CushionDirection.BOTH)
+    direction: int = field(default=CushionDirection.BOTH)
 
     def __attrs_post_init__(self):
         # Segment must have constant height
