@@ -221,8 +221,16 @@ class Ball:
         """Return the coordinate vector of the ball"""
         return self.state.rvw[0]
 
-    def copy(self) -> Ball:
+    def copy(self, drop_history: bool = False) -> Ball:
         """Create a deep copy"""
+        if drop_history:
+            return evolve(
+                self,
+                state=self.state.copy(),
+                history=BallHistory(),
+                history_cts=BallHistory(),
+            )
+
         # `params` and `initial_orientation` are frozen
         # This is the same speed as as Ball(...)
         return evolve(

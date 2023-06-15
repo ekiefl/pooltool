@@ -92,14 +92,13 @@ class Agent:
         if self.agent_type == AgentType.NULL:
             return
 
-        self.initial = obj.copy()
-
         if self.agent_type == AgentType.BALL:
-            # In this special case, we drop history fields because they are potentially
-            # huge
-            assert isinstance(self.initial, Ball)
-            self.initial.history = BallHistory()
-            self.initial.history_cts = BallHistory()
+            # In this special case, we drop history fields prior to copying because they
+            # are potentially huge and copying them is expensive
+            assert isinstance(obj, Ball)
+            self.initial = obj.copy(drop_history=True)
+        else:
+            self.initial = obj.copy()
 
     def get_initial(self) -> Optional[Object]:
         """Return a copy of the object post-event"""
