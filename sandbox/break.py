@@ -16,39 +16,54 @@ def main(args):
     if args.seed:
         np.random.seed(args.seed)
 
-    shot = pt.System(
-        cue=pt.Cue(cue_ball_id="cue"),
-        table=(table := pt.Table.pocket_table()),
-        balls=pt.get_nine_ball_rack(
-            table, ordered=True, spacing_factor=args.spacing_factor
-        ),
-    )
+    if args.load:
+        shot = pt.System.load(args.load)
+    else:
+        shot = pt.System(
+            cue=pt.Cue(cue_ball_id="cue"),
+            table=(table := pt.Table.pocket_table()),
+            balls=pt.get_nine_ball_rack(
+                table, ordered=True, spacing_factor=args.spacing_factor
+            ),
+        )
 
-    # Aim at the head ball then strike the cue ball
-    shot.aim_at_ball(ball_id="1")
-    shot.strike(V0=args.V0)
+        # Aim at the head ball then strike the cue ball
+        shot.aim_at_ball(ball_id="1")
+        shot.strike(V0=args.V0)
 
     # Time the shot
     if args.time_it:
-        N = 10
-        times = np.zeros(N)
+        N = 20
+        simulate_times = np.zeros(N)
+        continuize_times = np.zeros(N)
 
         # Burn a run (numba cache loading)
         copy = shot.copy()
         pt.simulate(copy)
+        copy.continuize()
 
         for i in range(N):
             copy = shot.copy()
+
             with pt.terminal.TimeCode(quiet=True) as timer:
                 pt.simulate(copy)
-            times[i] = timer.time.total_seconds()
+            simulate_times[i] = timer.time.total_seconds()
 
-        mu = np.mean(times)
-        stderr = np.std(times) / np.sqrt(N)
+            with pt.terminal.TimeCode(quiet=True) as timer:
+                copy.continuize()
+            continuize_times[i] = timer.time.total_seconds()
+
         run = pt.terminal.Run()
+
+        mu = np.mean(simulate_times)
+        stdev = np.std(simulate_times)
         run.info_single(
-            f"Shot evolution algorithm: ({mu:.3f} +- {stderr:.3f}) ({N} trials)"
+            f"Shot evolution algorithm: ({mu:.3f} +- {stdev:.3f}) ({N} trials)"
         )
+
+        mu = np.mean(continuize_times)
+        stdev = np.std(continuize_times)
+        run.info_single(f"Continuize: ({mu:.3f} +- {stdev:.3f}) ({N} trials)")
 
     # Time the shot
     if args.profile_it:
@@ -103,6 +118,12 @@ if __name__ == "__main__":
     )
     ap.add_argument(
         "--save", type=str, default=None, help="Filepath that shot will be saved to"
+    )
+    ap.add_argument(
+        "--load",
+        type=str,
+        default=None,
+        help="Don't create a new break, just simulate this system",
     )
     ap.add_argument(
         "--time-it",
