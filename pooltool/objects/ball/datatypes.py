@@ -151,19 +151,21 @@ class BallHistory:
         return not bool(len(self.states))
 
     def add(self, state: BallState) -> None:
-        """Append a state to self.states"""
-        new = state.copy()
+        """Append a state to self.states
 
+        Note, state is not copied before appending to the history, so they share the
+        same memory address.
+        """
         if not self.empty:
-            assert new.t >= self.states[-1].t
+            assert state.t >= self.states[-1].t
 
-        self.states.append(new)
+        self.states.append(state)
 
     def copy(self) -> BallHistory:
         """Create a deep copy"""
         history = BallHistory()
         for state in self.states:
-            history.add(state)
+            history.add(state.copy())
 
         return history
 
