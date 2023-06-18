@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 from __future__ import annotations
 
+from functools import cached_property
 from typing import Any, Iterator, List, Optional, Sequence, Tuple
 
 import numpy as np
@@ -37,7 +38,7 @@ class BallOrientation:
         return self
 
 
-@define(frozen=True)
+@define(frozen=True, slots=False)
 class BallParams:
     """Pool ball parameters and physical constants
 
@@ -78,7 +79,7 @@ class BallParams:
     f_c: float = field(default=0.2)
     g: float = field(default=9.8)
 
-    @property
+    @cached_property
     def u_sp(self) -> float:
         """Coefficient of spinning friction (radius dependent)"""
         return self.u_sp_proportionality * self.R
