@@ -1,3 +1,4 @@
+import attrs
 import numpy as np
 import pytest
 from attrs.exceptions import FrozenInstanceError
@@ -139,19 +140,19 @@ def test_ball_history_add():
     history.add(state)
     assert not history.empty
 
-    # `add` makes a copy of the state, so verify they are two different objects
-    assert history[0] is not state
+    # `add` appends the state directly, just list how lists append. So verify they are
+    # the same objects
+    assert history[0] is state
 
-    # But they do equate
+    # Therefore modifying the state modifies the history
+    state.t = 2
     assert history[0] == state
-
-    # Until one of them is modified
-    state.t = 0
-    assert history[0] != state
 
     # You can't add a state with a time less than the last entry
     with pytest.raises(AssertionError):
-        history.add(state)
+        new_state = state.copy()
+        new_state.t = 1
+        history.add(new_state)
 
     # Making time of state greater than the last entry works
     state.t = 2

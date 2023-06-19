@@ -94,7 +94,7 @@ def cue_struck_by_cuestick() -> Tuple[Cue, Ball]:
 
 
 def test_ball_ball_collision(cue_colliding_into_one_ball):
-    event = ball_ball_collision(*cue_colliding_into_one_ball, time=0)
+    event = ball_ball_collision(*cue_colliding_into_one_ball, time=0, set_initial=True)
 
     # Before the resolution, the initial states should be set and the final states
     # shouldn't be
@@ -144,7 +144,9 @@ def test_ball_ball_collision(cue_colliding_into_one_ball):
 
 
 def test_ball_linear_cushion_collision(cue_colliding_into_cushion):
-    event = ball_linear_cushion_collision(*cue_colliding_into_cushion, time=0)
+    event = ball_linear_cushion_collision(
+        *cue_colliding_into_cushion, time=0, set_initial=True
+    )
 
     # Before the resolution, the initial states should be set and the final states
     # shouldn't be
@@ -180,7 +182,7 @@ def test_ball_linear_cushion_collision(cue_colliding_into_cushion):
 
 def test_ball_pocket_collision(cue_colliding_with_pocket):
     ball, pocket = cue_colliding_with_pocket
-    event = ball_pocket_collision(ball, pocket, time=0)
+    event = ball_pocket_collision(ball, pocket, time=0, set_initial=True)
 
     # Before the resolution, the initial states should be set and the final states
     # shouldn't be
@@ -218,7 +220,7 @@ def test_ball_pocket_collision(cue_colliding_with_pocket):
 def test_stick_ball_collision(cue_struck_by_cuestick):
     stick, cue = cue_struck_by_cuestick
 
-    event = stick_ball_collision(stick, cue, time=0)
+    event = stick_ball_collision(stick, cue, time=0, set_initial=True)
 
     # Before the resolution, the initial states should be set and the final states
     # shouldn't be

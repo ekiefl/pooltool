@@ -62,12 +62,12 @@ def resolve_ball_ball_collision(rvw1, rvw2, R, spacer: bool = True):
     n = math.unit_vector(r2 - r1)
     t = math.coordinate_rotation(n, np.pi / 2)
 
-    correction = 2 * R - np.linalg.norm(r2 - r1) + (const.EPS_SPACE if spacer else 0.0)
+    correction = 2 * R - math.norm3d(r2 - r1) + (const.EPS_SPACE if spacer else 0.0)
     rvw2[0] += correction / 2 * n
     rvw1[0] -= correction / 2 * n
 
     v_rel = v1 - v2
-    v_mag = np.linalg.norm(v_rel)
+    v_mag = math.norm3d(v_rel)
 
     beta = math.angle(v_rel, n)
 
@@ -101,7 +101,7 @@ def resolve_ball_linear_cushion_collision(
     c[2] = rvw[0, 2]
 
     # Move the ball to meet the cushion
-    correction = R - np.linalg.norm(rvw[0] - c) + (const.EPS_SPACE if spacer else 0.0)
+    correction = R - math.norm3d(rvw[0] - c) + (const.EPS_SPACE if spacer else 0.0)
     rvw[0] -= correction * normal
 
     return rvw
@@ -127,7 +127,7 @@ def resolve_ball_circular_cushion_collision(
 
     c = np.array([center[0], center[1], rvw[0, 2]])
     correction = (
-        R + radius - np.linalg.norm(rvw[0] - c) - (const.EPS_SPACE if spacer else 0.0)
+        R + radius - math.norm3d(rvw[0] - c) - (const.EPS_SPACE if spacer else 0.0)
     )
 
     rvw[0] += correction * normal
@@ -265,13 +265,13 @@ def get_u_vec(rvw, phi, R, s):
 
 @jit(nopython=True, cache=const.numba_cache)
 def get_slide_time(rvw, R, u_s, g):
-    return 2 * np.linalg.norm(rel_velocity(rvw, R)) / (7 * u_s * g)
+    return 2 * math.norm3d(rel_velocity(rvw, R)) / (7 * u_s * g)
 
 
 @jit(nopython=True, cache=const.numba_cache)
 def get_roll_time(rvw, u_r, g):
     _, v, _ = rvw
-    return np.linalg.norm(v) / (u_r * g)
+    return math.norm3d(v) / (u_r * g)
 
 
 @jit(nopython=True, cache=const.numba_cache)
@@ -525,14 +525,14 @@ def get_ball_energy(rvw, R, m):
     energy if z-axis is freed
     """
     # Linear
-    LKE = m * np.linalg.norm(rvw[1]) ** 2 / 2
+    LKE = m * math.norm3d(rvw[1]) ** 2 / 2
 
     # Rotational
     I = 2 / 5 * m * R**2
-    RKE = I * np.linalg.norm(rvw[2]) ** 2 / 2
+    RKE = I * math.norm3d(rvw[2]) ** 2 / 2
 
     return LKE + RKE
 
 
 def is_overlapping(rvw1, rvw2, R1, R2):
-    return np.linalg.norm(rvw1[0] - rvw2[0]) < (R1 + R2)
+    return math.norm3d(rvw1[0] - rvw2[0]) < (R1 + R2)

@@ -7,6 +7,7 @@ from panda3d.core import TransparencyAttrib
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.constants as c
+import pooltool.math as math
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
@@ -149,7 +150,7 @@ class CallShotMode(BaseMode):
         d_min = np.inf
         closest = None
         for pocket in multisystem.active.table.pockets.values():
-            d = np.linalg.norm(pocket.center - fixation_pos)
+            d = math.norm3d(pocket.center - fixation_pos)
             if d < d_min:
                 d_min, closest = d, pocket
 
@@ -217,7 +218,7 @@ class CallShotMode(BaseMode):
                 continue
             if ball._ball.state.s == c.pocketed:
                 continue
-            d = np.linalg.norm(ball._ball.state.rvw[0] - fixation_pos)
+            d = math.norm3d(ball._ball.state.rvw[0] - fixation_pos)
             if d < d_min:
                 d_min, closest = d, ball
 

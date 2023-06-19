@@ -308,7 +308,7 @@ class System:
         left = True if cut < 0 else False
         cut = np.abs(cut) * np.pi / 180
         R = object_ball.params.R
-        d = np.linalg.norm(object_ball.state.rvw[0] - cueing_ball.state.rvw[0])
+        d = math.norm3d(object_ball.state.rvw[0] - cueing_ball.state.rvw[0])
 
         lower_bound = 0
         upper_bound = np.pi / 2 - np.arccos((2 * R) / d)

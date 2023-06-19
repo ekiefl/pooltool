@@ -7,6 +7,7 @@ from panda3d.core import TransparencyAttrib
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.constants as c
+import pooltool.math as math
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
@@ -126,9 +127,7 @@ class BallInHandMode(BaseMode):
         for ball in visual.balls.values():
             if ball == self.grabbed_ball:
                 continue
-            if np.linalg.norm(ball._ball.state.rvw[0] - pos) <= (
-                r + ball._ball.params.R
-            ):
+            if math.norm3d(ball._ball.state.rvw[0] - pos) <= (r + ball._ball.params.R):
                 return False
 
         self.grabbed_ball.set_object_state_as_render_state(patch=True)
@@ -203,7 +202,7 @@ class BallInHandMode(BaseMode):
                 continue
             if ball._ball.state.s == c.pocketed:
                 continue
-            d = np.linalg.norm(ball._ball.state.rvw[0] - cam_pos)
+            d = math.norm3d(ball._ball.state.rvw[0] - cam_pos)
             if d < d_min:
                 d_min, closest = d, ball
 

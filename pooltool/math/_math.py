@@ -1,3 +1,5 @@
+from math import sqrt
+
 import numpy as np
 from numba import jit
 from numpy.typing import NDArray
@@ -58,7 +60,7 @@ def unit_vector(vector, handle_zero=False):
     =====
     - Only supports 3D (for 2D see unit_vector_slow)
     """
-    norm = np.sqrt(vector[0] ** 2 + vector[1] ** 2 + vector[2] ** 2)
+    norm = norm3d(vector)
     if handle_zero and norm == 0.0:
         norm = 1.0
     return vector / norm
@@ -105,3 +107,21 @@ def point_on_line_closest_to_point(p1, p2, p0):
     diff = p2 - p1
     t = -np.dot(p1 - p0, diff) / np.dot(diff, diff)
     return p1 + diff * t
+
+
+@jit(nopython=True, cache=const.numba_cache)
+def norm3d(vec):
+    """Calculate the norm of a 3D vector
+
+    This is ~10x faster than np.linalg.norm
+
+    >>> import numpy as np
+    >>> from pooltool.math._math import *
+    >>> vec = np.random.rand(3)
+    >>> norm3d(vec)
+    >>> %timeit np.linalg.norm(vec)
+    >>> %timeit norm3d(vec)
+    2.65 µs ± 63 ns per loop (mean ± std. dev. of 7 runs, 100,000 loops each)
+    241 ns ± 2.57 ns per loop (mean ± std. dev. of 7 runs, 1,000,000 loops each)
+    """
+    return sqrt(vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2)

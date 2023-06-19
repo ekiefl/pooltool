@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 from __future__ import annotations
 
+from functools import cached_property
 from typing import Any, Iterator, List, Optional, Sequence, Tuple
 
 import numpy as np
@@ -8,6 +9,7 @@ from attrs import astuple, define, evolve, field
 from numpy.typing import NDArray
 
 import pooltool.constants as c
+import pooltool.math as math
 from pooltool.serialize import SerializeFormat, conversion
 from pooltool.utils.dataclasses import are_dataclasses_equal
 
@@ -21,7 +23,7 @@ class BallOrientation:
 
     @staticmethod
     def random() -> BallOrientation:
-        quat = (tmp := 2 * np.random.rand(4) - 1) / np.linalg.norm(tmp)
+        quat = (tmp := 2 * np.random.rand(4) - 1) / math.norm3d(tmp)
         q0, qx, qy, qz = quat
         return BallOrientation(
             pos=(1.0, 1.0, 1.0, 1.0),
@@ -29,11 +31,14 @@ class BallOrientation:
         )
 
     def copy(self) -> BallOrientation:
-        """Create a deep copy"""
-        return evolve(self)
+        """Create a deepish copy
+
+        Class is frozen and attributes are immutable. Just return self
+        """
+        return self
 
 
-@define(frozen=True)
+@define(frozen=True, slots=False)
 class BallParams:
     """Pool ball parameters and physical constants
 
@@ -74,10 +79,17 @@ class BallParams:
     f_c: float = field(default=0.2)
     g: float = field(default=9.8)
 
-    @property
+    @cached_property
     def u_sp(self) -> float:
         """Coefficient of spinning friction (radius dependent)"""
         return self.u_sp_proportionality * self.R
+
+    def copy(self) -> BallParams:
+        """Return deepish copy
+
+        Class is frozen and attributes are immutable. Just return self
+        """
+        return self
 
     @staticmethod
     def default() -> BallParams:
@@ -94,30 +106,29 @@ class BallState:
     s: int = field(converter=int)
     t: float = field(converter=float)
 
-    def __attrs_post_init__(self):
-        # FIXME this is safest, but in my preliminary tests, it is not necessary. If
-        # np.copy calls are bogging down shot calculation, this should be looked into
-        self.rvw = np.copy(self.rvw)
-
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
 
     def copy(self) -> BallState:
         """Create a deep copy"""
-        # Twice as fast as copy.deepcopy(self)
-        return evolve(self, rvw=np.copy(self.rvw))
+        # 3X faster than copy.deepcopy(self)
+        # 1.5X faster than evolve(self, rvw=np.copy(self.rvw))
+        return BallState(
+            rvw=self.rvw.copy(),
+            s=self.s,
+            t=self.t,
+        )
 
     @staticmethod
     def default() -> BallState:
         return BallState(
             rvw=_null_rvw(),
             s=c.stationary,
-            t=0,
+            t=0.0,
         )
 
 
-def _float64_array(x: Any) -> NDArray[np.float64]:
-    return np.array(x, dtype=np.float64)
+F64Array = NDArray[np.float64]
 
 
 @define
@@ -139,34 +150,45 @@ class BallHistory:
         return not bool(len(self.states))
 
     def add(self, state: BallState) -> None:
-        """Append a state to self.states"""
-        new = state.copy()
+        """Append a state to self.states
 
+        Note, state is not copied before appending to the history, so they share the
+        same memory address.
+        """
         if not self.empty:
-            assert new.t >= self.states[-1].t
+            assert state.t >= self.states[-1].t
 
-        self.states.append(new)
+        self.states.append(state)
 
     def copy(self) -> BallHistory:
         """Create a deep copy"""
         history = BallHistory()
         for state in self.states:
-            history.add(state)
+            history.add(state.copy())
 
         return history
 
-    def vectorize(self) -> Optional[Tuple[NDArray, NDArray, NDArray]]:
+    def vectorize(self) -> Optional[Tuple[F64Array, F64Array, F64Array]]:
         """Return rvw, s, and t as arrays"""
         if self.empty:
             return None
 
-        return tuple(  # type: ignore
-            map(_float64_array, zip(*[astuple(x) for x in self.states]))
-        )
+        num_states = len(self.states)
+
+        rvws = np.empty((num_states, 3, 3), dtype=np.float64)
+        ss = np.empty(num_states, dtype=np.float64)
+        ts = np.empty(num_states, dtype=np.float64)
+
+        for idx, state in enumerate(self.states):
+            rvws[idx] = state.rvw
+            ss[idx] = state.s
+            ts[idx] = state.t
+
+        return rvws, ss, ts
 
     @staticmethod
     def from_vectorization(
-        vectorization: Optional[Tuple[NDArray, NDArray, NDArray]]
+        vectorization: Optional[Tuple[F64Array, F64Array, F64Array]]
     ) -> BallHistory:
         history = BallHistory()
 
@@ -210,9 +232,18 @@ class Ball:
         """Return the coordinate vector of the ball"""
         return self.state.rvw[0]
 
-    def copy(self) -> Ball:
+    def copy(self, drop_history: bool = False) -> Ball:
         """Create a deep copy"""
+        if drop_history:
+            return evolve(
+                self,
+                state=self.state.copy(),
+                history=BallHistory(),
+                history_cts=BallHistory(),
+            )
+
         # `params` and `initial_orientation` are frozen
+        # This is the same speed as as Ball(...)
         return evolve(
             self,
             state=self.state.copy(),

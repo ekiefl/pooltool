@@ -1,31 +1,54 @@
 #! /usr/bin/env python
 
-import pooltool as pt
+import sys
+from pathlib import Path
 
-raise NotImplementedError("Needs a fixing after shot serialization is refactored")
+import pooltool as pt
+from pooltool.ani.globals import Global
+from pooltool.ani.modes import ModeManager, all_modes
 
 
 def main(args):
-    shot = pt.System(path=args.path)
+    shot = pt.System.load(args.path)
 
-    shot.simulate(quiet=True)
-    shot.reset_balls()
+    # Burn a simulation to pre-load numba caches
+    copy = shot.copy()
+    pt.simulate(copy)
+    copy.continuize()
+
+    if args.profile_it:
+        with pt.utils.PProfile(path=Path("cachegrind.out.simulate")):
+            pt.simulate(shot)
+
+        with pt.utils.PProfile(path=Path("cachegrind.out.continuize")):
+            shot.continuize()
+
+        class TimedModeManager(ModeManager):
+            def change_mode(self, *args, **kwargs):
+                with pt.utils.PProfile(path=Path("cachegrind.out.render")):
+                    super().change_mode(*args, **kwargs)
+                sys.exit()
+
+        interface = pt.ShotViewer()
+        Global.register_mode_mgr(TimedModeManager(all_modes))
+        Global.mode_mgr.init_modes()
+        interface.show(shot)
 
     with pt.terminal.TimeCode(success_msg="Trajectories simulated in: "):
-        shot.simulate(quiet=True)
+        pt.simulate(shot)
 
     with pt.terminal.TimeCode(success_msg="Trajectories continuized in: "):
-        shot.continuize(dt=1 / 60 * 2)
+        shot.continuize()
 
-    class Interface(pt.ShotViewer):
-        def __init__(self, *args, **kwargs):
-            pt.ShotViewer.__init__(self, *args, **kwargs)
-
+    class TimedModeManager(ModeManager):
         def change_mode(self, *args, **kwargs):
             with pt.terminal.TimeCode(success_msg="Animation sequence rendered in: "):
                 super().change_mode(*args, **kwargs)
+            sys.exit()
 
-    interface = Interface()
+    interface = pt.ShotViewer()
+    Global.register_mode_mgr(TimedModeManager(all_modes))
+    Global.mode_mgr.init_modes()
     interface.show(shot)
 
 
@@ -40,6 +63,11 @@ if __name__ == "__main__":
         type=str,
         required=True,
         help="Filepath to a shot (you could generate this with sandbox/break.py, for example)",
+    )
+    ap.add_argument(
+        "--profile-it",
+        action="store_true",
+        help="Profile and spit out a cachegrind file (cachegrind.out.simulate, cachegrind.out.continuize, and cachegrind.out.render)",
     )
 
     args = ap.parse_args()
