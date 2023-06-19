@@ -128,8 +128,7 @@ class BallState:
         )
 
 
-def _float64_array(x: Any) -> NDArray[np.float64]:
-    return np.array(x, dtype=np.float64)
+F64Array = NDArray[np.float64]
 
 
 @define
@@ -169,18 +168,27 @@ class BallHistory:
 
         return history
 
-    def vectorize(self) -> Optional[Tuple[NDArray, NDArray, NDArray]]:
+    def vectorize(self) -> Optional[Tuple[F64Array, F64Array, F64Array]]:
         """Return rvw, s, and t as arrays"""
         if self.empty:
             return None
 
-        return tuple(  # type: ignore
-            map(_float64_array, zip(*[astuple(x) for x in self.states]))
-        )
+        num_states = len(self.states)
+
+        rvws = np.empty((num_states, 3, 3), dtype=np.float64)
+        ss = np.empty(num_states, dtype=np.float64)
+        ts = np.empty(num_states, dtype=np.float64)
+
+        for idx, state in enumerate(self.states):
+            rvws[idx] = state.rvw
+            ss[idx] = state.s
+            ts[idx] = state.t
+
+        return rvws, ss, ts
 
     @staticmethod
     def from_vectorization(
-        vectorization: Optional[Tuple[NDArray, NDArray, NDArray]]
+        vectorization: Optional[Tuple[F64Array, F64Array, F64Array]]
     ) -> BallHistory:
         history = BallHistory()
 
