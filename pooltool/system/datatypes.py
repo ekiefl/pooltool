@@ -251,8 +251,19 @@ class System:
 
         assert self.cue.cue_ball_id in self.balls
 
-        event = stick_ball_collision(self.cue, self.balls[self.cue.cue_ball_id], time=0)
-        self.resolve_event(event)
+        event = stick_ball_collision(
+            stick=self.cue,
+            ball=self.balls[self.cue.cue_ball_id],
+            time=0,
+            set_initial=True,
+        )
+
+        event = resolve_event(event)
+
+        # Set the stricken ball's state
+        final = event.agents[1].get_final()
+        assert isinstance(final, Ball)
+        self.balls[final.id].state = final.state
 
     def aim_at_pos(self, pos):
         """Set phi to aim at a 3D position
