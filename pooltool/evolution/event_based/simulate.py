@@ -20,6 +20,7 @@ from pooltool.events import (
     ball_linear_cushion_collision,
     ball_pocket_collision,
     null_event,
+    resolve_event,
     rolling_spinning_transition,
     rolling_stationary_transition,
     sliding_rolling_transition,
@@ -67,7 +68,7 @@ def simulate(
         shot.evolve(event.time - shot.t)
 
         if event.event_type in include:
-            shot.resolve_event(event)
+            resolve_event_and_update_system(shot, event)
             transition_cache.update(event)
 
         shot.update_history(event)
@@ -80,6 +81,36 @@ def simulate(
         shot.continuize(dt=dt)
 
     return shot
+
+
+def resolve_event_and_update_system(shot: System, event: Event) -> None:
+    if event.event_type == EventType.NONE:
+        return
+
+    # The system has evolved since the event was created, so the initial states need to
+    # be snapshotted according to the current state
+    for agent in event.agents:
+        if agent.agent_type == AgentType.CUE:
+            agent.set_initial(shot.cue)
+        elif agent.agent_type == AgentType.BALL:
+            agent.set_initial(shot.balls[agent.id])
+        elif agent.agent_type == AgentType.POCKET:
+            agent.set_initial(shot.table.pockets[agent.id])
+        elif agent.agent_type == AgentType.LINEAR_CUSHION_SEGMENT:
+            agent.set_initial(shot.table.cushion_segments.linear[agent.id])
+        elif agent.agent_type == AgentType.CIRCULAR_CUSHION_SEGMENT:
+            agent.set_initial(shot.table.cushion_segments.circular[agent.id])
+
+    event = resolve_event(event)
+
+    # The final states of the agents are solved, but the system objects still need to be
+    # updated with these states.
+    for agent in event.agents:
+        final = agent.get_final()
+        if isinstance(final, Ball):
+            shot.balls[final.id].state = final.state
+        elif isinstance(final, Pocket):
+            shot.table.pockets[final.id] = final
 
 
 def get_next_event(

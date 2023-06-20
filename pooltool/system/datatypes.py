@@ -10,17 +10,9 @@ from attrs import define, field
 import pooltool.math as math
 import pooltool.physics as physics
 from pooltool.error import ConfigError
-from pooltool.events import (
-    AgentType,
-    Event,
-    EventType,
-    filter_ball,
-    resolve_event,
-    stick_ball_collision,
-)
+from pooltool.events import Event, filter_ball, resolve_event, stick_ball_collision
 from pooltool.objects.ball.datatypes import Ball, BallHistory, BallState
 from pooltool.objects.cue.datatypes import Cue
-from pooltool.objects.table.components import Pocket
 from pooltool.objects.table.datatypes import Table
 from pooltool.potting import PottingConfig
 from pooltool.serialize import conversion
@@ -202,35 +194,6 @@ class System:
                 t=dt,
             )
             ball.state = BallState(rvw, s, self.t + dt)
-
-    def resolve_event(self, event: Event) -> None:
-        if event.event_type == EventType.NONE:
-            return
-
-        # The system has evolved since the event was created, so the initial states need
-        # to be snapshotted according to the current state
-        for agent in event.agents:
-            if agent.agent_type == AgentType.CUE:
-                agent.set_initial(self.cue)
-            elif agent.agent_type == AgentType.BALL:
-                agent.set_initial(self.balls[agent.id])
-            elif agent.agent_type == AgentType.POCKET:
-                agent.set_initial(self.table.pockets[agent.id])
-            elif agent.agent_type == AgentType.LINEAR_CUSHION_SEGMENT:
-                agent.set_initial(self.table.cushion_segments.linear[agent.id])
-            elif agent.agent_type == AgentType.CIRCULAR_CUSHION_SEGMENT:
-                agent.set_initial(self.table.cushion_segments.circular[agent.id])
-
-        event = resolve_event(event)
-
-        # The final states of the agents are solved, but the system objects still need
-        # to be updated with these states.
-        for agent in event.agents:
-            final = agent.get_final()
-            if isinstance(final, Ball):
-                self.balls[final.id].state = final.state
-            elif isinstance(final, Pocket):
-                self.table.pockets[final.id] = final
 
     def reset_balls(self):
         """Reset balls to their initial states"""
