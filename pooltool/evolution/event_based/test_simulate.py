@@ -9,12 +9,67 @@ from pooltool.events import EventType, ball_ball_collision, ball_pocket_collisio
 from pooltool.evolution.event_based.simulate import (
     get_next_ball_ball_collision,
     get_next_event,
+    simulate,
 )
 from pooltool.evolution.event_based.solve import ball_ball_collision_coeffs
 from pooltool.evolution.event_based.test_data import TEST_DIR
 from pooltool.math.roots import quadratic, quartic
 from pooltool.objects import Ball, BilliardTableSpecs, Cue, Table
 from pooltool.system import System
+
+
+def test_simulate_inplace():
+    # First, we don't modify in place
+    system = System.example()
+    simulated_system = simulate(system, inplace=False)
+
+    # The passed system is not simulated
+    assert not system.simulated
+
+    # The returned system is
+    assert simulated_system.simulated
+
+    # The passed system is not the returned system
+    assert system is not simulated_system
+
+    # Now, we modify in place
+    system = System.example()
+    simulated_system = simulate(system, inplace=True)
+
+    # The passed system is simulated
+    assert system.simulated
+
+    # The returned system is simulated
+    assert simulated_system.simulated
+
+    # The passed system is the returned system
+    assert system is simulated_system
+
+
+def test_simulate_continuize():
+    system = System.example()
+    simulate(system, inplace=True, continuous=False)
+
+    # System is not continuized
+    assert not system.continuized
+
+    for ball in system.balls.values():
+        # history_cts is empty
+        assert len(ball.history_cts) == 0
+        # history is not
+        assert len(ball.history) > 0
+
+    system = System.example()
+    simulate(system, inplace=True, continuous=True)
+
+    # System is continuized
+    assert system.continuized
+
+    for ball in system.balls.values():
+        # history_cts is populated
+        assert len(ball.history_cts) > 0
+        # history is too
+        assert len(ball.history) > 0
 
 
 @pytest.mark.parametrize(

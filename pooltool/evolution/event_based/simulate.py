@@ -26,6 +26,7 @@ from pooltool.events import (
     sliding_rolling_transition,
     spinning_stationary_transition,
 )
+from pooltool.evolution.continuize import continuize
 from pooltool.evolution.event_based import solve
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
 from pooltool.math.roots.quartic import QuarticSolver
@@ -40,19 +41,83 @@ from pooltool.system.datatypes import System
 
 def simulate(
     shot: System,
-    include: Set[EventType] = INCLUDED_EVENTS,
+    inplace: bool = False,
+    continuous: bool = False,
+    dt: Optional[float] = None,
+    t_final: Optional[float] = None,
     quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
-    t_final=None,
-    continuize=False,
-    dt=None,
+    include: Set[EventType] = INCLUDED_EVENTS,
 ) -> System:
-    """Run a simulation on a system and return it"""
+    """Run a simulation on a system and return it
+
+    Args:
+        shot:
+            The system you would like simulated. The system should already have energy,
+            otherwise there will be nothing to simulate.
+        inplace:
+            By default, a copy of the passed system is simulated and returned. This
+            leaves the passed system unmodified. If inplace is set to True, the passed
+            system is modified in place, meaning no copy is made and the returned system
+            is the passed system. For a more practical distinction, see Examples below.
+        continuous:
+            If True, the system will not only be simulated, but it will also be
+            "continuized". This means each ball will be populated with a ball history
+            with small fixed timesteps that make it ready for visualization.
+        dt:
+            The small fixed timestep used when continuous is True.
+        t_final:
+            If set, the simulation will end prematurely after the first time an event
+            with time > t_final is detected.
+        quartic_solver:
+            Which QuarticSolver do you want to use for solving quartic polynomials?
+        include:
+            Which EventType are you interested in resolving? By default, all detected
+            events are resolved.
+
+    Examples:
+        Standard usage:
+
+        >>> # Simulate a system
+        >>> import pooltool as pt
+        >>> system = pt.System.example()
+        >>> simulated_system = pt.simulate(system)
+        >>> assert not system.simulated
+        >>> assert simulated_system.simulated
+
+        The returned system is simulated, but the passed system remains unchanged.
+
+        You can also modify the system in place:
+
+        >>> # Simulate a system in place
+        >>> import pooltool as pt
+        >>> system = pt.System.example()
+        >>> simulated_system = pt.simulate(system, inplace=True)
+        >>> assert system.simulated
+        >>> assert simulated_system.simulated
+        >>> assert system is simulated_system
+
+        Notice that the returned system _is_ the simulated system. Therefore, there is
+        no point catching the return object when inplace is True:
+
+        >>> # Simulate a system in place
+        >>> import pooltool as pt
+        >>> system = pt.System.example()
+        >>> assert not system.simulated
+        >>> pt.simulate(system, inplace=True)
+        >>> assert system.simulated
+
+        You can continuize the ball trajectories with `continuous`
+
+        >>> # Simulate a system in place
+        >>> import pooltool as pt
+        >>> system = pt.simulate(pt.System.example(), continuous=True)
+        >>> for ball in system.balls.values(): assert len(ball.history_cts) > 0
+    """
+    if not inplace:
+        shot = shot.copy()
 
     shot.reset_history()
     shot.update_history(null_event(time=0))
-
-    if dt is None:
-        dt = 0.01
 
     transition_cache = TransitionCache.create(shot)
 
@@ -77,8 +142,8 @@ def simulate(
             shot.update_history(null_event(time=shot.t))
             break
 
-    if continuize:
-        shot.continuize(dt=dt)
+    if continuous:
+        continuize(shot, dt=0.01 if dt is None else dt, inplace=True)
 
     return shot
 

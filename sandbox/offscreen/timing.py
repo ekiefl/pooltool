@@ -71,11 +71,11 @@ system.aim_at_ball(ball_id="1")
 system.strike(V0=8)
 
 # Simulate the system once to load cached numba functions
-pt.simulate(system.copy())
+pt.simulate(system, inplace=False)
 
 # Time shot simulation
 with pt.terminal.TimeCode(quiet=True) as t:
-    pt.simulate(system)
+    pt.simulate(system, inplace=True)
 sim_time = t.time.total_seconds()
 
 # -------------------------------------------------------------------------------------

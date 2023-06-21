@@ -13,15 +13,15 @@ def main(args):
 
     # Burn a simulation to pre-load numba caches
     copy = shot.copy()
-    pt.simulate(copy)
-    copy.continuize()
+    pt.simulate(copy, inplace=True)
+    pt.continuize(copy, inplace=True)
 
     if args.profile_it:
         with pt.utils.PProfile(path=Path("cachegrind.out.simulate")):
-            pt.simulate(shot)
+            pt.simulate(shot, inplace=True)
 
         with pt.utils.PProfile(path=Path("cachegrind.out.continuize")):
-            shot.continuize()
+            pt.continuize(shot, inplace=True)
 
         class TimedModeManager(ModeManager):
             def change_mode(self, *args, **kwargs):
@@ -35,10 +35,10 @@ def main(args):
         interface.show(shot)
 
     with pt.terminal.TimeCode(success_msg="Trajectories simulated in: "):
-        pt.simulate(shot)
+        pt.simulate(shot, inplace=True)
 
     with pt.terminal.TimeCode(success_msg="Trajectories continuized in: "):
-        shot.continuize()
+        pt.continuize(shot, inplace=True)
 
     class TimedModeManager(ModeManager):
         def change_mode(self, *args, **kwargs):

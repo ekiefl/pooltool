@@ -30,7 +30,7 @@ from pooltool.events import (
     spinning_stationary_transition,
     stick_ball_collision,
 )
-from pooltool.evolution import simulate
+from pooltool.evolution import continuize, simulate
 from pooltool.layouts import (
     get_eight_ball_rack,
     get_nine_ball_rack,

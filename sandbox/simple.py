@@ -57,7 +57,7 @@ assert shot.get_system_energy() > 0
 assert shot.t == 0
 
 # Let's simulate the shot
-pt.simulate(shot)
+pt.simulate(shot, inplace=True)
 
 # The shot has been simulated. Here are the series of events that took place:
 print(shot.events)
