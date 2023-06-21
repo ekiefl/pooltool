@@ -246,7 +246,7 @@ class FrameStepper(Interface):
         size: Tuple[int, int] = (int(1.6 * 720), 720),
         fps: float = 30.0,
     ) -> Generator:
-        continuize(system, 1 / fps)
+        continuize(system, dt=1 / fps, inplace=True)
 
         multisystem.reset()
         multisystem.append(system)

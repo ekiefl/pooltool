@@ -143,7 +143,7 @@ def simulate(
             break
 
     if continuous:
-        continuize(shot, 0.01 if dt is None else dt)
+        continuize(shot, dt=0.01 if dt is None else dt, inplace=True)
 
     return shot
 

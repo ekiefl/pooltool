@@ -26,7 +26,7 @@ class SystemRender:
         # If you're making a SystemRender from your system that has already been
         # simulated, you want it continuized
         if system.simulated and not system.continuized:
-            continuize(system)
+            continuize(system, inplace=True)
 
         return SystemRender(
             balls={ball_id: BallRender(ball) for ball_id, ball in system.balls.items()},
@@ -170,7 +170,7 @@ class SystemController:
         self.playback_speed *= factor
 
         # Recontinuize to adjust for change in speed
-        continuize(multisystem.active, 0.01 * self.playback_speed)
+        continuize(multisystem.active, dt=0.01 * self.playback_speed, inplace=True)
 
         self.build_shot_animation()
 

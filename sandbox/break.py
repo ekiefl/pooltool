@@ -38,11 +38,13 @@ def main(args):
         continuize_times = np.zeros(N)
 
         # Burn a run (numba cache loading)
-        copy = shot.copy()
-        pt.simulate(copy, inplace=True)
-        pt.continuize(copy)
+        pt.simulate(shot)
+        pt.continuize(shot)
 
         for i in range(N):
+            # In what follows, copy beforehand and use inplace=True to avoid timing the
+            # copy operation
+
             copy = shot.copy()
 
             with pt.terminal.TimeCode(quiet=True) as timer:
@@ -50,7 +52,7 @@ def main(args):
             simulate_times[i] = timer.time.total_seconds()
 
             with pt.terminal.TimeCode(quiet=True) as timer:
-                pt.continuize(copy)
+                pt.continuize(copy, inplace=True)
             continuize_times[i] = timer.time.total_seconds()
 
         run = pt.terminal.Run()
@@ -77,7 +79,7 @@ def main(args):
         with pt.utils.PProfile(Path("cachegrind.out.simulate")):
             pt.simulate(shot, inplace=True)
         with pt.utils.PProfile(Path("cachegrind.out.continuize")):
-            pt.continuize(shot)
+            pt.continuize(shot, inplace=True)
 
         sys.exit()
 
