@@ -197,7 +197,7 @@ def _ball_transition_motion_states(event_type: EventType) -> Tuple[int, int]:
     raise NotImplementedError()
 
 
-event_resolvers: Dict[EventType, Callable] = {
+_event_resolvers: Dict[EventType, Callable] = {
     EventType.NONE: resolve_null,
     EventType.BALL_BALL: resolve_ball_ball,
     EventType.BALL_LINEAR_CUSHION: resolve_linear_ball_cushion,
@@ -212,4 +212,4 @@ event_resolvers: Dict[EventType, Callable] = {
 
 
 def resolve_event(event: Event) -> Event:
-    return event_resolvers[event.event_type](event)
+    return _event_resolvers[event.event_type](event)
