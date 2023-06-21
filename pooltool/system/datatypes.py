@@ -331,6 +331,20 @@ class System:
     def load(cls, path: Pathish) -> System:
         return conversion.structure_from(path, cls)
 
+    @classmethod
+    def example(cls) -> System:
+        system = cls(
+            cue=Cue.default(),
+            table=(table := Table.default()),
+            balls={
+                "cue": Ball.create("cue", xy=(table.w / 2, table.l / 2)),
+                "1": Ball.create("1", xy=(table.w / 2, 3 / 4 * table.l)),
+            },
+        )
+        system.aim_for_best_pocket("1")
+        system.strike(V0=1.5, b=-0.3)
+        return system
+
 
 @define
 class MultiSystem:
