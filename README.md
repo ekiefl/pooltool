@@ -96,7 +96,7 @@ shot = pt.System(table=table, balls=balls, cue=cue)
 shot.aim_at_ball("1")
 shot.strike(V0=8)
 
-# Evolve the shot. This modifies the system in-place
+# Evolve the shot.
 pt.simulate(shot, inplace=True)
 
 # Open up the shot in the GUI
