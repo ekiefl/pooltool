@@ -39,7 +39,7 @@ def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> Syste
         >>> # Continuize a system in place
         >>> import pooltool as pt
         >>> system = pt.simulate(pt.System.example())
-        >>> continuized_system = pt.continuize(system, inplace=False)
+        >>> continuized_system = pt.continuize(system, inplace=True)
         >>> assert system.continuized
         >>> assert continuized_system.continuized
         >>> assert system is continuized_system
