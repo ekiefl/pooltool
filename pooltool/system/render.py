@@ -7,6 +7,7 @@ from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
 
 from pooltool.ani.globals import Global
+from pooltool.evolution.continuize import continuize
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.render import CueRender
 from pooltool.objects.table.render import TableRender
@@ -25,7 +26,7 @@ class SystemRender:
         # If you're making a SystemRender from your system that has already been
         # simulated, you want it continuized
         if system.simulated and not system.continuized:
-            system.continuize()
+            continuize(system)
 
         return SystemRender(
             balls={ball_id: BallRender(ball) for ball_id, ball in system.balls.items()},
@@ -169,7 +170,7 @@ class SystemController:
         self.playback_speed *= factor
 
         # Recontinuize to adjust for change in speed
-        multisystem.active.continuize(dt=0.01 * self.playback_speed)
+        continuize(multisystem.active, 0.01 * self.playback_speed)
 
         self.build_shot_animation()
 

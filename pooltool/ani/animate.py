@@ -30,6 +30,7 @@ from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.menu import GenericMenu, menus
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
+from pooltool.evolution.continuize import continuize
 from pooltool.objects.ball.datatypes import BallParams
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
@@ -245,7 +246,7 @@ class FrameStepper(Interface):
         size: Tuple[int, int] = (int(1.6 * 720), 720),
         fps: float = 30.0,
     ) -> Generator:
-        system.continuize(dt=1 / fps)
+        continuize(system, 1 / fps)
 
         multisystem.reset()
         multisystem.append(system)

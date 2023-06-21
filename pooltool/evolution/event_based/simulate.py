@@ -26,6 +26,7 @@ from pooltool.events import (
     sliding_rolling_transition,
     spinning_stationary_transition,
 )
+from pooltool.evolution.continuize import continuize
 from pooltool.evolution.event_based import solve
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
 from pooltool.math.roots.quartic import QuarticSolver
@@ -43,7 +44,7 @@ def simulate(
     include: Set[EventType] = INCLUDED_EVENTS,
     quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
     t_final=None,
-    continuize=False,
+    continuous=False,
     dt=None,
 ) -> System:
     """Run a simulation on a system and return it"""
@@ -77,8 +78,8 @@ def simulate(
             shot.update_history(null_event(time=shot.t))
             break
 
-    if continuize:
-        shot.continuize(dt=dt)
+    if continuous:
+        continuize(shot, dt)
 
     return shot
 

@@ -79,7 +79,7 @@ class CalculateMode(BaseMode):
 
         simulate(
             multisystem.active,
-            continuize=True,
+            continuous=True,
         )
 
         Global.game.process_shot(multisystem.active)

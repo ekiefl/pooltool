@@ -22,7 +22,7 @@ shot.strike(V0=8)
 
 # Evolve the shot
 pt.simulate(shot)
-shot.continuize()
+pt.continuize(shot)
 
 json_path = Path(__file__).parent / "serialized_shot.json"
 msgpack_path = Path(__file__).parent / "serialized_shot.msgpack"
