@@ -13,12 +13,12 @@ def main(args):
 
     # Burn a simulation to pre-load numba caches
     copy = shot.copy()
-    pt.simulate(copy)
+    pt.simulate(copy, inplace=True)
     pt.continuize(copy)
 
     if args.profile_it:
         with pt.utils.PProfile(path=Path("cachegrind.out.simulate")):
-            pt.simulate(shot)
+            pt.simulate(shot, inplace=True)
 
         with pt.utils.PProfile(path=Path("cachegrind.out.continuize")):
             pt.continuize(shot)
@@ -35,7 +35,7 @@ def main(args):
         interface.show(shot)
 
     with pt.terminal.TimeCode(success_msg="Trajectories simulated in: "):
-        pt.simulate(shot)
+        pt.simulate(shot, inplace=True)
 
     with pt.terminal.TimeCode(success_msg="Trajectories continuized in: "):
         pt.continuize(shot)

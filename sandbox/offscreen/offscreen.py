@@ -30,7 +30,7 @@ def main(args):
     system.strike(V0=args.V0)
 
     # Evolve the shot
-    pt.simulate(system)
+    pt.simulate(system, inplace=True)
 
     # Make an dump dir
     path = Path(__file__).parent / "offscreen_out"

@@ -45,7 +45,7 @@ def main(args):
         shot.strike(V0=40)
 
         # Evolve the shot
-        pt.simulate(shot, continuous=False)
+        pt.simulate(shot, continuous=False, inplace=True)
 
         if not args.no_viz:
             interface.show(shot)

@@ -21,7 +21,7 @@ def main():
     shot.strike(V0=8)
 
     # Simulate
-    pt.simulate(shot)
+    pt.simulate(shot, inplace=True)
 
     # Visualize it
     interface.show(shot, title="Original system state")

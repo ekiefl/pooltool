@@ -22,7 +22,7 @@ def main(args):
         shot.strike(V0=args.V0)
 
         # Evolve the shot
-        pt.simulate(shot)
+        pt.simulate(shot, inplace=True)
 
         count += 1
         print(count)
