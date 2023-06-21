@@ -10,10 +10,11 @@ from attrs import define, field
 import pooltool.math as math
 import pooltool.physics as physics
 from pooltool.error import ConfigError
-from pooltool.events import Event, resolve_event, stick_ball_collision
+from pooltool.events import Event, stick_ball_collision
 from pooltool.objects.ball.datatypes import Ball, BallHistory, BallState
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
+from pooltool.physics.engine import resolve_event
 from pooltool.potting import PottingConfig
 from pooltool.serialize import conversion
 from pooltool.serialize.serializers import Pathish

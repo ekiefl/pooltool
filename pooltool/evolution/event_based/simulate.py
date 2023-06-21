@@ -20,7 +20,6 @@ from pooltool.events import (
     ball_linear_cushion_collision,
     ball_pocket_collision,
     null_event,
-    resolve_event,
     rolling_spinning_transition,
     rolling_stationary_transition,
     sliding_rolling_transition,
@@ -36,6 +35,7 @@ from pooltool.objects.table.components import (
     LinearCushionSegment,
     Pocket,
 )
+from pooltool.physics.engine import resolve_event
 from pooltool.system.datatypes import System
 
 
