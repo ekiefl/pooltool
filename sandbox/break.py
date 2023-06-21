@@ -38,8 +38,7 @@ def main(args):
         continuize_times = np.zeros(N)
 
         # Burn a run (numba cache loading)
-        pt.simulate(shot)
-        pt.continuize(shot)
+        pt.simulate(shot, continuous=True)
 
         for i in range(N):
             # In what follows, copy beforehand and use inplace=True to avoid timing the
