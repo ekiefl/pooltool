@@ -29,7 +29,7 @@ class Cue:
     theta: float = field(default=0.0)
     a: float = field(default=0.0)
     b: float = field(default=0.25)
-    cue_ball_id: Optional[str] = field(default="cue")
+    cue_ball_id: str = field(default="cue")
 
     specs: CueSpecs = field(factory=CueSpecs.default)
 

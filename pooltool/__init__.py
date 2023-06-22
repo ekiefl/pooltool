@@ -54,7 +54,7 @@ from pooltool.objects import (
     TableModelDescr,
     TableType,
 )
-from pooltool.physics.engine import resolve_event
+from pooltool.physics.engine import PhysicsEngine
 from pooltool.system import MultiSystem, System, SystemController, multisystem, visual
 
 run = terminal.Run()
@@ -67,6 +67,7 @@ __all__ = [
     "get_three_cushion_rack",
     "System",
     "MultiSystem",
+    "PhysicsEngine",
     "multisystem",
     "SystemController",
     "visual",

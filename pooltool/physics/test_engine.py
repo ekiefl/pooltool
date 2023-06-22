@@ -11,7 +11,9 @@ from pooltool.events import (
     stick_ball_collision,
 )
 from pooltool.objects import Ball, Cue, LinearCushionSegment, Pocket
-from pooltool.physics.engine import resolve_event
+from pooltool.physics.engine import PhysicsEngine
+
+ENGINE = PhysicsEngine()
 
 
 @pytest.fixture
@@ -114,7 +116,7 @@ def test_ball_ball_collision(cue_colliding_into_one_ball):
     assert event.agents[1].get_final() is None
 
     # Now resolve the event and re-assess
-    event = resolve_event(event)
+    event = ENGINE.resolve_event(event)
 
     # Cue ball initial
     assert np.array_equal(event.agents[0].get_initial().state.rvw, cue_initial_expected)
@@ -165,7 +167,7 @@ def test_ball_linear_cushion_collision(cue_colliding_into_cushion):
     assert event.agents[1].get_final() is None
 
     # Now resolve the event and re-assess
-    event = resolve_event(event)
+    event = ENGINE.resolve_event(event)
 
     # Cue ball initial
     assert np.array_equal(event.agents[0].get_initial().state.rvw, cue_initial_expected)
@@ -201,7 +203,7 @@ def test_ball_pocket_collision(cue_colliding_with_pocket):
     assert event.agents[1].get_final() is None
 
     # Now resolve the event and re-assess
-    event = resolve_event(event)
+    event = ENGINE.resolve_event(event)
 
     # Cue ball initial
     assert np.array_equal(event.agents[0].get_initial().state.rvw, cue_initial_expected)
@@ -240,7 +242,7 @@ def test_stick_ball_collision(cue_struck_by_cuestick):
     assert event.agents[0].get_final() is None
 
     # Now resolve the event and re-assess
-    event = resolve_event(event)
+    event = ENGINE.resolve_event(event)
 
     # Cue ball initial
     assert np.array_equal(event.agents[1].get_initial().state.rvw, cue_initial_expected)

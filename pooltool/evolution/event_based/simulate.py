@@ -24,6 +24,7 @@ from pooltool.events import (
     rolling_stationary_transition,
     sliding_rolling_transition,
     spinning_stationary_transition,
+    stick_ball_collision,
 )
 from pooltool.evolution.continuize import continuize
 from pooltool.evolution.event_based import solve
@@ -35,12 +36,13 @@ from pooltool.objects.table.components import (
     LinearCushionSegment,
     Pocket,
 )
-from pooltool.physics.engine import resolve_event
+from pooltool.physics.engine import PhysicsEngine
 from pooltool.system.datatypes import System
 
 
 def simulate(
     shot: System,
+    engine: Optional[PhysicsEngine] = None,
     inplace: bool = False,
     continuous: bool = False,
     dt: Optional[float] = None,
@@ -116,8 +118,29 @@ def simulate(
     if not inplace:
         shot = shot.copy()
 
+    if not engine:
+        engine = PhysicsEngine()
+
     shot.reset_history()
     shot.update_history(null_event(time=0))
+
+    if shot.get_system_energy() == 0 and shot.cue.V0 > 0:
+        # System has no energy, but the cue stick has an impact velocity. So create and
+        # resolve a stick-ball collision to start things off
+        event = stick_ball_collision(
+            stick=shot.cue,
+            ball=shot.balls[shot.cue.cue_ball_id],
+            time=0,
+            set_initial=True,
+        )
+
+        event = engine.resolve_event(event)
+
+        # Set the stricken ball's state
+        final = event.agents[1].get_final()
+        assert isinstance(final, Ball)
+        shot.balls[final.id].state = final.state
+        shot.update_history(event)
 
     transition_cache = TransitionCache.create(shot)
 
@@ -133,7 +156,7 @@ def simulate(
         shot.evolve(event.time - shot.t)
 
         if event.event_type in include:
-            resolve_event_and_update_system(shot, event)
+            resolve_event_and_update_system(shot, event, engine)
             transition_cache.update(event)
 
         shot.update_history(event)
@@ -148,7 +171,9 @@ def simulate(
     return shot
 
 
-def resolve_event_and_update_system(shot: System, event: Event) -> None:
+def resolve_event_and_update_system(
+    shot: System, event: Event, engine: PhysicsEngine
+) -> None:
     if event.event_type == EventType.NONE:
         return
 
@@ -166,7 +191,7 @@ def resolve_event_and_update_system(shot: System, event: Event) -> None:
         elif agent.agent_type == AgentType.CIRCULAR_CUSHION_SEGMENT:
             agent.set_initial(shot.table.cushion_segments.circular[agent.id])
 
-    event = resolve_event(event)
+    event = engine.resolve_event(event)
 
     # The final states of the agents are solved, but the system objects still need to be
     # updated with these states.

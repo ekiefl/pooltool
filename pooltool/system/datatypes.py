@@ -10,11 +10,11 @@ from attrs import define, field
 import pooltool.math as math
 import pooltool.physics as physics
 from pooltool.error import ConfigError
-from pooltool.events import Event, stick_ball_collision
+from pooltool.events import Event
 from pooltool.objects.ball.datatypes import Ball, BallHistory, BallState
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
-from pooltool.physics.engine import resolve_event
+from pooltool.physics.engine import PhysicsEngine
 from pooltool.potting import PottingConfig
 from pooltool.serialize import conversion
 from pooltool.serialize.serializers import Pathish
@@ -90,33 +90,6 @@ class System:
         for ball in self.balls.values():
             if not ball.history.empty:
                 ball.state = ball.history[0].copy()
-
-    def strike(self, **state_kwargs) -> None:
-        """Strike a ball with the cue stick
-
-        The stricken ball is determined by the self.cue.cue_ball_id.
-
-        state_kwargs: **kwargs
-            Pass state parameters to be updated before the cue strike. Any parameters
-            accepted by Cue.set_state are permissible.
-        """
-        self.cue.set_state(**state_kwargs)
-
-        assert self.cue.cue_ball_id in self.balls
-
-        event = stick_ball_collision(
-            stick=self.cue,
-            ball=self.balls[self.cue.cue_ball_id],
-            time=0,
-            set_initial=True,
-        )
-
-        event = resolve_event(event)
-
-        # Set the stricken ball's state
-        final = event.agents[1].get_final()
-        assert isinstance(final, Ball)
-        self.balls[final.id].state = final.state
 
     def aim_at_pos(self, pos):
         """Set phi to aim at a 3D position
@@ -233,6 +206,18 @@ class System:
             config=config,
         )
 
+    def strike(self, **state_kwargs) -> None:
+        """Set cue stick parameters
+
+        Just a wrapper for self.cue.set_state
+
+        state_kwargs: **kwargs
+            Pass state parameters to be updated for the cue strike. Any parameters
+            accepted by Cue.set_state are permissible.
+        """
+        self.cue.set_state(**state_kwargs)
+        assert self.cue.cue_ball_id in self.balls
+
     def get_system_energy(self):
         energy = 0
         for ball in self.balls.values():
@@ -343,7 +328,7 @@ class System:
             },
         )
         system.aim_for_best_pocket("1")
-        system.strike(V0=1.5, b=-0.3)
+        system.cue.set_state(V0=1.5, b=-0.3)
         return system
 
 

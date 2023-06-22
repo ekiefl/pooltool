@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Callable, Dict, Tuple
 
 import attrs
@@ -211,5 +213,32 @@ _event_resolvers: Dict[EventType, Callable] = {
 }
 
 
-def resolve_event(event: Event) -> Event:
-    return _event_resolvers[event.event_type](event)
+@attrs.define
+class Resolver:
+    null: Callable
+    ball_ball: Callable
+    ball_linear_cushion: Callable
+    ball_circular_cushion: Callable
+    ball_pocket: Callable
+    stick_ball: Callable
+    transition: Callable
+
+    @classmethod
+    def default(cls) -> Resolver:
+        return cls(
+            null=resolve_null,
+            ball_ball=resolve_ball_ball,
+            ball_linear_cushion=resolve_linear_ball_cushion,
+            ball_circular_cushion=resolve_circular_ball_cushion,
+            ball_pocket=resolve_ball_pocket,
+            stick_ball=resolve_stick_ball,
+            transition=resolve_transition,
+        )
+
+
+@attrs.define
+class PhysicsEngine:
+    resolver: Resolver = attrs.field(factory=Resolver.default)
+
+    def resolve_event(self, event: Event) -> Event:
+        return _event_resolvers[event.event_type](event)
