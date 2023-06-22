@@ -199,20 +199,6 @@ def _ball_transition_motion_states(event_type: EventType) -> Tuple[int, int]:
     raise NotImplementedError()
 
 
-_event_resolvers: Dict[EventType, Callable] = {
-    EventType.NONE: resolve_null,
-    EventType.BALL_BALL: resolve_ball_ball,
-    EventType.BALL_LINEAR_CUSHION: resolve_linear_ball_cushion,
-    EventType.BALL_CIRCULAR_CUSHION: resolve_circular_ball_cushion,
-    EventType.BALL_POCKET: resolve_ball_pocket,
-    EventType.STICK_BALL: resolve_stick_ball,
-    EventType.SPINNING_STATIONARY: resolve_transition,
-    EventType.ROLLING_STATIONARY: resolve_transition,
-    EventType.ROLLING_SPINNING: resolve_transition,
-    EventType.SLIDING_ROLLING: resolve_transition,
-}
-
-
 @attrs.define
 class Resolver:
     null: Callable
@@ -222,6 +208,22 @@ class Resolver:
     ball_pocket: Callable
     stick_ball: Callable
     transition: Callable
+
+    mapping: Dict[EventType, Callable] = attrs.field(init=False)
+
+    def __attrs_post_init__(self):
+        self.mapping = {
+            EventType.NONE: self.null,
+            EventType.BALL_BALL: self.ball_ball,
+            EventType.BALL_LINEAR_CUSHION: self.ball_linear_cushion,
+            EventType.BALL_CIRCULAR_CUSHION: self.ball_circular_cushion,
+            EventType.BALL_POCKET: self.ball_pocket,
+            EventType.STICK_BALL: self.stick_ball,
+            EventType.SPINNING_STATIONARY: self.transition,
+            EventType.ROLLING_STATIONARY: self.transition,
+            EventType.ROLLING_SPINNING: self.transition,
+            EventType.SLIDING_ROLLING: self.transition,
+        }
 
     @classmethod
     def default(cls) -> Resolver:
@@ -241,4 +243,4 @@ class PhysicsEngine:
     resolver: Resolver = attrs.field(factory=Resolver.default)
 
     def resolve_event(self, event: Event) -> Event:
-        return _event_resolvers[event.event_type](event)
+        return self.resolver.mapping[event.event_type](event)
