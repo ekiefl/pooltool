@@ -133,13 +133,7 @@ def simulate(
             time=0,
             set_initial=True,
         )
-
-        event = engine.resolve_event(event)
-
-        # Set the stricken ball's state
-        final = event.agents[1].get_final()
-        assert isinstance(final, Ball)
-        shot.balls[final.id].state = final.state
+        resolve_event_and_update_system(shot, event, engine)
         shot.update_history(event)
 
     transition_cache = TransitionCache.create(shot)
