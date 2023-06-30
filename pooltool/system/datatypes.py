@@ -14,7 +14,6 @@ from pooltool.events import Event
 from pooltool.objects.ball.datatypes import Ball, BallHistory, BallState
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
-from pooltool.physics.engine import PhysicsEngine
 from pooltool.potting import PottingConfig
 from pooltool.serialize import conversion
 from pooltool.serialize.serializers import Pathish

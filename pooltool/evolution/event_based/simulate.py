@@ -133,7 +133,7 @@ def simulate(
             time=0,
             set_initial=True,
         )
-        resolve_event_and_update_system(shot, event, engine)
+        engine.resolve_event(shot, event)
         shot.update_history(event)
 
     transition_cache = TransitionCache.create(shot)
@@ -150,7 +150,7 @@ def simulate(
         shot.evolve(event.time - shot.t)
 
         if event.event_type in include:
-            resolve_event_and_update_system(shot, event, engine)
+            engine.resolve_event(shot, event)
             transition_cache.update(event)
 
         shot.update_history(event)
@@ -163,38 +163,6 @@ def simulate(
         continuize(shot, dt=0.01 if dt is None else dt, inplace=True)
 
     return shot
-
-
-def resolve_event_and_update_system(
-    shot: System, event: Event, engine: PhysicsEngine
-) -> None:
-    if event.event_type == EventType.NONE:
-        return
-
-    # The system has evolved since the event was created, so the initial states need to
-    # be snapshotted according to the current state
-    for agent in event.agents:
-        if agent.agent_type == AgentType.CUE:
-            agent.set_initial(shot.cue)
-        elif agent.agent_type == AgentType.BALL:
-            agent.set_initial(shot.balls[agent.id])
-        elif agent.agent_type == AgentType.POCKET:
-            agent.set_initial(shot.table.pockets[agent.id])
-        elif agent.agent_type == AgentType.LINEAR_CUSHION_SEGMENT:
-            agent.set_initial(shot.table.cushion_segments.linear[agent.id])
-        elif agent.agent_type == AgentType.CIRCULAR_CUSHION_SEGMENT:
-            agent.set_initial(shot.table.cushion_segments.circular[agent.id])
-
-    event = engine.resolve_event(event)
-
-    # The final states of the agents are solved, but the system objects still need to be
-    # updated with these states.
-    for agent in event.agents:
-        final = agent.get_final()
-        if isinstance(final, Ball):
-            shot.balls[final.id].state = final.state
-        elif isinstance(final, Pocket):
-            shot.table.pockets[final.id] = final
 
 
 def get_next_event(

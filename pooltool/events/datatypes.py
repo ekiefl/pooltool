@@ -186,18 +186,6 @@ class Event:
     agents: Tuple[Agent, ...]
     time: float
 
-    @property
-    def ids(self) -> Tuple[str, ...]:
-        return tuple(agent.id for agent in self.agents)
-
-    @property
-    def initial(self) -> Tuple[Optional[Object], ...]:
-        return tuple(agent.get_initial() for agent in self.agents)
-
-    @property
-    def final(self) -> Tuple[Optional[Object], ...]:
-        return tuple(agent.get_final() for agent in self.agents)
-
     def __repr__(self):
         agents = [
             (agent.initial.id if agent.initial is not None else None)
@@ -210,6 +198,18 @@ class Event:
             f" └── agents : {agents}",
         ]
         return "\n".join(lines) + "\n"
+
+    @property
+    def ids(self) -> Tuple[str, ...]:
+        return tuple(agent.id for agent in self.agents)
+
+    @property
+    def initial(self) -> Tuple[Optional[Object], ...]:
+        return tuple(agent.get_initial() for agent in self.agents)
+
+    @property
+    def final(self) -> Tuple[Optional[Object], ...]:
+        return tuple(agent.get_final() for agent in self.agents)
 
     def copy(self) -> Event:
         """Create a deepcopy"""
