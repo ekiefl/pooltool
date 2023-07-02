@@ -104,7 +104,7 @@ def _null_rvw() -> NDArray[np.float64]:
 class BallState:
     rvw: NDArray[np.float64]
     s: int = field(converter=int)
-    t: float = field(converter=float)
+    t: float = field(converter=float, default=0)
 
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)

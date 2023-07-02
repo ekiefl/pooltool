@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from typing import Callable, Dict, Tuple
+from typing import Dict, Tuple
 
 import attrs
 import numpy as np
 
 import pooltool.constants as c
+import pooltool.constants as const
+import pooltool.math as math
 import pooltool.physics as physics
 from pooltool.events.datatypes import AgentType, Event, EventType
 from pooltool.objects.ball.datatypes import Ball, BallState
@@ -18,170 +20,160 @@ from pooltool.objects.table.components import (
 from pooltool.system.datatypes import System
 
 
-def resolve_ball_ball(event: Event) -> Event:
-    ball1, ball2 = event.agents
+def resolve_ball_ball(
+    ball1: Ball, ball2: Ball, inplace: bool = False
+) -> Tuple[Ball, Ball]:
+    if not inplace:
+        ball1 = ball1.copy()
+        ball2 = ball2.copy()
 
-    assert isinstance(ball1.initial, Ball)
-    assert isinstance(ball2.initial, Ball)
-
-    rvw1, rvw2 = physics.resolve_ball_ball_collision(
-        ball1.initial.state.rvw.copy(),
-        ball2.initial.state.rvw.copy(),
-        ball1.initial.params.R,
+    rvw1, rvw2 = _resolve_ball_ball_collision(
+        ball1.state.rvw.copy(),
+        ball2.state.rvw.copy(),
+        ball1.params.R,
     )
 
-    ball1.final = attrs.evolve(
-        ball1.initial, state=BallState(rvw1, c.sliding, event.time)
-    )
-    ball2.final = attrs.evolve(
-        ball2.initial, state=BallState(rvw2, c.sliding, event.time)
-    )
+    ball1.state = BallState(rvw1, c.sliding)
+    ball2.state = BallState(rvw2, c.sliding)
 
-    return event
+    return ball1, ball2
 
 
-def resolve_null(event: Event) -> Event:
-    return event
+def resolve_linear_ball_cushion(
+    ball: Ball, cushion: LinearCushionSegment, inplace: bool = False
+) -> Tuple[Ball, LinearCushionSegment]:
+    if not inplace:
+        ball = ball.copy()
+        cushion = cushion.copy()
 
+    rvw = ball.state.rvw
+    normal = cushion.get_normal(rvw)
 
-def resolve_linear_ball_cushion(event: Event) -> Event:
-    ball, cushion = event.agents
-
-    assert isinstance(ball.initial, Ball)
-    assert isinstance(cushion.initial, LinearCushionSegment)
-
-    rvw = ball.initial.state.rvw
-    normal = cushion.initial.get_normal(rvw)
-
-    rvw = physics.resolve_ball_linear_cushion_collision(
+    rvw = _resolve_ball_linear_cushion_collision(
         rvw=rvw,
         normal=normal,
-        p1=cushion.initial.p1,
-        p2=cushion.initial.p2,
-        R=ball.initial.params.R,
-        m=ball.initial.params.m,
-        h=cushion.initial.height,
-        e_c=ball.initial.params.e_c,
-        f_c=ball.initial.params.f_c,
+        p1=cushion.p1,
+        p2=cushion.p2,
+        R=ball.params.R,
+        m=ball.params.m,
+        h=cushion.height,
+        e_c=ball.params.e_c,
+        f_c=ball.params.f_c,
     )
 
-    ball.final = attrs.evolve(ball.initial, state=BallState(rvw, c.sliding, event.time))
-    cushion.final = None
+    ball.state = BallState(rvw, c.sliding)
 
-    return event
+    return ball, cushion
 
 
-def resolve_circular_ball_cushion(event: Event) -> Event:
-    ball, cushion = event.agents
+def resolve_circular_ball_cushion(
+    ball: Ball, cushion: CircularCushionSegment, inplace: bool = False
+) -> Tuple[Ball, CircularCushionSegment]:
+    if not inplace:
+        ball = ball.copy()
+        cushion = cushion.copy()
 
-    assert isinstance(ball.initial, Ball)
-    assert isinstance(cushion.initial, CircularCushionSegment)
+    rvw = ball.state.rvw
+    normal = cushion.get_normal(rvw)
 
-    rvw = ball.initial.state.rvw
-    normal = cushion.initial.get_normal(rvw)
-
-    rvw = physics.resolve_ball_circular_cushion_collision(
+    rvw = _resolve_ball_circular_cushion_collision(
         rvw=rvw,
         normal=normal,
-        center=cushion.initial.center,
-        radius=cushion.initial.radius,
-        R=ball.initial.params.R,
-        m=ball.initial.params.m,
-        h=cushion.initial.height,
-        e_c=ball.initial.params.e_c,
-        f_c=ball.initial.params.f_c,
+        center=cushion.center,
+        radius=cushion.radius,
+        R=ball.params.R,
+        m=ball.params.m,
+        h=cushion.height,
+        e_c=ball.params.e_c,
+        f_c=ball.params.f_c,
     )
 
-    ball.final = attrs.evolve(ball.initial, state=BallState(rvw, c.sliding, event.time))
-    cushion.final = None
+    ball.state = BallState(rvw, c.sliding)
 
-    return event
+    return ball, cushion
 
 
-def resolve_ball_pocket(event: Event) -> Event:
-    ball, pocket = event.agents
-
-    assert isinstance(ball.initial, Ball)
-    assert isinstance(pocket.initial, Pocket)
+def resolve_ball_pocket(
+    ball: Ball, pocket: Pocket, inplace: bool = False
+) -> Tuple[Ball, Pocket]:
+    if not inplace:
+        ball = ball.copy()
+        pocket = pocket.copy()
 
     # Ball is placed at the pocket center
     rvw = np.array(
         [
-            [pocket.initial.a, pocket.initial.b, -pocket.initial.depth],
+            [pocket.a, pocket.b, -pocket.depth],
             [0, 0, 0],
             [0, 0, 0],
         ]
     )
 
-    ball.final = attrs.evolve(
-        ball.initial, state=BallState(rvw, c.pocketed, event.time)
-    )
-    pocket.final = pocket.initial.copy()
-    pocket.final.add(ball.final.id)
+    ball.state = BallState(rvw, c.pocketed)
+    pocket.add(ball.id)
 
-    return event
+    return ball, pocket
 
 
-def resolve_stick_ball(event: Event) -> Event:
-    cue, ball = event.agents
-
-    assert isinstance(ball.initial, Ball)
-    assert isinstance(cue.initial, Cue)
+def resolve_stick_ball(cue: Cue, ball: Ball, inplace: bool = False) -> Tuple[Cue, Ball]:
+    if not inplace:
+        cue = cue.copy()
+        ball = ball.copy()
 
     v, w = physics.cue_strike(
-        ball.initial.params.m,
-        cue.initial.specs.M,
-        ball.initial.params.R,
-        cue.initial.V0,
-        cue.initial.phi,
-        cue.initial.theta,
-        cue.initial.a,
-        cue.initial.b,
+        ball.params.m,
+        cue.specs.M,
+        ball.params.R,
+        cue.V0,
+        cue.phi,
+        cue.theta,
+        cue.a,
+        cue.b,
     )
 
-    rvw = np.array([ball.initial.state.rvw[0], v, w])
+    rvw = np.array([ball.state.rvw[0], v, w])
     s = c.sliding
 
-    ball.final = attrs.evolve(ball.initial, state=BallState(rvw, s, event.time))
-    cue.final = None
+    ball.state = BallState(rvw, s)
 
-    return event
+    return cue, ball
 
 
-def resolve_transition(event: Event) -> Event:
-    ball = event.agents[0]
+def resolve_transition(
+    ball: Ball, transition: EventType, inplace: bool = False
+) -> Ball:
+    if not inplace:
+        ball = ball.copy()
 
-    assert isinstance(ball.initial, Ball)
+    assert transition.is_transition()
+    start, end = _ball_transition_motion_states(transition)
 
-    start, end = _ball_transition_motion_states(event.event_type)
-
-    ball.final = ball.initial.copy()
-    ball.final.state.s = end
-    ball.initial.state.s = start
+    assert ball.state.s == start, f"Start state was {ball.state.s}, expected {start}"
+    ball.state.s = end
 
     if end == c.spinning:
         # Assert that the velocity components are nearly 0, and that the x and y angular
         # velocity components are nearly 0. Then set them to exactly 0.
-        v = ball.final.state.rvw[1]
-        w = ball.final.state.rvw[2]
+        v = ball.state.rvw[1]
+        w = ball.state.rvw[2]
         assert (np.abs(v) < c.EPS_SPACE).all()
         assert (np.abs(w[:2]) < c.EPS_SPACE).all()
 
-        ball.final.state.rvw[1, :] = [0.0, 0.0, 0.0]
-        ball.final.state.rvw[2, :2] = [0.0, 0.0]
+        ball.state.rvw[1, :] = [0.0, 0.0, 0.0]
+        ball.state.rvw[2, :2] = [0.0, 0.0]
 
     if end == c.stationary:
         # Assert that the linear and angular velocity components are nearly 0, then set
         # them to exactly 0.
-        v = ball.final.state.rvw[1]
-        w = ball.final.state.rvw[2]
+        v = ball.state.rvw[1]
+        w = ball.state.rvw[2]
         assert (np.abs(v) < c.EPS_SPACE).all()
         assert (np.abs(w) < c.EPS_SPACE).all()
 
-        ball.final.state.rvw[1, :] = [0.0, 0.0, 0.0]
-        ball.final.state.rvw[2, :] = [0.0, 0.0, 0.0]
+        ball.state.rvw[1, :] = [0.0, 0.0, 0.0]
+        ball.state.rvw[2, :] = [0.0, 0.0, 0.0]
 
-    return event
+    return ball
 
 
 def _ball_transition_motion_states(event_type: EventType) -> Tuple[int, int]:
@@ -202,53 +194,19 @@ def _ball_transition_motion_states(event_type: EventType) -> Tuple[int, int]:
 
 @attrs.define
 class Resolver:
-    null: Callable
-    ball_ball: Callable
-    ball_linear_cushion: Callable
-    ball_circular_cushion: Callable
-    ball_pocket: Callable
-    stick_ball: Callable
-    transition: Callable
-
-    mapping: Dict[EventType, Callable] = attrs.field(init=False)
-
-    def __attrs_post_init__(self):
-        self.mapping = {
-            EventType.NONE: self.null,
-            EventType.BALL_BALL: self.ball_ball,
-            EventType.BALL_LINEAR_CUSHION: self.ball_linear_cushion,
-            EventType.BALL_CIRCULAR_CUSHION: self.ball_circular_cushion,
-            EventType.BALL_POCKET: self.ball_pocket,
-            EventType.STICK_BALL: self.stick_ball,
-            EventType.SPINNING_STATIONARY: self.transition,
-            EventType.ROLLING_STATIONARY: self.transition,
-            EventType.ROLLING_SPINNING: self.transition,
-            EventType.SLIDING_ROLLING: self.transition,
-        }
+    placeholder: str = attrs.field(default="dummy")
 
     @classmethod
     def default(cls) -> Resolver:
-        return cls(
-            null=resolve_null,
-            ball_ball=resolve_ball_ball,
-            ball_linear_cushion=resolve_linear_ball_cushion,
-            ball_circular_cushion=resolve_circular_ball_cushion,
-            ball_pocket=resolve_ball_pocket,
-            stick_ball=resolve_stick_ball,
-            transition=resolve_transition,
-        )
+        return cls()
 
 
 @attrs.define
 class PhysicsEngine:
     resolver: Resolver = attrs.field(factory=Resolver.default)
 
-    def resolve_event(self, shot: System, event: Event) -> None:
-        if event.event_type == EventType.NONE:
-            return
-
-        # The system has evolved since the event was created, so the initial states need
-        # to be snapshotted according to the current state
+    def snapshot_initial(self, shot: System, event: Event) -> None:
+        """Set the initial states of the event agents"""
         for agent in event.agents:
             if agent.agent_type == AgentType.CUE:
                 agent.set_initial(shot.cue)
@@ -261,13 +219,245 @@ class PhysicsEngine:
             elif agent.agent_type == AgentType.CIRCULAR_CUSHION_SEGMENT:
                 agent.set_initial(shot.table.cushion_segments.circular[agent.id])
 
-        event = self.resolver.mapping[event.event_type](event)
-
-        # The final states of the agents are solved, but the system objects still need
-        # to be updated with these states.
+    def snapshot_final(self, shot: System, event: Event) -> None:
+        """Set the final states of the event agents"""
         for agent in event.agents:
-            final = agent.get_final()
-            if isinstance(final, Ball):
-                shot.balls[final.id].state = final.state
-            elif isinstance(final, Pocket):
-                shot.table.pockets[final.id] = final
+            if agent.agent_type == AgentType.BALL:
+                agent.set_final(shot.balls[agent.id])
+            elif agent.agent_type == AgentType.POCKET:
+                agent.set_final(shot.table.pockets[agent.id])
+
+    def resolve_event(self, shot: System, event: Event) -> None:
+        self.snapshot_initial(shot, event)
+
+        ids = event.ids
+
+        if event.event_type == EventType.NONE:
+            return
+        elif event.event_type.is_transition():
+            ball = shot.balls[ids[0]]
+            _ = resolve_transition(ball, event.event_type, inplace=True)
+        elif event.event_type == EventType.BALL_BALL:
+            ball1 = shot.balls[ids[0]]
+            ball2 = shot.balls[ids[1]]
+            _ = resolve_ball_ball(ball1, ball2, inplace=True)
+            ball1.state.t = event.time
+            ball2.state.t = event.time
+        elif event.event_type == EventType.BALL_LINEAR_CUSHION:
+            ball = shot.balls[ids[0]]
+            cushion = shot.table.cushion_segments.linear[ids[1]]
+            _ = resolve_linear_ball_cushion(ball, cushion, inplace=True)
+            ball.state.t = event.time
+        elif event.event_type == EventType.BALL_CIRCULAR_CUSHION:
+            ball = shot.balls[ids[0]]
+            cushion_jaw = shot.table.cushion_segments.circular[ids[1]]
+            _ = resolve_circular_ball_cushion(ball, cushion_jaw, inplace=True)
+            ball.state.t = event.time
+        elif event.event_type == EventType.BALL_POCKET:
+            ball = shot.balls[ids[0]]
+            pocket = shot.table.pockets[ids[1]]
+            _ = resolve_ball_pocket(ball, pocket, inplace=True)
+            ball.state.t = event.time
+        elif event.event_type == EventType.STICK_BALL:
+            cue = shot.cue
+            ball = shot.balls[ids[1]]
+            _ = resolve_stick_ball(cue, ball, inplace=True)
+            ball.state.t = event.time
+
+        self.snapshot_final(shot, event)
+
+
+def _resolve_ball_ball_collision(rvw1, rvw2, R, spacer: bool = True):
+    """Instantaneous, elastic, equal mass collision
+
+    Args:
+        spacer:
+            A correction is made such that if the balls are not 2*R apart, they are
+            moved equally along their line of centers such that they are, at least to
+            within float precision error. That's where this paramter comes in. If spacer
+            is True, a small epsilon of additional distance (constants.EPS_SPACE) is put
+            between them, ensuring the balls are non-intersecting.
+    """
+
+    r1, r2 = rvw1[0], rvw2[0]
+    v1, v2 = rvw1[1], rvw2[1]
+
+    n = math.unit_vector(r2 - r1)
+    t = math.coordinate_rotation(n, np.pi / 2)
+
+    correction = 2 * R - math.norm3d(r2 - r1) + (const.EPS_SPACE if spacer else 0.0)
+    rvw2[0] += correction / 2 * n
+    rvw1[0] -= correction / 2 * n
+
+    v_rel = v1 - v2
+    v_mag = math.norm3d(v_rel)
+
+    beta = math.angle(v_rel, n)
+
+    rvw1[1] = t * v_mag * np.sin(beta) + v2
+    rvw2[1] = n * v_mag * np.cos(beta) + v2
+
+    return rvw1, rvw2
+
+
+def _resolve_ball_linear_cushion_collision(
+    rvw, normal, p1, p2, R, m, h, e_c, f_c, spacer: bool = True
+):
+    """Resolve the ball linear cushion collision
+
+    Args:
+        spacer:
+            A correction is made such that if the ball is not a distance R from the
+            cushion, the ball is moved along the normal such that it is, at least to
+            within float precision error. That's where this paramter comes in. If spacer
+            is True, a small epsilon of additional distance (constants.EPS_SPACE) is put
+            between them, ensuring the cushion and ball are separated post-resolution.
+    """
+    # orient the normal so it points away from playing surface
+    normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
+
+    rvw = _resolve_ball_cushion_collision(rvw, normal, R, m, h, e_c, f_c)
+
+    # Calculate the point on cushion line where contact should be made, then set the
+    # z-component to match the ball's height
+    c = math.point_on_line_closest_to_point(p1, p2, rvw[0])
+    c[2] = rvw[0, 2]
+
+    # Move the ball to meet the cushion
+    correction = R - math.norm3d(rvw[0] - c) + (const.EPS_SPACE if spacer else 0.0)
+    rvw[0] -= correction * normal
+
+    return rvw
+
+
+def _resolve_ball_cushion_collision(rvw, normal, R, m, h, e_c, f_c):
+    """Inhwan Han (2005) 'Dynamics in Carom and Three Cushion Billiards'"""
+
+    # Change from the table frame to the cushion frame. The cushion frame is defined by
+    # the normal vector is parallel with <1,0,0>.
+    psi = math.angle(normal)
+    rvw_R = math.coordinate_rotation(rvw.T, -psi).T
+
+    # The incidence angle--called theta_0 in paper
+    phi = math.angle(rvw_R[1]) % (2 * np.pi)
+
+    # Get mu and e
+    e = get_ball_cushion_restitution(rvw_R, e_c)
+    mu = get_ball_cushion_friction(rvw_R, f_c)
+
+    # Depends on height of cushion relative to ball
+    theta_a = np.arcsin(h / R - 1)
+
+    # Eqs 14
+    sx = rvw_R[1, 0] * np.sin(theta_a) - rvw_R[1, 2] * np.cos(theta_a) + R * rvw_R[2, 1]
+    sy = (
+        -rvw_R[1, 1]
+        - R * rvw_R[2, 2] * np.cos(theta_a)
+        + R * rvw_R[2, 0] * np.sin(theta_a)
+    )
+    c = rvw_R[1, 0] * np.cos(theta_a)  # 2D assumption
+
+    # Eqs 16
+    I = 2 / 5 * m * R**2
+    A = 7 / 2 / m
+    B = 1 / m
+
+    # Eqs 17 & 20
+    PzE = (1 + e) * c / B
+    PzS = np.sqrt(sx**2 + sy**2) / A
+
+    if PzS <= PzE:
+        # Sliding and sticking case
+        PX = -sx / A * np.sin(theta_a) - (1 + e) * c / B * np.cos(theta_a)
+        PY = sy / A
+        PZ = sx / A * np.cos(theta_a) - (1 + e) * c / B * np.sin(theta_a)
+    else:
+        # Forward sliding case
+        PX = -mu * (1 + e) * c / B * np.cos(phi) * np.sin(theta_a) - (
+            1 + e
+        ) * c / B * np.cos(theta_a)
+        PY = mu * (1 + e) * c / B * np.sin(phi)
+        PZ = mu * (1 + e) * c / B * np.cos(phi) * np.cos(theta_a) - (
+            1 + e
+        ) * c / B * np.sin(theta_a)
+
+    # Update velocity
+    rvw_R[1, 0] += PX / m
+    rvw_R[1, 1] += PY / m
+    # rvw_R[1,2] += PZ/m
+
+    # Update angular velocity
+    rvw_R[2, 0] += -R / I * PY * np.sin(theta_a)
+    rvw_R[2, 1] += R / I * (PX * np.sin(theta_a) - PZ * np.cos(theta_a))
+    rvw_R[2, 2] += R / I * PY * np.cos(theta_a)
+
+    # Change back to table reference frame
+    rvw = math.coordinate_rotation(rvw_R.T, psi).T
+
+    return rvw
+
+
+def get_ball_cushion_restitution(rvw, e_c):
+    """Get restitution coefficient dependent on ball state
+
+    Parameters
+    ==========
+    rvw: np.array
+        Assumed to be in reference frame such that <1,0,0> points
+        perpendicular to the cushion, and in the direction away from the table
+
+    Notes
+    =====
+    - https://essay.utwente.nl/59134/1/scriptie_J_van_Balen.pdf suggests a constant
+      value of 0.85
+    """
+
+    return e_c
+    return max([0.40, 0.50 + 0.257 * rvw[1, 0] - 0.044 * rvw[1, 0] ** 2])
+
+
+def get_ball_cushion_friction(rvw, f_c):
+    """Get friction coeffecient depend on ball state
+
+    Parameters
+    ==========
+    rvw: np.array
+        Assumed to be in reference frame such that <1,0,0> points
+        perpendicular to the cushion, and in the direction away from the table
+    """
+
+    ang = math.angle(rvw[1])
+
+    if ang > np.pi:
+        ang = np.abs(2 * np.pi - ang)
+
+    ans = f_c
+    return ans
+
+
+def _resolve_ball_circular_cushion_collision(
+    rvw, normal, center, radius, R, m, h, e_c, f_c, spacer: bool = True
+):
+    """Resolve the ball linear cushion collision
+
+    Args:
+        spacer:
+            A correction is made such that if the ball is not a distance R from the
+            cushion, the ball is moved along the normal such that it is, at least to
+            within float precision error. That's where this paramter comes in. If spacer
+            is True, a small epsilon of additional distance (constants.EPS_SPACE) is put
+            between them, ensuring the cushion and ball are separated post-resolution.
+    """
+    # orient the normal so it points away from playing surface
+    normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
+
+    rvw = _resolve_ball_cushion_collision(rvw, normal, R, m, h, e_c, f_c)
+
+    c = np.array([center[0], center[1], rvw[0, 2]])
+    correction = (
+        R + radius - math.norm3d(rvw[0] - c) - (const.EPS_SPACE if spacer else 0.0)
+    )
+
+    rvw[0] += correction * normal
+
+    return rvw

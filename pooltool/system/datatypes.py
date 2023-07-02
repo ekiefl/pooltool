@@ -71,7 +71,7 @@ class System:
         """
 
         for ball_id, ball in self.balls.items():
-            rvw, s = physics.evolve_ball_motion(
+            rvw, s = physics.evolve_state_motion(
                 state=ball.state.s,
                 rvw=ball.state.rvw,
                 R=ball.params.R,
