@@ -4,7 +4,6 @@ import attrs
 
 from pooltool.events.datatypes import AgentType, Event, EventType
 from pooltool.physics.resolve import Resolver
-from pooltool.physics.resolve.ball_ball import resolve_ball_ball
 from pooltool.physics.resolve.ball_cushion import (
     resolve_circular_ball_cushion,
     resolve_linear_ball_cushion,
@@ -54,7 +53,7 @@ class PhysicsEngine:
         elif event.event_type == EventType.BALL_BALL:
             ball1 = shot.balls[ids[0]]
             ball2 = shot.balls[ids[1]]
-            _ = resolve_ball_ball(ball1, ball2, inplace=True)
+            _ = self.resolver.ball_ball.resolve(ball1, ball2, inplace=True)
             ball1.state.t = event.time
             ball2.state.t = event.time
         elif event.event_type == EventType.BALL_LINEAR_CUSHION:

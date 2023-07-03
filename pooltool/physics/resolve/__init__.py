@@ -1,13 +1,26 @@
 from __future__ import annotations
 
+from typing import Protocol, Tuple
+
 import attrs
+
+from pooltool.objects.ball.datatypes import Ball
+from pooltool.physics.resolve.ball_ball import BALL_BALL_DEFAULT
+
+
+class BallBallCollisionStrategy(Protocol):
+    def resolve(
+        self, ball1: Ball, ball2: Ball, inplace: bool = False
+    ) -> Tuple[Ball, Ball]:
+        ...
 
 
 @attrs.define
 class Resolver:
-    # TODO This class will manage the physics strategies used for each event type
-    placeholder: str = attrs.field(default="dummy")
+    ball_ball: BallBallCollisionStrategy
 
     @classmethod
     def default(cls) -> Resolver:
-        return cls()
+        return Resolver(
+            ball_ball=BALL_BALL_DEFAULT,
+        )
