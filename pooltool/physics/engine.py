@@ -10,7 +10,6 @@ from pooltool.physics.resolve.ball_cushion import (
 )
 from pooltool.physics.resolve.ball_pocket import resolve_ball_pocket
 from pooltool.physics.resolve.stick_ball import resolve_stick_ball
-from pooltool.physics.resolve.transition import resolve_transition
 from pooltool.system.datatypes import System
 
 
@@ -49,7 +48,7 @@ class PhysicsEngine:
             return
         elif event.event_type.is_transition():
             ball = shot.balls[ids[0]]
-            _ = resolve_transition(ball, event.event_type, inplace=True)
+            _ = self.resolver.transition.resolve(ball, event.event_type, inplace=True)
         elif event.event_type == EventType.BALL_BALL:
             ball1 = shot.balls[ids[0]]
             ball2 = shot.balls[ids[1]]

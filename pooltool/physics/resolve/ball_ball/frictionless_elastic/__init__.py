@@ -14,9 +14,9 @@ def _resolve_ball_ball(rvw1, rvw2, R, spacer: bool = True):
         spacer:
             A correction is made such that if the balls are not 2*R apart, they are
             moved equally along their line of centers such that they are, at least to
-            within float precision error. That's where this paramter comes in. If spacer
-            is True, a small epsilon of additional distance (constants.EPS_SPACE) is put
-            between them, ensuring the balls are non-intersecting.
+            within float precision error. That's where this parameter comes in. If
+            spacer is True, a small epsilon of additional distance (constants.EPS_SPACE)
+            is put between them, ensuring the balls are non-intersecting.
     """
 
     r1, r2 = rvw1[0], rvw2[0]
