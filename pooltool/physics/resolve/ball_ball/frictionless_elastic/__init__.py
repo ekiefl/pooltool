@@ -1,6 +1,5 @@
 from typing import Tuple
 
-import attrs
 import numpy as np
 
 import pooltool.constants as c
