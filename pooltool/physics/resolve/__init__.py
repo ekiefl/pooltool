@@ -9,12 +9,14 @@ from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
     CircularCushionSegment,
     LinearCushionSegment,
+    Pocket,
 )
 from pooltool.physics.resolve.ball_ball import BALL_BALL_DEFAULT
 from pooltool.physics.resolve.ball_cushion import (
     BALL_CIRCULAR_CUSHION_DEFAULT,
     BALL_LINEAR_CUSHION_DEFAULT,
 )
+from pooltool.physics.resolve.ball_pocket import BALL_POCKET_DEFAULT
 from pooltool.physics.resolve.transition import TRANSITION_DEFAULT
 
 
@@ -27,6 +29,13 @@ class BallBallCollisionStrategy(Protocol):
 
 class BallTransitionStrategy(Protocol):
     def resolve(self, ball: Ball, transition: EventType, inplace: bool = False) -> Ball:
+        ...
+
+
+class BallPocketStrategy(Protocol):
+    def resolve(
+        self, ball: Ball, pocket: Pocket, inplace: bool = False
+    ) -> Tuple[Ball, Pocket]:
         ...
 
 
@@ -49,6 +58,7 @@ class Resolver:
     ball_ball: BallBallCollisionStrategy
     ball_linear_cushion: BallLinearCushionCollisionStrategy
     ball_circular_cushion: BallCircularCushionCollisionStrategy
+    ball_pocket: BallPocketStrategy
     transition: BallTransitionStrategy
 
     @classmethod
@@ -57,5 +67,6 @@ class Resolver:
             ball_ball=BALL_BALL_DEFAULT,
             ball_linear_cushion=BALL_LINEAR_CUSHION_DEFAULT,
             ball_circular_cushion=BALL_CIRCULAR_CUSHION_DEFAULT,
+            ball_pocket=BALL_POCKET_DEFAULT,
             transition=TRANSITION_DEFAULT,
         )

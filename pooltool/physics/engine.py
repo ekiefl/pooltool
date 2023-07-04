@@ -4,7 +4,6 @@ import attrs
 
 from pooltool.events.datatypes import AgentType, Event, EventType
 from pooltool.physics.resolve import Resolver
-from pooltool.physics.resolve.ball_pocket import resolve_ball_pocket
 from pooltool.physics.resolve.stick_ball import resolve_stick_ball
 from pooltool.system.datatypes import System
 
@@ -66,7 +65,7 @@ class PhysicsEngine:
         elif event.event_type == EventType.BALL_POCKET:
             ball = shot.balls[ids[0]]
             pocket = shot.table.pockets[ids[1]]
-            _ = resolve_ball_pocket(ball, pocket, inplace=True)
+            _ = self.resolver.ball_pocket.resolve(ball, pocket, inplace=True)
             ball.state.t = event.time
         elif event.event_type == EventType.STICK_BALL:
             cue = shot.cue
