@@ -133,7 +133,7 @@ def simulate(
             time=0,
             set_initial=True,
         )
-        engine.resolve_event(shot, event)
+        engine.resolver.resolve(shot, event)
         shot.update_history(event)
 
     transition_cache = TransitionCache.create(shot)
@@ -150,7 +150,7 @@ def simulate(
         shot.evolve(event.time - shot.t)
 
         if event.event_type in include:
-            engine.resolve_event(shot, event)
+            engine.resolver.resolve(shot, event)
             transition_cache.update(event)
 
         shot.update_history(event)
