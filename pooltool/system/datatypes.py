@@ -179,7 +179,7 @@ class System:
         config: PottingConfig = PottingConfig.default(),
     ):
         """Set phi to pot a given ball into a given pocket"""
-        assert self.cue.cue_ball_id
+        assert self.cue.cue_ball_id in self.balls
 
         self.cue.set_state(
             phi=config.calculate_angle(
@@ -193,7 +193,7 @@ class System:
         self, ball_id: str, config: PottingConfig = PottingConfig.default()
     ):
         """Set phi to pot a given ball into the best/easiest pocket"""
-        assert self.cue.cue_ball_id
+        assert self.cue.cue_ball_id in self.balls
 
         cue_ball = self.balls[self.cue.cue_ball_id]
         object_ball = self.balls[ball_id]
