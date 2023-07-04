@@ -100,19 +100,18 @@ class Agent:
         else:
             self.initial = obj.copy()
 
-    def get_initial(self) -> Optional[Object]:
-        """Return a copy of the object post-event"""
-        if self.initial is None:
-            return None
+    def set_final(self, obj: Object) -> None:
+        """Set the object's state post-event"""
+        if self.agent_type == AgentType.NULL:
+            return
 
-        return self.initial.copy()
-
-    def get_final(self) -> Optional[Object]:
-        """Return a copy of the object post-event"""
-        if self.final is None:
-            return None
-
-        return self.final.copy()
+        if self.agent_type == AgentType.BALL:
+            # In this special case, we drop history fields prior to copying because they
+            # are potentially huge and copying them is expensive
+            assert isinstance(obj, Ball)
+            self.final = obj.copy(drop_history=True)
+        else:
+            self.final = obj.copy()
 
     def matches(self, obj: Object) -> bool:
         """Returns whether a given object matches the agent
@@ -186,30 +185,18 @@ class Event:
     agents: Tuple[Agent, ...]
     time: float
 
-    @property
-    def ids(self) -> Tuple[str, ...]:
-        return tuple(agent.id for agent in self.agents)
-
-    @property
-    def initial(self) -> Tuple[Optional[Object], ...]:
-        return tuple(agent.get_initial() for agent in self.agents)
-
-    @property
-    def final(self) -> Tuple[Optional[Object], ...]:
-        return tuple(agent.get_final() for agent in self.agents)
-
     def __repr__(self):
-        agents = [
-            (agent.initial.id if agent.initial is not None else None)
-            for agent in self.agents
-        ]
         lines = [
             f"<{self.__class__.__name__} object at {hex(id(self))}>",
             f" ├── type   : {self.event_type}",
-            f" ├── time   : {self.time:.9f}",
-            f" └── agents : {agents}",
+            f" ├── time   : {self.time}",
+            f" └── agents : {self.ids}",
         ]
         return "\n".join(lines) + "\n"
+
+    @property
+    def ids(self) -> Tuple[str, ...]:
+        return tuple(agent.id for agent in self.agents)
 
     def copy(self) -> Event:
         """Create a deepcopy"""

@@ -20,11 +20,11 @@ from pooltool.events import (
     ball_linear_cushion_collision,
     ball_pocket_collision,
     null_event,
-    resolve_event,
     rolling_spinning_transition,
     rolling_stationary_transition,
     sliding_rolling_transition,
     spinning_stationary_transition,
+    stick_ball_collision,
 )
 from pooltool.evolution.continuize import continuize
 from pooltool.evolution.event_based import solve
@@ -36,11 +36,13 @@ from pooltool.objects.table.components import (
     LinearCushionSegment,
     Pocket,
 )
+from pooltool.physics.engine import PhysicsEngine
 from pooltool.system.datatypes import System
 
 
 def simulate(
     shot: System,
+    engine: Optional[PhysicsEngine] = None,
     inplace: bool = False,
     continuous: bool = False,
     dt: Optional[float] = None,
@@ -116,8 +118,23 @@ def simulate(
     if not inplace:
         shot = shot.copy()
 
+    if not engine:
+        engine = PhysicsEngine()
+
     shot.reset_history()
     shot.update_history(null_event(time=0))
+
+    if shot.get_system_energy() == 0 and shot.cue.V0 > 0:
+        # System has no energy, but the cue stick has an impact velocity. So create and
+        # resolve a stick-ball collision to start things off
+        event = stick_ball_collision(
+            stick=shot.cue,
+            ball=shot.balls[shot.cue.cue_ball_id],
+            time=0,
+            set_initial=True,
+        )
+        engine.resolve_event(shot, event)
+        shot.update_history(event)
 
     transition_cache = TransitionCache.create(shot)
 
@@ -133,7 +150,7 @@ def simulate(
         shot.evolve(event.time - shot.t)
 
         if event.event_type in include:
-            resolve_event_and_update_system(shot, event)
+            engine.resolve_event(shot, event)
             transition_cache.update(event)
 
         shot.update_history(event)
@@ -146,36 +163,6 @@ def simulate(
         continuize(shot, dt=0.01 if dt is None else dt, inplace=True)
 
     return shot
-
-
-def resolve_event_and_update_system(shot: System, event: Event) -> None:
-    if event.event_type == EventType.NONE:
-        return
-
-    # The system has evolved since the event was created, so the initial states need to
-    # be snapshotted according to the current state
-    for agent in event.agents:
-        if agent.agent_type == AgentType.CUE:
-            agent.set_initial(shot.cue)
-        elif agent.agent_type == AgentType.BALL:
-            agent.set_initial(shot.balls[agent.id])
-        elif agent.agent_type == AgentType.POCKET:
-            agent.set_initial(shot.table.pockets[agent.id])
-        elif agent.agent_type == AgentType.LINEAR_CUSHION_SEGMENT:
-            agent.set_initial(shot.table.cushion_segments.linear[agent.id])
-        elif agent.agent_type == AgentType.CIRCULAR_CUSHION_SEGMENT:
-            agent.set_initial(shot.table.cushion_segments.circular[agent.id])
-
-    event = resolve_event(event)
-
-    # The final states of the agents are solved, but the system objects still need to be
-    # updated with these states.
-    for agent in event.agents:
-        final = agent.get_final()
-        if isinstance(final, Ball):
-            shot.balls[final.id].state = final.state
-        elif isinstance(final, Pocket):
-            shot.table.pockets[final.id] = final
 
 
 def get_next_event(
