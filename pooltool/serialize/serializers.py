@@ -1,9 +1,11 @@
 import json
 from pathlib import Path
-import yaml
+from typing import Any, Callable, Dict, Union
+
 import msgpack
 import msgpack_numpy as m
-from typing import Union, Any, Dict, Callable
+import yaml
+
 from pooltool.utils.strenum import StrEnum, auto
 
 Pathish = Union[str, Path]
@@ -21,7 +23,7 @@ class SerializeFormat(StrEnum):
 
 def to_json(o: Any, path: Pathish) -> None:
     with open(path, "w") as fp:
-        json.dump(o, fp)
+        json.dump(o, fp, indent=2)
 
 
 def from_json(path: Pathish) -> Any:
