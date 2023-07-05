@@ -1,71 +1,38 @@
 from __future__ import annotations
 
-from typing import Protocol, Tuple
-
 import attrs
 
 from pooltool.events.datatypes import AgentType, Event, EventType
-from pooltool.objects.ball.datatypes import Ball
-from pooltool.objects.cue.datatypes import Cue
-from pooltool.objects.table.components import (
-    CircularCushionSegment,
-    LinearCushionSegment,
-    Pocket,
+from pooltool.physics.resolve.ball_ball import (
+    BallBallCollisionStrategy,
+    get_ball_ball_model,
 )
-from pooltool.physics.resolve.ball_ball import BALL_BALL_DEFAULT
 from pooltool.physics.resolve.ball_cushion import (
-    BALL_CIRCULAR_CUSHION_DEFAULT,
-    BALL_LINEAR_CUSHION_DEFAULT,
+    BallCCushionCollisionStrategy,
+    BallLCushionCollisionStrategy,
+    get_ball_circ_cushion_model,
+    get_ball_lin_cushion_model,
 )
-from pooltool.physics.resolve.ball_pocket import BALL_POCKET_DEFAULT
-from pooltool.physics.resolve.stick_ball import STICK_BALL_DEFAULT
-from pooltool.physics.resolve.transition import TRANSITION_DEFAULT
+from pooltool.physics.resolve.ball_pocket import (
+    BallPocketStrategy,
+    get_ball_pocket_model,
+)
+from pooltool.physics.resolve.stick_ball import (
+    StickBallCollisionStrategy,
+    get_stick_ball_model,
+)
+from pooltool.physics.resolve.transition import (
+    BallTransitionStrategy,
+    get_transition_model,
+)
 from pooltool.system.datatypes import System
-
-
-class BallBallCollisionStrategy(Protocol):
-    def resolve(
-        self, ball1: Ball, ball2: Ball, inplace: bool = False
-    ) -> Tuple[Ball, Ball]:
-        ...
-
-
-class BallTransitionStrategy(Protocol):
-    def resolve(self, ball: Ball, transition: EventType, inplace: bool = False) -> Ball:
-        ...
-
-
-class BallPocketStrategy(Protocol):
-    def resolve(
-        self, ball: Ball, pocket: Pocket, inplace: bool = False
-    ) -> Tuple[Ball, Pocket]:
-        ...
-
-
-class BallLinearCushionCollisionStrategy(Protocol):
-    def resolve(
-        self, ball: Ball, cushion: LinearCushionSegment, inplace: bool = False
-    ) -> Tuple[Ball, LinearCushionSegment]:
-        ...
-
-
-class BallCircularCushionCollisionStrategy(Protocol):
-    def resolve(
-        self, ball: Ball, cushion: CircularCushionSegment, inplace: bool = False
-    ) -> Tuple[Ball, CircularCushionSegment]:
-        ...
-
-
-class StickBallCollisionStrategy(Protocol):
-    def resolve(self, cue: Cue, ball: Ball, inplace: bool = False) -> Tuple[Cue, Ball]:
-        ...
 
 
 @attrs.define
 class Resolver:
     ball_ball: BallBallCollisionStrategy
-    ball_linear_cushion: BallLinearCushionCollisionStrategy
-    ball_circular_cushion: BallCircularCushionCollisionStrategy
+    ball_linear_cushion: BallLCushionCollisionStrategy
+    ball_circular_cushion: BallCCushionCollisionStrategy
     ball_pocket: BallPocketStrategy
     stick_ball: StickBallCollisionStrategy
     transition: BallTransitionStrategy
@@ -113,12 +80,12 @@ class Resolver:
     @classmethod
     def default(cls) -> Resolver:
         return cls(
-            ball_ball=BALL_BALL_DEFAULT,
-            ball_linear_cushion=BALL_LINEAR_CUSHION_DEFAULT,
-            ball_circular_cushion=BALL_CIRCULAR_CUSHION_DEFAULT,
-            ball_pocket=BALL_POCKET_DEFAULT,
-            stick_ball=STICK_BALL_DEFAULT,
-            transition=TRANSITION_DEFAULT,
+            ball_ball=get_ball_ball_model(),
+            ball_linear_cushion=get_ball_lin_cushion_model(),
+            ball_circular_cushion=get_ball_circ_cushion_model(),
+            ball_pocket=get_ball_pocket_model(),
+            stick_ball=get_stick_ball_model(),
+            transition=get_transition_model(),
         )
 
 
