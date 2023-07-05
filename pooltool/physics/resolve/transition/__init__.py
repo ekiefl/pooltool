@@ -5,6 +5,7 @@ import numpy as np
 import pooltool.constants as const
 from pooltool.events.datatypes import EventType
 from pooltool.objects.ball.datatypes import Ball
+from pooltool.physics.resolve.types import ModelArgs
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -76,9 +77,11 @@ TRANSITION_DEFAULT = CanonicalTransition()
 
 def get_transition_model(
     model: Optional[BallTransitionModel] = None,
+    params: ModelArgs = {},
 ) -> BallTransitionStrategy:
     if model is None:
         return TRANSITION_DEFAULT
 
+    assert not len(params)
     assert model == BallTransitionModel.CANONICAL
     return CanonicalTransition()

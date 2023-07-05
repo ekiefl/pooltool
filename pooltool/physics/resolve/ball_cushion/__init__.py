@@ -9,6 +9,7 @@ from pooltool.physics.resolve.ball_cushion.han_2005 import (
     Han2005Circular,
     Han2005Linear,
 )
+from pooltool.physics.resolve.types import ModelArgs
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -48,18 +49,18 @@ BALL_CIRCULAR_CUSHION_DEFAULT = Han2005Circular()
 
 
 def get_ball_lin_cushion_model(
-    model: Optional[BallLCushionModel] = None, **kwargs
+    model: Optional[BallLCushionModel] = None, params: ModelArgs = {}
 ) -> BallLCushionCollisionStrategy:
     if model is None:
         return BALL_LINEAR_CUSHION_DEFAULT
 
-    return _ball_lcushion_models[model](**kwargs)
+    return _ball_lcushion_models[model](**params)
 
 
 def get_ball_circ_cushion_model(
-    model: Optional[BallCCushionModel] = None, **kwargs
+    model: Optional[BallCCushionModel] = None, params: ModelArgs = {}
 ) -> BallCCushionCollisionStrategy:
     if model is None:
         return BALL_CIRCULAR_CUSHION_DEFAULT
 
-    return _ball_ccushion_models[model](**kwargs)
+    return _ball_ccushion_models[model](**params)

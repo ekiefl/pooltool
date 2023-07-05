@@ -7,3 +7,4 @@ black
 isort
 types-Pillow
 twine
+types-PyYAML

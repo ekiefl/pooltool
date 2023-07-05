@@ -5,6 +5,7 @@ import numpy as np
 import pooltool.constants as const
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.table.components import Pocket
+from pooltool.physics.resolve.types import ModelArgs
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -46,10 +47,11 @@ BALL_POCKET_DEFAULT = CanonicalBallPocket()
 
 
 def get_ball_pocket_model(
-    model: Optional[BallPocketModel] = None,
+    model: Optional[BallPocketModel] = None, params: ModelArgs = {}
 ) -> BallPocketStrategy:
     if model is None:
         return BALL_POCKET_DEFAULT
 
+    assert not len(params)
     assert model == BallPocketModel.CANONICAL
     return CanonicalBallPocket()
