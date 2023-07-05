@@ -169,7 +169,7 @@ def linear_han2005(rvw, normal, p1, p2, R, m, h, e_c, f_c, spacer: bool = True):
 def circular_han2005(
     rvw, normal, center, radius, R, m, h, e_c, f_c, spacer: bool = True
 ):
-    """Resolve the ball linear cushion collision
+    """Resolve the ball circular cushion collision
 
     Args:
         spacer:
