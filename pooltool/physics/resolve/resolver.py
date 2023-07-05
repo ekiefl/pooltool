@@ -1,31 +1,77 @@
 from __future__ import annotations
 
+from pathlib import Path
+from typing import Dict, Union
+
 import attrs
 
 from pooltool.events.datatypes import AgentType, Event, EventType
 from pooltool.physics.resolve.ball_ball import (
     BallBallCollisionStrategy,
+    BallBallModel,
     get_ball_ball_model,
 )
 from pooltool.physics.resolve.ball_cushion import (
     BallCCushionCollisionStrategy,
+    BallCCushionModel,
     BallLCushionCollisionStrategy,
+    BallLCushionModel,
     get_ball_circ_cushion_model,
     get_ball_lin_cushion_model,
 )
 from pooltool.physics.resolve.ball_pocket import (
+    BallPocketModel,
     BallPocketStrategy,
     get_ball_pocket_model,
 )
 from pooltool.physics.resolve.stick_ball import (
     StickBallCollisionStrategy,
+    StickBallModel,
     get_stick_ball_model,
 )
 from pooltool.physics.resolve.transition import (
+    BallTransitionModel,
     BallTransitionStrategy,
     get_transition_model,
 )
+from pooltool.serialize import Pathish, conversion
 from pooltool.system.datatypes import System
+
+ArgType = Union[float, int, str, bool]
+ModelArgs = Dict[str, ArgType]
+
+# Leave type-casting to the JSON/YAML serializer
+conversion.register_structure_hook(cl=ArgType, func=lambda d, t: d)
+
+
+@attrs.define
+class ResolverConfig:
+    ball_ball: BallBallModel
+    ball_ball_kwargs: ModelArgs
+
+    ball_linear_cushion: BallLCushionModel
+    ball_linear_cushion_kwargs: ModelArgs
+
+    ball_circular_cushion: BallCCushionModel
+    ball_circular_cushion_kwargs: ModelArgs
+
+    ball_pocket: BallPocketModel
+    ball_pocket_kwargs: ModelArgs
+
+    stick_ball: StickBallModel
+    stick_ball_kwargs: ModelArgs
+
+    transition: BallTransitionModel
+    transition_kwargs: ModelArgs
+
+    @classmethod
+    def load(cls, path: Pathish) -> ResolverConfig:
+        return conversion.structure_from(path, cls)
+
+    def save(self, path: Pathish) -> Path:
+        path = Path(path)
+        conversion.unstructure_to(self, path)
+        return path
 
 
 @attrs.define
@@ -86,6 +132,47 @@ class Resolver:
             ball_pocket=get_ball_pocket_model(),
             stick_ball=get_stick_ball_model(),
             transition=get_transition_model(),
+        )
+
+    @classmethod
+    def from_config(cls, config: ResolverConfig) -> Resolver:
+        ball_ball = get_ball_ball_model(
+            model=config.ball_ball,
+            **config.ball_ball_kwargs,
+        )
+
+        ball_linear_cushion = get_ball_lin_cushion_model(
+            model=config.ball_linear_cushion,
+            **config.ball_linear_cushion_kwargs,
+        )
+
+        ball_circular_cushion = get_ball_circ_cushion_model(
+            model=config.ball_circular_cushion,
+            **config.ball_circular_cushion_kwargs,
+        )
+
+        ball_pocket = get_ball_pocket_model(
+            model=config.ball_pocket,
+            **config.ball_pocket_kwargs,
+        )
+
+        stick_ball = get_stick_ball_model(
+            model=config.stick_ball,
+            **config.stick_ball_kwargs,
+        )
+
+        transition = get_transition_model(
+            model=config.transition,
+            **config.transition_kwargs,
+        )
+
+        return cls(
+            ball_ball,
+            ball_linear_cushion,
+            ball_circular_cushion,
+            ball_pocket,
+            stick_ball,
+            transition,
         )
 
 

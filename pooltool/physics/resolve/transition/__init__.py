@@ -67,7 +67,7 @@ def _ball_transition_motion_states(event_type: EventType) -> Tuple[int, int]:
     raise NotImplementedError()
 
 
-class TransitionModel(StrEnum):
+class BallTransitionModel(StrEnum):
     CANONICAL = auto()
 
 
@@ -75,10 +75,10 @@ TRANSITION_DEFAULT = CanonicalTransition()
 
 
 def get_transition_model(
-    model: Optional[TransitionModel] = None,
+    model: Optional[BallTransitionModel] = None,
 ) -> BallTransitionStrategy:
     if model is None:
         return TRANSITION_DEFAULT
 
-    assert model == TransitionModel.CANONICAL
+    assert model == BallTransitionModel.CANONICAL
     return CanonicalTransition()
