@@ -138,16 +138,14 @@ def base_han2005(rvw, normal, R, m, h, e_c, f_c):
     return rvw
 
 
-def linear_han2005(rvw, normal, p1, p2, R, m, h, e_c, f_c, spacer: bool = True):
+def linear_han2005(rvw, normal, p1, p2, R, m, h, e_c, f_c):
     """Resolve the ball linear cushion collision
 
-    Args:
-        spacer:
-            A correction is made such that if the ball is not a distance R from the
-            cushion, the ball is moved along the normal such that it is, at least to
-            within float precision error. That's where this paramter comes in. If spacer
-            is True, a small epsilon of additional distance (constants.EPS_SPACE) is put
-            between them, ensuring the cushion and ball are separated post-resolution.
+    NOTE A correction is made such that if the ball is not a distance R from the
+    cushion, the ball is moved along the normal such that it is. To avoid float
+    precision round-off error, a small epsilon of additional distance
+    (constants.EPS_SPACE) is put between them, ensuring the cushion and ball are
+    separated post-resolution.
     """
     # orient the normal so it points away from playing surface
     normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
@@ -160,24 +158,20 @@ def linear_han2005(rvw, normal, p1, p2, R, m, h, e_c, f_c, spacer: bool = True):
     c[2] = rvw[0, 2]
 
     # Move the ball to exactly meet the cushion
-    correction = R - math.norm3d(rvw[0] - c) + (const.EPS_SPACE if spacer else 0.0)
+    correction = R - math.norm3d(rvw[0] - c) + const.EPS_SPACE
     rvw[0] -= correction * normal
 
     return rvw
 
 
-def circular_han2005(
-    rvw, normal, center, radius, R, m, h, e_c, f_c, spacer: bool = True
-):
+def circular_han2005(rvw, normal, center, radius, R, m, h, e_c, f_c):
     """Resolve the ball circular cushion collision
 
-    Args:
-        spacer:
-            A correction is made such that if the ball is not a distance R from the
-            cushion, the ball is moved along the normal such that it is, at least to
-            within float precision error. That's where this paramter comes in. If spacer
-            is True, a small epsilon of additional distance (constants.EPS_SPACE) is put
-            between them, ensuring the cushion and ball are separated post-resolution.
+    NOTE A correction is made such that if the ball is not a distance R from the
+    cushion, the ball is moved along the normal such that it is. To avoid float
+    precision round-off error, a small epsilon of additional distance
+    (constants.EPS_SPACE) is put between them, ensuring the cushion and ball are
+    separated post-resolution.
     """
     # orient the normal so it points away from playing surface
     normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
@@ -185,9 +179,7 @@ def circular_han2005(
     rvw = base_han2005(rvw, normal, R, m, h, e_c, f_c)
 
     c = np.array([center[0], center[1], rvw[0, 2]])
-    correction = (
-        R + radius - math.norm3d(rvw[0] - c) - (const.EPS_SPACE if spacer else 0.0)
-    )
+    correction = R + radius - math.norm3d(rvw[0] - c) - const.EPS_SPACE
 
     rvw[0] += correction * normal
 
