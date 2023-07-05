@@ -116,7 +116,7 @@ def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> Syste
                 # evolve the system from this state.
                 for agent in events[count].agents:
                     if agent.matches(ball):
-                        state = agent.final.state.copy()
+                        state = agent.final.state.copy()  # type: ignore
                         break
                 else:
                     raise ValueError("No agents in event match ball")
