@@ -5,6 +5,7 @@ from typing import Dict, Union
 
 import attrs
 
+import pooltool.user_config
 from pooltool.events.datatypes import AgentType, Event, EventType
 from pooltool.physics.resolve.ball_ball import (
     BallBallCollisionStrategy,
@@ -43,35 +44,56 @@ ModelArgs = Dict[str, ArgType]
 # Leave type-casting to the JSON/YAML serializer
 conversion.register_structure_hook(cl=ArgType, func=lambda d, t: d)
 
+RESOLVER_CONFIG_PATH = pooltool.user_config.PHYSICS_DIR / "resolver.json"
+
 
 @attrs.define
 class ResolverConfig:
     ball_ball: BallBallModel
     ball_ball_kwargs: ModelArgs
-
     ball_linear_cushion: BallLCushionModel
     ball_linear_cushion_kwargs: ModelArgs
-
     ball_circular_cushion: BallCCushionModel
     ball_circular_cushion_kwargs: ModelArgs
-
     ball_pocket: BallPocketModel
     ball_pocket_kwargs: ModelArgs
-
     stick_ball: StickBallModel
     stick_ball_kwargs: ModelArgs
-
     transition: BallTransitionModel
     transition_kwargs: ModelArgs
-
-    @classmethod
-    def load(cls, path: Pathish) -> ResolverConfig:
-        return conversion.structure_from(path, cls)
 
     def save(self, path: Pathish) -> Path:
         path = Path(path)
         conversion.unstructure_to(self, path)
         return path
+
+    @classmethod
+    def load(cls, path: Pathish) -> ResolverConfig:
+        return conversion.structure_from(path, cls)
+
+    @classmethod
+    def default(cls) -> ResolverConfig:
+        """Load ~/.config/pooltool/physics/resolver.json if exists, create otherwise"""
+        if RESOLVER_CONFIG_PATH.exists():
+            return cls.load(RESOLVER_CONFIG_PATH)
+
+        config = cls(
+            ball_ball=BallBallModel.FRICTIONLESS_ELASTIC,
+            ball_ball_kwargs={},
+            ball_linear_cushion=BallLCushionModel.HAN_2005,
+            ball_linear_cushion_kwargs={},
+            ball_circular_cushion=BallCCushionModel.HAN_2005,
+            ball_circular_cushion_kwargs={},
+            ball_pocket=BallPocketModel.CANONICAL,
+            ball_pocket_kwargs={},
+            stick_ball=StickBallModel.INSTANTANEOUS_POINT,
+            stick_ball_kwargs={},
+            transition=BallTransitionModel.CANONICAL,
+            transition_kwargs={},
+        )
+
+        config.save(RESOLVER_CONFIG_PATH)
+        return config
 
 
 @attrs.define
@@ -125,14 +147,7 @@ class Resolver:
 
     @classmethod
     def default(cls) -> Resolver:
-        return cls(
-            ball_ball=get_ball_ball_model(),
-            ball_linear_cushion=get_ball_lin_cushion_model(),
-            ball_circular_cushion=get_ball_circ_cushion_model(),
-            ball_pocket=get_ball_pocket_model(),
-            stick_ball=get_stick_ball_model(),
-            transition=get_transition_model(),
-        )
+        return cls.from_config(ResolverConfig.default())
 
     @classmethod
     def from_config(cls, config: ResolverConfig) -> Resolver:
@@ -140,32 +155,26 @@ class Resolver:
             model=config.ball_ball,
             **config.ball_ball_kwargs,
         )
-
         ball_linear_cushion = get_ball_lin_cushion_model(
             model=config.ball_linear_cushion,
             **config.ball_linear_cushion_kwargs,
         )
-
         ball_circular_cushion = get_ball_circ_cushion_model(
             model=config.ball_circular_cushion,
             **config.ball_circular_cushion_kwargs,
         )
-
         ball_pocket = get_ball_pocket_model(
             model=config.ball_pocket,
             **config.ball_pocket_kwargs,
         )
-
         stick_ball = get_stick_ball_model(
             model=config.stick_ball,
             **config.stick_ball_kwargs,
         )
-
         transition = get_transition_model(
             model=config.transition,
             **config.transition_kwargs,
         )
-
         return cls(
             ball_ball,
             ball_linear_cushion,
