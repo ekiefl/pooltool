@@ -1,16 +1,9 @@
-from typing import Dict, Optional, Protocol, Tuple, Type
+from typing import Dict, Optional, Type
 
-from pooltool.objects.ball.datatypes import Ball
+from pooltool.physics.resolve.ball_ball.core import BallBallCollisionStrategy
 from pooltool.physics.resolve.ball_ball.frictionless_elastic import FrictionlessElastic
 from pooltool.physics.resolve.types import ModelArgs
 from pooltool.utils.strenum import StrEnum, auto
-
-
-class BallBallCollisionStrategy(Protocol):
-    def resolve(
-        self, ball1: Ball, ball2: Ball, inplace: bool = False
-    ) -> Tuple[Ball, Ball]:
-        ...
 
 
 class BallBallModel(StrEnum):
@@ -20,7 +13,6 @@ class BallBallModel(StrEnum):
 _ball_ball_models: Dict[BallBallModel, Type[BallBallCollisionStrategy]] = {
     BallBallModel.FRICTIONLESS_ELASTIC: FrictionlessElastic,
 }
-
 
 BALL_BALL_DEFAULT = FrictionlessElastic()
 
