@@ -1,15 +1,9 @@
-from typing import Dict, Optional, Protocol, Tuple, Type
+from typing import Dict, Optional, Type
 
-from pooltool.objects.ball.datatypes import Ball
-from pooltool.objects.cue.datatypes import Cue
+from pooltool.physics.resolve.stick_ball.core import StickBallCollisionStrategy
 from pooltool.physics.resolve.stick_ball.instantaneous_point import InstantaneousPoint
 from pooltool.physics.resolve.types import ModelArgs
 from pooltool.utils.strenum import StrEnum, auto
-
-
-class StickBallCollisionStrategy(Protocol):
-    def resolve(self, cue: Cue, ball: Ball, inplace: bool = False) -> Tuple[Cue, Ball]:
-        ...
 
 
 class StickBallModel(StrEnum):

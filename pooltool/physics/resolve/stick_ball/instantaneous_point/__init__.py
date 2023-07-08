@@ -6,6 +6,7 @@ import pooltool.constants as const
 import pooltool.math as math
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.cue.datatypes import Cue
+from pooltool.physics.resolve.stick_ball.core import CoreStickBallCollision
 
 
 def cue_strike(m, M, R, V0, phi, theta, a, b):
@@ -102,12 +103,8 @@ def cue_strike(m, M, R, V0, phi, theta, a, b):
     return v_T, w_T
 
 
-class InstantaneousPoint:
-    def resolve(self, cue: Cue, ball: Ball, inplace: bool = False) -> Tuple[Cue, Ball]:
-        if not inplace:
-            cue = cue.copy()
-            ball = ball.copy()
-
+class InstantaneousPoint(CoreStickBallCollision):
+    def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]:
         v, w = cue_strike(
             ball.params.m,
             cue.specs.M,
