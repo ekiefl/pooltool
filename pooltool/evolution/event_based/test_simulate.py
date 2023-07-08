@@ -4,7 +4,7 @@ from numpy.typing import NDArray
 
 import pooltool.constants as const
 import pooltool.math as math
-import pooltool.physics as physics
+import pooltool.physics.utils as physics_utils
 from pooltool.events import EventType, ball_ball_collision, ball_pocket_collision
 from pooltool.evolution.event_based.simulate import (
     get_next_ball_ball_collision,
@@ -229,7 +229,7 @@ def test_case4(solver: quartic.QuarticSolver):
 
 
 def _assert_rolling(rvw: NDArray[np.float64], R: float) -> None:
-    assert np.isclose(physics.rel_velocity(rvw, R), 0).all()
+    assert np.isclose(physics_utils.rel_velocity(rvw, R), 0).all()
 
 
 @pytest.mark.parametrize(

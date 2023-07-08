@@ -1,4 +1,4 @@
-import pooltool.physics as physics
+import pooltool.physics.evolve as evolve
 from pooltool.events import filter_ball
 from pooltool.objects.ball.datatypes import BallHistory, BallState
 from pooltool.system.datatypes import System
@@ -129,7 +129,7 @@ def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> Syste
 
             # Whether it was the hard path or the easy path, the ball state is
             # properly defined and we know how much we need to simulate.
-            rvw, s = physics.evolve_ball_motion(
+            rvw, s = evolve.evolve_ball_motion(
                 state=s,
                 rvw=rvw,
                 R=ball.params.R,

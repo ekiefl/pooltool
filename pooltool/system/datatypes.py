@@ -8,7 +8,7 @@ import numpy as np
 from attrs import define, field
 
 import pooltool.math as math
-import pooltool.physics as physics
+import pooltool.physics.utils as physics_utils
 from pooltool.error import ConfigError
 from pooltool.events import Event
 from pooltool.objects.ball.datatypes import Ball, BallHistory, BallState
@@ -61,28 +61,6 @@ class System:
             ball.state.t = 0
 
         self.events = []
-
-    def evolve(self, dt: float):
-        """Evolves current ball an amount of time dt
-
-        FIXME This is very inefficent. each ball should store its natural trajectory
-        thereby avoid a call to the clunky evolve_ball_motion. It could even be a
-        partial function so parameters don't continuously need to be passed
-        """
-
-        for ball_id, ball in self.balls.items():
-            rvw, s = physics.evolve_state_motion(
-                state=ball.state.s,
-                rvw=ball.state.rvw,
-                R=ball.params.R,
-                m=ball.params.m,
-                u_s=ball.params.u_s,
-                u_sp=ball.params.u_sp,
-                u_r=ball.params.u_r,
-                g=ball.params.g,
-                t=dt,
-            )
-            ball.state = BallState(rvw, s, self.t + dt)
 
     def reset_balls(self):
         """Reset balls to their initial states"""
@@ -220,7 +198,7 @@ class System:
     def get_system_energy(self):
         energy = 0
         for ball in self.balls.values():
-            energy += physics.get_ball_energy(
+            energy += physics_utils.get_ball_energy(
                 ball.state.rvw, ball.params.R, ball.params.m
             )
 
@@ -273,7 +251,7 @@ class System:
                     ball1.params.R == ball2.params.R
                 ), "Balls are assumed to be equal radii"
 
-                if physics.is_overlapping(
+                if physics_utils.is_overlapping(
                     ball1.state.rvw, ball2.state.rvw, ball1.params.R, ball2.params.R
                 ):
                     return True

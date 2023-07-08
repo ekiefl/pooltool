@@ -10,7 +10,8 @@ import numpy as np
 
 import pooltool.constants as const
 import pooltool.math as math
-import pooltool.physics as physics
+import pooltool.physics.evolve as evolve
+import pooltool.physics.utils as physics_utils
 from pooltool.events import (
     AgentType,
     Event,
@@ -30,7 +31,7 @@ from pooltool.evolution.continuize import continuize
 from pooltool.evolution.event_based import solve
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
 from pooltool.math.roots.quartic import QuarticSolver
-from pooltool.objects.ball.datatypes import Ball
+from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.table.components import (
     CircularCushionSegment,
     LinearCushionSegment,
@@ -147,7 +148,7 @@ def simulate(
             shot.update_history(null_event(time=shot.t))
             break
 
-        shot.evolve(event.time - shot.t)
+        _evolve(shot, event.time - shot.t)
 
         if event.event_type in include:
             engine.resolver.resolve(shot, event)
@@ -163,6 +164,29 @@ def simulate(
         continuize(shot, dt=0.01 if dt is None else dt, inplace=True)
 
     return shot
+
+
+def _evolve(shot: System, dt: float):
+    """Evolves current ball an amount of time dt
+
+    FIXME This is very inefficent. each ball should store its natural trajectory
+    thereby avoid a call to the clunky evolve_ball_motion. It could even be a
+    partial function so parameters don't continuously need to be passed
+    """
+
+    for ball_id, ball in shot.balls.items():
+        rvw, s = evolve.evolve_state_motion(
+            state=ball.state.s,
+            rvw=ball.state.rvw,
+            R=ball.params.R,
+            m=ball.params.m,
+            u_s=ball.params.u_s,
+            u_sp=ball.params.u_sp,
+            u_r=ball.params.u_r,
+            g=ball.params.g,
+            t=dt,
+        )
+        ball.state = BallState(rvw, s, shot.t + dt)
 
 
 def get_next_event(
@@ -234,16 +258,16 @@ def _next_transition(ball: Ball) -> Event:
         return null_event(time=np.inf)
 
     elif ball.state.s == const.spinning:
-        dtau_E = physics.get_spin_time(
+        dtau_E = physics_utils.get_spin_time(
             ball.state.rvw, ball.params.R, ball.params.u_sp, ball.params.g
         )
         return spinning_stationary_transition(ball, ball.state.t + dtau_E)
 
     elif ball.state.s == const.rolling:
-        dtau_E_spin = physics.get_spin_time(
+        dtau_E_spin = physics_utils.get_spin_time(
             ball.state.rvw, ball.params.R, ball.params.u_sp, ball.params.g
         )
-        dtau_E_roll = physics.get_roll_time(
+        dtau_E_roll = physics_utils.get_roll_time(
             ball.state.rvw, ball.params.u_r, ball.params.g
         )
 
@@ -253,7 +277,7 @@ def _next_transition(ball: Ball) -> Event:
             return rolling_stationary_transition(ball, ball.state.t + dtau_E_roll)
 
     elif ball.state.s == const.sliding:
-        dtau_E = physics.get_slide_time(
+        dtau_E = physics_utils.get_slide_time(
             ball.state.rvw, ball.params.R, ball.params.u_s, ball.params.g
         )
         return sliding_rolling_transition(ball, ball.state.t + dtau_E)
