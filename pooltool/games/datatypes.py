@@ -2,8 +2,10 @@
 
 import uuid
 from abc import ABC, abstractmethod
+from typing import Optional, Type
 
 import pooltool.constants as c
+from pooltool.layouts import Rack
 from pooltool.system.datatypes import System
 from pooltool.terminal import Timer
 
@@ -32,7 +34,7 @@ class Log:
 class Game(ABC):
     is_call_pocket = None
     is_call_ball = None
-    rack = None
+    rack: Optional[Type[Rack]] = None
 
     def __init__(self):
         if self.is_call_pocket is None:

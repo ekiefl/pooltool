@@ -135,6 +135,7 @@ class Interface(ShowBase):
         Global.clock.setFrameRate(ani.settings["graphics"]["fps"])
 
         Global.register_mode_mgr(ModeManager(all_modes))
+        assert Global.mode_mgr is not None
         Global.mode_mgr.init_modes()
 
         self.frame = 0

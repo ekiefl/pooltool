@@ -54,7 +54,7 @@ ball_highlight = {
     "shadow_scale_amplitude": 0.4,
 }
 
-model_dir = Path(pt.__file__).parent / "models"
+model_dir: Path = Path(pt.__file__).parent / "models"
 
 logo_dir = Path(pt.__file__).parent / "logo"
 logo_paths = {

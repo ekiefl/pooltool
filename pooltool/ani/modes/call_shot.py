@@ -23,7 +23,7 @@ class CallShotMode(BaseMode):
     keymap = {
         Action.quit: False,
         Action.call_shot: True,
-        "next": False,
+        Action.next: False,
     }
 
     def __init__(self):
