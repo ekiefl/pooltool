@@ -21,7 +21,7 @@ class PickBallMode(BaseMode):
     keymap = {
         Action.quit: False,
         Action.pick_ball: True,
-        "done": False,
+        Action.done: False,
     }
 
     def enter(self):

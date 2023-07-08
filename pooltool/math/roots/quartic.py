@@ -47,7 +47,7 @@ def minimum_quartic_root(
     index = find_first_row_with_value(roots, best_root)
     assert index > -1
 
-    return best_root.real, index
+    return float(best_root.real), index
 
 
 def solve_many_numerical(p):
