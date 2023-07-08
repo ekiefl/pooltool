@@ -1,9 +1,8 @@
-from typing import Dict, Optional, Protocol, Tuple, Type
+from typing import Dict, Optional, Type
 
-from pooltool.objects.ball.datatypes import Ball
-from pooltool.objects.table.components import (
-    CircularCushionSegment,
-    LinearCushionSegment,
+from pooltool.physics.resolve.ball_cushion.core import (
+    BallCCushionCollisionStrategy,
+    BallLCushionCollisionStrategy,
 )
 from pooltool.physics.resolve.ball_cushion.han_2005 import (
     Han2005Circular,
@@ -11,20 +10,6 @@ from pooltool.physics.resolve.ball_cushion.han_2005 import (
 )
 from pooltool.physics.resolve.types import ModelArgs
 from pooltool.utils.strenum import StrEnum, auto
-
-
-class BallLCushionCollisionStrategy(Protocol):
-    def resolve(
-        self, ball: Ball, cushion: LinearCushionSegment, inplace: bool = False
-    ) -> Tuple[Ball, LinearCushionSegment]:
-        ...
-
-
-class BallCCushionCollisionStrategy(Protocol):
-    def resolve(
-        self, ball: Ball, cushion: CircularCushionSegment, inplace: bool = False
-    ) -> Tuple[Ball, CircularCushionSegment]:
-        ...
 
 
 class BallLCushionModel(StrEnum):
@@ -42,7 +27,6 @@ _ball_lcushion_models: Dict[BallLCushionModel, Type[BallLCushionCollisionStrateg
 _ball_ccushion_models: Dict[BallCCushionModel, Type[BallCCushionCollisionStrategy]] = {
     BallCCushionModel.HAN_2005: Han2005Circular,
 }
-
 
 BALL_LINEAR_CUSHION_DEFAULT = Han2005Linear()
 BALL_CIRCULAR_CUSHION_DEFAULT = Han2005Circular()
