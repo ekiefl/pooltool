@@ -28,15 +28,12 @@ _ball_ccushion_models: Dict[BallCCushionModel, Type[BallCCushionCollisionStrateg
     BallCCushionModel.HAN_2005: Han2005Circular,
 }
 
-BALL_LINEAR_CUSHION_DEFAULT = Han2005Linear()
-BALL_CIRCULAR_CUSHION_DEFAULT = Han2005Circular()
-
 
 def get_ball_lin_cushion_model(
     model: Optional[BallLCushionModel] = None, params: ModelArgs = {}
 ) -> BallLCushionCollisionStrategy:
     if model is None:
-        return BALL_LINEAR_CUSHION_DEFAULT
+        return Han2005Linear()
 
     return _ball_lcushion_models[model](**params)
 
@@ -45,6 +42,6 @@ def get_ball_circ_cushion_model(
     model: Optional[BallCCushionModel] = None, params: ModelArgs = {}
 ) -> BallCCushionCollisionStrategy:
     if model is None:
-        return BALL_CIRCULAR_CUSHION_DEFAULT
+        return Han2005Circular()
 
     return _ball_ccushion_models[model](**params)

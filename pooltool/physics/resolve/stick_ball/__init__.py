@@ -14,13 +14,11 @@ _stick_ball_models: Dict[StickBallModel, Type[StickBallCollisionStrategy]] = {
     StickBallModel.INSTANTANEOUS_POINT: InstantaneousPoint,
 }
 
-STICK_BALL_DEFAULT = InstantaneousPoint()
-
 
 def get_stick_ball_model(
     model: Optional[StickBallModel] = None, params: ModelArgs = {}
 ) -> StickBallCollisionStrategy:
     if model is None:
-        return STICK_BALL_DEFAULT
+        return InstantaneousPoint()
 
     return _stick_ball_models[model](**params)
