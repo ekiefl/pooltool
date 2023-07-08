@@ -1,3 +1,9 @@
+"""Defining and handling ball pocket collisions
+
+NOTE: If this module is ever extended to support multiple treatments for ball pocket
+collisions, expand this file into a file structure modelled after ../ball_ball or
+../ball_cushion
+"""
 from typing import Optional, Protocol, Tuple
 
 import numpy as np
