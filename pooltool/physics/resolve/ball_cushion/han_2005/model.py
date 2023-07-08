@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, TypeVar
 
 import numpy as np
 
@@ -88,39 +88,34 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
     return rvw
 
 
+Cushion = TypeVar("Cushion", LinearCushionSegment, CircularCushionSegment)
+
+
+def _solve(ball: Ball, cushion: Cushion) -> Tuple[Ball, Cushion]:
+    rvw = han2005(
+        rvw=ball.state.rvw,
+        normal=cushion.get_normal(ball.state.rvw),
+        R=ball.params.R,
+        m=ball.params.m,
+        h=cushion.height,
+        e_c=ball.params.e_c,
+        f_c=ball.params.f_c,
+    )
+
+    ball.state = BallState(rvw, const.sliding)
+
+    return ball, cushion
+
+
 class Han2005Linear(CoreBallLCushionCollision):
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
     ) -> Tuple[Ball, LinearCushionSegment]:
-        rvw = han2005(
-            rvw=ball.state.rvw,
-            normal=cushion.get_normal(ball.state.rvw),
-            R=ball.params.R,
-            m=ball.params.m,
-            h=cushion.height,
-            e_c=ball.params.e_c,
-            f_c=ball.params.f_c,
-        )
-
-        ball.state = BallState(rvw, const.sliding)
-
-        return ball, cushion
+        return _solve(ball, cushion)
 
 
 class Han2005Circular(CoreBallCCushionCollision):
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment
     ) -> Tuple[Ball, CircularCushionSegment]:
-        rvw = han2005(
-            rvw=ball.state.rvw,
-            normal=cushion.get_normal(ball.state.rvw),
-            R=ball.params.R,
-            m=ball.params.m,
-            h=cushion.height,
-            e_c=ball.params.e_c,
-            f_c=ball.params.f_c,
-        )
-
-        ball.state = BallState(rvw, const.sliding)
-
-        return ball, cushion
+        return _solve(ball, cushion)
