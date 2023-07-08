@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import copy
-import enum
 from functools import cached_property
 from typing import Dict, Union
 
