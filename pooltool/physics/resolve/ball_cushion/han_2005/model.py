@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, TypeVar
 
 import numpy as np
 
@@ -9,70 +9,20 @@ from pooltool.objects.table.components import (
     CircularCushionSegment,
     LinearCushionSegment,
 )
+from pooltool.physics.resolve.ball_cushion.core import (
+    CoreBallCCushionCollision,
+    CoreBallLCushionCollision,
+)
 from pooltool.physics.resolve.ball_cushion.han_2005.properties import (
     get_ball_cushion_friction,
     get_ball_cushion_restitution,
 )
 
 
-class Han2005Linear:
-    def resolve(
-        self, ball: Ball, cushion: LinearCushionSegment, inplace: bool = False
-    ) -> Tuple[Ball, LinearCushionSegment]:
-        if not inplace:
-            ball = ball.copy()
-            cushion = cushion.copy()
-
-        rvw = ball.state.rvw
-        normal = cushion.get_normal(rvw)
-
-        rvw = linear_han2005(
-            rvw=rvw,
-            normal=normal,
-            p1=cushion.p1,
-            p2=cushion.p2,
-            R=ball.params.R,
-            m=ball.params.m,
-            h=cushion.height,
-            e_c=ball.params.e_c,
-            f_c=ball.params.f_c,
-        )
-
-        ball.state = BallState(rvw, const.sliding)
-
-        return ball, cushion
-
-
-class Han2005Circular:
-    def resolve(
-        self, ball: Ball, cushion: CircularCushionSegment, inplace: bool = False
-    ) -> Tuple[Ball, CircularCushionSegment]:
-        if not inplace:
-            ball = ball.copy()
-            cushion = cushion.copy()
-
-        rvw = ball.state.rvw
-        normal = cushion.get_normal(rvw)
-
-        rvw = circular_han2005(
-            rvw=rvw,
-            normal=normal,
-            center=cushion.center,
-            radius=cushion.radius,
-            R=ball.params.R,
-            m=ball.params.m,
-            h=cushion.height,
-            e_c=ball.params.e_c,
-            f_c=ball.params.f_c,
-        )
-
-        ball.state = BallState(rvw, const.sliding)
-
-        return ball, cushion
-
-
-def base_han2005(rvw, normal, R, m, h, e_c, f_c):
+def han2005(rvw, normal, R, m, h, e_c, f_c):
     """Inhwan Han (2005) 'Dynamics in Carom and Three Cushion Billiards'"""
+    # orient the normal so it points away from playing surface
+    normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
 
     # Change from the table frame to the cushion frame. The cushion frame is defined by
     # the normal vector is parallel with <1,0,0>.
@@ -138,49 +88,34 @@ def base_han2005(rvw, normal, R, m, h, e_c, f_c):
     return rvw
 
 
-def linear_han2005(rvw, normal, p1, p2, R, m, h, e_c, f_c):
-    """Resolve the ball linear cushion collision
-
-    NOTE A correction is made such that if the ball is not a distance R from the
-    cushion, the ball is moved along the normal such that it is. To avoid float
-    precision round-off error, a small epsilon of additional distance
-    (constants.EPS_SPACE) is put between them, ensuring the cushion and ball are
-    separated post-resolution.
-    """
-    # orient the normal so it points away from playing surface
-    normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
-
-    rvw = base_han2005(rvw, normal, R, m, h, e_c, f_c)
-
-    # Calculate the point on cushion line where contact should be made, then set the
-    # z-component to match the ball's height
-    c = math.point_on_line_closest_to_point(p1, p2, rvw[0])
-    c[2] = rvw[0, 2]
-
-    # Move the ball to exactly meet the cushion
-    correction = R - math.norm3d(rvw[0] - c) + const.EPS_SPACE
-    rvw[0] -= correction * normal
-
-    return rvw
+Cushion = TypeVar("Cushion", LinearCushionSegment, CircularCushionSegment)
 
 
-def circular_han2005(rvw, normal, center, radius, R, m, h, e_c, f_c):
-    """Resolve the ball circular cushion collision
+def _solve(ball: Ball, cushion: Cushion) -> Tuple[Ball, Cushion]:
+    rvw = han2005(
+        rvw=ball.state.rvw,
+        normal=cushion.get_normal(ball.state.rvw),
+        R=ball.params.R,
+        m=ball.params.m,
+        h=cushion.height,
+        e_c=ball.params.e_c,
+        f_c=ball.params.f_c,
+    )
 
-    NOTE A correction is made such that if the ball is not a distance R from the
-    cushion, the ball is moved along the normal such that it is. To avoid float
-    precision round-off error, a small epsilon of additional distance
-    (constants.EPS_SPACE) is put between them, ensuring the cushion and ball are
-    separated post-resolution.
-    """
-    # orient the normal so it points away from playing surface
-    normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
+    ball.state = BallState(rvw, const.sliding)
 
-    rvw = base_han2005(rvw, normal, R, m, h, e_c, f_c)
+    return ball, cushion
 
-    c = np.array([center[0], center[1], rvw[0, 2]])
-    correction = R + radius - math.norm3d(rvw[0] - c) - const.EPS_SPACE
 
-    rvw[0] += correction * normal
+class Han2005Linear(CoreBallLCushionCollision):
+    def solve(
+        self, ball: Ball, cushion: LinearCushionSegment
+    ) -> Tuple[Ball, LinearCushionSegment]:
+        return _solve(ball, cushion)
 
-    return rvw
+
+class Han2005Circular(CoreBallCCushionCollision):
+    def solve(
+        self, ball: Ball, cushion: CircularCushionSegment
+    ) -> Tuple[Ball, CircularCushionSegment]:
+        return _solve(ball, cushion)

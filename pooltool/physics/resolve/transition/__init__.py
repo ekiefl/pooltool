@@ -1,4 +1,10 @@
-from typing import Optional, Protocol, Tuple
+"""Defining and handling ball state transitions
+
+NOTE: If this module is ever extended to support multiple treatments for ball
+transitions, expand this file into a file structure modelled after ../ball_ball or
+../ball_cushion
+"""
+from typing import Dict, Optional, Protocol, Tuple, Type
 
 import numpy as np
 
@@ -72,7 +78,9 @@ class BallTransitionModel(StrEnum):
     CANONICAL = auto()
 
 
-TRANSITION_DEFAULT = CanonicalTransition()
+_ball_transition_models: Dict[BallTransitionModel, Type[BallTransitionStrategy]] = {
+    BallTransitionModel.CANONICAL: CanonicalTransition,
+}
 
 
 def get_transition_model(
@@ -80,8 +88,6 @@ def get_transition_model(
     params: ModelArgs = {},
 ) -> BallTransitionStrategy:
     if model is None:
-        return TRANSITION_DEFAULT
+        return CanonicalTransition()
 
-    assert not len(params)
-    assert model == BallTransitionModel.CANONICAL
-    return CanonicalTransition()
+    return _ball_transition_models[model](**params)

@@ -1,4 +1,10 @@
-from typing import Optional, Protocol, Tuple
+"""Defining and handling ball pocket collisions
+
+NOTE: If this module is ever extended to support multiple treatments for ball pocket
+collisions, expand this file into a file structure modelled after ../ball_ball or
+../ball_cushion
+"""
+from typing import Dict, Optional, Protocol, Tuple, Type
 
 import numpy as np
 
@@ -43,15 +49,15 @@ class BallPocketModel(StrEnum):
     CANONICAL = auto()
 
 
-BALL_POCKET_DEFAULT = CanonicalBallPocket()
+_ball_pocket_models: Dict[BallPocketModel, Type[BallPocketStrategy]] = {
+    BallPocketModel.CANONICAL: CanonicalBallPocket,
+}
 
 
 def get_ball_pocket_model(
     model: Optional[BallPocketModel] = None, params: ModelArgs = {}
 ) -> BallPocketStrategy:
     if model is None:
-        return BALL_POCKET_DEFAULT
+        return CanonicalBallPocket()
 
-    assert not len(params)
-    assert model == BallPocketModel.CANONICAL
-    return CanonicalBallPocket()
+    return _ball_pocket_models[model](**params)
