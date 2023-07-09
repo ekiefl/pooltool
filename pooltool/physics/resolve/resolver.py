@@ -82,7 +82,7 @@ class ResolverConfig:
             ball_pocket=BallPocketModel.CANONICAL,
             ball_pocket_params={},
             stick_ball=StickBallModel.INSTANTANEOUS_POINT,
-            stick_ball_params={},
+            stick_ball_params={"throttle_english": True},
             transition=BallTransitionModel.CANONICAL,
             transition_params={},
         )
