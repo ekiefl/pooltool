@@ -19,6 +19,6 @@ def get_stick_ball_model(
     model: Optional[StickBallModel] = None, params: ModelArgs = {}
 ) -> StickBallCollisionStrategy:
     if model is None:
-        return InstantaneousPoint()
+        return InstantaneousPoint(throttle_english=True)
 
     return _stick_ball_models[model](**params)
