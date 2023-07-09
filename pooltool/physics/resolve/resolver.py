@@ -39,7 +39,7 @@ from pooltool.physics.resolve.types import ModelArgs
 from pooltool.serialize import Pathish, conversion
 from pooltool.system.datatypes import System
 
-RESOLVER_CONFIG_PATH = pooltool.user_config.PHYSICS_DIR / "resolver.json"
+RESOLVER_CONFIG_PATH = pooltool.user_config.PHYSICS_DIR / "resolver.yaml"
 
 
 @attrs.define
@@ -68,7 +68,7 @@ class ResolverConfig:
 
     @classmethod
     def default(cls) -> ResolverConfig:
-        """Load ~/.config/pooltool/physics/resolver.json if exists, create otherwise"""
+        """Load ~/.config/pooltool/physics/resolver.yaml if exists, create otherwise"""
         if RESOLVER_CONFIG_PATH.exists():
             return cls.load(RESOLVER_CONFIG_PATH)
 
