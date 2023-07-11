@@ -5,7 +5,8 @@ from numba import jit
 
 import pooltool.constants as const
 import pooltool.math as math
-import pooltool.physics as physics
+import pooltool.physics.evolve as evolve
+import pooltool.physics.utils as physics_utils
 
 
 @jit(nopython=True, cache=const.numba_cache)
@@ -75,7 +76,7 @@ def get_u(rvw, R, phi, s):
     if s == const.rolling:
         return np.array([1, 0, 0], dtype=np.float64)
 
-    rel_vel = physics.rel_velocity(rvw, R)
+    rel_vel = physics_utils.rel_velocity(rvw, R)
     if (rel_vel == 0).all():
         return np.array([1, 0, 0], dtype=np.float64)
 
@@ -251,7 +252,7 @@ def ball_linear_cushion_collision_time(
         if root.real <= const.EPS:
             continue
 
-        rvw_dtau, _ = physics.evolve_state_motion(s, rvw, R, m, mu, 1, mu, g, root)
+        rvw_dtau, _ = evolve.evolve_state_motion(s, rvw, R, m, mu, 1, mu, g, root)
         s_score = -np.dot(p1 - rvw_dtau[0], p2 - p1) / np.dot(p2 - p1, p2 - p1)
 
         if not (0 <= s_score <= 1):

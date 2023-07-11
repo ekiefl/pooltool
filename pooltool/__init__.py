@@ -23,14 +23,13 @@ from pooltool.events import (
     filter_time,
     filter_type,
     null_event,
-    resolve_event,
     rolling_spinning_transition,
     rolling_stationary_transition,
     sliding_rolling_transition,
     spinning_stationary_transition,
     stick_ball_collision,
 )
-from pooltool.evolution import simulate
+from pooltool.evolution import continuize, simulate
 from pooltool.layouts import (
     get_eight_ball_rack,
     get_nine_ball_rack,
@@ -55,6 +54,7 @@ from pooltool.objects import (
     TableModelDescr,
     TableType,
 )
+from pooltool.physics.engine import PhysicsEngine
 from pooltool.system import MultiSystem, System, SystemController, multisystem, visual
 
 run = terminal.Run()
@@ -67,6 +67,7 @@ __all__ = [
     "get_three_cushion_rack",
     "System",
     "MultiSystem",
+    "PhysicsEngine",
     "multisystem",
     "SystemController",
     "visual",
@@ -74,7 +75,6 @@ __all__ = [
     "filter_time",
     "filter_type",
     "FrameStepper",
-    "resolve_event",
     "null_event",
     "ball_ball_collision",
     "ball_linear_cushion_collision",

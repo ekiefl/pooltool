@@ -695,7 +695,7 @@ class Menu:
                 element["object"]["focus"] = value
                 return
 
-    @_update_xml
+    @_update_xml  # type: ignore
     def entry_teardown(self, name, initial):
         """Teardown up operations for leaving DirectEntry"""
 
@@ -1009,14 +1009,14 @@ class Menus:
             .attrib["selection"]
         }
 
-    @_update_xml
+    @_update_xml  # type: ignore
     def func_update_checkbox_xml(self, value, name):
         for element in self.current.elements:
             if element.get("name") == name:
                 break
         element["xml"].set("checked", "true" if value == 1 else "false")
 
-    @_update_xml
+    @_update_xml  # type: ignore
     def func_update_dropdown_xml(self, value, name):
         for element in self.current.elements:
             if element.get("name") == name:

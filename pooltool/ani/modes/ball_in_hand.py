@@ -22,7 +22,7 @@ class BallInHandMode(BaseMode):
     keymap = {
         Action.quit: False,
         Action.ball_in_hand: True,
-        "next": False,
+        Action.next: False,
     }
 
     def __init__(self):

@@ -10,7 +10,8 @@ import numpy as np
 
 import pooltool.constants as const
 import pooltool.math as math
-import pooltool.physics as physics
+import pooltool.physics.evolve as evolve
+import pooltool.physics.utils as physics_utils
 from pooltool.events import (
     AgentType,
     Event,
@@ -24,34 +25,117 @@ from pooltool.events import (
     rolling_stationary_transition,
     sliding_rolling_transition,
     spinning_stationary_transition,
+    stick_ball_collision,
 )
+from pooltool.evolution.continuize import continuize
 from pooltool.evolution.event_based import solve
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
 from pooltool.math.roots.quartic import QuarticSolver
-from pooltool.objects.ball.datatypes import Ball
+from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.table.components import (
     CircularCushionSegment,
     LinearCushionSegment,
     Pocket,
 )
+from pooltool.physics.engine import PhysicsEngine
 from pooltool.system.datatypes import System
 
 
 def simulate(
     shot: System,
-    include: Set[EventType] = INCLUDED_EVENTS,
+    engine: Optional[PhysicsEngine] = None,
+    inplace: bool = False,
+    continuous: bool = False,
+    dt: Optional[float] = None,
+    t_final: Optional[float] = None,
     quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
-    t_final=None,
-    continuize=False,
-    dt=None,
+    include: Set[EventType] = INCLUDED_EVENTS,
 ) -> System:
-    """Run a simulation on a system and return it"""
+    """Run a simulation on a system and return it
+
+    Args:
+        shot:
+            The system you would like simulated. The system should already have energy,
+            otherwise there will be nothing to simulate.
+        inplace:
+            By default, a copy of the passed system is simulated and returned. This
+            leaves the passed system unmodified. If inplace is set to True, the passed
+            system is modified in place, meaning no copy is made and the returned system
+            is the passed system. For a more practical distinction, see Examples below.
+        continuous:
+            If True, the system will not only be simulated, but it will also be
+            "continuized". This means each ball will be populated with a ball history
+            with small fixed timesteps that make it ready for visualization.
+        dt:
+            The small fixed timestep used when continuous is True.
+        t_final:
+            If set, the simulation will end prematurely after the first time an event
+            with time > t_final is detected.
+        quartic_solver:
+            Which QuarticSolver do you want to use for solving quartic polynomials?
+        include:
+            Which EventType are you interested in resolving? By default, all detected
+            events are resolved.
+
+    Examples:
+        Standard usage:
+
+        >>> # Simulate a system
+        >>> import pooltool as pt
+        >>> system = pt.System.example()
+        >>> simulated_system = pt.simulate(system)
+        >>> assert not system.simulated
+        >>> assert simulated_system.simulated
+
+        The returned system is simulated, but the passed system remains unchanged.
+
+        You can also modify the system in place:
+
+        >>> # Simulate a system in place
+        >>> import pooltool as pt
+        >>> system = pt.System.example()
+        >>> simulated_system = pt.simulate(system, inplace=True)
+        >>> assert system.simulated
+        >>> assert simulated_system.simulated
+        >>> assert system is simulated_system
+
+        Notice that the returned system _is_ the simulated system. Therefore, there is
+        no point catching the return object when inplace is True:
+
+        >>> # Simulate a system in place
+        >>> import pooltool as pt
+        >>> system = pt.System.example()
+        >>> assert not system.simulated
+        >>> pt.simulate(system, inplace=True)
+        >>> assert system.simulated
+
+        You can continuize the ball trajectories with `continuous`
+
+        >>> # Simulate a system in place
+        >>> import pooltool as pt
+        >>> system = pt.simulate(pt.System.example(), continuous=True)
+        >>> for ball in system.balls.values(): assert len(ball.history_cts) > 0
+    """
+    if not inplace:
+        shot = shot.copy()
+
+    if not engine:
+        engine = PhysicsEngine()
 
     shot.reset_history()
     shot.update_history(null_event(time=0))
 
-    if dt is None:
-        dt = 0.01
+    if shot.get_system_energy() == 0 and shot.cue.V0 > 0:
+        # System has no energy, but the cue stick has an impact velocity. So create and
+        # resolve a stick-ball collision to start things off
+        event = stick_ball_collision(
+            stick=shot.cue,
+            ball=shot.balls[shot.cue.cue_ball_id],
+            time=0,
+            set_initial=True,
+        )
+        engine.resolver.resolve(shot, event)
+        shot.update_history(event)
 
     transition_cache = TransitionCache.create(shot)
 
@@ -64,10 +148,10 @@ def simulate(
             shot.update_history(null_event(time=shot.t))
             break
 
-        shot.evolve(event.time - shot.t)
+        _evolve(shot, event.time - shot.t)
 
         if event.event_type in include:
-            shot.resolve_event(event)
+            engine.resolver.resolve(shot, event)
             transition_cache.update(event)
 
         shot.update_history(event)
@@ -76,10 +160,33 @@ def simulate(
             shot.update_history(null_event(time=shot.t))
             break
 
-    if continuize:
-        shot.continuize(dt=dt)
+    if continuous:
+        continuize(shot, dt=0.01 if dt is None else dt, inplace=True)
 
     return shot
+
+
+def _evolve(shot: System, dt: float):
+    """Evolves current ball an amount of time dt
+
+    FIXME This is very inefficent. each ball should store its natural trajectory
+    thereby avoid a call to the clunky evolve_ball_motion. It could even be a
+    partial function so parameters don't continuously need to be passed
+    """
+
+    for ball_id, ball in shot.balls.items():
+        rvw, s = evolve.evolve_state_motion(
+            state=ball.state.s,
+            rvw=ball.state.rvw,
+            R=ball.params.R,
+            m=ball.params.m,
+            u_s=ball.params.u_s,
+            u_sp=ball.params.u_sp,
+            u_r=ball.params.u_r,
+            g=ball.params.g,
+            t=dt,
+        )
+        ball.state = BallState(rvw, s, shot.t + dt)
 
 
 def get_next_event(
@@ -151,16 +258,16 @@ def _next_transition(ball: Ball) -> Event:
         return null_event(time=np.inf)
 
     elif ball.state.s == const.spinning:
-        dtau_E = physics.get_spin_time(
+        dtau_E = physics_utils.get_spin_time(
             ball.state.rvw, ball.params.R, ball.params.u_sp, ball.params.g
         )
         return spinning_stationary_transition(ball, ball.state.t + dtau_E)
 
     elif ball.state.s == const.rolling:
-        dtau_E_spin = physics.get_spin_time(
+        dtau_E_spin = physics_utils.get_spin_time(
             ball.state.rvw, ball.params.R, ball.params.u_sp, ball.params.g
         )
-        dtau_E_roll = physics.get_roll_time(
+        dtau_E_roll = physics_utils.get_roll_time(
             ball.state.rvw, ball.params.u_r, ball.params.g
         )
 
@@ -170,7 +277,7 @@ def _next_transition(ball: Ball) -> Event:
             return rolling_stationary_transition(ball, ball.state.t + dtau_E_roll)
 
     elif ball.state.s == const.sliding:
-        dtau_E = physics.get_slide_time(
+        dtau_E = physics_utils.get_slide_time(
             ball.state.rvw, ball.params.R, ball.params.u_s, ball.params.g
         )
         return sliding_rolling_transition(ball, ball.state.t + dtau_E)

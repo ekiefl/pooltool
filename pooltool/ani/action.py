@@ -43,3 +43,5 @@ class Action(StrEnum):
     parallel = auto()
     scroll_up = auto()
     scroll_down = auto()
+    done = auto()
+    next = auto()

@@ -32,7 +32,7 @@ def main(args):
         interface = pt.ShotViewer()
     while True:
         # Setup the system
-        table = pt.Table.from_table_specs(pt.PocketTableSpecs(l=4, w=2))
+        table = pt.Table.from_table_specs(pt.BilliardTableSpecs(l=4, w=2))
         balls = {}
         balls["cue"] = place_ball("cue", balls, table)
         for i in range(args.N):
@@ -45,10 +45,7 @@ def main(args):
         shot.strike(V0=40)
 
         # Evolve the shot
-        try:
-            pt.simulate(shot, continuize=False, quiet=False)
-        except KeyboardInterrupt:
-            break
+        pt.simulate(shot, continuous=False, inplace=True)
 
         if not args.no_viz:
             interface.show(shot)

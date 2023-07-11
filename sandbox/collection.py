@@ -22,7 +22,7 @@ for x in np.linspace(0, 0.7, 20):
     shot = system.copy()
     shot.cue.set_state(b=-x)
     shot.strike()
-    pt.simulate(shot)
+    pt.simulate(shot, inplace=True)
     collection.append(shot)
 
 # Just showing off that you can save and load the multisystem

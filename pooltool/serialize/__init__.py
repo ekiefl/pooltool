@@ -7,12 +7,12 @@ from pooltool.serialize.convert import Convert
 from pooltool.serialize.serializers import (
     Pathish,
     SerializeFormat,
-    from_yaml,
-    to_yaml,
     from_json,
     from_msgpack,
+    from_yaml,
     to_json,
     to_msgpack,
+    to_yaml,
 )
 from pooltool.utils.strenum import StrEnum
 
@@ -28,7 +28,7 @@ conversion = Convert(
 # https://github.com/python-attrs/cattrs/issues/194
 conversion.register_structure_hook_func(
     lambda t: getattr(t, "__origin__", None) is np.ndarray,
-    lambda v, t: np.array([t.__args__[1].__args__[0](e) for e in v]),
+    lambda v, t: np.array([t.__args__[1].__args__[0](e) for e in v]),  # type: ignore
     which=(SerializeFormat.JSON,),
 )
 
