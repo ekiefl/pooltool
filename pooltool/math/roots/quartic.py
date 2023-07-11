@@ -1,7 +1,6 @@
 from typing import Callable, Dict, Tuple
 
 import numpy as np
-import sympy
 from numba import jit
 from numpy.typing import NDArray
 
@@ -330,6 +329,8 @@ def analytic(p: NDArray[np.complex128]) -> NDArray[np.complex128]:
 
 
 def _truth(a_val, b_val, c_val, d_val, e_val, digits=50):
+    import sympy
+
     x, a, b, c, d, e = sympy.symbols("x a b c d e")
     general_solution = sympy.solve(a * x**4 + b * x**3 + c * x**2 + d * x + e, x)
     return [
