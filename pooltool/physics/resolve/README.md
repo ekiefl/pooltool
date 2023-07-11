@@ -95,7 +95,7 @@ class Resolver:
     ball_pocket: BallPocketStrategy
     stick_ball: StickBallCollisionStrategy
     transition: BallTransitionStrategy
-    ```
+```
 
 Each attribute is a _physics strategy_ (or model) for each event class: [ball-ball collisions](https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-ball-collision), [ball-linear cushion collisions](https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision), [ball-circular cushion collisions](https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision), [ball-pocket "collisions"](https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-pocket-collision), and [ball motion transitions](https://ekiefl.github.io/2020/12/20/pooltool-alg/#transition-events).
 
@@ -140,7 +140,7 @@ First, we need to establish a model within its own dedicated directory. This dir
 
 Within your model directory, create an `__init__.py` file. If your model is simple, all your model logic can be contained within this single file. However, if your model grows complex, feel free to expand it across multiple files, provided they're kept within your model directory.
 
-Here's the example code: FIXME
+Here's the example code: [7ded13254150cdebb09013fa35e6fe0846d59ea9](https://github.com/ekiefl/pooltool/commit/7ded13254150cdebb09013fa35e6fe0846d59ea9)
 
 ### Create the template
 
@@ -190,7 +190,7 @@ class UnrealisticLinear(CoreBallLCushionCollision):
         return ball, cushion
 ```
 
-Here's the example code: FIXME
+Here's the example code: [af507032217914629e53954965c982d21fdc8094](https://github.com/ekiefl/pooltool/commit/af507032217914629e53954965c982d21fdc8094)
 
 ### Implement the logic
 
@@ -198,13 +198,13 @@ This is where you come in, but there are a few points to make. First, I really l
 
 Second, since you'll be working with the core pooltool objects `Cue`, `Ball`, `LinearCushionSegment`, `CircularCushionSegment`, and `Pocket`, it is worth scanning their source code to determine what parameters they have, and therefore what tools you have at your disposal.
 
-Anyways, here's my preliminary implementation: FIXME
+Anyways, here's my preliminary implementation: [17510e7d014c8aa5e60d6556db2e5b0dea36f2f0](https://github.com/ekiefl/pooltool/commit/17510e7d014c8aa5e60d6556db2e5b0dea36f2f0)
 
 Then I added a parameter to the model to add some flavor and complexity. Note that the model parameters should not be things like mass or friction coefficients. Those are properties of the passed objects. If you think a property is missing for an object, we can add it to the object. Model parameters are more meta/behavioral (see the below example).
 
 Please note that the resolver config can only handle strings, booleans, floats, and integers for model parameters due to serialization requirements. If you have more complex model types like functions, try and simplify the passed argument to a string by string-lookup dictionary.
 
-Here's me adding a model parameter that dictates whether or not the outgoing speed should be dampened with the ball's restitution coefficient: FIXME
+Here's me adding a model parameter that dictates whether or not the outgoing speed should be dampened with the ball's restitution coefficient: [ec42752f381edf3d576a66a9178a27d6054ff437](https://github.com/ekiefl/pooltool/commit/ec42752f381edf3d576a66a9178a27d6054ff437)
 
 ### Register the model
 
@@ -262,7 +262,7 @@ I needed to import my new model, so I put this at the top of the file:
 from pooltool.physics.resolve.ball_cushion.unrealistic import UnrealisticLinear
 ```
 
-Here are the full changes: FIXME
+Here are the full changes: [9c4d9ad2dc6bae3848bfc9973f150b864e07db06](https://github.com/ekiefl/pooltool/commit/9c4d9ad2dc6bae3848bfc9973f150b864e07db06)
 
 ### Activate the model
 
@@ -278,9 +278,10 @@ ball_linear_cushion_params:
   restitution: true
 ```
 
-Here's the summary of changes: FIXME
-
 That's it. If everything runs without error, your model is active.
+
+Note, there is no git commit to show you here, because `~/.config/pooltool/physics/resolver.yaml` isn't part of the project--it's part of your personal workspace.
+
 
 ### Addendum: ball-cushion models
 
@@ -288,6 +289,7 @@ This is instructions for taking your ball-linear cushion model and creating a co
 
 The ball-cushion collision has two event classes: collision of the ball with (1) linear cushion segments and (2) circular cushion segments. I developed circular cushion segments to smoothly join two linear cushion segments, _e.g._ to create the jaws of a pocket.
 
-You could have separate models for circular and linear cushion segment collisions, or if you're lazy they could mimic each other. In this git commit, I illustrate how you can use the same model for both collision types, assuming you've already implemented the linear cushion segment: FIXME
+
+You could have separate models for circular and linear cushion segment collisions, or if you're lazy they could mimic each other. In this git commit, I illustrate how you can use the same model for both collision types, assuming you've already implemented the linear cushion segment: [f4b91e436976fb857bf7681fcb6458c3ae1e6377](https://github.com/ekiefl/pooltool/commit/f4b91e436976fb857bf7681fcb6458c3ae1e6377)
 
 If you want to activate the model, don't forget to modify the resolver config.
