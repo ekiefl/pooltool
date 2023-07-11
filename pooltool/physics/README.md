@@ -33,3 +33,7 @@ consistent across functions. All units are SI
 - `f_c`: The cushion coefficient of friction
 
 - `g`: The acceleration due to gravity felt by a ball.
+
+## Resolving events
+
+Check out the [resolver/README.md](resolver/README.md) for how the physics of transitions and collisions are resolved.
