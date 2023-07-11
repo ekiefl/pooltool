@@ -8,7 +8,10 @@ from pooltool.physics.resolve.ball_cushion.han_2005 import (
     Han2005Circular,
     Han2005Linear,
 )
-from pooltool.physics.resolve.ball_cushion.unrealistic import UnrealisticLinear
+from pooltool.physics.resolve.ball_cushion.unrealistic import (
+    UnrealisticCircular,
+    UnrealisticLinear,
+)
 from pooltool.physics.resolve.types import ModelArgs
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -20,6 +23,7 @@ class BallLCushionModel(StrEnum):
 
 class BallCCushionModel(StrEnum):
     HAN_2005 = auto()
+    UNREALISTIC = auto()
 
 
 _ball_lcushion_models: Dict[BallLCushionModel, Type[BallLCushionCollisionStrategy]] = {
@@ -29,6 +33,7 @@ _ball_lcushion_models: Dict[BallLCushionModel, Type[BallLCushionCollisionStrateg
 
 _ball_ccushion_models: Dict[BallCCushionModel, Type[BallCCushionCollisionStrategy]] = {
     BallCCushionModel.HAN_2005: Han2005Circular,
+    BallCCushionModel.UNREALISTIC: UnrealisticCircular,
 }
 
 
