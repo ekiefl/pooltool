@@ -57,6 +57,12 @@ def simulate(
         shot:
             The system you would like simulated. The system should already have energy,
             otherwise there will be nothing to simulate.
+        engine:
+            The engine holds all of the physics. You can instantiate your very own
+            `PhysicsEngine` object, or you can modify
+            `~/.config/pooltool/physics/resolver.json` to change the default engine.
+            Either way, check out the README.md in pooltool/physics/resolve/README.md
+            for more information.
         inplace:
             By default, a copy of the passed system is simulated and returned. This
             leaves the passed system unmodified. If inplace is set to True, the passed
