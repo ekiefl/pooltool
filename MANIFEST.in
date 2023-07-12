@@ -1,5 +1,6 @@
 include pooltool/config/*
 include pooltool/config/menus/*.xml
+recursive-include pooltool/ README.md
 recursive-include pooltool/ani/camera/states *.json
 recursive-include pooltool/logo *
 recursive-include pooltool/models *
