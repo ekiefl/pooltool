@@ -42,3 +42,4 @@ cd ~
 
 10. Test installation: `pip install pooltool-billiards==X.X.X` (you may need to wait for version to be live)
 
+11. Make a release on github. Run `python setup.py sdist bdist_wheel` and upload the `.whl` and `.tar.gz` found in `dist/`
