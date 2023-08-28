@@ -42,6 +42,7 @@ options_8_ball = "8 ball"
 options_9_ball = "9 ball"
 options_sandbox = "Sandbox"
 options_3_cushion = "3 cushion"
+options_snooker = "snooker"
 
 ball_highlight = {
     "ball_offset": 0.12,

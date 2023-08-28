@@ -52,10 +52,15 @@ class TableModelDescr:
     def billiard_table_default() -> TableModelDescr:
         return TableModelDescr.null()
 
+    @staticmethod
+    def snooker_table_default() -> TableModelDescr:
+        return TableModelDescr(name="snooker")
+
 
 class TableType(strenum.StrEnum):
     POCKET = strenum.auto()
     BILLIARD = strenum.auto()
+    SNOOKER = strenum.auto()
 
 
 @define
@@ -137,6 +142,42 @@ class BilliardTableSpecs(TableSpecs):
     def create_pockets(self) -> Dict[str, Pocket]:
         return {}
 
+@define(frozen=True)
+class SnookerTableSpecs(TableSpecs):
+    """Parameters that specify a 12-foot snooker table"""
+
+    # TODO update
+    # https://wpbsa.com/rules/
+    # The playing area is within the cushion faces and shall measure
+    # 11 ft 8½ in x 5 ft 10 in (3569 mm x 1778 mm) with a tolerance on both dimensions of +/- ½ in (13 mm). 
+    l: float = field(default=3.5869)
+    w: float = field(default=1.778)
+
+    cushion_width: float = field(default=2 * 2.54 / 100)
+    cushion_height: float = field(default=0.64 * 2 * 0.028575)
+    corner_pocket_width: float = field(default=0.118)
+    corner_pocket_angle: float = field(default=5.3)  # degrees
+    corner_pocket_depth: float = field(default=0.0398)
+    corner_pocket_radius: float = field(default=0.124 / 2)
+    corner_jaw_radius: float = field(default=0.0419 / 2)
+    side_pocket_width: float = field(default=0.137)
+    side_pocket_angle: float = field(default=7.14)  # degrees
+    side_pocket_depth: float = field(default=0.00437)
+    side_pocket_radius: float = field(default=0.129 / 2)
+    side_jaw_radius: float = field(default=0.0159 / 2)
+
+    # For visualization
+    height: float = field(default=0.708)
+    lights_height: float = field(default=1.99)
+
+    table_type: TableType = field(init=False, default=TableType.SNOOKER)
+
+    def create_cushion_segments(self) -> CushionSegments:
+        return _create_pocket_table_cushion_segments(self)
+
+    def create_pockets(self) -> Dict[str, Pocket]:
+        return _create_pocket_table_pockets(self)
+
 
 @define
 class Table:
@@ -156,6 +197,7 @@ class Table:
 
     @property
     def l(self) -> float:
+        """The length of the table"""
         y2 = self.cushion_segments.linear["9"].p1[1]
         y1 = self.cushion_segments.linear["18"].p1[1]
         return y2 - y1
@@ -195,6 +237,8 @@ class Table:
                 model_descr = TableModelDescr.billiard_table_default()
             elif specs.table_type == TableType.POCKET:
                 model_descr = TableModelDescr.pocket_table_default()
+            elif specs.table_type == TableType.SNOOKER:
+                model_descr = TableModelDescr.snooker_table_default()
             else:
                 raise NotImplementedError()
         else:
@@ -220,3 +264,7 @@ class Table:
     @staticmethod
     def default() -> Table:
         return Table.pocket_table()
+
+    @staticmethod
+    def snooker_table() -> Table:
+        return Table.from_table_specs(SnookerTableSpecs())

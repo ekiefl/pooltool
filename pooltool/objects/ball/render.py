@@ -27,7 +27,9 @@ from pooltool.utils import panda_path
 
 
 class BallRender(Render):
-    fallback_path = ani.model_dir / "balls" / "set_1" / "1.glb"
+    # TODO Snooker set is set_2
+    fallback_path = ani.model_dir / "balls" / "set_2" / "red1.glb"
+    #fallback_path = ani.model_dir / "balls" / "set_1" / "1.glb"
 
     def __init__(self, ball: Ball):
         self._ball = ball
@@ -36,7 +38,9 @@ class BallRender(Render):
 
     @property
     def model_path(self) -> Path:
-        expected_path = ani.model_dir / "balls" / "set_1" / f"{self._ball.id}.glb"
+        # TODO Snooker set is set_2
+        expected_path = ani.model_dir / "balls" / "set_2" / f"{self._ball.id}.glb"
+        #expected_path = ani.model_dir / "balls" / "set_1" / f"{self._ball.id}.glb"
         return expected_path if expected_path.exists() else self.fallback_path
 
     def init_sphere(self):
@@ -52,7 +56,8 @@ class BallRender(Render):
         sphere_node.reparentTo(position)
 
         if self.model_path == self.fallback_path:
-            tex = sphere_node.find_texture("1")
+            # TODO snooker spesific texture
+            tex = sphere_node.find_texture("red1")
         else:
             tex = sphere_node.find_texture(self._ball.id)
 
@@ -125,7 +130,9 @@ class BallRender(Render):
         z_offset = 0.0005
         scales = np.linspace(start, stop, N)
 
-        shadow_path = ani.model_dir / "balls" / "set_1" / "shadow.glb"
+        # TODO Snooker set is set_2
+        #shadow_path = ani.model_dir / "balls" / "set_1" / "shadow.glb"
+        shadow_path = ani.model_dir / "balls" / "set_2" / "shadow.glb"
         name = f"shadow_{self._ball.id}"
         shadow_node = Global.render.find("scene").find("table").attachNewNode(name)
         x, y, _ = self._ball.state.rvw[0]

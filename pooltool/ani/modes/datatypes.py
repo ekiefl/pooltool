@@ -53,7 +53,7 @@ class BaseMode(ABC):
         elif self.keymap.get(Action.introspect):
             self.keymap[Action.introspect] = False
             shot = multisystem.active
-            shot
+            shot # TODO seems like statement has no effect
             pdb.set_trace()
 
         elif self.keymap.get(Action.show_help):

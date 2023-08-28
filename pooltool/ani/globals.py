@@ -9,7 +9,7 @@ from pooltool.utils import classproperty
 def is_showbase_initialized() -> bool:
     """Return whether ShowBase has been initialized
 
-    Checks by seeing whether `base` is an attribute of the ShowBaseGobal namespace,
+    Checks by seeing whether `base` is an attribute of the ShowBaseGlobal namespace,
     which is dynamically added when ShowBase is initialized:
 
     https://docs.panda3d.org/1.10/python/reference/direct.showbase.ShowBaseGlobal#module-direct.showbase.ShowBaseGlobal
@@ -37,7 +37,7 @@ class Global:
     """A namespace for shared variables
 
     When an instance of ShowBase is created, Panda3d populates the global namespace with
-    many variables so they can be accessed from anywhere. But to those unfamiliar with
+    many variables, so they can be accessed from anywhere. But to those unfamiliar with
     this design idiom, tracking the origin of these variables is extremely confusing.
     Fortunately, Panda3d provides a module, `ShowBaseGlobal`, that you can use to access
     these variables the _right_ way:

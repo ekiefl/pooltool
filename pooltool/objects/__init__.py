@@ -16,6 +16,7 @@ from pooltool.objects.table.components import (
 from pooltool.objects.table.datatypes import (
     BilliardTableSpecs,
     PocketTableSpecs,
+    SnookerTableSpecs,
     Table,
     TableModelDescr,
     TableType,
@@ -39,4 +40,5 @@ __all__ = [
     "TableType",
     "PocketTableSpecs",
     "BilliardTableSpecs",
+    "SnookerTableSpecs",
 ]
