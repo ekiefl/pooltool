@@ -170,7 +170,15 @@ pip install --pre --extra-index-url https://archive.panda3d.org/ panda3d
 
 Thanks to @owenhayman for this fix.
 
-**(v)** test out your installation:
+**(v)** install the pre-commit hooks:
+
+This will automatically format your code according to the pooltool standard whenever you commit.
+
+```
+pre-commit install
+```
+
+**(vi)** test out your installation:
 
 ```bash
 python run_pooltool
@@ -178,7 +186,7 @@ python run_pooltool
 
 The game window should appear (escape key to exit).
 
-**(vi)** if you used a conda environment that you named `pooltool`, create this script that runs whenever the conda environment is activated. This script modifies `$PATH` and `$PYTHONPATH` so that python knows where to find pooltool libraries and the shell knows where to find the pooltool binary. **These path modifications live safely inside the pooltool conda environment, and do not propagate into your global
+**(vii)** if you used a conda environment that you named `pooltool`, create this script that runs whenever the conda environment is activated. This script modifies `$PATH` and `$PYTHONPATH` so that python knows where to find pooltool libraries and the shell knows where to find the pooltool binary. **These path modifications live safely inside the pooltool conda environment, and do not propagate into your global
 environment**:
 
 (_This is a multi-line command. Paste the entire block into your command line prompt._)
