@@ -58,7 +58,7 @@ class TableType(strenum.StrEnum):
     BILLIARD = strenum.auto()
 
 
-@define
+@define(frozen=True)
 class TableSpecs(Protocol):
     @property
     def table_type(self):
@@ -112,6 +112,10 @@ class PocketTableSpecs(TableSpecs):
     def create_pockets(self) -> Dict[str, Pocket]:
         return _create_pocket_table_pockets(self)
 
+    @classmethod
+    def default(cls) -> PocketTableSpecs:
+        return cls()
+
 
 @define(frozen=True)
 class BilliardTableSpecs(TableSpecs):
@@ -136,6 +140,10 @@ class BilliardTableSpecs(TableSpecs):
 
     def create_pockets(self) -> Dict[str, Pocket]:
         return {}
+
+    @classmethod
+    def default(cls) -> BilliardTableSpecs:
+        return cls()
 
 
 @define
