@@ -1,14 +1,12 @@
-import pytest
-import attrs
 import numpy as np
-from pooltool.events.datatypes import EventType
-from pooltool.evolution.event_based.simulate import get_next_event
-from pooltool.system.datatypes import System
-from pooltool.objects import Ball, Table, Cue, BallParams, LinearCushionSegment, PocketTableSpecs
-from pooltool.physics.resolve.ball_cushion import BallLCushionModel, get_ball_lin_cushion_model
-from pooltool.physics.resolve.resolver import Resolver
-from pooltool.physics.engine import PhysicsEngine
+import pytest
+
 from pooltool.constants import sliding
+from pooltool.objects import Ball, BallParams, LinearCushionSegment, PocketTableSpecs
+from pooltool.physics.resolve.ball_cushion import (
+    BallLCushionModel,
+    get_ball_lin_cushion_model,
+)
 
 
 @pytest.fixture
@@ -23,8 +21,12 @@ def cushion_yaxis():
     )
 
 
-@pytest.mark.parametrize("model_name", [BallLCushionModel.HAN_2005, BallLCushionModel.UNREALISTIC])
-def test_symmetry(cushion_yaxis, model_name: BallLCushionModel) -> None:
+@pytest.mark.parametrize(
+    "model_name", [BallLCushionModel.HAN_2005, BallLCushionModel.UNREALISTIC]
+)
+def test_symmetry(
+    cushion_yaxis: LinearCushionSegment, model_name: BallLCushionModel
+) -> None:
     """Test that ball-linear cushion interactions are symmetric"""
     R = BallParams.default().R
     pos = [-R, 0, R]
@@ -41,7 +43,7 @@ def test_symmetry(cushion_yaxis, model_name: BallLCushionModel) -> None:
 
         # Ball hitting left-side of cushion with opposite y-vel
         other = ball.copy()
-        other.state.rvw[1,1] = -ball.state.rvw[1,1]
+        other.state.rvw[1, 1] = -ball.state.rvw[1, 1]
 
         # Positions are same
         assert np.array_equal(ball.state.rvw[0], other.state.rvw[0])
@@ -62,9 +64,9 @@ def test_symmetry(cushion_yaxis, model_name: BallLCushionModel) -> None:
         assert not np.array_equal(other.state.rvw[1], other_after.state.rvw[1])
 
         # X-velocties are negative and the same
-        assert ball_after.state.rvw[1,0] < 0
-        assert other_after.state.rvw[1,0] < 0
-        assert np.isclose(ball_after.state.rvw[1,0], other_after.state.rvw[1,0])
+        assert ball_after.state.rvw[1, 0] < 0
+        assert other_after.state.rvw[1, 0] < 0
+        assert np.isclose(ball_after.state.rvw[1, 0], other_after.state.rvw[1, 0])
 
         # Y-velocities are reflected
-        assert ball_after.state.rvw[1,1] == -other_after.state.rvw[1,1]
+        assert ball_after.state.rvw[1, 1] == -other_after.state.rvw[1, 1]
