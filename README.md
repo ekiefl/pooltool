@@ -19,12 +19,14 @@ This project is very much a work-in-progress. Your OS may have partially support
 |        | MacOS | Windows | Linux |
 |--------|-------|---------|-------|
 | API    | ✅    | ✅      | 🔶    |
-| GUI    | ✅    | ❌      | 🔶    |
+| GUI    | ✅    | ✅*     | 🔶    |
 | pip    | ✅    | ✅      | 🔶    |
 
 ✅ = works
-❌ = doesn't work
-🔶 = untested
+| ❌ = doesn't work
+| 🔶 = untested
+
+***IMPORTANT**: If you want to use the GUI on Windows (which you probably do), you _must_ follow the _Developer_ instructions below.
 
 # Installation
 
@@ -155,7 +157,20 @@ pip install -r requirements-dev.txt
 
 In addition to `requirements.txt`, `requirements-dev.txt` includes some modules required for developement.
 
-**(iv)** test out your installation:
+**(iv)** windows workaround
+
+You can skip this step if you are **not** using WindowsOS.
+
+On Windows, there is a bug where the mouse moves off of the screen when aiming in the GUI, making you lose mouse control. The solution is to install Panda3D v1.11, which is currently unreleased but still installable.
+
+```
+pip uninstall panda3d -y
+pip install --pre --extra-index-url https://archive.panda3d.org/ panda3d
+```
+
+Thanks to @owenhayman for this fix.
+
+**(v)** test out your installation:
 
 ```bash
 python run_pooltool
@@ -163,7 +178,7 @@ python run_pooltool
 
 The game window should appear (escape key to exit).
 
-**(v)** if you used a conda environment that you named `pooltool`, create this script that runs whenever the conda environment is activated. This script modifies `$PATH` and `$PYTHONPATH` so that python knows where to find pooltool libraries and the shell knows where to find the pooltool binary. **These path modifications live safely inside the pooltool conda environment, and do not propagate into your global
+**(vi)** if you used a conda environment that you named `pooltool`, create this script that runs whenever the conda environment is activated. This script modifies `$PATH` and `$PYTHONPATH` so that python knows where to find pooltool libraries and the shell knows where to find the pooltool binary. **These path modifications live safely inside the pooltool conda environment, and do not propagate into your global
 environment**:
 
 (_This is a multi-line command. Paste the entire block into your command line prompt._)
@@ -186,6 +201,6 @@ run_pooltool
 
 </details>
 
-## Tutorials
+# Tutorials
 
 There are some tutorials for pooltool that can be viewed in [the wiki](https://github.com/ekiefl/pooltool/wiki).
