@@ -25,6 +25,7 @@ def cushion_yaxis():
 
 @pytest.mark.parametrize("model_name", [BallLCushionModel.HAN_2005])
 def test_symmetry(cushion_yaxis, model_name: BallLCushionModel) -> None:
+    """Test that ball-linear cushion interactions are symmetric"""
     R = BallParams.default().R
     pos = [-R, 0, R]
 
