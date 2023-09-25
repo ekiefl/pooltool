@@ -204,3 +204,9 @@ run_pooltool
 # Tutorials
 
 There are some tutorials for pooltool that can be viewed in [the wiki](https://github.com/ekiefl/pooltool/wiki).
+
+# Contribute
+
+If you want to contribute to the codebase, please join the Discord and introduce yourself in the **#developers** channel.
+
+[![Discord](https://img.shields.io/badge/Discord-Join%20Server-7289da?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/jAbQRWR3)
