@@ -318,6 +318,9 @@ class SnookerRack(Rack):
     # B – Semi-Circle Radius (1/6 of the width)
     # C – Pink Spot 
     # D – Black (1/11  of the length)
+    # https://dynamicbilliard.ca/resources/snooker-table-layout/
+    # https://www.lovecuesports.com/snooker-table-setup-ball-values/
+    # http://www.fcsnooker.co.uk/table_markings/table_markings.htm
 
     def center_by_table(self, table):
         # place pyramid of red balls

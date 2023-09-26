@@ -151,3 +151,4 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 install-log.txt
+errors.txt

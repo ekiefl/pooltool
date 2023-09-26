@@ -22,7 +22,7 @@ POINTS = {
     "black" : 7 
     }
 for i in range(1, 16):
-    POINTS["red" + str(i)] = "red" + str(i) 
+    POINTS["red" + str(i)] = 1 
 
 class Snooker(Game):
     rack = SnookerRack
@@ -37,7 +37,11 @@ class Snooker(Game):
         self.colorCount = 0     # Counter to cycle through COLORED_BALLS Dictionary
         self.expected = RED_BALLS
         Game.__init__(self)
+
         self.create_players(2)
+
+        for player in self.players:
+            player.can_cue = ["white"]
 
     def start(self, shot):
         self.active_player.ball_in_hand = ["white"]
@@ -78,12 +82,16 @@ class Snooker(Game):
             else:
                 points -= max(hbp, hbh)
 
+            self.log.add_msg("Points : " + str(points))  
+
         # add points for sussefully potted ball(s)
         else:
             pocket_events = e.filter_type(shot.events, e.EventType.BALL_POCKET)
             potted_balls = [event.agents[0] for event in pocket_events]
             for ball in potted_balls:
-                points += POINTS(ball.id)
+                points += POINTS[ball.id]
+                self.log.add_msg("Potted ball :" + ball.id)  
+                self.log.add_msg("Points : " + str(points))  
 
         self.shot_info["points"][self.active_player] = points
 
@@ -156,6 +164,12 @@ class Snooker(Game):
             # check if potted ball was "red"
             if balls_potted[0].id in RED_BALLS:
                 self.expected = COLORED_BALLS
+                # If shot was legal only several red balls are allowed. Log potting event(s)
+                for ball in balls_potted:
+                    # Add red ball(s) to the collection of the potted balls
+                    self.pottedBalls.append(ball)
+                    self.log.add_msg(f"Ball potted: {ball.id}", sentiment="good")
+
             # check if potted ball was colored and still red balls are left
             elif balls_potted[0].id in COLORED_BALLS and self.getCountPottedBalls("red") != 15:
                 self.expected = RED_BALLS
@@ -164,18 +178,17 @@ class Snooker(Game):
                 # Now we need to follow color sequence
                 self.expected = [COLORED_BALLS[self.colorCount]]
                 self.colorCount += 1
-
-            # Log potting events
-            for ball in balls_potted:
+                # Add colored ball to the collection of the potted balls
                 self.pottedBalls.append(ball)
                 self.log.add_msg(f"Ball potted: {ball.id}", sentiment="good")
-                return False
+            return False
 
         # If no ball was potted in this shot restore expected target
         # always reset target to red 
         if self.getCountPottedBalls("red") != 15:
             self.expected = RED_BALLS
-        # if all red are potted and yellow not potted set target to yellow
+        # if all red are potted and yellow not yet potted set target to yellow
+        # TODO check if this is right
         if self.getCountPottedBalls("red") == 15 and self.getCountPottedBalls("yellow") == 0: 
             self.expected = ["yellow"]
 
@@ -189,13 +202,13 @@ class Snooker(Game):
 
     def is_game_over(self, shot):
         pocket_events = e.filter_type(shot.events, e.EventType.BALL_POCKET)
-        pocketed_balls_ids = [event.agents[0].id for event in pocket_events]
+        balls_potted = [event.agents[0].id for event in pocket_events]
 
         # Last pocketed ball is 'black' and legally pocketed
-        if len(pocketed_balls_ids) == 1 and self.shot_info["is_legal"]:
-            return True
-        else:
-            return False
+        if len(balls_potted) == 1 and self.shot_info["is_legal"]:
+            if balls_potted[0] == 'black':
+                return True
+        return False
 
     # Return number of hits any ball hit any cushion
     def ball_hit_cushion(self, shot):
