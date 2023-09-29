@@ -195,10 +195,9 @@ class Snooker(Game):
         return True
 
     def getCountPottedBalls(self, color):
-        if color == "red":
-            return self.pottedBalls.count(ball.id[:3] == color for ball in self.pottedBalls)
-        else:
-            return self.pottedBalls.count(ball.id == color for ball in self.pottedBalls)
+        # compare only first 3 leters of the color. 
+        # For RED it should return values 0-15. For COLORED balls 0-1
+        return len( [ball for ball in self.pottedBalls if ball.id[:3] == color[:3]] )
 
     def is_game_over(self, shot):
         pocket_events = e.filter_type(shot.events, e.EventType.BALL_POCKET)
