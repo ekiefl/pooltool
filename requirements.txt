@@ -13,14 +13,3 @@ msgpack
 msgpack-numpy
 h5py
 pyyaml
-# Development
-psutil
-colored
-ipython
-pytest
-pre-commit
-black
-isort
-types-Pillow
-twine
-types-PyYAML
