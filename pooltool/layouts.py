@@ -223,8 +223,21 @@ class ThreeCushionRack(Rack):
 
         self.balls["red"].state.rvw[0] = [table.w / 2, table.l * 3 / 4, self.radius]
 
+
 class SnookerRack(Rack):
-    """Arrange a list of balls into snooker break configuration"""
+    """Arrange a list of balls into snooker break configuration
+
+    Information for the snooker rack is taken from these resources:
+
+    https://snookerfreaks.com/how-to-choose-the-right-snooker-table-buyers-guide/
+    A - Baulk Line (1/5 of the length)
+    B - Semi-Circle Radius (1/6 of the width)
+    C - Pink Spot
+    D - Black (1/11  of the length)
+    https://dynamicbilliard.ca/resources/snooker-table-layout/
+    https://www.lovecuesports.com/snooker-table-setup-ball-values/
+    http://www.fcsnooker.co.uk/table_markings/table_markings.htm
+    """
 
     def __init__(
         self,
@@ -233,8 +246,13 @@ class SnookerRack(Rack):
         ordered=False,
         params: BallParams = BallParams(),
     ):
-        # TODO if id is just "red" looks nicer but does not work adding "i" works but not nice
-        #self.balls = [Ball(id="red", params=params) for i in range(1, 16)]
+        # kerby2000:
+        #  if id is just "red" looks nicer but does not work adding "i" works
+        #  but not nice
+        # ekiefl:
+        #  Yes, but the IDs are supposed to be unique identifiers. We could
+        #  solve this by adding an attribute to ball called "name", which is
+        #  separate from "id"
         self.balls = [Ball(id="red" + str(i), params=params) for i in range(1, 16)]
         self.balls.append(Ball("yellow", params=params))
         self.balls.append(Ball("green", params=params))
@@ -313,15 +331,6 @@ class SnookerRack(Rack):
             ball.state.rvw[0, 0] += x
             ball.state.rvw[0, 1] += y
 
-    # https://snookerfreaks.com/how-to-choose-the-right-snooker-table-buyers-guide/
-    # A – Baulk Line (1/5 of the length)
-    # B – Semi-Circle Radius (1/6 of the width)
-    # C – Pink Spot 
-    # D – Black (1/11  of the length)
-    # https://dynamicbilliard.ca/resources/snooker-table-layout/
-    # https://www.lovecuesports.com/snooker-table-setup-ball-values/
-    # http://www.fcsnooker.co.uk/table_markings/table_markings.htm
-
     def center_by_table(self, table):
         # place pyramid of red balls
         x = table.w / 2
@@ -336,27 +345,30 @@ class SnookerRack(Rack):
         # yellow
         self.balls[15].state.rvw[0] = [table.w / 3, table.l / 5, self.radius]
         # green
-        self.balls[16].state.rvw[0] = [table.w * 2/3, table.l / 5, self.radius]
+        self.balls[16].state.rvw[0] = [table.w * 2 / 3, table.l / 5, self.radius]
         # brown
         self.balls[17].state.rvw[0] = [table.w / 2, table.l / 5, self.radius]
         # blue
         self.balls[18].state.rvw[0] = [table.w / 2, table.l / 2, self.radius]
         # pink
-        self.balls[19].state.rvw[0] = [table.w / 2, table.l * 3/4, self.radius]
+        self.balls[19].state.rvw[0] = [table.w / 2, table.l * 3 / 4, self.radius]
         # black
-        self.balls[20].state.rvw[0] = [table.w / 2, table.l * 10/11, self.radius]
+        self.balls[20].state.rvw[0] = [table.w / 2, table.l * 10 / 11, self.radius]
         # white (place halfway between brown and green)
-        self.balls[21].state.rvw[0] = [table.w * 7/12, table.l / 5, self.radius]
+        self.balls[21].state.rvw[0] = [table.w * 7 / 12, table.l / 5, self.radius]
 
 
 def get_nine_ball_rack(*args, **kwargs):
     return NineBallRack(*args, **kwargs).get_balls_dict()
 
+
 def get_eight_ball_rack(*args, **kwargs):
     return EightBallRack(*args, **kwargs).get_balls_dict()
 
+
 def get_three_cushion_rack(*args, **kwargs):
     return ThreeCushionRack(*args, **kwargs).get_balls_dict()
+
 
 def get_snooker_rack(*args, **kwargs):
     return SnookerRack(*args, **kwargs).get_balls_dict()
