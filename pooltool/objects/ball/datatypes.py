@@ -79,13 +79,16 @@ class BallParams:
     f_c: float = field(default=0.2)
     g: float = field(default=9.81)
 
-
     # Updating to snooker specific constants foun on internet
     # TODO how to implement this in more generic way
     # https://www.snookershorts.com/shorts/some-snooker-and-pool-differences#:~:text=Pool%20balls%20are%20slightly%20larger,balls%20are%20approximately%20160%2D170g.
-    m: float = field(default=0.140)         # Snooker balls generally weigh around the 140g mark
-    R: float = field(default=0.02619375)    # Snooker balls are standardized at 52.5 mm (2+1⁄16 in) in diameter within a tolerance of plus or minus 0.05 mm (0.002 in).
-                                            # R=0.02619375 D=0.0523875
+    m: float = field(
+        default=0.140
+    )  # Snooker balls generally weigh around the 140g mark
+    R: float = field(
+        default=0.02619375
+    )  # Snooker balls are standardized at 52.5 mm (2+1⁄16 in) in diameter within a tolerance of plus or minus 0.05 mm (0.002 in).
+    # R=0.02619375 D=0.0523875
 
     # https://eloquentmath.blogspot.com/2012/04/introductory-mechanics-maths-of-snooker.html
     u_s: float = field(default=0.5)
@@ -106,6 +109,7 @@ class BallParams:
     @staticmethod
     def default() -> BallParams:
         return BallParams()
+
 
 def _null_rvw() -> NDArray[np.float64]:
     return np.array([[np.nan, np.nan, np.nan], [0, 0, 0], [0, 0, 0]], dtype=np.float64)

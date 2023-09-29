@@ -36,7 +36,11 @@ class TableRender(Render):
         if not ani.settings["gameplay"]["cue_collision"]:
             return
 
-        if self._table.table_type not in (TableType.BILLIARD, TableType.POCKET, TableType.SNOOKER):
+        if self._table.table_type not in (
+            TableType.BILLIARD,
+            TableType.POCKET,
+            TableType.SNOOKER,
+        ):
             raise NotImplementedError()
 
         # Make 4 planes

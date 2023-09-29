@@ -29,7 +29,7 @@ from pooltool.utils import panda_path
 class BallRender(Render):
     # TODO Snooker set is set_2
     fallback_path = ani.model_dir / "balls" / "set_2" / "red1.glb"
-    #fallback_path = ani.model_dir / "balls" / "set_1" / "1.glb"
+    # fallback_path = ani.model_dir / "balls" / "set_1" / "1.glb"
 
     def __init__(self, ball: Ball):
         self._ball = ball
@@ -40,7 +40,7 @@ class BallRender(Render):
     def model_path(self) -> Path:
         # TODO Snooker set is set_2
         expected_path = ani.model_dir / "balls" / "set_2" / f"{self._ball.id}.glb"
-        #expected_path = ani.model_dir / "balls" / "set_1" / f"{self._ball.id}.glb"
+        # expected_path = ani.model_dir / "balls" / "set_1" / f"{self._ball.id}.glb"
         return expected_path if expected_path.exists() else self.fallback_path
 
     def init_sphere(self):
@@ -131,7 +131,7 @@ class BallRender(Render):
         scales = np.linspace(start, stop, N)
 
         # TODO Snooker set is set_2
-        #shadow_path = ani.model_dir / "balls" / "set_1" / "shadow.glb"
+        # shadow_path = ani.model_dir / "balls" / "set_1" / "shadow.glb"
         shadow_path = ani.model_dir / "balls" / "set_2" / "shadow.glb"
         name = f"shadow_{self._ball.id}"
         shadow_node = Global.render.find("scene").find("table").attachNewNode(name)

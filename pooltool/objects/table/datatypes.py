@@ -142,6 +142,7 @@ class BilliardTableSpecs(TableSpecs):
     def create_pockets(self) -> Dict[str, Pocket]:
         return {}
 
+
 @define(frozen=True)
 class SnookerTableSpecs(TableSpecs):
     """Parameters that specify a 12-foot snooker table"""
@@ -149,7 +150,7 @@ class SnookerTableSpecs(TableSpecs):
     # TODO update
     # https://wpbsa.com/rules/
     # The playing area is within the cushion faces and shall measure
-    # 11 ft 8½ in x 5 ft 10 in (3569 mm x 1778 mm) with a tolerance on both dimensions of +/- ½ in (13 mm). 
+    # 11 ft 8½ in x 5 ft 10 in (3569 mm x 1778 mm) with a tolerance on both dimensions of +/- ½ in (13 mm).
     l: float = field(default=3.5869)
     w: float = field(default=1.778)
 
