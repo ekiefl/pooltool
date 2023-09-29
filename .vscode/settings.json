@@ -1,0 +1,13 @@
+{
+    "python.analysis.typeCheckingMode": "strict",
+    "python.analysis.extraPaths": [
+        "pooltool"
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "isort.args": [
+        "--profile",
+        "black"
+    ]
+}
