@@ -9,7 +9,6 @@ from attrs import define, evolve, field, fields_dict
 
 @define(frozen=True)
 class CueSpecs:
-    # TODO add snooker cue if needed
     brand: str = field(default="Predator")
     M: float = field(default=0.567)  # 20oz
     length: float = field(default=1.4732)  # 58in
@@ -19,6 +18,10 @@ class CueSpecs:
     @staticmethod
     def default() -> CueSpecs:
         return CueSpecs()
+
+    @staticmethod
+    def snooker() -> CueSpecs:
+        raise NotImplementedError()
 
 
 @define
