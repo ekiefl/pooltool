@@ -2,17 +2,17 @@
 
 import pooltool.constants as c
 import pooltool.events as e
-from pooltool.game.ruleset.datatypes import Game
+from pooltool.game.ruleset.datatypes import Ruleset
 from pooltool.layouts import EightBallRack
 
 
-class EightBall(Game):
+class EightBall(Ruleset):
     rack = EightBallRack
 
     def __init__(self, apa_rules=False):
         self.is_call_ball = True
         self.is_call_pocket = True
-        Game.__init__(self)
+        Ruleset.__init__(self)
         self.create_players(2)
 
         self.solids = [str(i) for i in range(1, 8)]

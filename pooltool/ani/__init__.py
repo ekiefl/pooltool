@@ -38,12 +38,6 @@ max_elevate = 80
 # number of seconds that camera rotation is disabled when shot is being calculated
 rotate_downtime = 0.3
 
-options_8_ball = "8 ball"
-options_9_ball = "9 ball"
-options_sandbox = "Sandbox"
-options_3_cushion = "3 cushion"
-options_snooker = "snooker"
-
 ball_highlight = {
     "ball_offset": 0.12,
     "ball_amplitude": 0.03,

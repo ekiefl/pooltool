@@ -19,7 +19,6 @@ from panda3d.core import (
 
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
-import pooltool.game.ruleset as ruleset
 import pooltool.terminal as terminal
 import pooltool.utils as utils
 from pooltool.ani.camera import cam
@@ -31,6 +30,8 @@ from pooltool.ani.menu import GenericMenu, menus
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
 from pooltool.evolution.continuize import continuize
+from pooltool.game.datatypes import GameType
+from pooltool.game.ruleset import get_ruleset
 from pooltool.objects.ball.datatypes import BallParams
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
@@ -440,7 +441,7 @@ class Game(Interface):
         # shot = System(table=table, balls=balls, cue=cue)
 
         # Snooker game
-        game = ruleset.game_classes[ani.options_snooker]()
+        game = get_ruleset(GameType.SNOOKER)()
         game.init()
 
         table = Table.snooker_table()

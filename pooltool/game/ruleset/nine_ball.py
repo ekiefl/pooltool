@@ -2,18 +2,18 @@
 
 import pooltool.constants as c
 import pooltool.events as e
-from pooltool.game.ruleset.datatypes import Game
+from pooltool.game.ruleset.datatypes import Ruleset
 from pooltool.layouts import NineBallRack
 from pooltool.objects.ball.datatypes import Ball
 
 
-class NineBall(Game):
+class NineBall(Ruleset):
     rack = NineBallRack
 
     def __init__(self, apa_rules=False):
         self.is_call_ball = False
         self.is_call_pocket = False
-        Game.__init__(self)
+        Ruleset.__init__(self)
         self.apa_rules = apa_rules
         self.create_players(2)
 

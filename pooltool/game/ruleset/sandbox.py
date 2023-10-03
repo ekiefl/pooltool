@@ -1,17 +1,17 @@
 #! /usr/bin/env python
 
 import pooltool.constants as c
-from pooltool.game.ruleset.datatypes import Game
+from pooltool.game.ruleset.datatypes import Ruleset
 from pooltool.layouts import NineBallRack
 
 
-class Sandbox(Game):
+class Sandbox(Ruleset):
     rack = NineBallRack
 
     def __init__(self, apa_rules=False):
         self.is_call_ball = False
         self.is_call_pocket = False
-        Game.__init__(self)
+        Ruleset.__init__(self)
         self.create_players(1)
 
     def start(self, shot):

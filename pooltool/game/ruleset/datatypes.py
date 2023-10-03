@@ -31,7 +31,7 @@ class Log:
             self.update = True
 
 
-class Game(ABC):
+class Ruleset(ABC):
     is_call_pocket = None
     is_call_ball = None
     rack: Optional[Type[Rack]] = None

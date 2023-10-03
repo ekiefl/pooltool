@@ -2,7 +2,7 @@
 
 import pooltool.constants as c
 import pooltool.events as e
-from pooltool.game.ruleset.datatypes import Game
+from pooltool.game.ruleset.datatypes import Ruleset
 from pooltool.layouts import SnookerRack
 from pooltool.objects.ball.datatypes import Ball
 
@@ -25,7 +25,7 @@ for i in range(1, 16):
     POINTS["red" + str(i)] = 1
 
 
-class Snooker(Game):
+class Snooker(Ruleset):
     rack = SnookerRack
 
     def __init__(self):
@@ -37,7 +37,7 @@ class Snooker(Game):
         self.pottedBalls = []  # Dictionary to store potted balls
         self.colorCount = 0  # Counter to cycle through COLORED_BALLS Dictionary
         self.expected = RED_BALLS
-        Game.__init__(self)
+        Ruleset.__init__(self)
 
         self.create_players(2)
 
