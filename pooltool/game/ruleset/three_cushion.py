@@ -2,7 +2,7 @@
 
 import pooltool.constants as c
 from pooltool.error import ConfigError
-from pooltool.games.datatypes import Game
+from pooltool.game.ruleset.datatypes import Game
 from pooltool.layouts import ThreeCushionRack
 
 

@@ -19,7 +19,7 @@ from panda3d.core import (
 
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
-import pooltool.games as games
+import pooltool.game.ruleset as ruleset
 import pooltool.terminal as terminal
 import pooltool.utils as utils
 from pooltool.ani.camera import cam
@@ -431,16 +431,16 @@ class Game(Interface):
         hardcoded defaults like `table = Table.pocket_table()`
         """
         # Pool game
-        #game = games.game_classes[ani.options_sandbox]()
-        #game.init()
+        # game = games.game_classes[ani.options_sandbox]()
+        # game.init()
 
-        #table = Table.pocket_table()
-        #balls = game.rack(table, ordered=True, params=BallParams()).get_balls_dict()
-        #cue = Cue(cue_ball_id=game.get_initial_cueing_ball(balls).id)
-        #shot = System(table=table, balls=balls, cue=cue)
+        # table = Table.pocket_table()
+        # balls = game.rack(table, ordered=True, params=BallParams()).get_balls_dict()
+        # cue = Cue(cue_ball_id=game.get_initial_cueing_ball(balls).id)
+        # shot = System(table=table, balls=balls, cue=cue)
 
         # Snooker game
-        game = games.game_classes[ani.options_snooker]()
+        game = ruleset.game_classes[ani.options_snooker]()
         game.init()
 
         table = Table.snooker_table()
