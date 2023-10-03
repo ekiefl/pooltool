@@ -1,5 +1,3 @@
-from typing import Type
-
 from pooltool.game.datatypes import GameType
 from pooltool.game.ruleset.datatypes import Ruleset
 from pooltool.game.ruleset.eight_ball import EightBall
