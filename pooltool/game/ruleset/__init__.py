@@ -15,5 +15,5 @@ _ruleset_classes = {
 }
 
 
-def get_ruleset(game: GameType) -> Type[Ruleset]:
-    return _ruleset_classes[game]
+def get_ruleset(game: GameType) -> Ruleset:
+    return _ruleset_classes[game]()

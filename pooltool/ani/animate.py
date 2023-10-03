@@ -431,17 +431,7 @@ class Game(Interface):
         FIXME This is where menu options should plug into, rather than using these
         hardcoded defaults like `table = Table.pocket_table()`
         """
-        # Pool game
-        # game = games.game_classes[ani.options_sandbox]()
-        # game.init()
-
-        # table = Table.pocket_table()
-        # balls = game.rack(table, ordered=True, params=BallParams()).get_balls_dict()
-        # cue = Cue(cue_ball_id=game.get_initial_cueing_ball(balls).id)
-        # shot = System(table=table, balls=balls, cue=cue)
-
-        # Snooker game
-        game = get_ruleset(GameType.SNOOKER)()
+        game = get_ruleset(GameType.SNOOKER)
         game.init()
 
         table = Table.snooker_table()
