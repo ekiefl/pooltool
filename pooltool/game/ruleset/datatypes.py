@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, Type
 
 import pooltool.constants as c
-from pooltool.layouts import Rack
+from pooltool.game.layouts import Rack
 from pooltool.system.datatypes import System
 from pooltool.terminal import Timer
 

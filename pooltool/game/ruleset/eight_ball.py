@@ -2,8 +2,8 @@
 
 import pooltool.constants as c
 import pooltool.events as e
+from pooltool.game.layouts import EightBallRack
 from pooltool.game.ruleset.datatypes import Ruleset
-from pooltool.layouts import EightBallRack
 
 
 class EightBall(Ruleset):

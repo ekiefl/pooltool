@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 
 import pooltool.constants as c
+from pooltool.game.layouts import NineBallRack
 from pooltool.game.ruleset.datatypes import Ruleset
-from pooltool.layouts import NineBallRack
 
 
 class Sandbox(Ruleset):

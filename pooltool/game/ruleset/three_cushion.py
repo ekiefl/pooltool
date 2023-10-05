@@ -2,8 +2,8 @@
 
 import pooltool.constants as c
 from pooltool.error import ConfigError
+from pooltool.game.layouts import ThreeCushionRack
 from pooltool.game.ruleset.datatypes import Ruleset
-from pooltool.layouts import ThreeCushionRack
 
 
 class ThreeCushion(Ruleset):
