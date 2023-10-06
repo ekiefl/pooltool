@@ -4,8 +4,16 @@ import random
 from abc import ABC, abstractmethod
 
 import numpy as np
+from numpy.typing import NDArray
 
 from pooltool.objects.ball.datatypes import Ball, BallParams
+
+
+def wiggle(xyz: NDArray, spacer: float):
+    ang = 2 * np.pi * np.random.rand()
+    rad = spacer * np.random.rand()
+
+    return xyz + np.array([rad * np.cos(ang), rad * np.sin(ang), 0])
 
 
 class Rack(ABC):
@@ -46,33 +54,39 @@ class NineBallRack(Rack):
         self.balls.append(Ball("cue", params=params))
         Rack.__init__(self, table)
 
-    def wiggle(self, xyz):
-        ang = 2 * np.pi * np.random.rand()
-        rad = self.spacer * np.random.rand()
-
-        return xyz + np.array([rad * np.cos(ang), rad * np.sin(ang), 0])
-
     def arrange(self):
         a = np.sqrt(3)
         r = self.eff_radius
 
-        self.balls[0].state.rvw[0] = self.wiggle(np.array([0, 0, self.radius]))
+        self.balls[0].state.rvw[0] = wiggle(np.array([0, 0, self.radius]), self.spacer)
 
-        self.balls[1].state.rvw[0] = self.wiggle(np.array([-r, a * r, self.radius]))
-        self.balls[2].state.rvw[0] = self.wiggle(np.array([+r, a * r, self.radius]))
-
-        self.balls[3].state.rvw[0] = self.wiggle(
-            np.array([-2 * r, 2 * a * r, self.radius])
+        self.balls[1].state.rvw[0] = wiggle(
+            np.array([-r, a * r, self.radius]), self.spacer
         )
-        self.balls[4].state.rvw[0] = self.wiggle(np.array([0, 2 * a * r, self.radius]))
-        self.balls[5].state.rvw[0] = self.wiggle(
-            np.array([+2 * r, 2 * a * r, self.radius])
+        self.balls[2].state.rvw[0] = wiggle(
+            np.array([+r, a * r, self.radius]), self.spacer
         )
 
-        self.balls[6].state.rvw[0] = self.wiggle(np.array([-r, 3 * a * r, self.radius]))
-        self.balls[7].state.rvw[0] = self.wiggle(np.array([+r, 3 * a * r, self.radius]))
+        self.balls[3].state.rvw[0] = wiggle(
+            np.array([-2 * r, 2 * a * r, self.radius]), self.spacer
+        )
+        self.balls[4].state.rvw[0] = wiggle(
+            np.array([0, 2 * a * r, self.radius]), self.spacer
+        )
+        self.balls[5].state.rvw[0] = wiggle(
+            np.array([+2 * r, 2 * a * r, self.radius]), self.spacer
+        )
 
-        self.balls[8].state.rvw[0] = self.wiggle(np.array([0, 4 * a * r, self.radius]))
+        self.balls[6].state.rvw[0] = wiggle(
+            np.array([-r, 3 * a * r, self.radius]), self.spacer
+        )
+        self.balls[7].state.rvw[0] = wiggle(
+            np.array([+r, 3 * a * r, self.radius]), self.spacer
+        )
+
+        self.balls[8].state.rvw[0] = wiggle(
+            np.array([0, 4 * a * r, self.radius]), self.spacer
+        )
 
     def center(self, x, y):
         for ball in self.balls:
@@ -116,56 +130,56 @@ class EightBallRack(Rack):
         self.balls.append(Ball("cue", params=params))
         Rack.__init__(self, table)
 
-    def wiggle(self, xyz):
-        ang = 2 * np.pi * np.random.rand()
-        rad = self.spacer * np.random.rand()
-
-        return xyz + np.array([rad * np.cos(ang), rad * np.sin(ang), 0])
-
     def arrange(self):
         a = np.sqrt(3)
         r = self.eff_radius
 
-        self.balls[0].state.rvw[0] = self.wiggle(np.array([0, 0, self.radius]))
+        self.balls[0].state.rvw[0] = wiggle(np.array([0, 0, self.radius]), self.spacer)
 
-        self.balls[1].state.rvw[0] = self.wiggle(np.array([-r, a * r, self.radius]))
-        self.balls[2].state.rvw[0] = self.wiggle(np.array([+r, a * r, self.radius]))
-
-        self.balls[3].state.rvw[0] = self.wiggle(
-            np.array([-2 * r, 2 * a * r, self.radius])
+        self.balls[1].state.rvw[0] = wiggle(
+            np.array([-r, a * r, self.radius]), self.spacer
         )
-        self.balls[4].state.rvw[0] = self.wiggle(np.array([0, 2 * a * r, self.radius]))
-        self.balls[5].state.rvw[0] = self.wiggle(
-            np.array([+2 * r, 2 * a * r, self.radius])
+        self.balls[2].state.rvw[0] = wiggle(
+            np.array([+r, a * r, self.radius]), self.spacer
         )
 
-        self.balls[6].state.rvw[0] = self.wiggle(
-            np.array([-3 * r, 3 * a * r, self.radius])
+        self.balls[3].state.rvw[0] = wiggle(
+            np.array([-2 * r, 2 * a * r, self.radius]), self.spacer
         )
-        self.balls[7].state.rvw[0] = self.wiggle(
-            np.array([-1 * r, 3 * a * r, self.radius])
+        self.balls[4].state.rvw[0] = wiggle(
+            np.array([0, 2 * a * r, self.radius]), self.spacer
         )
-        self.balls[8].state.rvw[0] = self.wiggle(
-            np.array([+1 * r, 3 * a * r, self.radius])
-        )
-        self.balls[9].state.rvw[0] = self.wiggle(
-            np.array([+3 * r, 3 * a * r, self.radius])
+        self.balls[5].state.rvw[0] = wiggle(
+            np.array([+2 * r, 2 * a * r, self.radius]), self.spacer
         )
 
-        self.balls[10].state.rvw[0] = self.wiggle(
-            np.array([-4 * r, 4 * a * r, self.radius])
+        self.balls[6].state.rvw[0] = wiggle(
+            np.array([-3 * r, 3 * a * r, self.radius]), self.spacer
         )
-        self.balls[11].state.rvw[0] = self.wiggle(
-            np.array([-2 * r, 4 * a * r, self.radius])
+        self.balls[7].state.rvw[0] = wiggle(
+            np.array([-1 * r, 3 * a * r, self.radius]), self.spacer
         )
-        self.balls[12].state.rvw[0] = self.wiggle(
-            np.array([+0 * r, 4 * a * r, self.radius])
+        self.balls[8].state.rvw[0] = wiggle(
+            np.array([+1 * r, 3 * a * r, self.radius]), self.spacer
         )
-        self.balls[13].state.rvw[0] = self.wiggle(
-            np.array([+2 * r, 4 * a * r, self.radius])
+        self.balls[9].state.rvw[0] = wiggle(
+            np.array([+3 * r, 3 * a * r, self.radius]), self.spacer
         )
-        self.balls[14].state.rvw[0] = self.wiggle(
-            np.array([+4 * r, 4 * a * r, self.radius])
+
+        self.balls[10].state.rvw[0] = wiggle(
+            np.array([-4 * r, 4 * a * r, self.radius]), self.spacer
+        )
+        self.balls[11].state.rvw[0] = wiggle(
+            np.array([-2 * r, 4 * a * r, self.radius]), self.spacer
+        )
+        self.balls[12].state.rvw[0] = wiggle(
+            np.array([+0 * r, 4 * a * r, self.radius]), self.spacer
+        )
+        self.balls[13].state.rvw[0] = wiggle(
+            np.array([+2 * r, 4 * a * r, self.radius]), self.spacer
+        )
+        self.balls[14].state.rvw[0] = wiggle(
+            np.array([+4 * r, 4 * a * r, self.radius]), self.spacer
         )
 
     def center(self, x, y):
@@ -268,62 +282,62 @@ class SnookerRack(Rack):
 
         Rack.__init__(self, table)
 
-    def wiggle(self, xyz):
-        ang = 2 * np.pi * np.random.rand()
-        rad = self.spacer * np.random.rand()
-
-        return xyz + np.array([rad * np.cos(ang), rad * np.sin(ang), 0])
-
     def arrange(self):
         a = np.sqrt(3)
         r = self.eff_radius
 
         # Arrange red balls into pyramid
         # row 1
-        self.balls[0].state.rvw[0] = self.wiggle(np.array([0, 0, self.radius]))
+        self.balls[0].state.rvw[0] = wiggle(np.array([0, 0, self.radius]), self.spacer)
 
         # row 2
-        self.balls[1].state.rvw[0] = self.wiggle(np.array([-r, a * r, self.radius]))
-        self.balls[2].state.rvw[0] = self.wiggle(np.array([+r, a * r, self.radius]))
+        self.balls[1].state.rvw[0] = wiggle(
+            np.array([-r, a * r, self.radius]), self.spacer
+        )
+        self.balls[2].state.rvw[0] = wiggle(
+            np.array([+r, a * r, self.radius]), self.spacer
+        )
 
         # row 3
-        self.balls[3].state.rvw[0] = self.wiggle(
-            np.array([-2 * r, 2 * a * r, self.radius])
+        self.balls[3].state.rvw[0] = wiggle(
+            np.array([-2 * r, 2 * a * r, self.radius]), self.spacer
         )
-        self.balls[4].state.rvw[0] = self.wiggle(np.array([0, 2 * a * r, self.radius]))
-        self.balls[5].state.rvw[0] = self.wiggle(
-            np.array([+2 * r, 2 * a * r, self.radius])
+        self.balls[4].state.rvw[0] = wiggle(
+            np.array([0, 2 * a * r, self.radius]), self.spacer
+        )
+        self.balls[5].state.rvw[0] = wiggle(
+            np.array([+2 * r, 2 * a * r, self.radius]), self.spacer
         )
 
         # row 4
-        self.balls[6].state.rvw[0] = self.wiggle(
-            np.array([-3 * r, 3 * a * r, self.radius])
+        self.balls[6].state.rvw[0] = wiggle(
+            np.array([-3 * r, 3 * a * r, self.radius]), self.spacer
         )
-        self.balls[7].state.rvw[0] = self.wiggle(
-            np.array([-1 * r, 3 * a * r, self.radius])
+        self.balls[7].state.rvw[0] = wiggle(
+            np.array([-1 * r, 3 * a * r, self.radius]), self.spacer
         )
-        self.balls[8].state.rvw[0] = self.wiggle(
-            np.array([+1 * r, 3 * a * r, self.radius])
+        self.balls[8].state.rvw[0] = wiggle(
+            np.array([+1 * r, 3 * a * r, self.radius]), self.spacer
         )
-        self.balls[9].state.rvw[0] = self.wiggle(
-            np.array([+3 * r, 3 * a * r, self.radius])
+        self.balls[9].state.rvw[0] = wiggle(
+            np.array([+3 * r, 3 * a * r, self.radius]), self.spacer
         )
 
         # row 5
-        self.balls[10].state.rvw[0] = self.wiggle(
-            np.array([-4 * r, 4 * a * r, self.radius])
+        self.balls[10].state.rvw[0] = wiggle(
+            np.array([-4 * r, 4 * a * r, self.radius]), self.spacer
         )
-        self.balls[11].state.rvw[0] = self.wiggle(
-            np.array([-2 * r, 4 * a * r, self.radius])
+        self.balls[11].state.rvw[0] = wiggle(
+            np.array([-2 * r, 4 * a * r, self.radius]), self.spacer
         )
-        self.balls[12].state.rvw[0] = self.wiggle(
-            np.array([+0 * r, 4 * a * r, self.radius])
+        self.balls[12].state.rvw[0] = wiggle(
+            np.array([+0 * r, 4 * a * r, self.radius]), self.spacer
         )
-        self.balls[13].state.rvw[0] = self.wiggle(
-            np.array([+2 * r, 4 * a * r, self.radius])
+        self.balls[13].state.rvw[0] = wiggle(
+            np.array([+2 * r, 4 * a * r, self.radius]), self.spacer
         )
-        self.balls[14].state.rvw[0] = self.wiggle(
-            np.array([+4 * r, 4 * a * r, self.radius])
+        self.balls[14].state.rvw[0] = wiggle(
+            np.array([+4 * r, 4 * a * r, self.radius]), self.spacer
         )
 
     def center(self, x, y):
