@@ -21,7 +21,7 @@ def main(args):
     else:
         shot = pt.System(
             cue=pt.Cue(cue_ball_id="cue"),
-            table=(table := pt.Table.pocket_table()),
+            table=(table := pt.Table.default()),
             balls=pt.get_nine_ball_rack(
                 table, ordered=True, spacing_factor=args.spacing_factor
             ),

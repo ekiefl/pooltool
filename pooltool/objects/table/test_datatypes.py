@@ -5,7 +5,7 @@ from pooltool.objects.table.datatypes import Table
 
 @pytest.fixture
 def table():
-    return Table.pocket_table()
+    return Table.default()
 
 
 def test_table_copy(table):

@@ -13,7 +13,7 @@ def main():
 
     # Create a system
     shot = pt.System(
-        table=(table := pt.Table.pocket_table()),
+        table=(table := pt.Table.default()),
         balls=pt.get_nine_ball_rack(table, ordered=True),
         cue=pt.Cue(cue_ball_id="cue"),
     )

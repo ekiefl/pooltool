@@ -120,7 +120,7 @@ def get_two_ball_rack(seed: Optional[int] = None):
             (ball_one := BallPos([], relative_to=(0.5, 0.5), ids={"1", "2"})),
             BallPos([Trans(Dir.LEFT)], relative_to=ball_one, ids={"1", "2"}),
         ],
-        table=Table.pocket_table(),
+        table=Table.default(),
         ball_params=ball_params,
         spacing_factor=SPACING_FACTOR,
         seed=seed,

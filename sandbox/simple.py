@@ -13,7 +13,7 @@ def rand_pos(table):
 
 
 # Create a 2-ball system (randomly placed balls)
-table = pt.Table.pocket_table()
+table = pt.Table.default()
 shot = pt.System(
     table=table,
     cue=pt.Cue(),
