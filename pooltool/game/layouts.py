@@ -49,26 +49,52 @@ class Dir(StrEnum):
         }
 
 
-@attrs.define
-class Trans:
-    """A translation in a direction
+class Jump:
+    @staticmethod
+    def LEFT(quantity: int = 1) -> List[Dir]:
+        return [Dir.LEFT] * quantity
 
-    Attributes:
-        direction:
-            A direction.
-        quantity:
-            The number of ball diameters to move in the direction. quantity=1
-            means moving one ball diameter in the given direction.
-    """
+    @staticmethod
+    def RIGHT(quantity: int = 1) -> List[Dir]:
+        return [Dir.RIGHT] * quantity
 
-    direction: Dir
-    quantity: int = 1
+    @staticmethod
+    def UP(quantity: int = 1) -> List[Dir]:
+        return [Dir.UP] * quantity
 
-    def eval(self, radius: float) -> Tuple[float, float]:
+    @staticmethod
+    def DOWN(quantity: int = 1) -> List[Dir]:
+        return [Dir.DOWN] * quantity
+
+    @staticmethod
+    def UPLEFT(quantity: int = 1) -> List[Dir]:
+        return [Dir.UPLEFT] * quantity
+
+    @staticmethod
+    def UPRIGHT(quantity: int = 1) -> List[Dir]:
+        return [Dir.UPRIGHT] * quantity
+
+    @staticmethod
+    def DOWNRIGHT(quantity: int = 1) -> List[Dir]:
+        return [Dir.DOWNRIGHT] * quantity
+
+    @staticmethod
+    def DOWNLEFT(quantity: int = 1) -> List[Dir]:
+        return [Dir.DOWNLEFT] * quantity
+
+    @staticmethod
+    def eval(translations: List[Dir], radius: float) -> Tuple[float, float]:
         mapping = Dir.translation_map
         assert isinstance(mapping, dict)
-        delta_x, delta_y = mapping[self.direction]
-        return delta_x * self.quantity * radius, delta_y * self.quantity * radius
+
+        dx, dy = 0, 0
+
+        for direction in translations:
+            i, j = mapping[direction]
+            dx += i * radius
+            dy += j * radius
+
+        return dx, dy
 
 
 @attrs.define
@@ -85,7 +111,7 @@ class Pos:
             so (0.0, 0.0) is bottom-left and (1.0, 1.0) is top right.
     """
 
-    loc: List[Trans]
+    loc: List[Dir]
     relative_to: Union[Pos, Tuple[float, float]]
 
 
@@ -108,10 +134,10 @@ def _get_ball_ids(positions: List[BallPos]) -> Set[str]:
     return ids
 
 
-def _get_anchor_translation(pos: Pos) -> Tuple[Tuple[float, float], List[Trans]]:
+def _get_anchor_translation(pos: Pos) -> Tuple[Tuple[float, float], List[Dir]]:
     """Traverse the position's parent hierarchy until the anchor is found"""
 
-    translation_from_anchor: List[Trans] = []
+    translation_from_anchor: List[Dir] = []
     translation_from_anchor.extend(pos.loc)
 
     parent = pos.relative_to
@@ -188,10 +214,10 @@ def _get_rack(
         x *= table.w
         y *= table.l
 
-        for trans in translation:
-            dx, dy = trans.eval(radius)
-            x += dx
-            y += dy
+        dx, dy = Jump.eval(translation, radius)
+
+        x += dx
+        y += dy
 
         x, y = _wiggle(x, y, ball_radius * spacing_factor)
 
@@ -215,16 +241,6 @@ def _wiggle(x: float, y: float, spacer: float) -> Tuple[float, float]:
     return x + rad * np.cos(ang), y + rad * np.sin(ang)
 
 
-GO_LEFT = Trans(Dir.LEFT, 1)
-GO_RIGHT = Trans(Dir.RIGHT, 1)
-GO_UP = Trans(Dir.UP, 1)
-GO_DOWN = Trans(Dir.DOWN, 1)
-GO_UPLEFT = Trans(Dir.UPLEFT, 1)
-GO_UPRIGHT = Trans(Dir.UPRIGHT, 1)
-GO_DOWNLEFT = Trans(Dir.DOWNLEFT, 1)
-GO_DOWNRIGHT = Trans(Dir.DOWNRIGHT, 1)
-
-
 def get_nine_ball_rack(*args, **kwargs) -> Dict[str, Ball]:
     others = {"2", "3", "4", "5", "6", "7", "8"}
 
@@ -233,23 +249,23 @@ def get_nine_ball_rack(*args, **kwargs) -> Dict[str, Ball]:
     ]
 
     row2 = [
-        (anchor := BallPos([GO_UPLEFT], anchor, others)),
-        BallPos([GO_RIGHT], anchor, others),
+        (anchor := BallPos(Jump.UPLEFT(), anchor, others)),
+        BallPos(Jump.RIGHT(), anchor, others),
     ]
 
     row3 = [
-        (anchor := BallPos([GO_UPLEFT], anchor, others)),
-        BallPos([GO_RIGHT], anchor, {"9"}),
-        BallPos([GO_RIGHT] * 2, anchor, others),
+        (anchor := BallPos(Jump.UPLEFT(), anchor, others)),
+        BallPos(Jump.RIGHT(1), anchor, {"9"}),
+        BallPos(Jump.RIGHT(2), anchor, others),
     ]
 
     row4 = [
-        (anchor := BallPos([GO_UPRIGHT], anchor, others)),
-        BallPos([GO_RIGHT], anchor, others),
+        (anchor := BallPos(Jump.UPRIGHT(), anchor, others)),
+        BallPos(Jump.RIGHT(), anchor, others),
     ]
 
     row5 = [
-        BallPos([GO_UPRIGHT], anchor, others),
+        BallPos(Jump.UPRIGHT(), anchor, others),
     ]
 
     cue = BallPos([], (0.85, 0.23), {"cue"})
@@ -267,29 +283,29 @@ def get_eight_ball_rack(*args, **kwargs) -> Dict[str, Ball]:
     ]
 
     row2 = [
-        (anchor := BallPos([GO_UPLEFT], anchor, stripes)),
-        BallPos([GO_RIGHT], anchor, solids),
+        (anchor := BallPos(Jump.UPLEFT(), anchor, stripes)),
+        BallPos(Jump.RIGHT(), anchor, solids),
     ]
 
     row3 = [
-        (anchor := BallPos([GO_UPLEFT], anchor, solids)),
-        BallPos([GO_RIGHT], anchor, {"8"}),
-        BallPos([GO_RIGHT] * 2, anchor, stripes),
+        (anchor := BallPos(Jump.UPLEFT(), anchor, solids)),
+        BallPos(Jump.RIGHT(1), anchor, {"8"}),
+        BallPos(Jump.RIGHT(2), anchor, stripes),
     ]
 
     row4 = [
-        (anchor := BallPos([GO_UPLEFT], anchor, stripes)),
-        BallPos([GO_RIGHT], anchor, solids),
-        BallPos([GO_RIGHT] * 2, anchor, stripes),
-        BallPos([GO_RIGHT] * 3, anchor, solids),
+        (anchor := BallPos(Jump.UPLEFT(), anchor, stripes)),
+        BallPos(Jump.RIGHT(1), anchor, solids),
+        BallPos(Jump.RIGHT(2), anchor, stripes),
+        BallPos(Jump.RIGHT(3), anchor, solids),
     ]
 
     row5 = [
-        (anchor := BallPos([GO_UPLEFT], anchor, solids)),
-        BallPos([GO_RIGHT], anchor, stripes),
-        BallPos([GO_RIGHT] * 2, anchor, stripes),
-        BallPos([GO_RIGHT] * 3, anchor, solids),
-        BallPos([GO_RIGHT] * 4, anchor, stripes),
+        (anchor := BallPos(Jump.UPLEFT(), anchor, solids)),
+        BallPos(Jump.RIGHT(1), anchor, stripes),
+        BallPos(Jump.RIGHT(2), anchor, stripes),
+        BallPos(Jump.RIGHT(3), anchor, solids),
+        BallPos(Jump.RIGHT(4), anchor, stripes),
     ]
 
     # Cue ball
@@ -326,33 +342,33 @@ def get_snooker_rack(*args, **kwargs):
     red_ids = set([f"red{i}" for i in range(1, 16)])
 
     row1 = [
-        (anchor := BallPos([GO_UP], (0.5, 0.75), red_ids)),
+        (anchor := BallPos(Jump.UP(), (0.5, 0.75), red_ids)),
     ]
 
     row2 = [
-        (anchor := BallPos([GO_UPLEFT], anchor, red_ids)),
-        BallPos([GO_RIGHT], anchor, red_ids),
+        (anchor := BallPos(Jump.UPLEFT(), anchor, red_ids)),
+        BallPos(Jump.RIGHT(), anchor, red_ids),
     ]
 
     row3 = [
-        (anchor := BallPos([GO_UPLEFT], anchor, red_ids)),
-        BallPos([GO_RIGHT], anchor, red_ids),
-        BallPos([GO_RIGHT] * 2, anchor, red_ids),
+        (anchor := BallPos(Jump.UPLEFT(), anchor, red_ids)),
+        BallPos(Jump.RIGHT(1), anchor, red_ids),
+        BallPos(Jump.RIGHT(2), anchor, red_ids),
     ]
 
     row4 = [
-        (anchor := BallPos([GO_UPLEFT], anchor, red_ids)),
-        BallPos([GO_RIGHT], anchor, red_ids),
-        BallPos([GO_RIGHT] * 2, anchor, red_ids),
-        BallPos([GO_RIGHT] * 3, anchor, red_ids),
+        (anchor := BallPos(Jump.UPLEFT(), anchor, red_ids)),
+        BallPos(Jump.RIGHT(1), anchor, red_ids),
+        BallPos(Jump.RIGHT(2), anchor, red_ids),
+        BallPos(Jump.RIGHT(3), anchor, red_ids),
     ]
 
     row5 = [
-        (anchor := BallPos([GO_UPLEFT], anchor, red_ids)),
-        BallPos([GO_RIGHT], anchor, red_ids),
-        BallPos([GO_RIGHT] * 2, anchor, red_ids),
-        BallPos([GO_RIGHT] * 3, anchor, red_ids),
-        BallPos([GO_RIGHT] * 4, anchor, red_ids),
+        (anchor := BallPos(Jump.UPLEFT(), anchor, red_ids)),
+        BallPos(Jump.RIGHT(1), anchor, red_ids),
+        BallPos(Jump.RIGHT(2), anchor, red_ids),
+        BallPos(Jump.RIGHT(3), anchor, red_ids),
+        BallPos(Jump.RIGHT(4), anchor, red_ids),
     ]
 
     blueprint = colors + row1 + row2 + row3 + row4 + row5
