@@ -1,6 +1,9 @@
+from typing import Any, List, Literal
+
 import numpy as np
 import pytest
 
+import pooltool.math as math
 from pooltool.game.layouts import (
     BallPos,
     Dir,
@@ -8,7 +11,11 @@ from pooltool.game.layouts import (
     Trans,
     _get_anchor_translation,
     _get_ball_ids,
+    _get_rack,
+    get_nine_ball_rack,
 )
+from pooltool.objects import Ball, BallParams, Table
+from pooltool.physics.utils import is_overlapping
 
 
 def test_get_ball_ids():
@@ -95,3 +102,41 @@ def test_get_translation(directions, quantities, expected_x, expected_y, radius)
         y += dy
     assert x == expected_x
     assert y == expected_y
+
+
+SPACING_FACTOR = 0.1
+
+
+def _two_ball_rack():
+    R = 0.03
+    ball_params = BallParams(R=R)
+
+    return _get_rack(
+        blueprint=[
+            (ball_one := BallPos([], relative_to=(0.5, 0.5), ids={"1"})),
+            BallPos([Trans(Dir.LEFT)], relative_to=ball_one, ids={"2"}),
+        ],
+        table=Table.pocket_table(),
+        ball_params=ball_params,
+        spacing_factor=SPACING_FACTOR,
+    )
+
+
+def test_wiggle():
+    _distance_array: List[float] = []
+
+    for _ in range(1000):
+        rack = _two_ball_rack()
+        ball1 = rack["1"]
+        ball2 = rack["2"]
+        distance = (
+            math.norm3d(ball1.state.rvw[0] - ball2.state.rvw[0]) - 2 * ball1.params.R
+        )
+
+        # Distance always greater than 0
+        assert distance > 0
+
+        # Distance never greater than 4 * R * spacing_factor
+        assert distance < 4 * SPACING_FACTOR * ball1.params.R
+
+        _distance_array.append(distance)

@@ -163,10 +163,12 @@ def _get_rack(
     if ball_params is None:
         ball_params = BallParams.default()
 
-    ball_ids = _get_ball_ids(blueprint)
-    radius = ball_params.R
+    ball_radius = ball_params.R
+    radius = ball_radius * (1 + spacing_factor)
 
     balls: Dict[str, Ball] = {}
+
+    ball_ids = _get_ball_ids(blueprint)
 
     for ball in blueprint:
         (x, y), translation = _get_anchor_translation(ball)
@@ -178,6 +180,8 @@ def _get_rack(
             dx, dy = trans.eval(radius)
             x += dx
             y += dy
+
+        x, y = _wiggle(x, y, ball_radius * spacing_factor)
 
         # Choose ball
         remaining = ball_ids.intersection(ball.ids)
@@ -192,11 +196,11 @@ def _get_rack(
     return balls
 
 
-def _wiggle(xyz: NDArray, spacer: float):
+def _wiggle(x: float, y: float, spacer: float) -> Tuple[float, float]:
     ang = 2 * np.pi * np.random.rand()
     rad = spacer * np.random.rand()
 
-    return xyz + np.array([rad * np.cos(ang), rad * np.sin(ang), 0])
+    return x + rad * np.cos(ang), y + rad * np.sin(ang)
 
 
 GO_LEFT = Trans(Dir.LEFT, 1)
