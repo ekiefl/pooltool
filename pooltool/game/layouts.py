@@ -14,6 +14,7 @@ from numpy.typing import NDArray
 from pooltool.game.datatypes import GameType
 from pooltool.objects.ball.datatypes import Ball, BallParams
 from pooltool.objects.table.datatypes import Table
+from pooltool.utils import classproperty
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -33,24 +34,19 @@ class Dir(StrEnum):
     DOWNLEFT = auto()
     UPLEFT = auto()
 
-    @staticmethod
-    def get_translation(
-        direction: Dir, quantity: int, radius: float
-    ) -> Tuple[float, float]:
+    @classproperty
+    def translation_map(cls) -> Dict[Dir, Tuple[float, float]]:
         a = np.sqrt(3)
-        translations = {
-            Dir.LEFT: (-2 * radius, 0),
-            Dir.RIGHT: (2 * radius, 0),
-            Dir.UP: (0, 2 * radius),
-            Dir.DOWN: (0, -2 * radius),
-            Dir.UPRIGHT: (radius, a * radius),
-            Dir.DOWNRIGHT: (radius, -a * radius),
-            Dir.UPLEFT: (-radius, a * radius),
-            Dir.DOWNLEFT: (-radius, -a * radius),
+        return {
+            Dir.LEFT: (-2, 0),
+            Dir.RIGHT: (2, 0),
+            Dir.UP: (0, 2),
+            Dir.DOWN: (0, -2),
+            Dir.UPRIGHT: (1, a),
+            Dir.DOWNRIGHT: (1, -a),
+            Dir.UPLEFT: (-1, a),
+            Dir.DOWNLEFT: (-1, -a),
         }
-
-        delta_x, delta_y = translations[direction]
-        return delta_x * quantity, delta_y * quantity
 
 
 @attrs.define
@@ -68,10 +64,16 @@ class Trans:
     direction: Dir
     quantity: int
 
+    def eval(self, radius: float) -> Tuple[float, float]:
+        mapping = Dir.translation_map
+        assert isinstance(mapping, dict)
+        delta_x, delta_y = mapping[self.direction]
+        return delta_x * self.quantity * radius, delta_y * self.quantity * radius
+
 
 @attrs.define
 class Pos:
-    """Defines a position relative to another position, or an anchor
+    """Defines a position relative to another position, or a 2D table coordinate
 
     Attributes:
         loc:
@@ -106,13 +108,13 @@ def _get_ball_ids(positions: List[BallPos]) -> Set[str]:
     return ids
 
 
-def _get_anchor_translation(ball: BallPos) -> Tuple[Tuple[float, float], List[Trans]]:
-    """Traverse the ball position's parent hierarchy until the anchor is found"""
+def _get_anchor_translation(pos: Pos) -> Tuple[Tuple[float, float], List[Trans]]:
+    """Traverse the position's parent hierarchy until the anchor is found"""
 
     translation_from_anchor: List[Trans] = []
-    translation_from_anchor.extend(ball.loc)
+    translation_from_anchor.extend(pos.loc)
 
-    parent = ball.relative_to
+    parent = pos.relative_to
 
     while True:
         if isinstance(parent, tuple):
@@ -164,7 +166,7 @@ def get_rack(blueprint: List[BallPos], table: Table) -> Dict[str, Ball]:
         y *= table.l
 
         for trans in translation:
-            dx, dy = Dir.get_translation(trans.direction, trans.quantity, radius)
+            dx, dy = trans.eval(radius)
             x += dx
             y += dy
 

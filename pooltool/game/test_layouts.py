@@ -90,7 +90,8 @@ def radius():
 def test_get_translation(directions, quantities, expected_x, expected_y, radius):
     x, y = 0, 0
     for direction, quantity in zip(directions, quantities):
-        dx, dy = Dir.get_translation(direction, quantity, radius)
+        trans = Trans(direction, quantity)
+        dx, dy = trans.eval(radius)
         x += dx
         y += dy
     assert x == expected_x
