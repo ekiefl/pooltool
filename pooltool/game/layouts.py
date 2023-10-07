@@ -124,7 +124,9 @@ def _get_anchor_translation(pos: Pos) -> Tuple[Tuple[float, float], List[Trans]]
         parent = parent.relative_to
 
 
-def get_rack(blueprint: List[BallPos], table: Table) -> Dict[str, Ball]:
+def get_rack(
+    blueprint: List[BallPos], table: Table, ball_params: BallParams
+) -> Dict[str, Ball]:
     """Generate Ball objects based on a given blueprint and table dimensions.
 
     The function calculates the absolute position of each ball on the table using the
@@ -154,8 +156,7 @@ def get_rack(blueprint: List[BallPos], table: Table) -> Dict[str, Ball]:
     """
 
     ball_ids = _get_ball_ids(blueprint)
-    params = BallParams.default()
-    radius = params.R
+    radius = ball_params.R
 
     balls: Dict[str, Ball] = {}
 
