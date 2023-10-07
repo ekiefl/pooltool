@@ -12,8 +12,8 @@ import pooltool.math as math
 from pooltool.game.layouts import (
     BallPos,
     Dir,
+    Jump,
     Pos,
-    Trans,
     _get_anchor_translation,
     _get_ball_ids,
     _get_rack,
@@ -24,7 +24,7 @@ from pooltool.objects.ball.datatypes import Ball
 
 def test_get_ball_ids():
     anchor = (0.5, 0.5)
-    trans = [Trans(direction=Dir.UP, quantity=1)]
+    trans = Jump.UP(1)
     ball_pos_1 = BallPos(loc=trans, relative_to=anchor, ids={"1", "2"})
     ball_pos_2 = BallPos(loc=trans, relative_to=anchor, ids={"1", "3", "4"})
 
@@ -35,7 +35,7 @@ def test_get_ball_ids():
 def test_get_anchor_translation_direct():
     """BallPos directly references an Anchor"""
     anchor = (0.5, 0.5)
-    trans = [Trans(direction=Dir.UP, quantity=1)]
+    trans = Jump.UP(1)
     ball_pos = BallPos(loc=trans, relative_to=anchor, ids={"1"})
 
     anchor_result, translation_result = _get_anchor_translation(ball_pos)
@@ -46,11 +46,11 @@ def test_get_anchor_translation_direct():
 def test_get_anchor_translation_multi_level():
     """Multiple levels of positions before reaching the Anchor"""
     anchor = (0.5, 0.5)
-    trans1 = [Trans(direction=Dir.UP, quantity=1)]
+    trans1 = Jump.UP(1)
     pos1 = Pos(loc=trans1, relative_to=anchor)
-    trans2 = [Trans(direction=Dir.LEFT, quantity=1)]
+    trans2 = Jump.LEFT(1)
     pos2 = Pos(loc=trans2, relative_to=pos1)
-    trans3 = [Trans(direction=Dir.DOWN, quantity=1)]
+    trans3 = Jump.DOWN(1)
     ball_pos = BallPos(loc=trans3, relative_to=pos2, ids={"1"})
 
     anchor_result, translation_result = _get_anchor_translation(ball_pos)
@@ -61,11 +61,11 @@ def test_get_anchor_translation_multi_level():
 def test_get_anchor_translation_mixed_hierarchy():
     """A mix of Pos and BallPos in the parent hierarchy"""
     anchor = (0.5, 0.5)
-    trans1 = [Trans(direction=Dir.UP, quantity=1)]
+    trans1 = Jump.UP(1)
     pos1 = Pos(loc=trans1, relative_to=anchor)
-    trans2 = [Trans(direction=Dir.LEFT, quantity=1)]
+    trans2 = Jump.LEFT(1)
     ball_pos1 = BallPos(loc=trans2, relative_to=pos1, ids={"1"})
-    trans3 = [Trans(direction=Dir.DOWN, quantity=1)]
+    trans3 = Jump.DOWN(1)
     ball_pos2 = BallPos(loc=trans3, relative_to=ball_pos1, ids={"2"})
 
     anchor_result, translation_result = _get_anchor_translation(ball_pos2)
@@ -100,8 +100,8 @@ def radius():
 def test_get_translation(directions, quantities, expected_x, expected_y, radius):
     x, y = 0, 0
     for direction, quantity in zip(directions, quantities):
-        trans = Trans(direction, quantity)
-        dx, dy = trans.eval(radius)
+        trans = [direction] * quantity
+        dx, dy = Jump.eval(trans, radius)
         x += dx
         y += dy
     assert x == expected_x
@@ -118,7 +118,7 @@ def get_two_ball_rack(seed: Optional[int] = None):
     return _get_rack(
         blueprint=[
             (ball_one := BallPos([], relative_to=(0.5, 0.5), ids={"1", "2"})),
-            BallPos([Trans(Dir.LEFT)], relative_to=ball_one, ids={"1", "2"}),
+            BallPos(Jump.LEFT(), relative_to=ball_one, ids={"1", "2"}),
         ],
         table=Table.default(),
         ball_params=ball_params,
