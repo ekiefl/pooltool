@@ -2,14 +2,11 @@
 
 import pooltool.constants as c
 import pooltool.events as e
-from pooltool.game.layouts import NineBallRack
 from pooltool.game.ruleset.datatypes import Ruleset
 from pooltool.objects.ball.datatypes import Ball
 
 
 class NineBall(Ruleset):
-    rack = NineBallRack
-
     def __init__(self, apa_rules=False):
         self.is_call_ball = False
         self.is_call_pocket = False

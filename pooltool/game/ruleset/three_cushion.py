@@ -2,13 +2,10 @@
 
 import pooltool.constants as c
 from pooltool.error import ConfigError
-from pooltool.game.layouts import ThreeCushionRack
 from pooltool.game.ruleset.datatypes import Ruleset
 
 
 class ThreeCushion(Ruleset):
-    rack = ThreeCushionRack
-
     def __init__(self):
         self.points_to_win = 20
         self.is_call_ball = False

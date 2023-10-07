@@ -2,11 +2,9 @@
 
 import pooltool.constants as c
 import pooltool.events as e
-from pooltool.game.layouts import SnookerRack
 from pooltool.game.ruleset.datatypes import Ruleset
 from pooltool.objects.ball.datatypes import Ball
 
-RED_BALLS = ["red"]
 RED_BALLS = ["red" + str(i) for i in range(1, 16)]
 
 COLORED_BALLS = ["yellow", "green", "brown", "blue", "pink", "black"]
@@ -26,8 +24,6 @@ for i in range(1, 16):
 
 
 class Snooker(Ruleset):
-    rack = SnookerRack
-
     def __init__(self):
         # TODO how to track call ball?
         self.is_call_ball = False
