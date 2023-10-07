@@ -1,12 +1,211 @@
 #! /usr/bin/env python
 
+from __future__ import annotations
+
 import random
 from abc import ABC, abstractmethod
+from collections import Counter
+from typing import Dict, List, Optional, Set, Tuple, Union
 
+import attrs
 import numpy as np
 from numpy.typing import NDArray
 
+from pooltool.game.datatypes import GameType
 from pooltool.objects.ball.datatypes import Ball, BallParams
+from pooltool.objects.table.datatypes import Table
+from pooltool.utils.strenum import StrEnum, auto
+
+
+class Dir(StrEnum):
+    """Movement directions
+
+    The diagonal positions are not true diagonals (45 degrees), but rather the
+    diagonals seen when creating a triangular rack pattern (60 degrees).
+    """
+
+    LEFT = auto()
+    RIGHT = auto()
+    UP = auto()
+    DOWN = auto()
+    UPRIGHT = auto()
+    DOWNRIGHT = auto()
+    DOWNLEFT = auto()
+    UPLEFT = auto()
+
+    @staticmethod
+    def get_translation(
+        direction: Dir, quantity: int, radius: float
+    ) -> Tuple[float, float]:
+        a = np.sqrt(3)
+        translations = {
+            Dir.LEFT: (-2 * radius, 0),
+            Dir.RIGHT: (2 * radius, 0),
+            Dir.UP: (0, 2 * radius),
+            Dir.DOWN: (0, -2 * radius),
+            Dir.UPRIGHT: (radius, a * radius),
+            Dir.DOWNRIGHT: (radius, -a * radius),
+            Dir.UPLEFT: (-radius, a * radius),
+            Dir.DOWNLEFT: (-radius, -a * radius),
+        }
+
+        delta_x, delta_y = translations[direction]
+        return delta_x * quantity, delta_y * quantity
+
+
+@attrs.define
+class Trans:
+    """A translation in a direction
+
+    Attributes:
+        direction:
+            A direction.
+        quantity:
+            The number of ball diameters to move in the direction. quantity=1
+            means moving one ball diameter in the given direction.
+    """
+
+    direction: Dir
+    quantity: int
+
+
+@attrs.define
+class Pos:
+    """Defines a position relative to another position, or an anchor
+
+    Attributes:
+        loc:
+            A sequence of translations.
+        relative_to:
+            This defines what the translation is with respect to. This can
+            either be another Pos, or a 2D coordinate, normalized by the table's
+            width and height. The origin is the bottom-left corner of the table,
+            so (0.0, 0.0) is bottom-left and (1.0, 1.0) is top right.
+    """
+
+    loc: List[Trans]
+    relative_to: Union[Pos, Tuple[float, float]]
+
+
+@attrs.define
+class BallPos(Pos):
+    """A subclass of Pos with ball id info
+
+    Attributes:
+        ids:
+            This set says which ball ids can exist at the given position.
+    """
+
+    ids: Set[str]
+
+
+def _get_ball_ids(positions: List[BallPos]) -> Set[str]:
+    ids = set()
+    for pos in positions:
+        ids.update(pos.ids)
+    return ids
+
+
+def _get_anchor_translation(ball: BallPos) -> Tuple[Tuple[float, float], List[Trans]]:
+    """Traverse the ball position's parent hierarchy until the anchor is found"""
+
+    translation_from_anchor: List[Trans] = []
+    translation_from_anchor.extend(ball.loc)
+
+    parent = ball.relative_to
+
+    while True:
+        if isinstance(parent, tuple):
+            return parent, translation_from_anchor
+
+        translation_from_anchor.extend(parent.loc)
+        parent = parent.relative_to
+
+
+def get_rack(blueprint: List[BallPos], table: Table) -> Dict[str, Ball]:
+    """Generate Ball objects based on a given blueprint and table dimensions.
+
+    The function calculates the absolute position of each ball on the table using the
+    translations provided in the blueprint relative to table anchors. It then randomly
+    assigns ball IDs to each position, ensuring no ball ID is used more than once.
+
+    Args:
+        blueprint:
+            A list of ball positions represented as BallPos objects, which
+            describe their location relative to table anchors or other
+            positions.
+        table:
+            A Table. This must exist so the rack can be created with respect to
+            the table's dimensions.
+        ball_params:
+            A BallParams object, which all balls will be created with. This
+            contains info like ball radius.
+
+    Returns:
+        balls:
+            A dictionary mapping ball IDs to their respective Ball objects, with
+            their absolute positions on the table.
+
+    Notes:
+    - The table dimensions are normalized such that the bottom-left corner is
+      (0.0, 0.0) and the top-right corner is (1.0, 1.0).
+    """
+
+    ball_ids = _get_ball_ids(blueprint)
+    params = BallParams.default()
+    radius = params.R
+
+    balls: Dict[str, Ball] = {}
+
+    for ball in blueprint:
+        (x, y), translation = _get_anchor_translation(ball)
+
+        x *= table.w
+        y *= table.l
+
+        for trans in translation:
+            dx, dy = Dir.get_translation(trans.direction, trans.quantity, radius)
+            x += dx
+            y += dy
+
+        # Choose ball
+        remaining = ball_ids.intersection(ball.ids)
+        assert len(remaining), "Ball requirements of blueprint unsatisfiable"
+        ball_id = random.choice(list(remaining))
+        ball_ids.remove(ball_id)
+
+        # Create ball
+        balls[ball_id] = Ball.create(ball_id, xy=(x, y))
+
+    return balls
+
+
+# row1_anchor = Pos(loc=[], relative_to=None)
+# row2_anchor = Pos([Trans(Dir.DOWNLEFT, 1)], relative_to=row1_anchor)
+# row3_anchor = Pos([Trans(Dir.DOWNLEFT, 1)], relative_to=row2_anchor)
+# row4_anchor = Pos([Trans(Dir.DOWNRIGHT, 1)], relative_to=row3_anchor)
+# row5_anchor = Pos([Trans(Dir.DOWNRIGHT, 1)], relative_to=row4_anchor)
+#
+# others = ["2", "3", "4", "5", "6", "7", "8"]
+#
+# blueprint = [
+#    # Row 1
+#    BallPos([], row1_anchor, ["1"]),
+#    # Row 2
+#    BallPos([], row2_anchor, others),
+#    BallPos([Trans(Dir.RIGHT, 1)], row2_anchor, others),
+#    # Row 3
+#    BallPos([], row3_anchor, others),
+#    BallPos([Trans(Dir.RIGHT, 1)], row3_anchor, ["9"]),
+#    BallPos([Trans(Dir.RIGHT, 2)], row3_anchor, others),
+#    # Row 4
+#    BallPos([], row4_anchor, others),
+#    BallPos([Trans(Dir.RIGHT, 1)], row4_anchor, others),
+#    # Row 5
+#    BallPos([], row5_anchor, others),
+# ]
+
+# ------------------------------------------------
 
 
 def wiggle(xyz: NDArray, spacer: float):
