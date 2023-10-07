@@ -224,7 +224,7 @@ def get_nine_ball_rack(*args, **kwargs) -> Dict[str, Ball]:
     row3 = [
         (anchor := BallPos([GO_UPLEFT], anchor, others)),
         BallPos([GO_RIGHT], anchor, {"9"}),
-        BallPos([GO_RIGHT, RIGHT], anchor, others),
+        BallPos([GO_RIGHT] * 2, anchor, others),
     ]
 
     row4 = [
