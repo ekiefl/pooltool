@@ -31,6 +31,7 @@ from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
 from pooltool.evolution.continuize import continuize
 from pooltool.game.datatypes import GameType
+from pooltool.game.layouts import get_rack
 from pooltool.game.ruleset import get_ruleset
 from pooltool.objects.ball.datatypes import BallParams
 from pooltool.objects.cue.datatypes import Cue
@@ -429,13 +430,16 @@ class Game(Interface):
         """Create the multisystem and game objects
 
         FIXME This is where menu options should plug into, rather than using these
-        hardcoded defaults like `table = Table.pocket_table()`
+        hardcoded defaults like `game_type = GameType.NINEBALL`
         """
-        game = get_ruleset(GameType.SNOOKER)
+        game_type = GameType.NINEBALL
+
+        game = get_ruleset(game_type)
         game.init()
 
-        table = Table.snooker_table()
-        balls = game.rack(table, ordered=True, params=BallParams()).get_balls_dict()
+        table = Table.from_game_type(game_type)
+        balls = get_rack(game_type, table, None, 1e-3)
+
         cue = Cue(cue_ball_id=game.get_initial_cueing_ball(balls).id)
         shot = System(table=table, balls=balls, cue=cue)
 

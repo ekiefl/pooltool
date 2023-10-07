@@ -5,7 +5,7 @@ from __future__ import annotations
 import random
 from abc import ABC, abstractmethod
 from collections import Counter
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Callable, Dict, List, Optional, Set, Tuple, Union
 
 import attrs
 import numpy as np
@@ -62,7 +62,7 @@ class Trans:
     """
 
     direction: Dir
-    quantity: int
+    quantity: int = 1
 
     def eval(self, radius: float) -> Tuple[float, float]:
         mapping = Dir.translation_map
@@ -124,8 +124,11 @@ def _get_anchor_translation(pos: Pos) -> Tuple[Tuple[float, float], List[Trans]]
         parent = parent.relative_to
 
 
-def get_rack(
-    blueprint: List[BallPos], table: Table, ball_params: BallParams
+def _get_rack(
+    blueprint: List[BallPos],
+    table: Table,
+    ball_params: Optional[BallParams] = None,
+    spacing_factor: float = 1e-3,
 ) -> Dict[str, Ball]:
     """Generate Ball objects based on a given blueprint and table dimensions.
 
@@ -155,6 +158,9 @@ def get_rack(
       (0.0, 0.0) and the top-right corner is (1.0, 1.0).
     """
 
+    if ball_params is None:
+        ball_params = BallParams.default()
+
     ball_ids = _get_ball_ids(blueprint)
     radius = ball_params.R
 
@@ -173,42 +179,15 @@ def get_rack(
 
         # Choose ball
         remaining = ball_ids.intersection(ball.ids)
+
         assert len(remaining), "Ball requirements of blueprint unsatisfiable"
         ball_id = random.choice(list(remaining))
         ball_ids.remove(ball_id)
 
         # Create ball
-        balls[ball_id] = Ball.create(ball_id, xy=(x, y))
+        balls[ball_id] = Ball.create(ball_id, xy=(x, y), **attrs.asdict(ball_params))
 
     return balls
-
-
-# row1_anchor = Pos(loc=[], relative_to=None)
-# row2_anchor = Pos([Trans(Dir.DOWNLEFT, 1)], relative_to=row1_anchor)
-# row3_anchor = Pos([Trans(Dir.DOWNLEFT, 1)], relative_to=row2_anchor)
-# row4_anchor = Pos([Trans(Dir.DOWNRIGHT, 1)], relative_to=row3_anchor)
-# row5_anchor = Pos([Trans(Dir.DOWNRIGHT, 1)], relative_to=row4_anchor)
-#
-# others = ["2", "3", "4", "5", "6", "7", "8"]
-#
-# blueprint = [
-#    # Row 1
-#    BallPos([], row1_anchor, ["1"]),
-#    # Row 2
-#    BallPos([], row2_anchor, others),
-#    BallPos([Trans(Dir.RIGHT, 1)], row2_anchor, others),
-#    # Row 3
-#    BallPos([], row3_anchor, others),
-#    BallPos([Trans(Dir.RIGHT, 1)], row3_anchor, ["9"]),
-#    BallPos([Trans(Dir.RIGHT, 2)], row3_anchor, others),
-#    # Row 4
-#    BallPos([], row4_anchor, others),
-#    BallPos([Trans(Dir.RIGHT, 1)], row4_anchor, others),
-#    # Row 5
-#    BallPos([], row5_anchor, others),
-# ]
-
-# ------------------------------------------------
 
 
 def wiggle(xyz: NDArray, spacer: float):
@@ -574,8 +553,49 @@ class SnookerRack(Rack):
         self.balls[21].state.rvw[0] = [table.w * 7 / 12, table.l / 5, self.radius]
 
 
-def get_nine_ball_rack(*args, **kwargs):
-    return NineBallRack(*args, **kwargs).get_balls_dict()
+def get_nine_ball_rack(
+    table: Table, params: Optional[BallParams] = None, spacing_factor: float = 1e-3
+) -> Dict[str, Ball]:
+    others = {"2", "3", "4", "5", "6", "7", "8"}
+
+    # Row 1
+    anchor = Pos([], relative_to=(0.5, 0.77))
+    row1 = [
+        BallPos([], anchor, {"1"}),
+    ]
+
+    # Row 2
+    anchor = Pos([Trans(Dir.UPLEFT)], relative_to=anchor)
+    row2 = [
+        BallPos([], anchor, others),
+        BallPos([Trans(Dir.RIGHT)], anchor, others),
+    ]
+
+    # Row 3
+    anchor = Pos([Trans(Dir.UPLEFT)], relative_to=anchor)
+    row3 = [
+        BallPos([], anchor, others),
+        BallPos([Trans(Dir.RIGHT)], anchor, {"9"}),
+        BallPos([Trans(Dir.RIGHT, 2)], anchor, others),
+    ]
+
+    # Row 4
+    anchor = Pos([Trans(Dir.UPRIGHT)], relative_to=anchor)
+    row4 = [
+        BallPos([], anchor, others),
+        BallPos([Trans(Dir.RIGHT)], anchor, others),
+    ]
+
+    # Row 5
+    anchor = Pos([Trans(Dir.UPRIGHT)], relative_to=anchor)
+    row5 = [
+        BallPos([], anchor, others),
+    ]
+
+    # Cue ball
+    cue = BallPos([], (0.85, 0.23), {"cue"})
+
+    return _get_rack(row1 + row2 + row3 + row4 + row5 + [cue], table, params)
 
 
 def get_eight_ball_rack(*args, **kwargs):
@@ -588,3 +608,18 @@ def get_three_cushion_rack(*args, **kwargs):
 
 def get_snooker_rack(*args, **kwargs):
     return SnookerRack(*args, **kwargs).get_balls_dict()
+
+
+def get_rack(
+    game_type: GameType,
+    table: Table,
+    params: Optional[BallParams],
+    spacing_factor: float,
+) -> Dict[str, Ball]:
+    _game_rack_map: Dict[
+        str, Callable[[Table, Optional[BallParams], float], Dict[str, Ball]]
+    ] = {
+        GameType.NINEBALL: get_nine_ball_rack,
+    }
+
+    return _game_rack_map[game_type](table, params, spacing_factor)

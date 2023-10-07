@@ -8,7 +8,6 @@ from pooltool.game.layouts import (
     Trans,
     _get_anchor_translation,
     _get_ball_ids,
-    get_rack,
 )
 
 

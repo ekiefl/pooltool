@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Dict, Optional, Protocol, Tuple
+from typing import Callable, Dict, Optional, Protocol, Tuple
 
 from attrs import define, evolve, field, fields_dict
 
 import pooltool.ani as ani
 from pooltool.error import ConfigError
+from pooltool.game.datatypes import GameType
 from pooltool.objects.table._layout import (
     _create_billiard_table_cushion_segments,
     _create_pocket_table_cushion_segments,
@@ -269,3 +270,14 @@ class Table:
     @staticmethod
     def snooker_table() -> Table:
         return Table.from_table_specs(SnookerTableSpecs())
+
+    @staticmethod
+    def from_game_type(game_type: GameType) -> Table:
+        _game_table_map: Dict[GameType, Callable[[], Table]] = {
+            GameType.EIGHTBALL: Table.pocket_table,
+            GameType.NINEBALL: Table.pocket_table,
+            GameType.THREECUSHION: Table.billiard_table,
+            GameType.SNOOKER: Table.snooker_table,
+        }
+
+        return _game_table_map[game_type]()
