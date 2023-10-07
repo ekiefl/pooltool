@@ -129,6 +129,7 @@ def _get_rack(
     table: Table,
     ball_params: Optional[BallParams] = None,
     spacing_factor: float = 1e-3,
+    seed: Optional[int] = None,
 ) -> Dict[str, Ball]:
     """Generate Ball objects based on a given blueprint and table dimensions.
 
@@ -148,7 +149,14 @@ def _get_rack(
             A BallParams object, which all balls will be created with. This
             contains info like ball radius.
         spacing_factor:
-            FIXME (implement)
+            FIXME Get ChatGPT to explain this.
+        seed:
+            Set a seed for reproducibility. That's because getting a rack
+            involves two random procedures. First, some ball positions can be
+            satisfied with many different ball IDs. For example, in 9 ball, only
+            the 1 ball and 9 ball are predetermined, the positions of the other
+            balls are random. The second source of randomnness is from
+            spacing_factor.
 
     Returns:
         balls:
@@ -162,6 +170,10 @@ def _get_rack(
 
     if ball_params is None:
         ball_params = BallParams.default()
+
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
 
     ball_radius = ball_params.R
     radius = ball_radius * (1 + spacing_factor)

@@ -1,7 +1,12 @@
-from typing import Any, List, Literal
+from __future__ import annotations
 
+from itertools import combinations
+from typing import Dict, List, Optional
+
+import attrs
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 
 import pooltool.math as math
 from pooltool.game.layouts import (
@@ -12,10 +17,9 @@ from pooltool.game.layouts import (
     _get_anchor_translation,
     _get_ball_ids,
     _get_rack,
-    get_nine_ball_rack,
 )
-from pooltool.objects import Ball, BallParams, Table
-from pooltool.physics.utils import is_overlapping
+from pooltool.objects import BallParams, Table
+from pooltool.objects.ball.datatypes import Ball
 
 
 def test_get_ball_ids():
@@ -107,18 +111,19 @@ def test_get_translation(directions, quantities, expected_x, expected_y, radius)
 SPACING_FACTOR = 0.1
 
 
-def _two_ball_rack():
+def get_two_ball_rack(seed: Optional[int] = None):
     R = 0.03
     ball_params = BallParams(R=R)
 
     return _get_rack(
         blueprint=[
-            (ball_one := BallPos([], relative_to=(0.5, 0.5), ids={"1"})),
-            BallPos([Trans(Dir.LEFT)], relative_to=ball_one, ids={"2"}),
+            (ball_one := BallPos([], relative_to=(0.5, 0.5), ids={"1", "2"})),
+            BallPos([Trans(Dir.LEFT)], relative_to=ball_one, ids={"1", "2"}),
         ],
         table=Table.pocket_table(),
         ball_params=ball_params,
         spacing_factor=SPACING_FACTOR,
+        seed=seed,
     )
 
 
@@ -126,7 +131,7 @@ def test_wiggle():
     _distance_array: List[float] = []
 
     for _ in range(1000):
-        rack = _two_ball_rack()
+        rack = get_two_ball_rack()
         ball1 = rack["1"]
         ball2 = rack["2"]
         distance = (
@@ -140,3 +145,56 @@ def test_wiggle():
         assert distance < 4 * SPACING_FACTOR * ball1.params.R
 
         _distance_array.append(distance)
+
+
+@attrs.define
+class SeedTestResult:
+    ascending_order: bool
+    ball1_pos: NDArray
+    ball2_pos: NDArray
+
+    @classmethod
+    def from_rack(cls, balls: Dict[str, Ball]) -> SeedTestResult:
+        ascending_order = balls["1"].state.rvw[0, 0] < balls["2"].state.rvw[0, 0]
+
+        return cls(
+            ascending_order=ascending_order,
+            ball1_pos=balls["1"].state.rvw[0],
+            ball2_pos=balls["2"].state.rvw[0],
+        )
+
+
+def test_seed():
+    # Random seed
+    results_random_seed: List[SeedTestResult] = []
+    for _ in range(20):
+        results_random_seed.append(
+            SeedTestResult.from_rack(get_two_ball_rack(seed=None))
+        )
+
+    all_ascending = all(result.ascending_order for result in results_random_seed)
+    all_descending = all(not result.ascending_order for result in results_random_seed)
+
+    # Random, so odds of this is 1/2^19
+    assert not all_ascending and not all_descending
+
+    # Random, so positional perturbations (wiggle) ensure different vectors each trial
+    for result1, result2 in combinations(results_random_seed, 2):
+        assert not np.array_equal(result1.ball1_pos, result2.ball1_pos)
+        assert not np.array_equal(result1.ball2_pos, result2.ball2_pos)
+
+    # Fixed seed
+    results_fixed_seed: List[SeedTestResult] = []
+    for _ in range(20):
+        results_fixed_seed.append(SeedTestResult.from_rack(get_two_ball_rack(seed=42)))
+
+    all_ascending = all(result.ascending_order for result in results_fixed_seed)
+    all_descending = all(not result.ascending_order for result in results_fixed_seed)
+
+    # Fixed, so ball order is preserved
+    assert all_ascending or all_descending
+
+    # Random, so positional perturbations (wiggle) ensure different vectors each trial
+    for result1, result2 in combinations(results_fixed_seed, 2):
+        assert np.array_equal(result1.ball1_pos, result2.ball1_pos)
+        assert np.array_equal(result1.ball2_pos, result2.ball2_pos)
