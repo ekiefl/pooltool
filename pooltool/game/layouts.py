@@ -147,6 +147,8 @@ def _get_rack(
         ball_params:
             A BallParams object, which all balls will be created with. This
             contains info like ball radius.
+        spacing_factor:
+            FIXME (implement)
 
     Returns:
         balls:
@@ -190,424 +192,165 @@ def _get_rack(
     return balls
 
 
-def wiggle(xyz: NDArray, spacer: float):
+def _wiggle(xyz: NDArray, spacer: float):
     ang = 2 * np.pi * np.random.rand()
     rad = spacer * np.random.rand()
 
     return xyz + np.array([rad * np.cos(ang), rad * np.sin(ang), 0])
 
 
-class Rack(ABC):
-    def __init__(self, table):
-        self.arrange()
-        self.center_by_table(table)
-
-    def get_balls_dict(self):
-        return {str(ball.id): ball for ball in self.balls}
-
-    @abstractmethod
-    def arrange(self):
-        pass
-
-    @abstractmethod
-    def center_by_table(self, table):
-        pass
+GO_LEFT = Trans(Dir.LEFT, 1)
+GO_RIGHT = Trans(Dir.RIGHT, 1)
+GO_UP = Trans(Dir.UP, 1)
+GO_DOWN = Trans(Dir.DOWN, 1)
+GO_UPLEFT = Trans(Dir.UPLEFT, 1)
+GO_UPRIGHT = Trans(Dir.UPRIGHT, 1)
+GO_DOWNLEFT = Trans(Dir.DOWNLEFT, 1)
+GO_DOWNRIGHT = Trans(Dir.DOWNRIGHT, 1)
 
 
-class NineBallRack(Rack):
-    """Arrange a list of balls into 9-ball break configuration"""
-
-    def __init__(
-        self,
-        table,
-        spacing_factor=1e-3,
-        ordered=False,
-        params: BallParams = BallParams(),
-    ):
-        self.balls = [Ball(id=str(i), params=params) for i in range(1, 10)]
-        self.radius = params.R
-        self.spacer = spacing_factor * self.radius
-        self.eff_radius = self.radius + self.spacer
-
-        if not ordered:
-            random.shuffle(self.balls)
-
-        self.balls.append(Ball("cue", params=params))
-        Rack.__init__(self, table)
-
-    def arrange(self):
-        a = np.sqrt(3)
-        r = self.eff_radius
-
-        self.balls[0].state.rvw[0] = wiggle(np.array([0, 0, self.radius]), self.spacer)
-
-        self.balls[1].state.rvw[0] = wiggle(
-            np.array([-r, a * r, self.radius]), self.spacer
-        )
-        self.balls[2].state.rvw[0] = wiggle(
-            np.array([+r, a * r, self.radius]), self.spacer
-        )
-
-        self.balls[3].state.rvw[0] = wiggle(
-            np.array([-2 * r, 2 * a * r, self.radius]), self.spacer
-        )
-        self.balls[4].state.rvw[0] = wiggle(
-            np.array([0, 2 * a * r, self.radius]), self.spacer
-        )
-        self.balls[5].state.rvw[0] = wiggle(
-            np.array([+2 * r, 2 * a * r, self.radius]), self.spacer
-        )
-
-        self.balls[6].state.rvw[0] = wiggle(
-            np.array([-r, 3 * a * r, self.radius]), self.spacer
-        )
-        self.balls[7].state.rvw[0] = wiggle(
-            np.array([+r, 3 * a * r, self.radius]), self.spacer
-        )
-
-        self.balls[8].state.rvw[0] = wiggle(
-            np.array([0, 4 * a * r, self.radius]), self.spacer
-        )
-
-    def center(self, x, y):
-        for ball in self.balls:
-            ball.state.rvw[0, 0] += x
-            ball.state.rvw[0, 1] += y
-
-    def center_by_table(self, table):
-        x = table.w / 2
-        y = table.l * 6 / 8
-        self.center(x, y)
-
-        self.balls[-1].state.rvw[0] = [
-            table.center[0] + 0.2,
-            table.l / 4,
-            self.balls[-1].params.R,
-        ]
-
-
-class EightBallRack(Rack):
-    """Arrange a list of balls into 8-ball break configuration"""
-
-    def __init__(
-        self,
-        table,
-        spacing_factor=1e-3,
-        ordered=False,
-        params: BallParams = BallParams(),
-    ):
-        self.balls = [Ball(id=str(i), params=params) for i in range(1, 16)]
-        self.radius = params.R
-        self.spacer = spacing_factor * self.radius
-        self.eff_radius = self.radius + self.spacer
-
-        if not ordered:
-            self.balls = list(
-                np.random.choice(
-                    np.array(self.balls), replace=False, size=len(self.balls)
-                )
-            )
-
-        self.balls.append(Ball("cue", params=params))
-        Rack.__init__(self, table)
-
-    def arrange(self):
-        a = np.sqrt(3)
-        r = self.eff_radius
-
-        self.balls[0].state.rvw[0] = wiggle(np.array([0, 0, self.radius]), self.spacer)
-
-        self.balls[1].state.rvw[0] = wiggle(
-            np.array([-r, a * r, self.radius]), self.spacer
-        )
-        self.balls[2].state.rvw[0] = wiggle(
-            np.array([+r, a * r, self.radius]), self.spacer
-        )
-
-        self.balls[3].state.rvw[0] = wiggle(
-            np.array([-2 * r, 2 * a * r, self.radius]), self.spacer
-        )
-        self.balls[4].state.rvw[0] = wiggle(
-            np.array([0, 2 * a * r, self.radius]), self.spacer
-        )
-        self.balls[5].state.rvw[0] = wiggle(
-            np.array([+2 * r, 2 * a * r, self.radius]), self.spacer
-        )
-
-        self.balls[6].state.rvw[0] = wiggle(
-            np.array([-3 * r, 3 * a * r, self.radius]), self.spacer
-        )
-        self.balls[7].state.rvw[0] = wiggle(
-            np.array([-1 * r, 3 * a * r, self.radius]), self.spacer
-        )
-        self.balls[8].state.rvw[0] = wiggle(
-            np.array([+1 * r, 3 * a * r, self.radius]), self.spacer
-        )
-        self.balls[9].state.rvw[0] = wiggle(
-            np.array([+3 * r, 3 * a * r, self.radius]), self.spacer
-        )
-
-        self.balls[10].state.rvw[0] = wiggle(
-            np.array([-4 * r, 4 * a * r, self.radius]), self.spacer
-        )
-        self.balls[11].state.rvw[0] = wiggle(
-            np.array([-2 * r, 4 * a * r, self.radius]), self.spacer
-        )
-        self.balls[12].state.rvw[0] = wiggle(
-            np.array([+0 * r, 4 * a * r, self.radius]), self.spacer
-        )
-        self.balls[13].state.rvw[0] = wiggle(
-            np.array([+2 * r, 4 * a * r, self.radius]), self.spacer
-        )
-        self.balls[14].state.rvw[0] = wiggle(
-            np.array([+4 * r, 4 * a * r, self.radius]), self.spacer
-        )
-
-    def center(self, x, y):
-        for ball in self.balls:
-            ball.state.rvw[0, 0] += x
-            ball.state.rvw[0, 1] += y
-
-    def center_by_table(self, table):
-        x = table.w / 2
-        y = table.l * 6 / 8
-        self.center(x, y)
-
-        self.balls[-1].state.rvw[0] = [
-            table.center[0] + 0.2,
-            table.l / 4,
-            self.balls[-1].params.R,
-        ]
-
-
-class ThreeCushionRack(Rack):
-    def __init__(self, table, white_to_break=True, **ball_kwargs):
-        self.balls = {
-            "white": Ball("white", **ball_kwargs),
-            "yellow": Ball("yellow", **ball_kwargs),
-            "red": Ball("red", **ball_kwargs),
-        }
-
-        self.white_to_break = white_to_break
-        self.radius = max([ball.params.R for ball in self.balls.values()])
-
-        Rack.__init__(self, table)
-
-    def get_balls_dict(self):
-        return self.balls
-
-    def arrange(self):
-        pass
-
-    def center_by_table(self, table):
-        """Based on https://www.3cushionbilliards.com/rules/106-official-us-billiard-association-rules-of-play"""
-        if self.white_to_break:
-            self.balls["white"].state.rvw[0] = [
-                table.w / 2 + 0.1825,
-                table.l / 4,
-                self.radius,
-            ]
-            self.balls["yellow"].state.rvw[0] = [table.w / 2, table.l / 4, self.radius]
-        else:
-            self.balls["yellow"].state.rvw[0] = [
-                table.w / 2 + 0.1825,
-                table.l / 4,
-                self.radius,
-            ]
-            self.balls["white"].state.rvw[0] = [table.w / 2, table.l / 4, self.radius]
-
-        self.balls["red"].state.rvw[0] = [table.w / 2, table.l * 3 / 4, self.radius]
-
-
-class SnookerRack(Rack):
-    """Arrange a list of balls into snooker break configuration
-
-    Information for the snooker rack is taken from these resources:
-
-    https://snookerfreaks.com/how-to-choose-the-right-snooker-table-buyers-guide/
-    A - Baulk Line (1/5 of the length)
-    B - Semi-Circle Radius (1/6 of the width)
-    C - Pink Spot
-    D - Black (1/11  of the length)
-    https://dynamicbilliard.ca/resources/snooker-table-layout/
-    https://www.lovecuesports.com/snooker-table-setup-ball-values/
-    http://www.fcsnooker.co.uk/table_markings/table_markings.htm
-    """
-
-    def __init__(
-        self,
-        table,
-        spacing_factor=1e-3,
-        ordered=False,
-        params: BallParams = BallParams(),
-    ):
-        # kerby2000:
-        #  if id is just "red" looks nicer but does not work adding "i" works
-        #  but not nice
-        # ekiefl:
-        #  Yes, but the IDs are supposed to be unique identifiers. We could
-        #  solve this by adding an attribute to ball called "name", which is
-        #  separate from "id"
-        self.balls = [Ball(id="red" + str(i), params=params) for i in range(1, 16)]
-        self.balls.append(Ball("yellow", params=params))
-        self.balls.append(Ball("green", params=params))
-        self.balls.append(Ball("brown", params=params))
-        self.balls.append(Ball("blue", params=params))
-        self.balls.append(Ball("pink", params=params))
-        self.balls.append(Ball("black", params=params))
-        self.balls.append(Ball("white", params=params))
-
-        self.radius = params.R
-        self.spacer = spacing_factor * self.radius
-        self.eff_radius = self.radius + self.spacer
-
-        Rack.__init__(self, table)
-
-    def arrange(self):
-        a = np.sqrt(3)
-        r = self.eff_radius
-
-        # Arrange red balls into pyramid
-        # row 1
-        self.balls[0].state.rvw[0] = wiggle(np.array([0, 0, self.radius]), self.spacer)
-
-        # row 2
-        self.balls[1].state.rvw[0] = wiggle(
-            np.array([-r, a * r, self.radius]), self.spacer
-        )
-        self.balls[2].state.rvw[0] = wiggle(
-            np.array([+r, a * r, self.radius]), self.spacer
-        )
-
-        # row 3
-        self.balls[3].state.rvw[0] = wiggle(
-            np.array([-2 * r, 2 * a * r, self.radius]), self.spacer
-        )
-        self.balls[4].state.rvw[0] = wiggle(
-            np.array([0, 2 * a * r, self.radius]), self.spacer
-        )
-        self.balls[5].state.rvw[0] = wiggle(
-            np.array([+2 * r, 2 * a * r, self.radius]), self.spacer
-        )
-
-        # row 4
-        self.balls[6].state.rvw[0] = wiggle(
-            np.array([-3 * r, 3 * a * r, self.radius]), self.spacer
-        )
-        self.balls[7].state.rvw[0] = wiggle(
-            np.array([-1 * r, 3 * a * r, self.radius]), self.spacer
-        )
-        self.balls[8].state.rvw[0] = wiggle(
-            np.array([+1 * r, 3 * a * r, self.radius]), self.spacer
-        )
-        self.balls[9].state.rvw[0] = wiggle(
-            np.array([+3 * r, 3 * a * r, self.radius]), self.spacer
-        )
-
-        # row 5
-        self.balls[10].state.rvw[0] = wiggle(
-            np.array([-4 * r, 4 * a * r, self.radius]), self.spacer
-        )
-        self.balls[11].state.rvw[0] = wiggle(
-            np.array([-2 * r, 4 * a * r, self.radius]), self.spacer
-        )
-        self.balls[12].state.rvw[0] = wiggle(
-            np.array([+0 * r, 4 * a * r, self.radius]), self.spacer
-        )
-        self.balls[13].state.rvw[0] = wiggle(
-            np.array([+2 * r, 4 * a * r, self.radius]), self.spacer
-        )
-        self.balls[14].state.rvw[0] = wiggle(
-            np.array([+4 * r, 4 * a * r, self.radius]), self.spacer
-        )
-
-    def center(self, x, y):
-        for ball in self.balls:
-            ball.state.rvw[0, 0] += x
-            ball.state.rvw[0, 1] += y
-
-    def center_by_table(self, table):
-        # place pyramid of red balls
-        x = table.w / 2
-        y = table.l * 6 / 8 + self.radius
-        self.center(x, y)
-
-        A = table.l / 5
-        B = table.w / 6
-        C = table.l / 5
-        D = table.l / 11
-
-        # yellow
-        self.balls[15].state.rvw[0] = [table.w / 3, table.l / 5, self.radius]
-        # green
-        self.balls[16].state.rvw[0] = [table.w * 2 / 3, table.l / 5, self.radius]
-        # brown
-        self.balls[17].state.rvw[0] = [table.w / 2, table.l / 5, self.radius]
-        # blue
-        self.balls[18].state.rvw[0] = [table.w / 2, table.l / 2, self.radius]
-        # pink
-        self.balls[19].state.rvw[0] = [table.w / 2, table.l * 3 / 4, self.radius]
-        # black
-        self.balls[20].state.rvw[0] = [table.w / 2, table.l * 10 / 11, self.radius]
-        # white (place halfway between brown and green)
-        self.balls[21].state.rvw[0] = [table.w * 7 / 12, table.l / 5, self.radius]
-
-
-def get_nine_ball_rack(
-    table: Table, params: Optional[BallParams] = None, spacing_factor: float = 1e-3
-) -> Dict[str, Ball]:
+def get_nine_ball_rack(*args, **kwargs) -> Dict[str, Ball]:
     others = {"2", "3", "4", "5", "6", "7", "8"}
 
-    # Row 1
-    anchor = Pos([], relative_to=(0.5, 0.77))
     row1 = [
-        BallPos([], anchor, {"1"}),
+        (anchor := BallPos([], (0.5, 0.77), {"1"})),
     ]
 
-    # Row 2
-    anchor = Pos([Trans(Dir.UPLEFT)], relative_to=anchor)
     row2 = [
-        BallPos([], anchor, others),
-        BallPos([Trans(Dir.RIGHT)], anchor, others),
+        (anchor := BallPos([GO_UPLEFT], anchor, others)),
+        BallPos([GO_RIGHT], anchor, others),
     ]
 
-    # Row 3
-    anchor = Pos([Trans(Dir.UPLEFT)], relative_to=anchor)
     row3 = [
-        BallPos([], anchor, others),
-        BallPos([Trans(Dir.RIGHT)], anchor, {"9"}),
-        BallPos([Trans(Dir.RIGHT, 2)], anchor, others),
+        (anchor := BallPos([GO_UPLEFT], anchor, others)),
+        BallPos([GO_RIGHT], anchor, {"9"}),
+        BallPos([GO_RIGHT, RIGHT], anchor, others),
     ]
 
-    # Row 4
-    anchor = Pos([Trans(Dir.UPRIGHT)], relative_to=anchor)
     row4 = [
-        BallPos([], anchor, others),
-        BallPos([Trans(Dir.RIGHT)], anchor, others),
+        (anchor := BallPos([GO_UPRIGHT], anchor, others)),
+        BallPos([GO_RIGHT], anchor, others),
     ]
 
-    # Row 5
-    anchor = Pos([Trans(Dir.UPRIGHT)], relative_to=anchor)
     row5 = [
-        BallPos([], anchor, others),
+        BallPos([GO_UPRIGHT], anchor, others),
+    ]
+
+    cue = BallPos([], (0.85, 0.23), {"cue"})
+
+    blueprint = row1 + row2 + row3 + row4 + row5 + [cue]
+    return _get_rack(blueprint, *args, **kwargs)
+
+
+def get_eight_ball_rack(*args, **kwargs) -> Dict[str, Ball]:
+    stripes = {"9", "10", "11", "12", "13", "14", "15"}
+    solids = {"1", "2", "3", "4", "5", "6", "7"}
+
+    row1 = [
+        (anchor := BallPos([], (0.5, 0.77), solids)),
+    ]
+
+    row2 = [
+        (anchor := BallPos([GO_UPLEFT], anchor, stripes)),
+        BallPos([GO_RIGHT], anchor, solids),
+    ]
+
+    row3 = [
+        (anchor := BallPos([GO_UPLEFT], anchor, solids)),
+        BallPos([GO_RIGHT], anchor, {"8"}),
+        BallPos([GO_RIGHT] * 2, anchor, stripes),
+    ]
+
+    row4 = [
+        (anchor := BallPos([GO_UPLEFT], anchor, stripes)),
+        BallPos([GO_RIGHT], anchor, solids),
+        BallPos([GO_RIGHT] * 2, anchor, stripes),
+        BallPos([GO_RIGHT] * 3, anchor, solids),
+    ]
+
+    row5 = [
+        (anchor := BallPos([GO_UPLEFT], anchor, solids)),
+        BallPos([GO_RIGHT], anchor, stripes),
+        BallPos([GO_RIGHT] * 2, anchor, stripes),
+        BallPos([GO_RIGHT] * 3, anchor, solids),
+        BallPos([GO_RIGHT] * 4, anchor, stripes),
     ]
 
     # Cue ball
-    cue = BallPos([], (0.85, 0.23), {"cue"})
+    cue = BallPos([], (0.6, 0.23), {"cue"})
 
-    return _get_rack(row1 + row2 + row3 + row4 + row5 + [cue], table, params)
-
-
-def get_eight_ball_rack(*args, **kwargs):
-    return EightBallRack(*args, **kwargs).get_balls_dict()
+    blueprint = row1 + row2 + row3 + row4 + row5 + [cue]
+    return _get_rack(blueprint, *args, **kwargs)
 
 
 def get_three_cushion_rack(*args, **kwargs):
-    return ThreeCushionRack(*args, **kwargs).get_balls_dict()
+    """A three cushion starting position (white to break)
+
+    Based on https://www.3cushionbilliards.com/rules/106-official-us-billiard-association-rules-of-play
+    """
+
+    white = BallPos([], (0.62, 0.25), {"white"})
+    yellow = BallPos([], (0.5, 0.25), {"yellow"})
+    red = BallPos([], (0.5, 0.75), {"red"})
+
+    return _get_rack([white, yellow, red], *args, **kwargs)
 
 
 def get_snooker_rack(*args, **kwargs):
-    return SnookerRack(*args, **kwargs).get_balls_dict()
+    colors = [
+        BallPos([], (7 / 12, 0.2), {"white"}),
+        BallPos([], (0.333, 0.2), {"yellow"}),
+        BallPos([], (0.666, 0.2), {"green"}),
+        BallPos([], (0.5, 0.2), {"brown"}),
+        BallPos([], (0.5, 0.5), {"blue"}),
+        BallPos([], (0.5, 10 / 11), {"black"}),
+        BallPos([], (0.5, 0.75), {"pink"}),
+    ]
+
+    red_ids = set([f"red{i}" for i in range(1, 16)])
+
+    row1 = [
+        (anchor := BallPos([GO_UP], (0.5, 0.75), red_ids)),
+    ]
+
+    row2 = [
+        (anchor := BallPos([GO_UPLEFT], anchor, red_ids)),
+        BallPos([GO_RIGHT], anchor, red_ids),
+    ]
+
+    row3 = [
+        (anchor := BallPos([GO_UPLEFT], anchor, red_ids)),
+        BallPos([GO_RIGHT], anchor, red_ids),
+        BallPos([GO_RIGHT] * 2, anchor, red_ids),
+    ]
+
+    row4 = [
+        (anchor := BallPos([GO_UPLEFT], anchor, red_ids)),
+        BallPos([GO_RIGHT], anchor, red_ids),
+        BallPos([GO_RIGHT] * 2, anchor, red_ids),
+        BallPos([GO_RIGHT] * 3, anchor, red_ids),
+    ]
+
+    row5 = [
+        (anchor := BallPos([GO_UPLEFT], anchor, red_ids)),
+        BallPos([GO_RIGHT], anchor, red_ids),
+        BallPos([GO_RIGHT] * 2, anchor, red_ids),
+        BallPos([GO_RIGHT] * 3, anchor, red_ids),
+        BallPos([GO_RIGHT] * 4, anchor, red_ids),
+    ]
+
+    blueprint = colors + row1 + row2 + row3 + row4 + row5
+    return _get_rack(blueprint, *args, **kwargs)
+
+
+_game_rack_map: Dict[
+    str, Callable[[Table, Optional[BallParams], float], Dict[str, Ball]]
+] = {
+    GameType.NINEBALL: get_nine_ball_rack,
+    GameType.EIGHTBALL: get_eight_ball_rack,
+    GameType.THREECUSHION: get_three_cushion_rack,
+    GameType.SNOOKER: get_snooker_rack,
+}
 
 
 def get_rack(
@@ -616,10 +359,4 @@ def get_rack(
     params: Optional[BallParams],
     spacing_factor: float,
 ) -> Dict[str, Ball]:
-    _game_rack_map: Dict[
-        str, Callable[[Table, Optional[BallParams], float], Dict[str, Ball]]
-    ] = {
-        GameType.NINEBALL: get_nine_ball_rack,
-    }
-
     return _game_rack_map[game_type](table, params, spacing_factor)
