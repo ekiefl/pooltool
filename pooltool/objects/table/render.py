@@ -20,11 +20,13 @@ class TableRender(Render):
             or self._table.model_descr == TableModelDescr.null()
             or not ani.settings["graphics"]["table"]
         ):
+            # Rectangular playing surface (not a real table)
             model = Global.loader.loadModel(TableModelDescr.null().path)
             node = Global.render.find("scene").attachNewNode("table")
             model.reparentTo(node)
             model.setScale(self._table.w, self._table.l, 1)
         else:
+            # Real table
             node = Global.loader.loadModel(self._table.model_descr.path)
             node.reparentTo(Global.render.find("scene"))
             node.setName("table")
@@ -127,6 +129,7 @@ class TableRender(Render):
             not self._table.model_descr
             or self._table.model_descr == TableModelDescr.null()
             or not ani.settings["graphics"]["table"]
+            or True  # FIXME
         ):
             # draw cushion_segments as edges
             self.cushion_drawer = LineSegs()
