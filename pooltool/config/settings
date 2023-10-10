@@ -1,6 +1,6 @@
 [graphics]
-room = 0
-floor = 0
+room = 1
+floor = 1
 table = 1
 shadows = 1
 shader = 1
