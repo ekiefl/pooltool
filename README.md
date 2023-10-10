@@ -14,19 +14,12 @@ I have blogged about every aspect of this project. Read the detailed account [he
 
 # OS support
 
-This project is very much a work-in-progress. Your OS may have partially supported or untested support. The following shows what is known to work.
+This project is very much a work-in-progress. Anecdotally, pooltool has worked for users on the following operating systems:
 
-|        | MacOS | Windows | Linux |
-|--------|-------|---------|-------|
-| API    | ✅    | ✅      | 🔶    |
-| GUI    | ✅    | ✅*     | 🔶    |
-| pip    | ✅    | ✅      | 🔶    |
-
-✅ = works
-| ❌ = doesn't work
-| 🔶 = untested
-
-***IMPORTANT**: If you want to use the GUI on Windows (which you probably do), you _must_ follow the _Developer_ instructions below.
+- Windows
+- MacOS
+- Debian
+- Arch
 
 # Installation
 
@@ -62,6 +55,13 @@ With a compatible python version, install via
 
 ```python
 pip install pooltool-billiards
+```
+
+**NOTE**: If you're on Linux or Windows, you must _also_ run this:
+
+```python
+pip uninstall panda3d -y
+pip install --pre --extra-index-url https://archive.panda3d.org/ panda3d
 ```
 
 After installing, the GUI can be opened at any time via
@@ -157,20 +157,16 @@ pip install -r requirements-dev.txt
 
 In addition to `requirements.txt`, `requirements-dev.txt` includes some modules required for developement.
 
-**(iv)** windows workaround
+**NOTE**: If you're on Linux or Windows, you must _also_ run this:
 
-You can skip this step if you are **not** using WindowsOS.
-
-On Windows, there is a bug where the mouse moves off of the screen when aiming in the GUI, making you lose mouse control. The solution is to install Panda3D v1.11, which is currently unreleased but still installable.
-
-```
+```python
 pip uninstall panda3d -y
 pip install --pre --extra-index-url https://archive.panda3d.org/ panda3d
 ```
 
-Thanks to @owenhayman for this fix.
+(_This is because there is a bug where the mouse moves off of the screen when aiming in the GUI, making you lose mouse control on Linux and Windows. The solution is to install Panda3D v1.11, which is currently unreleased but still installable._)
 
-**(v)** install the pre-commit hooks:
+**(iv)** install the pre-commit hooks:
 
 This will automatically format your code according to the pooltool standard whenever you commit.
 
@@ -178,7 +174,7 @@ This will automatically format your code according to the pooltool standard when
 pre-commit install
 ```
 
-**(vi)** test out your installation:
+**(v)** test out your installation:
 
 ```bash
 python run_pooltool
@@ -186,7 +182,7 @@ python run_pooltool
 
 The game window should appear (escape key to exit).
 
-**(vii)** if you used a conda environment that you named `pooltool`, create this script that runs whenever the conda environment is activated. This script modifies `$PATH` and `$PYTHONPATH` so that python knows where to find pooltool libraries and the shell knows where to find the pooltool binary. **These path modifications live safely inside the pooltool conda environment, and do not propagate into your global
+**(vi)** if you used a conda environment that you named `pooltool`, create this script that runs whenever the conda environment is activated. This script modifies `$PATH` and `$PYTHONPATH` so that python knows where to find pooltool libraries and the shell knows where to find the pooltool binary. **These path modifications live safely inside the pooltool conda environment, and do not propagate into your global
 environment**:
 
 (_This is a multi-line command. Paste the entire block into your command line prompt._)
@@ -200,7 +196,6 @@ EOF
 ```
 
 The next time you activate your conda environment (`conda activate pooltool`), `run_pooltool` (or `run_pooltool.bat` if you're on Windows) is now a binary that can be run anywhere in your filesystem whenever you are in the `pooltool` conda environment. Test it out:
-
 ```
 conda activate pooltool
 cd ~
