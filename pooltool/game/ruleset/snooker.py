@@ -202,8 +202,8 @@ class Snooker(Ruleset):
                 self.expected = [COLORED_BALLS[self.colorCount]]
                 self.colorCount += 1
                 # Add colored ball to the collection of the potted balls
-                self.pottedBalls.append(ball)
-                self.log.add_msg(f"Ball potted: {ball.id}", sentiment="good")
+                self.pottedBalls.append(balls_potted[0])
+                self.log.add_msg(f"Ball potted: {balls_potted[0].id}", sentiment="good")
             return False
 
         # If no ball was potted in this shot restore expected target
@@ -317,7 +317,7 @@ class Snooker(Ruleset):
                 "Not expected ball hit first. Expected :"
                 + str(self.expected)
                 + "; Hit first :"
-                + self.hit_first
+                + str(self.hit_first)
             )
         elif not self.is_expected_ball_pocketed(shot) and len(potted_balls) != 0:
             reason = (
