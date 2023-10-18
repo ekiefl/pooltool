@@ -2,9 +2,11 @@
 
 import uuid
 from abc import ABC, abstractmethod
-from typing import Optional, Type
+from typing import List, Tuple
 
 import pooltool.constants as c
+from pooltool.objects.ball.datatypes import Ball
+from pooltool.objects.table.components import Pocket
 from pooltool.system.datatypes import System
 from pooltool.terminal import Timer
 
@@ -40,16 +42,16 @@ class Ruleset(ABC):
         if self.is_call_ball is None:
             raise Exception(f"{self.__class__.__name__} needs is_call_ball defined")
 
-        self.players = None
-        self.shot_number = None
-        self.turn_number = None
-        self.active_player = None
-        self.game_over = None
-        self.winner = None
-        self.tie = False
-        self.ball_call = None
-        self.pocket_call = None
-        self.update_player_stats = True
+        self.players: List[Player]
+        self.shot_number: int
+        self.turn_number: int
+        self.active_player: Player
+        self.game_over: bool
+        self.winner: Player
+        self.tie: bool = False
+        self.ball_call: Ball = Ball.dummy()
+        self.pocket_call: Pocket = Pocket.dummy()
+        self.update_player_stats: bool = True
 
         self.log = Log()
 
@@ -65,7 +67,6 @@ class Ruleset(ABC):
         self.turn_number = 0
         self.set_next_player()
         self.game_over = False
-        self.winner = None
         self.tie = False
 
     def player_order(self):
@@ -129,11 +130,11 @@ class Ruleset(ABC):
 
         self.update_player_stats = True
 
-        self.ball_call = None
-        self.pocket_call = None
+        self.ball_call = Ball.dummy()
+        self.pocket_call = Pocket.dummy()
 
     @abstractmethod
-    def legality(self, shot):
+    def legality(self, shot) -> Tuple[bool, str]:
         pass
 
     @abstractmethod
