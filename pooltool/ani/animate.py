@@ -432,7 +432,7 @@ class Game(Interface):
         FIXME This is where menu options should plug into, rather than using these
         hardcoded defaults like `game_type = GameType.NINEBALL`
         """
-        game_type = GameType.SNOOKER
+        game_type = GameType.NINEBALL
 
         game = get_ruleset(game_type)
         game.init()

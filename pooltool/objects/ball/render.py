@@ -39,8 +39,8 @@ class BallRender(Render):
     @property
     def model_path(self) -> Path:
         # TODO Snooker set is set_2
-        expected_path = ani.model_dir / "balls" / "set_2" / f"{self._ball.id}.glb"
-        # expected_path = ani.model_dir / "balls" / "set_1" / f"{self._ball.id}.glb"
+        # expected_path = ani.model_dir / "balls" / "set_2" / f"{self._ball.id}.glb"
+        expected_path = ani.model_dir / "balls" / "set_1" / f"{self._ball.id}.glb"
         return expected_path if expected_path.exists() else self.fallback_path
 
     def init_sphere(self):
