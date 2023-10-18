@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-
 from __future__ import annotations
 
 import random
@@ -14,6 +13,7 @@ from numpy.typing import NDArray
 from pooltool.game.datatypes import GameType
 from pooltool.objects.ball.datatypes import Ball, BallParams
 from pooltool.objects.table.datatypes import Table
+from pooltool.system.datatypes import Balls
 from pooltool.utils import classproperty
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -156,7 +156,7 @@ def _get_rack(
     ball_params: Optional[BallParams] = None,
     spacing_factor: float = 1e-3,
     seed: Optional[int] = None,
-) -> Dict[str, Ball]:
+) -> Balls:
     """Generate Ball objects based on a given blueprint and table dimensions.
 
     The function calculates the absolute position of each ball on the table using the
@@ -204,7 +204,7 @@ def _get_rack(
     ball_radius = ball_params.R
     radius = ball_radius * (1 + spacing_factor)
 
-    balls: Dict[str, Ball] = {}
+    balls: Balls = {}
 
     ball_ids = _get_ball_ids(blueprint)
 
@@ -241,7 +241,7 @@ def _wiggle(x: float, y: float, spacer: float) -> Tuple[float, float]:
     return x + rad * np.cos(ang), y + rad * np.sin(ang)
 
 
-def get_nine_ball_rack(*args, **kwargs) -> Dict[str, Ball]:
+def get_nine_ball_rack(*args, **kwargs) -> Balls:
     others = {"2", "3", "4", "5", "6", "7", "8"}
 
     row1 = [
@@ -274,7 +274,7 @@ def get_nine_ball_rack(*args, **kwargs) -> Dict[str, Ball]:
     return _get_rack(blueprint, *args, **kwargs)
 
 
-def get_eight_ball_rack(*args, **kwargs) -> Dict[str, Ball]:
+def get_eight_ball_rack(*args, **kwargs) -> Balls:
     stripes = {"9", "10", "11", "12", "13", "14", "15"}
     solids = {"1", "2", "3", "4", "5", "6", "7"}
 
@@ -375,9 +375,7 @@ def get_snooker_rack(*args, **kwargs):
     return _get_rack(blueprint, *args, **kwargs)
 
 
-_game_rack_map: Dict[
-    str, Callable[[Table, Optional[BallParams], float], Dict[str, Ball]]
-] = {
+_game_rack_map: Dict[str, Callable[[Table, Optional[BallParams], float], Balls]] = {
     GameType.NINEBALL: get_nine_ball_rack,
     GameType.EIGHTBALL: get_eight_ball_rack,
     GameType.THREECUSHION: get_three_cushion_rack,
@@ -390,5 +388,5 @@ def get_rack(
     table: Table,
     params: Optional[BallParams],
     spacing_factor: float,
-) -> Dict[str, Ball]:
+) -> Balls:
     return _game_rack_map[game_type](table, params, spacing_factor)

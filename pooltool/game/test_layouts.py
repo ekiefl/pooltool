@@ -20,6 +20,7 @@ from pooltool.game.layouts import (
 )
 from pooltool.objects import BallParams, Table
 from pooltool.objects.ball.datatypes import Ball
+from pooltool.system.datatypes import Balls
 
 
 def test_get_ball_ids():
@@ -154,7 +155,7 @@ class SeedTestResult:
     ball2_pos: NDArray
 
     @classmethod
-    def from_rack(cls, balls: Dict[str, Ball]) -> SeedTestResult:
+    def from_rack(cls, balls: Balls) -> SeedTestResult:
         ascending_order = balls["1"].state.rvw[0, 0] < balls["2"].state.rvw[0, 0]
 
         return cls(

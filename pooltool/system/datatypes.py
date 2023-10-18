@@ -11,19 +11,21 @@ import pooltool.math as math
 import pooltool.physics.utils as physics_utils
 from pooltool.error import ConfigError
 from pooltool.events import Event
-from pooltool.objects.ball.datatypes import Ball, BallHistory, BallState
+from pooltool.objects.ball.datatypes import Ball, BallHistory
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
 from pooltool.potting import PottingConfig
 from pooltool.serialize import conversion
 from pooltool.serialize.serializers import Pathish
 
+Balls = Dict[str, Ball]
+
 
 @define
 class System:
     cue: Cue
     table: Table
-    balls: Dict[str, Ball]
+    balls: Balls
 
     t: float = field(default=0)
     events: List[Event] = field(factory=list)
