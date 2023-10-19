@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import uuid
 from abc import ABC, abstractmethod
-from typing import Counter, Dict, List, Optional, Tuple
+from typing import Counter, Dict, Generator, List, Optional, Tuple
 
 import attrs
 
@@ -40,8 +40,7 @@ class ShotInfo:
     shooter: Player
     is_legal: bool
     is_turn_over: bool
-    ball_in_hand: List[str]
-    awarded_points: Dict[Player, int]
+    awarded_points: Dict[str, int]
 
 
 class Ruleset(ABC):
@@ -59,17 +58,21 @@ class Ruleset(ABC):
         self.game_over = False
         self.shot_number: int = 0
         self.turn_number: int = 0
+        self.ball_in_hand: Optional[str] = None
         self.ball_call: Ball = Ball.dummy()
         self.pocket_call: Pocket = Pocket.dummy()
+        self.active_player: Player = Player.dummy()
         self.log: Log = Log()
 
         self.shot_info: ShotInfo
-        self.active_player: Player
-        self.last_player: Player
         self.winner: Player
 
         self.players: List[Player] = Player.create_players(player_names)
         self.set_next_player()
+
+    def player_order(self) -> Generator[Player, None, None]:
+        for i in range(len(self.players)):
+            yield self.players[(self.turn_number + i) % len(self.players)]
 
     def set_next_player(self):
         next_player = self.players[self.turn_number % len(self.players)]
@@ -92,7 +95,7 @@ class Ruleset(ABC):
         shot.balls[ball_id].state.s = c.stationary
 
     def process_shot(self, shot: System):
-        is_legal, reason, ball_in_hand = self.legality(shot)
+        is_legal, reason = self.legality(shot)
         is_turn_over = self.is_turn_over(shot)
         awarded_points = self.award_points(shot)
 
@@ -100,7 +103,6 @@ class Ruleset(ABC):
             self.active_player,
             is_legal,
             is_turn_over,
-            ball_in_hand,
             awarded_points,
         )
         self.points += awarded_points
@@ -108,8 +110,7 @@ class Ruleset(ABC):
         if not is_legal:
             self.log.add_msg(f"Illegal shot! {reason}", sentiment="bad")
 
-        self.award_points(shot)
-        self.award_ball_in_hand(shot)
+        self.ball_in_hand = self.award_ball_in_hand(shot, is_legal)
         self.respot_balls(shot)
 
     def advance(self, shot):
@@ -123,21 +124,21 @@ class Ruleset(ABC):
             self.turn_number += 1
         self.shot_number += 1
 
-        self.active_player.ball_in_hand = []
+        self.active_player.ball_in_hand = None
         self.set_next_player()
 
         if not self.shot_info.is_legal:
-            self.active_player.ball_in_hand = self.shot_info.ball_in_hand
+            self.active_player.ball_in_hand = self.ball_in_hand
 
         self.ball_call = Ball.dummy()
         self.pocket_call = Pocket.dummy()
 
     @abstractmethod
-    def legality(self, shot: System) -> Tuple[bool, str, List[str]]:
+    def legality(self, shot: System) -> Tuple[bool, str]:
         pass
 
     @abstractmethod
-    def award_points(self, shot: System) -> Counter[Player]:
+    def award_points(self, shot: System) -> Counter[str]:
         pass
 
     @abstractmethod
@@ -149,7 +150,7 @@ class Ruleset(ABC):
         pass
 
     @abstractmethod
-    def award_ball_in_hand(self, shot: System):
+    def award_ball_in_hand(self, shot: System, legal: bool) -> Optional[str]:
         pass
 
     @abstractmethod
@@ -178,7 +179,7 @@ class Player:
     name: str
     is_shooting: bool = attrs.field(default=False)
     target_balls: List[str] = attrs.field(factory=list)
-    ball_in_hand: List[str] = attrs.field(factory=list)
+    ball_in_hand: Optional[str] = attrs.field(default=None)
 
     id: str = attrs.field(factory=_get_id, init=False)
 
@@ -188,3 +189,7 @@ class Player:
             names = ["Player 1", "Player 2"]
 
         return [cls(name) for name in names]
+
+    @classmethod
+    def dummy(cls) -> Player:
+        return cls(name="dummy")

@@ -435,7 +435,6 @@ class Game(Interface):
         game_type = GameType.NINEBALL
 
         game = get_ruleset(game_type)
-        game.init()
 
         table = Table.from_game_type(game_type)
         balls = get_rack(game_type, table, None, 1e-3)

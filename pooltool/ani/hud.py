@@ -99,9 +99,6 @@ class HUD:
         return task.cont
 
     def update_player_stats(self):
-        if not Global.game.update_player_stats:
-            return
-
         self.elements["player_stats"].update(Global.game)
         Global.game.update_player_stats = False
 
@@ -299,7 +296,7 @@ class PlayerStats(BaseHUDElement):
         self.init()
 
         for i, player in enumerate(game.player_order()):
-            msg = f"{player.name}: {player.points}"
+            msg = f"{player.name}: {game.points[player.name]}"
             color = self.colors["active"] if i == 0 else self.colors["inactive"]
             self.on_screen.append(self.init_text_object(i, msg, color=color))
 
