@@ -1,163 +1,201 @@
 #! /usr/bin/env python
 
+from typing import Counter, Dict, List, Optional, Set, Tuple
+
 import pooltool.constants as c
-import pooltool.events as e
+from pooltool.events.datatypes import EventType
+from pooltool.events.filter import by_ball, by_time, by_type, filter_events, filter_type
 from pooltool.game.ruleset.datatypes import Ruleset
+from pooltool.game.ruleset.utils import get_id_of_first_ball_hit, get_pocketed_ball_ids
+from pooltool.objects.ball.datatypes import Ball
+from pooltool.system.datatypes import System
+from pooltool.utils.strenum import StrEnum, auto
+
+
+class TargetBalls(StrEnum):
+    SOLIDS = auto()
+    STRIPES = auto()
+    EIGHT = auto()
+    UNDECIDED = auto()
+
+
+target_balls_dict: Dict[str, List[str]] = {
+    TargetBalls.SOLIDS: [str(i) for i in range(1, 8)],
+    TargetBalls.STRIPES: [str(i) for i in range(9, 16)],
+    TargetBalls.EIGHT: ["8"],
+    TargetBalls.UNDECIDED: [],
+}
 
 
 class EightBall(Ruleset):
-    def __init__(self, apa_rules=False):
-        self.is_call_ball = True
-        self.is_call_pocket = True
-        Ruleset.__init__(self)
-        self.create_players(2)
+    def __init__(self):
+        Ruleset.__init__(self, True, True, None)
 
         self.solids = [str(i) for i in range(1, 8)]
         self.stripes = [str(i) for i in range(9, 16)]
 
-        # Allow stroke mode during break
-        self.ball_call = "dummy"
-        self.pocket_call = "dummy"
+        # Solids or stripes undetermined
+        self.targeting: Dict[str, TargetBalls] = {}
+        for player in self.players:
+            self.targeting[player.name] = TargetBalls.UNDECIDED
 
         for player in self.players:
-            player.stripes_or_solids = None
             player.target_balls = []
-            player.can_cue = ["cue"]
 
-    def start(self, shot):
-        self.active_player.ball_in_hand = ["cue"]
+    def target_balls(self) -> List[str]:
+        return target_balls_dict[self.active_player_targeting()]
 
-    def get_initial_cueing_ball(self, balls):
+    def active_player_targeting(self) -> TargetBalls:
+        return self.targeting[self.active_player.name]
+
+    def start(self, _: System) -> None:
+        self.active_player.ball_in_hand = "cue"
+
+    def get_initial_cueing_ball(self, balls) -> Ball:
         return balls["cue"]
 
-    def award_points(self, shot):
-        self.shot_info["points"] = {player: 0 for player in self.players}
+    def award_points(self, shot: System) -> Counter:
+        legal, _ = self.legality(shot)
+        if not legal:
+            return Counter()
 
-    def decide_winner(self, shot):
-        if self.shot_info["is_legal"]:
+        # At this point the shot was legal, so no cue ball was sunk and no 8-ball was
+        # sunk out of turn. Therefore we can return the number of potted balls
+
+        return Counter({self.active_player.name: len(get_pocketed_ball_ids(shot))})
+
+    def decide_winner(self, _: System):
+        if self.shot_info.is_legal:
             self.winner = self.active_player
-        else:
-            self.winner = (
-                self.players[0]
-                if self.players[0] != self.active_player
-                else self.players[1]
-            )
+            return
 
-    def award_ball_in_hand(self, shot):
-        if not self.shot_info["is_legal"]:
-            self.shot_info["ball_in_hand"] = ["cue"]
+        self.winner = (
+            self.players[0]
+            if self.players[0] != self.active_player
+            else self.players[1]
+        )
+
+    def award_ball_in_hand(self, shot: System, legal: bool) -> Optional[str]:
+        if not legal:
             self.respot(
-                shot, "cue", shot.table.w / 2, shot.table.l * 1 / 4, shot.balls["cue"].R
+                shot,
+                "cue",
+                shot.table.w / 2,
+                shot.table.l * 1 / 4,
+                shot.balls["cue"].params.R,
             )
+            return "cue"
         else:
-            self.shot_info["ball_in_hand"] = None
+            return None
 
-    def respot_balls(self, shot):
-        pass
+    def respot_balls(self, _: System):
+        """No balls respotted in this variant of 8-ball"""
 
-    def is_turn_over(self, shot):
-        if not self.shot_info["is_legal"]:
+    def is_turn_over(self, shot: System) -> bool:
+        legal, _ = self.legality(shot)
+        if not legal:
             return True
 
-        pocket_events = e.filter_type(shot.events, e.EventType.BALL_POCKET)
+        pocket_events = filter_type(shot.events, EventType.BALL_POCKET)
 
-        if self.active_player.stripes_or_solids is None and len(pocket_events):
+        if self.active_player_targeting() == TargetBalls.UNDECIDED and len(
+            pocket_events
+        ):
             return False
 
         for event in pocket_events:
-            ball, pocket = event.agents
-            if ball == self.ball_call and pocket == self.pocket_call:
-                self.log.add_msg(f"Ball potted: {ball.id}", sentiment="good")
+            ball_id, pocket_id = event.ids
+            if ball_id == self.ball_call and pocket_id == self.pocket_call:
+                self.log.add_msg(f"Ball potted: {ball_id}", sentiment="good")
                 return False
 
         return True
 
-    def is_game_over(self, shot):
-        pocket_events = e.filter_type(shot.events, e.EventType.BALL_POCKET)
-        for event in pocket_events:
-            if "8" in (event.agents[0].id, event.agents[1].id):
-                return True
+    def is_game_over(self, shot: System) -> bool:
+        return any(
+            "8" in event.agents[0].id
+            for event in filter_type(shot.events, EventType.BALL_POCKET)
+        )
 
-    def is_object_ball_hit_first(self, shot):
-        cue = shot.balls["cue"]
-        cue_ball_events = e.filter_ball(shot.events, cue.id)
-        collisions = e.filter_type(cue_ball_events, e.EventType.BALL_BALL)
-        if not len(collisions):
-            return False
+    def is_object_ball_hit_first(self, shot: System) -> bool:
+        ball_id = get_id_of_first_ball_hit(shot, "cue")
 
-        first_collision = collisions[0]
-        ball1, ball2 = first_collision.agents
-        first_ball_hit = ball1 if ball1.id != "cue" else ball2
-
-        if self.active_player.stripes_or_solids is None:
-            # stripes or solids not yet determined
+        ball_was_hit = ball_id is not None
+        if not ball_was_hit:
             return True
 
-        if first_ball_hit.id in self.active_player.target_balls:
+        if self.active_player_targeting() == TargetBalls.UNDECIDED:
+            # stripes or solids not yet determined, so every ball is target ball
             return True
 
-        return False
+        return ball_id == self.ball_call
 
-    def is_legal_break(self, shot):
+    def is_legal_break(self, shot: System) -> bool:
         if self.shot_number != 0:
             return True
 
-        ball_pocketed = (
-            True if len(e.filter_type(shot.events, e.EventType.BALL_POCKET)) else False
-        )
-        enough_cushions = (
-            True if len(self.numbered_balls_that_hit_cushion(shot)) >= 4 else False
-        )
+        ball_pocketed = bool(len(get_pocketed_ball_ids(shot)))
+        enough_cushions = len(self.numbered_balls_that_hit_cushion(shot)) >= 4
 
-        return True if (ball_pocketed or enough_cushions) else False
+        return ball_pocketed or enough_cushions
 
-    def numbered_balls_that_hit_cushion(self, shot):
-        numbered_balls = [ball.id for ball in shot.balls.values() if ball.id != "cue"]
+    def numbered_balls_that_hit_cushion(self, shot: System) -> Set[str]:
+        numbered_ball_ids = [
+            ball.id for ball in shot.balls.values() if ball.id != "cue"
+        ]
 
-        cushion_events = e.filter_type(
+        cushion_events = filter_events(
             shot.events,
-            [e.EventType.BALL_LINEAR_CUSHION, e.EventType.BALL_CIRCULAR_CUSHION],
+            by_type([EventType.BALL_LINEAR_CUSHION, EventType.BALL_CIRCULAR_CUSHION]),
+            by_ball(numbered_ball_ids),
         )
-        numbered_ball_cushion_events = e.filter_ball(cushion_events, numbered_balls)
 
-        return set([event.agents[0].id for event in numbered_ball_cushion_events])
+        return set(event.agents[0].id for event in cushion_events)
 
-    def is_cue_pocketed(self, shot):
-        return True if shot.balls["cue"].s == c.pocketed else False
+    def is_cue_pocketed(self, shot: System) -> bool:
+        return "cue" in get_pocketed_ball_ids(shot)
 
-    def is_cushion_after_first_contact(self, shot):
+    def is_cushion_hit_after_first_contact(self, shot: System) -> bool:
         if not self.is_object_ball_hit_first(shot):
             return False
 
-        cue_events = e.filter_ball(shot.events, shot.balls["cue"].id)
-        first_contact = e.filter_type(cue_events, e.EventType.BALL_BALL)[0]
-        after_first_contact = e.filter_time(first_contact.time)
-        cushion_events = e.filter_type(
-            after_first_contact,
-            [e.EventType.BALL_LINEAR_CUSHION, e.EventType.BALL_CIRCULAR_CUSHION],
+        numbered_balls_pocketed = filter_events(
+            shot.events,
+            by_type(EventType.BALL_POCKET),
+            by_ball([ball.id for ball in shot.balls.values() if ball.id != "cue"]),
         )
 
-        cushion_hit = True if len(cushion_events) else False
+        first_contact_event = filter_events(
+            shot.events,
+            by_ball("cue"),
+            by_type(EventType.BALL_BALL),
+        )[0]
 
-        numbered_balls = [ball.id for ball in shot.balls.values() if ball.id != "cue"]
+        post_first_contact_cushion_hits = filter_events(
+            shot.events,
+            by_time(first_contact_event.time),
+            by_ball("cue"),
+            by_type([EventType.BALL_LINEAR_CUSHION, EventType.BALL_CIRCULAR_CUSHION]),
+        )
 
-        balls_pocketed = e.filter_type(shot.events, e.EventType.BALL_POCKET)
-        numbered_balls_pocketed = e.filter_ball(balls_pocketed, numbered_balls)
+        ball_was_pocketed = bool(len(numbered_balls_pocketed))
+        cushion_hit_after_first_contact = bool(len(post_first_contact_cushion_hits))
 
-        return True if (cushion_hit or len(numbered_balls_pocketed)) else False
+        return ball_was_pocketed or cushion_hit_after_first_contact
 
-    def is_8_ball_sunk_before_others(self, shot):
-        if "8" in self.active_player.target_balls:
+    def is_8_ball_sunk_before_others(self, shot: System) -> bool:
+        if "8" in self.target_balls():
+            # Player is on the 8-ball, so it's not out of turn
             return False
 
-        pocket_events = e.filter_type(shot.events, e.EventType.BALL_POCKET)
-        for event in pocket_events:
-            if "8" in (event.agents[0].id, event.agents[1].id):
-                return True
+        return any(
+            "8" in event.agents[0].id
+            for event in filter_type(shot.events, EventType.BALL_POCKET)
+        )
 
-    def legality(self, shot):
+    def legality(self, shot) -> Tuple[bool, str]:
         """Returns whether or not a shot is legal, and the reason"""
-        reason = None
+        reason = ""
 
         if self.is_8_ball_sunk_before_others(shot):
             reason = "8-ball sunk before others!"
@@ -167,14 +205,14 @@ class EightBall(Ruleset):
             reason = "No shot called!"
         elif self.is_cue_pocketed(shot):
             reason = "Cue ball in pocket!"
-        elif not self.is_cushion_after_first_contact(shot):
+        elif not self.is_cushion_hit_after_first_contact(shot):
             reason = "Cushion not contacted after first contact"
         elif not self.is_legal_break(shot):
             reason = "Must contact 4 rails or pot 1 ball"
 
         return (True, reason) if not reason else (False, reason)
 
-    def is_shot_called(self, shot):
+    def is_shot_called(self, _: System) -> bool:
         if self.shot_number == 0:
             return True
 
@@ -188,7 +226,7 @@ class EightBall(Ruleset):
         self.decide_stripes_or_solids(shot)
         super().advance(shot)
 
-    def update_target_balls(self, shot):
+    def update_target_balls(self, shot: System):
         for player in self.players:
             if self.shot_number == 0:
                 player.target_balls = self.solids + self.stripes
@@ -202,7 +240,7 @@ class EightBall(Ruleset):
                 player.target_balls.append("8")
 
     def decide_stripes_or_solids(self, shot):
-        is_open = True if self.active_player.stripes_or_solids is None else False
+        is_open = True if self.target_balls() is None else False
         player_potted = not self.shot_info["is_turn_over"]
         is_break_shot = self.shot_number == 0
 
@@ -210,7 +248,7 @@ class EightBall(Ruleset):
             return
 
         if self.ball_call.id in self.stripes:
-            self.active_player.stripes_or_solids = "stripes"
+            self.target_balls() == "stripes"
             self.active_player.target_balls = self.stripes
             other_player = (
                 self.players[0]
@@ -220,7 +258,7 @@ class EightBall(Ruleset):
             other_player.stripes_or_solids = "solids"
             other_player.target_balls = self.solids
         else:
-            self.active_player.stripes_or_solids = "solids"
+            self.target_balls() == "solids"
             self.active_player.target_balls = self.solids
             other_player = (
                 self.players[0]
@@ -231,6 +269,6 @@ class EightBall(Ruleset):
             other_player.target_balls = self.stripes
 
         self.log.add_msg(
-            f"{self.active_player.name} takes {self.active_player.stripes_or_solids}",
+            f"{self.active_player.name} takes {self.target_balls()}",
             sentiment="good",
         )

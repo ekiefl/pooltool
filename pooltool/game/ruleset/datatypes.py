@@ -59,8 +59,8 @@ class Ruleset(ABC):
         self.shot_number: int = 0
         self.turn_number: int = 0
         self.ball_in_hand: Optional[str] = None
-        self.ball_call: Ball = Ball.dummy()
-        self.pocket_call: Pocket = Pocket.dummy()
+        self.ball_call: str = "dummy"
+        self.pocket_call: str = "dummy"
         self.active_player: Player = Player.dummy()
         self.log: Log = Log()
 
