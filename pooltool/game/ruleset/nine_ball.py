@@ -7,7 +7,7 @@ import pooltool.constants as c
 from pooltool.events.datatypes import EventType
 from pooltool.events.filter import by_ball, by_time, by_type, filter_events
 from pooltool.game.ruleset.datatypes import Ruleset
-from pooltool.game.ruleset.utils import get_pocketed_ball_ids
+from pooltool.game.ruleset.utils import get_id_of_first_ball_hit, get_pocketed_ball_ids
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.system.datatypes import System
 
@@ -39,7 +39,7 @@ class NineBall(Ruleset):
     def decide_winner(self, _: System) -> None:
         self.winner = self.active_player
 
-    def award_ball_in_hand(self, shot: System, legal) -> Optional[str]:
+    def award_ball_in_hand(self, shot: System, legal: bool) -> Optional[str]:
         if not legal:
             self.respot(
                 shot,
@@ -120,18 +120,10 @@ class NineBall(Ruleset):
         return highest
 
     def is_lowest_hit_first(self, shot: System) -> bool:
-        lowest = self.get_lowest_ball(shot)
-
-        cue_collisions = filter_events(
-            shot.events,
-            by_ball("cue"),
-            by_type(EventType.BALL_BALL),
-        )
-
-        if not len(cue_collisions):
+        if (ball_id := get_id_of_first_ball_hit(shot, "cue")) is None:
             return False
 
-        return lowest.id in cue_collisions[0].ids
+        return self.get_lowest_ball(shot).id == ball_id
 
     def is_legal_break(self, shot: System) -> bool:
         if self.shot_number != 0:
