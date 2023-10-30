@@ -53,8 +53,9 @@ class GameOverMode(BaseMode):
             ),
         }
         for i, player in enumerate(Global.game.players):
+            points = Global.game.points[player.name]
             self.text[player.name] = OnscreenText(
-                text=f"{player.name}\n{player.points}",
+                text=f"{player.name}\n{points}",
                 style=1,
                 fg=(1, 1, 1, 1),
                 shadow=(0, 0, 0, 0.5),
