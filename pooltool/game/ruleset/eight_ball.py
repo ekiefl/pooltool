@@ -180,7 +180,6 @@ class EightBall(Ruleset):
         post_first_contact_cushion_hits = filter_events(
             shot.events,
             by_time(first_contact_event.time),
-            by_ball("cue"),
             by_type([EventType.BALL_LINEAR_CUSHION, EventType.BALL_CIRCULAR_CUSHION]),
         )
 
