@@ -9,7 +9,6 @@ class ThreeCushion(Ruleset):
     def __init__(self):
         self.points_to_win = 20
         self.is_call_ball = False
-        self.is_call_pocket = False
         Ruleset.__init__(self)
         self.create_players(2)
 

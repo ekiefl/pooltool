@@ -32,11 +32,8 @@ target_dict: Dict[str, Set[str]] = {
 
 
 class EightBall(Ruleset):
-    def __init__(self):
-        Ruleset.__init__(self, True, True, None)
-
-        self.solids = [str(i) for i in range(1, 8)]
-        self.stripes = [str(i) for i in range(9, 16)]
+    def __init__(self, player_names=None):
+        Ruleset.__init__(self, is_call_ball=True, player_names=player_names)
 
         # Solids or stripes undetermined
         self.targeting: Dict[str, Target] = {}
@@ -64,7 +61,6 @@ class EightBall(Ruleset):
         self.shot_constraints = ShotConstraints(
             ball_in_hand=BallInHandOptions.BEHIND_LINE,
             call_ball=False,
-            call_pocket=False,
         )
 
     def get_initial_cueing_ball(self, balls) -> Ball:
@@ -274,6 +270,5 @@ class EightBall(Ruleset):
                 if self.shot_info.is_legal
                 else BallInHandOptions.ANYWHERE
             ),
-            call_ball=True,
-            call_pocket=True,
+            call_ball=False,
         )

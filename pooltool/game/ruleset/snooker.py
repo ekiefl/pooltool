@@ -27,7 +27,6 @@ class Snooker(Ruleset):
     def __init__(self):
         # TODO how to track call ball?
         self.is_call_ball = False
-        self.is_call_pocket = False
 
         self.hit_first = None
         self.pottedBalls = []  # Dictionary to store potted balls

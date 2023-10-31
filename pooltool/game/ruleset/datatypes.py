@@ -61,7 +61,6 @@ class ShotConstraints:
 class Ruleset(ABC):
     def __init__(
         self,
-        is_call_pocket: bool,
         is_call_ball: bool,
         player_names: Optional[List[str]] = None,
     ) -> None:
@@ -71,7 +70,6 @@ class Ruleset(ABC):
         self.shot_constraints = ShotConstraints(
             ball_in_hand=BallInHandOptions.NONE,
             call_ball=self.is_call_ball,
-            call_pocket=self.is_call_pocket,
         )
 
         self.points: Counter = Counter()

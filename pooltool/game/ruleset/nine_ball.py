@@ -15,8 +15,8 @@ from pooltool.system.datatypes import System
 
 
 class NineBall(Ruleset):
-    def __init__(self):
-        Ruleset.__init__(self, False, False, None)
+    def __init__(self, player_names=None):
+        Ruleset.__init__(self, is_call_ball=False, player_names=player_names)
 
     def start(self, _: System):
         self.active_player.ball_in_hand = "cue"
