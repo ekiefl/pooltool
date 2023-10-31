@@ -55,7 +55,6 @@ class BallInHandOptions(StrEnum):
 class ShotConstraints:
     ball_in_hand: BallInHandOptions
     call_ball: bool
-    call_pocket: bool
 
 
 class Ruleset(ABC):
@@ -65,7 +64,6 @@ class Ruleset(ABC):
         player_names: Optional[List[str]] = None,
     ) -> None:
         self.is_call_ball = is_call_ball
-        self.is_call_pocket = is_call_pocket
 
         self.shot_constraints = ShotConstraints(
             ball_in_hand=BallInHandOptions.NONE,
@@ -195,26 +193,16 @@ class Ruleset(ABC):
         pass
 
 
-def _get_id() -> str:
-    return uuid.uuid4().hex
-
-
 @attrs.define
 class Player:
     name: str
-    is_shooting: bool = attrs.field(default=False)
-    target_balls: List[str] = attrs.field(factory=list)
     ball_in_hand: Optional[str] = attrs.field(default=None)
-
-    id: str = attrs.field(factory=_get_id, init=False)
 
     @classmethod
     def create_players(cls, names: Optional[List[str]] = None) -> List[Player]:
         if names is None:
             names = ["Player 1", "Player 2"]
 
-        return [cls(name) for name in names]
+        assert len(names) == len(set(names)), "Player names must be unique"
 
-    @classmethod
-    def dummy(cls) -> Player:
-        return cls(name="dummy")
+        return [cls(name) for name in names]

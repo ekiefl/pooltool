@@ -40,9 +40,6 @@ class EightBall(Ruleset):
         for player in self.players:
             self.targeting[player.name] = Target.UNDECIDED
 
-        for player in self.players:
-            player.target_balls = []
-
     @property
     def active_balls(self) -> Set[str]:
         """Return the list of ball IDs associated with active player's target"""
