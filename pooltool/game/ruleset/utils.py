@@ -22,3 +22,10 @@ def get_id_of_first_ball_hit(shot: System, cue: str = "cue") -> Optional[str]:
 
     id1, id2 = cue_collisions[0].ids
     return id1 if id1 != cue else id2
+
+
+def is_ball_pocketed(shot: System, ball_id: str) -> bool:
+    return any(
+        ball_id in event.agents[0].id
+        for event in filter_type(shot.events, EventType.BALL_POCKET)
+    )
