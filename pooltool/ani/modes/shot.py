@@ -123,6 +123,16 @@ class ShotMode(BaseMode):
             # unsimulated, it already exists. Otherwise, it needs to be created, using
             # most recent system as template.
             if multisystem[-1].simulated:
+                # The shot is processed and advanced at this point, because (1) the
+                # shot animation has ended or the user has requested to take the next
+                # shot and (2) it hasn't been processed yet, since if it had, the latest
+                # system would be unsimulated.
+                Global.game.process_shot(multisystem[-1])
+                Global.game.advance(multisystem[-1])
+                if Global.game.game_over:
+                    # The game is over, so scrap that, that, head to game over screen
+                    Global.mode_mgr.change_mode(Mode.game_over)
+
                 if multisystem.active_index != multisystem.max_index:
                     # The currently rendered shot isn't the most recent shot, and it's
                     # the most recent shot we want to advance from. So render it.
@@ -194,11 +204,7 @@ class ShotMode(BaseMode):
         elif self.keymap[Action.aim] or visual.animation_finished:
             # Either the user has requested to start the next shot, or the animation has
             # finished
-            Global.game.advance(multisystem[-1])
-            if Global.game.game_over:
-                Global.mode_mgr.change_mode(Mode.game_over)
-            else:
-                Global.mode_mgr.change_mode(Mode.aim, exit_kwargs=dict(key="advance"))
+            Global.mode_mgr.change_mode(Mode.aim, exit_kwargs=dict(key="advance"))
 
         elif self.keymap[Action.zoom]:
             cam.zoom_via_mouse()
