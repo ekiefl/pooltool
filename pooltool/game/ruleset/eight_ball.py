@@ -46,10 +46,12 @@ class EightBall(Ruleset):
         for player in self.players:
             player.target_balls = []
 
+    @property
     def active_balls(self) -> Set[str]:
         """Return the list of ball IDs associated with active player's target"""
-        return target_dict[self.active_target()]
+        return target_dict[self.active_target]
 
+    @property
     def active_target(self) -> Target:
         """Return the active player's Target (SOLIDS, STRIPES, UNDECIDED, EIGHT)"""
         return self.targeting[self.active_player.name]
@@ -112,7 +114,7 @@ class EightBall(Ruleset):
 
         pocket_events = filter_type(shot.events, EventType.BALL_POCKET)
 
-        if self.active_target() == Target.UNDECIDED and len(pocket_events):
+        if self.active_target == Target.UNDECIDED and len(pocket_events):
             return False
 
         for event in pocket_events:
@@ -132,7 +134,7 @@ class EightBall(Ruleset):
         if not ball_id:
             return False
 
-        if self.active_target() == Target.UNDECIDED:
+        if self.active_target == Target.UNDECIDED:
             # stripes or solids not yet determined, so every ball is target ball
             return True
 
@@ -192,7 +194,7 @@ class EightBall(Ruleset):
         return ball_was_pocketed or cushion_hit_after_first_contact
 
     def is_8_ball_pocketed_out_of_turn(self, shot: System) -> bool:
-        if "8" in self.active_balls():
+        if "8" in self.active_balls:
             # Player is on the 8-ball, so it can't be out of turn
             return False
 
@@ -227,30 +229,28 @@ class EightBall(Ruleset):
 
         return True
 
-    def advance(self, shot):
-        self.update_target_balls(shot)
-        self.decide_stripes_or_solids()
+    def advance(self, shot: System):
+        self.on_8_ball(shot)
+        self.decide_stripes_or_solids(shot)
         super().advance(shot)
 
-    def update_target_balls(self, shot: System):
+    def on_8_ball(self, shot: System):
         for player in self.players:
-            if self.shot_number == 0:
-                self.targeting[player.name] = Target.UNDECIDED
-
             states = [
                 ball.state.s
                 for ball in shot.balls.values()
                 if ball.id in target_dict[self.targeting[player.name]]
             ]
             if all([state == c.pocketed for state in states]):
-                player.target_balls.append("8")
+                self.targeting[player.name] = Target.EIGHT
 
-    def decide_stripes_or_solids(self):
-        is_open = self.active_target == Target.UNDECIDED
-        player_potted = not self.shot_info.is_turn_over
-        is_break_shot = self.shot_number == 0
+    def decide_stripes_or_solids(self, shot: System):
+        if self.active_target != Target.UNDECIDED:
+            # Stripes/solids has already been determined
+            return
 
-        if (not is_open) or (not player_potted) or (is_break_shot):
+        if self.shot_info.is_turn_over:
+            # Player didn't sink a ball
             return
 
         if self.ball_call in target_dict[Target.STRIPES]:
@@ -263,7 +263,7 @@ class EightBall(Ruleset):
             raise NotImplementedError("This should not happen")
 
         self.log.add_msg(
-            f"{self.active_player.name} takes {self.active_target()}",
+            f"{self.active_player.name} takes {self.active_target}",
             sentiment="good",
         )
 

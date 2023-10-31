@@ -19,6 +19,7 @@ class Log:
     def __init__(self):
         self.timer = Timer()
         self.msgs = []
+        self.update = False
 
     def add_msg(self, msg, sentiment="neutral", quiet=False) -> None:
         self.msgs.append(
@@ -81,28 +82,29 @@ class Ruleset(ABC):
         self.ball_in_hand: Optional[str] = None
         self.ball_call: str = Ball.dummy().id
         self.pocket_call: str = Pocket.dummy().id
-        self.active_player: Player = Player.dummy()
         self.log: Log = Log()
 
         self.shot_info: ShotInfo
         self.winner: Player
 
         self.players: List[Player] = Player.create_players(player_names)
-        self.set_next_player()
+        self.active_idx: int = 0
 
     def player_order(self) -> Generator[Player, None, None]:
         for i in range(len(self.players)):
             yield self.players[(self.turn_number + i) % len(self.players)]
 
-    def set_next_player(self):
-        next_player = self.players[self.turn_number % len(self.players)]
-        if next_player != self.active_player:
-            self.last_player, self.active_player = self.active_player, next_player
-            self.active_player.is_shooting = True
-            if self.last_player:
-                self.last_player.is_shooting = False
+    @property
+    def active_player(self) -> Player:
+        return self.players[self.active_idx]
 
-            self.log.add_msg(f"{self.active_player.name} is up", sentiment="neutral")
+    @property
+    def last_player(self) -> Player:
+        last_idx = (self.active_idx - 1) % len(self.players)
+        return self.players[last_idx]
+
+    def set_next_player(self):
+        self.active_idx = self.turn_number % len(self.players)
 
     def respot(self, shot: System, ball_id: str, x: float, y: float, z: float):
         """Move cue ball to head spot
