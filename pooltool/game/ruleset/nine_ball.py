@@ -3,10 +3,12 @@
 from collections import Counter
 from typing import Optional, Set, Tuple
 
+import attrs
+
 import pooltool.constants as c
 from pooltool.events.datatypes import EventType
 from pooltool.events.filter import by_ball, by_time, by_type, filter_events
-from pooltool.game.ruleset.datatypes import Ruleset
+from pooltool.game.ruleset.datatypes import BallInHandOptions, Ruleset, ShotConstraints
 from pooltool.game.ruleset.utils import get_id_of_first_ball_hit, get_pocketed_ball_ids
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.system.datatypes import System
@@ -18,6 +20,9 @@ class NineBall(Ruleset):
 
     def start(self, _: System):
         self.active_player.ball_in_hand = "cue"
+        self.shot_constraints = attrs.evolve(
+            self.shot_constraints, ball_in_hand=BallInHandOptions.BEHIND_LINE
+        )
 
     def get_initial_cueing_ball(self, balls) -> Ball:
         return balls["cue"]
@@ -191,3 +196,11 @@ class NineBall(Ruleset):
             reason = "Must contact 4 rails or pot 1 ball"
 
         return (True, reason) if not reason else (False, reason)
+
+    def next_shot_constraints(self, _: System) -> ShotConstraints:
+        ball_in_hand = (
+            BallInHandOptions.NONE
+            if self.shot_info.is_legal
+            else BallInHandOptions.ANYWHERE
+        )
+        return attrs.evolve(self.shot_constraints, ball_in_hand=ball_in_hand)

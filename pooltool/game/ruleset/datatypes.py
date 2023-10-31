@@ -12,6 +12,7 @@ from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import Pocket
 from pooltool.system.datatypes import System
 from pooltool.terminal import Timer
+from pooltool.utils.strenum import StrEnum, auto
 
 
 class Log:
@@ -43,6 +44,19 @@ class ShotInfo:
     awarded_points: Dict[str, int]
 
 
+class BallInHandOptions(StrEnum):
+    NONE = auto()
+    ANYWHERE = auto()
+    BEHIND_LINE = auto()
+
+
+@attrs.define
+class ShotConstraints:
+    ball_in_hand: BallInHandOptions
+    call_ball: bool
+    call_pocket: bool
+
+
 class Ruleset(ABC):
     def __init__(
         self,
@@ -53,14 +67,20 @@ class Ruleset(ABC):
         self.is_call_ball = is_call_ball
         self.is_call_pocket = is_call_pocket
 
+        self.shot_constraints = ShotConstraints(
+            ball_in_hand=BallInHandOptions.NONE,
+            call_ball=self.is_call_ball,
+            call_pocket=self.is_call_pocket,
+        )
+
         self.points: Counter = Counter()
         self.tie: bool = False
         self.game_over = False
         self.shot_number: int = 0
         self.turn_number: int = 0
         self.ball_in_hand: Optional[str] = None
-        self.ball_call: str = "dummy"
-        self.pocket_call: str = "dummy"
+        self.ball_call: str = Ball.dummy().id
+        self.pocket_call: str = Pocket.dummy().id
         self.active_player: Player = Player.dummy()
         self.log: Log = Log()
 
@@ -113,7 +133,7 @@ class Ruleset(ABC):
         self.ball_in_hand = self.award_ball_in_hand(shot, is_legal)
         self.respot_balls(shot)
 
-    def advance(self, shot):
+    def advance(self, shot: System):
         if self.is_game_over(shot):
             self.game_over = True
             self.decide_winner(shot)
@@ -130,8 +150,9 @@ class Ruleset(ABC):
         if not self.shot_info.is_legal:
             self.active_player.ball_in_hand = self.ball_in_hand
 
-        self.ball_call = Ball.dummy()
-        self.pocket_call = Pocket.dummy()
+        self.ball_call = Ball.dummy().id
+        self.pocket_call = Pocket.dummy().id
+        self.shot_constraints = self.next_shot_constraints(shot)
 
     @abstractmethod
     def legality(self, shot: System) -> Tuple[bool, str]:
@@ -163,6 +184,10 @@ class Ruleset(ABC):
 
     @abstractmethod
     def get_initial_cueing_ball(self, balls) -> Ball:
+        pass
+
+    @abstractmethod
+    def next_shot_constraints(self, shot: System) -> ShotConstraints:
         pass
 
     @abstractmethod
