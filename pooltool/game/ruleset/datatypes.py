@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import uuid
 from abc import ABC, abstractmethod
-from typing import Counter, Dict, Generator, List, Optional, Tuple
+from typing import Counter, Dict, Generator, List, Optional, Set, Tuple
 
 import attrs
 
@@ -54,6 +54,7 @@ class BallInHandOptions(StrEnum):
 @attrs.define
 class ShotConstraints:
     ball_in_hand: BallInHandOptions
+    movable: Set
     call_shot: bool
     ball_call: Optional[str] = attrs.field(default=None)
     pocket_call: Optional[str] = attrs.field(default=None)
@@ -67,7 +68,6 @@ class Ruleset(ABC):
         self.turn_number: int = 0
 
         # Game states
-        self.ball_in_hand: Optional[str] = None
         self.shot_info: ShotInfo
         self.winner: Player
         self.shot_constraints = self.initial_shot_constraints()
@@ -125,7 +125,6 @@ class Ruleset(ABC):
         if not is_legal:
             self.log.add_msg(f"Illegal shot! {reason}", sentiment="bad")
 
-        self.ball_in_hand = self.award_ball_in_hand(shot, is_legal)
         self.respot_balls(shot)
 
     def advance(self, shot: System):
@@ -139,11 +138,7 @@ class Ruleset(ABC):
             self.turn_number += 1
         self.shot_number += 1
 
-        self.active_player.ball_in_hand = None
         self.set_next_player()
-
-        if not self.shot_info.is_legal:
-            self.active_player.ball_in_hand = self.ball_in_hand
 
         self.shot_constraints = self.next_shot_constraints(shot)
 
@@ -161,10 +156,6 @@ class Ruleset(ABC):
 
     @abstractmethod
     def is_game_over(self, shot: System) -> bool:
-        pass
-
-    @abstractmethod
-    def award_ball_in_hand(self, shot: System, legal: bool) -> Optional[str]:
         pass
 
     @abstractmethod
@@ -191,7 +182,6 @@ class Ruleset(ABC):
 @attrs.define
 class Player:
     name: str
-    ball_in_hand: Optional[str] = attrs.field(default=None)
 
     @classmethod
     def create_players(cls, names: Optional[List[str]] = None) -> List[Player]:

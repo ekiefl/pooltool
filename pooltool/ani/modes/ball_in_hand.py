@@ -13,6 +13,7 @@ from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.game.ruleset.datatypes import BallInHandOptions
 from pooltool.system.render import visual
 from pooltool.utils import panda_path
 
@@ -45,12 +46,14 @@ class BallInHandMode(BaseMode):
         self.register_keymap_event("g-up", Action.ball_in_hand, False)
         self.register_keymap_event("mouse1-up", "next", True)
 
-        num_options = len(Global.game.active_player.ball_in_hand)
+        num_options = len(Global.game.shot_constraints.movable)
         if num_options == 0:
             # FIXME add message
             self.picking = "ball"
         elif num_options == 1:
-            self.grabbed_ball = visual.balls[Global.game.active_player.ball_in_hand[0]]
+            self.grabbed_ball = visual.balls[
+                next(iter(Global.game.shot_constraints.movable))
+            ]
             self.grab_ball_node = self.grabbed_ball.get_node("pos")
             self.grab_ball_shadow_node = self.grabbed_ball.get_node("shadow")
             self.picking = "placement"
@@ -81,6 +84,9 @@ class BallInHandMode(BaseMode):
                 enter_kwargs=dict(load_prev_cam=False),
             )
             return task.done
+
+        if Global.game.shot_constraints.ball_in_hand == BallInHandOptions.NONE:
+            return task.cont
 
         cam.move_fixation_via_mouse()
 
@@ -198,7 +204,7 @@ class BallInHandMode(BaseMode):
         d_min = np.inf
         closest = None
         for ball_id, ball in visual.balls.items():
-            if ball_id not in Global.game.active_player.ball_in_hand:
+            if ball_id not in Global.game.shot_constraints.movable:
                 continue
             if ball._ball.state.s == c.pocketed:
                 continue

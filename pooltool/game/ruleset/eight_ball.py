@@ -35,8 +35,6 @@ class EightBall(Ruleset):
     def __init__(self, player_names=None):
         Ruleset.__init__(self, player_names=player_names)
 
-        self.active_player.ball_in_hand = "cue"
-
         # Solids or stripes undetermined
         self.targeting: Dict[str, Target] = {}
         for player in self.players:
@@ -55,16 +53,17 @@ class EightBall(Ruleset):
     def initial_shot_constraints(self) -> ShotConstraints:
         return ShotConstraints(
             ball_in_hand=BallInHandOptions.BEHIND_LINE,
+            movable={"cue"},
             call_shot=False,
         )
 
     def next_shot_constraints(self, _: System) -> ShotConstraints:
+        legal = self.shot_info.is_legal
         return ShotConstraints(
             ball_in_hand=(
-                BallInHandOptions.NONE
-                if self.shot_info.is_legal
-                else BallInHandOptions.ANYWHERE
+                BallInHandOptions.NONE if legal else BallInHandOptions.ANYWHERE
             ),
+            movable=set() if legal else {"cue"},
             call_shot=True,
         )
 
@@ -95,8 +94,9 @@ class EightBall(Ruleset):
             else self.players[1]
         )
 
-    def award_ball_in_hand(self, shot: System, legal: bool) -> Optional[str]:
-        if not legal:
+    def respot_balls(self, shot: System):
+        """No balls respotted in this variant of 8-ball"""
+        if not self.shot_info.is_legal:
             self.respot(
                 shot,
                 "cue",
@@ -104,12 +104,6 @@ class EightBall(Ruleset):
                 shot.table.l * 1 / 4,
                 shot.balls["cue"].params.R,
             )
-            return "cue"
-        else:
-            return None
-
-    def respot_balls(self, _: System):
-        """No balls respotted in this variant of 8-ball"""
 
     def is_turn_over(self, shot: System) -> bool:
         legal, _ = self.legality(shot)
