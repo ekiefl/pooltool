@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-from typing import Counter, Dict, Optional, Set, Tuple
+from typing import Counter, Dict, List, Set, Tuple
 
 import pooltool.constants as c
 from pooltool.events.datatypes import EventType
@@ -11,7 +11,6 @@ from pooltool.game.ruleset.utils import (
     get_pocketed_ball_ids,
     is_ball_pocketed,
 )
-from pooltool.objects.ball.datatypes import Ball
 from pooltool.system.datatypes import System
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -23,11 +22,11 @@ class Target(StrEnum):
     UNDECIDED = auto()
 
 
-target_dict: Dict[str, Set[str]] = {
-    Target.SOLIDS: {str(i) for i in range(1, 8)},
-    Target.STRIPES: {str(i) for i in range(9, 16)},
-    Target.UNDECIDED: {str(i) for i in range(1, 16) if i != 8},
-    Target.EIGHT: {"8"},
+target_dict: Dict[str, List[str]] = {
+    Target.SOLIDS: [str(i) for i in range(1, 8)],
+    Target.STRIPES: [str(i) for i in range(9, 16)],
+    Target.UNDECIDED: [str(i) for i in range(1, 16) if i != 8],
+    Target.EIGHT: ["8"],
 }
 
 
@@ -40,34 +39,48 @@ class EightBall(Ruleset):
         for player in self.players:
             self.targeting[player.name] = Target.UNDECIDED
 
-    @property
-    def active_balls(self) -> Set[str]:
-        """Return the list of ball IDs associated with active player's target"""
-        return target_dict[self.active_target]
+    def initial_shot_constraints(self) -> ShotConstraints:
+        return ShotConstraints(
+            ball_in_hand=BallInHandOptions.BEHIND_LINE,
+            movable=["cue"],
+            cueable=["cue"],
+            hittable=target_dict[Target.UNDECIDED],
+            call_shot=False,
+        )
+
+    def next_shot_constraints(self, shot: System) -> ShotConstraints:
+        if self.legality(shot)[0]:
+            ball_in_hand = BallInHandOptions.NONE
+            movable = []
+        else:
+            ball_in_hand = BallInHandOptions.ANYWHERE
+            movable = ["cue"]
+
+        if self.is_turn_over(shot):
+            hittable = target_dict[self.next_target]
+        else:
+            hittable = target_dict[self.active_target]
+
+        return ShotConstraints(
+            ball_in_hand=ball_in_hand,
+            movable=movable,
+            cueable=["cue"],
+            hittable=hittable,
+            call_shot=True,
+        )
 
     @property
     def active_target(self) -> Target:
         """Return the active player's Target (SOLIDS, STRIPES, UNDECIDED, EIGHT)"""
         return self.targeting[self.active_player.name]
 
-    def initial_shot_constraints(self) -> ShotConstraints:
-        return ShotConstraints(
-            ball_in_hand=BallInHandOptions.BEHIND_LINE,
-            movable=["cue"],
-            cueable=["cue"],
-            call_shot=False,
-        )
+    @property
+    def next_target(self) -> Target:
+        """Return the next player's Target (SOLIDS, STRIPES, UNDECIDED, EIGHT)
 
-    def next_shot_constraints(self, shot: System) -> ShotConstraints:
-        legal, _ = self.legality(shot)
-        return ShotConstraints(
-            ball_in_hand=(
-                BallInHandOptions.NONE if legal else BallInHandOptions.ANYWHERE
-            ),
-            movable=[] if legal else ["cue"],
-            cueable=["cue"],
-            call_shot=True,
-        )
+        Note: The next player is the same as the last player since it's a two player game
+        """
+        return self.targeting[self.last_player.name]
 
     def award_points(self, shot: System) -> Counter:
         """FIXME
@@ -205,7 +218,7 @@ class EightBall(Ruleset):
         return ball_was_pocketed or cushion_hit_after_first_contact
 
     def is_8_ball_pocketed_out_of_turn(self, shot: System) -> bool:
-        if "8" in self.active_balls:
+        if self.active_target == Target.UNDECIDED:
             # Player is on the 8-ball, so it can't be out of turn
             return False
 

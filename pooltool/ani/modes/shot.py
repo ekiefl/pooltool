@@ -123,10 +123,10 @@ class ShotMode(BaseMode):
             # unsimulated, it already exists. Otherwise, it needs to be created, using
             # most recent system as template.
             if multisystem[-1].simulated:
-                # The shot is processed and advanced at this point, because (1) the
-                # shot animation has ended or the user has requested to take the next
-                # shot and (2) it hasn't been processed yet, since if it had, the latest
-                # system would be unsimulated.
+                # The shot is processed and advanced now, because (1) the shot animation
+                # has ended or the user has requested to take the next shot and (2) it
+                # hasn't been processed yet, since if it had, the latest system would be
+                # unsimulated.
                 Global.game.process_shot(multisystem[-1])
                 Global.game.advance(multisystem[-1])
                 if Global.game.game_over:

@@ -15,8 +15,6 @@ from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
-from pooltool.game.ruleset.datatypes import Ruleset
-from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.table.components import Pocket
 from pooltool.system.datatypes import multisystem
@@ -229,7 +227,7 @@ class CallShotMode(BaseMode):
         closest = None
 
         for ball_id, ball in visual.balls.items():
-            if ball_id not in Global.game.active_balls:
+            if ball_id not in Global.game.shot_constraints.hittable:
                 continue
             if ball._ball.state.s == c.pocketed:
                 continue

@@ -48,6 +48,7 @@ class ShotConstraints:
     ball_in_hand: BallInHandOptions
     movable: List
     cueable: List
+    hittable: List
     call_shot: bool
     ball_call: Optional[str] = attrs.field(default=None)
     pocket_call: Optional[str] = attrs.field(default=None)

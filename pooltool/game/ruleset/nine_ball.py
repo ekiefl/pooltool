@@ -1,9 +1,7 @@
 #! /usr/bin/env python
 
 from collections import Counter
-from typing import Optional, Set, Tuple
-
-import attrs
+from typing import Set, Tuple
 
 import pooltool.constants as c
 from pooltool.events.datatypes import EventType
@@ -23,6 +21,7 @@ class NineBall(Ruleset):
             ball_in_hand=BallInHandOptions.BEHIND_LINE,
             movable=["cue"],
             cueable=["cue"],
+            hittable=["1"],
             call_shot=False,
         )
 
@@ -34,6 +33,7 @@ class NineBall(Ruleset):
             ),
             movable=[] if legal else ["cue"],
             cueable=["cue"],
+            hittable=[self.get_lowest_ball(shot, at_start=False).id],
             call_shot=False,
         )
 
@@ -64,9 +64,9 @@ class NineBall(Ruleset):
                 shot.balls["cue"].params.R,
             )
 
-        highest = self.get_highest_ball(shot)
+        highest = self.get_highest_ball(shot, at_start=True)
         highest_id = highest.id
-        lowest_id = self.get_lowest_ball(shot).id
+        lowest_id = self.get_lowest_ball(shot, at_start=True).id
 
         pocketed_ball_ids = get_pocketed_ball_ids(shot)
 
@@ -95,7 +95,7 @@ class NineBall(Ruleset):
         return True
 
     def is_game_over(self, shot: System) -> bool:
-        highest_id = self.get_highest_ball(shot).id
+        highest_id = self.get_highest_ball(shot, at_start=False).id
 
         pocketed_ball_ids = get_pocketed_ball_ids(shot)
 
@@ -104,29 +104,53 @@ class NineBall(Ruleset):
         else:
             return False
 
-    def get_lowest_ball(self, shot: System) -> Ball:
-        lowest = Ball.dummy(id="10")
+    def get_lowest_ball(self, shot: System, at_start: bool) -> Ball:
+        """Get the lowest ball on the table at start or end of shot
 
+        Args:
+            at_start:
+                If True, the lowest ball on the table at t=0 is calculated. If False,
+                the lowest ball at the end of the shot (t=inf) is calculated. The latter
+                returns a different result if the lowest ball on the table was pocketed
+        """
+        _dummy = "10000"
+        lowest = Ball.dummy(id=_dummy)
+
+        history_idx = 0 if at_start else -1
         for ball in shot.balls.values():
             if ball.id == "cue":
                 continue
-            if ball.history[0].s == c.pocketed:
+            if ball.history[history_idx].s == c.pocketed:
                 continue
             if int(ball.id) < int(lowest.id):
                 lowest = ball
 
+        assert lowest.id != _dummy, "No numbered balls on table"
+
         return lowest
 
-    def get_highest_ball(self, shot: System) -> Ball:
-        highest = Ball.dummy(id="0")
+    def get_highest_ball(self, shot: System, at_start: bool) -> Ball:
+        """Get the highest ball on the table at start or end of shot
 
+        Args:
+            at_start:
+                If True, the highest ball on the table at t=0 is calculated. If False,
+                the highest ball at the end of the shot (t=inf) is calculated. The latter
+                returns a different result if the highest ball on the table was pocketed
+        """
+        _dummy = "0"
+        highest = Ball.dummy(id=_dummy)
+
+        history_idx = 0 if at_start else -1
         for ball in shot.balls.values():
             if ball.id == "cue":
                 continue
-            if ball.history[0].s == c.pocketed:
+            if ball.history[history_idx].s == c.pocketed:
                 continue
             if int(ball.id) > int(highest.id):
                 highest = ball
+
+        assert highest.id != _dummy, "No numbered balls on table"
 
         return highest
 
@@ -134,7 +158,7 @@ class NineBall(Ruleset):
         if (ball_id := get_id_of_first_ball_hit(shot, "cue")) is None:
             return False
 
-        return self.get_lowest_ball(shot).id == ball_id
+        return self.get_lowest_ball(shot, at_start=True).id == ball_id
 
     def is_legal_break(self, shot: System) -> bool:
         if self.shot_number != 0:
