@@ -73,8 +73,8 @@ class Ruleset(ABC):
         self.shot_constraints = self.initial_shot_constraints()
 
         # Boolean indicators
-        self.tie: bool = False
-        self.game_over = False
+        self.tie: bool = False  # FIXME code this during game over screen
+        self.game_over: bool = False
 
         # Player info
         self.players: List[Player] = Player.create_players(player_names)
@@ -100,7 +100,7 @@ class Ruleset(ABC):
             yield self.players[(self.turn_number + i) % len(self.players)]
 
     def respot(self, shot: System, ball_id: str, x: float, y: float, z: float):
-        """Move cue ball to head spot
+        """FIXME this is a utils.py fn
 
         Notes
         =====
@@ -122,7 +122,9 @@ class Ruleset(ABC):
         )
         self.points += awarded_points
 
-        if not is_legal:
+        if is_legal and reason != "":
+            self.log.add_msg(f"Legal shot! {reason}", sentiment="good")
+        elif not is_legal:
             self.log.add_msg(f"Illegal shot! {reason}", sentiment="bad")
 
         self.respot_balls(shot)
@@ -144,30 +146,60 @@ class Ruleset(ABC):
 
     @abstractmethod
     def legality(self, shot: System) -> Tuple[bool, str]:
-        pass
+        """Is the shot legal?
 
-    @abstractmethod
-    def award_points(self, shot: System) -> Counter[str]:
-        pass
-
-    @abstractmethod
-    def respot_balls(self, shot: System):
-        pass
-
-    @abstractmethod
-    def is_game_over(self, shot: System) -> bool:
+        This method should return whether or not the shot was legal, and a string
+        indicating the reason. If the shot was legal, it makes sense to return an empty
+        string for the reason.
+        """
         pass
 
     @abstractmethod
     def is_turn_over(self, shot: System) -> bool:
+        """Is the player's turn over?
+
+        This method returns whether or not the player's turn is over
+        """
+        pass
+
+    @abstractmethod
+    def award_points(self, shot: System) -> None:
+        """Update points
+
+        This method should update self.points to reflect the new score. self.points is a
+        Counter object (like a dictionary).
+        """
+        pass
+
+    @abstractmethod
+    def respot_balls(self, shot: System):
+        """Respot balls
+
+        This method should decide which balls should be respotted, and respot them. This
+        method should probably make use of pooltool.game.ruleset.utils.respot
+        """
+        pass
+
+    @abstractmethod
+    def is_game_over(self, shot: System) -> bool:
+        """Determine whether the game is over
+
+        Returns whether or not the game is finished.
+        """
         pass
 
     @abstractmethod
     def decide_winner(self, shot: System):
+        """Decide the winner
+
+        This method should modify the self.winner attribute, setting it to be the player
+        who wins. This method is only called when self.is_game_over returns True.
+        """
         pass
 
     @abstractmethod
     def get_initial_cueing_ball(self, balls) -> Ball:
+        """FIXME remove (use cueable attribute for ShotConstraints)"""
         pass
 
     @abstractmethod
