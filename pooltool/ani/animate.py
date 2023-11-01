@@ -2,7 +2,8 @@
 
 import gc
 import sys
-from typing import Generator, Optional, Tuple
+from functools import partial
+from typing import Generator, Optional, Tuple, cast
 
 import gltf  # FIXME at first glance this does nothing?
 import simplepbr
@@ -20,7 +21,6 @@ from panda3d.core import (
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.terminal as terminal
-import pooltool.utils as utils
 from pooltool.ani.camera import cam
 from pooltool.ani.collision import cue_avoid
 from pooltool.ani.environment import environment
@@ -191,9 +191,10 @@ class Interface(ShowBase):
             return task.cont
 
         keymap = Global.mode_mgr.get_keymap()
-        self.stdout.warning(
-            "", header=f"Frame {self.frame}", lc="green", nl_before=1, nl_after=0
-        )
+
+        header = partial(self.stdout.warning, "", lc="green", nl_before=1, nl_after=0)
+        header(header=f"Frame {self.frame}")
+
         self.stdout.info("Mode", Global.mode_mgr.mode)
         self.stdout.info("Last", Global.mode_mgr.last_mode)
         self.stdout.info("Tasks", [task.name for task in Global.task_mgr.getAllTasks()])
@@ -432,7 +433,7 @@ class Game(Interface):
         FIXME This is where menu options should plug into, rather than using these
         hardcoded defaults like `game_type = GameType.NINEBALL`
         """
-        game_type = GameType.NINEBALL
+        game_type = GameType.EIGHTBALL
 
         game = get_ruleset(game_type)
 
@@ -444,8 +445,6 @@ class Game(Interface):
 
         multisystem.reset()
         multisystem.append(shot)
-
-        game.start(shot)
         Global.game = game
 
     def start(self):

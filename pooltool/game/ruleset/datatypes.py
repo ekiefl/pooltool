@@ -54,41 +54,33 @@ class BallInHandOptions(StrEnum):
 @attrs.define
 class ShotConstraints:
     ball_in_hand: BallInHandOptions
-    call_ball: bool
+    call_shot: bool
+    ball_call: Optional[str] = attrs.field(default=None)
+    pocket_call: Optional[str] = attrs.field(default=None)
 
 
 class Ruleset(ABC):
-    def __init__(
-        self,
-        is_call_ball: bool,
-        player_names: Optional[List[str]] = None,
-    ) -> None:
-        self.is_call_ball = is_call_ball
-
-        self.shot_constraints = ShotConstraints(
-            ball_in_hand=BallInHandOptions.NONE,
-            call_ball=self.is_call_ball,
-        )
-
+    def __init__(self, player_names: Optional[List[str]] = None) -> None:
+        # Game progress tracking
         self.points: Counter = Counter()
-        self.tie: bool = False
-        self.game_over = False
         self.shot_number: int = 0
         self.turn_number: int = 0
-        self.ball_in_hand: Optional[str] = None
-        self.ball_call: str = Ball.dummy().id
-        self.pocket_call: str = Pocket.dummy().id
-        self.log: Log = Log()
 
+        # Game states
+        self.ball_in_hand: Optional[str] = None
         self.shot_info: ShotInfo
         self.winner: Player
+        self.shot_constraints = self.initial_shot_constraints()
 
+        # Boolean indicators
+        self.tie: bool = False
+        self.game_over = False
+
+        # Player info
         self.players: List[Player] = Player.create_players(player_names)
         self.active_idx: int = 0
 
-    def player_order(self) -> Generator[Player, None, None]:
-        for i in range(len(self.players)):
-            yield self.players[(self.turn_number + i) % len(self.players)]
+        self.log: Log = Log()
 
     @property
     def active_player(self) -> Player:
@@ -101,6 +93,11 @@ class Ruleset(ABC):
 
     def set_next_player(self):
         self.active_idx = self.turn_number % len(self.players)
+
+    def player_order(self) -> Generator[Player, None, None]:
+        """Generates player order from current player until last-to-play"""
+        for i in range(len(self.players)):
+            yield self.players[(self.turn_number + i) % len(self.players)]
 
     def respot(self, shot: System, ball_id: str, x: float, y: float, z: float):
         """Move cue ball to head spot
@@ -148,8 +145,6 @@ class Ruleset(ABC):
         if not self.shot_info.is_legal:
             self.active_player.ball_in_hand = self.ball_in_hand
 
-        self.ball_call = Ball.dummy().id
-        self.pocket_call = Pocket.dummy().id
         self.shot_constraints = self.next_shot_constraints(shot)
 
     @abstractmethod
@@ -189,7 +184,7 @@ class Ruleset(ABC):
         pass
 
     @abstractmethod
-    def start(self, shot: Optional[System] = None):
+    def initial_shot_constraints(self) -> ShotConstraints:
         pass
 
 

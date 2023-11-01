@@ -12,9 +12,6 @@ from pooltool.objects.table.components import Pocket
 from pooltool.system.datatypes import multisystem
 from pooltool.system.render import visual
 
-BALL_DUMMY_ID = Ball.dummy().id
-POCKET_DUMMY_ID = Pocket.dummy().id
-
 
 class StrokeMode(BaseMode):
     name = Mode.stroke
@@ -48,16 +45,18 @@ class StrokeMode(BaseMode):
         if self.keymap[Action.stroke]:
             # Respect the shot constraints
             if (
-                Global.game.shot_constraints.call_ball
-                and Global.game.ball_call == BALL_DUMMY_ID
+                Global.game.shot_constraints.call_shot
+                and not Global.game.shot_constraints.ball_call
             ):
                 # The shot requires calling a ball, but a ball has not been called
+                # FIXME add GUI message
                 return task.cont
             if (
-                Global.game.shot_constraints.call_pocket
-                and Global.game.pocket_call == POCKET_DUMMY_ID
+                Global.game.shot_constraints.call_shot
+                and not Global.game.shot_constraints.pocket_call
             ):
                 # The shot requires calling a pocket, but a pocket has not been called
+                # FIXME add GUI message
                 return task.cont
 
             if self.stroke_cue_stick():

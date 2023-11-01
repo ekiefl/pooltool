@@ -6,6 +6,7 @@ from pooltool.system.datatypes import System
 
 
 def get_pocketed_ball_ids(shot: System) -> List[str]:
+    """Get list of ball IDs pocketed during the shot"""
     pocket_events = filter_type(shot.events, EventType.BALL_POCKET)
     return [event.agents[0].id for event in pocket_events]
 

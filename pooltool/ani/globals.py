@@ -1,4 +1,5 @@
 import functools
+from typing import Any
 
 from direct.showbase import ShowBaseGlobal
 
@@ -55,8 +56,8 @@ class Global:
     aspect2d = ShowBaseGlobal.aspect2d
     render2d = ShowBaseGlobal.render2d
 
-    game = None
-    mode_mgr = None
+    game: Any = None
+    mode_mgr: Any = None
 
     @classproperty
     @require_showbase

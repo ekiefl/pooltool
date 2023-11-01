@@ -16,13 +16,8 @@ from pooltool.system.datatypes import System
 
 class NineBall(Ruleset):
     def __init__(self, player_names=None):
-        Ruleset.__init__(self, is_call_ball=False, player_names=player_names)
-
-    def start(self, _: System):
+        Ruleset.__init__(self, player_names=player_names)
         self.active_player.ball_in_hand = "cue"
-        self.shot_constraints = attrs.evolve(
-            self.shot_constraints, ball_in_hand=BallInHandOptions.BEHIND_LINE
-        )
 
     def get_initial_cueing_ball(self, balls) -> Ball:
         return balls["cue"]
@@ -198,9 +193,16 @@ class NineBall(Ruleset):
         return (True, reason) if not reason else (False, reason)
 
     def next_shot_constraints(self, _: System) -> ShotConstraints:
-        ball_in_hand = (
-            BallInHandOptions.NONE
-            if self.shot_info.is_legal
-            else BallInHandOptions.ANYWHERE
+        return ShotConstraints(
+            ball_in_hand=(
+                BallInHandOptions.NONE
+                if self.shot_info.is_legal
+                else BallInHandOptions.ANYWHERE
+            ),
+            call_shot=False,
         )
-        return attrs.evolve(self.shot_constraints, ball_in_hand=ball_in_hand)
+
+    def initial_shot_constraints(self) -> ShotConstraints:
+        return ShotConstraints(
+            ball_in_hand=BallInHandOptions.BEHIND_LINE, call_shot=False
+        )

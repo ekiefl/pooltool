@@ -33,7 +33,9 @@ target_dict: Dict[str, Set[str]] = {
 
 class EightBall(Ruleset):
     def __init__(self, player_names=None):
-        Ruleset.__init__(self, is_call_ball=True, player_names=player_names)
+        Ruleset.__init__(self, player_names=player_names)
+
+        self.active_player.ball_in_hand = "cue"
 
         # Solids or stripes undetermined
         self.targeting: Dict[str, Target] = {}
@@ -50,26 +52,35 @@ class EightBall(Ruleset):
         """Return the active player's Target (SOLIDS, STRIPES, UNDECIDED, EIGHT)"""
         return self.targeting[self.active_player.name]
 
-    def start(self, _: System) -> None:
-        self.active_player.ball_in_hand = "cue"
-
-        # These are the initial shot constraints. On the break one doesn't have to call
-        # the ball, or the pocket, and the cue remains behind the line.
-        self.shot_constraints = ShotConstraints(
+    def initial_shot_constraints(self) -> ShotConstraints:
+        return ShotConstraints(
             ball_in_hand=BallInHandOptions.BEHIND_LINE,
-            call_ball=False,
+            call_shot=False,
+        )
+
+    def next_shot_constraints(self, _: System) -> ShotConstraints:
+        return ShotConstraints(
+            ball_in_hand=(
+                BallInHandOptions.NONE
+                if self.shot_info.is_legal
+                else BallInHandOptions.ANYWHERE
+            ),
+            call_shot=True,
         )
 
     def get_initial_cueing_ball(self, balls) -> Ball:
         return balls["cue"]
 
     def award_points(self, shot: System) -> Counter:
+        """FIXME
+
+        Currently some inaccuracies resulting from balls being potted before
+        stripes/solids is determined. Until a functional approach replaces the poor base
+        class design, we are stuck with this structural constraint.
+        """
         legal, _ = self.legality(shot)
         if not legal:
             return Counter()
-
-        # At this point the shot was legal, so no cue ball was sunk and no 8-ball was
-        # sunk out of turn. Therefore we can return the number of potted balls
 
         return Counter({self.active_player.name: len(get_pocketed_ball_ids(shot))})
 
@@ -107,31 +118,46 @@ class EightBall(Ruleset):
 
         pocket_events = filter_type(shot.events, EventType.BALL_POCKET)
 
-        if self.active_target == Target.UNDECIDED and len(pocket_events):
+        if self.active_target == Target.UNDECIDED and len(pocket_events) > 0:
             return False
+
+        called_ball_pocketed = False
+        called_ball_in_wrong_pocket = False
 
         for event in pocket_events:
             ball_id, pocket_id = event.ids
-            if ball_id == self.ball_call and pocket_id == self.pocket_call:
-                self.log.add_msg(f"Ball potted: {ball_id}", sentiment="good")
-                return False
+            if ball_id == self.shot_constraints.ball_call:
+                if pocket_id == self.shot_constraints.pocket_call:
+                    called_ball_pocketed = True
+                    break
+                else:
+                    called_ball_in_wrong_pocket = True
+
+        if called_ball_pocketed:
+            pocketed_balls = get_pocketed_ball_ids(shot)
+            self.log.add_msg(
+                f"Nice! Ball(s) potted: {pocketed_balls}", sentiment="good"
+            )
+            return False
+
+        if called_ball_in_wrong_pocket:
+            self.log.add_msg(
+                f"{self.shot_constraints.ball_call} ball potted in wrong pocket!",
+                sentiment="neutral",
+            )
 
         return True
 
     def is_game_over(self, shot: System) -> bool:
         return is_ball_pocketed(shot, "8")
 
-    def is_object_ball_hit_first(self, shot: System) -> bool:
+    def is_target_group_hit_first(self, shot: System) -> bool:
         ball_id = get_id_of_first_ball_hit(shot, "cue")
 
-        if not ball_id:
+        if ball_id is None:
             return False
 
-        if self.active_target == Target.UNDECIDED:
-            # stripes or solids not yet determined, so every ball is target ball
-            return True
-
-        return ball_id == self.ball_call
+        return ball_id in target_dict[self.active_target]
 
     def is_legal_break(self, shot: System) -> bool:
         if self.shot_number != 0:
@@ -159,7 +185,7 @@ class EightBall(Ruleset):
         return "cue" in get_pocketed_ball_ids(shot)
 
     def is_cushion_hit_after_first_contact(self, shot: System) -> bool:
-        if not self.is_object_ball_hit_first(shot):
+        if not self.is_target_group_hit_first(shot):
             return False
 
         numbered_balls_pocketed = filter_events(
@@ -199,8 +225,8 @@ class EightBall(Ruleset):
 
         if self.is_8_ball_pocketed_out_of_turn(shot):
             reason = "8-ball sunk before others!"
-        elif not self.is_object_ball_hit_first(shot):
-            reason = "Object ball not hit first"
+        elif not self.is_target_group_hit_first(shot):
+            reason = f"Incorrect ball hit first"
         elif not self.is_shot_called(shot):
             reason = "No shot called!"
         elif self.is_cue_pocketed(shot):
@@ -213,10 +239,13 @@ class EightBall(Ruleset):
         return (True, reason) if not reason else (False, reason)
 
     def is_shot_called(self, _: System) -> bool:
-        if self.shot_number == 0:
+        if not self.shot_constraints.call_shot:
             return True
 
-        if self.ball_call is None or self.pocket_call is None:
+        if (
+            self.shot_constraints.ball_call is None
+            or self.shot_constraints.pocket_call is None
+        ):
             return False
 
         return True
@@ -245,10 +274,17 @@ class EightBall(Ruleset):
             # Player didn't sink a ball
             return
 
-        if self.ball_call in target_dict[Target.STRIPES]:
+        if not self.shot_constraints.call_shot:
+            # It's the break shot, no call shot is required
+            return
+
+        if self.shot_constraints.ball_call not in get_pocketed_ball_ids(shot):
+            return
+
+        if self.shot_constraints.ball_call in target_dict[Target.STRIPES]:
             self.targeting[self.active_player.name] = Target.STRIPES
             self.targeting[self.last_player.name] = Target.SOLIDS
-        elif self.ball_call in target_dict[Target.SOLIDS]:
+        elif self.shot_constraints.ball_call in target_dict[Target.SOLIDS]:
             self.targeting[self.active_player.name] = Target.SOLIDS
             self.targeting[self.last_player.name] = Target.STRIPES
         else:
@@ -257,14 +293,4 @@ class EightBall(Ruleset):
         self.log.add_msg(
             f"{self.active_player.name} takes {self.active_target}",
             sentiment="good",
-        )
-
-    def next_shot_constraints(self, _: System) -> ShotConstraints:
-        return ShotConstraints(
-            ball_in_hand=(
-                BallInHandOptions.NONE
-                if self.shot_info.is_legal
-                else BallInHandOptions.ANYWHERE
-            ),
-            call_ball=False,
         )

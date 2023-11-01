@@ -151,8 +151,8 @@ class SnookerTableSpecs(TableSpecs):
     # https://wpbsa.com/rules/
     # The playing area is within the cushion faces and shall measure
     # 11 ft 8½ in x 5 ft 10 in (3569 mm x 1778 mm) with a tolerance on both dimensions of +/- ½ in (13 mm).
-    l: float = field(default=3.566) # my table size
-    w: float = field(default=1.770) # my table size
+    l: float = field(default=3.566)  # my table size
+    w: float = field(default=1.770)  # my table size
 
     cushion_width: float = field(default=2 * 25.4 / 1000)
     cushion_height: float = field(default=0.04)
@@ -163,7 +163,7 @@ class SnookerTableSpecs(TableSpecs):
     corner_jaw_radius: float = field(default=4 * 25.4 / 1000)
     side_pocket_width: float = field(default=0.087)
     side_pocket_angle: float = field(default=0)  # degrees # TODO how to measure that
-    side_pocket_depth: float = field(default=0.004) 
+    side_pocket_depth: float = field(default=0.004)
     side_pocket_radius: float = field(default=2 * 25.4 / 1000)
     side_jaw_radius: float = field(default=3 * 25.4 / 1000)
 
