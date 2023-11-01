@@ -46,7 +46,8 @@ class BallInHandOptions(StrEnum):
 @attrs.define
 class ShotConstraints:
     ball_in_hand: BallInHandOptions
-    movable: Set
+    movable: List
+    cueable: List
     call_shot: bool
     ball_call: Optional[str] = attrs.field(default=None)
     pocket_call: Optional[str] = attrs.field(default=None)
@@ -178,11 +179,6 @@ class Ruleset(ABC):
         This method should modify the self.winner attribute, setting it to be the player
         who wins. This method is only called when self.is_game_over returns True.
         """
-        pass
-
-    @abstractmethod
-    def get_initial_cueing_ball(self, balls) -> Ball:
-        """FIXME remove (use cueable attribute for ShotConstraints)"""
         pass
 
     @abstractmethod

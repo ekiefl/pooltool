@@ -53,7 +53,8 @@ class EightBall(Ruleset):
     def initial_shot_constraints(self) -> ShotConstraints:
         return ShotConstraints(
             ball_in_hand=BallInHandOptions.BEHIND_LINE,
-            movable={"cue"},
+            movable=["cue"],
+            cueable=["cue"],
             call_shot=False,
         )
 
@@ -63,12 +64,10 @@ class EightBall(Ruleset):
             ball_in_hand=(
                 BallInHandOptions.NONE if legal else BallInHandOptions.ANYWHERE
             ),
-            movable=set() if legal else {"cue"},
+            movable=[] if legal else ["cue"],
+            cueable=["cue"],
             call_shot=True,
         )
-
-    def get_initial_cueing_ball(self, balls) -> Ball:
-        return balls["cue"]
 
     def award_points(self, shot: System) -> Counter:
         """FIXME

@@ -51,9 +51,7 @@ class BallInHandMode(BaseMode):
             # FIXME add message
             self.picking = "ball"
         elif num_options == 1:
-            self.grabbed_ball = visual.balls[
-                next(iter(Global.game.shot_constraints.movable))
-            ]
+            self.grabbed_ball = visual.balls[Global.game.shot_constraints.movable[0]]
             self.grab_ball_node = self.grabbed_ball.get_node("pos")
             self.grab_ball_shadow_node = self.grabbed_ball.get_node("shadow")
             self.picking = "placement"

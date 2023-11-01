@@ -433,14 +433,14 @@ class Game(Interface):
         FIXME This is where menu options should plug into, rather than using these
         hardcoded defaults like `game_type = GameType.NINEBALL`
         """
-        game_type = GameType.EIGHTBALL
+        game_type = GameType.NINEBALL
 
         game = get_ruleset(game_type)
 
         table = Table.from_game_type(game_type)
         balls = get_rack(game_type, table, None, 1e-3)
 
-        cue = Cue(cue_ball_id=game.get_initial_cueing_ball(balls).id)
+        cue = Cue(cue_ball_id=game.shot_constraints.cueable[0])
         shot = System(table=table, balls=balls, cue=cue)
 
         multisystem.reset()
