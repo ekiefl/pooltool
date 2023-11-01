@@ -37,14 +37,6 @@ class Log:
             self.update = True
 
 
-@attrs.define
-class ShotInfo:
-    shooter: Player
-    is_legal: bool
-    is_turn_over: bool
-    awarded_points: Dict[str, int]
-
-
 class BallInHandOptions(StrEnum):
     NONE = auto()
     ANYWHERE = auto()
@@ -68,7 +60,6 @@ class Ruleset(ABC):
         self.turn_number: int = 0
 
         # Game states
-        self.shot_info: ShotInfo
         self.winner: Player
         self.shot_constraints = self.initial_shot_constraints()
 
@@ -111,15 +102,7 @@ class Ruleset(ABC):
 
     def process_shot(self, shot: System):
         is_legal, reason = self.legality(shot)
-        is_turn_over = self.is_turn_over(shot)
         awarded_points = self.award_points(shot)
-
-        self.shot_info = ShotInfo(
-            self.active_player,
-            is_legal,
-            is_turn_over,
-            awarded_points,
-        )
         self.points += awarded_points
 
         if is_legal and reason != "":
@@ -136,7 +119,7 @@ class Ruleset(ABC):
             self.log.add_msg(f"Game over! {self.winner.name} wins!", sentiment="good")
             return
 
-        if self.shot_info.is_turn_over:
+        if self.is_turn_over(shot):
             self.turn_number += 1
         self.shot_number += 1
 

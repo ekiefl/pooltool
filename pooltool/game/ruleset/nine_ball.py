@@ -25,8 +25,8 @@ class NineBall(Ruleset):
             call_shot=False,
         )
 
-    def next_shot_constraints(self, _: System) -> ShotConstraints:
-        legal = self.shot_info.is_legal
+    def next_shot_constraints(self, shot: System) -> ShotConstraints:
+        legal = self.legality(shot)[0]
         return ShotConstraints(
             ball_in_hand=(
                 BallInHandOptions.NONE if legal else BallInHandOptions.ANYWHERE
@@ -56,7 +56,7 @@ class NineBall(Ruleset):
         self.winner = self.active_player
 
     def respot_balls(self, shot: System) -> None:
-        if not self.shot_info.is_legal:
+        if not self.legality(shot)[0]:
             self.respot(
                 shot,
                 "cue",
@@ -74,7 +74,7 @@ class NineBall(Ruleset):
         if (
             (highest_id == lowest_id)
             and (highest_id in pocketed_ball_ids)
-            and not self.shot_info.is_legal
+            and not self.legality(shot)[0]
         ):
             self.respot(
                 shot,
@@ -100,7 +100,7 @@ class NineBall(Ruleset):
 
         pocketed_ball_ids = get_pocketed_ball_ids(shot)
 
-        if highest_id in pocketed_ball_ids and self.shot_info.is_legal:
+        if highest_id in pocketed_ball_ids and self.legality(shot)[0]:
             return True
         else:
             return False

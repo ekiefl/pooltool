@@ -57,8 +57,8 @@ class EightBall(Ruleset):
             call_shot=False,
         )
 
-    def next_shot_constraints(self, _: System) -> ShotConstraints:
-        legal = self.shot_info.is_legal
+    def next_shot_constraints(self, shot: System) -> ShotConstraints:
+        legal, _ = self.legality(shot)
         return ShotConstraints(
             ball_in_hand=(
                 BallInHandOptions.NONE if legal else BallInHandOptions.ANYWHERE
@@ -83,8 +83,8 @@ class EightBall(Ruleset):
 
         return Counter({self.active_player.name: len(get_pocketed_ball_ids(shot))})
 
-    def decide_winner(self, _: System):
-        if self.shot_info.is_legal:
+    def decide_winner(self, shot: System):
+        if self.legality(shot)[0]:
             self.winner = self.active_player
             return
 
@@ -96,7 +96,7 @@ class EightBall(Ruleset):
 
     def respot_balls(self, shot: System):
         """No balls respotted in this variant of 8-ball"""
-        if not self.shot_info.is_legal:
+        if not self.legality(shot)[0]:
             self.respot(
                 shot,
                 "cue",
@@ -264,7 +264,7 @@ class EightBall(Ruleset):
             # Stripes/solids has already been determined
             return
 
-        if self.shot_info.is_turn_over:
+        if self.is_turn_over(shot):
             # Player didn't sink a ball
             return
 
