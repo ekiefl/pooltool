@@ -124,9 +124,9 @@ class Ruleset(ABC):
             self.turn_number += 1
         self.shot_number += 1
 
-        self.set_next_player()
-
         self.shot_constraints = self.next_shot_constraints(shot)
+
+        self.set_next_player()
 
     @abstractmethod
     def legality(self, shot: System) -> Tuple[bool, str]:
