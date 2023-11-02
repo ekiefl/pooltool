@@ -3,13 +3,10 @@ from __future__ import annotations
 
 import uuid
 from abc import ABC, abstractmethod
-from typing import Counter, Dict, Generator, List, Optional, Set, Tuple
+from typing import Counter, Generator, List, Optional
 
 import attrs
 
-import pooltool.constants as c
-from pooltool.objects.ball.datatypes import Ball
-from pooltool.objects.table.components import Pocket
 from pooltool.system.datatypes import System
 from pooltool.terminal import Timer
 from pooltool.utils.strenum import StrEnum, auto
@@ -57,7 +54,7 @@ class BallInHandOptions(StrEnum):
     BEHIND_LINE = auto()
 
 
-@attrs.define
+@attrs.define(frozen=True)
 class ShotConstraints:
     ball_in_hand: BallInHandOptions
     movable: List
@@ -72,7 +69,7 @@ class ShotConstraints:
 class ShotInfo:
     player: Player
     legal: bool
-    reason: bool
+    reason: str
     turn_over: bool
     game_over: bool
     winner: Optional[Player]
@@ -81,17 +78,13 @@ class ShotInfo:
 class Ruleset(ABC):
     def __init__(self, player_names: Optional[List[str]] = None) -> None:
         # Game progress tracking
-        self.points: Counter = Counter()
+        self.score: Counter = Counter()
         self.shot_number: int = 0
         self.turn_number: int = 0
 
         # Game states
-        self.winner: Player
-        self.shot_constraints = self.initial_shot_constraints()
-
-        # Boolean indicators
-        self.tie: bool = False  # FIXME code this during game over screen
-        self.game_over: bool = False
+        self.shot_constraints: ShotConstraints = self.initial_shot_constraints()
+        self.shot_info: ShotInfo
 
         # Player info
         self.players: List[Player] = Player.create_players(player_names)
@@ -118,13 +111,15 @@ class Ruleset(ABC):
 
     def process_shot(self, shot: System):
         self.shot_info = self.build_shot_info(shot)
-        self.points = self.get_points(shot)
+        self.log.add_msg(f"{self.shot_info}", sentiment="neutral", quiet=False)
+
+        self.score = self.get_score(shot)
         self.respot_balls(shot)
 
     def advance(self, shot: System):
         if self.shot_info.game_over:
             if (winner := self.shot_info.winner) is not None:
-                self.log.add_msg(f"Game over! {winner} wins!", sentiment="good")
+                self.log.add_msg(f"Game over! {winner.name} wins!", sentiment="good")
             else:
                 self.log.add_msg(f"Game over! Tie game!", sentiment="good")
             return
@@ -153,7 +148,7 @@ class Ruleset(ABC):
         pass
 
     @abstractmethod
-    def get_points(self, shot: System) -> Counter:
+    def get_score(self, shot: System) -> Counter:
         """Update points
 
         This method returns a Counter object (like a dictionary) that reflects the

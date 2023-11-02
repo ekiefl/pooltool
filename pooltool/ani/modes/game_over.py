@@ -35,8 +35,13 @@ class GameOverMode(BaseMode):
         del self.text
 
     def render_game_over_screen(self):
+        if (winner := Global.game.shot_info.winner) is not None:
+            title = f"Game over! {winner.name} wins!"
+        else:
+            title = f"Game over! Tie game!"
+
         self.game_over_menu = GenericMenu(
-            title=f"Game over! {Global.game.winner.name} wins!",
+            title=title,
             frame_color=(0, 0, 0, 0.5),
             title_pos=(0, 0, 0.55),
         )
@@ -53,7 +58,7 @@ class GameOverMode(BaseMode):
             ),
         }
         for i, player in enumerate(Global.game.players):
-            points = Global.game.points[player.name]
+            points = Global.game.score[player.name]
             self.text[player.name] = OnscreenText(
                 text=f"{player.name}\n{points}",
                 style=1,

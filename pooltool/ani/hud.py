@@ -296,7 +296,7 @@ class PlayerStats(BaseHUDElement):
         self.init()
 
         for i, player in enumerate(game.player_order()):
-            msg = f"{player.name}: {game.points[player.name]}"
+            msg = f"{player.name}: {game.score[player.name]}"
             color = self.colors["active"] if i == 0 else self.colors["inactive"]
             self.on_screen.append(self.init_text_object(i, msg, color=color))
 

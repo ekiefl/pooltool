@@ -129,7 +129,7 @@ class ShotMode(BaseMode):
                 # unsimulated.
                 Global.game.process_shot(multisystem[-1])
                 Global.game.advance(multisystem[-1])
-                if Global.game.game_over:
+                if Global.game.shot_info.game_over:
                     # The game is over, so scrap that, that, head to game over screen
                     Global.mode_mgr.change_mode(Mode.game_over)
 
