@@ -15,6 +15,20 @@ from pooltool.terminal import Timer
 from pooltool.utils.strenum import StrEnum, auto
 
 
+@attrs.define
+class Player:
+    name: str
+
+    @classmethod
+    def create_players(cls, names: Optional[List[str]] = None) -> List[Player]:
+        if names is None:
+            names = ["Player 1", "Player 2"]
+
+        assert len(names) == len(set(names)), "Player names must be unique"
+
+        return [cls(name) for name in names]
+
+
 class Log:
     def __init__(self):
         self.timer = Timer()
@@ -52,6 +66,16 @@ class ShotConstraints:
     call_shot: bool
     ball_call: Optional[str] = attrs.field(default=None)
     pocket_call: Optional[str] = attrs.field(default=None)
+
+
+@attrs.define(frozen=True)
+class ShotInfo:
+    player: Player
+    legal: bool
+    reason: bool
+    turn_over: bool
+    game_over: bool
+    winner: Optional[Player]
 
 
 class Ruleset(ABC):
@@ -92,95 +116,33 @@ class Ruleset(ABC):
         for i in range(len(self.players)):
             yield self.players[(self.turn_number + i) % len(self.players)]
 
-    def respot(self, shot: System, ball_id: str, x: float, y: float, z: float):
-        """FIXME this is a utils.py fn
-
-        Notes
-        =====
-        - FIXME check if respot position overlaps with ball
-        """
-        shot.balls[ball_id].state.rvw[0] = [x, y, z]
-        shot.balls[ball_id].state.s = c.stationary
-
     def process_shot(self, shot: System):
-        is_legal, reason = self.legality(shot)
-        awarded_points = self.award_points(shot)
-        self.points += awarded_points
-
-        if is_legal and reason != "":
-            self.log.add_msg(f"Legal shot! {reason}", sentiment="good")
-        elif not is_legal:
-            self.log.add_msg(f"Illegal shot! {reason}", sentiment="bad")
-
+        self.shot_info = self.build_shot_info(shot)
+        self.points = self.get_points(shot)
         self.respot_balls(shot)
 
     def advance(self, shot: System):
-        if self.is_game_over(shot):
-            self.game_over = True
-            self.decide_winner(shot)
-            self.log.add_msg(f"Game over! {self.winner.name} wins!", sentiment="good")
+        if self.shot_info.game_over:
+            if (winner := self.shot_info.winner) is not None:
+                self.log.add_msg(f"Game over! {winner} wins!", sentiment="good")
+            else:
+                self.log.add_msg(f"Game over! Tie game!", sentiment="good")
             return
 
-        if self.is_turn_over(shot):
+        if self.shot_info.turn_over:
             self.turn_number += 1
         self.shot_number += 1
 
         self.shot_constraints = self.next_shot_constraints(shot)
-
         self.set_next_player()
 
     @abstractmethod
-    def legality(self, shot: System) -> Tuple[bool, str]:
-        """Is the shot legal?
+    def build_shot_info(self, shot: System) -> ShotInfo:
+        """Build up the essential information about the shot
 
-        This method should return whether or not the shot was legal, and a string
-        indicating the reason. If the shot was legal, it makes sense to return an empty
-        string for the reason.
+        The returned ShotInfo is used in conjunction with ShotConstraints to process the
+        shot (self.process_shot) and advance the game (self.advance).
         """
-        pass
-
-    @abstractmethod
-    def is_turn_over(self, shot: System) -> bool:
-        """Is the player's turn over?
-
-        This method returns whether or not the player's turn is over
-        """
-        pass
-
-    @abstractmethod
-    def award_points(self, shot: System) -> None:
-        """Update points
-
-        This method should update self.points to reflect the new score. self.points is a
-        Counter object (like a dictionary).
-        """
-        pass
-
-    @abstractmethod
-    def respot_balls(self, shot: System):
-        """Respot balls
-
-        This method should decide which balls should be respotted, and respot them. This
-        method should probably make use of pooltool.game.ruleset.utils.respot
-        """
-        pass
-
-    @abstractmethod
-    def is_game_over(self, shot: System) -> bool:
-        """Determine whether the game is over
-
-        Returns whether or not the game is finished.
-        """
-        pass
-
-    @abstractmethod
-    def decide_winner(self, shot: System):
-        """Decide the winner
-
-        This method should modify the self.winner attribute, setting it to be the player
-        who wins. This method is only called when self.is_game_over returns True.
-        """
-        pass
 
     @abstractmethod
     def next_shot_constraints(self, shot: System) -> ShotConstraints:
@@ -190,16 +152,18 @@ class Ruleset(ABC):
     def initial_shot_constraints(self) -> ShotConstraints:
         pass
 
+    @abstractmethod
+    def get_points(self, shot: System) -> Counter:
+        """Update points
 
-@attrs.define
-class Player:
-    name: str
+        This method returns a Counter object (like a dictionary) that reflects the
+        current score.
+        """
 
-    @classmethod
-    def create_players(cls, names: Optional[List[str]] = None) -> List[Player]:
-        if names is None:
-            names = ["Player 1", "Player 2"]
+    @abstractmethod
+    def respot_balls(self, shot: System):
+        """Respot balls
 
-        assert len(names) == len(set(names)), "Player names must be unique"
-
-        return [cls(name) for name in names]
+        This method should decide which balls should be respotted, and respot them. This
+        method should probably make use of pooltool.game.ruleset.utils.respot
+        """
