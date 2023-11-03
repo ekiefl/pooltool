@@ -101,21 +101,20 @@ class HUD:
         if not Global.game.log.update:
             return
 
-        for msg in reversed(Global.game.log.msgs):
+        for msg in Global.game.log.msgs:
+            if msg["broadcast"]:
+                continue
             if not msg["quiet"]:
-                if not msg["broadcast"]:
-                    timestamp, msg_txt, sentiment = (
-                        msg["elapsed"],
-                        msg["msg"],
-                        msg["sentiment"],
-                    )
-                    self.elements["log_win"].broadcast_msg(
-                        f"({timestamp}) {msg_txt}",
-                        color=self.elements["log_win"].colors[sentiment],
-                    )
-                    msg["broadcast"] = True
-                else:
-                    break
+                timestamp, msg_txt, sentiment = (
+                    msg["elapsed"],
+                    msg["msg"],
+                    msg["sentiment"],
+                )
+                self.elements["log_win"].broadcast_msg(
+                    f"({timestamp}) {msg_txt}",
+                    color=self.elements["log_win"].colors[sentiment],
+                )
+                msg["broadcast"] = True
 
         Global.game.log.update = False
 
