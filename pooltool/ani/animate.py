@@ -8,7 +8,6 @@ from typing import Generator, Optional, Tuple, cast
 import gltf  # FIXME at first glance this does nothing?
 import simplepbr
 from attrs import define
-from direct.gui.OnscreenText import OnscreenText
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import (
     ClockObject,
@@ -20,6 +19,7 @@ from panda3d.core import (
 
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
+import pooltool.ani.utils as autils
 import pooltool.terminal as terminal
 from pooltool.ani.camera import cam
 from pooltool.ani.collision import cue_avoid
@@ -38,6 +38,7 @@ from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
 from pooltool.system.datatypes import System, multisystem
 from pooltool.system.render import PlaybackMode, visual
+from pooltool.utils import get_total_memory_usage
 
 
 @define
@@ -358,7 +359,7 @@ class ShotViewer(Interface):
         tasks.register_event("stop", self.stop)
 
     def create_title(self, title):
-        self.title_node = OnscreenText(
+        self.title_node = autils.CustomOnscreenText(
             text=title,
             pos=(-1.55, -0.93),
             scale=ani.menu_text_scale * 0.7,
@@ -374,7 +375,7 @@ class ShotViewer(Interface):
             ani.logo_paths["default"], pos=(0, 0, 0), scale=(0.5, 1, 0.44)
         )
 
-        OnscreenText(
+        autils.CustomOnscreenText(
             text="GUI standing by...",
             style=1,
             fg=(1, 1, 1, 1),

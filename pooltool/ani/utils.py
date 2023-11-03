@@ -5,9 +5,20 @@ from typing import List
 import numpy as np
 from direct.gui.DirectGui import DGG
 from direct.gui.DirectGuiBase import DirectGuiWidget
+from direct.gui.OnscreenText import OnscreenText
 from panda3d.core import LVector3, NodePath, PGItem, Quat, Vec3, Vec4
 
 import pooltool.math as math
+from pooltool.ani.fonts import load_font
+
+
+class CustomOnscreenText(OnscreenText):
+    def __init__(self, **kwargs):
+        assert "font" not in kwargs, f"Cannot modify 'font', use 'font_name' instead"
+        font = (
+            load_font() if "font_name" not in kwargs else load_font(kwargs["font_name"])
+        )
+        OnscreenText.__init__(self, font=font, **kwargs)
 
 
 def get_list_of_Vec3s_from_array(array):

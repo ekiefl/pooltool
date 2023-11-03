@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
-from direct.gui.DirectGui import OnscreenText
-
+import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.globals import Global
 from pooltool.ani.menu import GenericMenu
@@ -48,7 +47,7 @@ class GameOverMode(BaseMode):
         self.game_over_menu.show()
 
         self.text = {
-            "stat_names": OnscreenText(
+            "stat_names": autils.CustomOnscreenText(
                 text="Points\n",
                 style=1,
                 fg=(1, 1, 1, 1),
@@ -59,7 +58,7 @@ class GameOverMode(BaseMode):
         }
         for i, player in enumerate(Global.game.players):
             points = Global.game.score[player.name]
-            self.text[player.name] = OnscreenText(
+            self.text[player.name] = autils.CustomOnscreenText(
                 text=f"{player.name}\n{points}",
                 style=1,
                 fg=(1, 1, 1, 1),

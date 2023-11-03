@@ -5,7 +5,6 @@ from collections import deque
 from typing import List
 
 from direct.gui.OnscreenImage import OnscreenImage
-from direct.gui.OnscreenText import OnscreenText
 from direct.interval.LerpInterval import LerpFunc
 from panda3d.core import CardMaker, NodePath, TextNode, TransparencyAttrib
 
@@ -149,7 +148,7 @@ class Help(BaseHUDElement):
     def init(self):
         self.destroy()
 
-        self.help_hint = OnscreenText(
+        self.help_hint = autils.CustomOnscreenText(
             text="Press 'h' to toggle help",
             pos=(-1.55, 0.93),
             scale=ani.menu_text_scale * 0.9,
@@ -162,7 +161,7 @@ class Help(BaseHUDElement):
 
         def add(msg, title=False):
             pos = 0.06 * self.row_num
-            text = OnscreenText(
+            text = autils.CustomOnscreenText(
                 text=msg,
                 style=1,
                 fg=(1, 1, 1, 1),
@@ -259,7 +258,7 @@ class PlayerStats(BaseHUDElement):
         scale = self.scale1 if is_active else self.scale2
         vertical_position = self.top_spot - self.spacer * i
 
-        return OnscreenText(
+        return autils.CustomOnscreenText(
             text=msg,
             pos=(1.55, vertical_position),
             scale=scale,
@@ -349,7 +348,7 @@ class English(BaseHUDElement):
         )
         self.crosshairs.setTransparency(TransparencyAttrib.MAlpha)
 
-        self.text = OnscreenText(
+        self.text = autils.CustomOnscreenText(
             text="(0.00, 0.00)",
             pos=(0, -1.15),
             scale=self.text_scale,
@@ -409,7 +408,7 @@ class Power(NodePath, BaseHUDElement):
         self.setScale(0.3)
 
         start_value = 2
-        self.text = OnscreenText(
+        self.text = autils.CustomOnscreenText(
             text=f"{start_value:.2f} m/s",
             pos=(0, 0),
             scale=self.text_scale,
@@ -482,7 +481,7 @@ class Jack(BaseHUDElement):
 
         self.cue_cartoon.wrtReparentTo(self.rotational_point)
 
-        self.text = OnscreenText(
+        self.text = autils.CustomOnscreenText(
             text="0 deg",
             pos=(-1, -1.4),
             scale=self.text_scale,
@@ -537,7 +536,7 @@ class LogWindow(BaseHUDElement):
         if color is None:
             color = self.colors["neutral"]
 
-        return OnscreenText(
+        return autils.CustomOnscreenText(
             text=msg,
             pos=(-1.55, self.top_spot + self.spacer * i),
             scale=self.scale1,
