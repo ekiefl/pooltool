@@ -1,11 +1,11 @@
 #! /usr/bin/env python
+
 from __future__ import annotations
 
-from typing import Counter, Dict, List, Optional, Set, Tuple
+from typing import Counter, Dict, Optional, Tuple
 
-import pooltool.constants as c
 from pooltool.events.datatypes import EventType
-from pooltool.events.filter import by_ball, by_time, by_type, filter_events, filter_type
+from pooltool.events.filter import by_ball, by_time, by_type, filter_events
 from pooltool.game.ruleset.datatypes import (
     BallInHandOptions,
     Player,
@@ -25,7 +25,6 @@ from pooltool.game.ruleset.utils import (
     is_shot_called_if_required,
     respot,
 )
-from pooltool.objects.ball.datatypes import Ball
 from pooltool.system.datatypes import System
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -148,10 +147,7 @@ def is_turn_over(shot: System, constraints: ShotConstraints, legal: bool) -> boo
 
     # Break shot case
     if not constraints.call_shot:
-        if any(ball_id in constraints.hittable for ball_id in ids):
-            return False
-        else:
-            return True
+        return not any(ball_id in constraints.hittable for ball_id in ids)
 
     assert constraints.ball_call is not None
     assert constraints.pocket_call is not None
@@ -261,6 +257,8 @@ class EightBall(Ruleset):
             else:
                 num_active = num_stripes
                 num_other = num_solids
+            if is_ball_pocketed(shot, "8") and self.shot_info.legal:
+                num_active += 1
             return Counter(
                 {self.active_player.name: num_active, self.last_player.name: num_other}
             )

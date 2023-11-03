@@ -129,7 +129,6 @@ class Ruleset(ABC):
 
         self.shot_constraints = self.next_shot_constraints(shot)
         self.set_next_player()
-        print(self.shot_constraints)
 
     @abstractmethod
     def build_shot_info(self, shot: System) -> ShotInfo:
