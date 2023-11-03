@@ -172,14 +172,6 @@ def decide_winner(
 
 
 class EightBall(Ruleset):
-    def __init__(self, player_names=None):
-        Ruleset.__init__(self, player_names=player_names)
-
-        # Solids or stripes undetermined
-        self.targeting: Dict[str, BallGroup] = {}
-        for player in self.players:
-            self.targeting[player.name] = BallGroup.UNDECIDED
-
     def build_shot_info(self, shot: System) -> ShotInfo:
         legal, reason = is_legal(shot, self.shot_constraints, self.shot_number == 0)
         turn_over = is_turn_over(shot, self.shot_constraints, legal)
