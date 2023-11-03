@@ -6,12 +6,7 @@ from typing import List
 
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.gui.OnscreenText import OnscreenText
-from direct.interval.IntervalGlobal import (
-    LerpFunctionInterval,
-    Parallel,
-    Sequence,
-    Wait,
-)
+from direct.interval.LerpInterval import LerpFunc
 from panda3d.core import CardMaker, NodePath, TextNode, TransparencyAttrib
 
 import pooltool.ani as ani
@@ -556,13 +551,10 @@ class LogWindow(BaseHUDElement):
 
     def destroy(self):
         """Delete the on screen text nodes"""
-        while True:
-            try:
-                on_screen_text = self.on_screen.pop()
-                on_screen_text.hide()
-                del on_screen_text
-            except IndexError:
-                break
+        while self.on_screen:
+            on_screen_text = self.on_screen.pop()
+            on_screen_text.hide()
+            del on_screen_text
 
     def show(self):
         for on_screen_text in self.on_screen:
@@ -573,62 +565,33 @@ class LogWindow(BaseHUDElement):
             on_screen_text.hide()
 
     def broadcast_msg(self, msg, color=None):
-        self.on_screen.appendleft(self.init_text_object(-1, msg=msg, color=color))
+        if len(self.on_screen) >= self.on_screen_max:
+            # Remove the oldest message from the screen
+            off_screen = self.on_screen.pop()
+            off_screen.hide()
+            del off_screen
 
-        off_screen = self.on_screen.pop()
-        off_screen.hide()
-        del off_screen
+        # Add the new message to the screen and set its alpha scale to 0 to make it invisible
+        new_message = self.init_text_object(0, msg=msg, color=color)
+        new_message.setAlphaScale(0)
+        self.on_screen.appendleft(new_message)
 
-        animation = Parallel()
+        # Update positions of existing messages without animating
         for i, on_screen_text in enumerate(self.on_screen):
-            start, stop = (
-                self.top_spot + self.spacer * (i - 1),
-                self.top_spot + self.spacer * i,
-            )
-            sequence = Sequence(
-                Wait(0.2),
-                LerpFunctionInterval(
-                    on_screen_text.setY, toData=stop, fromData=start, duration=0.5
-                ),
-            )
+            on_screen_text.setPos(-1.55, self.top_spot + self.spacer * i)
             if i == 0:
-                sequence = Parallel(
-                    LerpFunctionInterval(
-                        on_screen_text.setScale,
-                        toData=self.scale1,
-                        fromData=self.scale2,
-                        duration=0.5,
-                    ),
-                    sequence,
-                    LerpFunctionInterval(
-                        on_screen_text.setAlphaScale, toData=1, fromData=0, duration=0.5
-                    ),
-                )
-            elif i == 1:
-                sequence = Parallel(
-                    sequence,
-                    LerpFunctionInterval(
-                        on_screen_text.setScale,
-                        toData=self.scale2,
-                        fromData=self.scale1,
-                        duration=0.5,
-                    ),
-                    LerpFunctionInterval(
-                        on_screen_text.setAlphaScale,
-                        toData=1,
-                        fromData=0.7,
-                        duration=0.5,
-                    ),
-                )
-            elif i == self.on_screen_max - 1:
-                sequence = Parallel(
-                    sequence,
-                    LerpFunctionInterval(
-                        on_screen_text.setAlphaScale, toData=0, fromData=1, duration=0.5
-                    ),
-                )
-            animation.append(sequence)
-        animation.start()
+                on_screen_text.setScale(self.scale1)
+            else:
+                on_screen_text.setScale(self.scale2)
+
+        # Animate the alpha scale of the new message to fade in
+        fade_in = LerpFunc(
+            new_message.setAlphaScale,
+            fromData=0,  # Start the alpha at 0 (completely transparent)
+            toData=1,  # End with an alpha of 1 (completely opaque)
+            duration=0.5,  # Duration of the fade-in animation
+        )
+        fade_in.start()
 
 
 hud = HUD()
