@@ -249,7 +249,7 @@ class PlayerStats(BaseHUDElement):
         self.top_spot = -0.18
         self.spacer = 0.05
         self.scale1 = 0.06
-        self.scale2 = 0.04
+        self.scale2 = 0.05
         self.on_screen = []
 
         self.colors = {
@@ -261,14 +261,14 @@ class PlayerStats(BaseHUDElement):
         self.destroy()
         self.on_screen = []
 
-    def init_text_object(self, i, msg="", color=None):
+    def init_text_object(self, i, msg="", color=None, active=0):
         if color is None:
             color = self.colors["inactive"]
 
         return OnscreenText(
             text=msg,
             pos=(1.55, self.top_spot + self.spacer * i),
-            scale=self.scale1 if i == 0 else self.scale2,
+            scale=self.scale1 if i == active else self.scale2,
             fg=color,
             align=TextNode.ARight,
             mayChange=True,
@@ -295,10 +295,16 @@ class PlayerStats(BaseHUDElement):
     def update(self, game):
         self.init()
 
-        for i, player in enumerate(game.player_order()):
+        for i, player in enumerate(game.players):
             msg = f"{player.name}: {game.score[player.name]}"
-            color = self.colors["active"] if i == 0 else self.colors["inactive"]
-            self.on_screen.append(self.init_text_object(i, msg, color=color))
+            color = (
+                self.colors["active"]
+                if i == game.active_idx
+                else self.colors["inactive"]
+            )
+            self.on_screen.append(
+                self.init_text_object(i, msg, color=color, active=game.active_idx)
+            )
 
 
 class Logo(BaseHUDElement):
