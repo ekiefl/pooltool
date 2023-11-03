@@ -256,14 +256,14 @@ class PlayerStats(BaseHUDElement):
         self.destroy()
         self.on_screen = []
 
-    def init_text_object(self, i, msg="", color=None, active=0):
-        if color is None:
-            color = self.colors["inactive"]
+    def init_text_object(self, i, msg="", color=None, is_active=False):
+        scale = self.scale1 if is_active else self.scale2
+        vertical_position = self.top_spot - self.spacer * i
 
         return OnscreenText(
             text=msg,
-            pos=(1.55, self.top_spot + self.spacer * i),
-            scale=self.scale1 if i == active else self.scale2,
+            pos=(1.55, vertical_position),
+            scale=scale,
             fg=color,
             align=TextNode.ARight,
             mayChange=True,
@@ -289,16 +289,14 @@ class PlayerStats(BaseHUDElement):
 
     def update(self, game):
         self.init()
+        players = game.players
 
-        for i, player in enumerate(game.players):
+        for i, player in enumerate(players):
             msg = f"{player.name}: {game.score[player.name]}"
-            color = (
-                self.colors["active"]
-                if i == game.active_idx
-                else self.colors["inactive"]
-            )
+            is_active = i == game.active_idx
+            color = self.colors["active"] if is_active else self.colors["inactive"]
             self.on_screen.append(
-                self.init_text_object(i, msg, color=color, active=game.active_idx)
+                self.init_text_object(i, msg, color=color, is_active=is_active)
             )
 
 
