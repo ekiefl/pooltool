@@ -90,13 +90,8 @@ class CallShotMode(BaseMode):
                 self.add_ball_highlight()
 
             if self.keymap["next"]:
-                self.keymap["next"] = False
-                if self.closest_ball is not None:
-                    Global.game.log.add_msg(
-                        f"Calling the {self.closest_ball._ball.id} ball",
-                        sentiment="neutral",
-                    )
                 assert self.closest_ball is not None
+                self.keymap["next"] = False
                 Global.game.shot_constraints.ball_call = self.closest_ball._ball.id
                 self.picking = "pocket"
                 self.trans_ball.show()
@@ -108,13 +103,13 @@ class CallShotMode(BaseMode):
                 self.move_ball_highlight()
 
             if self.keymap["next"]:
-                self.keymap["next"] = False
-                if self.closest_pocket is not None:
-                    Global.game.log.add_msg(
-                        f"Calling the {self.closest_pocket.id} pocket",
-                        sentiment="neutral",
-                    )
                 assert self.closest_pocket is not None
+                self.keymap["next"] = False
+                player = Global.game.active_player.name
+                ball_id = self.closest_ball._ball.id
+                pock_id = self.closest_pocket.id
+                msg = f"{player} called the {ball_id} in the '{pock_id}' pocket"
+                Global.game.log.add_msg(msg, sentiment="neutral")
                 Global.game.shot_constraints.pocket_call = self.closest_pocket.id
                 Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
                 return task.done
