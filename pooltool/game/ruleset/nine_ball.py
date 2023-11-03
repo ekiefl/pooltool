@@ -107,6 +107,23 @@ def is_game_over(shot: System, legal: bool) -> bool:
 
 
 class NineBall(Ruleset):
+    def process_shot(self, shot: System):
+        """Override process_shot to add log messages"""
+        super().process_shot(shot)
+
+        ball_ids = get_pocketed_ball_ids_during_shot(shot, exclude={"cue"})
+        if len(ball_ids):
+            sentiment = "neutral" if self.shot_info.turn_over else "good"
+            self.log.add_msg(
+                f"Ball(s) potted: {', '.join(ball_ids)}", sentiment=sentiment
+            )
+
+        if not self.shot_info.legal:
+            self.log.add_msg(f"Illegal shot! {self.shot_info.reason}", sentiment="bad")
+
+        if self.shot_info.turn_over:
+            self.log.add_msg(f"{self.last_player.name} is up!", sentiment="good")
+
     def build_shot_info(self, shot: System) -> ShotInfo:
         legal, reason = is_legal(shot, break_shot=self.shot_number == 0)
         turn_over = is_turn_over(shot, legal)

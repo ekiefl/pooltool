@@ -172,6 +172,31 @@ def decide_winner(
 
 
 class EightBall(Ruleset):
+    @property
+    def active_group(self) -> BallGroup:
+        return BallGroup.get(self.shot_constraints.hittable)
+
+    def process_shot(self, shot: System):
+        """Override process_shot to add log messages"""
+        super().process_shot(shot)
+
+        ball_ids = get_pocketed_ball_ids_during_shot(shot, exclude={"cue"})
+        if len(ball_ids):
+            sentiment = "neutral" if self.shot_info.turn_over else "good"
+            self.log.add_msg(
+                f"Ball(s) potted: {', '.join(ball_ids)}", sentiment=sentiment
+            )
+
+        if not self.shot_info.legal:
+            self.log.add_msg(f"Illegal shot! {self.shot_info.reason}", sentiment="bad")
+
+        if self.shot_info.turn_over:
+            shooting = self.active_group.next(shot)
+            self.log.add_msg(
+                f"{self.last_player.name} is up! Aiming at: {shooting}",
+                sentiment="good",
+            )
+
     def build_shot_info(self, shot: System) -> ShotInfo:
         legal, reason = is_legal(shot, self.shot_constraints, self.shot_number == 0)
         turn_over = is_turn_over(shot, self.shot_constraints, legal)
@@ -216,10 +241,9 @@ class EightBall(Ruleset):
 
     def get_score(self, shot: System) -> Counter:
         """How many stripes/solids are down?"""
-        active_group = BallGroup.get(self.shot_constraints.hittable)
-        other_group = active_group.next(shot)
+        other_group = self.active_group.next(shot)
 
-        if active_group is BallGroup.UNDECIDED:
+        if self.active_group is BallGroup.UNDECIDED:
             # No points before solids/stripes is determined
             assert other_group is BallGroup.UNDECIDED
             return Counter()
@@ -228,21 +252,21 @@ class EightBall(Ruleset):
         num_stripes = sum(ball in BallGroup.STRIPES.balls for ball in pocketed)
         num_solids = sum(ball in BallGroup.SOLIDS.balls for ball in pocketed)
 
-        if active_group is BallGroup.SOLIDS:
+        if self.active_group is BallGroup.SOLIDS:
             return Counter(
                 {
                     self.active_player.name: num_solids,
                     self.last_player.name: num_stripes,
                 }
             )
-        elif active_group is BallGroup.STRIPES:
+        elif self.active_group is BallGroup.STRIPES:
             return Counter(
                 {
                     self.active_player.name: num_stripes,
                     self.last_player.name: num_solids,
                 }
             )
-        elif active_group is BallGroup.EIGHT:
+        elif self.active_group is BallGroup.EIGHT:
             if num_solids == 7:
                 num_active = num_solids
                 num_other = num_stripes
@@ -255,7 +279,7 @@ class EightBall(Ruleset):
                 {self.active_player.name: num_active, self.last_player.name: num_other}
             )
         else:
-            raise NotImplementedError(f"Unknown: {active_group}")
+            raise NotImplementedError(f"Unknown: {self.active_group}")
 
     def respot_balls(self, shot: System):
         """No balls respotted in this variant of 8-ball"""
