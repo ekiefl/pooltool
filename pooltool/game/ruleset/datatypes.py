@@ -110,10 +110,6 @@ class Ruleset(ABC):
 
     def process_shot(self, shot: System):
         self.shot_info = self.build_shot_info(shot)
-
-        if not self.shot_info.legal:
-            self.log.add_msg(f"Illegal shot! {self.shot_info.reason}", sentiment="bad")
-
         self.score = self.get_score(shot)
         self.respot_balls(shot)
 
@@ -126,7 +122,6 @@ class Ruleset(ABC):
             return
 
         if self.shot_info.turn_over:
-            self.log.add_msg(f"{self.last_player.name} is up!", sentiment="neutral")
             self.turn_number += 1
         self.shot_number += 1
 

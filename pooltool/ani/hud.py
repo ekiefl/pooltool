@@ -586,7 +586,7 @@ class LogWindow(BaseHUDElement):
             new_message.setAlphaScale,
             fromData=0,  # Start the alpha at 0 (completely transparent)
             toData=1,  # End with an alpha of 1 (completely opaque)
-            duration=0.5,  # Duration of the fade-in animation
+            duration=1,  # Duration of the fade-in animation
         )
         fade_in.start()
 
