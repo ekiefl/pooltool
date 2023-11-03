@@ -529,7 +529,7 @@ class LogWindow(BaseHUDElement):
     def init(self):
         self.destroy()
         self.on_screen = deque([])
-        self.on_screen_max = 5
+        self.on_screen_max = 10
         for i in range(self.on_screen_max):
             self.on_screen.append(self.init_text_object(i))
 
