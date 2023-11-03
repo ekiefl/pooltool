@@ -1,9 +1,8 @@
 #! /usr/bin/env python
 from __future__ import annotations
 
-import uuid
 from abc import ABC, abstractmethod
-from typing import Counter, Generator, List, Optional
+from typing import Counter, Generator, List, Optional, Tuple
 
 import attrs
 
@@ -54,12 +53,12 @@ class BallInHandOptions(StrEnum):
     BEHIND_LINE = auto()
 
 
-@attrs.define(frozen=True)
+@attrs.define
 class ShotConstraints:
     ball_in_hand: BallInHandOptions
-    movable: List
-    cueable: List
-    hittable: List
+    movable: List[str]
+    cueable: List[str]
+    hittable: Tuple[str, ...]
     call_shot: bool
     ball_call: Optional[str] = attrs.field(default=None)
     pocket_call: Optional[str] = attrs.field(default=None)
@@ -130,6 +129,7 @@ class Ruleset(ABC):
 
         self.shot_constraints = self.next_shot_constraints(shot)
         self.set_next_player()
+        print(self.shot_constraints)
 
     @abstractmethod
     def build_shot_info(self, shot: System) -> ShotInfo:

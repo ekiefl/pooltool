@@ -16,8 +16,10 @@ from pooltool.game.ruleset.utils import (
     get_highest_ball,
     get_lowest_ball,
     get_pocketed_ball_ids_during_shot,
+    is_ball_hit,
     is_ball_pocketed,
     is_lowest_hit_first,
+    is_numbered_ball_pocketed,
     respot,
 )
 from pooltool.system.datatypes import System
@@ -34,16 +36,6 @@ def _is_legal_break(shot: System) -> Tuple[bool, str]:
     reason = "" if legal else "Must contact 4 rails or pot 1 ball"
 
     return legal, reason
-
-
-def _is_ball_hit(shot: System) -> bool:
-    return bool(
-        len(filter_events(shot.events, by_ball("cue"), by_type(EventType.BALL_BALL)))
-    )
-
-
-def _is_numbered_ball_pocketed(shot: System) -> bool:
-    return bool(len(get_pocketed_ball_ids_during_shot(shot, exclude={"cue"})))
 
 
 def _is_cushion_hit_after_first_contact(shot: System) -> bool:
@@ -73,11 +65,11 @@ def is_legal(shot: System, break_shot: bool) -> Tuple[bool, str]:
         return _is_legal_break(shot)
 
     cushion_after_contact = _is_cushion_hit_after_first_contact(shot)
-    ball_pocketed = _is_numbered_ball_pocketed(shot)
+    ball_pocketed = is_numbered_ball_pocketed(shot)
 
     reason = ""
     legal = True
-    if not _is_ball_hit(shot):
+    if not is_ball_hit(shot):
         legal = False
         reason = "No ball contacted"
     elif not is_lowest_hit_first(shot):
@@ -115,9 +107,6 @@ def is_game_over(shot: System, legal: bool) -> bool:
 
 
 class NineBall(Ruleset):
-    def __init__(self, player_names=None):
-        Ruleset.__init__(self, player_names=player_names)
-
     def build_shot_info(self, shot: System) -> ShotInfo:
         legal, reason = is_legal(shot, break_shot=self.shot_number == 0)
         turn_over = is_turn_over(shot, legal)
@@ -138,7 +127,7 @@ class NineBall(Ruleset):
             ball_in_hand=BallInHandOptions.BEHIND_LINE,
             movable=["cue"],
             cueable=["cue"],
-            hittable=["1"],
+            hittable=("1",),
             call_shot=False,
         )
 
@@ -151,7 +140,7 @@ class NineBall(Ruleset):
             ),
             movable=[] if self.shot_info.legal else ["cue"],
             cueable=["cue"],
-            hittable=[get_lowest_ball(shot, at_start=False).id],
+            hittable=(get_lowest_ball(shot, at_start=False).id,),
             call_shot=False,
         )
 

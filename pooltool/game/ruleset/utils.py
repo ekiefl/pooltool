@@ -3,6 +3,7 @@ from typing import List, Optional, Set
 import pooltool.constants as const
 from pooltool.events.datatypes import EventType
 from pooltool.events.filter import by_ball, by_type, filter_events, filter_type
+from pooltool.game.ruleset.datatypes import ShotConstraints
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.system.datatypes import System
 
@@ -51,6 +52,14 @@ def is_ball_pocketed(shot: System, ball_id: str) -> bool:
         ball_id in event.agents[0].id
         for event in filter_type(shot.events, EventType.BALL_POCKET)
     )
+
+
+def is_ball_pocketed_in_pocket(shot: System, ball_id: str, pocket_id: str) -> bool:
+    for event in filter_type(shot.events, EventType.BALL_POCKET):
+        agent1, agent2 = event.ids
+        if ball_id == agent1 and pocket_id == agent2:
+            return True
+    return False
 
 
 def respot(
@@ -157,3 +166,21 @@ def balls_that_hit_cushion(
     )
 
     return set(event.agents[0].id for event in cushion_events)
+
+
+def is_ball_hit(shot: System) -> bool:
+    return bool(len(filter_events(shot.events, by_type(EventType.BALL_BALL))))
+
+
+def is_numbered_ball_pocketed(shot: System) -> bool:
+    return bool(len(get_pocketed_ball_ids_during_shot(shot, exclude={"cue"})))
+
+
+def is_shot_called_if_required(shot_constraints: ShotConstraints) -> bool:
+    if not shot_constraints.call_shot:
+        return True
+
+    if shot_constraints.ball_call is None or shot_constraints.pocket_call is None:
+        return False
+
+    return True
