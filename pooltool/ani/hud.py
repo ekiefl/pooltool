@@ -150,6 +150,7 @@ class Help(BaseHUDElement):
 
         self.help_hint = autils.CustomOnscreenText(
             text="Press 'h' to toggle help",
+            font_name="LABTSECS",
             pos=(-1.55, 0.93),
             scale=ani.menu_text_scale * 0.9,
             fg=(1, 1, 1, 1),
@@ -349,8 +350,8 @@ class English(BaseHUDElement):
         self.crosshairs.setTransparency(TransparencyAttrib.MAlpha)
 
         self.text = autils.CustomOnscreenText(
-            text="(0.00, 0.00)",
-            pos=(0, -1.15),
+            text="(0.000, 0.000)",
+            pos=(0, -1.25),
             scale=self.text_scale,
             fg=self.text_color,
             align=TextNode.ACenter,
@@ -360,7 +361,7 @@ class English(BaseHUDElement):
 
     def set(self, a, b):
         self.crosshairs.setPos(-a, 0, b)
-        self.text.setText(f"({a:.2f},{b:.2f})")
+        self.text.setText(f"({a:.3f},{b:.3f})")
 
     def init(self):
         self.show()
@@ -482,7 +483,7 @@ class Jack(BaseHUDElement):
         self.cue_cartoon.wrtReparentTo(self.rotational_point)
 
         self.text = autils.CustomOnscreenText(
-            text="0 deg",
+            text="0.00 deg",
             pos=(-1, -1.4),
             scale=self.text_scale,
             fg=self.text_color,
@@ -492,7 +493,7 @@ class Jack(BaseHUDElement):
         )
 
     def set(self, theta):
-        self.text.setText(f"{theta:.1f} deg")
+        self.text.setText(f"{theta:.2f} deg")
         self.rotational_point.setR(theta)
 
     def init(self):
@@ -515,14 +516,14 @@ class LogWindow(BaseHUDElement):
     def __init__(self):
         self.top_spot = -0.95
         self.spacer = 0.05
-        self.scale1 = 0.05
+        self.scale1 = 0.04  # latest message
         self.scale2 = 0.04
         self.on_screen = deque([])
 
         self.colors = {
-            "bad": (1, 0.5, 0.5, 1),
-            "neutral": (1, 1, 0.5, 1),
-            "good": (0.5, 1, 0.5, 1),
+            "bad": (0.8, 0.2, 0.2, 1),
+            "neutral": (0.4, 0.7, 0.9, 1),
+            "good": (0.2, 0.8, 0.2, 1),
         }
 
     def init(self):
@@ -585,7 +586,7 @@ class LogWindow(BaseHUDElement):
             new_message.setAlphaScale,
             fromData=0,  # Start the alpha at 0 (completely transparent)
             toData=1,  # End with an alpha of 1 (completely opaque)
-            duration=1,  # Duration of the fade-in animation
+            duration=0.6,  # Duration of the fade-in animation
         )
         fade_in.start()
 
