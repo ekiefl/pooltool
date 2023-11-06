@@ -68,7 +68,7 @@ class ShotConstraints:
         if self.cueable is None:
             assert len(balls)
 
-            for cue in ("cue", "white"):
+            for cue in ("cue", "white", "yellow"):
                 if cue in balls:
                     return cue
 
@@ -139,6 +139,7 @@ class Ruleset(ABC):
         self.shot_number += 1
 
         self.shot_constraints = self.next_shot_constraints(shot)
+        shot.cue.cue_ball_id = self.shot_constraints.cueball(shot.balls)
         self.set_next_player()
 
     @abstractmethod
