@@ -15,9 +15,13 @@ from pooltool.ani.fonts import load_font
 class CustomOnscreenText(OnscreenText):
     def __init__(self, **kwargs):
         assert "font" not in kwargs, f"Cannot modify 'font', use 'font_name' instead"
-        font = (
-            load_font() if "font_name" not in kwargs else load_font(kwargs["font_name"])
-        )
+
+        if "font_name" in kwargs:
+            font = load_font(kwargs["font_name"])
+            del kwargs["font_name"]
+        else:
+            font = load_font()
+
         OnscreenText.__init__(self, font=font, **kwargs)
 
 
