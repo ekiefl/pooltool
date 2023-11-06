@@ -87,6 +87,7 @@ class Table:
             GameType.NINEBALL: TableType.POCKET,
             GameType.THREECUSHION: TableType.BILLIARD,
             GameType.SNOOKER: TableType.SNOOKER,
+            GameType.SANDBOX: TableType.POCKET,
         }
 
         return cls.default(_game_table_type_map[game_type])

@@ -380,6 +380,7 @@ _game_rack_map: Dict[str, Callable[[Table, Optional[BallParams], float], Balls]]
     GameType.EIGHTBALL: get_eight_ball_rack,
     GameType.THREECUSHION: get_three_cushion_rack,
     GameType.SNOOKER: get_snooker_rack,
+    GameType.SANDBOX: get_nine_ball_rack,
 }
 
 

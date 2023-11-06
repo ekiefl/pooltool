@@ -1,52 +1,66 @@
 #! /usr/bin/env python
 
-import pooltool.constants as c
-from pooltool.game.ruleset.datatypes import Ruleset
+from __future__ import annotations
+
+from typing import Counter
+
+import pooltool.constants as const
+from pooltool.game.ruleset.datatypes import (
+    BallInHandOptions,
+    Ruleset,
+    ShotConstraints,
+    ShotInfo,
+)
+from pooltool.game.ruleset.utils import get_pocketed_ball_ids_during_shot, respot
+from pooltool.system.datatypes import System
 
 
-class Sandbox(Ruleset):
-    def __init__(self, apa_rules=False):
-        self.is_call_ball = False
-        Ruleset.__init__(self)
-        self.create_players(1)
+class SandBox(Ruleset):
+    def __init__(self):
+        Ruleset.__init__(self, ["Player 1"])
 
-    def start(self, shot):
-        self.active_player.ball_in_hand = [ball_id for ball_id in shot.balls]
-        for player in self.players:
-            player.can_cue = [ball_id for ball_id in shot.balls]
-            player.target_balls = [ball_id for ball_id in shot.balls]
+    def build_shot_info(self, _: System) -> ShotInfo:
+        return ShotInfo(
+            player=self.active_player,
+            legal=True,
+            reason="",
+            turn_over=False,
+            game_over=False,
+            winner=None,
+        )
 
-    def get_initial_cueing_ball(self, balls):
-        return balls["cue"]
+    def initial_shot_constraints(self) -> ShotConstraints:
+        return ShotConstraints(
+            ball_in_hand=BallInHandOptions.ANYWHERE,
+            movable=None,
+            cueable=None,
+            hittable=tuple(),
+            call_shot=False,
+        )
 
-    def award_points(self, shot):
-        self.shot_info["points"] = {player: 0 for player in self.players}
+    def next_shot_constraints(self, _: System) -> ShotConstraints:
+        return self.initial_shot_constraints()
 
-    def decide_winner(self, shot):
-        self.winner = self.active_player
+    def get_score(self, _: System) -> Counter:
+        return Counter()
 
-    def award_ball_in_hand(self, shot):
-        self.shot_info["ball_in_hand"] = [ball.id for ball in shot.balls.values()]
+    def respot_balls(self, shot: System):
+        """No balls respotted in this variant of 8-ball"""
+        for ball_id, ball in shot.balls.items():
+            if ball_id == shot.cue.cue_ball_id and ball.state.s == const.pocketed:
+                respot(
+                    shot,
+                    ball_id,
+                    shot.table.w / 2,
+                    shot.table.l * 1 / 4,
+                )
 
-    def respot_balls(self, shot):
-        if shot.balls["cue"].state.s == c.pocketed:
-            self.respot(
-                shot,
-                "cue",
-                shot.table.w / 2,
-                shot.table.l * 1 / 4,
-                shot.balls["cue"].params.R,
+    def process_shot(self, shot: System):
+        """Override process_shot to add log messages"""
+        super().process_shot(shot)
+
+        ball_ids = get_pocketed_ball_ids_during_shot(shot)
+        if len(ball_ids):
+            self.log.add_msg(
+                f"Ball(s) potted: {', '.join(ball_ids)}", sentiment="neutral"
             )
-
-    def is_turn_over(self, shot):
-        return False
-
-    def is_game_over(self, shot):
-        return False
-
-    def legality(self, shot):
-        """Returns whether or not a shot is legal, and the reason"""
-        return (True, None)
-
-    def advance(self, shot):
-        super().advance(shot)

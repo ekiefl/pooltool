@@ -6,3 +6,4 @@ class GameType(StrEnum):
     NINEBALL = auto()
     THREECUSHION = auto()
     SNOOKER = auto()
+    SANDBOX = auto()
