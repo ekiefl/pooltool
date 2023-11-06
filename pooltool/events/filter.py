@@ -70,32 +70,35 @@ def by_ball(ball_ids: Union[str, List[str]], keep_nonevent: bool = False) -> Fil
     return func
 
 
-def by_time(t: float) -> FilterFunc:
+def by_time(t: float, after: bool = True) -> FilterFunc:
     def func(events: List[Event]) -> List[Event]:
-        """Return events in chronological order after a certain time
+        """Return events in chronological order around a certain time
 
         Parameters
         ==========
         t : float
-            time after which you want events for (non-inclusive)
+            The reference time for filtering events
+        after : bool
+            If True, return events after time `t` (non-inclusive).
+            If False, return events before time `t` (non-inclusive).
 
         Returns
         =======
         events:
-            A subset of events occurring after specified time, non-inclusive.
+            A subset of events occurring before or after the specified time, non-inclusive.
         """
 
         if not events == sorted(events, key=lambda event: event.time):
             raise ValueError("Event lists must be chronological")
 
         new: List[Event] = []
-        for event in reversed(events):
-            if event.time > t:
+        for event in events:
+            if after and event.time > t:
                 new.append(event)
-            else:
-                break
+            elif not after and event.time < t:
+                new.append(event)
 
-        return new[::-1]
+        return new
 
     return func
 
@@ -126,5 +129,5 @@ def filter_ball(
     return by_ball(ball_ids, keep_nonevent)(events)
 
 
-def filter_time(events: List[Event], t: float) -> List[Event]:
-    return by_time(t)(events)
+def filter_time(events: List[Event], t: float, after: bool = True) -> List[Event]:
+    return by_time(t, after)(events)

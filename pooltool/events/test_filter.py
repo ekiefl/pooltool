@@ -168,8 +168,8 @@ def test_by_type_multi(events, ball1, ball2, ball3, cue):
     ]
 
 
-def test_by_time(events, ball1, ball2, ball3, cushion):
-    # Non-inclusive
+def test_by_time(events, cue, ball1, ball2, ball3, cushion):
+    # After t (non-inclusive)
     assert filter_time(events, 4) == [
         sliding_rolling_transition(ball2, 5),
         rolling_stationary_transition(ball2, 6),
@@ -179,6 +179,14 @@ def test_by_time(events, ball1, ball2, ball3, cushion):
         rolling_stationary_transition(ball1, 10),
         ball_linear_cushion_collision(ball3, cushion, 12),
         null_event(inf),
+    ]
+
+    # Before t (non-inclusive)
+    assert filter_time(events, 4, after=False) == [
+        null_event(0),
+        stick_ball_collision(cue, ball2, 1),
+        sliding_rolling_transition(ball1, 2),
+        ball_ball_collision(ball1, ball2, 3),
     ]
 
     # Fails if not sorted
