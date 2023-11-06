@@ -440,8 +440,8 @@ class Game(Interface):
 
         table = Table.from_game_type(game_type)
         balls = get_rack(game_type, table, None, 1e-3)
+        cue = Cue(cue_ball_id=game.shot_constraints.cueball(balls))
 
-        cue = Cue(cue_ball_id=game.shot_constraints.cueable[0])
         shot = System(table=table, balls=balls, cue=cue)
 
         multisystem.reset()

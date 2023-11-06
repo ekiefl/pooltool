@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Counter, Generator, List, Optional, Tuple
+from typing import Counter, Dict, Generator, List, Optional, Tuple
 
 import attrs
 
-from pooltool.system.datatypes import System
+from pooltool.objects.ball.datatypes import Ball
+from pooltool.system.datatypes import Balls, System
 from pooltool.terminal import Timer
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -56,12 +57,24 @@ class BallInHandOptions(StrEnum):
 @attrs.define
 class ShotConstraints:
     ball_in_hand: BallInHandOptions
-    movable: List[str]
-    cueable: List[str]
+    movable: Optional[List[str]]
+    cueable: Optional[List[str]]
     hittable: Tuple[str, ...]
     call_shot: bool
     ball_call: Optional[str] = attrs.field(default=None)
     pocket_call: Optional[str] = attrs.field(default=None)
+
+    def cueball(self, balls: Balls) -> str:
+        if self.cueable is None:
+            assert len(balls)
+
+            for cue in ("cue", "white"):
+                if cue in balls:
+                    return cue
+
+            return list(balls.keys())[0]
+
+        return self.cueable[0]
 
 
 @attrs.define(frozen=True)

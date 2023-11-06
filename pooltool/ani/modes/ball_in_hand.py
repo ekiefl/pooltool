@@ -46,16 +46,18 @@ class BallInHandMode(BaseMode):
         self.register_keymap_event("g-up", Action.ball_in_hand, False)
         self.register_keymap_event("mouse1-up", "next", True)
 
-        num_options = len(Global.game.shot_constraints.movable)
-        if num_options == 0:
-            # FIXME add message
+        if Global.game.shot_constraints.movable is None:
             self.picking = "ball"
-        elif num_options == 1:
+        elif len(Global.game.shot_constraints.movable) == 0:
+            # FIXME: Add message to indicate that no balls are movable
+            pass
+        elif len(Global.game.shot_constraints.movable) == 1:
             self.grabbed_ball = visual.balls[Global.game.shot_constraints.movable[0]]
             self.grab_ball_node = self.grabbed_ball.get_node("pos")
             self.grab_ball_shadow_node = self.grabbed_ball.get_node("shadow")
             self.picking = "placement"
         else:
+            # If there are specific movable balls, set picking to "ball" to allow selection
             self.picking = "ball"
 
         tasks.add(self.ball_in_hand_task, "ball_in_hand_task")
@@ -201,11 +203,18 @@ class BallInHandMode(BaseMode):
         cam_pos = cam.fixation.getPos()
         d_min = np.inf
         closest = None
+        movable = Global.game.shot_constraints.movable
+
         for ball_id, ball in visual.balls.items():
-            if ball_id not in Global.game.shot_constraints.movable:
-                continue
+            # Skip pocketed balls
             if ball._ball.state.s == c.pocketed:
                 continue
+
+            # If there is a list of movable balls, skip balls not in that list
+            if movable is not None and ball_id not in movable:
+                continue
+
+            # Calculate distance and update closest ball if necessary
             d = math.norm3d(ball._ball.state.rvw[0] - cam_pos)
             if d < d_min:
                 d_min, closest = d, ball
