@@ -16,3 +16,7 @@ def load_font(name: Optional[str] = None):
 
     assert name in font_paths, f"{name=} is not a known font"
     return Global.loader.loadFont(panda_path(font_paths[name]))
+
+
+def print_font_names() -> None:
+    print(font_paths.keys())
