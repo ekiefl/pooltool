@@ -62,7 +62,7 @@ def is_game_over(
     if turn_over:
         return False
 
-    return score[active.name] == win_condition - 1
+    return score[active.name] == win_condition
 
 
 def next_cue(current_cue: str, num_players: int) -> str:
@@ -82,8 +82,12 @@ class ThreeCushion(Ruleset):
 
     def build_shot_info(self, shot: System) -> ShotInfo:
         turn_over = is_turn_over(shot, self.shot_constraints)
+        score = self.get_score(self.score, turn_over)
         game_over = is_game_over(
-            self.score, self.active_player, turn_over, self.win_condition
+            score,
+            self.active_player,
+            turn_over,
+            self.win_condition,
         )
 
         return ShotInfo(
@@ -93,6 +97,7 @@ class ThreeCushion(Ruleset):
             turn_over=turn_over,
             game_over=game_over,
             winner=self.active_player if game_over else None,
+            score=score,
         )
 
     def initial_shot_constraints(self) -> ShotConstraints:
@@ -118,12 +123,12 @@ class ThreeCushion(Ruleset):
             call_shot=False,
         )
 
-    def get_score(self, _: System) -> Counter:
-        if self.shot_info.turn_over:
-            return self.score
+    def get_score(self, score: Counter, turn_over: bool) -> Counter:
+        if turn_over:
+            return score
 
-        self.score[self.active_player.name] += 1
-        return self.score
+        score[self.active_player.name] += 1
+        return score
 
     def respot_balls(self, _: System) -> None:
         pass

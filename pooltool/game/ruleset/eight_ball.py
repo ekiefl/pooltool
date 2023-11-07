@@ -202,6 +202,7 @@ class EightBall(Ruleset):
         turn_over = is_turn_over(shot, self.shot_constraints, legal)
         game_over = is_game_over(shot)
         winner = decide_winner(game_over, legal, self.active_player, self.last_player)
+        score = self.get_score(shot)
 
         return ShotInfo(
             player=self.active_player,
@@ -210,6 +211,7 @@ class EightBall(Ruleset):
             turn_over=turn_over,
             game_over=game_over,
             winner=winner,
+            score=score,
         )
 
     def initial_shot_constraints(self) -> ShotConstraints:

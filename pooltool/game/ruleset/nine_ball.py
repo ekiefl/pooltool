@@ -129,6 +129,7 @@ class NineBall(Ruleset):
         turn_over = is_turn_over(shot, legal)
         game_over = is_game_over(shot, legal)
         winner = self.active_player if game_over else None
+        score = self.get_score(shot, legal)
 
         return ShotInfo(
             player=self.active_player,
@@ -137,6 +138,7 @@ class NineBall(Ruleset):
             turn_over=turn_over,
             game_over=game_over,
             winner=winner,
+            score=score,
         )
 
     def initial_shot_constraints(self) -> ShotConstraints:
@@ -161,13 +163,13 @@ class NineBall(Ruleset):
             call_shot=False,
         )
 
-    def get_score(self, shot: System) -> Counter:
+    def get_score(self, shot: System, legal: bool) -> Counter:
         """APA-style point awards
 
         This doesn't mean much, because the winner is determined by who sinks the
         9-ball, not who has more points
         """
-        if not self.shot_info.legal:
+        if not legal:
             # No points earned for either player on an illegal shot
             return self.score
 

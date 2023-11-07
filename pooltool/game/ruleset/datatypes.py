@@ -110,6 +110,7 @@ class ShotInfo:
     turn_over: bool
     game_over: bool
     winner: Optional[Player]
+    score: Counter
 
 
 class Ruleset(ABC):
@@ -170,7 +171,7 @@ class Ruleset(ABC):
             shot: The shot data from the system.
         """
         self.shot_info = self.build_shot_info(shot)
-        self.score = self.get_score(shot)
+        self.score = self.shot_info.score
         self.respot_balls(shot)
 
     def advance(self, shot: System):
@@ -229,14 +230,6 @@ class Ruleset(ABC):
 
         Returns:
             A ShotConstraints instance with predefined constraints for the initial shot.
-        """
-
-    @abstractmethod
-    def get_score(self, shot: System) -> Counter:
-        """Update points
-
-        This method returns a Counter object (like a dictionary) that reflects the
-        current score.
         """
 
     @abstractmethod

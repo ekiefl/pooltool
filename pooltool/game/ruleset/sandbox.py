@@ -27,6 +27,7 @@ class SandBox(Ruleset):
             turn_over=False,
             game_over=False,
             winner=None,
+            score=Counter(),
         )
 
     def initial_shot_constraints(self) -> ShotConstraints:
@@ -40,9 +41,6 @@ class SandBox(Ruleset):
 
     def next_shot_constraints(self, _: System) -> ShotConstraints:
         return self.initial_shot_constraints()
-
-    def get_score(self, _: System) -> Counter:
-        return Counter()
 
     def respot_balls(self, shot: System):
         """No balls respotted in this variant of 8-ball"""
