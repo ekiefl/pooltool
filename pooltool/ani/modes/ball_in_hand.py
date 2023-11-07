@@ -73,7 +73,8 @@ class BallInHandMode(BaseMode):
             self.remove_grab_selection_highlight()
 
         if self.picking == "placement" and not success:
-            self.grabbed_ball.set_render_state_as_object_state()
+            if self.grabbed_ball is not None:
+                self.grabbed_ball.set_render_state_as_object_state()
 
         self.grab_selection_highlight_sequence.pause()
 
