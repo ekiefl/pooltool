@@ -15,7 +15,6 @@ from pooltool.game.ruleset.datatypes import (
 )
 from pooltool.game.ruleset.utils import (
     balls_that_hit_cushion,
-    get_id_of_first_ball_hit,
     get_pocketed_ball_ids,
     get_pocketed_ball_ids_during_shot,
     is_ball_hit,
@@ -23,6 +22,7 @@ from pooltool.game.ruleset.utils import (
     is_ball_pocketed_in_pocket,
     is_numbered_ball_pocketed,
     is_shot_called_if_required,
+    is_target_group_hit_first,
     respot,
 )
 from pooltool.system.datatypes import System
@@ -40,10 +40,6 @@ def _is_legal_break(shot: System) -> Tuple[bool, str]:
     reason = "" if legal else "Must contact 4 rails or pot 1 ball"
 
     return legal, reason
-
-
-def _is_target_group_hit_first(shot: System, target_balls: Tuple[str, ...]) -> bool:
-    return get_id_of_first_ball_hit(shot, cue="cue") in target_balls
 
 
 def _is_cushion_hit_after_first_contact(shot: System) -> bool:
@@ -120,7 +116,7 @@ def is_legal(
     elif not is_ball_hit(shot):
         legal = False
         reason = "No ball contacted"
-    elif not _is_target_group_hit_first(shot, constraints.hittable):
+    elif not is_target_group_hit_first(shot, constraints.hittable):
         legal = False
         reason = "First contact wasn't made with target balls"
     elif not cushion_after_contact and not ball_pocketed:
@@ -128,7 +124,7 @@ def is_legal(
         reason = "Cushion not contacted after first contact"
     elif not is_shot_called_if_required(constraints):
         legal = False
-        reason = ""
+        reason = "Shot not called, but it was required!"
 
     # Game ender
     if _is_8_ball_pocketed_incorrectly(shot, constraints):

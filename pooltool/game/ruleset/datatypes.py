@@ -51,6 +51,7 @@ class BallInHandOptions(StrEnum):
     NONE = auto()
     ANYWHERE = auto()
     BEHIND_LINE = auto()
+    IN_THE_D = auto()
 
 
 @attrs.define

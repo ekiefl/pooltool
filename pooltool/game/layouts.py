@@ -339,7 +339,7 @@ def get_snooker_rack(*args, **kwargs):
         BallPos([], (0.5, 0.75), {"pink"}),
     ]
 
-    red_ids = set([f"red{i}" for i in range(1, 16)])
+    red_ids = set([f"red_{i:02d}" for i in range(1, 16)])
 
     row1 = [
         (anchor := BallPos(Jump.UP(), (0.5, 0.75), red_ids)),
