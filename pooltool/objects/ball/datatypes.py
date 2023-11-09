@@ -2,14 +2,15 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import Any, Iterator, List, Optional, Sequence, Tuple
+from typing import Iterator, List, Optional, Sequence, Tuple
 
 import numpy as np
-from attrs import astuple, define, evolve, field
+from attrs import define, evolve, field, validate
 from numpy.typing import NDArray
 
 import pooltool.constants as c
 import pooltool.math as math
+from pooltool.objects.ball.sets import BallSet
 from pooltool.serialize import SerializeFormat, conversion
 from pooltool.utils.dataclasses import are_dataclasses_equal
 
@@ -67,6 +68,8 @@ class BallParams:
             Cushion coefficient of friction.
         g:
             Gravitational constant.
+        ballset:
+            What ballset does this ball belong to? (Used for rendering)
     """
 
     m: float = field(default=0.170097)
@@ -93,6 +96,8 @@ class BallParams:
     # https://eloquentmath.blogspot.com/2012/04/introductory-mechanics-maths-of-snooker.html
     u_s: float = field(default=0.5)
     f_c: float = field(default=0.5)
+
+    ballset: Optional[BallSet] = field(default=None)
 
     @cached_property
     def u_sp(self) -> float:
@@ -225,7 +230,7 @@ conversion.register_unstructure_hook(
 )
 conversion.register_structure_hook(
     BallHistory,
-    lambda v, t: BallHistory.from_vectorization(v),
+    lambda v, _: BallHistory.from_vectorization(v),
     which=(SerializeFormat.MSGPACK,),
 )
 
@@ -237,15 +242,26 @@ class Ball:
     id: str
     state: BallState = field(factory=BallState.default)
     params: BallParams = field(factory=BallParams.default)
+
+    ballset: Optional[BallSet] = field(default=None)
     initial_orientation: BallOrientation = field(factory=BallOrientation.random)
 
     history: BallHistory = field(factory=BallHistory.factory)
     history_cts: BallHistory = field(factory=BallHistory.factory)
 
+    @ballset.validator  # type: ignore
+    def _is_ballset_compatible(self, _, value: BallSet):
+        if value is not None and self.id not in value.ids:
+            raise ValueError(f"{self.id} not member of BallSet: {value.ids}")
+
     @property
     def xyz(self):
         """Return the coordinate vector of the ball"""
         return self.state.rvw[0]
+
+    def set_ballset(self, ballset: BallSet) -> None:
+        self.ballset = ballset
+        validate(self)
 
     def copy(self, drop_history: bool = False) -> Ball:
         """Create a deep copy"""
@@ -267,7 +283,13 @@ class Ball:
         )
 
     @staticmethod
-    def create(id: str, *, xy: Optional[Sequence[float]] = None, **kwargs) -> Ball:
+    def create(
+        id: str,
+        *,
+        xy: Optional[Sequence[float]] = None,
+        ballset: Optional[BallSet] = None,
+        **kwargs,
+    ) -> Ball:
         """Create ball using a flattened parameter set
 
         Args:
@@ -277,7 +299,7 @@ class Ball:
                 Parameters accepted by BallParams
         """
         params = BallParams(**kwargs)
-        ball = Ball(id=id, params=params)
+        ball = Ball(id=id, ballset=ballset, params=params)
 
         if xy is not None:
             ball.state.rvw[0] = [*xy, ball.params.R]
