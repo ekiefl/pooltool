@@ -328,16 +328,19 @@ def get_three_cushion_rack(*args, **kwargs):
     return _get_rack([white, yellow, red], *args, **kwargs)
 
 
+snooker_color_locs: Dict[str, BallPos] = {
+    "white": BallPos([], (7 / 12, 0.2), {"white"}),
+    "yellow": BallPos([], (0.333, 0.2), {"yellow"}),
+    "green": BallPos([], (0.666, 0.2), {"green"}),
+    "brown": BallPos([], (0.5, 0.2), {"brown"}),
+    "blue": BallPos([], (0.5, 0.5), {"blue"}),
+    "black": BallPos([], (0.5, 10 / 11), {"black"}),
+    "pink": BallPos([], (0.5, 0.75), {"pink"}),
+}
+
+
 def get_snooker_rack(*args, **kwargs):
-    colors = [
-        BallPos([], (7 / 12, 0.2), {"white"}),
-        BallPos([], (0.333, 0.2), {"yellow"}),
-        BallPos([], (0.666, 0.2), {"green"}),
-        BallPos([], (0.5, 0.2), {"brown"}),
-        BallPos([], (0.5, 0.5), {"blue"}),
-        BallPos([], (0.5, 10 / 11), {"black"}),
-        BallPos([], (0.5, 0.75), {"pink"}),
-    ]
+    colors = list(snooker_color_locs.values())
 
     red_ids = set([f"red_{i:02d}" for i in range(1, 16)])
 

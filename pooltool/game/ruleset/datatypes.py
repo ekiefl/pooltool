@@ -51,7 +51,7 @@ class BallInHandOptions(StrEnum):
     NONE = auto()
     ANYWHERE = auto()
     BEHIND_LINE = auto()
-    IN_THE_D = auto()
+    SEMICIRCLE = auto()
 
 
 @attrs.define
@@ -111,7 +111,7 @@ class ShotInfo:
     turn_over: bool
     game_over: bool
     winner: Optional[Player]
-    score: Counter
+    score: Counter[str]
 
 
 class Ruleset(ABC):
@@ -124,7 +124,7 @@ class Ruleset(ABC):
 
     def __init__(self, player_names: Optional[List[str]] = None) -> None:
         # Game progress tracking
-        self.score: Counter = Counter()
+        self.score: Counter[str] = Counter()
         self.shot_number: int = 0
         self.turn_number: int = 0
 

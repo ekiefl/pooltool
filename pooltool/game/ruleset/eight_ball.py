@@ -116,7 +116,7 @@ def is_legal(
     elif not is_ball_hit(shot):
         legal = False
         reason = "No ball contacted"
-    elif not is_target_group_hit_first(shot, constraints.hittable):
+    elif not is_target_group_hit_first(shot, constraints.hittable, "cue"):
         legal = False
         reason = "First contact wasn't made with target balls"
     elif not cushion_after_contact and not ball_pocketed:

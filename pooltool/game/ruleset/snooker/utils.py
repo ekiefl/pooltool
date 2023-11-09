@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Dict, Tuple
+from typing import Iterable, List, Tuple
 
 from pooltool.game.ruleset.datatypes import ShotConstraints
+from pooltool.game.ruleset.snooker.balls import (
+    BallGroup,
+    ball_info,
+    ball_infos,
+    ball_infos_dict,
+)
 from pooltool.game.ruleset.utils import (
     get_ball_ids_on_table,
     get_pocketed_ball_ids,
@@ -12,50 +18,75 @@ from pooltool.game.ruleset.utils import (
     is_target_group_hit_first,
 )
 from pooltool.system.datatypes import System
-from pooltool.utils.strenum import StrEnum, auto
+from pooltool.utils.strenum import StrEnum
 
 
-class BallGroup(StrEnum):
-    REDS = auto()
-    COLORS = auto()
-
-    @property
-    def balls(self) -> Tuple[str, ...]:
-        """Return the ball IDs associated to a BallGroup"""
-        return _group_to_balls_dict[self]
-
-    def next(self, shot: System) -> BallGroup:
-        """Get next player's ball-group"""
-        if are_reds_done(shot):
-            return BallGroup.COLORS
-
-        return BallGroup.REDS
-
-    def cont(self, shot: System, constraints: ShotConstraints) -> BallGroup:
-        """Get the same player's ball-group for next shot"""
-        if are_reds_done(shot):
-            return BallGroup.COLORS
-
-        curr_group = BallGroup.get(constraints.hittable)
-        return BallGroup.COLORS if curr_group is BallGroup.REDS else BallGroup.REDS
-
-    @classmethod
-    def get(cls, balls: Tuple[str, ...]) -> BallGroup:
-        return _balls_to_group_dict[balls]
+class Reason(StrEnum):
+    NONE = ""
+    CUE_POCKETED = "Cue ball in pocket!"
+    NO_BALL_HIT = "No ball contacted!"
+    OFF_BALL_HIT_FIRST = "First contact made with a ball that's not on!"
+    OFF_BALL_POCKETED = "First contact made with a ball that's not on!"
 
 
-_group_to_balls_dict: Dict[BallGroup, Tuple[str, ...]] = {
-    BallGroup.REDS: tuple(f"red_{i:02d}" for i in range(1, 16)),
-    BallGroup.COLORS: ("yellow", "green", "brown", "blue", "pink", "black"),
-}
+def get_next_player_ball_group(shot: System) -> BallGroup:
+    """Get next player's ball-group"""
+    if are_reds_done(shot):
+        return BallGroup.COLORS
 
-_balls_to_group_dict: Dict[Tuple[str, ...], BallGroup] = {
-    v: k for k, v in _group_to_balls_dict.items()
-}
+    return BallGroup.REDS
+
+
+def get_continued_player_ball_group(
+    shot: System, constraints: ShotConstraints
+) -> BallGroup:
+    """Get the same player's ball-group for next shot"""
+    if are_reds_done(shot):
+        return BallGroup.COLORS
+
+    curr_group = BallGroup.get(constraints.hittable)
+    return BallGroup.COLORS if curr_group is BallGroup.REDS else BallGroup.REDS
 
 
 def are_reds_done(shot: System) -> bool:
+    """Have all reds been sunk (by end of shot)"""
     return all(ball in get_pocketed_ball_ids(shot) for ball in BallGroup.REDS.balls)
+
+
+def is_alternate_mode(shot: System, legal: bool) -> bool:
+    if not are_reds_done(shot):
+        return True
+
+    return is_transition_to_sequential_mode(shot, legal)
+
+
+def is_transition_to_sequential_mode(shot: System, legal: bool) -> bool:
+    """Returns whether game is transitioning from alternate to sequential mode
+
+    - Alternate mode means there are reds on the table and players alternate between
+      potting reds and potting colors.
+
+    - Sequential mode means the colors must be potted in order
+
+    Inbetween these two modes, there is a _potential_ transitional shot, which occurs
+    when the player legally pots the last red, and gets their pick of any color ball
+    before sequential mode begins, even though there are no reds on the table. This
+    function returns whether or not that transitional shot is about to occur by counting
+    the number of reds on the table before and after the shot, as well as wheher or not
+    the player's shot was legal.
+    """
+    if legal:
+        return False
+
+    red_sunk = any(
+        ball_id.startswith("red_")
+        for ball_id in get_pocketed_ball_ids_during_shot(shot)
+    )
+
+    if are_reds_done(shot) and red_sunk:
+        return True
+
+    return False
 
 
 def on_final_black(shot: System) -> bool:
@@ -92,16 +123,29 @@ def is_off_ball_pocketed(shot: System, constraints: ShotConstraints) -> bool:
 
 
 def is_off_ball_hit_first(shot: System, constraints: ShotConstraints) -> bool:
-    return not is_target_group_hit_first(shot, get_on_balls(constraints))
+    return not is_target_group_hit_first(shot, get_on_balls(constraints), cue="white")
 
 
-POINTS = {
-    "white": -4,
-    "yellow": 2,
-    "green": 3,
-    "brown": 4,
-    "blue": 5,
-    "pink": 6,
-    "black": 7,
-}
-POINTS.update({red: 1 for red in BallGroup.REDS.balls})
+def get_lowest_pottable(shot: System) -> str:
+    ball_ids = get_ball_ids_on_table(shot, at_start=False)
+    ans = min(
+        [info for info in ball_infos(ball_ids).values() if info.color],
+        key=lambda info: info.points,
+    ).id
+    print(ans)
+    return ans
+
+
+def get_higher_value_color_balls(shot: System) -> List[str]:
+    ans = [
+        ball_id
+        for ball_id, info in ball_infos_dict.items()
+        if info.color and info.points >= ball_info(get_lowest_pottable(shot)).points
+    ]
+    print(ans)
+    return ans
+
+
+def get_foul_points(offending_balls: Iterable[str]) -> int:
+    """Return the number of points for the foul"""
+    return max(4, max(ball_info(ball_id).points for ball_id in offending_balls))

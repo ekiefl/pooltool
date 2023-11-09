@@ -62,8 +62,10 @@ def is_ball_pocketed_in_pocket(shot: System, ball_id: str, pocket_id: str) -> bo
     return False
 
 
-def is_target_group_hit_first(shot: System, target_balls: Tuple[str, ...]) -> bool:
-    return get_id_of_first_ball_hit(shot, cue="cue") in target_balls
+def is_target_group_hit_first(
+    shot: System, target_balls: Tuple[str, ...], cue: str
+) -> bool:
+    return get_id_of_first_ball_hit(shot, cue=cue) in target_balls
 
 
 def respot(
@@ -94,12 +96,15 @@ def respot(
     shot.balls[ball_id].state.s = state
 
 
-def get_ball_ids_on_table(shot: System, at_start: bool) -> Set[str]:
+def get_ball_ids_on_table(
+    shot: System, at_start: bool, exclude: Optional[Set[str]] = None
+) -> Set[str]:
     history_idx = 0 if at_start else -1
     return set(
         ball.id
         for ball in shot.balls.values()
         if ball.history[history_idx].s in const.on_table
+        and (exclude is None or ball.id not in exclude)
     )
 
 
