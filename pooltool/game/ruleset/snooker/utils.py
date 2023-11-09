@@ -128,22 +128,18 @@ def is_off_ball_hit_first(shot: System, constraints: ShotConstraints) -> bool:
 
 def get_lowest_pottable(shot: System) -> str:
     ball_ids = get_ball_ids_on_table(shot, at_start=False)
-    ans = min(
+    return min(
         [info for info in ball_infos(ball_ids).values() if info.color],
         key=lambda info: info.points,
     ).id
-    print(ans)
-    return ans
 
 
 def get_higher_value_color_balls(shot: System) -> List[str]:
-    ans = [
+    return [
         ball_id
         for ball_id, info in ball_infos_dict.items()
         if info.color and info.points >= ball_info(get_lowest_pottable(shot)).points
     ]
-    print(ans)
-    return ans
 
 
 def get_foul_points(offending_balls: Iterable[str]) -> int:
