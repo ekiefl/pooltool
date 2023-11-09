@@ -2,13 +2,10 @@
 from __future__ import annotations
 
 import random
-from abc import ABC, abstractmethod
-from collections import Counter
 from typing import Callable, Dict, List, Optional, Set, Tuple, Union
 
 import attrs
 import numpy as np
-from numpy.typing import NDArray
 
 from pooltool.game.datatypes import GameType
 from pooltool.objects.ball.datatypes import Ball, BallParams
@@ -315,7 +312,7 @@ def get_eight_ball_rack(*args, **kwargs) -> Balls:
     return _get_rack(blueprint, *args, **kwargs)
 
 
-def get_three_cushion_rack(*args, **kwargs):
+def get_three_cushion_rack(*args, **kwargs) -> Balls:
     """A three cushion starting position (white to break)
 
     Based on https://www.3cushionbilliards.com/rules/106-official-us-billiard-association-rules-of-play
@@ -339,7 +336,7 @@ snooker_color_locs: Dict[str, BallPos] = {
 }
 
 
-def get_snooker_rack(*args, **kwargs):
+def get_snooker_rack(*args, **kwargs) -> Balls:
     colors = list(snooker_color_locs.values())
 
     red_ids = set([f"red_{i:02d}" for i in range(1, 16)])
