@@ -195,18 +195,22 @@ class Help(BaseHUDElement):
         add("Undo shot - [z]")
         add("Replay shot - [r]")
         add("Pause shot - [space]")
-        add("Rewind - [hold left-arrow]")
-        add("Fast forward - [hold right-arrow]")
+        add("Rewind - [hold left-arrow] (must be paused)")
+        add("Fast forward - [hold right-arrow] (must be paused)")
         add("Slow down - [down-arrow]")
         add("Speed up - [up-arrow]")
 
-        add("Other controls", True)
+        add("Situational controls (not always active)", True)
         add(
-            "Cue different ball - [hold q] (select with mouse, click to confirm)",
+            "Call shot - [hold c] (mouse, click to confirm ball, mouse, "
+            "click to confirm pocket)"
         )
         add(
-            "Move ball - [hold g] (click once to select ball, move with mouse, "
-            "then click to confirm move",
+            "Move ball - [hold g] (mouse, click confirm ball, mouse, "
+            "click to confirm move",
+        )
+        add(
+            "Cue different ball - [hold q] (mouse, click to confirm)",
         )
 
         self.display = False
