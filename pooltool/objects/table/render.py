@@ -4,6 +4,7 @@ from panda3d.core import CollisionNode, CollisionPlane, LineSegs, Plane, Point3,
 import pooltool.ani as ani
 from pooltool.ani.globals import Global
 from pooltool.objects.datatypes import Render
+from pooltool.objects.table.collection import TableName
 from pooltool.objects.table.datatypes import Table, TableModelDescr, TableType
 
 
@@ -129,7 +130,7 @@ class TableRender(Render):
             not self._table.model_descr
             or self._table.model_descr == TableModelDescr.null()
             or not ani.settings["graphics"]["table"]
-            or True  # FIXME
+            or self._table.model_descr.name == TableName.SNOOKER_GENERIC  # dim are WIP
         ):
             # draw cushion_segments as edges
             self.cushion_drawer = LineSegs()
