@@ -125,7 +125,7 @@ class CueRender(Render):
 
         # If the stroke is longer than max_time seconds, truncate to max_time
         max_time = 1.0
-        backstroke_time, apex_time, strike_time = self.get_stroke_times()
+        _, _, strike_time = self.get_stroke_times()
         if strike_time > max_time:
             idx = min(
                 range(len(self.stroke_pos)),
@@ -164,7 +164,7 @@ class CueRender(Render):
                 makes contact.
         """
         if not self.stroke_pos:
-            return (0, 0, 0) if as_index else (0, 0, 0)
+            return (0, 0, 0)
 
         # Find the index of the apex (highest point in the backswing)
         apex_index = self.stroke_pos.index(max(self.stroke_pos))
@@ -192,7 +192,7 @@ class CueRender(Render):
             # No backstroke
             return False
 
-        backstroke_time, apex_time, strike_time = self.get_stroke_times()
+        backstroke_time, _, strike_time = self.get_stroke_times()
 
         if (strike_time - backstroke_time) < 0.3:
             # Stroke is too short
@@ -209,7 +209,7 @@ class CueRender(Render):
         """
 
         try:
-            backstroke_time, apex_time, strike_time = self.get_stroke_times()
+            _, apex_time, strike_time = self.get_stroke_times()
         except IndexError:
             raise StrokeError("Unresolved edge case")
 
@@ -237,6 +237,8 @@ class CueRender(Render):
             V0 = self.calc_V0_from_stroke()
         except StrokeError:
             V0 = 0.1
+
+        assert V0 is not None
 
         theta = -cue_stick_focus.getR()
         a = -cue_stick.getY() / self.follow._ball.params.R
