@@ -2,17 +2,22 @@
 from __future__ import annotations
 
 import random
-from typing import Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Protocol, Set, Tuple, Union
 
 import attrs
 import numpy as np
 
 from pooltool.game.datatypes import GameType
 from pooltool.objects.ball.datatypes import Ball, BallParams
+from pooltool.objects.ball.sets import BallSet, get_ball_set
 from pooltool.objects.table.datatypes import Table
 from pooltool.system.datatypes import Balls
 from pooltool.utils import classproperty
 from pooltool.utils.strenum import StrEnum, auto
+
+DEFAULT_STANDARD_BALLSET = get_ball_set("pooltool_pocket")
+DEFAULT_SNOOKER_BALLSET = get_ball_set("generic_snooker")
+DEFAULT_THREECUSH_BALLSET = None
 
 
 class Dir(StrEnum):
@@ -150,6 +155,7 @@ def _get_anchor_translation(pos: Pos) -> Tuple[Tuple[float, float], List[Dir]]:
 def _get_rack(
     blueprint: List[BallPos],
     table: Table,
+    ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
     spacing_factor: float = 1e-3,
     seed: Optional[int] = None,
@@ -226,7 +232,9 @@ def _get_rack(
         ball_ids.remove(ball_id)
 
         # Create ball
-        balls[ball_id] = Ball.create(ball_id, xy=(x, y), **attrs.asdict(ball_params))
+        balls[ball_id] = Ball.create(
+            ball_id, xy=(x, y), ballset=ballset, **attrs.asdict(ball_params)
+        )
 
     return balls
 
@@ -238,7 +246,10 @@ def _wiggle(x: float, y: float, spacer: float) -> Tuple[float, float]:
     return x + rad * np.cos(ang), y + rad * np.sin(ang)
 
 
-def get_nine_ball_rack(*args, **kwargs) -> Balls:
+def get_nine_ball_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Balls:
+    if ballset is None:
+        ballset = DEFAULT_STANDARD_BALLSET
+
     others = {"2", "3", "4", "5", "6", "7", "8"}
 
     row1 = [
@@ -271,7 +282,10 @@ def get_nine_ball_rack(*args, **kwargs) -> Balls:
     return _get_rack(blueprint, *args, **kwargs)
 
 
-def get_eight_ball_rack(*args, **kwargs) -> Balls:
+def get_eight_ball_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Balls:
+    if ballset is None:
+        ballset = DEFAULT_STANDARD_BALLSET
+
     stripes = {"9", "10", "11", "12", "13", "14", "15"}
     solids = {"1", "2", "3", "4", "5", "6", "7"}
 
@@ -312,7 +326,10 @@ def get_eight_ball_rack(*args, **kwargs) -> Balls:
     return _get_rack(blueprint, *args, **kwargs)
 
 
-def get_three_cushion_rack(*args, **kwargs) -> Balls:
+def get_three_cushion_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Balls:
+    if ballset is None:
+        ballset = DEFAULT_THREECUSH_BALLSET
+
     """A three cushion starting position (white to break)
 
     Based on https://www.3cushionbilliards.com/rules/106-official-us-billiard-association-rules-of-play
@@ -336,7 +353,10 @@ snooker_color_locs: Dict[str, BallPos] = {
 }
 
 
-def get_snooker_rack(*args, **kwargs) -> Balls:
+def get_snooker_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Balls:
+    if ballset is None:
+        ballset = DEFAULT_SNOOKER_BALLSET
+
     colors = list(snooker_color_locs.values())
 
     red_ids = set([f"red_{i:02d}" for i in range(1, 16)])
@@ -375,7 +395,14 @@ def get_snooker_rack(*args, **kwargs) -> Balls:
     return _get_rack(blueprint, *args, **kwargs)
 
 
-_game_rack_map: Dict[str, Callable[[Table, Optional[BallParams], float], Balls]] = {
+class GetRackProtocol(Protocol):
+    def __call__(
+        self, *args: Any, ballset: Optional[BallSet] = None, **kwargs: Any
+    ) -> Balls:
+        ...
+
+
+_game_rack_map: Dict[str, GetRackProtocol] = {
     GameType.NINEBALL: get_nine_ball_rack,
     GameType.EIGHTBALL: get_eight_ball_rack,
     GameType.THREECUSHION: get_three_cushion_rack,
@@ -388,6 +415,9 @@ def get_rack(
     game_type: GameType,
     table: Table,
     params: Optional[BallParams],
+    ballset: Optional[BallSet],
     spacing_factor: float,
 ) -> Balls:
-    return _game_rack_map[game_type](table, params, spacing_factor)
+    return _game_rack_map[game_type](
+        table, ball_params=params, ballset=ballset, spacing_factor=spacing_factor
+    )
