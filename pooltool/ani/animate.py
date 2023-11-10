@@ -33,7 +33,6 @@ from pooltool.evolution.continuize import continuize
 from pooltool.game.datatypes import GameType
 from pooltool.game.layouts import get_rack
 from pooltool.game.ruleset import get_ruleset
-from pooltool.objects.ball.datatypes import BallParams
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
 from pooltool.system.datatypes import System, multisystem
