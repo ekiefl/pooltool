@@ -260,6 +260,11 @@ class Ball:
         return self.state.rvw[0]
 
     def set_ballset(self, ballset: BallSet) -> None:
+        """Update the BallSet
+
+        Raises:
+            ValueError if any balls' IDs don't correspond to a model name
+        """
         self.ballset = ballset
         validate(self)
 
