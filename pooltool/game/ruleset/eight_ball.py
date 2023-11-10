@@ -271,8 +271,15 @@ class EightBall(Ruleset):
             else:
                 num_active = num_stripes
                 num_other = num_solids
-            if is_ball_pocketed(shot, "8") and self.shot_info.legal:
+
+            assert (ball_call := self.shot_constraints.ball_call) == "8"
+            assert (pocket_call := self.shot_constraints.pocket_call) is not None
+            if (
+                is_ball_pocketed_in_pocket(shot, ball_call, pocket_call)
+                and self.shot_info.legal
+            ):
                 num_active += 1
+
             return Counter(
                 {self.active_player.name: num_active, self.last_player.name: num_other}
             )
