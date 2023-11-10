@@ -68,8 +68,6 @@ class BallParams:
             Cushion coefficient of friction.
         g:
             Gravitational constant.
-        ballset:
-            What ballset does this ball belong to? (Used for rendering)
     """
 
     m: float = field(default=0.170097)
@@ -96,8 +94,6 @@ class BallParams:
     # https://eloquentmath.blogspot.com/2012/04/introductory-mechanics-maths-of-snooker.html
     u_s: float = field(default=0.5)
     f_c: float = field(default=0.5)
-
-    ballset: Optional[BallSet] = field(default=None)
 
     @cached_property
     def u_sp(self) -> float:
