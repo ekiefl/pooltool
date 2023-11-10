@@ -439,7 +439,13 @@ class Game(Interface):
         game = get_ruleset(game_type)
 
         table = Table.from_game_type(game_type)
-        balls = get_rack(game_type, table, None, 1e-3)
+        balls = get_rack(
+            game_type=game_type,
+            table=table,
+            params=None,
+            ballset=None,
+            spacing_factor=1e-3,
+        )
         cue = Cue(cue_ball_id=game.shot_constraints.cueball(balls))
 
         shot = System(table=table, balls=balls, cue=cue)
