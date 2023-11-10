@@ -38,8 +38,8 @@ TABLE_SPECS: Dict[TableName, TableSpecs] = {
         model_descr=TableModelDescr(name="seven_foot_showood"),
     ),
     TableName.SNOOKER_GENERIC: SnookerTableSpecs(
-        l=3.566,
-        w=1.770,
+        l=3.541,
+        w=1.745,
         cushion_width=2 * 25.4 / 1000,
         cushion_height=0.04,
         corner_pocket_width=0.083,
