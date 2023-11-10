@@ -279,7 +279,7 @@ def get_nine_ball_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Ba
     cue = BallPos([], (0.85, 0.23), {"cue"})
 
     blueprint = row1 + row2 + row3 + row4 + row5 + [cue]
-    return _get_rack(blueprint, *args, **kwargs)
+    return _get_rack(blueprint, *args, ballset=ballset, **kwargs)
 
 
 def get_eight_ball_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Balls:
@@ -323,7 +323,7 @@ def get_eight_ball_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> B
     cue = BallPos([], (0.6, 0.23), {"cue"})
 
     blueprint = row1 + row2 + row3 + row4 + row5 + [cue]
-    return _get_rack(blueprint, *args, **kwargs)
+    return _get_rack(blueprint, *args, ballset=ballset, **kwargs)
 
 
 def get_three_cushion_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Balls:
@@ -339,7 +339,7 @@ def get_three_cushion_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -
     yellow = BallPos([], (0.5, 0.25), {"yellow"})
     red = BallPos([], (0.5, 0.75), {"red"})
 
-    return _get_rack([white, yellow, red], *args, **kwargs)
+    return _get_rack([white, yellow, red], *args, ballset=ballset, **kwargs)
 
 
 snooker_color_locs: Dict[str, BallPos] = {
@@ -392,7 +392,7 @@ def get_snooker_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Ball
     ]
 
     blueprint = colors + row1 + row2 + row3 + row4 + row5
-    return _get_rack(blueprint, *args, **kwargs)
+    return _get_rack(blueprint, *args, ballset=ballset, **kwargs)
 
 
 class GetRackProtocol(Protocol):

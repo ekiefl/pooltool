@@ -221,9 +221,6 @@ class Snooker(Ruleset):
             assert "white" not in potted_ids, "Legal shot with white ball pocketed?"
 
             if self.active_group is BallGroup.REDS:
-                import ipdb
-
-                ipdb.set_trace()
                 for ball_id in potted_ids:
                     assert ball_id in BallGroup.REDS.balls, "Legal shot with non-red?"
                     self.score[self.active_player.name] += ball_info(ball_id).points

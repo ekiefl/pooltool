@@ -246,9 +246,10 @@ class Ball:
     history_cts: BallHistory = field(factory=BallHistory.factory)
 
     @ballset.validator  # type: ignore
-    def _is_ballset_compatible(self, _, value: BallSet):
-        if value is not None and self.id not in value.ids:
-            raise ValueError(f"{self.id} not member of BallSet: {value.ids}")
+    def _is_ballset_compatible(self, _, ballset: BallSet):
+        """Raises ValueError if ballset isn't compatible with Ball ID"""
+        if ballset is not None:
+            ballset.ensure_valid(self.id)
 
     @property
     def xyz(self):
