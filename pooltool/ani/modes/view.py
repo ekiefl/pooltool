@@ -129,7 +129,7 @@ class ViewMode(BaseMode):
             Global.mode_mgr.change_mode(Mode.aim, enter_kwargs=dict(load_prev_cam=True))
         elif self.keymap[Action.exec_shot]:
             Global.mode_mgr.mode_stroked_from = Mode.view
-            multisystem.active.cue.set_object_state_as_render_state(skip_V0=True)
+            visual.cue.set_object_state_as_render_state(skip_V0=True)
             multisystem.active.strike()
             Global.mode_mgr.change_mode(Mode.calculate)
         elif self.keymap[Action.prev_shot]:
