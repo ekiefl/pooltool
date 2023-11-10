@@ -43,20 +43,8 @@ class StrokeMode(BaseMode):
 
     def stroke_task(self, task):
         if self.keymap[Action.stroke]:
-            print(Global.game.shot_constraints)
-            # Respect the shot constraints
-            if (
-                Global.game.shot_constraints.call_shot
-                and not Global.game.shot_constraints.ball_call
-            ):
-                # The shot requires calling a ball, but a ball has not been called
-                # FIXME add GUI message
-                return task.cont
-            if (
-                Global.game.shot_constraints.call_shot
-                and not Global.game.shot_constraints.pocket_call
-            ):
-                # The shot requires calling a pocket, but a pocket has not been called
+            if not Global.game.shot_constraints.can_shoot():
+                # Shot constraints not satisfied
                 # FIXME add GUI message
                 return task.cont
 
