@@ -26,7 +26,7 @@ class Reason(StrEnum):
     CUE_POCKETED = "Cue ball in pocket!"
     NO_BALL_HIT = "No ball contacted!"
     OFF_BALL_HIT_FIRST = "First contact made with a ball that's not on!"
-    OFF_BALL_POCKETED = "First contact made with a ball that's not on!"
+    OFF_BALL_POCKETED = "Pocketed a ball that's not on!"
 
 
 def get_next_player_ball_group(shot: System) -> BallGroup:
