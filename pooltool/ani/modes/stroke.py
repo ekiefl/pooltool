@@ -43,6 +43,7 @@ class StrokeMode(BaseMode):
 
     def stroke_task(self, task):
         if self.keymap[Action.stroke]:
+            print(Global.game.shot_constraints)
             # Respect the shot constraints
             if (
                 Global.game.shot_constraints.call_shot
