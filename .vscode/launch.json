@@ -1,4 +1,7 @@
 {
+    // NOTE: I (@ekiefl) don't use VSCode, but @kerby2000, a contributor, finds these settings
+    // useful for development. I'll leave them here but your mileage may vary.
+    //
     // Use IntelliSense to learn about possible attributes.
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387

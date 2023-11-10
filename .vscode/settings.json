@@ -1,4 +1,6 @@
 {
+    // NOTE: I (@ekiefl) don't use VSCode, I think these settings should help you conform to the
+    // code standards in this repo
     "python.analysis.typeCheckingMode": "basic",
     "python.analysis.extraPaths": [
         "pooltool"
