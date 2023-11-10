@@ -129,19 +129,7 @@ class ViewMode(BaseMode):
             Global.mode_mgr.change_mode(Mode.aim, enter_kwargs=dict(load_prev_cam=True))
         elif self.keymap[Action.exec_shot]:
             self.keymap[Action.exec_shot] = False
-            constraints = Global.game.shot_constraints
-            if not constraints.call_shot:
-                can_shoot = True
-            elif (
-                constraints.call_shot
-                and constraints.ball_call is not None
-                and constraints.pocket_call is not None
-            ):
-                can_shoot = True
-            else:
-                can_shoot = False
-
-            if can_shoot:
+            if Global.game.shot_constraints.can_shoot():
                 Global.mode_mgr.mode_stroked_from = Mode.aim
                 visual.cue.set_object_state_as_render_state(skip_V0=True)
                 multisystem.active.strike()
