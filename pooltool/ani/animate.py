@@ -199,7 +199,7 @@ class Interface(ShowBase):
         self.stdout.info("Mode", Global.mode_mgr.mode)
         self.stdout.info("Last", Global.mode_mgr.last_mode)
         self.stdout.info("Tasks", [task.name for task in Global.task_mgr.getAllTasks()])
-        self.stdout.info("Memory", utils.get_total_memory_usage())
+        self.stdout.info("Memory", get_total_memory_usage())
         self.stdout.info("Actions", [k for k in keymap if keymap[k]])
         self.stdout.info("Keymap", Global.mode_mgr.get_keymap())
         self.stdout.info("Frame", self.frame)
