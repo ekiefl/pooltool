@@ -178,8 +178,10 @@ class Snooker(Ruleset):
 
         if is_alternate_mode(shot, self.shot_info.legal):
             hittable = ball_group.balls
+            call_shot = True if ball_group is BallGroup.COLORS else False
         else:
             hittable = (get_lowest_pottable(shot),)
+            call_shot = False
 
         return ShotConstraints(
             ball_in_hand=(
@@ -190,7 +192,7 @@ class Snooker(Ruleset):
             movable=["white"] if gets_ball_in_hand else [],
             cueable=["white"],
             hittable=hittable,
-            call_shot=True if ball_group is BallGroup.COLORS else False,
+            call_shot=call_shot,
         )
 
     def respot_balls(self, shot: System):
