@@ -151,57 +151,37 @@ class CueRender(Render):
     def get_stroke_times(self, as_index=False):
         """Get key moments in the trajectory of the stroke
 
-        Parameters
-        ==========
-        as_index : bool, False
-            See Returns
+        Args:
+            as_index:
+                See Returns
 
-        Returns
-        =======
-        output : (backstroke, apex, strike)
-            Returns a 3-ple of times (or indices of the lists self.stroke_time and
-            self.stroke_pos if as_index is True) that describe three critical moments in
-            the cue stick. backstroke is start of the backswing, apex is when the cue is
-            at the peak of the backswing, and strike is when the cue makes contact.
+        Returns:
+            (backstroke, apex, strike):
+                Returns a 3-ple of times (or indices of the lists self.stroke_time and
+                self.stroke_pos if as_index is True) that describe three critical
+                moments in the cue stick. backstroke is start of the backswing, apex is
+                when the cue is at the peak of the backswing, and strike is when the cue
+                makes contact.
         """
-        if not len(self.stroke_pos):
-            return 0, 0, 0
+        if not self.stroke_pos:
+            return (0, 0, 0) if as_index else (0, 0, 0)
 
-        apex_pos = 0
-        for i, pos in enumerate(self.stroke_pos[::-1]):
-            if pos < apex_pos:
-                break
-            apex_pos = pos
-
-        apex_index = len(self.stroke_pos) - i
-        while True:
-            if apex_pos == self.stroke_pos[apex_index + 1]:
-                apex_index += 1
-            else:
-                break
+        # Find the index of the apex (highest point in the backswing)
+        apex_index = self.stroke_pos.index(max(self.stroke_pos))
         apex_time = self.stroke_time[apex_index]
 
-        backstroke_pos = apex_pos
-        for j, pos in enumerate(self.stroke_pos[::-1][i:]):
-            if pos > backstroke_pos:
-                break
-            backstroke_pos = pos
-        backstroke_index = len(self.stroke_pos) - (i + j)
-        while True:
-            if backstroke_pos == self.stroke_pos[backstroke_index + 1]:
-                backstroke_index += 1
-            else:
-                break
+        # Find the index of the backstroke start (lowest point before the apex)
+        backstroke_index = self.stroke_pos.index(min(self.stroke_pos[: apex_index + 1]))
         backstroke_time = self.stroke_time[backstroke_index]
 
-        strike_time = self.stroke_time[-1]
-        strike_index = len(self.stroke_time) - 1
+        # The last position in the list is considered the strike
+        strike_index = len(self.stroke_pos) - 1
+        strike_time = self.stroke_time[strike_index]
 
-        return (
-            (backstroke_index, apex_index, strike_index)
-            if as_index
-            else (backstroke_time, apex_time, strike_time)
-        )
+        if as_index:
+            return (backstroke_index, apex_index, strike_index)
+        else:
+            return (backstroke_time, apex_time, strike_time)
 
     def is_shot(self):
         if len(self.stroke_time) < 10:
