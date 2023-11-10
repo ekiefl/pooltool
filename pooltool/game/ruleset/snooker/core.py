@@ -14,13 +14,14 @@ from pooltool.game.ruleset.datatypes import (
 )
 from pooltool.game.ruleset.snooker.balls import BallGroup, ball_info
 from pooltool.game.ruleset.snooker.utils import (
+    GamePhase,
     Reason,
+    game_phase,
+    get_color_balls_to_be_potted,
     get_continued_player_ball_group,
     get_foul_points,
-    get_higher_value_color_balls,
     get_lowest_pottable,
     get_next_player_ball_group,
-    is_alternate_mode,
     is_off_ball_hit_first,
     is_off_ball_pocketed,
     on_final_black,
@@ -138,6 +139,10 @@ def decide_winner(
 
 
 class Snooker(Ruleset):
+    def __init__(self, *args, **kwargs):
+        Ruleset.__init__(self, *args, **kwargs)
+        self.phase: GamePhase = GamePhase.ALTERNATING
+
     @property
     def active_group(self):
         return BallGroup.get(self.shot_constraints.hittable)
@@ -169,6 +174,8 @@ class Snooker(Ruleset):
         )
 
     def next_shot_constraints(self, shot: System) -> ShotConstraints:
+        self.phase = game_phase(shot, self.shot_info.legal)
+
         gets_ball_in_hand = "white" in get_pocketed_ball_ids_during_shot(shot)
 
         if self.shot_info.turn_over:
@@ -176,12 +183,20 @@ class Snooker(Ruleset):
         else:
             ball_group = get_continued_player_ball_group(shot, self.shot_constraints)
 
-        if is_alternate_mode(shot, self.shot_info.legal):
+        if self.phase is GamePhase.ALTERNATING:
             hittable = ball_group.balls
             call_shot = True if ball_group is BallGroup.COLORS else False
+            ball_call = None
         else:
-            hittable = (get_lowest_pottable(shot),)
-            call_shot = False
+            lowest = get_lowest_pottable(shot)
+            hittable = (lowest,)
+            call_shot = True
+            ball_call = lowest
+
+        # FIXME Currently, the GUI requires calling a pocket in addition to a ball.
+        # Ideally, games could be made where a ball is called without a pocket. Until
+        # then, just choose any pocket
+        pocket_call = "lb"
 
         return ShotConstraints(
             ball_in_hand=(
@@ -193,16 +208,24 @@ class Snooker(Ruleset):
             cueable=["white"],
             hittable=hittable,
             call_shot=call_shot,
+            ball_call=ball_call,
+            pocket_call=pocket_call,
         )
 
     def respot_balls(self, shot: System):
         check: List[str] = ["white"]
-        if is_alternate_mode(shot, self.shot_info.legal):
+
+        if self.phase is GamePhase.ALTERNATING:
             check.extend(list(BallGroup.COLORS.balls))
         else:
-            check.extend(get_higher_value_color_balls(shot))
-
-        print(f"checking: {check}")
+            assert (ball_call := self.shot_constraints.ball_call) is not None
+            check.extend(
+                get_color_balls_to_be_potted(
+                    shot,
+                    self.shot_info.legal,
+                    ball_call,
+                )
+            )
 
         on_table = get_ball_ids_on_table(shot, at_start=False)
         for ball_id in check:
@@ -236,6 +259,9 @@ class Snooker(Ruleset):
             offending_balls.add("white")
             if (first_hit := get_id_of_first_ball_hit(shot, cue="white")) is not None:
                 offending_balls.add(first_hit)
+            if self.shot_constraints.call_shot:
+                assert self.shot_constraints.ball_call is not None
+                offending_balls.add(self.shot_constraints.ball_call)
 
             self.score[self.last_player.name] += get_foul_points(offending_balls)
 
