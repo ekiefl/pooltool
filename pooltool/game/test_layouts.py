@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from itertools import combinations
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import attrs
 import numpy as np
