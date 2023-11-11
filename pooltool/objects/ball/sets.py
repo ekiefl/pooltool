@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import cached_property
 from pathlib import Path
 from typing import Dict, List
 
@@ -11,17 +12,9 @@ from pooltool.ani import model_dir
 _expected_conversion_name = "conversion.json"
 
 
-@attrs.define
+@attrs.define(frozen=True, slots=False)
 class BallSet:
     name: str = attrs.field()
-    conversion_dict: Dict[str, str] = attrs.field(init=False, factory=dict)
-
-    def __attrs_post_init__(self):
-        conversion_path = self.path / _expected_conversion_name
-        if conversion_path.exists():
-            self.conversion_dict = serialize.conversion.structure_from(
-                conversion_path, Dict[str, str]
-            )
 
     @name.validator  # type: ignore
     def _check_name(self, _, value):
@@ -34,6 +27,14 @@ class BallSet:
     @property
     def path(self) -> Path:
         return (model_dir / "balls") / self.name
+
+    @cached_property
+    def conversion_dict(self) -> Dict[str, str]:
+        conversion_path = self.path / _expected_conversion_name
+        if conversion_path.exists():
+            return serialize.conversion.structure_from(conversion_path, Dict[str, str])
+
+        return {}
 
     @property
     def ids(self) -> List[str]:
