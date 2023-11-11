@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 """This sets up a 9-ball break forever and ever"""
 
-import numpy as np
-
 import pooltool as pt
 
 
@@ -11,10 +9,8 @@ def main(args):
     while True:
         shot = pt.System(
             cue=pt.Cue(cue_ball_id="cue"),
-            table=(table := pt.Table.billiard_table()),
-            balls=pt.get_nine_ball_rack(
-                table, ordered=True, spacing_factor=args.spacing_factor
-            ),
+            table=(table := pt.Table.default(table_type="pocket")),
+            balls=pt.get_nine_ball_rack(table, spacing_factor=args.spacing_factor),
         )
 
         # Aim at the head ball then strike the cue ball

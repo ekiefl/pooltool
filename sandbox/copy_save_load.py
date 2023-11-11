@@ -14,7 +14,7 @@ def main():
     # Create a system
     shot = pt.System(
         table=(table := pt.Table.default()),
-        balls=pt.get_nine_ball_rack(table, ordered=True),
+        balls=pt.get_nine_ball_rack(table),
         cue=pt.Cue(cue_ball_id="cue"),
     )
     shot.aim_at_ball(ball_id="1")

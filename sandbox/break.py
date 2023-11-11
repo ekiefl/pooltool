@@ -22,9 +22,7 @@ def main(args):
         shot = pt.System(
             cue=pt.Cue(cue_ball_id="cue"),
             table=(table := pt.Table.default()),
-            balls=pt.get_nine_ball_rack(
-                table, ordered=True, spacing_factor=args.spacing_factor
-            ),
+            balls=pt.get_nine_ball_rack(table, spacing_factor=args.spacing_factor),
         )
 
         # Aim at the head ball then strike the cue ball
