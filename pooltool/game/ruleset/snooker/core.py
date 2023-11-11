@@ -130,7 +130,14 @@ def decide_winner(
     if not game_over:
         return None
 
-    player_name = max(points, key=lambda x: points[x])
+    max_points = max(points.values())
+    top_players = [name for name, point in points.items() if point == max_points]
+
+    if len(top_players) > 1:
+        # More than one player with the highest score indicates a tie
+        return None
+
+    player_name = top_players[0]
     for player in players:
         if player.name == player_name:
             return player
