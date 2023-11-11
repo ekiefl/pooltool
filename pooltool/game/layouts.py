@@ -129,6 +129,22 @@ class BallPos(Pos):
     ids: Set[str]
 
 
+JumpSequence = List[Tuple[List[Dir], Set[str]]]
+
+
+def ball_cluster_blueprint(seed: BallPos, jump_sequence: JumpSequence) -> List[BallPos]:
+    """Define a blueprint with a seed ball position and a sequence of quantized jumps"""
+
+    anchor = seed
+    blueprint: List[BallPos] = [seed]
+
+    for jump, ids in jump_sequence:
+        anchor = BallPos(jump, anchor, ids)
+        blueprint.append(anchor)
+
+    return blueprint
+
+
 def _get_ball_ids(positions: List[BallPos]) -> Set[str]:
     ids = set()
     for pos in positions:
@@ -152,7 +168,7 @@ def _get_anchor_translation(pos: Pos) -> Tuple[Tuple[float, float], List[Dir]]:
         parent = parent.relative_to
 
 
-def _get_rack(
+def generate_layout(
     blueprint: List[BallPos],
     table: Table,
     ballset: Optional[BallSet] = None,
@@ -252,34 +268,28 @@ def get_nine_ball_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Ba
 
     others = {"2", "3", "4", "5", "6", "7", "8"}
 
-    row1 = [
-        (anchor := BallPos([], (0.5, 0.77), {"1"})),
-    ]
-
-    row2 = [
-        (anchor := BallPos(Jump.UPLEFT(), anchor, others)),
-        BallPos(Jump.RIGHT(), anchor, others),
-    ]
-
-    row3 = [
-        (anchor := BallPos(Jump.UPLEFT(), anchor, others)),
-        BallPos(Jump.RIGHT(1), anchor, {"9"}),
-        BallPos(Jump.RIGHT(2), anchor, others),
-    ]
-
-    row4 = [
-        (anchor := BallPos(Jump.UPRIGHT(), anchor, others)),
-        BallPos(Jump.RIGHT(), anchor, others),
-    ]
-
-    row5 = [
-        BallPos(Jump.UPRIGHT(), anchor, others),
-    ]
+    blueprint = ball_cluster_blueprint(
+        seed=BallPos([], (0.5, 0.77), {"1"}),
+        jump_sequence=[
+            # row 2
+            (Jump.UPLEFT(), others),
+            (Jump.RIGHT(), others),
+            # row 3
+            (Jump.UPRIGHT(), others),
+            (Jump.LEFT(), {"9"}),
+            (Jump.LEFT(), others),
+            # row 4
+            (Jump.UPRIGHT(), others),
+            (Jump.RIGHT(), others),
+            # row 5
+            (Jump.UPLEFT(), others),
+        ],
+    )
 
     cue = BallPos([], (0.85, 0.23), {"cue"})
+    blueprint += [cue]
 
-    blueprint = row1 + row2 + row3 + row4 + row5 + [cue]
-    return _get_rack(blueprint, *args, ballset=ballset, **kwargs)
+    return generate_layout(blueprint, *args, ballset=ballset, **kwargs)
 
 
 def get_eight_ball_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Balls:
@@ -289,41 +299,34 @@ def get_eight_ball_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> B
     stripes = {"9", "10", "11", "12", "13", "14", "15"}
     solids = {"1", "2", "3", "4", "5", "6", "7"}
 
-    row1 = [
-        (anchor := BallPos([], (0.5, 0.77), solids)),
-    ]
+    blueprint = ball_cluster_blueprint(
+        seed=BallPos([], (0.5, 0.77), solids),
+        jump_sequence=[
+            # row 2
+            (Jump.UPLEFT(), stripes),
+            (Jump.RIGHT(), solids),
+            # row 3
+            (Jump.UPRIGHT(), stripes),
+            (Jump.LEFT(), {"8"}),
+            (Jump.LEFT(), solids),
+            # row 4
+            (Jump.UPLEFT(), stripes),
+            (Jump.RIGHT(), solids),
+            (Jump.RIGHT(), stripes),
+            (Jump.RIGHT(), solids),
+            # row 5
+            (Jump.UPRIGHT(), stripes),
+            (Jump.LEFT(), solids),
+            (Jump.LEFT(), stripes),
+            (Jump.LEFT(), stripes),
+            (Jump.LEFT(), solids),
+        ],
+    )
 
-    row2 = [
-        (anchor := BallPos(Jump.UPLEFT(), anchor, stripes)),
-        BallPos(Jump.RIGHT(), anchor, solids),
-    ]
-
-    row3 = [
-        (anchor := BallPos(Jump.UPLEFT(), anchor, solids)),
-        BallPos(Jump.RIGHT(1), anchor, {"8"}),
-        BallPos(Jump.RIGHT(2), anchor, stripes),
-    ]
-
-    row4 = [
-        (anchor := BallPos(Jump.UPLEFT(), anchor, stripes)),
-        BallPos(Jump.RIGHT(1), anchor, solids),
-        BallPos(Jump.RIGHT(2), anchor, stripes),
-        BallPos(Jump.RIGHT(3), anchor, solids),
-    ]
-
-    row5 = [
-        (anchor := BallPos(Jump.UPLEFT(), anchor, solids)),
-        BallPos(Jump.RIGHT(1), anchor, stripes),
-        BallPos(Jump.RIGHT(2), anchor, stripes),
-        BallPos(Jump.RIGHT(3), anchor, solids),
-        BallPos(Jump.RIGHT(4), anchor, stripes),
-    ]
-
-    # Cue ball
     cue = BallPos([], (0.6, 0.23), {"cue"})
+    blueprint += [cue]
 
-    blueprint = row1 + row2 + row3 + row4 + row5 + [cue]
-    return _get_rack(blueprint, *args, ballset=ballset, **kwargs)
+    return generate_layout(blueprint, *args, ballset=ballset, **kwargs)
 
 
 def get_three_cushion_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Balls:
@@ -339,7 +342,7 @@ def get_three_cushion_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -
     yellow = BallPos([], (0.5, 0.25), {"yellow"})
     red = BallPos([], (0.5, 0.75), {"red"})
 
-    return _get_rack([white, yellow, red], *args, ballset=ballset, **kwargs)
+    return generate_layout([white, yellow, red], *args, ballset=ballset, **kwargs)
 
 
 snooker_color_locs: Dict[str, BallPos] = {
@@ -357,42 +360,36 @@ def get_snooker_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Ball
     if ballset is None:
         ballset = DEFAULT_SNOOKER_BALLSET
 
-    colors = list(snooker_color_locs.values())
-
     red_ids = set([f"red_{i:02d}" for i in range(1, 16)])
 
-    row1 = [
-        (anchor := BallPos(Jump.UP(), (0.5, 0.75), red_ids)),
-    ]
+    blueprint = ball_cluster_blueprint(
+        seed=BallPos([], (0.5, 0.77), red_ids),
+        jump_sequence=[
+            # row 2
+            (Jump.UPLEFT(), red_ids),
+            (Jump.RIGHT(), red_ids),
+            # row 3
+            (Jump.UPRIGHT(), red_ids),
+            (Jump.LEFT(), red_ids),
+            (Jump.LEFT(), red_ids),
+            # row 4
+            (Jump.UPLEFT(), red_ids),
+            (Jump.RIGHT(), red_ids),
+            (Jump.RIGHT(), red_ids),
+            (Jump.RIGHT(), red_ids),
+            # row 5
+            (Jump.UPRIGHT(), red_ids),
+            (Jump.LEFT(), red_ids),
+            (Jump.LEFT(), red_ids),
+            (Jump.LEFT(), red_ids),
+            (Jump.LEFT(), red_ids),
+        ],
+    )
 
-    row2 = [
-        (anchor := BallPos(Jump.UPLEFT(), anchor, red_ids)),
-        BallPos(Jump.RIGHT(), anchor, red_ids),
-    ]
+    colors = list(snooker_color_locs.values())
+    blueprint += colors
 
-    row3 = [
-        (anchor := BallPos(Jump.UPLEFT(), anchor, red_ids)),
-        BallPos(Jump.RIGHT(1), anchor, red_ids),
-        BallPos(Jump.RIGHT(2), anchor, red_ids),
-    ]
-
-    row4 = [
-        (anchor := BallPos(Jump.UPLEFT(), anchor, red_ids)),
-        BallPos(Jump.RIGHT(1), anchor, red_ids),
-        BallPos(Jump.RIGHT(2), anchor, red_ids),
-        BallPos(Jump.RIGHT(3), anchor, red_ids),
-    ]
-
-    row5 = [
-        (anchor := BallPos(Jump.UPLEFT(), anchor, red_ids)),
-        BallPos(Jump.RIGHT(1), anchor, red_ids),
-        BallPos(Jump.RIGHT(2), anchor, red_ids),
-        BallPos(Jump.RIGHT(3), anchor, red_ids),
-        BallPos(Jump.RIGHT(4), anchor, red_ids),
-    ]
-
-    blueprint = colors + row1 + row2 + row3 + row4 + row5
-    return _get_rack(blueprint, *args, ballset=ballset, **kwargs)
+    return generate_layout(blueprint, *args, ballset=ballset, **kwargs)
 
 
 class GetRackProtocol(Protocol):

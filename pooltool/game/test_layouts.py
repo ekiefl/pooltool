@@ -16,10 +16,9 @@ from pooltool.game.layouts import (
     Pos,
     _get_anchor_translation,
     _get_ball_ids,
-    _get_rack,
+    generate_layout,
 )
 from pooltool.objects import BallParams, Table
-from pooltool.objects.ball.datatypes import Ball
 from pooltool.system.datatypes import Balls
 
 
@@ -116,7 +115,7 @@ def get_two_ball_rack(seed: Optional[int] = None):
     R = 0.03
     ball_params = BallParams(R=R)
 
-    return _get_rack(
+    return generate_layout(
         blueprint=[
             (ball_one := BallPos([], relative_to=(0.5, 0.5), ids={"1", "2"})),
             BallPos(Jump.LEFT(), relative_to=ball_one, ids={"1", "2"}),
