@@ -1,18 +1,39 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Optional, Protocol
+from typing import Dict, List
 
 import attrs
 
+from pooltool import serialize
 from pooltool.ani import model_dir
+
+_expected_conversion_name = "conversion.json"
 
 
 @attrs.define
 class BallSet:
-    name: str
-    path: Path
-    conversion: Optional[BallToModelConversion] = attrs.field(default=None)
+    name: str = attrs.field()
+    conversion_dict: Dict[str, str] = attrs.field(init=False, factory=dict)
+
+    def __attrs_post_init__(self):
+        conversion_path = self.path / _expected_conversion_name
+        if conversion_path.exists():
+            self.conversion_dict = serialize.conversion.structure_from(
+                conversion_path, Dict[str, str]
+            )
+
+    @name.validator  # type: ignore
+    def _check_name(self, _, value):
+        path = (model_dir / "balls") / value
+        if not path.exists() and not path.is_dir():
+            raise ValueError(
+                f"Invalid BallSet: '{value}'. {path} must exist as directory"
+            )
+
+    @property
+    def path(self) -> Path:
+        return (model_dir / "balls") / self.name
 
     @property
     def ids(self) -> List[str]:
@@ -27,12 +48,13 @@ class BallSet:
         Raises:
             ValueError if Ball ID doesn't match to BallSet
         """
-        model_id = id if self.conversion is None else self.conversion(id)
+        if id in self.ids:
+            return id
 
-        if model_id not in self.ids:
-            raise ValueError(f"{model_id} doesn't match to BallSet: {self.ids}")
+        if id in self.conversion_dict:
+            return self.conversion_dict[id]
 
-        return model_id
+        raise ValueError(f"Ball ID '{id}' doesn't match to BallSet: {self.ids}")
 
     def ball_path(self, id: str) -> Path:
         model_id = self.ensure_valid(id)
@@ -40,7 +62,7 @@ class BallSet:
 
 
 ball_sets = {
-    ball_dir.stem: BallSet(name=ball_dir.stem, path=ball_dir)
+    ball_dir.stem: BallSet(name=ball_dir.stem)
     for ball_dir in [path for path in (model_dir / "balls").glob("*") if path.is_dir()]
 }
 
@@ -48,22 +70,3 @@ ball_sets = {
 def get_ball_set(name: str) -> BallSet:
     assert name in ball_sets, f"Unknown ball set name: {name}"
     return ball_sets[name]
-
-
-# NOTE: If BallSet model IDs don't match ball IDs, you'll have to write a conversion and
-# plop it in the `conversions` dictionary below
-# --------------------------------------------------------------------------------------
-
-
-class BallToModelConversion(Protocol):
-    def __call__(self, ball_id: str) -> str:
-        ...
-
-
-conversions: Dict[str, BallToModelConversion] = {
-    "generic_snooker": lambda ball_id: "red" if ball_id.startswith("red") else ball_id
-}
-
-for name, conversion in conversions.items():
-    assert name in ball_sets
-    ball_sets[name].conversion = conversion
