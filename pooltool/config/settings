@@ -2,7 +2,7 @@
 room = 1
 floor = 1
 table = 1
-shadows = 1
+shadows = 0
 shader = 1
 lights = 1
 physical_based_rendering = 0
