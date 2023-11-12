@@ -208,8 +208,19 @@ run_pooltool
 
 There are some tutorials for pooltool that can be viewed in [the wiki](https://github.com/ekiefl/pooltool/wiki).
 
-# Contribute
+# Join the discussion
 
-If you want to contribute to the codebase, please join the Discord and introduce yourself in the **#developers** channel.
+If you want to ask questions, get help, or contribute to the codebase, please join the Discord and introduce yourself.
 
 [![Discord](https://img.shields.io/badge/Discord-Join%20Server-7289da?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/jAbQRWR3)
+
+# Contribute/collaborate
+
+pooltool needs and welcomes contributors/collaborators of all skill levels who are excited about this project, but especially those who have skill or passion in:
+
+1) Game development (especially for the Panda3D game engine!)
+2) Creating 3D models (tables, balls, cues, rooms, etc)
+3) Projector/camera systems
+4) Computer vision / machine learning / reinforcement learning
+
+Please reach out in the Discord.
