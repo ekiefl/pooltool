@@ -21,14 +21,17 @@ import pooltool.ani.utils as autils
 import pooltool.constants as c
 from pooltool.ani.globals import Global
 from pooltool.objects.ball.datatypes import Ball, BallHistory, BallOrientation
+from pooltool.objects.ball.sets import get_ball_set
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.datatypes import Render
 from pooltool.utils import panda_path
 
+FALLBACK_ID = "cue"
+FALLBACK_BALLSET = get_ball_set("pooltool_pocket")
+FALLBACK_PATH = FALLBACK_BALLSET.ball_path(FALLBACK_ID)
+
 
 class BallRender(Render):
-    fallback_path = ani.model_dir / "balls" / "set_1" / "1.glb"
-
     def __init__(self, ball: Ball):
         self._ball = ball
         self.quats: list = []
@@ -36,8 +39,10 @@ class BallRender(Render):
 
     @property
     def model_path(self) -> Path:
-        expected_path = ani.model_dir / "balls" / "set_1" / f"{self._ball.id}.glb"
-        return expected_path if expected_path.exists() else self.fallback_path
+        ballset = self._ball.ballset
+        return (
+            ballset.ball_path(self._ball.id) if ballset is not None else FALLBACK_PATH
+        )
 
     def init_sphere(self):
         """Initialize the ball's nodes"""
@@ -51,10 +56,10 @@ class BallRender(Render):
         sphere_node = Global.loader.loadModel(panda_path(self.model_path))
         sphere_node.reparentTo(position)
 
-        if self.model_path == self.fallback_path:
-            tex = sphere_node.find_texture("1")
+        if self._ball.ballset is None:
+            tex = sphere_node.find_texture(FALLBACK_ID)
         else:
-            tex = sphere_node.find_texture(self._ball.id)
+            tex = sphere_node.find_texture(self.model_path.stem)
 
         # https://discourse.panda3d.org/t/visual-artifact-at-poles-of-uv-sphere-gltf-format/27975/8
         tex.set_minfilter(SamplerState.FT_linear)
@@ -125,7 +130,11 @@ class BallRender(Render):
         z_offset = 0.0005
         scales = np.linspace(start, stop, N)
 
-        shadow_path = ani.model_dir / "balls" / "set_1" / "shadow.glb"
+        if (ballset := self._ball.ballset) is not None:
+            shadow_path = ballset.ball_path("shadow")
+        else:
+            shadow_path = FALLBACK_BALLSET.ball_path("shadow")
+
         name = f"shadow_{self._ball.id}"
         shadow_node = Global.render.find("scene").find("table").attachNewNode(name)
         x, y, _ = self._ball.state.rvw[0]

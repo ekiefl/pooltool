@@ -19,6 +19,10 @@ class CueSpecs:
     def default() -> CueSpecs:
         return CueSpecs()
 
+    @staticmethod
+    def snooker() -> CueSpecs:
+        raise NotImplementedError()
+
 
 @define
 class Cue:

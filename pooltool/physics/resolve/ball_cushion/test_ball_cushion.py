@@ -12,7 +12,7 @@ from pooltool.physics.resolve.ball_cushion import (
 @pytest.fixture
 def cushion_yaxis():
     """A cushion with edge along the y-axis"""
-    h = PocketTableSpecs.default().cushion_height
+    h = PocketTableSpecs().cushion_height
 
     return LinearCushionSegment(
         "cushion",

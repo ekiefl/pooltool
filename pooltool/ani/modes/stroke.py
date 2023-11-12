@@ -7,6 +7,8 @@ from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.objects.ball.datatypes import Ball
+from pooltool.objects.table.components import Pocket
 from pooltool.system.datatypes import multisystem
 from pooltool.system.render import visual
 
@@ -41,9 +43,9 @@ class StrokeMode(BaseMode):
 
     def stroke_task(self, task):
         if self.keymap[Action.stroke]:
-            if Global.game.is_call_pocket and Global.game.pocket_call is None:
-                return task.cont
-            if Global.game.is_call_ball and Global.game.ball_call is None:
+            if not Global.game.shot_constraints.can_shoot():
+                # Shot constraints not satisfied
+                # FIXME add GUI message
                 return task.cont
 
             if self.stroke_cue_stick():

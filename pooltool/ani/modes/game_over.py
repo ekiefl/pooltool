@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
-from direct.gui.DirectGui import OnscreenText
-
+import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.globals import Global
 from pooltool.ani.menu import GenericMenu
@@ -35,15 +34,20 @@ class GameOverMode(BaseMode):
         del self.text
 
     def render_game_over_screen(self):
+        if (winner := Global.game.shot_info.winner) is not None:
+            title = f"Game over! {winner.name} wins!"
+        else:
+            title = f"Game over! Tie game!"
+
         self.game_over_menu = GenericMenu(
-            title=f"Game over! {Global.game.winner.name} wins!",
+            title=title,
             frame_color=(0, 0, 0, 0.5),
             title_pos=(0, 0, 0.55),
         )
         self.game_over_menu.show()
 
         self.text = {
-            "stat_names": OnscreenText(
+            "stat_names": autils.CustomOnscreenText(
                 text="Points\n",
                 style=1,
                 fg=(1, 1, 1, 1),
@@ -53,8 +57,9 @@ class GameOverMode(BaseMode):
             ),
         }
         for i, player in enumerate(Global.game.players):
-            self.text[player.name] = OnscreenText(
-                text=f"{player.name}\n{player.points}",
+            points = Global.game.score[player.name]
+            self.text[player.name] = autils.CustomOnscreenText(
+                text=f"{player.name}\n{points}",
                 style=1,
                 fg=(1, 1, 1, 1),
                 shadow=(0, 0, 0, 0.5),

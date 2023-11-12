@@ -2,12 +2,12 @@
 
 import gc
 import sys
-from typing import Generator, Optional, Tuple
+from functools import partial
+from typing import Generator, Optional, Tuple, cast
 
 import gltf  # FIXME at first glance this does nothing?
 import simplepbr
 from attrs import define
-from direct.gui.OnscreenText import OnscreenText
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import (
     ClockObject,
@@ -19,9 +19,8 @@ from panda3d.core import (
 
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
-import pooltool.games as games
+import pooltool.ani.utils as autils
 import pooltool.terminal as terminal
-import pooltool.utils as utils
 from pooltool.ani.camera import cam
 from pooltool.ani.collision import cue_avoid
 from pooltool.ani.environment import environment
@@ -31,11 +30,14 @@ from pooltool.ani.menu import GenericMenu, menus
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
 from pooltool.evolution.continuize import continuize
-from pooltool.objects.ball.datatypes import BallParams
+from pooltool.game.datatypes import GameType
+from pooltool.game.layouts import get_rack
+from pooltool.game.ruleset import get_ruleset
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
 from pooltool.system.datatypes import System, multisystem
 from pooltool.system.render import PlaybackMode, visual
+from pooltool.utils import get_total_memory_usage
 
 
 @define
@@ -189,13 +191,14 @@ class Interface(ShowBase):
             return task.cont
 
         keymap = Global.mode_mgr.get_keymap()
-        self.stdout.warning(
-            "", header=f"Frame {self.frame}", lc="green", nl_before=1, nl_after=0
-        )
+
+        header = partial(self.stdout.warning, "", lc="green", nl_before=1, nl_after=0)
+        header(header=f"Frame {self.frame}")
+
         self.stdout.info("Mode", Global.mode_mgr.mode)
         self.stdout.info("Last", Global.mode_mgr.last_mode)
         self.stdout.info("Tasks", [task.name for task in Global.task_mgr.getAllTasks()])
-        self.stdout.info("Memory", utils.get_total_memory_usage())
+        self.stdout.info("Memory", get_total_memory_usage())
         self.stdout.info("Actions", [k for k in keymap if keymap[k]])
         self.stdout.info("Keymap", Global.mode_mgr.get_keymap())
         self.stdout.info("Frame", self.frame)
@@ -355,7 +358,7 @@ class ShotViewer(Interface):
         tasks.register_event("stop", self.stop)
 
     def create_title(self, title):
-        self.title_node = OnscreenText(
+        self.title_node = autils.CustomOnscreenText(
             text=title,
             pos=(-1.55, -0.93),
             scale=ani.menu_text_scale * 0.7,
@@ -371,7 +374,7 @@ class ShotViewer(Interface):
             ani.logo_paths["default"], pos=(0, 0, 0), scale=(0.5, 1, 0.44)
         )
 
-        OnscreenText(
+        autils.CustomOnscreenText(
             text="GUI standing by...",
             style=1,
             fg=(1, 1, 1, 1),
@@ -427,21 +430,28 @@ class Game(Interface):
     def create_system(self):
         """Create the multisystem and game objects
 
-        FIXME This is where menu options should plug into, rather than using these
-        hardcoded defaults like `table = Table.pocket_table()`
+        FIXME This is where menu options for game type and further specifications should
+        plug into.
         """
-        game = games.game_classes[ani.options_sandbox]()
-        game.init()
+        # Change this line to change the game played.
+        # Pick from {NINEBALL, EIGHTBALL, THREECUSHION, SNOOKER, SANDBOX}
+        game_type = GameType.NINEBALL
 
-        table = Table.pocket_table()
-        balls = game.rack(table, ordered=True, params=BallParams()).get_balls_dict()
-        cue = Cue(cue_ball_id=game.get_initial_cueing_ball(balls).id)
+        game = get_ruleset(game_type)
+
+        table = Table.from_game_type(game_type)
+        balls = get_rack(
+            game_type=game_type,
+            table=table,
+            params=None,
+            ballset=None,
+            spacing_factor=1e-3,
+        )
+        cue = Cue(cue_ball_id=game.shot_constraints.cueball(balls))
         shot = System(table=table, balls=balls, cue=cue)
 
         multisystem.reset()
         multisystem.append(shot)
-
-        game.start(shot)
         Global.game = game
 
     def start(self):

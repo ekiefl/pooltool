@@ -4,6 +4,7 @@ from panda3d.core import CollisionNode, CollisionPlane, LineSegs, Plane, Point3,
 import pooltool.ani as ani
 from pooltool.ani.globals import Global
 from pooltool.objects.datatypes import Render
+from pooltool.objects.table.collection import TableName
 from pooltool.objects.table.datatypes import Table, TableModelDescr, TableType
 
 
@@ -20,11 +21,13 @@ class TableRender(Render):
             or self._table.model_descr == TableModelDescr.null()
             or not ani.settings["graphics"]["table"]
         ):
+            # Rectangular playing surface (not a real table)
             model = Global.loader.loadModel(TableModelDescr.null().path)
             node = Global.render.find("scene").attachNewNode("table")
             model.reparentTo(node)
             model.setScale(self._table.w, self._table.l, 1)
         else:
+            # Real table
             node = Global.loader.loadModel(self._table.model_descr.path)
             node.reparentTo(Global.render.find("scene"))
             node.setName("table")
@@ -36,7 +39,11 @@ class TableRender(Render):
         if not ani.settings["gameplay"]["cue_collision"]:
             return
 
-        if self._table.table_type not in (TableType.BILLIARD, TableType.POCKET):
+        if self._table.table_type not in (
+            TableType.BILLIARD,
+            TableType.POCKET,
+            TableType.SNOOKER,
+        ):
             raise NotImplementedError()
 
         # Make 4 planes
@@ -123,6 +130,7 @@ class TableRender(Render):
             not self._table.model_descr
             or self._table.model_descr == TableModelDescr.null()
             or not ani.settings["graphics"]["table"]
+            or self._table.model_descr.name == TableName.SNOOKER_GENERIC  # dim are WIP
         ):
             # draw cushion_segments as edges
             self.cushion_drawer = LineSegs()

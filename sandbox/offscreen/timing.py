@@ -62,8 +62,8 @@ if args.seed:
 
 system = pt.System(
     cue=pt.Cue(cue_ball_id="cue"),
-    table=(table := pt.Table.pocket_table()),
-    balls=pt.get_nine_ball_rack(table, ordered=True, spacing_factor=1e-3),
+    table=(table := pt.Table.default()),
+    balls=pt.get_nine_ball_rack(table, spacing_factor=1e-3),
 )
 
 # Aim at the head ball then strike the cue ball

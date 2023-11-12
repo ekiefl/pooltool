@@ -7,6 +7,8 @@ sandbox/offscreen/timing/*
 sandbox/offscreen/timing_results/*
 cachegrind*
 
+.idea/
+
 *.blend1
 
 .DS_Store
@@ -150,3 +152,5 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+install-log.txt
+errors.txt

@@ -46,7 +46,6 @@ class MenuMode(BaseMode):
     def menu_task(self, task):
         if self.keymap[Action.exit]:
             sys.exit()
-            return task.done
 
         if self.keymap[Action.new_game]:
             Global.base.messenger.send("enter-game")

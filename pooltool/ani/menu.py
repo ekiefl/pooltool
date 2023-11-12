@@ -33,6 +33,7 @@ from panda3d.core import (
 import pooltool
 import pooltool.ani as ani
 import pooltool.ani.utils as autils
+from pooltool.ani.fonts import load_font
 from pooltool.ani.globals import Global
 from pooltool.utils import panda_path
 
@@ -50,8 +51,8 @@ MOVE = 0.02
 INFO_SCALE = 0.025
 INFO_TEXT_SCALE = 0.05
 MENU_ASSETS = ani.model_dir / "menu"
-TITLE_FONT = MENU_ASSETS / "fonts" / "labtop-secundo" / "LABTSECW.ttf"
-BUTTON_FONT = MENU_ASSETS / "fonts" / "labtop-secundo" / "LABTSECW.ttf"
+TITLE_FONT = "LABTSECW"
+BUTTON_FONT = "LABTSECW"
 
 
 class XMLMenu:
@@ -86,8 +87,8 @@ class Menu:
         self.name = name
         self.menu_xml = self.get_xml()
 
-        self.title_font = Global.loader.loadFont(panda_path(TITLE_FONT))
-        self.button_font = Global.loader.loadFont(panda_path(BUTTON_FONT))
+        self.title_font = load_font(TITLE_FONT)
+        self.button_font = load_font(BUTTON_FONT)
 
         # This is necessary, but unexplainable
         if self.title_font.get_num_pages() == 0:

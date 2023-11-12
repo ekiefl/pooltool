@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+from typing import Optional
+
 import numpy as np
 from direct.interval.IntervalGlobal import LerpFunc, Parallel
 from panda3d.core import TransparencyAttrib
@@ -13,6 +15,8 @@ from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.objects.ball.render import BallRender
+from pooltool.objects.table.components import Pocket
 from pooltool.system.datatypes import multisystem
 from pooltool.system.render import visual
 from pooltool.utils import panda_path
@@ -29,7 +33,7 @@ class CallShotMode(BaseMode):
     def __init__(self):
         super().__init__()
 
-        self.head_raise = 14
+        self.head_raise = 0
 
         self.trans_ball = None
         self.ball_highlight = None
@@ -70,6 +74,11 @@ class CallShotMode(BaseMode):
             Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
             return task.done
 
+        if not Global.game.shot_constraints.call_shot:
+            # This shot doesn't require calling shot
+            # FIXME add GUI message
+            return task.cont
+
         cam.move_fixation_via_mouse()
 
         if self.picking == "ball":
@@ -81,13 +90,9 @@ class CallShotMode(BaseMode):
                 self.add_ball_highlight()
 
             if self.keymap["next"]:
+                assert self.closest_ball is not None
                 self.keymap["next"] = False
-                Global.game.ball_call = self.closest_ball
-                if self.closest_ball is not None:
-                    Global.game.log.add_msg(
-                        f"Calling the {self.closest_ball._ball.id} ball",
-                        sentiment="neutral",
-                    )
+                Global.game.shot_constraints.ball_call = self.closest_ball._ball.id
                 self.picking = "pocket"
                 self.trans_ball.show()
 
@@ -98,13 +103,14 @@ class CallShotMode(BaseMode):
                 self.move_ball_highlight()
 
             if self.keymap["next"]:
+                assert self.closest_pocket is not None
                 self.keymap["next"] = False
-                Global.game.pocket_call = self.closest_pocket
-                if self.closest_pocket is not None:
-                    Global.game.log.add_msg(
-                        f"Calling the {self.closest_pocket.id} pocket",
-                        sentiment="neutral",
-                    )
+                player = Global.game.active_player.name
+                ball_id = self.closest_ball._ball.id
+                pock_id = self.closest_pocket.id
+                msg = f"{player} called the {ball_id} in the '{pock_id}' pocket"
+                Global.game.log.add_msg(msg, sentiment="neutral")
+                Global.game.shot_constraints.pocket_call = self.closest_pocket.id
                 Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
                 return task.done
 
@@ -145,7 +151,7 @@ class CallShotMode(BaseMode):
             )
             self.ball_highlight_sequence.start()
 
-    def find_closest_pocket(self):
+    def find_closest_pocket(self) -> Optional[Pocket]:
         fixation_pos = cam.fixation.getPos()
         d_min = np.inf
         closest = None
@@ -209,12 +215,14 @@ class CallShotMode(BaseMode):
             self.trans_ball.removeNode()
         self.trans_ball = None
 
-    def find_closest_ball(self):
+    def find_closest_ball(self) -> Optional[BallRender]:
         fixation_pos = cam.fixation.getPos()
         d_min = np.inf
+
         closest = None
+
         for ball_id, ball in visual.balls.items():
-            if ball_id not in Global.game.active_player.target_balls:
+            if ball_id not in Global.game.shot_constraints.hittable:
                 continue
             if ball._ball.state.s == c.pocketed:
                 continue

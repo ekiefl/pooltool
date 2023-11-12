@@ -5,10 +5,11 @@ from pooltool.objects.table.components import (
     LinearCushionSegment,
     Pocket,
 )
-from pooltool.objects.table.datatypes import (
+from pooltool.objects.table.datatypes import Table
+from pooltool.objects.table.specs import (
     BilliardTableSpecs,
     PocketTableSpecs,
-    Table,
+    SnookerTableSpecs,
     TableModelDescr,
     TableType,
 )
@@ -24,4 +25,5 @@ __all__ = [
     "TableType",
     "PocketTableSpecs",
     "BilliardTableSpecs",
+    "SnookerTableSpecs",
 ]

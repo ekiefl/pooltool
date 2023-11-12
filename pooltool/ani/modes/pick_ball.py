@@ -43,6 +43,8 @@ class PickBallMode(BaseMode):
         tasks.remove("pick_ball_task")
 
     def pick_ball_task(self, task):
+        raise NotImplementedError("Woops, this is in a broken state, don't press that")
+
         if not self.keymap[Action.pick_ball]:
             Global.mode_mgr.change_mode(Mode.aim)
             return task.done

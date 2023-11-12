@@ -1,4 +1,3 @@
-import attrs
 import numpy as np
 import pytest
 from attrs.exceptions import FrozenInstanceError
@@ -12,6 +11,7 @@ from pooltool.objects.ball.datatypes import (
     BallState,
     _null_rvw,
 )
+from pooltool.objects.ball.sets import BallSet, get_ball_set
 
 
 def test__null_rvw():
@@ -27,7 +27,7 @@ def test_ball_orientation():
 
     # Frozen
     with pytest.raises(FrozenInstanceError):
-        orientation.pos = [1, 1, 1, 1]
+        orientation.pos = (1.0, 1.0, 1.0, 1.0)  # type: ignore
 
 
 # ------ BallState
@@ -97,7 +97,8 @@ def test_ball_history_vectorize():
     for _ in range(10):
         history.add(state)
 
-    rvws, motion_states, t = history.vectorize()
+    assert (vectorize := history.vectorize()) is not None
+    rvws, motion_states, t = vectorize
 
     assert np.array_equal(rvws, np.array([state.rvw] * 10))
     assert np.array_equal(motion_states, np.array([0] * 10))
@@ -168,7 +169,7 @@ def test_ball_params():
 
     # Params are frozen
     with pytest.raises(FrozenInstanceError):
-        params.u_r = 4
+        params.u_r = 4  # type: ignore
 
     # Partial specification OK
     other = BallParams(m=0.24)
@@ -179,6 +180,32 @@ def test_ball_params():
 
 
 # ------ Ball
+
+
+def test_ballset():
+    # Valid ballset
+    ballset1 = get_ball_set("pooltool_pocket")
+    assert "cue" in ballset1.ids
+
+    ball = Ball.create("cue", m=24, g=10.8, xy=[4, 2])
+    assert ball.ballset is None
+    ball.set_ballset(ballset1)
+    assert ball.ballset == ballset1
+
+    ball = Ball.create("cue", ballset=ballset1, m=24, g=10.8, xy=[4, 2])
+    assert ball.ballset == ballset1
+
+    # Invalid ballset
+    ballset2 = get_ball_set("generic_snooker")
+    assert "cue" not in ballset2.ids
+
+    ball = Ball.create("cue", m=24, g=10.8, xy=[4, 2])
+    assert ball.ballset is None
+    with pytest.raises(ValueError):
+        ball.set_ballset(ballset2)
+
+    with pytest.raises(ValueError):
+        Ball.create("cue", ballset=ballset2, m=24, g=10.8, xy=[4, 2])
 
 
 def test_ball_copy():
@@ -192,11 +219,11 @@ def test_ball_copy():
 
     # Can't change `params` attributes period
     with pytest.raises(FrozenInstanceError):
-        ball.params.m = 42
+        ball.params.m = 42  # type: ignore
 
     # Nor `initial_orientation` attributes
     with pytest.raises(FrozenInstanceError):
-        ball.initial_orientation.pos = [1, 1, 1, 1]
+        ball.initial_orientation.pos = (1.0, 1.0, 1.0, 1.0)  # type: ignore
 
     # Assigning new params does not modify copy
     assert ball.params == copy.params

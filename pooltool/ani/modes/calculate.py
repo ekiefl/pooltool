@@ -83,8 +83,6 @@ class CalculateMode(BaseMode):
             inplace=True,
         )
 
-        Global.game.process_shot(multisystem.active)
-
         tasks.remove("run_simulation")
 
         return task.done

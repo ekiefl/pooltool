@@ -13,6 +13,7 @@ from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.game.ruleset.datatypes import BallInHandOptions
 from pooltool.system.render import visual
 from pooltool.utils import panda_path
 
@@ -45,16 +46,18 @@ class BallInHandMode(BaseMode):
         self.register_keymap_event("g-up", Action.ball_in_hand, False)
         self.register_keymap_event("mouse1-up", "next", True)
 
-        num_options = len(Global.game.active_player.ball_in_hand)
-        if num_options == 0:
-            # FIXME add message
+        if Global.game.shot_constraints.movable is None:
             self.picking = "ball"
-        elif num_options == 1:
-            self.grabbed_ball = visual.balls[Global.game.active_player.ball_in_hand[0]]
+        elif len(Global.game.shot_constraints.movable) == 0:
+            # FIXME: Add message to indicate that no balls are movable
+            pass
+        elif len(Global.game.shot_constraints.movable) == 1:
+            self.grabbed_ball = visual.balls[Global.game.shot_constraints.movable[0]]
             self.grab_ball_node = self.grabbed_ball.get_node("pos")
             self.grab_ball_shadow_node = self.grabbed_ball.get_node("shadow")
             self.picking = "placement"
         else:
+            # If there are specific movable balls, set picking to "ball" to allow selection
             self.picking = "ball"
 
         tasks.add(self.ball_in_hand_task, "ball_in_hand_task")
@@ -70,7 +73,8 @@ class BallInHandMode(BaseMode):
             self.remove_grab_selection_highlight()
 
         if self.picking == "placement" and not success:
-            self.grabbed_ball.set_render_state_as_object_state()
+            if self.grabbed_ball is not None:
+                self.grabbed_ball.set_render_state_as_object_state()
 
         self.grab_selection_highlight_sequence.pause()
 
@@ -81,6 +85,9 @@ class BallInHandMode(BaseMode):
                 enter_kwargs=dict(load_prev_cam=False),
             )
             return task.done
+
+        if Global.game.shot_constraints.ball_in_hand == BallInHandOptions.NONE:
+            return task.cont
 
         cam.move_fixation_via_mouse()
 
@@ -197,11 +204,18 @@ class BallInHandMode(BaseMode):
         cam_pos = cam.fixation.getPos()
         d_min = np.inf
         closest = None
+        movable = Global.game.shot_constraints.movable
+
         for ball_id, ball in visual.balls.items():
-            if ball_id not in Global.game.active_player.ball_in_hand:
-                continue
+            # Skip pocketed balls
             if ball._ball.state.s == c.pocketed:
                 continue
+
+            # If there is a list of movable balls, skip balls not in that list
+            if movable is not None and ball_id not in movable:
+                continue
+
+            # Calculate distance and update closest ball if necessary
             d = math.norm3d(ball._ball.state.rvw[0] - cam_pos)
             if d < d_min:
                 d_min, closest = d, ball

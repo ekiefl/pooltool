@@ -27,6 +27,7 @@ state_dict = {
     4: "pocketed",
 }
 
+on_table = {stationary, spinning, sliding, rolling}
 nontranslating = {stationary, spinning, pocketed}
 energetic = {spinning, sliding, rolling}
 

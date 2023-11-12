@@ -5,13 +5,7 @@ from collections import deque
 from typing import List
 
 from direct.gui.OnscreenImage import OnscreenImage
-from direct.gui.OnscreenText import OnscreenText
-from direct.interval.IntervalGlobal import (
-    LerpFunctionInterval,
-    Parallel,
-    Sequence,
-    Wait,
-)
+from direct.interval.LerpInterval import LerpFunc
 from panda3d.core import CardMaker, NodePath, TextNode, TransparencyAttrib
 
 import pooltool.ani as ani
@@ -99,9 +93,6 @@ class HUD:
         return task.cont
 
     def update_player_stats(self):
-        if not Global.game.update_player_stats:
-            return
-
         self.elements["player_stats"].update(Global.game)
         Global.game.update_player_stats = False
 
@@ -109,21 +100,20 @@ class HUD:
         if not Global.game.log.update:
             return
 
-        for msg in reversed(Global.game.log.msgs):
+        for msg in Global.game.log.msgs:
+            if msg["broadcast"]:
+                continue
             if not msg["quiet"]:
-                if not msg["broadcast"]:
-                    timestamp, msg_txt, sentiment = (
-                        msg["elapsed"],
-                        msg["msg"],
-                        msg["sentiment"],
-                    )
-                    self.elements["log_win"].broadcast_msg(
-                        f"({timestamp}) {msg_txt}",
-                        color=self.elements["log_win"].colors[sentiment],
-                    )
-                    msg["broadcast"] = True
-                else:
-                    break
+                timestamp, msg_txt, sentiment = (
+                    msg["elapsed"],
+                    msg["msg"],
+                    msg["sentiment"],
+                )
+                self.elements["log_win"].broadcast_msg(
+                    f"({timestamp}) {msg_txt}",
+                    color=self.elements["log_win"].colors[sentiment],
+                )
+                msg["broadcast"] = True
 
         Global.game.log.update = False
 
@@ -158,8 +148,9 @@ class Help(BaseHUDElement):
     def init(self):
         self.destroy()
 
-        self.help_hint = OnscreenText(
+        self.help_hint = autils.CustomOnscreenText(
             text="Press 'h' to toggle help",
+            font_name="LABTSECS",
             pos=(-1.55, 0.93),
             scale=ani.menu_text_scale * 0.9,
             fg=(1, 1, 1, 1),
@@ -171,7 +162,7 @@ class Help(BaseHUDElement):
 
         def add(msg, title=False):
             pos = 0.06 * self.row_num
-            text = OnscreenText(
+            text = autils.CustomOnscreenText(
                 text=msg,
                 style=1,
                 fg=(1, 1, 1, 1),
@@ -204,18 +195,22 @@ class Help(BaseHUDElement):
         add("Undo shot - [z]")
         add("Replay shot - [r]")
         add("Pause shot - [space]")
-        add("Rewind - [hold left-arrow]")
-        add("Fast forward - [hold right-arrow]")
+        add("Rewind - [hold left-arrow] (must be paused)")
+        add("Fast forward - [hold right-arrow] (must be paused)")
         add("Slow down - [down-arrow]")
         add("Speed up - [up-arrow]")
 
-        add("Other controls", True)
+        add("Situational controls (not always active)", True)
         add(
-            "Cue different ball - [hold q] (select with mouse, click to confirm)",
+            "Call shot - [hold c] (mouse, click to confirm ball, mouse, "
+            "click to confirm pocket)"
         )
         add(
-            "Move ball - [hold g] (click once to select ball, move with mouse, "
-            "then click to confirm move",
+            "Move ball - [hold g] (mouse, click confirm ball, mouse, "
+            "click to confirm move",
+        )
+        add(
+            "Cue different ball - [hold q] (mouse, click to confirm)",
         )
 
         self.display = False
@@ -252,7 +247,7 @@ class PlayerStats(BaseHUDElement):
         self.top_spot = -0.18
         self.spacer = 0.05
         self.scale1 = 0.06
-        self.scale2 = 0.04
+        self.scale2 = 0.05
         self.on_screen = []
 
         self.colors = {
@@ -264,14 +259,14 @@ class PlayerStats(BaseHUDElement):
         self.destroy()
         self.on_screen = []
 
-    def init_text_object(self, i, msg="", color=None):
-        if color is None:
-            color = self.colors["inactive"]
+    def init_text_object(self, i, msg="", color=None, is_active=False):
+        scale = self.scale1 if is_active else self.scale2
+        vertical_position = self.top_spot - self.spacer * i
 
-        return OnscreenText(
+        return autils.CustomOnscreenText(
             text=msg,
-            pos=(1.55, self.top_spot + self.spacer * i),
-            scale=self.scale1 if i == 0 else self.scale2,
+            pos=(1.55, vertical_position),
+            scale=scale,
             fg=color,
             align=TextNode.ARight,
             mayChange=True,
@@ -297,11 +292,15 @@ class PlayerStats(BaseHUDElement):
 
     def update(self, game):
         self.init()
+        players = game.players
 
-        for i, player in enumerate(game.player_order()):
-            msg = f"{player.name}: {player.points}"
-            color = self.colors["active"] if i == 0 else self.colors["inactive"]
-            self.on_screen.append(self.init_text_object(i, msg, color=color))
+        for i, player in enumerate(players):
+            msg = f"{player.name}: {game.score[player.name]}"
+            is_active = i == game.active_idx
+            color = self.colors["active"] if is_active else self.colors["inactive"]
+            self.on_screen.append(
+                self.init_text_object(i, msg, color=color, is_active=is_active)
+            )
 
 
 class Logo(BaseHUDElement):
@@ -354,9 +353,9 @@ class English(BaseHUDElement):
         )
         self.crosshairs.setTransparency(TransparencyAttrib.MAlpha)
 
-        self.text = OnscreenText(
-            text="(0.00, 0.00)",
-            pos=(0, -1.15),
+        self.text = autils.CustomOnscreenText(
+            text="(0.000, 0.000)",
+            pos=(0, -1.25),
             scale=self.text_scale,
             fg=self.text_color,
             align=TextNode.ACenter,
@@ -366,7 +365,7 @@ class English(BaseHUDElement):
 
     def set(self, a, b):
         self.crosshairs.setPos(-a, 0, b)
-        self.text.setText(f"({a:.2f},{b:.2f})")
+        self.text.setText(f"({a:.3f},{b:.3f})")
 
     def init(self):
         self.show()
@@ -414,7 +413,7 @@ class Power(NodePath, BaseHUDElement):
         self.setScale(0.3)
 
         start_value = 2
-        self.text = OnscreenText(
+        self.text = autils.CustomOnscreenText(
             text=f"{start_value:.2f} m/s",
             pos=(0, 0),
             scale=self.text_scale,
@@ -487,8 +486,8 @@ class Jack(BaseHUDElement):
 
         self.cue_cartoon.wrtReparentTo(self.rotational_point)
 
-        self.text = OnscreenText(
-            text="0 deg",
+        self.text = autils.CustomOnscreenText(
+            text="0.00 deg",
             pos=(-1, -1.4),
             scale=self.text_scale,
             fg=self.text_color,
@@ -498,7 +497,7 @@ class Jack(BaseHUDElement):
         )
 
     def set(self, theta):
-        self.text.setText(f"{theta:.1f} deg")
+        self.text.setText(f"{theta:.2f} deg")
         self.rotational_point.setR(theta)
 
     def init(self):
@@ -521,20 +520,20 @@ class LogWindow(BaseHUDElement):
     def __init__(self):
         self.top_spot = -0.95
         self.spacer = 0.05
-        self.scale1 = 0.05
+        self.scale1 = 0.04  # latest message
         self.scale2 = 0.04
         self.on_screen = deque([])
 
         self.colors = {
-            "bad": (1, 0.5, 0.5, 1),
-            "neutral": (1, 1, 0.5, 1),
-            "good": (0.5, 1, 0.5, 1),
+            "bad": (0.8, 0.2, 0.2, 1),
+            "neutral": (0.4, 0.7, 0.9, 1),
+            "good": (0.2, 0.8, 0.2, 1),
         }
 
     def init(self):
         self.destroy()
         self.on_screen = deque([])
-        self.on_screen_max = 5
+        self.on_screen_max = 10
         for i in range(self.on_screen_max):
             self.on_screen.append(self.init_text_object(i))
 
@@ -542,7 +541,7 @@ class LogWindow(BaseHUDElement):
         if color is None:
             color = self.colors["neutral"]
 
-        return OnscreenText(
+        return autils.CustomOnscreenText(
             text=msg,
             pos=(-1.55, self.top_spot + self.spacer * i),
             scale=self.scale1,
@@ -553,13 +552,10 @@ class LogWindow(BaseHUDElement):
 
     def destroy(self):
         """Delete the on screen text nodes"""
-        while True:
-            try:
-                on_screen_text = self.on_screen.pop()
-                on_screen_text.hide()
-                del on_screen_text
-            except IndexError:
-                break
+        while self.on_screen:
+            on_screen_text = self.on_screen.pop()
+            on_screen_text.hide()
+            del on_screen_text
 
     def show(self):
         for on_screen_text in self.on_screen:
@@ -570,62 +566,33 @@ class LogWindow(BaseHUDElement):
             on_screen_text.hide()
 
     def broadcast_msg(self, msg, color=None):
-        self.on_screen.appendleft(self.init_text_object(-1, msg=msg, color=color))
+        if len(self.on_screen) >= self.on_screen_max:
+            # Remove the oldest message from the screen
+            off_screen = self.on_screen.pop()
+            off_screen.hide()
+            del off_screen
 
-        off_screen = self.on_screen.pop()
-        off_screen.hide()
-        del off_screen
+        # Add the new message to the screen and set its alpha scale to 0 to make it invisible
+        new_message = self.init_text_object(0, msg=msg, color=color)
+        new_message.setAlphaScale(0)
+        self.on_screen.appendleft(new_message)
 
-        animation = Parallel()
+        # Update positions of existing messages without animating
         for i, on_screen_text in enumerate(self.on_screen):
-            start, stop = (
-                self.top_spot + self.spacer * (i - 1),
-                self.top_spot + self.spacer * i,
-            )
-            sequence = Sequence(
-                Wait(0.2),
-                LerpFunctionInterval(
-                    on_screen_text.setY, toData=stop, fromData=start, duration=0.5
-                ),
-            )
+            on_screen_text.setPos(-1.55, self.top_spot + self.spacer * i)
             if i == 0:
-                sequence = Parallel(
-                    LerpFunctionInterval(
-                        on_screen_text.setScale,
-                        toData=self.scale1,
-                        fromData=self.scale2,
-                        duration=0.5,
-                    ),
-                    sequence,
-                    LerpFunctionInterval(
-                        on_screen_text.setAlphaScale, toData=1, fromData=0, duration=0.5
-                    ),
-                )
-            elif i == 1:
-                sequence = Parallel(
-                    sequence,
-                    LerpFunctionInterval(
-                        on_screen_text.setScale,
-                        toData=self.scale2,
-                        fromData=self.scale1,
-                        duration=0.5,
-                    ),
-                    LerpFunctionInterval(
-                        on_screen_text.setAlphaScale,
-                        toData=1,
-                        fromData=0.7,
-                        duration=0.5,
-                    ),
-                )
-            elif i == self.on_screen_max - 1:
-                sequence = Parallel(
-                    sequence,
-                    LerpFunctionInterval(
-                        on_screen_text.setAlphaScale, toData=0, fromData=1, duration=0.5
-                    ),
-                )
-            animation.append(sequence)
-        animation.start()
+                on_screen_text.setScale(self.scale1)
+            else:
+                on_screen_text.setScale(self.scale2)
+
+        # Animate the alpha scale of the new message to fade in
+        fade_in = LerpFunc(
+            new_message.setAlphaScale,
+            fromData=0,  # Start the alpha at 0 (completely transparent)
+            toData=1,  # End with an alpha of 1 (completely opaque)
+            duration=0.6,  # Duration of the fade-in animation
+        )
+        fade_in.start()
 
 
 hud = HUD()

@@ -30,11 +30,13 @@ from pooltool.events import (
     stick_ball_collision,
 )
 from pooltool.evolution import continuize, simulate
-from pooltool.layouts import (
+from pooltool.game.layouts import (
     get_eight_ball_rack,
     get_nine_ball_rack,
+    get_snooker_rack,
     get_three_cushion_rack,
 )
+from pooltool.game.ruleset import EightBall, NineBall, Snooker, ThreeCushion
 from pooltool.objects import (
     Ball,
     BallHistory,
@@ -50,6 +52,7 @@ from pooltool.objects import (
     LinearCushionSegment,
     Pocket,
     PocketTableSpecs,
+    SnookerTableSpecs,
     Table,
     TableModelDescr,
     TableType,
@@ -65,6 +68,7 @@ __all__ = [
     "get_eight_ball_rack",
     "get_nine_ball_rack",
     "get_three_cushion_rack",
+    "get_snooker_rack",
     "System",
     "MultiSystem",
     "PhysicsEngine",
@@ -110,9 +114,15 @@ __all__ = [
     "TableType",
     "PocketTableSpecs",
     "BilliardTableSpecs",
+    "SnookerTableSpecs",
     "Game",
     "save_images",
     "image_stack",
     "ShotViewer",
     "simulate",
+    "continuize",
+    "ThreeCushion",
+    "EightBall",
+    "NineBall",
+    "Snooker",
 ]
