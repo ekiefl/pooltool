@@ -2,7 +2,6 @@ from math import sqrt
 
 import numpy as np
 from numba import jit
-from numpy.typing import NDArray
 
 import pooltool.constants as const
 

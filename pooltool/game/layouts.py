@@ -453,9 +453,9 @@ _game_rack_map: Dict[str, GetRackProtocol] = {
 def get_rack(
     game_type: GameType,
     table: Table,
-    params: Optional[BallParams],
-    ballset: Optional[BallSet],
-    spacing_factor: float,
+    params: Optional[BallParams] = None,
+    ballset: Optional[BallSet] = None,
+    spacing_factor: float = 1e-3,
 ) -> Balls:
     return _game_rack_map[game_type](
         table,

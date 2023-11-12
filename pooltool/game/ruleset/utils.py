@@ -4,7 +4,7 @@ import pooltool.constants as const
 from pooltool.events.datatypes import EventType
 from pooltool.events.filter import by_ball, by_type, filter_events, filter_type
 from pooltool.game.ruleset.datatypes import ShotConstraints
-from pooltool.objects.ball.datatypes import Ball
+from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.system.datatypes import System
 
 
@@ -108,6 +108,16 @@ def get_ball_ids_on_table(
     )
 
 
+def _probe_ball_state(ball: Ball, at_start: bool, simulated: bool) -> BallState:
+    if not simulated:
+        return ball.state
+
+    if at_start:
+        return ball.history[0]
+
+    return ball.history[-1]
+
+
 def get_lowest_ball(shot: System, at_start: bool) -> Ball:
     """Get the lowest ball on the table at start or end of shot
 
@@ -120,11 +130,10 @@ def get_lowest_ball(shot: System, at_start: bool) -> Ball:
     _dummy = "10000"
     lowest = Ball.dummy(id=_dummy)
 
-    history_idx = 0 if at_start else -1
     for ball in shot.balls.values():
         if ball.id == "cue":
             continue
-        if ball.history[history_idx].s == const.pocketed:
+        if _probe_ball_state(ball, at_start, shot.simulated).s == const.pocketed:
             continue
         if int(ball.id) < int(lowest.id):
             lowest = ball

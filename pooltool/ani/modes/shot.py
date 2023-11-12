@@ -127,8 +127,7 @@ class ShotMode(BaseMode):
                 # has ended or the user has requested to take the next shot and (2) it
                 # hasn't been processed yet, since if it had, the latest system would be
                 # unsimulated.
-                Global.game.process_shot(multisystem[-1])
-                Global.game.advance(multisystem[-1])
+                Global.game.process_and_advance(multisystem[-1])
                 if Global.game.shot_info.game_over:
                     # The game is over, so scrap that, that, head to game over screen
                     Global.mode_mgr.change_mode(Mode.game_over)

@@ -208,6 +208,10 @@ class Ruleset(ABC):
         shot.cue.cue_ball_id = self.shot_constraints.cueball(shot.balls)
         self.set_next_player()
 
+    def process_and_advance(self, shot: System):
+        self.process_shot(shot)
+        self.advance(shot)
+
     @abstractmethod
     def build_shot_info(self, shot: System) -> ShotInfo:
         """Construct the ShotInfo object for the current shot

@@ -1,5 +1,6 @@
 __version__ = "0.2.1"
 
+import pooltool.math as math
 from pooltool import terminal
 from pooltool.ani.animate import FrameStepper, Game, ShotViewer
 from pooltool.ani.image import (
@@ -30,9 +31,11 @@ from pooltool.events import (
     stick_ball_collision,
 )
 from pooltool.evolution import continuize, simulate
+from pooltool.game.datatypes import GameType
 from pooltool.game.layouts import (
     get_eight_ball_rack,
     get_nine_ball_rack,
+    get_rack,
     get_snooker_rack,
     get_three_cushion_rack,
 )
@@ -89,6 +92,7 @@ __all__ = [
     "rolling_stationary_transition",
     "rolling_spinning_transition",
     "sliding_rolling_transition",
+    "GameType",
     "Event",
     "EventType",
     "AgentType",
@@ -121,6 +125,7 @@ __all__ = [
     "ShotViewer",
     "simulate",
     "continuize",
+    "math",
     "ThreeCushion",
     "EightBall",
     "NineBall",
