@@ -430,9 +430,11 @@ class Game(Interface):
     def create_system(self):
         """Create the multisystem and game objects
 
-        FIXME This is where menu options should plug into, rather than using these
-        hardcoded defaults like `game_type = GameType.NINEBALL`
+        FIXME This is where menu options for game type and further specifications should
+        plug into.
         """
+        # Change this line to change the game played.
+        # Pick from {NINEBALL, EIGHTBALL, THREECUSHION, SNOOKER, SANDBOX}
         game_type = GameType.NINEBALL
 
         game = get_ruleset(game_type)
@@ -446,7 +448,6 @@ class Game(Interface):
             spacing_factor=1e-3,
         )
         cue = Cue(cue_ball_id=game.shot_constraints.cueball(balls))
-
         shot = System(table=table, balls=balls, cue=cue)
 
         multisystem.reset()
