@@ -262,7 +262,15 @@ def _wiggle(x: float, y: float, spacer: float) -> Tuple[float, float]:
     return x + rad * np.cos(ang), y + rad * np.sin(ang)
 
 
-def get_nine_ball_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Balls:
+def get_nine_ball_rack(
+    *args,
+    ballset: Optional[BallSet] = None,
+    ball_params: Optional[BallParams] = None,
+    **kwargs,
+) -> Balls:
+    if ball_params is None:
+        ball_params = BallParams.default(game_type=GameType.NINEBALL)
+
     if ballset is None:
         ballset = DEFAULT_STANDARD_BALLSET
 
@@ -289,10 +297,20 @@ def get_nine_ball_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Ba
     cue = BallPos([], (0.85, 0.23), {"cue"})
     blueprint += [cue]
 
-    return generate_layout(blueprint, *args, ballset=ballset, **kwargs)
+    return generate_layout(
+        blueprint, *args, ballset=ballset, ball_params=ball_params, **kwargs
+    )
 
 
-def get_eight_ball_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Balls:
+def get_eight_ball_rack(
+    *args,
+    ballset: Optional[BallSet] = None,
+    ball_params: Optional[BallParams] = None,
+    **kwargs,
+) -> Balls:
+    if ball_params is None:
+        ball_params = BallParams.default(game_type=GameType.EIGHTBALL)
+
     if ballset is None:
         ballset = DEFAULT_STANDARD_BALLSET
 
@@ -329,7 +347,15 @@ def get_eight_ball_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> B
     return generate_layout(blueprint, *args, ballset=ballset, **kwargs)
 
 
-def get_three_cushion_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Balls:
+def get_three_cushion_rack(
+    *args,
+    ballset: Optional[BallSet] = None,
+    ball_params: Optional[BallParams] = None,
+    **kwargs,
+) -> Balls:
+    if ball_params is None:
+        ball_params = BallParams.default(game_type=GameType.THREECUSHION)
+
     if ballset is None:
         ballset = DEFAULT_THREECUSH_BALLSET
 
@@ -342,7 +368,9 @@ def get_three_cushion_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -
     yellow = BallPos([], (0.5, 0.25), {"yellow"})
     red = BallPos([], (0.5, 0.75), {"red"})
 
-    return generate_layout([white, yellow, red], *args, ballset=ballset, **kwargs)
+    return generate_layout(
+        [white, yellow, red], *args, ballset=ballset, ball_params=ball_params, **kwargs
+    )
 
 
 snooker_color_locs: Dict[str, BallPos] = {
@@ -356,7 +384,15 @@ snooker_color_locs: Dict[str, BallPos] = {
 }
 
 
-def get_snooker_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Balls:
+def get_snooker_rack(
+    *args,
+    ballset: Optional[BallSet] = None,
+    ball_params: Optional[BallParams] = None,
+    **kwargs,
+) -> Balls:
+    if ball_params is None:
+        ball_params = BallParams.default(game_type=GameType.SNOOKER)
+
     if ballset is None:
         ballset = DEFAULT_SNOOKER_BALLSET
 
@@ -389,12 +425,18 @@ def get_snooker_rack(*args, ballset: Optional[BallSet] = None, **kwargs) -> Ball
     colors = list(snooker_color_locs.values())
     blueprint += colors
 
-    return generate_layout(blueprint, *args, ballset=ballset, **kwargs)
+    return generate_layout(
+        blueprint, *args, ballset=ballset, ball_params=ball_params, **kwargs
+    )
 
 
 class GetRackProtocol(Protocol):
     def __call__(
-        self, *args: Any, ballset: Optional[BallSet] = None, **kwargs: Any
+        self,
+        *args: Any,
+        ballset: Optional[BallSet] = None,
+        ball_params: Optional[BallParams] = None,
+        **kwargs: Any,
     ) -> Balls:
         ...
 
@@ -416,5 +458,8 @@ def get_rack(
     spacing_factor: float,
 ) -> Balls:
     return _game_rack_map[game_type](
-        table, ball_params=params, ballset=ballset, spacing_factor=spacing_factor
+        table,
+        ball_params=params,
+        ballset=ballset,
+        spacing_factor=spacing_factor,
     )

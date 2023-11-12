@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 from __future__ import annotations
 
-from functools import cached_property
 from typing import Iterator, List, Optional, Sequence, Tuple
 
 import numpy as np
@@ -10,6 +9,7 @@ from numpy.typing import NDArray
 
 import pooltool.constants as c
 import pooltool.math as math
+from pooltool.objects.ball.params import BallParams
 from pooltool.objects.ball.sets import BallSet
 from pooltool.serialize import SerializeFormat, conversion
 from pooltool.utils.dataclasses import are_dataclasses_equal
@@ -37,79 +37,6 @@ class BallOrientation:
         Class is frozen and attributes are immutable. Just return self
         """
         return self
-
-
-@define(frozen=True, slots=False)
-class BallParams:
-    """Pool ball parameters and physical constants
-
-    Most of the default values are taken from or based off of
-    https://billiards.colostate.edu/faq/physics/physical-properties/. All units are SI.
-    Some of the parameters aren't truly _ball_ parameters, e.g. the gravitational
-    constant, however it is nice to be able to tune such parameters on a ball-by-ball
-    basis.
-
-    Attributes:
-        m:
-            Mass.
-        R:
-            Radius.
-        u_s:
-            Coefficient of sliding friction.
-        u_r:
-            Coefficient of rolling friction.
-        u_sp_proportionality:
-            The coefficient of spinning friction is proportional ball radius. This is
-            the proportionality constant. To obtain the coefficient of spinning
-            friction, use the property `u_sp`.
-        e_c:
-            Cushion coefficient of restitution.
-        f_c:
-            Cushion coefficient of friction.
-        g:
-            Gravitational constant.
-    """
-
-    m: float = field(default=0.170097)
-    R: float = field(default=0.028575)
-
-    u_s: float = field(default=0.2)
-    u_r: float = field(default=0.01)
-    u_sp_proportionality: float = field(default=10 * 2 / 5 / 9)
-    e_c: float = field(default=0.85)
-    f_c: float = field(default=0.2)
-    g: float = field(default=9.81)
-
-    # Updating to snooker specific constants foun on internet
-    # TODO how to implement this in more generic way
-    # https://www.snookershorts.com/shorts/some-snooker-and-pool-differences#:~:text=Pool%20balls%20are%20slightly%20larger,balls%20are%20approximately%20160%2D170g.
-    m: float = field(
-        default=0.140
-    )  # Snooker balls generally weigh around the 140g mark
-    R: float = field(
-        default=0.02619375
-    )  # Snooker balls are standardized at 52.5 mm (2+1⁄16 in) in diameter within a tolerance of plus or minus 0.05 mm (0.002 in).
-    # R=0.02619375 D=0.0523875
-
-    # https://eloquentmath.blogspot.com/2012/04/introductory-mechanics-maths-of-snooker.html
-    u_s: float = field(default=0.5)
-    f_c: float = field(default=0.5)
-
-    @cached_property
-    def u_sp(self) -> float:
-        """Coefficient of spinning friction (radius dependent)"""
-        return self.u_sp_proportionality * self.R
-
-    def copy(self) -> BallParams:
-        """Return deepish copy
-
-        Class is frozen and attributes are immutable. Just return self
-        """
-        return self
-
-    @staticmethod
-    def default() -> BallParams:
-        return BallParams()
 
 
 def _null_rvw() -> NDArray[np.float64]:
