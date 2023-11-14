@@ -10,7 +10,7 @@ import numpy as np
 from attrs import define, evolve, field
 from numpy.typing import NDArray
 
-import pooltool.math as math
+import pooltool.ptmath as ptmath
 from pooltool.utils.dataclasses import are_dataclasses_equal
 
 
@@ -86,7 +86,7 @@ class LinearCushionSegment:
 
     @cached_property
     def normal(self):
-        return math.unit_vector(np.array([self.lx, self.ly, 0]))
+        return ptmath.unit_vector(np.array([self.lx, self.ly, 0]))
 
     def get_normal(self, rvw):
         return self.normal
@@ -147,7 +147,7 @@ class CircularCushionSegment:
     def get_normal(self, rvw) -> NDArray[np.float64]:
         normal = rvw[0, :] - self.center
         normal[2] = 0  # remove z-component
-        return math.unit_vector(normal)
+        return ptmath.unit_vector(normal)
 
     def copy(self) -> CircularCushionSegment:
         """Create a deep-ish copy

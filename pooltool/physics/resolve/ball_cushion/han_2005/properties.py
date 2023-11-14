@@ -1,6 +1,6 @@
 import numpy as np
 
-import pooltool.math as math
+import pooltool.ptmath as ptmath
 
 
 def get_ball_cushion_restitution(rvw, e_c):
@@ -32,7 +32,7 @@ def get_ball_cushion_friction(rvw, f_c):
         perpendicular to the cushion, and in the direction away from the table
     """
 
-    ang = math.angle(rvw[1])
+    ang = ptmath.angle(rvw[1])
 
     if ang > np.pi:
         ang = np.abs(2 * np.pi - ang)

@@ -8,7 +8,7 @@ from attrs import define, evolve, field, validate
 from numpy.typing import NDArray
 
 import pooltool.constants as c
-import pooltool.math as math
+import pooltool.ptmath as ptmath
 from pooltool.objects.ball.params import BallParams
 from pooltool.objects.ball.sets import BallSet
 from pooltool.serialize import SerializeFormat, conversion
@@ -24,7 +24,7 @@ class BallOrientation:
 
     @staticmethod
     def random() -> BallOrientation:
-        quat = (tmp := 2 * np.random.rand(4) - 1) / math.norm3d(tmp)
+        quat = (tmp := 2 * np.random.rand(4) - 1) / ptmath.norm3d(tmp)
         q0, qx, qy, qz = quat
         return BallOrientation(
             pos=(1.0, 1.0, 1.0, 1.0),

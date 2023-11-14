@@ -4,9 +4,9 @@ import numpy as np
 from numba import jit
 
 import pooltool.constants as const
-import pooltool.math as math
 import pooltool.physics.evolve as evolve
 import pooltool.physics.utils as physics_utils
+import pooltool.ptmath as ptmath
 
 
 @jit(nopython=True, cache=const.numba_cache)
@@ -39,9 +39,9 @@ def skip_ball_ball_collision(rvw1, rvw2, s1, s2, R1, R2):
 
         # ball2 is not moving, so we can pinpoint the range of angles ball1 must be
         # headed in for a collision
-        d = math.norm3d(r12)
+        d = ptmath.norm3d(r12)
         unit_d = r12 / d
-        unit_v = math.unit_vector(rvw1[1])
+        unit_v = ptmath.unit_vector(rvw1[1])
 
         # Angles are in radians
         # Calculate forwards and backwards angles, e.g. 10 and 350, take the min
@@ -57,9 +57,9 @@ def skip_ball_ball_collision(rvw1, rvw2, s1, s2, R1, R2):
 
         # ball1 is not moving, so we can pinpoint the range of angles ball2 must be
         # headed in for a collision
-        d = math.norm3d(r21)
+        d = ptmath.norm3d(r21)
         unit_d = r21 / d
-        unit_v = math.unit_vector(rvw2[1])
+        unit_v = ptmath.unit_vector(rvw2[1])
 
         # Angles are in radians
         # Calculate forwards and backwards angles, e.g. 10 and 350, take the min
@@ -80,7 +80,7 @@ def get_u(rvw, R, phi, s):
     if (rel_vel == 0).all():
         return np.array([1, 0, 0], dtype=np.float64)
 
-    return math.coordinate_rotation(math.unit_vector(rel_vel), -phi)
+    return ptmath.coordinate_rotation(ptmath.unit_vector(rel_vel), -phi)
 
 
 @jit(nopython=True, cache=const.numba_cache)
@@ -96,8 +96,8 @@ def ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
     if s1 == const.spinning or s1 == const.pocketed or s1 == const.stationary:
         a1x, a1y, b1x, b1y = 0, 0, 0, 0
     else:
-        phi1 = math.angle(rvw1[1])
-        v1 = math.norm3d(rvw1[1])
+        phi1 = ptmath.angle(rvw1[1])
+        v1 = ptmath.norm3d(rvw1[1])
 
         u1 = get_u(rvw1, R, phi1, s1)
 
@@ -113,8 +113,8 @@ def ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
     if s2 == const.spinning or s2 == const.pocketed or s2 == const.stationary:
         a2x, a2y, b2x, b2y = 0.0, 0.0, 0.0, 0.0
     else:
-        phi2 = math.angle(rvw2[1])
-        v2 = math.norm3d(rvw2[1])
+        phi2 = ptmath.angle(rvw2[1])
+        v2 = ptmath.norm3d(rvw2[1])
 
         u2 = get_u(rvw2, R, phi2, s2)
 
@@ -145,7 +145,7 @@ def ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
 
     NOTE This is deprecated. Rather than solve the roots of a single polynomial
     equation, as is done in this function, all roots of a given collision class are
-    solved simultaneously via math.roots
+    solved simultaneously via ptmath.roots
     """
     a, b, c, d, e = ball_ball_collision_coeffs(
         rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
@@ -176,22 +176,22 @@ def skip_ball_linear_cushion_collision(rvw, s, u_r, g, R, p1, p2, normal):
         p21 = p2 + R * normal
         p22 = p2 - R * normal
 
-        t = math.norm3d(rvw[1]) / (u_r * g)
-        v_0_hat = math.unit_vector(rvw[1])
+        t = ptmath.norm3d(rvw[1]) / (u_r * g)
+        v_0_hat = ptmath.unit_vector(rvw[1])
         r1 = rvw[0]
         r2 = r1 + rvw[1] * t - 0.5 * u_r * g * t**2 * v_0_hat
 
-        o1 = math.orientation(r1, r2, p11)
-        o2 = math.orientation(r1, r2, p21)
-        o3 = math.orientation(p11, p21, r1)
-        o4 = math.orientation(p11, p21, r2)
+        o1 = ptmath.orientation(r1, r2, p11)
+        o2 = ptmath.orientation(r1, r2, p21)
+        o3 = ptmath.orientation(p11, p21, r1)
+        o4 = ptmath.orientation(p11, p21, r2)
         # Whether or not trajectory intersects with first intersection line
         int1 = (o1 != o2) and (o3 != o4)
 
-        o1 = math.orientation(r1, r2, p12)
-        o2 = math.orientation(r1, r2, p22)
-        o3 = math.orientation(p12, p22, r1)
-        o4 = math.orientation(p12, p22, r2)
+        o1 = ptmath.orientation(r1, r2, p12)
+        o2 = ptmath.orientation(r1, r2, p22)
+        o3 = ptmath.orientation(p12, p22, r1)
+        o4 = ptmath.orientation(p12, p22, r2)
         # Whether or not trajectory intersects with first intersection line
         int2 = (o1 != o2) and (o3 != o4)
 
@@ -212,8 +212,8 @@ def ball_linear_cushion_collision_time(
     if s == const.spinning or s == const.pocketed or s == const.stationary:
         return np.inf
 
-    phi = math.angle(rvw[1])
-    v = math.norm3d(rvw[1])
+    phi = ptmath.angle(rvw[1])
+    v = ptmath.norm3d(rvw[1])
 
     u = get_u(rvw, R, phi, s)
 
@@ -231,17 +231,17 @@ def ball_linear_cushion_collision_time(
 
     if direction == 0:
         C = l0 + lx * cx + ly * cy + R * np.sqrt(lx**2 + ly**2)
-        root1, root2 = math.roots.quadratic.solve(A, B, C)
+        root1, root2 = ptmath.roots.quadratic.solve(A, B, C)
         roots = [root1, root2]
     elif direction == 1:
         C = l0 + lx * cx + ly * cy - R * np.sqrt(lx**2 + ly**2)
-        root1, root2 = math.roots.quadratic.solve(A, B, C)
+        root1, root2 = ptmath.roots.quadratic.solve(A, B, C)
         roots = [root1, root2]
     else:
         C1 = l0 + lx * cx + ly * cy + R * np.sqrt(lx**2 + ly**2)
         C2 = l0 + lx * cx + ly * cy - R * np.sqrt(lx**2 + ly**2)
-        root1, root2 = math.roots.quadratic.solve(A, B, C1)
-        root3, root4 = math.roots.quadratic.solve(A, B, C2)
+        root1, root2 = ptmath.roots.quadratic.solve(A, B, C1)
+        root3, root4 = ptmath.roots.quadratic.solve(A, B, C2)
         roots = [root1, root2, root3, root4]
 
     min_time = np.inf
@@ -274,8 +274,8 @@ def ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     if s == const.spinning or s == const.pocketed or s == const.stationary:
         return np.inf, np.inf, np.inf, np.inf, np.inf
 
-    phi = math.angle(rvw[1])
-    v = math.norm3d(rvw[1])
+    phi = ptmath.angle(rvw[1])
+    v = ptmath.norm3d(rvw[1])
 
     u = get_u(rvw, R, phi, s)
 
@@ -307,8 +307,8 @@ def ball_pocket_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     if s == const.spinning or s == const.pocketed or s == const.stationary:
         return np.inf, np.inf, np.inf, np.inf, np.inf
 
-    phi = math.angle(rvw[1])
-    v = math.norm3d(rvw[1])
+    phi = ptmath.angle(rvw[1])
+    v = ptmath.norm3d(rvw[1])
 
     u = get_u(rvw, R, phi, s)
 

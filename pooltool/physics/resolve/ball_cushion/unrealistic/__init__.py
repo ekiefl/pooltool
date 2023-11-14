@@ -5,7 +5,7 @@ from typing import Tuple, TypeVar
 import numpy as np
 
 import pooltool.constants as const
-import pooltool.math as math
+import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
     CircularCushionSegment,
@@ -49,14 +49,14 @@ def _solve(
     # Rotate frame of reference to the cushion frame. The cushion frame is defined
     # by the cushion's normal vector (convention: points away from table) being
     # parallel with <1,0,0>.
-    psi = math.angle(normal)
-    rvw_R = math.coordinate_rotation(rvw.T, -psi).T
+    psi = ptmath.angle(normal)
+    rvw_R = ptmath.coordinate_rotation(rvw.T, -psi).T
 
     # Reverse velocity component lying in normal direction
     rvw_R[1, 0] *= -1 * (1 if not restitution else ball.params.e_c)
 
     # Rotate frame of reference back to the table frame
-    rvw = math.coordinate_rotation(rvw_R.T, psi).T
+    rvw = ptmath.coordinate_rotation(rvw_R.T, psi).T
 
     # Set the ball's rvw
     ball.state.rvw = rvw

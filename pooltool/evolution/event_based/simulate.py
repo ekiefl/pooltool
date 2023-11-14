@@ -9,9 +9,9 @@ import attrs
 import numpy as np
 
 import pooltool.constants as const
-import pooltool.math as math
 import pooltool.physics.evolve as evolve
 import pooltool.physics.utils as physics_utils
+import pooltool.ptmath as ptmath
 from pooltool.events import (
     AgentType,
     Event,
@@ -30,7 +30,6 @@ from pooltool.events import (
 from pooltool.evolution.continuize import continuize
 from pooltool.evolution.event_based import solve
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
-from pooltool.math.roots.quartic import QuarticSolver
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.table.components import (
     CircularCushionSegment,
@@ -38,6 +37,7 @@ from pooltool.objects.table.components import (
     Pocket,
 )
 from pooltool.physics.engine import PhysicsEngine
+from pooltool.ptmath.roots.quartic import QuarticSolver
 from pooltool.system.datatypes import System
 
 
@@ -318,7 +318,7 @@ def get_next_ball_ball_collision(
             continue
 
         if (
-            math.norm3d(ball1_state.rvw[0] - ball2_state.rvw[0])
+            ptmath.norm3d(ball1_state.rvw[0] - ball2_state.rvw[0])
             < ball1_params.R + ball2_params.R
         ):
             # If balls are intersecting, avoid internal collisions
@@ -354,7 +354,7 @@ def get_next_ball_ball_collision(
         # There are no collisions to test for
         return ball_ball_collision(Ball.dummy(), Ball.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = math.roots.quartic.minimum_quartic_root(
+    dtau_E, index = ptmath.roots.quartic.minimum_quartic_root(
         ps=np.array(collision_coeffs), solver=solver
     )
 
@@ -403,7 +403,7 @@ def get_next_ball_circular_cushion_event(
             Ball.dummy(), CircularCushionSegment.dummy(), shot.t + dtau_E
         )
 
-    dtau_E, index = math.roots.quartic.minimum_quartic_root(
+    dtau_E, index = ptmath.roots.quartic.minimum_quartic_root(
         ps=np.array(collision_coeffs), solver=solver
     )
 
@@ -491,7 +491,7 @@ def get_next_ball_pocket_collision(
         # There are no collisions to test for
         return ball_pocket_collision(Ball.dummy(), Pocket.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = math.roots.quartic.minimum_quartic_root(
+    dtau_E, index = ptmath.roots.quartic.minimum_quartic_root(
         ps=np.array(collision_coeffs), solver=solver
     )
 

@@ -2,7 +2,7 @@ import numpy as np
 from panda3d.core import CollisionHandlerQueue, CollisionTraverser
 
 import pooltool.ani as ani
-import pooltool.math as math
+import pooltool.ptmath as ptmath
 from pooltool.ani.globals import Global
 from pooltool.system.datatypes import multisystem
 from pooltool.system.render import visual
@@ -118,7 +118,7 @@ class CueAvoid:
 
         # Center of aim
         v = np.array([Ex - Px, Ey - Py, Ez - Pz])
-        u = math.unit_vector(v) * self.avoid_nodes["cue_stick_model"].getX()
+        u = ptmath.unit_vector(v) * self.avoid_nodes["cue_stick_model"].getX()
         Fx, Fy, Fz = Ex + u[0], Ey + u[1], Ez + u[2]
 
         min_theta = np.arctan2(Dz - Fz, np.sqrt((Dx - Fx) ** 2 + (Dy - Fy) ** 2))
@@ -167,7 +167,7 @@ class CueAvoid:
 
         # Cue tip point, no top/bottom english
         m = self.avoid_nodes["cue_stick_model"].getX()
-        u = math.unit_vector(
+        u = ptmath.unit_vector(
             np.array([-np.cos(phi), -np.sin(phi), np.sin(min_theta_no_english)])
         )
         Ex, Ey, Ez = Cx + m * u[0], Cy + m * u[1], Cz + m * u[2]

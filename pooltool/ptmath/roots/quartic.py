@@ -5,7 +5,7 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
-from pooltool.math.roots.core import find_first_row_with_value, min_real_root
+from pooltool.ptmath.roots.core import find_first_row_with_value, min_real_root
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -26,7 +26,7 @@ def minimum_quartic_root(
             the quartic polynomial equation at^4 + bt^3 + ct^2 + dt + e = 0.
         solver:
             The method used to calculate the roots. See
-            pooltool.math.roots.quartic.QuarticSolver.
+            pooltool.ptmath.roots.quartic.QuarticSolver.
 
     Returns:
         (real_root, index):

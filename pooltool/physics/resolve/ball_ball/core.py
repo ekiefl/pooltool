@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Protocol, Tuple
 
 import pooltool.constants as const
-import pooltool.math as math
+import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
 
 
@@ -34,9 +34,9 @@ class CoreBallBallCollision(ABC):
         non-intersecting.
         """
         r1, r2 = ball1.state.rvw[0], ball2.state.rvw[0]
-        n = math.unit_vector(r2 - r1)
+        n = ptmath.unit_vector(r2 - r1)
 
-        correction = 2 * ball1.params.R - math.norm3d(r2 - r1) + const.EPS_SPACE
+        correction = 2 * ball1.params.R - ptmath.norm3d(r2 - r1) + const.EPS_SPACE
         ball2.state.rvw[0] += correction / 2 * n
         ball1.state.rvw[0] -= correction / 2 * n
 

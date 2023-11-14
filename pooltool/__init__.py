@@ -1,6 +1,5 @@
 __version__ = "0.2.1"
 
-import pooltool.math as math
 from pooltool import terminal
 from pooltool.ani.animate import FrameStepper, Game, ShotViewer
 from pooltool.ani.image import (
@@ -125,7 +124,8 @@ __all__ = [
     "ShotViewer",
     "simulate",
     "continuize",
-    "math",
+    "ptmath",
+    "get_rack",
     "ThreeCushion",
     "EightBall",
     "NineBall",

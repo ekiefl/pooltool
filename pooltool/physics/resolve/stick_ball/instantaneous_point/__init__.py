@@ -4,7 +4,7 @@ import attrs
 import numpy as np
 
 import pooltool.constants as const
-import pooltool.math as math
+import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.physics.resolve.stick_ball.core import CoreStickBallCollision
@@ -100,8 +100,8 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, throttle_english: bool):
 
     # Rotate to table reference
     rot_angle = phi + np.pi / 2
-    v_T = math.coordinate_rotation(v_B, rot_angle)
-    w_T = math.coordinate_rotation(w_B, rot_angle)
+    v_T = ptmath.coordinate_rotation(v_B, rot_angle)
+    w_T = ptmath.coordinate_rotation(w_B, rot_angle)
 
     return v_T, w_T
 

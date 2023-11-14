@@ -7,8 +7,8 @@ from typing import Dict, Iterator, List, Optional
 import numpy as np
 from attrs import define, field
 
-import pooltool.math as math
 import pooltool.physics.utils as physics_utils
+import pooltool.ptmath as ptmath
 from pooltool.error import ConfigError
 from pooltool.events import Event
 from pooltool.objects.ball.datatypes import Ball, BallHistory
@@ -94,8 +94,8 @@ class System:
 
         cueing_ball = self.balls[self.cue.cue_ball_id]
 
-        direction = math.angle(
-            math.unit_vector(np.array(pos) - cueing_ball.state.rvw[0])
+        direction = ptmath.angle(
+            ptmath.unit_vector(np.array(pos) - cueing_ball.state.rvw[0])
         )
         self.cue.set_state(phi=direction * 180 / np.pi)
 
@@ -134,7 +134,7 @@ class System:
         left = True if cut < 0 else False
         cut = np.abs(cut) * np.pi / 180
         R = object_ball.params.R
-        d = math.norm3d(object_ball.state.rvw[0] - cueing_ball.state.rvw[0])
+        d = ptmath.norm3d(object_ball.state.rvw[0] - cueing_ball.state.rvw[0])
 
         lower_bound = 0
         upper_bound = np.pi / 2 - np.arccos((2 * R) / d)

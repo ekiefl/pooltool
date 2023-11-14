@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pooltool.math.roots import quartic
+from pooltool.ptmath.roots import quartic
 
 
 @pytest.mark.parametrize(

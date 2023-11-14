@@ -2,7 +2,7 @@ import numpy as np
 from numba import jit
 
 import pooltool.constants as const
-import pooltool.math as math
+import pooltool.ptmath as ptmath
 
 
 @jit(nopython=True, cache=const.numba_cache)
@@ -12,7 +12,7 @@ def rel_velocity(rvw, R):
     This vector is non-zero whenever the ball is sliding
     """
     _, v, w = rvw
-    return v + R * math.cross(np.array([0.0, 0.0, 1.0], dtype=np.float64), w)
+    return v + R * ptmath.cross(np.array([0.0, 0.0, 1.0], dtype=np.float64), w)
 
 
 @jit(nopython=True, cache=const.numba_cache)
@@ -25,18 +25,18 @@ def get_u_vec(rvw, phi, R, s):
     if (rel_vel == 0.0).all():
         return np.array([1.0, 0.0, 0.0])
 
-    return math.coordinate_rotation(math.unit_vector(rel_vel), -phi)
+    return ptmath.coordinate_rotation(ptmath.unit_vector(rel_vel), -phi)
 
 
 @jit(nopython=True, cache=const.numba_cache)
 def get_slide_time(rvw, R, u_s, g):
-    return 2 * math.norm3d(rel_velocity(rvw, R)) / (7 * u_s * g)
+    return 2 * ptmath.norm3d(rel_velocity(rvw, R)) / (7 * u_s * g)
 
 
 @jit(nopython=True, cache=const.numba_cache)
 def get_roll_time(rvw, u_r, g):
     _, v, _ = rvw
-    return math.norm3d(v) / (u_r * g)
+    return ptmath.norm3d(v) / (u_r * g)
 
 
 @jit(nopython=True, cache=const.numba_cache)
@@ -52,14 +52,14 @@ def get_ball_energy(rvw, R, m):
     energy if z-axis is freed
     """
     # Linear
-    LKE = m * math.norm3d(rvw[1]) ** 2 / 2
+    LKE = m * ptmath.norm3d(rvw[1]) ** 2 / 2
 
     # Rotational
     I = 2 / 5 * m * R**2
-    RKE = I * math.norm3d(rvw[2]) ** 2 / 2
+    RKE = I * ptmath.norm3d(rvw[2]) ** 2 / 2
 
     return LKE + RKE
 
 
 def is_overlapping(rvw1, rvw2, R1, R2):
-    return math.norm3d(rvw1[0] - rvw2[0]) < (R1 + R2)
+    return ptmath.norm3d(rvw1[0] - rvw2[0]) < (R1 + R2)

@@ -8,7 +8,7 @@ from direct.gui.DirectGuiBase import DirectGuiWidget
 from direct.gui.OnscreenText import OnscreenText
 from panda3d.core import LVector3, NodePath, PGItem, Quat, Vec3, Vec4
 
-import pooltool.math as math
+import pooltool.ptmath as ptmath
 from pooltool.ani.fonts import load_font
 
 
@@ -21,7 +21,6 @@ class CustomOnscreenText(OnscreenText):
             del kwargs["font_name"]
         else:
             font = load_font()
-
         OnscreenText.__init__(self, font=font, **kwargs)
 
 
@@ -56,7 +55,7 @@ def as_quaternion(w, t, dQ_0=None) -> List:
 
 def get_infinitesimal_quaternions(w, t, dQ_0=None):
     w_norm = np.linalg.norm(w, axis=1)
-    w_unit = math.unit_vector_slow(w, handle_zero=True)
+    w_unit = ptmath.unit_vector_slow(w, handle_zero=True)
 
     dt = np.diff(t)
     theta = w_norm[1:] * dt

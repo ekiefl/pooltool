@@ -6,7 +6,7 @@ import numpy as np
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.constants as c
-import pooltool.math as math
+import pooltool.ptmath as ptmath
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
@@ -118,7 +118,7 @@ class PickBallMode(BaseMode):
                 continue
             if ball._ball.state.s == c.pocketed:
                 continue
-            d = math.norm3d(ball._ball.state.rvw[0] - cam_fixation)
+            d = ptmath.norm3d(ball._ball.state.rvw[0] - cam_fixation)
             if d < d_min:
                 d_min, closest = d, ball
 

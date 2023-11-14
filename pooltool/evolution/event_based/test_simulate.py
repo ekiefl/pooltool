@@ -3,8 +3,8 @@ import pytest
 from numpy.typing import NDArray
 
 import pooltool.constants as const
-import pooltool.math as math
 import pooltool.physics.utils as physics_utils
+import pooltool.ptmath as ptmath
 from pooltool.events import EventType, ball_ball_collision, ball_pocket_collision
 from pooltool.evolution.event_based.simulate import (
     get_next_ball_ball_collision,
@@ -13,8 +13,8 @@ from pooltool.evolution.event_based.simulate import (
 )
 from pooltool.evolution.event_based.solve import ball_ball_collision_coeffs
 from pooltool.evolution.event_based.test_data import TEST_DIR
-from pooltool.math.roots import quadratic, quartic
 from pooltool.objects import Ball, BilliardTableSpecs, Cue, Table
+from pooltool.ptmath.roots import quadratic, quartic
 from pooltool.system import System
 
 
@@ -284,7 +284,7 @@ def test_grazing_ball_ball_collision(solver: quartic.QuarticSolver):
                 0,
             ]
         )
-        w = math.cross(np.array([0, 0, 1]), v) / ball.params.R
+        w = ptmath.cross(np.array([0, 0, 1]), v) / ball.params.R
 
         system.balls["cue"].state.rvw[1] = v
         system.balls["cue"].state.rvw[2] = w
@@ -369,7 +369,7 @@ def test_almost_touching_ball_ball_collision(solver: quartic.QuarticSolver):
                 0,
             ]
         )
-        w = math.cross(np.array([0, 0, 1]), v) / ball.params.R
+        w = ptmath.cross(np.array([0, 0, 1]), v) / ball.params.R
 
         system.balls["cue"].state.rvw[0, 0] = rx
         system.balls["cue"].state.rvw[1] = v
@@ -467,7 +467,7 @@ def test_no_ball_ball_collisions_for_intersecting_balls(solver: quartic.QuarticS
     )
 
     v = np.array([-0.5, 0, 0])
-    w = math.cross(np.array([0, 0, 1]), v) / ball.params.R
+    w = ptmath.cross(np.array([0, 0, 1]), v) / ball.params.R
 
     system.balls["cue"].state.rvw[1] = v
     system.balls["cue"].state.rvw[2] = w

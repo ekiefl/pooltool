@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-import pooltool.math as math
+import pooltool.ptmath as ptmath
 from pooltool.game.layouts import (
     BallPos,
     Dir,
@@ -135,7 +135,7 @@ def test_wiggle():
         ball1 = rack["1"]
         ball2 = rack["2"]
         distance = (
-            math.norm3d(ball1.state.rvw[0] - ball2.state.rvw[0]) - 2 * ball1.params.R
+            ptmath.norm3d(ball1.state.rvw[0] - ball2.state.rvw[0]) - 2 * ball1.params.R
         )
 
         # Distance always greater than 0

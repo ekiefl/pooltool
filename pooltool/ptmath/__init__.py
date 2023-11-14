@@ -1,4 +1,4 @@
-from pooltool.math._math import (
+from pooltool.ptmath._ptmath import (
     angle,
     coordinate_rotation,
     cross,

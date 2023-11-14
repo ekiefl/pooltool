@@ -4,7 +4,7 @@ from typing import Protocol, Tuple
 import numpy as np
 
 import pooltool.constants as const
-import pooltool.math as math
+import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
     CircularCushionSegment,
@@ -65,14 +65,14 @@ class CoreBallLCushionCollision(ABC):
 
         # Calculate the point on cushion line where contact should be made, then set the
         # z-component to match the ball's height
-        c = math.point_on_line_closest_to_point(
+        c = ptmath.point_on_line_closest_to_point(
             cushion.p1, cushion.p2, ball.state.rvw[0]
         )
         c[2] = ball.state.rvw[0, 2]
 
         # Move the ball to exactly meet the cushion
         correction = (
-            ball.params.R - math.norm3d(ball.state.rvw[0] - c) + const.EPS_SPACE
+            ball.params.R - ptmath.norm3d(ball.state.rvw[0] - c) + const.EPS_SPACE
         )
         ball.state.rvw[0] -= correction * normal
 
@@ -117,7 +117,7 @@ class CoreBallCCushionCollision(ABC):
         correction = (
             ball.params.R
             + cushion.radius
-            - math.norm3d(ball.state.rvw[0] - c)
+            - ptmath.norm3d(ball.state.rvw[0] - c)
             - const.EPS_SPACE
         )
 

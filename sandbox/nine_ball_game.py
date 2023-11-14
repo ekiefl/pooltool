@@ -1,9 +1,12 @@
 from typing import Tuple
 
 import numpy as np
+from mcts.mcts import MCTS
 
 import pooltool as pt
+from pooltool.game.ruleset.nine_ball import NineBall
 from pooltool.game.ruleset.utils import get_lowest_ball
+from pooltool.ptmath import wiggle
 
 GAMETYPE = pt.GameType.NINEBALL
 
@@ -36,23 +39,15 @@ def gen_game() -> Tuple[pt.MultiSystem, pt.System, pt.NineBall]:
     return multisystem, system, game
 
 
-def aim(shot: pt.System) -> pt.System:
+def aim(shot: pt.System, game: NineBall) -> pt.System:
     """Aim the shot
 
     This is where an AI could be plugged into
     """
-    if GAMETYPE != pt.GameType.NINEBALL:
-        raise NotImplementedError("This aim() method doesn't work for other games")
-
-    cue = shot.cue
-    shot.aim_for_best_pocket(get_lowest_ball(shot, at_start=False).id)
-    shot.strike(
-        V0=4.5 * np.random.rand() + 0.5,
-        phi=pt.math.wiggle(cue.phi, 0.5),
-        a=np.random.rand() - 0.5,
-        b=np.random.rand() - 0.5,
-        theta=3,
-    )
+    mcts = MCTS(shot, game)
+    action = mcts.run(20)
+    action.apply(shot.cue)
+    shot.strike()
 
     return shot
 
@@ -62,7 +57,7 @@ shots, shot, game = gen_game()
 gui = pt.ShotViewer()
 
 while True:
-    shot = pt.simulate(aim(shot), inplace=True)
+    shot = pt.simulate(aim(shot, game), inplace=True)
     game.process_and_advance(shot)
     shots.append(shot)
     shot = shot.copy()

@@ -11,8 +11,8 @@ from typing import Sequence
 import numpy as np
 from numpy.typing import NDArray
 
-from pooltool.math import unit_vector_slow
 from pooltool.objects import Ball, Pocket
+from pooltool.ptmath import unit_vector_slow
 
 
 def angle_between_points(p1, p2) -> float:

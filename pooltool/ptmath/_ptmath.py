@@ -115,7 +115,7 @@ def norm3d(vec):
     This is ~10x faster than np.linalg.norm
 
     >>> import numpy as np
-    >>> from pooltool.math._math import *
+    >>> from pooltool.ptmath._ptmath import *
     >>> vec = np.random.rand(3)
     >>> norm3d(vec)
     >>> %timeit np.linalg.norm(vec)

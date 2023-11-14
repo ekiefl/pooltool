@@ -14,7 +14,7 @@ import numpy as np
 from numba import jit
 
 import pooltool.constants as const
-import pooltool.math as math
+import pooltool.ptmath as ptmath
 from pooltool.physics.utils import (
     get_roll_time,
     get_slide_time,
@@ -79,12 +79,12 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
         return rvw
 
     # Angle of initial velocity in table frame
-    phi = math.angle(rvw[1])
+    phi = ptmath.angle(rvw[1])
 
-    rvw_B0 = math.coordinate_rotation(rvw.T, -phi).T
+    rvw_B0 = ptmath.coordinate_rotation(rvw.T, -phi).T
 
     # Relative velocity unit vector in ball frame
-    u_0 = math.coordinate_rotation(math.unit_vector(rel_velocity(rvw, R)), -phi)
+    u_0 = ptmath.coordinate_rotation(ptmath.unit_vector(rel_velocity(rvw, R)), -phi)
 
     # Calculate quantities according to the ball frame. NOTE w_B in this code block
     # is only accurate of the x and y evolution of angular velocity. z evolution of
@@ -95,7 +95,7 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     rvw_B[0, 1] = -0.5 * u_s * g * t**2 * u_0[1]
     rvw_B[0, 2] = 0
     rvw_B[1, :] = rvw_B0[1] - u_s * g * t * u_0
-    rvw_B[2, :] = rvw_B0[2] - 5 / 2 / R * u_s * g * t * math.cross(
+    rvw_B[2, :] = rvw_B0[2] - 5 / 2 / R * u_s * g * t * ptmath.cross(
         u_0, np.array([0, 0, 1], dtype=np.float64)
     )
 
@@ -104,7 +104,7 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     rvw_B = evolve_perpendicular_spin_state(rvw_B, R, u_sp, g, t)
 
     # Rotate to table reference
-    rvw_T = math.coordinate_rotation(rvw_B.T, phi).T
+    rvw_T = ptmath.coordinate_rotation(rvw_B.T, phi).T
     rvw_T[0] += rvw[0]  # Add initial ball position
 
     return rvw_T
@@ -117,11 +117,11 @@ def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
 
     r_0, v_0, w_0 = rvw
 
-    v_0_hat = math.unit_vector(v_0)
+    v_0_hat = ptmath.unit_vector(v_0)
 
     r = r_0 + v_0 * t - 0.5 * u_r * g * t**2 * v_0_hat
     v = v_0 - u_r * g * t * v_0_hat
-    w = math.coordinate_rotation(v / R, np.pi / 2)
+    w = ptmath.coordinate_rotation(v / R, np.pi / 2)
 
     # Independently evolve the z spin
     temp = evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)

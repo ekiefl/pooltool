@@ -3,7 +3,7 @@ from typing import Tuple, TypeVar
 import numpy as np
 
 import pooltool.constants as const
-import pooltool.math as math
+import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.table.components import (
     CircularCushionSegment,
@@ -26,11 +26,11 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
 
     # Change from the table frame to the cushion frame. The cushion frame is defined by
     # the normal vector is parallel with <1,0,0>.
-    psi = math.angle(normal)
-    rvw_R = math.coordinate_rotation(rvw.T, -psi).T
+    psi = ptmath.angle(normal)
+    rvw_R = ptmath.coordinate_rotation(rvw.T, -psi).T
 
     # The incidence angle--called theta_0 in paper
-    phi = math.angle(rvw_R[1]) % (2 * np.pi)
+    phi = ptmath.angle(rvw_R[1]) % (2 * np.pi)
 
     # Get mu and e
     e = get_ball_cushion_restitution(rvw_R, e_c)
@@ -83,7 +83,7 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
     rvw_R[2, 2] += R / I * PY * np.cos(theta_a)
 
     # Change back to table reference frame
-    rvw = math.coordinate_rotation(rvw_R.T, psi).T
+    rvw = ptmath.coordinate_rotation(rvw_R.T, psi).T
 
     return rvw
 
