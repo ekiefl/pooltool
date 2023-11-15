@@ -1,9 +1,14 @@
-from math import sqrt
+from math import degrees, sqrt
 
 import numpy as np
 from numba import jit
 
 import pooltool.constants as const
+
+
+def angle_between_vectors(v1, v2) -> float:
+    angle = np.math.atan2(np.linalg.det([v1, v2]), np.dot(v1, v2))  # type: ignore
+    return degrees(angle)
 
 
 def wiggle(x, val):

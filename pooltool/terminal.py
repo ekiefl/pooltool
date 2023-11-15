@@ -3,6 +3,8 @@
 
 Taken from https://github.com/merenlab/anvio/blob/master/anvio/terminal.py"""
 
+from __future__ import annotations
+
 import datetime
 import importlib.util
 import os
@@ -762,6 +764,10 @@ class Timer:
             ]
             for fmt in fmts:
                 run.info(str(fmt), self.format_time(td, fmt=fmt))
+
+    @classmethod
+    def factory(cls) -> Timer:
+        return cls()
 
 
 class TimeCode(object):

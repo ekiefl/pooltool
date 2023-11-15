@@ -1,8 +1,9 @@
 #! /usr/bin/env python
 from __future__ import annotations
 
+import copy
 from abc import ABC, abstractmethod
-from typing import Counter, Generator, List, Optional, Tuple
+from typing import Any, Counter, Dict, Generator, List, Optional, Tuple
 
 import attrs
 
@@ -25,11 +26,11 @@ class Player:
         return [cls(name) for name in names]
 
 
+@attrs.define
 class Log:
-    def __init__(self):
-        self.timer = Timer()
-        self.msgs = []
-        self.update = False
+    msgs: List[Dict[str, Any]] = attrs.field(factory=list)
+    timer: Timer = attrs.field(factory=Timer.factory)
+    update: bool = attrs.field(default=False)
 
     def add_msg(self, msg, sentiment="neutral", quiet=False) -> None:
         self.msgs.append(
@@ -45,6 +46,13 @@ class Log:
 
         if not quiet:
             self.update = True
+
+    def copy(self) -> Log:
+        return attrs.evolve(
+            self,
+            timer=copy.deepcopy(self.timer),
+            msgs=copy.deepcopy(self.msgs),
+        )
 
 
 class BallInHandOptions(StrEnum):

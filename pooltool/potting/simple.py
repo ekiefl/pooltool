@@ -8,22 +8,16 @@ ignored. Bank shots are not supported. Interfering balls are not detected.
 import math
 from typing import Sequence
 
-import numpy as np
 from numpy.typing import NDArray
 
 from pooltool.objects import Ball, Pocket
-from pooltool.ptmath import unit_vector_slow
+from pooltool.ptmath import angle_between_vectors, unit_vector_slow
 
 
 def angle_between_points(p1, p2) -> float:
     (x1, y1), (x2, y2) = p1, p2
     x_diff, y_diff = x2 - x1, y2 - y1
     return math.degrees(math.atan2(y_diff, x_diff))
-
-
-def angle_between_vectors(v1, v2) -> float:
-    angle = np.math.atan2(np.linalg.det([v1, v2]), np.dot(v1, v2))  # type: ignore
-    return math.degrees(angle)
 
 
 def calc_cut_angle(c, b, p) -> float:

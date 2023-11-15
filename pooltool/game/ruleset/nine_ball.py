@@ -1,7 +1,12 @@
 #! /usr/bin/env python
 
+from __future__ import annotations
+
+import copy
 from collections import Counter
 from typing import Tuple
+
+import attrs
 
 from pooltool.events.datatypes import EventType
 from pooltool.events.filter import by_ball, by_time, by_type, filter_events
@@ -214,3 +219,16 @@ class NineBall(Ruleset):
                 shot.table.w / 2,
                 shot.table.l * 3 / 4,
             )
+
+    def copy(self) -> NineBall:
+        game = NineBall()
+        game.score = copy.deepcopy(self.score)
+        game.shot_number = self.shot_number
+        game.turn_number = self.turn_number
+        game.shot_constraints = attrs.evolve(self.shot_constraints)
+        if hasattr(game, "shot_info"):
+            game.shot_info = attrs.evolve(self.shot_info)
+        game.players = self.players
+        game.active_idx = self.active_idx
+        game.log = self.log.copy()
+        return game

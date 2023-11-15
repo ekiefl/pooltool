@@ -1,5 +1,6 @@
 from pooltool.ptmath._ptmath import (
     angle,
+    angle_between_vectors,
     coordinate_rotation,
     cross,
     norm3d,
@@ -11,6 +12,7 @@ from pooltool.ptmath._ptmath import (
 
 __all__ = [
     "angle",
+    "angle_between_vectors",
     "coordinate_rotation",
     "cross",
     "norm3d",
