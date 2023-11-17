@@ -29,8 +29,10 @@ class UnintelligentAI:
 
     @game.validator  # type: ignore
     def _game_supported(self, _, value) -> None:
-        supported = [type(get_ruleset(gametype)) for gametype in SUPPORTED_GAMETYPES]
-        assert type(value) in supported, f"{type(value)} unsupported gametype"
+        supported = [get_ruleset(gametype) for gametype in SUPPORTED_GAMETYPES]
+        assert any(
+            isinstance(value, cls) for cls in supported
+        ), f"{type(value)} unsupported gametype"
 
     def aim(self, system: System) -> Action:
         cue_ball = system.balls[system.cue.cue_ball_id]

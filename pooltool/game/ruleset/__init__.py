@@ -1,3 +1,5 @@
+from typing import Type
+
 from pooltool.game.datatypes import GameType
 from pooltool.game.ruleset.datatypes import Ruleset
 from pooltool.game.ruleset.eight_ball import EightBall
@@ -15,5 +17,5 @@ _ruleset_classes = {
 }
 
 
-def get_ruleset(game: GameType) -> Ruleset:
-    return _ruleset_classes[game]()
+def get_ruleset(game: GameType) -> Type[Ruleset]:
+    return _ruleset_classes[game]

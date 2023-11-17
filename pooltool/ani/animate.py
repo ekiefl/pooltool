@@ -437,7 +437,7 @@ class Game(Interface):
         # Pick from {NINEBALL, EIGHTBALL, THREECUSHION, SNOOKER, SANDBOX}
         game_type = GameType.NINEBALL
 
-        game = get_ruleset(game_type)
+        game = get_ruleset(game_type)()
 
         table = Table.from_game_type(game_type)
         balls = get_rack(
