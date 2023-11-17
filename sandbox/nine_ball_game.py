@@ -1,12 +1,12 @@
+from logging import root
 from typing import Tuple
 
 import numpy as np
 from mcts.mcts import MCTS
+from mcts.state import State
 
 import pooltool as pt
 from pooltool.game.ruleset.nine_ball import NineBall
-from pooltool.game.ruleset.utils import get_lowest_ball
-from pooltool.ptmath import wiggle
 
 GAMETYPE = pt.GameType.NINEBALL
 
@@ -39,17 +39,22 @@ def gen_game() -> Tuple[pt.MultiSystem, pt.System, pt.NineBall]:
     return multisystem, system, game
 
 
-def aim(shot: pt.System, game: NineBall) -> pt.System:
+def aim(shot: pt.System, game: NineBall) -> Tuple[pt.System, MCTS]:
     """Aim the shot
 
     This is where an AI could be plugged into
     """
-    mcts = MCTS(shot, game)
-    action = mcts.run(20)
+    mcts = MCTS.create(root_state=State(shot, game), breadth=20)
+
+    if game.shot_number == 0:
+        shot.aim_at_ball("1")
+        shot.strike(V0=8)
+        return shot, mcts
+
+    action = mcts.run(600)
     action.apply(shot.cue)
     shot.strike()
-
-    return shot
+    return shot, mcts
 
 
 games_played = 0
@@ -57,8 +62,10 @@ shots, shot, game = gen_game()
 gui = pt.ShotViewer()
 
 while True:
-    shot = pt.simulate(aim(shot, game), inplace=True)
+    shot, mcts = aim(shot, game)
+    shot = pt.simulate(shot, inplace=True)
     game.process_and_advance(shot)
+    # gui.show(shot)
     shots.append(shot)
     shot = shot.copy()
 
@@ -73,3 +80,16 @@ while True:
 
         gui.show(shots, "Press [n] and [p] to cycle through shots, [esc] for next game")
         shots, shot, game = gen_game()
+
+    if game.shot_number == 1:
+        continue
+    ranked = sorted(mcts.root.children, key=lambda child: child.value / child.visits)[
+        ::-1
+    ]
+    for i, child in enumerate(ranked):
+        gui.show(
+            child.state.system,
+            title=f"Option {i}; Rank Value {child.value / child.visits}; Value {child.value}; Visits {child.visits}",
+        )
+        if i == 5:
+            break
