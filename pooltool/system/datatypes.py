@@ -15,7 +15,6 @@ from pooltool.objects.ball.datatypes import Ball, BallHistory
 from pooltool.objects.ball.sets import BallSet
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
-from pooltool.potting import PottingConfig
 from pooltool.serialize import conversion
 from pooltool.serialize.serializers import Pathish
 
@@ -162,39 +161,6 @@ class System:
 
         self.cue.phi = (self.cue.phi + 180 / np.pi * (dphi if left else -dphi)) % 360
 
-    def aim_for_pocket(
-        self,
-        ball_id: str,
-        pocket_id: str,
-        config: PottingConfig = PottingConfig.default(),
-    ):
-        """Set phi to pot a given ball into a given pocket"""
-        assert self.cue.cue_ball_id in self.balls
-
-        self.cue.set_state(
-            phi=config.calculate_angle(
-                self.balls[self.cue.cue_ball_id],
-                self.balls[ball_id],
-                self.table.pockets[pocket_id],
-            )
-        )
-
-    def aim_for_best_pocket(
-        self, ball_id: str, config: PottingConfig = PottingConfig.default()
-    ):
-        """Set phi to pot a given ball into the best/easiest pocket"""
-        assert self.cue.cue_ball_id in self.balls
-
-        cue_ball = self.balls[self.cue.cue_ball_id]
-        object_ball = self.balls[ball_id]
-        pockets = list(self.table.pockets.values())
-
-        self.aim_for_pocket(
-            ball_id=ball_id,
-            pocket_id=config.choose_pocket(cue_ball, object_ball, pockets).id,
-            config=config,
-        )
-
     def strike(self, **state_kwargs) -> None:
         """Set cue stick parameters
 
@@ -316,8 +282,7 @@ class System:
                 "1": Ball.create("1", xy=(table.w / 2, 3 / 4 * table.l)),
             },
         )
-        system.aim_for_best_pocket("1")
-        system.cue.set_state(V0=1.5, b=-0.3)
+        system.cue.set_state(V0=1.5, b=-0.3, phi=95.07668213305062)
         return system
 
 

@@ -18,6 +18,7 @@ from pooltool.game.ruleset.datatypes import (
 )
 from pooltool.game.ruleset.utils import (
     balls_that_hit_cushion,
+    get_ball_ids_on_table,
     get_highest_ball,
     get_lowest_ball,
     get_pocketed_ball_ids_during_shot,
@@ -189,10 +190,11 @@ class NineBall(Ruleset):
     def respot_balls(self, shot: System) -> None:
         """Respot balls
 
-        This respots two circumstances:
+        This respots under the following circumstances:
 
         (1) The shot was illegal, in which case the cue is respotted
-        (2) If the highest ball on the table and the cue are sunk together, both are respotted
+        (2) If there are no balls on the table but it was an illegal shot, respot the
+            highest ball that was on the table at the start of the shot.
         """
         if not self.shot_info.legal:
             respot(
@@ -202,20 +204,12 @@ class NineBall(Ruleset):
                 shot.table.l * 1 / 4,
             )
 
-        highest = get_highest_ball(shot, at_start=True)
-        highest_id = highest.id
-        lowest_id = get_lowest_ball(shot, at_start=True).id
-
-        pocketed_ball_ids = get_pocketed_ball_ids_during_shot(shot)
-
-        if (
-            (highest_id == lowest_id)
-            and (highest_id in pocketed_ball_ids)
-            and not self.shot_info.legal
-        ):
+        ball_ids = get_ball_ids_on_table(shot, at_start=False, exclude={"cue"})
+        if not len(ball_ids):
+            highest = get_highest_ball(shot, at_start=True)
             respot(
                 shot,
-                highest_id,
+                highest.id,
                 shot.table.w / 2,
                 shot.table.l * 3 / 4,
             )

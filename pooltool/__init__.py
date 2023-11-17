@@ -1,5 +1,7 @@
 __version__ = "0.2.1"
 
+import pooltool.ai as ai
+import pooltool.ai.potting as potting
 from pooltool import terminal
 from pooltool.ani.animate import FrameStepper, Game, ShotViewer
 from pooltool.ani.image import (
@@ -44,6 +46,7 @@ from pooltool.objects import (
     BallHistory,
     BallOrientation,
     BallParams,
+    BallSet,
     BallState,
     BilliardTableSpecs,
     CircularCushionSegment,
@@ -58,6 +61,7 @@ from pooltool.objects import (
     Table,
     TableModelDescr,
     TableType,
+    get_ball_set,
 )
 from pooltool.physics.engine import PhysicsEngine
 from pooltool.system import MultiSystem, System, SystemController, multisystem, visual
@@ -97,6 +101,7 @@ __all__ = [
     "AgentType",
     "Agent",
     "Ball",
+    "BallSet",
     "BallState",
     "BallParams",
     "BallHistory",
@@ -124,10 +129,12 @@ __all__ = [
     "ShotViewer",
     "simulate",
     "continuize",
-    "ptmath",
     "get_rack",
     "ThreeCushion",
     "EightBall",
     "NineBall",
     "Snooker",
+    "get_ball_set",
+    "ai",
+    "potting",
 ]
