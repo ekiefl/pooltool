@@ -296,6 +296,9 @@ class EightBall(Ruleset):
                 shot.table.l * 1 / 4,
             )
 
+    def copy(self) -> EightBall:
+        raise NotImplementedError("EightBall copy needs to be implemented")
+
 
 class BallGroup(StrEnum):
     SOLIDS = auto()

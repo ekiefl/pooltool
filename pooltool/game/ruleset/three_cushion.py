@@ -139,3 +139,6 @@ class ThreeCushion(Ruleset):
 
         if self.shot_info.turn_over:
             self.log.add_msg(f"{self.last_player.name} is up!", sentiment="good")
+
+    def copy(self) -> ThreeCushion:
+        raise NotImplementedError("ThreeCushion copy needs to be implemented")

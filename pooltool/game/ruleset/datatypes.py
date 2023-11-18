@@ -294,3 +294,7 @@ class Ruleset(ABC):
         This method should decide which balls should be respotted, and respot them. This
         method should probably make use of pooltool.game.ruleset.utils.respot
         """
+
+    @abstractmethod
+    def copy(self) -> Ruleset:
+        pass
