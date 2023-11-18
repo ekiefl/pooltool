@@ -3,7 +3,17 @@ from __future__ import annotations
 
 import copy
 from abc import ABC, abstractmethod
-from typing import Any, Counter, Dict, Generator, List, Optional, Protocol, Tuple
+from typing import (
+    Any,
+    Callable,
+    Counter,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Protocol,
+    Tuple,
+)
 
 import attrs
 
@@ -14,7 +24,9 @@ from pooltool.utils.strenum import StrEnum, auto
 
 
 class AIPlayer(Protocol):
-    def decide(self, system: System, game: Ruleset) -> Action:
+    def decide(
+        self, system: System, game: Ruleset, callback: Callable[[Action], None]
+    ) -> Action:
         ...
 
     def apply(self, system: System, action: Action) -> None:

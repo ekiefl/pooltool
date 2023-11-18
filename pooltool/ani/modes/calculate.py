@@ -4,15 +4,23 @@ import time
 
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
+from pooltool.ai.datatypes import Action as CueAction
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
+from pooltool.ani.hud import hud
 from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.evolution import simulate
 from pooltool.system.datatypes import multisystem
 from pooltool.system.render import visual
+
+
+def ai_callback(action: CueAction) -> None:
+    action.apply(multisystem.active.cue)
+    visual.cue.set_render_state_as_object_state()
+    hud.update_cue(multisystem.active.cue)
 
 
 class CalculateMode(BaseMode):
@@ -28,7 +36,6 @@ class CalculateMode(BaseMode):
         mouse.mode(MouseMode.RELATIVE)
 
         if Global.game.active_player.is_ai:
-            visual.cue.hide_nodes(ignore=("cue_cseg",))
             overlay_title = f"{Global.game.active_player.name} is thinking..."
             tasks.add(self.simulate_shot, "simulate_shot", taskChain="simulation")
         else:
@@ -86,7 +93,7 @@ class CalculateMode(BaseMode):
     def simulate_shot(self, task):
         if Global.game.active_player.is_ai:
             ai = Global.game.active_player.ai
-            action = ai.decide(multisystem.active, Global.game)
+            action = ai.decide(multisystem.active, Global.game, callback=ai_callback)
             ai.apply(multisystem.active, action)
 
             while task.time < 2.5:

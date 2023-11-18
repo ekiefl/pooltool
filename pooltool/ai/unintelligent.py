@@ -1,3 +1,5 @@
+from typing import Callable, Optional
+
 import attrs
 
 from pooltool.ai.datatypes import Action
@@ -31,7 +33,12 @@ class UnintelligentAI:
             isinstance(value, cls) for cls in supported
         ), f"{type(value)} unsupported gametype"
 
-    def decide(self, system: System, _: Ruleset) -> Action:
+    def decide(
+        self,
+        system: System,
+        _: Ruleset,
+        callback: Optional[Callable[[Action], None]] = None,
+    ) -> Action:
         cue_ball = system.balls[system.cue.cue_ball_id]
         lowest_ball = get_lowest_ball(system, when=StateProbe.CURRENT)
         pockets = list(system.table.pockets.values())
@@ -42,6 +49,9 @@ class UnintelligentAI:
             lowest_ball,
             AIMER.choose_pocket(cue_ball, lowest_ball, pockets),
         )
+
+        if callback is not None:
+            callback(action)
 
         return action
 
