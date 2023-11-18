@@ -17,7 +17,7 @@ from typing import (
 
 import attrs
 
-from pooltool.ai.datatypes import Action
+from pooltool.ai.action import Action
 from pooltool.system.datatypes import Balls, System
 from pooltool.terminal import Timer
 from pooltool.utils.strenum import StrEnum, auto
@@ -25,7 +25,10 @@ from pooltool.utils.strenum import StrEnum, auto
 
 class AIPlayer(Protocol):
     def decide(
-        self, system: System, game: Ruleset, callback: Callable[[Action], None]
+        self,
+        system: System,
+        game: Ruleset,
+        callback: Optional[Callable[[Action], None]] = None,
     ) -> Action:
         ...
 

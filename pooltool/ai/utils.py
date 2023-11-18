@@ -2,7 +2,7 @@ from typing import Tuple
 
 import numpy as np
 
-from pooltool.ai.datatypes import Action
+from pooltool.ai.action import Action
 
 
 def between(low: float, high: float) -> float:

@@ -2,7 +2,7 @@ from typing import Callable, Optional
 
 import attrs
 
-from pooltool.ai.datatypes import Action
+from pooltool.ai.action import Action
 from pooltool.ai.potting import PottingConfig
 from pooltool.ai.potting.simple import calc_potting_angle, pick_best_pot
 from pooltool.ai.utils import random_params
@@ -36,7 +36,7 @@ class UnintelligentAI:
     def decide(
         self,
         system: System,
-        _: Ruleset,
+        game: Ruleset,
         callback: Optional[Callable[[Action], None]] = None,
     ) -> Action:
         cue_ball = system.balls[system.cue.cue_ball_id]

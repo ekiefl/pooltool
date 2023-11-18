@@ -4,7 +4,7 @@ import time
 
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
-from pooltool.ai.datatypes import Action as CueAction
+from pooltool.ai.action import Action as CueAction
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
