@@ -1,6 +1,7 @@
 from typing import Tuple
 
 import pooltool as pt
+from pooltool.evolution.event_based.simulate import simulate
 
 GAMETYPE = pt.GameType.NINEBALL
 
@@ -40,7 +41,9 @@ gui = pt.ShotViewer()
 
 while True:
     # Take a shot
-    ai.aim_and_shoot(shot)
+    action = ai.decide(shot)
+    ai.apply(shot, action)
+    simulate(shot, inplace=True)
     game.process_and_advance(shot)
 
     # Add shot to multisystem

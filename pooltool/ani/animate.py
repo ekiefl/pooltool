@@ -21,6 +21,7 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 import pooltool.terminal as terminal
+from pooltool.ai.unintelligent import UnintelligentAI
 from pooltool.ani.camera import cam
 from pooltool.ani.collision import cue_avoid
 from pooltool.ani.environment import environment
@@ -33,6 +34,7 @@ from pooltool.evolution.continuize import continuize
 from pooltool.game.datatypes import GameType
 from pooltool.game.layouts import get_rack
 from pooltool.game.ruleset import get_ruleset
+from pooltool.game.ruleset.datatypes import Player
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
 from pooltool.system.datatypes import System, multisystem
@@ -438,6 +440,10 @@ class Game(Interface):
         game_type = GameType.NINEBALL
 
         game = get_ruleset(game_type)()
+        game.players = [
+            Player("Player", ai=None),
+            Player("AI", ai=UnintelligentAI(game)),
+        ]
 
         table = Table.from_game_type(game_type)
         balls = get_rack(
