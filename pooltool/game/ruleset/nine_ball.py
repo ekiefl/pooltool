@@ -17,6 +17,7 @@ from pooltool.game.ruleset.datatypes import (
     ShotInfo,
 )
 from pooltool.game.ruleset.utils import (
+    StateProbe,
     balls_that_hit_cushion,
     get_ball_ids_on_table,
     get_highest_ball,
@@ -165,7 +166,7 @@ class NineBall(Ruleset):
             ),
             movable=[] if self.shot_info.legal else ["cue"],
             cueable=["cue"],
-            hittable=(get_lowest_ball(shot, at_start=False).id,),
+            hittable=(get_lowest_ball(shot, when=StateProbe.END).id,),
             call_shot=False,
         )
 
@@ -204,15 +205,15 @@ class NineBall(Ruleset):
                 shot.table.l * 1 / 4,
             )
 
-        ball_ids = get_ball_ids_on_table(shot, at_start=False, exclude={"cue"})
-        if not len(ball_ids):
-            highest = get_highest_ball(shot, at_start=True)
-            respot(
-                shot,
-                highest.id,
-                shot.table.w / 2,
-                shot.table.l * 3 / 4,
-            )
+            ball_ids = get_ball_ids_on_table(shot, at_start=False, exclude={"cue"})
+            if not len(ball_ids):
+                highest = get_highest_ball(shot, at_start=True)
+                respot(
+                    shot,
+                    highest.id,
+                    shot.table.w / 2,
+                    shot.table.l * 3 / 4,
+                )
 
     def copy(self) -> NineBall:
         game = NineBall()
