@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+import time
+
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
@@ -10,6 +12,7 @@ from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.evolution import simulate
 from pooltool.system.datatypes import multisystem
+from pooltool.system.render import visual
 
 
 class CalculateMode(BaseMode):
@@ -24,13 +27,19 @@ class CalculateMode(BaseMode):
     def enter(self):
         mouse.mode(MouseMode.RELATIVE)
 
+        if Global.game.active_player.is_ai:
+            visual.cue.hide_nodes(ignore=("cue_cseg",))
+            overlay_title = f"{Global.game.active_player.name} is thinking..."
+            tasks.add(self.simulate_shot, "simulate_shot", taskChain="simulation")
+        else:
+            overlay_title = "Calculating shot..."
+            tasks.add(self.simulate_shot, "simulate_shot", taskChain="simulation")
+
         self.shot_sim_overlay = GenericMenu(
-            title="Calculating shot...",
+            title=overlay_title,
             frame_color=(0, 0, 0, 0.4),
             title_pos=(0, 0, -0.2),
         )
-
-        tasks.add(self.run_simulation, "run_simulation", taskChain="simulation")
 
         self.register_keymap_event("escape", Action.quit, True)
         self.register_keymap_event("mouse1", Action.zoom, True)
@@ -50,7 +59,7 @@ class CalculateMode(BaseMode):
         self.shot_sim_overlay.hide()
 
     def calculate_view_task(self, task):
-        if not tasks.has("run_simulation"):
+        if not tasks.has("simulate_shot"):
             # simulation calculation is finished
             Global.mode_mgr.change_mode(
                 Mode.shot, enter_kwargs=dict(build_animations=True)
@@ -74,8 +83,14 @@ class CalculateMode(BaseMode):
 
         return task.cont
 
-    def run_simulation(self, task):
-        """Run a pool simulation"""
+    def simulate_shot(self, task):
+        if Global.game.active_player.is_ai:
+            ai = Global.game.active_player.ai
+            action = ai.decide(multisystem.active, Global.game)
+            ai.apply(multisystem.active, action)
+
+            while task.time < 2.5:
+                time.sleep(0.1)
 
         simulate(
             multisystem.active,
@@ -83,6 +98,19 @@ class CalculateMode(BaseMode):
             inplace=True,
         )
 
-        tasks.remove("run_simulation")
+        tasks.remove("simulate_shot")
+
+        return task.done
+
+    def calculate_ai_shot(self, task):
+        """Calculate the AI's next move, then simulate"""
+
+        simulate(
+            multisystem.active,
+            continuous=True,
+            inplace=True,
+        )
+
+        tasks.remove("simulate_shot")
 
         return task.done

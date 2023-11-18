@@ -7,7 +7,7 @@ from pooltool.ai.utils import random_params
 from pooltool.game.datatypes import GameType
 from pooltool.game.ruleset import get_ruleset
 from pooltool.game.ruleset.datatypes import Ruleset
-from pooltool.game.ruleset.utils import get_lowest_ball
+from pooltool.game.ruleset.utils import StateProbe, get_lowest_ball
 from pooltool.system.datatypes import System
 
 SUPPORTED_GAMETYPES = {
@@ -31,9 +31,9 @@ class UnintelligentAI:
             isinstance(value, cls) for cls in supported
         ), f"{type(value)} unsupported gametype"
 
-    def decide(self, system: System) -> Action:
+    def decide(self, system: System, _: Ruleset) -> Action:
         cue_ball = system.balls[system.cue.cue_ball_id]
-        lowest_ball = get_lowest_ball(system, at_start=True)
+        lowest_ball = get_lowest_ball(system, when=StateProbe.CURRENT)
         pockets = list(system.table.pockets.values())
 
         action = random_params()

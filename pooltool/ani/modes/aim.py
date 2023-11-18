@@ -106,6 +106,10 @@ class AimMode(BaseMode):
         tasks.add(self.aim_task, "aim_task")
         tasks.add(self.shared_task, "shared_task")
 
+        # If an AI is aiming, change mode to Mode.calculate
+        if Global.game.active_player.is_ai:
+            Global.mode_mgr.change_mode(Mode.calculate)
+
     def exit(self):
         tasks.remove("aim_task")
         tasks.remove("shared_task")

@@ -3,20 +3,32 @@ from __future__ import annotations
 
 import copy
 from abc import ABC, abstractmethod
-from typing import Any, Counter, Dict, Generator, List, Optional, Tuple
+from typing import Any, Counter, Dict, Generator, List, Optional, Protocol, Tuple
 
 import attrs
 
-from pooltool.ai.interface import AIPlayer
+from pooltool.ai.datatypes import Action
 from pooltool.system.datatypes import Balls, System
 from pooltool.terminal import Timer
 from pooltool.utils.strenum import StrEnum, auto
+
+
+class AIPlayer(Protocol):
+    def decide(self, system: System, game: Ruleset) -> Action:
+        ...
+
+    def apply(self, system: System, action: Action) -> None:
+        ...
 
 
 @attrs.define
 class Player:
     name: str
     ai: Optional[AIPlayer] = None
+
+    @property
+    def is_ai(self) -> bool:
+        return self.ai is not None
 
     @classmethod
     def create_players(cls, names: Optional[List[str]] = None) -> List[Player]:
@@ -146,8 +158,7 @@ class Ruleset(ABC):
 
     def __init__(self, players: Optional[List[Player]] = None) -> None:
         # Player info
-        if players is None:
-            players = []
+        players = [] if players is None else players
         self.players: List[Player] = players
         self.active_idx: int = 0
 
