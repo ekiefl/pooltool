@@ -1,9 +1,9 @@
 [graphics]
-room = 1
-floor = 1
+room = 0
+floor = 0
 table = 1
 shadows = 0
-shader = 1
+shader = 0
 lights = 1
 physical_based_rendering = 0
 debug = 0

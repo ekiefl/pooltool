@@ -1,7 +1,5 @@
 """A place for horrible stuff to happen"""
 
-from typing import Dict, Tuple
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -315,13 +313,3 @@ def create_pocket_table_pockets(specs):
     }
 
     return pockets
-
-
-pocket_jaw_map: Dict[str, Tuple[str, str]] = {
-    "lb": ("2t", "1t"),
-    "lc": ("5t", "4t"),
-    "lc": ("8t", "7t"),
-    "rb": ("17t", "16t"),
-    "rc": ("14t", "13t"),
-    "rt": ("11t", "10t"),
-}

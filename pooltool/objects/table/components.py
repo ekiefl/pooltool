@@ -214,29 +214,6 @@ class Pocket:
     def b(self) -> float:
         return self.center[1]
 
-    @cached_property
-    def potting_point(self) -> NDArray[np.float64]:
-        """The 2D coordinates that should be aimed at for the ball to be sunk
-
-        Determines the coordinates of a point ahead of the pocket where, if a traveling
-        ball were to pass through it, would result in the ball being sunk. The point
-        would be a radius to left/right, and a radius up/down, depending on the pocket.
-        These values were determined empirically by trial and error.
-        """
-        (x, y, _), r = self.center, self.radius
-
-        if self.id[0] == "l":
-            x = x + r
-        else:
-            x = x - r
-
-        if self.id[1] == "b":
-            y = y + r
-        elif self.id[1] == "t":
-            y = y - r
-
-        return np.array([x, y], dtype=np.float64)
-
     def add(self, ball_id: str) -> None:
         self.contains.add(ball_id)
 
