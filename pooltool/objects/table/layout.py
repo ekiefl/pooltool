@@ -1,5 +1,7 @@
 """A place for horrible stuff to happen"""
 
+from typing import Dict, Tuple
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -16,7 +18,7 @@ def _arr(*args) -> NDArray[np.float64]:
     return np.array(args, dtype=np.float64)
 
 
-def _create_billiard_table_cushion_segments(specs) -> CushionSegments:
+def create_billiard_table_cushion_segments(specs) -> CushionSegments:
     h = specs.cushion_height
     return CushionSegments(
         linear={
@@ -50,7 +52,7 @@ def _create_billiard_table_cushion_segments(specs) -> CushionSegments:
     )
 
 
-def _create_pocket_table_cushion_segments(specs) -> CushionSegments:
+def create_pocket_table_cushion_segments(specs) -> CushionSegments:
     # https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times
     # for diagram
     cw = specs.cushion_width
@@ -283,7 +285,7 @@ def _create_pocket_table_cushion_segments(specs) -> CushionSegments:
     )
 
 
-def _create_pocket_table_pockets(specs):
+def create_pocket_table_pockets(specs):
     pw = specs.corner_pocket_width
     cr = specs.corner_pocket_radius
     sr = specs.side_pocket_radius
@@ -313,3 +315,13 @@ def _create_pocket_table_pockets(specs):
     }
 
     return pockets
+
+
+pocket_jaw_map: Dict[str, Tuple[str, str]] = {
+    "lb": ("2t", "1t"),
+    "lc": ("5t", "4t"),
+    "lc": ("8t", "7t"),
+    "rb": ("17t", "16t"),
+    "rc": ("14t", "13t"),
+    "rt": ("11t", "10t"),
+}
