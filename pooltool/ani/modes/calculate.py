@@ -21,6 +21,7 @@ def ai_callback(action: CueAction) -> None:
     action.apply(multisystem.active.cue)
     visual.cue.set_render_state_as_object_state()
     hud.update_cue(multisystem.active.cue)
+    print(action)
 
 
 class CalculateMode(BaseMode):

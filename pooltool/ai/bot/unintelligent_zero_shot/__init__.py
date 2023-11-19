@@ -23,7 +23,7 @@ AIMER = PottingConfig(
 
 
 @attrs.define
-class UnintelligentAI:
+class UnintelligentZeroShotAI:
     game: Ruleset = attrs.field()
 
     @game.validator  # type: ignore

@@ -45,15 +45,6 @@ class Player:
     def is_ai(self) -> bool:
         return self.ai is not None
 
-    @classmethod
-    def create_players(cls, names: Optional[List[str]] = None) -> List[Player]:
-        if names is None:
-            names = ["Player 1", "Player 2"]
-
-        assert len(names) == len(set(names)), "Player names must be unique"
-
-        return [cls(name) for name in names]
-
 
 @attrs.define
 class Log:

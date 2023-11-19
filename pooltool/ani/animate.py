@@ -21,7 +21,7 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 import pooltool.terminal as terminal
-from pooltool.ai.bot import UnintelligentAI
+from pooltool.ai.bot import RewardBasedFlatSearch, UnintelligentZeroShotAI
 from pooltool.ani.camera import cam
 from pooltool.ani.collision import cue_avoid
 from pooltool.ani.environment import environment
@@ -441,8 +441,8 @@ class Game(Interface):
 
         game = get_ruleset(game_type)()
         game.players = [
-            Player("Player", ai=None),
-            Player("AI", ai=UnintelligentAI(game)),
+            Player("AI 1", ai=RewardBasedFlatSearch(game)),
+            Player("AI 2", ai=RewardBasedFlatSearch(game)),
         ]
 
         table = Table.from_game_type(game_type)
