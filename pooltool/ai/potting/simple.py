@@ -13,7 +13,13 @@ import numpy as np
 from numpy.typing import NDArray
 
 from pooltool.objects import Ball, Pocket, Table
-from pooltool.ptmath import angle_between_vectors, unit_vector_slow
+from pooltool.ptmath import (
+    angle_between_vectors,
+    find_intersection_2D,
+    norm3d,
+    unit_vector,
+    unit_vector_slow,
+)
 
 Coordinate = NDArray[np.float64]
 
@@ -43,6 +49,91 @@ pocket_jaw_map: Dict[str, Jaw] = {
     "rc": Jaw("13", "12", "14", "15", False),
     "rt": Jaw("10", "9", "11", "12", True),
 }
+
+
+def potting_point_side(_: Ball, table: Table, pocket: Pocket) -> Coordinate:
+    jaw = pocket_jaw_map[pocket.id]
+    lrail = table.cushion_segments.linear[jaw.left_rail]
+    rrail = table.cushion_segments.linear[jaw.right_rail]
+
+    # Unfortunately, we don't know which two endpoints of each cushion segment define the
+    # jaws of the pocket, so we calculate distances between the two left points against
+    # the two right points. The minimum distance are the pocket jaws, and for these two
+    # points we calculate the "midpoint between jaws" (MBJ). That's our potting point.
+
+    min_dist = np.inf
+    MBJ = np.empty(2)
+    for pl, pr in (
+        (lrail.p1, rrail.p1),
+        (lrail.p1, rrail.p2),
+        (lrail.p2, rrail.p1),
+        (lrail.p2, rrail.p2),
+    ):
+        dist = norm3d(pl - pr)
+        if dist < min_dist:
+            min_dist = dist
+            MBJ = (pl + (pr - pl) / 2)[:2]
+
+    return MBJ
+
+
+def potting_point_corner(ball: Ball, table: Table, pocket: Pocket) -> Coordinate:
+    jaw = pocket_jaw_map[pocket.id]
+    lrail = table.cushion_segments.linear[jaw.left_rail]
+    rrail = table.cushion_segments.linear[jaw.right_rail]
+
+    # adjacent cushion intersection
+    ACI = find_intersection_2D(
+        l1x=lrail.lx,
+        l1y=lrail.ly,
+        l10=lrail.l0,
+        l2x=rrail.lx,
+        l2y=rrail.ly,
+        l20=rrail.l0,
+    )
+
+    ball_to_ACI = ACI - ball.xyz[:2]
+
+    lrail_unit = unit_vector(lrail.p2 - lrail.p1)[:2]
+    rrail_unit = unit_vector(rrail.p2 - rrail.p1)[:2]
+
+    # Point the cushion unit vectors towards the pocket
+    if np.dot(ball_to_ACI, lrail_unit) < 0:
+        lrail_unit *= -1
+    if np.dot(ball_to_ACI, rrail_unit) < 0:
+        rrail_unit *= -1
+
+    theta_lrail = np.abs(angle_between_vectors(ball_to_ACI, lrail_unit))
+    theta_rrail = np.abs(angle_between_vectors(ball_to_ACI, rrail_unit))
+
+    assert theta_lrail <= 90.0
+    assert theta_rrail <= 90.0
+
+    # The rail with smallest theta is the rail ball is closest towards
+    # Offset will be in opposite direction of other rail
+    if theta_lrail < theta_rrail:
+        theta = 45.0 - theta_lrail
+        offset_dir = -rrail_unit
+    else:
+        theta = 45.0 - theta_rrail
+        offset_dir = -lrail_unit
+
+    assert 45.0 >= theta >= 0.0
+
+    # Apply a linear interpolation, such that
+    # theta = 0 -> 0
+    # theta = 45 -> R
+    offset_mag = theta / 45 * ball.params.R
+    return ACI + offset_dir * offset_mag
+
+
+def get_potting_point(ball: Ball, table: Table, pocket: Pocket) -> Coordinate:
+    """The 2D coordinates that should be aimed at for the ball to be sunk"""
+    return (
+        potting_point_corner(ball, table, pocket)
+        if pocket_jaw_map[pocket.id].corner
+        else potting_point_side(ball, table, pocket)
+    )
 
 
 def calc_cut_angle(

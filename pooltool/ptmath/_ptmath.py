@@ -1,4 +1,5 @@
 from math import degrees, sqrt
+from typing import Tuple
 
 import numpy as np
 from numba import jit
@@ -7,6 +8,7 @@ import pooltool.constants as const
 
 
 def angle_between_vectors(v1, v2) -> float:
+    """Returns angles between [-180, 180]"""
     angle = np.math.atan2(np.linalg.det([v1, v2]), np.dot(v1, v2))  # type: ignore
     return degrees(angle)
 
@@ -14,6 +16,41 @@ def angle_between_vectors(v1, v2) -> float:
 def wiggle(x, val):
     """Vary a float or int x by +- val according to a uniform distribution"""
     return x + val * (2 * np.random.rand() - 1)
+
+
+def find_intersection_2D(
+    l1x: float,
+    l1y: float,
+    l10: float,
+    l2x: float,
+    l2y: float,
+    l20: float,
+) -> Tuple[float, float]:
+    """Find the intersection point of two lines in 2D space
+
+    The lines are defined by their linear equations in the general form:
+    (l1x)x + (l1y)y + l10 = 0 and (l2x)x + (l2y)y + l20 = 0.
+
+    Args:
+        l1x: The coefficient of x in the first line equation.
+        l1y: The coefficient of y in the first line equation.
+        l10: The constant term in the first line equation.
+        l2x: The coefficient of x in the second line equation.
+        l2y: The coefficient of y in the second line equation.
+        l20: The constant term in the second line equation.
+
+    Returns:
+        A tuple (x, y) representing the intersection point if the lines intersect at a
+        single point. Returns None if the lines are parallel or coincident (no unique
+        intersection).
+    """
+    if (determinant := l1x * l2y - l2x * l1y) == 0:
+        raise ValueError("Lines are parallel or coincident, no unique intersection")
+
+    x = (l1y * l20 - l2y * l10) / determinant
+    y = (l2x * l10 - l1x * l20) / determinant
+
+    return x, y
 
 
 @jit(nopython=True, cache=const.numba_cache)
@@ -33,6 +70,8 @@ def cross(u, v):
 
 def unit_vector_slow(vector, handle_zero=False):
     """Returns the unit vector of the vector.
+
+    "Slow", but supports more than just 3D.
 
     Parameters
     ==========
