@@ -45,43 +45,6 @@ pocket_jaw_map: Dict[str, Jaw] = {
 }
 
 
-def _potting_point_side(table: Table, pocket_id: str) -> Coordinate:
-    pass
-
-
-def _potting_point_corner(table: Table, pocket_id: str) -> Coordinate:
-    pass
-
-
-def potting_point(table: Table, pocket_id: str) -> Coordinate:
-    """The 2D coordinates that should be aimed at for the ball to be sunk
-
-    Determines the coordinates of a point ahead of the pocket where, if a traveling
-    ball were to pass through it, would result in the ball being sunk. These values were
-    determined by voodoo.
-    """
-    jaw = table.pockets[pocket_id]
-
-    if jaw.corner:
-        return _potting_point_corner(table, pocket_id)
-    else:
-        return _potting_point_side(table, pocket_id)
-
-    (x, y, _), r = self.center, self.radius
-
-    if self.id[0] == "l":
-        x = x + r
-    else:
-        x = x - r
-
-    if self.id[1] == "b":
-        y = y + r
-    elif self.id[1] == "t":
-        y = y - r
-
-    return np.array([x, y], dtype=np.float64)
-
-
 def calc_cut_angle(
     cueball: Coordinate, ball: Coordinate, potting_point: Coordinate
 ) -> float:
