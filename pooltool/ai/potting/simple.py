@@ -15,6 +15,7 @@ from numpy.typing import NDArray
 from pooltool.objects import Ball, Pocket, Table
 from pooltool.ptmath import (
     angle_between_vectors,
+    are_points_on_same_side,
     find_intersection_2D,
     norm3d,
     unit_vector,
@@ -78,6 +79,11 @@ def potting_point_side(_: Ball, table: Table, pocket: Pocket) -> Coordinate:
 
 
 def potting_point_corner(ball: Ball, table: Table, pocket: Pocket) -> Coordinate:
+    # Treatment varies if ball is considered "in the jaws of the pocket"
+    potting_point = potting_point_jaw_treatment(ball, table, pocket)
+    if potting_point is not None:
+        return potting_point
+
     jaw = pocket_jaw_map[pocket.id]
     lrail = table.cushion_segments.linear[jaw.left_rail]
     rrail = table.cushion_segments.linear[jaw.right_rail]
@@ -125,6 +131,46 @@ def potting_point_corner(ball: Ball, table: Table, pocket: Pocket) -> Coordinate
     # theta = 45 -> R
     offset_mag = np.sin(np.pi / 90 * theta) * ball.params.R
     return ACI + offset_dir * offset_mag
+
+
+def potting_point_jaw_treatment(
+    ball: Ball, table: Table, pocket: Pocket
+) -> Optional[Coordinate]:
+    """Determines if ball is in jaws of pocket, decides what to do if should
+
+    Returns:
+        If None, the ball is not considered in the jaws of the pocket.
+    """
+
+    jaw = pocket_jaw_map[pocket.id]
+    lrail = table.cushion_segments.linear[jaw.left_rail]
+    ledge = table.cushion_segments.linear[jaw.left_edge]
+    rrail = table.cushion_segments.linear[jaw.right_rail]
+    redge = table.cushion_segments.linear[jaw.right_edge]
+
+    # Find intersection of edge and rail for left and right
+    lpoint = find_intersection_2D(
+        l1x=lrail.lx,
+        l1y=lrail.ly,
+        l10=lrail.l0,
+        l2x=ledge.lx,
+        l2y=ledge.ly,
+        l20=ledge.l0,
+    )
+    rpoint = find_intersection_2D(
+        l1x=rrail.lx,
+        l1y=rrail.ly,
+        l10=rrail.l0,
+        l2x=redge.lx,
+        l2y=redge.ly,
+        l20=redge.l0,
+    )
+
+    # Consider the line between lpoint and rpoint. Is the center of object ball on the
+    # same side of this line as the pocket center? If so, it's considered in the jaws
+    in_jaws = are_points_on_same_side(lpoint, rpoint, ball.xyz, pocket.center)
+
+    return pocket.center[:2] if in_jaws else None
 
 
 def get_potting_point(ball: Ball, table: Table, pocket: Pocket) -> Coordinate:
