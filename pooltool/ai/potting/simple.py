@@ -123,7 +123,7 @@ def potting_point_corner(ball: Ball, table: Table, pocket: Pocket) -> Coordinate
     # Apply a linear interpolation, such that
     # theta = 0 -> 0
     # theta = 45 -> R
-    offset_mag = theta / 45 * ball.params.R
+    offset_mag = np.sin(np.pi / 90 * theta) * ball.params.R
     return ACI + offset_dir * offset_mag
 
 
