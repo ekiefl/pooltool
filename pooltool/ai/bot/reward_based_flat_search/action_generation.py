@@ -1,25 +1,10 @@
-from typing import Callable, Dict, List, Optional
-
-import attrs
-
 from pooltool.ai.action import Action
-from pooltool.ai.datatypes import State
 from pooltool.ai.potting import PottingConfig
-from pooltool.ai.potting.simple import calc_potting_angle, pick_best_pot
-from pooltool.ai.reward.nine_ball import RewardPointBased
 from pooltool.ai.utils import between, random_params
-from pooltool.evolution.event_based.simulate import simulate
-from pooltool.game.datatypes import GameType
-from pooltool.game.ruleset import get_ruleset
 from pooltool.game.ruleset.datatypes import Ruleset
-from pooltool.objects.ball.datatypes import Ball
-from pooltool.objects.table.components import Pocket
 from pooltool.system.datatypes import System
 
-AIMER = PottingConfig(
-    calculate_angle=calc_potting_angle,
-    choose_pocket=pick_best_pot,
-)
+AIMER = PottingConfig.default()
 
 
 def random_action() -> Action:
@@ -40,7 +25,8 @@ def get_best_aiming_phi(system: System, game: Ruleset) -> float:
     return AIMER.calculate_angle(
         cue_ball,
         target_ball,
-        AIMER.choose_pocket(cue_ball, target_ball, pockets),
+        system.table,
+        AIMER.choose_pocket(cue_ball, target_ball, system.table, pockets),
     )
 
 

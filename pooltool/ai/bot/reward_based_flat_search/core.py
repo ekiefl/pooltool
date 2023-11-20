@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Optional
+from typing import Callable, List, Optional
 
 import attrs
 
@@ -10,10 +10,7 @@ from pooltool.ai.bot.reward_based_flat_search.action_generation import (
     random_action,
 )
 from pooltool.ai.datatypes import State
-from pooltool.ai.potting import PottingConfig
-from pooltool.ai.potting.simple import calc_potting_angle, pick_best_pot
 from pooltool.ai.reward.nine_ball import RewardPointBased
-from pooltool.ai.utils import between, random_params
 from pooltool.evolution.event_based.simulate import simulate
 from pooltool.game.datatypes import GameType
 from pooltool.game.ruleset import get_ruleset
@@ -85,7 +82,7 @@ class RewardBasedFlatSearch:
         for i in range(self.iterations):
             state = State(system.copy(), game.copy())
 
-            action = apply_phi_to_action(potting_phi, 0.2, random_action())
+            action = apply_phi_to_action(potting_phi, 0.0, random_action())
             simulate_action(state, action)
 
             reward = self.rewarder.calc(state, debug=True)

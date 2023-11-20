@@ -65,21 +65,21 @@ class LinearCushionSegment:
         return are_dataclasses_equal(self, other)
 
     @cached_property
-    def height(self):
+    def height(self) -> float:
         return self.p1[2]
 
     @cached_property
-    def lx(self):
+    def lx(self) -> float:
         p1x, p1y, _ = self.p1
         p2x, p2y, _ = self.p2
         return 1 if (p2x - p1x) == 0 else -(p2y - p1y) / (p2x - p1x)
 
     @cached_property
-    def ly(self):
+    def ly(self) -> float:
         return 0 if (self.p2[0] - self.p1[0]) == 0 else 1
 
     @cached_property
-    def l0(self):
+    def l0(self) -> float:
         p1x, p1y, _ = self.p1
         p2x, p2y, _ = self.p2
         return -p1x if (p2x - p1x) == 0 else (p2y - p1y) / (p2x - p1x) * p1x - p1y

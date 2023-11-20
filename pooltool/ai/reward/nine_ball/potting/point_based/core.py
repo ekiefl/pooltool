@@ -5,25 +5,9 @@ import attrs
 import numpy as np
 
 from pooltool.ai.datatypes import State
-from pooltool.ai.potting.simple import (
-    calc_cut_angle,
-    calc_shadow_ball_center,
-    pick_best_pot,
-)
 from pooltool.events.datatypes import EventType
-from pooltool.events.filter import (
-    by_ball,
-    by_type,
-    filter_ball,
-    filter_events,
-    filter_type,
-)
-from pooltool.game.ruleset.utils import (
-    StateProbe,
-    get_lowest_ball,
-    is_numbered_ball_pocketed,
-)
-from pooltool.ptmath import norm3d
+from pooltool.events.filter import filter_ball, filter_type
+from pooltool.game.ruleset.utils import is_numbered_ball_pocketed
 
 
 def is_legal_pot(state: State) -> bool:

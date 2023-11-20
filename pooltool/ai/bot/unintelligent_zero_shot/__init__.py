@@ -4,7 +4,6 @@ import attrs
 
 from pooltool.ai.action import Action
 from pooltool.ai.potting import PottingConfig
-from pooltool.ai.potting.simple import calc_potting_angle, pick_best_pot
 from pooltool.ai.utils import random_params
 from pooltool.game.datatypes import GameType
 from pooltool.game.ruleset import get_ruleset
@@ -16,10 +15,7 @@ SUPPORTED_GAMETYPES = {
     GameType.NINEBALL,
 }
 
-AIMER = PottingConfig(
-    calculate_angle=calc_potting_angle,
-    choose_pocket=pick_best_pot,
-)
+AIMER = PottingConfig.default()
 
 
 @attrs.define

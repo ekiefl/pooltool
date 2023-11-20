@@ -6,7 +6,7 @@ ignored. Bank shots are not supported. Interfering balls are not detected.
 """
 
 import math
-from typing import Dict, Sequence
+from typing import Dict, List, Optional, Sequence
 
 import attrs
 import numpy as np
@@ -144,11 +144,13 @@ def calc_cut_angle(
     return angle_between_vectors(aim_vector, pocket_vector)
 
 
-def calc_shadow_ball_center(ball: Ball, pocket: Pocket) -> Coordinate:
+def calc_shadow_ball_center(ball: Ball, table: Table, pocket: Pocket) -> Coordinate:
     """Return coordinates of shadow ball for potting into specific pocket"""
 
+    potting_point = get_potting_point(ball, table, pocket)
+
     # Calculate the unit vector drawn from the object ball to the pocket
-    ball_to_pocket_vector = unit_vector_slow(pocket.potting_point - ball.xyz[:2])
+    ball_to_pocket_vector = unit_vector_slow(potting_point - ball.xyz[:2])
 
     # The shadow ball center is two ball radii away from the object ball center
     magnitude = ball.params.R * 2
@@ -157,10 +159,12 @@ def calc_shadow_ball_center(ball: Ball, pocket: Pocket) -> Coordinate:
     return ball.xyz[:2] - ball_to_pocket_vector * magnitude
 
 
-def calc_potting_angle(cueball: Ball, ball: Ball, pocket: Pocket) -> float:
+def calc_potting_angle(
+    cueball: Ball, ball: Ball, table: Table, pocket: Pocket
+) -> float:
     """Return potting angle phi for potting into pocket"""
     p1 = cueball.xyz[:2]
-    p2 = calc_shadow_ball_center(ball, pocket)
+    p2 = calc_shadow_ball_center(ball, table, pocket)
 
     (x1, y1), (x2, y2) = p1, p2
     x_diff, y_diff = x2 - x1, y2 - y1
@@ -168,19 +172,28 @@ def calc_potting_angle(cueball: Ball, ball: Ball, pocket: Pocket) -> float:
     return math.degrees(math.atan2(y_diff, x_diff))
 
 
-def pick_best_pot(cueball: Ball, ball: Ball, pockets: Sequence[Pocket]) -> Pocket:
+def pick_best_pot(
+    cueball: Ball, ball: Ball, table: Table, pockets: Optional[Sequence[Pocket]] = None
+) -> Pocket:
     """Return best pocket to pot ball into
 
     This function calculates the potting angle required for each pocket. The "best"
     pocket is the one where the pot requires the smallest cut angle.
+
+    If pockets is not passed, all pockets on the table will be used.
     """
 
-    best_pocket, min_cut_angle = pockets[0], 90.0
-    for pocket in pockets:
+    _pockets: Sequence[Pocket] = (
+        list(table.pockets.values()) if pockets is None else pockets
+    )
+
+    best_pocket, min_cut_angle = _pockets[0], 90.0
+    for pocket in _pockets:
+        potting_point = get_potting_point(ball, table, pocket)
         cut_angle = calc_cut_angle(
             cueball=cueball.xyz[:2],
-            ball=calc_shadow_ball_center(ball, pocket),
-            potting_point=pocket.potting_point,
+            ball=calc_shadow_ball_center(ball, table, pocket),
+            potting_point=potting_point,
         )
         if abs(cut_angle) < abs(min_cut_angle):  # Prefer a straighter shot
             min_cut_angle = cut_angle

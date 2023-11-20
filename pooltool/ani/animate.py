@@ -441,8 +441,8 @@ class Game(Interface):
 
         game = get_ruleset(game_type)()
         game.players = [
-            Player("Player"),
-            # Player("AI 1", ai=RewardBasedFlatSearch(game)),
+            # Player("Player"),
+            Player("AI 1", ai=RewardBasedFlatSearch(game)),
             Player("AI 2", ai=RewardBasedFlatSearch(game)),
         ]
 
