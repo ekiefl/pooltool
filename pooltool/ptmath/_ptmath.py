@@ -18,6 +18,24 @@ def wiggle(x, val):
     return x + val * (2 * np.random.rand() - 1)
 
 
+def are_points_on_same_side(p1, p2, p3, p4):
+    """Are points p3, p4 are on the same side of the line formed by points p1 and p2?
+
+    Accepts indexable objects. This is a 2D function, but if higher dimensions are
+    provided, that's ok (only the first two dimensions will be used).
+    """
+
+    def cross_product_sign(a, b, c):
+        """Calculate the sign of the cross product of vectors (a, b) and (a, c)"""
+        return (b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1])
+
+    cp1 = cross_product_sign(p1, p2, p3)
+    cp2 = cross_product_sign(p1, p2, p4)
+
+    # If both cross products have the same sign, then p3 and p4 are on the same side
+    return cp1 * cp2 >= 0
+
+
 def find_intersection_2D(
     l1x: float,
     l1y: float,
