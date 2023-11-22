@@ -161,16 +161,16 @@ class System:
 
         self.cue.phi = (self.cue.phi + 180 / np.pi * (dphi if left else -dphi)) % 360
 
-    def strike(self, **state_kwargs) -> None:
+    def strike(self, **kwargs) -> None:
         """Set cue stick parameters
 
         Just a wrapper for self.cue.set_state
 
-        state_kwargs: **kwargs
+        kwargs: **kwargs
             Pass state parameters to be updated for the cue strike. Any parameters
             accepted by Cue.set_state are permissible.
         """
-        self.cue.set_state(**state_kwargs)
+        self.cue.set_state(**kwargs)
         assert self.cue.cue_ball_id in self.balls
 
     def get_system_energy(self):
