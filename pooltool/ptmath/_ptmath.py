@@ -186,3 +186,12 @@ def norm3d(vec):
     241 ns ± 2.57 ns per loop (mean ± std. dev. of 7 runs, 1,000,000 loops each)
     """
     return sqrt(vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2)
+
+
+@jit(nopython=True, cache=const.numba_cache)
+def norm2d(vec):
+    """Calculate the norm of a 2D vector
+
+    This is faster than np.linalg.norm
+    """
+    return sqrt(vec[0] ** 2 + vec[1] ** 2)

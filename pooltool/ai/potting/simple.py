@@ -6,18 +6,21 @@ ignored. Bank shots are not supported. Interfering balls are not detected.
 """
 
 import math
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, Iterable, Optional, Set
 
 import attrs
 import numpy as np
 from numpy.typing import NDArray
 
+import pooltool.constants as const
 from pooltool.objects import Ball, Pocket, Table
 from pooltool.ptmath import (
     angle_between_vectors,
     are_points_on_same_side,
     find_intersection_2D,
+    norm2d,
     norm3d,
+    point_on_line_closest_to_point,
     unit_vector,
     unit_vector_slow,
 )
@@ -37,18 +40,20 @@ class Jaw:
 
     left_edge: str
     left_rail: str
+    left_tip: str
     right_edge: str
     right_rail: str
+    right_tip: str
     corner: bool
 
 
 pocket_jaw_map: Dict[str, Jaw] = {
-    "lb": Jaw("1", "18", "2", "3", True),
-    "lc": Jaw("4", "3", "5", "6", False),
-    "lt": Jaw("7", "6", "8", "9", True),
-    "rb": Jaw("16", "15", "17", "18", True),
-    "rc": Jaw("13", "12", "14", "15", False),
-    "rt": Jaw("10", "9", "11", "12", True),
+    "lb": Jaw("1", "18", "1t", "2", "3", "2t", True),
+    "lc": Jaw("4", "3", "4t", "5", "6", "5t", False),
+    "lt": Jaw("7", "6", "7t", "8", "9", "8t", True),
+    "rb": Jaw("16", "15", "16t", "17", "18", "17t", True),
+    "rc": Jaw("13", "12", "13t", "14", "15", "14t", False),
+    "rt": Jaw("10", "9", "10t", "11", "12", "11t", True),
 }
 
 
@@ -190,6 +195,164 @@ def calc_cut_angle(
     return angle_between_vectors(aim_vector, pocket_vector)
 
 
+def ball_ids_occluding_ballpath(
+    ball: Ball, aim_spot: Coordinate, balls: Iterable[Ball]
+) -> Set[str]:
+    """Returns IDs of balls that occlude the straight line ball path from p1 to p2
+
+    Assumes the ball taking the ball path has radius R
+    """
+
+    p1 = ball.xyz[:2]
+    p2 = aim_spot
+
+    occluding_ball_ids = set()
+    for _ball in balls:
+        if ball.id == _ball.id:
+            continue
+
+        if ball.state.s == const.pocketed:
+            continue
+
+        p0 = _ball.xyz[:2]
+
+        closest = point_on_line_closest_to_point(p1, p2, p0)
+        s_score = -np.dot(p1 - closest, p2 - p1) / np.dot(p2 - p1, p2 - p1)
+        if s_score < 0 or s_score > 1:
+            continue
+
+        distance = norm2d(closest - p0)
+        if distance < 2 * _ball.params.R:
+            occluding_ball_ids.add(_ball.id)
+
+    return occluding_ball_ids
+
+
+def is_object_ball_occluded(
+    cue: Ball, ball: Ball, table: Table, pocket: Pocket, balls: Iterable[Ball]
+) -> bool:
+    """Is the cue's path to the object ball occluded?"""
+    aim_spot = calc_shadow_ball_center(ball, table, pocket)
+
+    occluding_ids = ball_ids_occluding_ballpath(cue, aim_spot, balls)
+    occluding_ids.discard(cue.id)
+    occluding_ids.discard(ball.id)
+
+    return bool(len(occluding_ids))
+
+
+def is_pocket_occluded(
+    ball: Ball, table: Table, pocket: Pocket, balls: Iterable[Ball]
+) -> bool:
+    """Is the object ball's path to the potting point occluded?"""
+    aim_spot = get_potting_point(ball, table, pocket)
+
+    occluding_ids = ball_ids_occluding_ballpath(ball, aim_spot, balls)
+    occluding_ids.discard(ball.id)
+
+    return bool(len(occluding_ids))
+
+
+def is_room_for_cue_ball(
+    ball: Ball, table: Table, pocket: Pocket, balls: Iterable[Ball]
+) -> bool:
+    R = ball.params.R
+    shadow_ball_coords = calc_shadow_ball_center(ball, table, pocket)
+    if ball.id == "1" and pocket.id == "rc":
+        print(shadow_ball_coords)
+
+    if (
+        shadow_ball_coords[0] < R
+        or shadow_ball_coords[0] > table.w - R
+        or shadow_ball_coords[1] < R
+        or shadow_ball_coords[1] > table.l - R
+    ):
+        return False
+
+    for _ball in balls:
+        if ball.id == _ball.id:
+            continue
+
+        if norm2d(_ball.xyz[:2] - shadow_ball_coords) < 2 * _ball.params.R:
+            return False
+
+    return True
+
+
+def is_jaw_in_way(ball: Ball, table: Table, pocket: Pocket) -> bool:
+    if pocket_jaw_map[pocket.id].corner:
+        # Only side pockets have this problem
+        return False
+
+    jaw = pocket_jaw_map[pocket.id]
+    ljaw_tip = table.cushion_segments.circular[jaw.left_tip]
+    rjaw_tip = table.cushion_segments.circular[jaw.right_tip]
+
+    # We consider the jaw tip closest to the ball
+    jaw_tip = (
+        ljaw_tip
+        if norm3d(ljaw_tip.center - ball.xyz) < norm3d(rjaw_tip.center - ball.xyz)
+        else rjaw_tip
+    )
+
+    closest_point_to_jaw = point_on_line_closest_to_point(
+        ball.xyz[:2], get_potting_point(ball, table, pocket), jaw_tip.center[:2]
+    )
+    return (
+        norm2d(closest_point_to_jaw - jaw_tip.center[:2])
+        < jaw_tip.radius + ball.params.R
+    )
+
+
+def open_pockets(ball: Ball, table: Table, balls: Iterable[Ball]) -> Set[str]:
+    """Return the IDs of pockets that are open to the ball
+
+    An open pocket means that the ball has an unobscured path to the pocket, and if
+    there is room to place a cue ball behind the object ball.
+
+    See also: viable_pockets
+    """
+    return set(
+        pocket.id
+        for pocket in table.pockets.values()
+        if not is_pocket_occluded(ball, table, pocket, balls)
+        and is_room_for_cue_ball(ball, table, pocket, balls)
+        and not is_jaw_in_way(ball, table, pocket)
+    )
+
+
+def viable_pockets(
+    cue: Ball,
+    ball: Ball,
+    table: Table,
+    balls: Iterable[Ball],
+    max_cut: float = 80,
+) -> Set[str]:
+    """Return the IDs of pockets that are open to the ball
+
+    An open pocket means that the ball has an unobscured path to the pocket.
+
+    See also: viable_pockets
+    """
+
+    viable = set()
+    for pocket in table.pockets.values():
+        cut_angle = calc_cut_angle(
+            cue.xyz[:2],
+            ball.xyz[:2],
+            get_potting_point(ball, table, pocket),
+        )
+
+        if (
+            not is_pocket_occluded(ball, table, pocket, balls)
+            and not is_object_ball_occluded(cue, ball, table, pocket, balls)
+            and np.abs(cut_angle) <= max_cut
+        ):
+            viable.add(pocket.id)
+
+    return viable
+
+
 def calc_shadow_ball_center(ball: Ball, table: Table, pocket: Pocket) -> Coordinate:
     """Return coordinates of shadow ball for potting into specific pocket"""
 
@@ -219,7 +382,7 @@ def calc_potting_angle(
 
 
 def pick_best_pot(
-    cueball: Ball, ball: Ball, table: Table, pockets: Optional[Sequence[Pocket]] = None
+    cueball: Ball, ball: Ball, table: Table, pockets: Optional[Iterable[Pocket]] = None
 ) -> Pocket:
     """Return best pocket to pot ball into
 
@@ -229,7 +392,7 @@ def pick_best_pot(
     If pockets is not passed, all pockets on the table will be used.
     """
 
-    _pockets: Sequence[Pocket] = (
+    _pockets: Iterable[Pocket] = (
         list(table.pockets.values()) if pockets is None else pockets
     )
 
