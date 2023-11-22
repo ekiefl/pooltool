@@ -280,6 +280,20 @@ def is_room_for_cue_ball(
 
 
 def is_jaw_in_way(ball: Ball, table: Table, pocket: Pocket) -> bool:
+    """Is the the closest jaw in the way of the potting point?
+
+    When shooting into the side pocket, there is often not enough pocket to aim at, in
+    particular when the object ball is close to the rail that the pocket is on. One way
+    of imagining the problem is that the closest jaw "gets in the way" of the object
+    ball shot path.
+
+    This function calculates whether or not the close jaw is in the way of the shot path
+    by determining the point on the shot path that is closest to the jaw tip center.
+    (The jaw tip is a small circular cushion segment, used to round out the
+    cushion tip). If the distance between this point and the jaw tip center is less than
+    the jaw tip radius plus the ball radius, then the object ball would hit the close
+    cushion, in which case this function returns True.
+    """
     if pocket_jaw_map[pocket.id].corner:
         # Only side pockets have this problem
         return False
@@ -307,7 +321,7 @@ def is_jaw_in_way(ball: Ball, table: Table, pocket: Pocket) -> bool:
 def open_pockets(ball: Ball, table: Table, balls: Iterable[Ball]) -> Set[str]:
     """Return the IDs of pockets that are open to the ball
 
-    An open pocket means that the ball has an unobscured path to the pocket, and if
+    An open pocket means that the ball has an unobscured path to the pocket, and that
     there is room to place a cue ball behind the object ball.
 
     See also: viable_pockets
