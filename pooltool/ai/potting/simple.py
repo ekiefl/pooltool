@@ -342,11 +342,17 @@ def viable_pockets(
     balls: Iterable[Ball],
     max_cut: float = 80,
 ) -> Set[str]:
-    """Return the IDs of pockets that are open to the ball
+    """Return the IDs of pockets that the cue ball can sink the object ball into
 
-    An open pocket means that the ball has an unobscured path to the pocket.
+    A viable pocket is one that is:
 
-    See also: viable_pockets
+        (1) Open
+        (2) Max cut angle doesn't exceed max_cut. The theoretical max is 90
+        (3) A straight line can be drawn between where the cue ball is and
+            where the cue ball has to contact the object ball, without any
+            obscuring balls or cushions.
+
+    See also: open_pockets
     """
 
     viable = set()
