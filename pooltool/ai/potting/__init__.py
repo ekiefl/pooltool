@@ -4,7 +4,7 @@ from typing import Callable, Optional, Sequence
 
 from attrs import define
 
-from pooltool.ai.potting.simple import calc_potting_angle, pick_best_pot
+from pooltool.ai.potting.simple import calc_potting_angle, pick_easiest_pot
 from pooltool.objects import Ball, Pocket, Table
 from pooltool.system.datatypes import System
 
@@ -18,7 +18,7 @@ class PottingConfig:
     def default() -> PottingConfig:
         return PottingConfig(
             calculate_angle=calc_potting_angle,
-            choose_pocket=pick_best_pot,
+            choose_pocket=pick_easiest_pot,
         )
 
 

@@ -6,7 +6,7 @@ ignored. Bank shots are not supported. Interfering balls are not detected.
 """
 
 import math
-from typing import Dict, Iterable, Optional, Set
+from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
 import attrs
 import numpy as np
@@ -188,10 +188,10 @@ def get_potting_point(ball: Ball, table: Table, pocket: Pocket) -> Coordinate:
 
 
 def calc_cut_angle(
-    cueball: Coordinate, ball: Coordinate, potting_point: Coordinate
+    cueball: Coordinate, ghost_ball: Coordinate, potting_point: Coordinate
 ) -> float:
-    aim_vector = ball[0] - cueball[0], ball[1] - cueball[1]
-    pocket_vector = potting_point[0] - ball[0], potting_point[1] - ball[1]
+    aim_vector = ghost_ball[0] - cueball[0], ghost_ball[1] - cueball[1]
+    pocket_vector = potting_point[0] - ghost_ball[0], potting_point[1] - ghost_ball[1]
     return angle_between_vectors(aim_vector, pocket_vector)
 
 
@@ -339,8 +339,8 @@ def viable_pockets(
     table: Table,
     balls: Iterable[Ball],
     max_cut: float = 80,
-) -> Set[str]:
-    """Return the IDs of pockets that the cue ball can sink the object ball into
+) -> List[Tuple[str, float]]:
+    """Return viable pockets that the cue ball can sink the object ball into
 
     A viable pocket is one that is:
 
@@ -350,26 +350,32 @@ def viable_pockets(
             where the cue ball has to contact the object ball, without any
             obscuring balls or cushions.
 
+    Returns:
+        list of two-pules
+
     See also: open_pockets
     """
 
-    viable = set()
+    viable = []
     for pocket in table.pockets.values():
-        cut_angle = calc_cut_angle(
-            cue.xyz[:2],
-            ball.xyz[:2],
-            get_potting_point(ball, table, pocket),
+        cut_angle = np.abs(
+            calc_cut_angle(
+                cue.xyz[:2],
+                ball.xyz[:2],
+                get_potting_point(ball, table, pocket),
+            )
         )
 
         if (
             not is_pocket_occluded(ball, table, pocket, balls)
-            and not is_object_ball_occluded(cue, ball, table, pocket, balls)
+            and is_room_for_cue_ball(ball, table, pocket, balls)
             and not is_jaw_in_way(ball, table, pocket)
-            and np.abs(cut_angle) <= max_cut
+            and not is_object_ball_occluded(cue, ball, table, pocket, balls)
+            and cut_angle <= max_cut
         ):
-            viable.add(pocket.id)
+            viable.append((pocket.id, cut_angle))
 
-    return viable
+    return sorted(viable, key=lambda x: x[1])
 
 
 def calc_shadow_ball_center(ball: Ball, table: Table, pocket: Pocket) -> Coordinate:
@@ -400,8 +406,8 @@ def calc_potting_angle(
     return math.degrees(math.atan2(y_diff, x_diff))
 
 
-def pick_best_pot(
-    cueball: Ball, ball: Ball, table: Table, pockets: Optional[Iterable[Pocket]] = None
+def pick_easiest_pot(
+    cueball: Ball, ball: Ball, table: Table, pockets: Optional[Sequence[Pocket]] = None
 ) -> Pocket:
     """Return best pocket to pot ball into
 
@@ -411,16 +417,14 @@ def pick_best_pot(
     If pockets is not passed, all pockets on the table will be used.
     """
 
-    _pockets: Iterable[Pocket] = (
-        list(table.pockets.values()) if pockets is None else pockets
-    )
+    pockets = list(table.pockets.values()) if pockets is None else pockets
 
-    best_pocket, min_cut_angle = _pockets[0], 90.0
-    for pocket in _pockets:
+    best_pocket, min_cut_angle = pockets[0], 90.0
+    for pocket in pockets:
         potting_point = get_potting_point(ball, table, pocket)
         cut_angle = calc_cut_angle(
             cueball=cueball.xyz[:2],
-            ball=calc_shadow_ball_center(ball, table, pocket),
+            ghost_ball=calc_shadow_ball_center(ball, table, pocket),
             potting_point=potting_point,
         )
         if abs(cut_angle) < abs(min_cut_angle):  # Prefer a straighter shot
