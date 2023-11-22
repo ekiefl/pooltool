@@ -258,8 +258,6 @@ def is_room_for_cue_ball(
 ) -> bool:
     R = ball.params.R
     shadow_ball_coords = calc_shadow_ball_center(ball, table, pocket)
-    if ball.id == "1" and pocket.id == "rc":
-        print(shadow_ball_coords)
 
     if (
         shadow_ball_coords[0] < R
