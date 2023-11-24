@@ -36,7 +36,11 @@ def gen_game(
 
 
 def compete(
-    game_type: GameType, gen_ai_1: GetAI, gen_ai_2: GetAI, quiet: bool = True
+    game_type: GameType,
+    games: int,
+    gen_ai_1: GetAI,
+    gen_ai_2: GetAI,
+    quiet: bool = True,
 ) -> ResultAccumulator:
     games_played = 0
     shots, shot, game = gen_game(game_type, gen_ai_1, gen_ai_2)
@@ -65,7 +69,7 @@ def compete(
                 print(f"Game {games_played} finished!")
                 print(f"\tWinner: {game.shot_info.winner}")
 
-            if games_played == 5:
+            if games_played == games:
                 break
 
             shots, shot, game = gen_game(game_type, gen_ai_1, gen_ai_2)
@@ -75,9 +79,10 @@ def compete(
 
 if __name__ == "__main__":
     results = compete(
-        GameType.NINEBALL,
-        lambda game: Player("WorstAI", WorstAI()),
-        lambda game: Player("AimNaiveAI", AimNaiveAI()),
+        game_type=GameType.NINEBALL,
+        games=20,
+        gen_ai_1=lambda game: Player("WorstAI", WorstAI()),
+        gen_ai_2=lambda game: Player("AimNaiveAI", AimNaiveAI()),
         quiet=False,
     )
     results.plot_summary()
