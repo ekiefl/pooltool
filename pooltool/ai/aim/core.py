@@ -2,7 +2,6 @@ import numpy as np
 from numpy.typing import NDArray
 
 import pooltool.ptmath as ptmath
-from pooltool.error import ConfigError
 from pooltool.system.datatypes import System
 
 

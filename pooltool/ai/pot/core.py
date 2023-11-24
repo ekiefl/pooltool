@@ -408,18 +408,20 @@ def calc_potting_angle(
 
 def pick_easiest_pot(
     cueball: Ball, ball: Ball, table: Table, pockets: Optional[Sequence[Pocket]] = None
-) -> Pocket:
+) -> Optional[Pocket]:
     """Return best pocket to pot ball into
 
     This function calculates the potting angle required for each pocket. The "best"
     pocket is the one where the pot requires the smallest cut angle.
 
     If pockets is not passed, all pockets on the table will be used.
+
+    If no pocket is possible, any pocket is pocked
     """
 
     pockets = list(table.pockets.values()) if pockets is None else pockets
 
-    best_pocket, min_cut_angle = pockets[0], 90.0
+    best_pocket, min_cut_angle = None, 90.0
     for pocket in pockets:
         potting_point = get_potting_point(ball, table, pocket)
         cut_angle = calc_cut_angle(

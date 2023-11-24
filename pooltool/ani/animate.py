@@ -21,7 +21,7 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 import pooltool.terminal as terminal
-from pooltool.ai.bot import RewardBasedFlatSearch, UnintelligentZeroShotAI
+from pooltool.ai.bot import RewardBasedFlatSearch
 from pooltool.ani.camera import cam
 from pooltool.ani.collision import cue_avoid
 from pooltool.ani.environment import environment

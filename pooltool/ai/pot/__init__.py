@@ -12,7 +12,9 @@ from pooltool.system.datatypes import System
 @define
 class PottingConfig:
     calculate_angle: Callable[[Ball, Ball, Table, Pocket], float]
-    choose_pocket: Callable[[Ball, Ball, Table, Optional[Sequence[Pocket]]], Pocket]
+    choose_pocket: Callable[
+        [Ball, Ball, Table, Optional[Sequence[Pocket]]], Optional[Pocket]
+    ]
 
     @staticmethod
     def default() -> PottingConfig:
