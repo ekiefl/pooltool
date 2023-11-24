@@ -52,7 +52,12 @@ def compete(
         action = player.ai.decide(shot, game)
         player.ai.apply(shot, action)
 
-        simulate(shot, inplace=True)
+        simulate(shot, inplace=True, max_events=500)
+        if shot.get_system_energy() > 0:
+            # For whatever reason, the shot evolver get stuck
+            shots, shot, game = gen_game(game_type, gen_ai_1, gen_ai_2)
+            continue
+
         game.process_and_advance(shot)
 
         shots.append(shot)
