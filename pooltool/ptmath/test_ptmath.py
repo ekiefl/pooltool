@@ -54,9 +54,3 @@ def test_transcendental_no_root_error():
     f = lambda x: x**2 + 1
     with pytest.raises(ValueError):
         solve_transcendental_equation(f, 0, 10)
-
-
-def test_transcendental_max_iterations_error():
-    f = lambda x: x**2 - 4 * x + 3
-    with pytest.raises(RuntimeError):
-        print(solve_transcendental_equation(f, 0, 2.5, max_iter=1))

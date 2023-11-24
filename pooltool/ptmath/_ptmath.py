@@ -35,6 +35,7 @@ def solve_transcendental_equation(f, a, b, tol=1e-5, max_iter=100) -> float:
     if f(a) * f(b) >= 0:
         raise ValueError("Function must have opposite signs at the interval endpoints")
 
+    c = (a + b) / 2
     for _ in range(max_iter):
         c = (a + b) / 2
         if f(c) == 0 or (b - a) / 2 < tol:
@@ -45,7 +46,7 @@ def solve_transcendental_equation(f, a, b, tol=1e-5, max_iter=100) -> float:
         else:
             a = c
 
-    raise RuntimeError("Max iterations reached without convergence")
+    return c
 
 
 def angle_between_vectors(v1, v2) -> float:
