@@ -50,6 +50,7 @@ def simulate(
     t_final: Optional[float] = None,
     quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
     include: Set[EventType] = INCLUDED_EVENTS,
+    max_events: int = 0,
 ) -> System:
     """Run a simulation on a system and return it
 
@@ -82,6 +83,8 @@ def simulate(
         include:
             Which EventType are you interested in resolving? By default, all detected
             events are resolved.
+        max_events:
+            If this is greater than 0, and the shot has more than this many events, stop.
 
     Examples:
         Standard usage:
@@ -145,6 +148,7 @@ def simulate(
 
     transition_cache = TransitionCache.create(shot)
 
+    events = 0
     while True:
         event = get_next_event(
             shot, transition_cache=transition_cache, quartic_solver=quartic_solver
@@ -165,6 +169,11 @@ def simulate(
         if t_final is not None and shot.t >= t_final:
             shot.update_history(null_event(time=shot.t))
             break
+
+        if max_events > 0 and events > max_events:
+            break
+
+        events += 1
 
     if continuous:
         continuize(shot, dt=0.01 if dt is None else dt, inplace=True)
