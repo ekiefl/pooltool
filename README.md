@@ -94,9 +94,8 @@ cue = pt.Cue(cue_ball_id="cue")
 # Wrap it up as a System
 shot = pt.System(table=table, balls=balls, cue=cue)
 
-# Aim at the head ball then strike the cue ball
-shot.aim_at_ball("1")
-shot.strike(V0=8)
+# Aim at the head ball with a strong impact
+shot.strike(V0=8, phi=pt.aim.at_ball(shot, "1"))
 
 # Evolve the shot.
 pt.simulate(shot, inplace=True)

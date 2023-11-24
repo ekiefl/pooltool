@@ -4,7 +4,7 @@ from typing import Callable, Optional, Sequence
 
 from attrs import define
 
-from pooltool.ai.potting.simple import calc_potting_angle, pick_easiest_pot
+from pooltool.ai.pot.core import calc_potting_angle, pick_easiest_pot
 from pooltool.objects import Ball, Pocket, Table
 from pooltool.system.datatypes import System
 

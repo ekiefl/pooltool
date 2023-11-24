@@ -40,7 +40,7 @@ shot.cue.set_state(
 assert shot.cue.phi == 0
 
 # So let's Aim at the 1-ball, with a 30 degree cut to the left
-pt.potting.aim_for_best_pocket(shot, ball_id="1")
+pt.pot.aim_for_best_pocket(shot, ball_id="1")
 
 # Now the direction is set!
 assert shot.cue.phi != 0

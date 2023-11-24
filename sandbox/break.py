@@ -25,9 +25,8 @@ def main(args):
             balls=pt.get_nine_ball_rack(table, spacing_factor=args.spacing_factor),
         )
 
-        # Aim at the head ball then strike the cue ball
-        shot.aim_at_ball(ball_id="1")
-        shot.strike(V0=args.V0)
+        # Aim at the head ball
+        shot.strike(V0=args.V0, phi=pt.aim.at_ball(shot, ball_id="1"))
 
     # Time the shot
     if args.time_it:

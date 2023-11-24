@@ -1,7 +1,8 @@
 __version__ = "0.2.1"
 
 import pooltool.ai as ai
-import pooltool.ai.potting as potting
+import pooltool.ai.aim as aim
+import pooltool.ai.pot as pot
 from pooltool import terminal
 from pooltool.ani.animate import FrameStepper, Game, ShotViewer
 from pooltool.ani.image import (
@@ -138,5 +139,6 @@ __all__ = [
     "Snooker",
     "get_ball_set",
     "ai",
-    "potting",
+    "pot",
+    "aim",
 ]

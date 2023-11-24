@@ -1,5 +1,5 @@
 from pooltool.ai.action import Action
-from pooltool.ai.potting import PottingConfig
+from pooltool.ai.pot import PottingConfig
 from pooltool.ai.utils import between, random_params
 from pooltool.game.ruleset.datatypes import Ruleset
 from pooltool.system.datatypes import System

@@ -3,7 +3,7 @@ from typing import Callable, Optional
 import attrs
 
 from pooltool.ai.action import Action
-from pooltool.ai.potting import PottingConfig
+from pooltool.ai.pot import PottingConfig
 from pooltool.ai.utils import random_params
 from pooltool.game.datatypes import GameType
 from pooltool.game.ruleset import get_ruleset
