@@ -1,6 +1,6 @@
 from typing import Protocol, Tuple
 
-from pooltool.ai.bot import AimNaiveAI, WorstAI
+from pooltool.ai.bot import AimNaiveAI, AimPocketAI, WorstAI
 from pooltool.ai.compete.result import ResultAccumulator, ShotResult
 from pooltool.evolution.event_based.simulate import simulate
 from pooltool.game.datatypes import GameType
@@ -85,8 +85,8 @@ def compete(
 if __name__ == "__main__":
     results = compete(
         game_type=GameType.NINEBALL,
-        games=20,
-        gen_ai_1=lambda game: Player("WorstAI", WorstAI()),
+        games=100,
+        gen_ai_1=lambda game: Player("AimPocketAI", AimPocketAI(game)),
         gen_ai_2=lambda game: Player("AimNaiveAI", AimNaiveAI()),
         quiet=False,
     )
