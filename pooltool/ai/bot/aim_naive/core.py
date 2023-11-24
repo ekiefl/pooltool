@@ -1,15 +1,16 @@
 from typing import Callable, Optional
 
+import attrs
 import numpy as np
 
 import pooltool.ai.aim as aim
 from pooltool.ai.action import Action
 from pooltool.game.ruleset.datatypes import Ruleset
 from pooltool.game.ruleset.utils import StateProbe, get_lowest_ball
-from pooltool.ptmath import wiggle
 from pooltool.system.datatypes import System
 
 
+@attrs.define
 class AimNaiveAI:
     def decide(
         self,
@@ -26,8 +27,7 @@ class AimNaiveAI:
         )
 
         lowest_ball = get_lowest_ball(system, when=StateProbe.CURRENT)
-        action.phi = aim.at_ball(system, lowest_ball.id)
-        action.phi = wiggle(action.phi, 2)
+        action.phi = aim.at_ball(system, lowest_ball.id, cut=np.random.uniform(-70, 70))
 
         return action
 

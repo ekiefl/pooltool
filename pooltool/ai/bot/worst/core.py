@@ -1,5 +1,6 @@
 from typing import Callable, Optional
 
+import attrs
 import numpy as np
 
 from pooltool.ai.action import Action
@@ -7,6 +8,7 @@ from pooltool.game.ruleset.datatypes import Ruleset
 from pooltool.system.datatypes import System
 
 
+@attrs.define
 class WorstAI:
     def decide(
         self,

@@ -46,16 +46,7 @@ def at_ball(system: System, ball_id: str, cut: float = 0.0) -> float:
     if cut == 0.0:
         return phi
 
-    assert -89.0 < cut < 89.0, "Cut must be less than 89 and more than -89"
-
-    # Ok a cut angle has been requested. Unfortunately, there exists no analytical
-    # function phi(cut), at least as far as I have been able to calculate. Instead,
-    # it is a nasty transcendental equation that must be solved. The gaol is to make
-    # its value 0. To do this, I sweep from 0 to the max possible angle with 100
-    # values and find where the equation flips from positive to negative. The dphi
-    # that makes the equation lies somewhere between those two values, so then I do
-    # a new parameter sweep between the value that was positive and the value that
-    # was negative. Then I rinse and repeat this a total of 5 times.
+    assert -89.0 <= cut <= 89.0, "Cut must be less than 89 and more than -89"
 
     left = True if cut < 0 else False
     cut = np.abs(cut) * np.pi / 180
@@ -65,25 +56,14 @@ def at_ball(system: System, ball_id: str, cut: float = 0.0) -> float:
     lower_bound = 0
     upper_bound = np.pi / 2 - np.arccos((2 * R) / d)
 
-    dphi = 0
-    for _ in range(5):
-        dphis = np.linspace(lower_bound, upper_bound, 100)
-        transcendental = (
-            np.arctan(2 * R * np.sin(cut - dphis) / (d - 2 * R * np.cos(cut - dphis)))
-            - dphis
+    transcendental = (
+        lambda dphi: np.arctan(
+            2 * R * np.sin(cut - dphi) / (d - 2 * R * np.cos(cut - dphi))
         )
-        for i in range(len(transcendental)):
-            if transcendental[i] < 0:
-                lower_bound = dphis[i - 1] if i > 0 else 0
-                upper_bound = dphis[i]
-                dphi = dphis[i]
-                break
-        else:
-            raise ConfigError(
-                "This happens from time to time. The algorithm "
-                "that finds the cut angle needs to be looked at again, because "
-                "the transcendental equation could not be solved."
-            )
-
+        - dphi
+    )
+    dphi = ptmath.solve_transcendental_equation(
+        transcendental, lower_bound, upper_bound
+    )
     phi = (phi + 180 / np.pi * (dphi if left else -dphi)) % 360
     return phi

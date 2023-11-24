@@ -7,6 +7,47 @@ from numba import jit
 import pooltool.constants as const
 
 
+def solve_transcendental_equation(f, a, b, tol=1e-5, max_iter=100) -> float:
+    """Solve transcendental equation f(x) = 0 in interval [a, b] using bisection method
+
+    Args:
+        f:
+            A function representing the transcendental equation.
+        a:
+            The lower bound of the interval.
+        b:
+            The upper bound of the interval.
+        tol:
+            The tolerance level for the solution. The function stops when the absolute
+            difference between the upper and lower bounds is less than tol.
+        max_iter:
+            The maximum number of iterations to perform.
+
+    Returns:
+        The approximate root of f within the interval [a, b].
+
+    Raises:
+        ValueError:
+            If f(a) and f(b) have the same sign, indicating no root within the interval.
+        RuntimeError:
+            If the maximum number of iterations is reached without convergence.
+    """
+    if f(a) * f(b) >= 0:
+        raise ValueError("Function must have opposite signs at the interval endpoints")
+
+    for _ in range(max_iter):
+        c = (a + b) / 2
+        if f(c) == 0 or (b - a) / 2 < tol:
+            return c
+
+        if f(c) * f(a) < 0:
+            b = c
+        else:
+            a = c
+
+    raise RuntimeError("Max iterations reached without convergence")
+
+
 def angle_between_vectors(v1, v2) -> float:
     """Returns angles between [-180, 180]"""
     angle = np.math.atan2(np.linalg.det([v1, v2]), np.dot(v1, v2))  # type: ignore
