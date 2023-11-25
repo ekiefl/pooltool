@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 
 import pooltool as pt
+from pooltool.utils import PProfile
 
 
 def main(args):
@@ -26,7 +27,7 @@ def main(args):
         )
 
         # Aim at the head ball
-        shot.strike(V0=args.V0, phi=pt.aim.at_ball(shot, ball_id="1"))
+        shot.strike(V0=args.V0, phi=pt.aim.at_ball(shot, "1"))
 
     # Time the shot
     if args.time_it:
@@ -72,9 +73,9 @@ def main(args):
         run = pt.terminal.Run()
         run.info_single("Profiling `simulate` and `continuize` (may take awhile)")
 
-        with pt.utils.PProfile(Path("cachegrind.out.simulate")):
+        with PProfile(Path("cachegrind.out.simulate")):
             pt.simulate(shot, inplace=True)
-        with pt.utils.PProfile(Path("cachegrind.out.continuize")):
+        with PProfile(Path("cachegrind.out.continuize")):
             pt.continuize(shot, inplace=True)
 
         sys.exit()

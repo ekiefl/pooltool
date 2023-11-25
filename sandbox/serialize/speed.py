@@ -17,7 +17,7 @@ shot = System(
 )
 
 # Aim at the head ball
-shot.strike(V0=8, phi=pt.aim.at_ball(shot, ball_id="1"))
+shot.strike(V0=8, phi=pt.aim.at_ball(shot, "1"))
 
 # Evolve the shot
 pt.simulate(shot, inplace=True)

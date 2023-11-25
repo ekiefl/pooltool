@@ -17,7 +17,7 @@ def main():
         balls=pt.get_nine_ball_rack(table),
         cue=pt.Cue(cue_ball_id="cue"),
     )
-    shot.strike(V0=8, phi=pt.aim.at_ball(shot, ball_id="1"))
+    shot.strike(V0=8, phi=pt.aim.at_ball(shot, "1"))
 
     # Simulate
     pt.simulate(shot, inplace=True)

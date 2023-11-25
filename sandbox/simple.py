@@ -3,6 +3,8 @@ import numpy as np
 
 import pooltool as pt
 
+raise NotImplementedError("API changed, this is now defunct")
+
 
 def rand_pos(table):
     params = pt.BallParams()

@@ -67,7 +67,7 @@ system = pt.System(
 )
 
 # Aim at the head ball
-system.strike(V0=8, phi=pt.aim.at_ball(system, ball_id="1"))
+system.strike(V0=8, phi=pt.aim.at_ball(system, "1"))
 
 # Simulate the system once to load cached numba functions
 pt.simulate(system, inplace=False)
