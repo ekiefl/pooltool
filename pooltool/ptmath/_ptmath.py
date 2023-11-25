@@ -3,6 +3,7 @@ from typing import Tuple
 
 import numpy as np
 from numba import jit
+from numpy.typing import NDArray
 
 import pooltool.constants as const
 
@@ -47,6 +48,11 @@ def solve_transcendental_equation(f, a, b, tol=1e-5, max_iter=100) -> float:
             a = c
 
     return c
+
+
+def convert_2D_to_3D(array: NDArray) -> NDArray:
+    """Convert a 2D vector to a 3D vector, setting z=0"""
+    return np.pad(array, (0, 1), "constant", constant_values=(0,))  # type: ignore
 
 
 def angle_between_vectors(v1, v2) -> float:
