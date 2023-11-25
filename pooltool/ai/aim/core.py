@@ -15,22 +15,21 @@ def at_pos(system: System, pos: NDArray[np.float64]) -> float:
 
 
 @overload
-def at_pos(cue_ball: Ball, cue: Cue, pos: NDArray[np.float64]) -> float:
+def at_pos(cue_ball: Ball, pos: NDArray[np.float64]) -> float:
     ...
 
 
 def at_pos(*args) -> float:  # type: ignore
+    assert len(args) == 2
     if isinstance(system := args[0], System):
-        return _at_pos(system.balls[system.cue.cue_ball_id], system.cue, args[1])
-    elif isinstance(args[0], Ball) and isinstance(args[1], Cue):
+        return _at_pos(system.balls[system.cue.cue_ball_id], args[1])
+    elif isinstance(args[0], Ball):
         return _at_pos(*args)
     else:
         raise TypeError("Invalid arguments for at_pos")
 
 
-def _at_pos(cue_ball: Ball, cue: Cue, pos: NDArray[np.float64]) -> float:
-    assert cue.cue_ball_id == cue_ball.id
-
+def _at_pos(cue_ball: Ball, pos: NDArray[np.float64]) -> float:
     vector = ptmath.unit_vector(np.array(pos) - cue_ball.state.rvw[0])
     direction = ptmath.angle(vector)
 
@@ -43,7 +42,7 @@ def at_ball(system: System, ball_id: str, *, cut: float = 0.0) -> float:
 
 
 @overload
-def at_ball(cue_ball: Ball, object_ball: Ball, cue: Cue, *, cut: float = 0.0) -> float:
+def at_ball(cue_ball: Ball, object_ball: Ball, *, cut: float = 0.0) -> float:
     ...
 
 
@@ -57,30 +56,24 @@ def at_ball(*args, **kwargs) -> float:  # type: ignore
             The cut angle in degrees, within [-89, 89]. Negative is cutting the left
             side of the ball from the shooter's perspective.
     """
-    assert len(kwargs) < 2
-    if len(kwargs) == 1:
+    if len(kwargs):
+        assert len(kwargs) == 1
         assert "cut" in kwargs
 
     if isinstance(system := args[0], System) and isinstance(args[1], str):
-        assert len(args) == 2 or len(args) == 3
+        assert len(args) == 2
         cue_ball = system.balls[system.cue.cue_ball_id]
         object_ball = system.balls[args[1]]
-        return _at_ball(cue_ball, object_ball, system.cue, **kwargs)
-    elif (
-        isinstance(args[0], Ball)
-        and isinstance(args[1], Ball)
-        and isinstance(args[2], Cue)
-    ):
-        assert len(args) == 3 or len(args) == 4
+        return _at_ball(cue_ball, object_ball, **kwargs)
+    elif isinstance(args[0], Ball) and isinstance(args[1], Ball):
+        assert len(args) == 2
         return _at_pos(*args, **kwargs)
     else:
         raise TypeError("Invalid arguments for at_ball")
 
 
-def _at_ball(cue_ball: Ball, object_ball: Ball, cue: Cue, cut: float = 0.0) -> float:
-    assert cue.cue_ball_id == cue_ball.id
-
-    phi = at_pos(cue_ball, cue, object_ball.state.rvw[0])
+def _at_ball(cue_ball: Ball, object_ball: Ball, cut: float = 0.0) -> float:
+    phi = at_pos(cue_ball, object_ball.state.rvw[0])
 
     if cut == 0.0:
         return phi
