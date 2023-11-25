@@ -172,12 +172,6 @@ class Ball:
     history: BallHistory = field(factory=BallHistory.factory)
     history_cts: BallHistory = field(factory=BallHistory.factory)
 
-    @ballset.validator  # type: ignore
-    def _is_ballset_compatible(self, _, ballset: BallSet):
-        """Raises ValueError if ballset isn't compatible with Ball ID"""
-        if ballset is not None:
-            ballset.ensure_valid(self.id)
-
     @property
     def xyz(self):
         """Return the coordinate vector of the ball"""
