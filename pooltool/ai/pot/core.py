@@ -6,7 +6,7 @@ ignored. Bank shots are not supported. Interfering balls are not detected.
 """
 
 import math
-from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 import attrs
 import numpy as np
@@ -24,6 +24,7 @@ from pooltool.ptmath import (
     unit_vector,
     unit_vector_slow,
 )
+from pooltool.system.datatypes import System
 
 Coordinate = NDArray[np.float64]
 
@@ -333,6 +334,61 @@ def open_pockets(ball: Ball, table: Table, balls: Iterable[Ball]) -> Set[str]:
     )
 
 
+def required_precision(
+    cue: Ball,
+    ball: Ball,
+    table: Table,
+    pocket: Pocket,
+) -> float:
+    """Return the required precision for a pot
+
+    This is not an exact calculation. What is returned is the difference in phi values
+    required to aim the center of the object ball towards both jaw tips. So the returned
+    value is exactly the variance in phi, within which you will still pot the ball. But,
+    it _is_ still a proxy for how difficult the pot is.
+    """
+    jaw = pocket_jaw_map[pocket.id]
+    lrail = table.cushion_segments.linear[jaw.left_rail]
+    ledge = table.cushion_segments.linear[jaw.left_edge]
+    rrail = table.cushion_segments.linear[jaw.right_rail]
+    redge = table.cushion_segments.linear[jaw.right_edge]
+
+    ltip = find_intersection_2D(
+        l1x=lrail.lx,
+        l1y=lrail.ly,
+        l10=lrail.l0,
+        l2x=ledge.lx,
+        l2y=ledge.ly,
+        l20=ledge.l0,
+    )
+    rtip = find_intersection_2D(
+        l1x=rrail.lx,
+        l1y=rrail.ly,
+        l10=rrail.l0,
+        l2x=redge.lx,
+        l2y=redge.ly,
+        l20=redge.l0,
+    )
+
+    phi_left = np.abs(
+        calc_cut_angle(
+            cue.xyz[:2],
+            ball.xyz[:2],
+            np.array([*ltip]),
+        )
+    )
+
+    phi_right = np.abs(
+        calc_cut_angle(
+            cue.xyz[:2],
+            ball.xyz[:2],
+            np.array([*rtip]),
+        )
+    )
+
+    return np.abs(phi_left - phi_right)
+
+
 def viable_pockets(
     cue: Ball,
     ball: Ball,
@@ -373,7 +429,7 @@ def viable_pockets(
             and not is_object_ball_occluded(cue, ball, table, pocket, balls)
             and cut_angle <= max_cut
         ):
-            viable.append((pocket.id, cut_angle))
+            viable.append((pocket.id, required_precision(cue, ball, table, pocket)))
 
     return sorted(viable, key=lambda x: x[1])
 
@@ -407,30 +463,22 @@ def calc_potting_angle(
 
 
 def pick_easiest_pot(
-    cueball: Ball, ball: Ball, table: Table, pockets: Optional[Sequence[Pocket]] = None
+    system: System,
+    ball: Ball,
 ) -> Optional[Pocket]:
     """Return best pocket to pot ball into
 
-    This function calculates the potting angle required for each pocket. The "best"
-    pocket is the one where the pot requires the smallest cut angle.
-
-    If pockets is not passed, all pockets on the table will be used.
-
-    If no pocket is possible, any pocket is pocked
+    This function calculates the potting angle required, and the precision required, for
+    each pocket. The "best" pocket is the one where the pot requires the smallest cut
+    angle.
     """
 
-    pockets = list(table.pockets.values()) if pockets is None else pockets
+    cue_ball = system.balls[system.cue.cue_ball_id]
+    pocket_options = viable_pockets(
+        cue_ball, ball, system.table, list(system.balls.values())
+    )
 
-    best_pocket, min_cut_angle = None, 90.0
-    for pocket in pockets:
-        potting_point = get_potting_point(ball, table, pocket)
-        cut_angle = calc_cut_angle(
-            cueball=cueball.xyz[:2],
-            ghost_ball=calc_shadow_ball_center(ball, table, pocket),
-            potting_point=potting_point,
-        )
-        if abs(cut_angle) < abs(min_cut_angle):  # Prefer a straighter shot
-            min_cut_angle = cut_angle
-            best_pocket = pocket
+    if not len(pocket_options):
+        return None
 
-    return best_pocket
+    return system.table.pockets[pocket_options[0][0]]

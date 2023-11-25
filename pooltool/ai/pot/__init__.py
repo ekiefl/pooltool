@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Optional, Sequence
+from typing import Callable, Optional
 
 from attrs import define
 
@@ -12,9 +12,7 @@ from pooltool.system.datatypes import System
 @define
 class PottingConfig:
     calculate_angle: Callable[[Ball, Ball, Table, Pocket], float]
-    choose_pocket: Callable[
-        [Ball, Ball, Table, Optional[Sequence[Pocket]]], Optional[Pocket]
-    ]
+    choose_pocket: Callable[[System, Ball], Optional[Pocket]]
 
     @staticmethod
     def default() -> PottingConfig:

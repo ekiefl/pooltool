@@ -5,7 +5,6 @@ from numpy.typing import NDArray
 
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
-from pooltool.objects.cue.datatypes import Cue
 from pooltool.system.datatypes import System
 
 
