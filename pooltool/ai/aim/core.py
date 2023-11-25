@@ -20,6 +20,7 @@ def at_pos(cue_ball: Ball, pos: NDArray[np.float64]) -> float:
 
 
 def at_pos(*args) -> float:  # type: ignore
+    """Return phi required to aim at specific 3D position"""
     assert len(args) == 2
     if isinstance(system := args[0], System):
         return _at_pos(system.balls[system.cue.cue_ball_id], args[1])
@@ -47,15 +48,7 @@ def at_ball(cue_ball: Ball, object_ball: Ball, *, cut: float = 0.0) -> float:
 
 
 def at_ball(*args, **kwargs) -> float:  # type: ignore
-    """Returns phi to hit a ball with specified cut angle (assumes straight line shot)
-
-    Args:
-        ball:
-            A ball
-        cut:
-            The cut angle in degrees, within [-89, 89]. Negative is cutting the left
-            side of the ball from the shooter's perspective.
-    """
+    """Returns phi to hit ball with specified cut angle (assumes straight line shot)"""
     if len(kwargs):
         assert len(kwargs) == 1
         assert "cut" in kwargs
