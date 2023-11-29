@@ -109,16 +109,3 @@ class CalculateMode(BaseMode):
         tasks.remove("simulate_shot")
 
         return task.done
-
-    def calculate_ai_shot(self, task):
-        """Calculate the AI's next move, then simulate"""
-
-        simulate(
-            multisystem.active,
-            continuous=True,
-            inplace=True,
-        )
-
-        tasks.remove("simulate_shot")
-
-        return task.done
