@@ -1,3 +1,5 @@
+"""FIXME TODO Remove this module, replaced with aim_pocket"""
+
 from typing import Callable, List, Optional
 
 import attrs
@@ -51,11 +53,9 @@ class RewardBasedFlatSearch:
     iterations: int = attrs.field(default=25)
 
     @game.validator  # type: ignore
-    def _game_supported(self, _, value) -> None:
-        supported = [get_ruleset(gametype) for gametype in SUPPORTED_GAMETYPES]
-        assert any(
-            isinstance(value, cls) for cls in supported
-        ), f"{type(value)} unsupported gametype"
+    def _game_supported(self, _, val) -> None:
+        supports = [get_ruleset(gametype) for gametype in SUPPORTED_GAMETYPES]
+        assert any(isinstance(val, cls) for cls in supports), f"{type(val)} unsupported"
 
     def decide_break(
         self, system: System, game: Ruleset, callback: Optional[Callback] = None

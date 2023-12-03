@@ -1,3 +1,5 @@
+"""FIXME TODO Remove this module, replaced with aim_pocket"""
+
 from pooltool.ai.action import Action
 from pooltool.ai.pot import PottingConfig
 from pooltool.ai.utils import between, random_params
@@ -20,13 +22,16 @@ def random_action() -> Action:
 def get_best_aiming_phi(system: System, game: Ruleset) -> float:
     cue_ball = system.balls[system.cue.cue_ball_id]
     target_ball = system.balls[game.shot_constraints.hittable[0]]
-    pockets = list(system.table.pockets.values())
+
+    pocket = AIMER.choose_pocket(system, cue_ball)
+    if pocket is None:
+        pocket = list(system.table.pockets.values())[0]
 
     return AIMER.calculate_angle(
         cue_ball,
         target_ball,
         system.table,
-        AIMER.choose_pocket(cue_ball, target_ball, system.table, pockets),
+        pocket,
     )
 
 

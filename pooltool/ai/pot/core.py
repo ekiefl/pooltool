@@ -13,7 +13,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 import pooltool.constants as const
-from pooltool.objects import Ball, Pocket, Table
+from pooltool.objects import Ball, BallState, Pocket, Table
 from pooltool.ptmath import (
     angle_between_vectors,
     are_points_on_same_side,
@@ -335,8 +335,8 @@ def open_pockets(ball: Ball, table: Table, balls: Iterable[Ball]) -> Set[str]:
 
 
 def required_precision(
-    cue: Ball,
-    ball: Ball,
+    cue_state: BallState,
+    ball_state: BallState,
     table: Table,
     pocket: Pocket,
 ) -> float:
@@ -372,20 +372,21 @@ def required_precision(
 
     phi_left = np.abs(
         calc_cut_angle(
-            cue.xyz[:2],
-            ball.xyz[:2],
+            cue_state.rvw[0][:2],
+            ball_state.rvw[0][:2],
             np.array([*ltip]),
         )
     )
 
     phi_right = np.abs(
         calc_cut_angle(
-            cue.xyz[:2],
-            ball.xyz[:2],
+            cue_state.rvw[0][:2],
+            ball_state.rvw[0][:2],
             np.array([*rtip]),
         )
     )
 
+    # FIXME this is tolerance
     return np.abs(phi_left - phi_right)
 
 
@@ -407,7 +408,7 @@ def viable_pockets(
             obscuring balls or cushions.
 
     Returns:
-        list of two-pules
+        list of (pocket_id, required_precision), ordered with lowest precision first
 
     See also: open_pockets
     """
@@ -429,7 +430,9 @@ def viable_pockets(
             and not is_object_ball_occluded(cue, ball, table, pocket, balls)
             and cut_angle <= max_cut
         ):
-            viable.append((pocket.id, required_precision(cue, ball, table, pocket)))
+            viable.append(
+                (pocket.id, required_precision(cue.state, ball.state, table, pocket))
+            )
 
     return sorted(viable, key=lambda x: x[1])
 
