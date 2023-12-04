@@ -5,6 +5,7 @@ import attrs
 import numpy as np
 
 from pooltool.ai.datatypes import State
+from pooltool.ai.pot.core import required_precision, viable_pockets
 from pooltool.events.datatypes import EventType
 from pooltool.events.filter import filter_ball, filter_type
 from pooltool.game.ruleset.utils import is_numbered_ball_pocketed
@@ -23,7 +24,26 @@ def is_legal_shot(state: State) -> bool:
 
 def precision_of_next_pot(state: State) -> float:
     """The precision score between [0, 1] required for potting the next ball"""
+    if state.game.shot_info.game_over:
+        return 0.0
+
     return 0.5
+
+    # FIXME
+
+    next_ball = state.system.balls[state.game.shot_constraints.hittable[0]]
+    cue = state.system.balls[state.system.cue.cue_ball_id]
+
+    options = viable_pockets(
+        cue, next_ball, state.system.table, state.system.balls.values()
+    )
+
+    from pooltool.ai.pot.core import viable_pockets
+
+    viable_pockets(shot.balls["cue"], shot.balls["1"], shot.table, shot.balls.values())
+
+    if not len(options):
+        return 1.0
 
 
 def precision_of_pot(state: State) -> float:
