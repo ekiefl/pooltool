@@ -86,6 +86,7 @@ class Table:
             GameType.EIGHTBALL: TableType.POCKET,
             GameType.NINEBALL: TableType.POCKET,
             GameType.THREECUSHION: TableType.BILLIARD,
+            GameType.SUMTOTHREE: TableType.BILLIARD,
             GameType.SNOOKER: TableType.SNOOKER,
             GameType.SANDBOX: TableType.POCKET,
         }
