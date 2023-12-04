@@ -76,7 +76,7 @@ def next_cue(current_cue: str, num_players: int) -> str:
 
 
 class ThreeCushion(Ruleset):
-    def __init__(self, win_condition: int = 10, *args, **kwargs):
+    def __init__(self, *args, win_condition: int = 10, **kwargs):
         self.win_condition = win_condition
         Ruleset.__init__(self, *args, **kwargs)
 

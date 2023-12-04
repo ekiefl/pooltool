@@ -25,6 +25,10 @@ from pooltool.events import (
     filter_ball,
     filter_time,
     filter_type,
+    filter_events,
+    by_time,
+    by_type,
+    by_ball,
     null_event,
     rolling_spinning_transition,
     rolling_stationary_transition,
@@ -41,7 +45,7 @@ from pooltool.game.layouts import (
     get_snooker_rack,
     get_three_cushion_rack,
 )
-from pooltool.game.ruleset import EightBall, NineBall, Snooker, ThreeCushion, OneRail
+from pooltool.game.ruleset import EightBall, NineBall, Snooker, ThreeCushion, OneRail, get_ruleset
 from pooltool.game.ruleset.datatypes import Player
 from pooltool.objects import (
     Ball,
@@ -86,6 +90,10 @@ __all__ = [
     "filter_ball",
     "filter_time",
     "filter_type",
+    "filter_events",
+    "by_type",
+    "by_ball",
+    "by_time",
     "FrameStepper",
     "null_event",
     "ball_ball_collision",
@@ -132,6 +140,7 @@ __all__ = [
     "simulate",
     "continuize",
     "get_rack",
+    "get_ruleset",
     "ThreeCushion",
     "EightBall",
     "Player",

@@ -49,7 +49,7 @@ def is_game_over(
 
 
 class OneRail(Ruleset):
-    def __init__(self, win_condition: int = 5, *args, **kwargs):
+    def __init__(self, *args, win_condition: int = 5, **kwargs):
         self.win_condition = win_condition
         Ruleset.__init__(self, *args, **kwargs)
 
