@@ -212,7 +212,9 @@ There are some tutorials for pooltool that can be viewed in [the wiki](https://g
 
 If you want to ask questions, get help, or contribute to the codebase, please join the Discord and introduce yourself.
 
-[![Discord](https://img.shields.io/badge/Discord-Join%20Server-7289da?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/Mfs4Ayn3)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Server-7289da?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/8Y8qUgzZhz)
+
+If the Discord link is expired, please make an issue in this repo.
 
 # Contribute/collaborate
 
