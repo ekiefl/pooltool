@@ -1,6 +1,8 @@
+from pathlib import Path
 from typing import Protocol, Tuple
 
 from pooltool.ai.bot import AimNaiveAI, AimPocketAI, WorstAI
+from pooltool.ai.bot.sumtothree_rl.core import ActionInference, SumToThreeAI
 from pooltool.ai.compete.result import ResultAccumulator, ShotResult
 from pooltool.evolution.event_based.simulate import simulate
 from pooltool.game.datatypes import GameType
@@ -83,14 +85,17 @@ def compete(
 
 
 if __name__ == "__main__":
+    model_path = Path("/Users/evan/Software/pooltool_ml/LightZero/data_pooltool_ctree/trial0/ckpt/ckpt_best.pth.tar")
+    model = ActionInference.from_model_path(model_path)
+
     results = compete(
-        game_type=GameType.NINEBALL,
+        game_type=GameType.SUMTOTHREE,
         games=50,
         gen_ai_1=lambda game: Player(
-            "depth 2", AimPocketAI(game, dphi=0.0, iterations=2)
+            "Bot 1", ai=SumToThreeAI.load(model_path)
         ),
         gen_ai_2=lambda game: Player(
-            "depth 1", AimPocketAI(game, dphi=0.0, iterations=1)
+            "Bot 2", ai=SumToThreeAI.load(model_path)
         ),
         quiet=False,
     )

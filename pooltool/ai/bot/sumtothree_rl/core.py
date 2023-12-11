@@ -82,6 +82,31 @@ def single_player_env(random_pos: bool = False) -> LightZeroEnv:
     return get_env(State(system, game))
 
 
+def reset_single_player_env(env: LightZeroEnv) -> LightZeroEnv:
+    """Return the passed environment, resetting things to an initial state"""
+    del env.game
+    env.game = get_ruleset(GameType.SUMTOTHREE)(
+        players=[Player("Player 1")],
+        win_condition=-1,  # type: ignore
+    )
+
+    cue_pos = (
+        env.system.table.w / 2,
+        env.system.table.l / 4,
+    )
+
+    object_pos = (
+        env.system.table.w / 2,
+        env.system.table.l * 3 / 4,
+    )
+
+    env.system.reset_history()
+    env.system.balls["cue"].state.rvw[0, :2] = cue_pos
+    env.system.balls["object"].state.rvw[0, :2] = object_pos
+
+    return env
+
+
 def get_env(state: State) -> LightZeroEnv:
     """Create a SumToThree environment from a State"""
     return LightZeroEnv(

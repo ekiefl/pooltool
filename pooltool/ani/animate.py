@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import gc
+from pathlib import Path
 import sys
 from functools import partial
 from typing import Generator, Optional, Tuple, cast
@@ -21,8 +22,8 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 import pooltool.terminal as terminal
-from pooltool.ai.bot import RewardBasedFlatSearch
 from pooltool.ani.camera import cam
+from pooltool.ai.bot.sumtothree_rl.core import SumToThreeAI
 from pooltool.ani.collision import cue_avoid
 from pooltool.ani.environment import environment
 from pooltool.ani.globals import Global, require_showbase
@@ -437,13 +438,16 @@ class Game(Interface):
         """
         # Change this line to change the game played.
         # Pick from {NINEBALL, EIGHTBALL, THREECUSHION, SNOOKER, SANDBOX}
-        game_type = GameType.NINEBALL
+        game_type = GameType.SUMTOTHREE
 
+        model_path = Path("/Users/evan/Software/pooltool_ml/LightZero/data_pooltool_ctree/trial0/ckpt/ckpt_best.pth.tar")
         game = get_ruleset(game_type)()
         game.players = [
-            # Player("Player"),
-            Player("AI 1", ai=RewardBasedFlatSearch(game)),
-            Player("AI 2", ai=RewardBasedFlatSearch(game)),
+            Player("Bot 1", ai=SumToThreeAI.load(model_path)),
+            Player("Bot 2", ai=SumToThreeAI.load(model_path)),
+            #Player("Player"),
+            # Player("AI 1", ai=RewardBasedFlatSearch(game)),
+            # Player("AI 2", ai=RewardBasedFlatSearch(game)),
         ]
 
         table = Table.from_game_type(game_type)
