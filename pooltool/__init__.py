@@ -45,7 +45,7 @@ from pooltool.game.layouts import (
     get_snooker_rack,
     get_three_cushion_rack,
 )
-from pooltool.game.ruleset import EightBall, NineBall, Snooker, ThreeCushion, OneRail, get_ruleset
+from pooltool.game.ruleset import EightBall, NineBall, Snooker, ThreeCushion, SumToThree, get_ruleset
 from pooltool.game.ruleset.datatypes import Player
 from pooltool.objects import (
     Ball,
@@ -145,7 +145,7 @@ __all__ = [
     "EightBall",
     "Player",
     "NineBall",
-    "OneRail",
+    "SumToThree",
     "Snooker",
     "get_ball_set",
     "ai",

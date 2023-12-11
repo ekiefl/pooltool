@@ -48,8 +48,8 @@ def is_game_over(
     return score[active.name] == win_condition
 
 
-class OneRail(Ruleset):
-    def __init__(self, *args, win_condition: int = 5, **kwargs):
+class SumToThree(Ruleset):
+    def __init__(self, *args, win_condition: int = 10, **kwargs):
         self.win_condition = win_condition
         Ruleset.__init__(self, *args, **kwargs)
 
@@ -102,5 +102,5 @@ class OneRail(Ruleset):
         if self.shot_info.turn_over:
             self.log.add_msg(f"{self.last_player.name} is up!", sentiment="good")
 
-    def copy(self) -> OneRail:
+    def copy(self) -> SumToThree:
         raise NotImplementedError("ThreeCushion copy needs to be implemented")
