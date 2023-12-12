@@ -40,6 +40,8 @@ from pooltool.physics.engine import PhysicsEngine
 from pooltool.ptmath.roots.quartic import QuarticSolver
 from pooltool.system.datatypes import System
 
+DEFAULT_ENGINE = PhysicsEngine()
+
 
 def simulate(
     shot: System,
@@ -129,7 +131,7 @@ def simulate(
         shot = shot.copy()
 
     if not engine:
-        engine = PhysicsEngine()
+        engine = DEFAULT_ENGINE
 
     shot.reset_history()
     shot.update_history(null_event(time=0))
