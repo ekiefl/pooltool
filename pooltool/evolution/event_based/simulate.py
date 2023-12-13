@@ -194,7 +194,7 @@ def _evolve(shot: System, dt: float):
     """
 
     for ball_id, ball in shot.balls.items():
-        rvw, s = evolve.evolve_state_motion(
+        rvw, _ = evolve.evolve_ball_motion(
             state=ball.state.s,
             rvw=ball.state.rvw,
             R=ball.params.R,
@@ -205,7 +205,7 @@ def _evolve(shot: System, dt: float):
             g=ball.params.g,
             t=dt,
         )
-        ball.state = BallState(rvw, s, shot.t + dt)
+        ball.state = BallState(rvw, ball.state.s, shot.t + dt)
 
 
 def get_next_event(
