@@ -86,7 +86,8 @@ def simulate(
             Which EventType are you interested in resolving? By default, all detected
             events are resolved.
         max_events:
-            If this is greater than 0, and the shot has more than this many events, stop.
+            If this is greater than 0, and the shot has more than this many events, the
+            simulation is stopped and the balls are set to stationary.
 
     Examples:
         Standard usage:
@@ -153,7 +154,7 @@ def simulate(
     events = 0
     while True:
         event = get_next_event(
-            shot, transition_cache=transition_cache, quartic_solver=quartic_solver
+            shot, transition_cache=transition_cache, quartic_solver=quartic_solver,
         )
 
         if event.time == np.inf:
@@ -173,6 +174,7 @@ def simulate(
             break
 
         if max_events > 0 and events > max_events:
+            shot.stop_balls()
             break
 
         events += 1

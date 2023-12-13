@@ -8,6 +8,7 @@ import numpy as np
 from attrs import define, field
 
 import pooltool.physics.utils as physics_utils
+import pooltool.constants as const
 from pooltool.events import Event
 from pooltool.objects.ball.datatypes import Ball, BallHistory
 from pooltool.objects.ball.sets import BallSet
@@ -76,6 +77,13 @@ class System:
         for ball in self.balls.values():
             if not ball.history.empty:
                 ball.state = ball.history[0].copy()
+
+    def stop_balls(self):
+        """Change ball states to stationary and remove all momentum"""
+        for ball in self.balls.values():
+            ball.state.s = const.stationary
+            ball.state.rvw[1] = np.array([0.0, 0.0, 0.0], np.float64)
+            ball.state.rvw[2] = np.array([0.0, 0.0, 0.0], np.float64)
 
     def strike(self, **kwargs) -> None:
         """Set cue stick parameters
