@@ -2,7 +2,7 @@ import pytest
 
 from pooltool.ptmath._ptmath import (
     are_points_on_same_side,
-    solve_transcendental_equation,
+    solve_transcendental,
 )
 
 
@@ -40,17 +40,17 @@ def test_are_points_on_same_side():
 
 def test_transcendental_linear_equation():
     f = lambda x: x - 5
-    root = solve_transcendental_equation(f, 0, 10)
+    root = solve_transcendental(f, 0, 10)
     assert pytest.approx(root, 0.00001) == 5.0
 
 
 def test_transcendental_nonlinear_equation():
     f = lambda x: x**2 - 4 * x + 3
-    root = solve_transcendental_equation(f, 0, 2.5)
+    root = solve_transcendental(f, 0, 2.5)
     assert pytest.approx(root, 0.00001) == 1.0
 
 
 def test_transcendental_no_root_error():
     f = lambda x: x**2 + 1
     with pytest.raises(ValueError):
-        solve_transcendental_equation(f, 0, 10)
+        solve_transcendental(f, 0, 10)

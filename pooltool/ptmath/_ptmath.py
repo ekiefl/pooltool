@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 import pooltool.constants as const
 
 
-def solve_transcendental_equation(f, a, b, tol=1e-5, max_iter=100) -> float:
+def solve_transcendental(f, a, b, tol=1e-5, max_iter=100) -> float:
     """Solve transcendental equation f(x) = 0 in interval [a, b] using bisection method
 
     Args:

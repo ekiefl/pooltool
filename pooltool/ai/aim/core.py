@@ -1,3 +1,4 @@
+from functools import partial
 from typing import overload
 
 import numpy as np
@@ -77,17 +78,20 @@ def _at_ball(cue_ball: Ball, object_ball: Ball, cut: float = 0.0) -> float:
     R = object_ball.params.R
     d = ptmath.norm3d(object_ball.state.rvw[0] - cue_ball.state.rvw[0])
 
+    # If for some reason d < 2R, set d = 2R
+    d = max(d, 2*R)
+
     lower_bound = 0
     upper_bound = np.pi / 2 - np.arccos((2 * R) / d)
 
-    transcendental = (
-        lambda dphi: np.arctan(
-            2 * R * np.sin(cut - dphi) / (d - 2 * R * np.cos(cut - dphi))
-        )
-        - dphi
-    )
-    dphi = ptmath.solve_transcendental_equation(
-        transcendental, lower_bound, upper_bound
-    )
+    transcendental = partial(_transcendental, cut=cut, R=R, d=d)
+    dphi = ptmath.solve_transcendental(transcendental, lower_bound, upper_bound)
+
     phi = (phi + 180 / np.pi * (dphi if left else -dphi)) % 360
     return phi
+
+
+def _transcendental(dphi: float, cut: float, R: float, d: float) -> float:
+    a = 2 * R * np.sin(cut - dphi)
+    b = d - 2 * R * np.cos(cut - dphi)
+    return np.arctan(a / b) - dphi
