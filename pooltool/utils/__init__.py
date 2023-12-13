@@ -6,6 +6,7 @@ import os
 import pickle
 import tracemalloc
 
+import pandas as pd
 import pprofile
 from numba import jit
 from panda3d.core import Filename
@@ -146,6 +147,73 @@ def display_top_memory_usage(snapshot, key_type="lineno", limit=10):
     print("Total allocated size: %.1f KiB" % (total / 1024))
 
 
+def memory_usage_to_dataframe(snapshot, key_type="lineno", limit=10):
+    """
+    Convert memory usage data from tracemalloc into a pandas DataFrame.
+
+    Args:
+    snapshot (tracemalloc.Snapshot): The snapshot of memory allocation.
+    key_type (str): The type of key to categorize memory usage.
+    limit (int): The number of top entries to include.
+
+    Returns:
+    pd.DataFrame: DataFrame containing memory usage information.
+    """
+
+    snapshot = snapshot.filter_traces(
+        (
+            tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+            tracemalloc.Filter(False, "<frozen importlib._bootstrap_external>"),
+            tracemalloc.Filter(False, "<unknown>"),
+        )
+    )
+    top_stats = snapshot.statistics(key_type)
+
+    # Initialize lists to store data
+    ranks = []
+    files = []
+    line_numbers = []
+    memory_usages = []
+    code_snippets = []
+    categories = []
+
+    # Process top statistics
+    for index, stat in enumerate(top_stats[:limit], 1):
+        frame = stat.traceback[0]
+        filename = os.sep.join(frame.filename.split(os.sep)[-2:])
+        line = linecache.getline(frame.filename, frame.lineno).strip()
+
+        ranks.append(index)
+        files.append(filename)
+        line_numbers.append(frame.lineno)
+        memory_usages.append(stat.size / 1024)
+        code_snippets.append(line)
+        categories.append("Top")
+
+    # Process other statistics
+    other = top_stats[limit:]
+    if other:
+        size = sum(stat.size for stat in other)
+        ranks.append(None)
+        files.append(None)
+        line_numbers.append(None)
+        memory_usages.append(size / 1024)
+        code_snippets.append(None)
+        categories.append("Other")
+
+    # Create DataFrame
+    data = {
+        "Rank": ranks,
+        "File": files,
+        "Line Number": line_numbers,
+        "Memory Usage (KiB)": memory_usages,
+        "Code Snippet": code_snippets,
+        "Category": categories,
+    }
+
+    return pd.DataFrame(data)
+
+
 def human_readable_file_size(nbytes):
     suffixes = ["B", "KB", "MB", "GB", "TB", "PB"]
     if nbytes == 0:
@@ -158,7 +226,7 @@ def human_readable_file_size(nbytes):
     return "%s %s" % (f, suffixes[i])
 
 
-@jit(nopython=True, cache=c.numba_cache)
+@jit(nopython=True, cache=c.use_numba_cache)
 def orientation(p, q, r):
     """Find the orientation of an ordered triplet (p, q, r)
 

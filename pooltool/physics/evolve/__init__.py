@@ -23,7 +23,7 @@ from pooltool.physics.utils import (
 )
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
     if state == const.stationary or state == const.pocketed:
         return rvw, state
@@ -60,7 +60,7 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
             return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), const.spinning
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     if t == 0:
         return rvw
@@ -97,7 +97,7 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     return rvw_T
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
     if t == 0:
         return rvw
@@ -123,7 +123,7 @@ def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
     return new_rvw
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def evolve_perpendicular_spin_component(wz, R, u_sp, g, t):
     if t == 0:
         return wz
@@ -144,7 +144,7 @@ def evolve_perpendicular_spin_component(wz, R, u_sp, g, t):
     return wz_final
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
     # Otherwise ball.state.rvw will be modified and corresponding entry in self.history
     # FIXME framework has changed, this may not be true. EDIT This is still true.

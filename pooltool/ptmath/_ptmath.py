@@ -119,7 +119,7 @@ def find_intersection_2D(
     return x, y
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def cross(u, v):
     """Compute cross product u x v, where u and v are 3-dimensional vectors
 
@@ -156,7 +156,7 @@ def unit_vector_slow(vector, handle_zero=False):
         return vector / norm
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def unit_vector(vector, handle_zero=False):
     """Returns the unit vector of the vector (just-in-time compiled)
 
@@ -175,7 +175,7 @@ def unit_vector(vector, handle_zero=False):
     return vector / norm
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def angle(v2, v1=(1, 0)):
     """Returns counter-clockwise angle of projections of v1 and v2 onto the x-y plane
 
@@ -189,7 +189,7 @@ def angle(v2, v1=(1, 0)):
     return ang
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def coordinate_rotation(v, phi):
     """Rotate vector/matrix from one frame of reference to another (3D FIXME)
 
@@ -207,7 +207,7 @@ def coordinate_rotation(v, phi):
     return np.dot(rotation, v)
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def point_on_line_closest_to_point(p1, p2, p0):
     """Returns point on line defined by points p1 and p2 closest to the point p0
 
@@ -218,7 +218,7 @@ def point_on_line_closest_to_point(p1, p2, p0):
     return p1 + diff * t
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def norm3d(vec):
     """Calculate the norm of a 3D vector
 
@@ -236,7 +236,7 @@ def norm3d(vec):
     return sqrt(vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2)
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def norm2d(vec):
     """Calculate the norm of a 2D vector
 

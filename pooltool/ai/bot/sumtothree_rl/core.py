@@ -17,6 +17,7 @@ from gym import spaces
 from lzero.mcts.utils import prepare_observation
 from lzero.worker import MuZeroEvaluator
 
+import pooltool.constants as const
 from pooltool.ai import aim
 from pooltool.ai.action import Action
 from pooltool.ai.datatypes import LightZeroEnv, ObservationDict, Spaces, State
@@ -90,19 +91,30 @@ def reset_single_player_env(env: LightZeroEnv) -> LightZeroEnv:
         win_condition=-1,  # type: ignore
     )
 
+    R = env.system.balls["cue"].params.R
+
     cue_pos = (
         env.system.table.w / 2,
         env.system.table.l / 4,
+        R,
     )
 
     object_pos = (
         env.system.table.w / 2,
         env.system.table.l * 3 / 4,
+        R,
     )
 
     env.system.reset_history()
-    env.system.balls["cue"].state.rvw[0, :2] = cue_pos
-    env.system.balls["object"].state.rvw[0, :2] = object_pos
+    env.system.stop_balls()
+
+    env.system.balls["cue"].state.rvw[0] = cue_pos
+    env.system.balls["object"].state.rvw[0] = object_pos
+
+    assert env.system.balls["cue"].state.s == const.stationary
+    assert env.system.balls["object"].state.s == const.stationary
+    assert not np.isnan(env.system.balls["cue"].state.rvw).any()
+    assert not np.isnan(env.system.balls["object"].state.rvw).any()
 
     return env
 

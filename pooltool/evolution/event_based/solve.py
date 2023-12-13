@@ -9,7 +9,7 @@ import pooltool.physics.utils as physics_utils
 import pooltool.ptmath as ptmath
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def skip_ball_ball_collision(rvw1, rvw2, s1, s2, R1, R2):
     if (s1 == const.spinning or s1 == const.pocketed or s1 == const.stationary) and (
         s2 == const.spinning or s2 == const.pocketed or s2 == const.stationary
@@ -71,7 +71,7 @@ def skip_ball_ball_collision(rvw1, rvw2, s1, s2, R1, R2):
     return False
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def get_u(rvw, R, phi, s):
     if s == const.rolling:
         return np.array([1, 0, 0], dtype=np.float64)
@@ -83,7 +83,7 @@ def get_u(rvw, R, phi, s):
     return ptmath.coordinate_rotation(ptmath.unit_vector(rel_vel), -phi)
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
     """Get quartic coeffs required to determine the ball-ball collision time
 
@@ -157,7 +157,7 @@ def ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
     return roots.min() if len(roots) else np.inf
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def skip_ball_linear_cushion_collision(rvw, s, u_r, g, R, p1, p2, normal):
     if s == const.spinning or s == const.pocketed or s == const.stationary:
         # Ball isn't moving. No collision.
@@ -201,7 +201,7 @@ def skip_ball_linear_cushion_collision(rvw, s, u_r, g, R, p1, p2, normal):
     return False
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def ball_linear_cushion_collision_time(
     rvw, s, lx, ly, l0, p1, p2, direction, mu, m, g, R
 ):
@@ -264,7 +264,7 @@ def ball_linear_cushion_collision_time(
     return min_time
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     """Get quartic coeffs required to determine the ball-circular-cushion collision time
 
@@ -297,7 +297,7 @@ def ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     return A, B, C, D, E
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def ball_pocket_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
     """Get quartic coeffs required to determine the ball-pocket collision time
 
