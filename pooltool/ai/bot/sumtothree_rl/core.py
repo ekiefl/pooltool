@@ -3,7 +3,6 @@ from __future__ import annotations
 import importlib
 import sys
 from functools import partial
-from pathlib import Path
 from typing import Any, Callable, Optional, Tuple
 
 import attrs
@@ -20,6 +19,7 @@ from lzero.worker import MuZeroEvaluator
 import pooltool.constants as const
 from pooltool.ai import aim
 from pooltool.ai.action import Action
+from pooltool.ai.bot.sumtothree_rl.models import ModelDescr, get_model_descr
 from pooltool.ai.datatypes import LightZeroEnv, ObservationDict, Spaces, State
 from pooltool.events.datatypes import EventType
 from pooltool.events.filter import filter_type
@@ -145,11 +145,8 @@ def get_env(state: State) -> LightZeroEnv:
     )
 
 
-def _config_from_model_path(model_path: Path) -> Tuple[dict, dict]:
-    config_path = model_path.parent.parent / "formatted_total_config.py"
-    assert config_path.exists()
-
-    sys.path.append(str(config_path.parent))
+def config_from_model_descr(model_descr: ModelDescr) -> Tuple[dict, dict]:
+    sys.path.append(str(model_descr.config.parent))
     config_module = importlib.import_module("formatted_total_config")
     return config_module.main_config, config_module.create_config
 
@@ -177,8 +174,8 @@ class ActionInference:
         return policy_output[0]["action"]
 
     @classmethod
-    def from_model_path(cls, model_path: Path) -> ActionInference:
-        cfg, create_cfg = _config_from_model_path(model_path)
+    def from_model_descr(cls, model_descr: ModelDescr) -> ActionInference:
+        cfg, create_cfg = config_from_model_descr(model_descr)
 
         # Otherwise the environment isn't registered
         create_cfg.policy.import_names = cfg.policy.import_names
@@ -206,7 +203,7 @@ class ActionInference:
 
         policy = create_policy(cfg.policy, enable_field=["learn", "eval"])
         policy.eval_mode.load_state_dict(
-            torch.load(model_path, map_location=cfg.policy.device)
+            torch.load(model_descr.checkpoint, map_location=cfg.policy.device)
         )
 
         policy_config = cfg.policy
@@ -256,5 +253,5 @@ class SumToThreeAI:
         action.apply(system.cue)
 
     @classmethod
-    def load(cls, path: Path) -> SumToThreeAI:
-        return cls(ActionInference.from_model_path(path))
+    def load(cls, name: str, checkpoint: str) -> SumToThreeAI:
+        return cls(ActionInference.from_model_descr(get_model_descr(name, checkpoint)))

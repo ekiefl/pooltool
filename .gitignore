@@ -1,5 +1,7 @@
 pooltool/config/settings.local
 
+*.pth.tar
+
 sandbox/collection.json*
 sandbox/serialize/serialized_shot*
 sandbox/offscreen/offscreen_out
