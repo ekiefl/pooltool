@@ -1,6 +1,1 @@
-*.pth.tar
-*learner_logger.txt
-*collector_logger.txt
-*evaluator_logger.txt
-*tfevents*
-
+/*
