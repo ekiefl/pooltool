@@ -440,14 +440,9 @@ class Game(Interface):
         # Pick from {NINEBALL, EIGHTBALL, THREECUSHION, SNOOKER, SANDBOX}
         game_type = GameType.SUMTOTHREE
 
-        model_path = Path("/Users/evan/Software/pooltool_ml/LightZero/data_pooltool_ctree/trial0/ckpt/ckpt_best.pth.tar")
         game = get_ruleset(game_type)()
         game.players = [
-            Player("Bot 1", ai=SumToThreeAI.load(model_path)),
-            Player("Bot 2", ai=SumToThreeAI.load(model_path)),
-            #Player("Player"),
-            # Player("AI 1", ai=RewardBasedFlatSearch(game)),
-            # Player("AI 2", ai=RewardBasedFlatSearch(game)),
+            Player("Player"),
         ]
 
         table = Table.from_game_type(game_type)
