@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import Callable, Tuple
+from typing import Callable, Protocol, Tuple
 
+import os
 import attrs
 import numba
 import numpy as np
@@ -10,8 +11,15 @@ from pygame.surface import Surface
 from pygame.time import Clock
 
 import pooltool.constants as const
-from pooltool.ai.datatypes import State
+from pooltool.game.ruleset.datatypes import Ruleset
 from pooltool.objects.table.datatypes import Table
+from pooltool.system.datatypes import System
+
+
+class StateLike(Protocol):
+    system: System
+    game: Ruleset
+
 
 Color = Tuple[int, int, int]
 
@@ -44,7 +52,9 @@ def array_to_grayscale(raw_data, weights):
 class RenderConfig:
     grayscale: bool = attrs.field()
     cushion_color: Color = attrs.field()
-    ball_color: Callable[[str, State], Color]
+    ball_color: Callable[[str, StateLike], Color]
+    render_cushions: bool = attrs.field(default=True)
+    offscreen: bool = attrs.field(default=True)
 
 
 class PygameRenderer:
@@ -54,7 +64,7 @@ class PygameRenderer:
 
         self.screen: Surface
         self.clock: Clock
-        self.state: State
+        self.state: StateLike
 
     @property
     def width(self) -> int:
@@ -65,11 +75,19 @@ class PygameRenderer:
         return self.coordinates.height
 
     def init(self) -> None:
+        if self.render_config.offscreen:
+            os.environ["SDL_DRIVER"] = "dummy"
+
         pygame.init()
-        self.screen = pygame.display.set_mode((self.width, self.height))
+
+        if self.render_config.offscreen:
+            self.screen = pygame.Surface((self.width, self.height))
+        else:
+            self.screen = pygame.display.set_mode((self.width, self.height))
+
         self.clock = pygame.time.Clock()
 
-    def set_state(self, state: State) -> None:
+    def set_state(self, state: StateLike) -> None:
         self.state = state
 
     def render(self) -> None:
@@ -93,6 +111,10 @@ class PygameRenderer:
                 radius=self.coordinates.scale_dist(radius),
             )
 
+        if not self.render_config.render_cushions:
+            pygame.display.flip()
+            return
+
         cushion_color = self.render_config.cushion_color
         if self.render_config.grayscale:
             cushion_color = to_grayscale(cushion_color)
@@ -111,12 +133,17 @@ class PygameRenderer:
     def observation(self) -> np.ndarray:
         raw_data = pygame.surfarray.array3d(self.screen)
         if self.render_config.grayscale:
-            return array_to_grayscale(raw_data, GRAYSCALE_CONVERSION_WEIGHTS)
+            # H, W, C
+            return np.expand_dims(array_to_grayscale(raw_data, GRAYSCALE_CONVERSION_WEIGHTS), axis=-1).transpose((1, 0, 2))
+            # C, H, W
+            #return np.expand_dims(array_to_grayscale(raw_data, GRAYSCALE_CONVERSION_WEIGHTS), axis=0)
         else:
-            return np.transpose(raw_data, (1, 0, 2))
+            return np.transpose(raw_data, (2, 0, 1))
 
     def display_frame(self) -> None:
         """Display the current frame in a window"""
+        assert not self.render_config.offscreen, "only call display_frame when offscreen is True"
+
         self.render()
 
         # Display until exited
@@ -182,21 +209,31 @@ class CoordinateManager:
         def scale_dist(d: float) -> float:
             return d * max(sy, sx)
 
-        return CoordinateManager(px_x, px_y, coords_to_px, scale_dist)
+        return CoordinateManager(int(px_x), int(px_y), coords_to_px, scale_dist)
 
 
 if __name__ == "__main__":
     import pooltool as pt
     from pooltool.ai.datatypes import State
 
-    system = pt.System(
-        cue=pt.Cue(cue_ball_id="cue"),
-        table=(table := pt.Table.default()),
-        balls=pt.get_nine_ball_rack(table),
+    game_type = pt.GameType.NINEBALL
+
+    game = pt.get_ruleset(game_type)()
+    game.players = [
+        pt.Player("Player"),
+    ]
+    table = pt.Table.from_game_type(game_type)
+    balls = pt.get_rack(
+        game_type=game_type,
+        table=table,
+        params=None,
+        ballset=None,
+        spacing_factor=1e-3,
     )
-    system.strike(V0=8, phi=pt.aim.at_ball(system, "1"))
+    cue = pt.Cue(cue_ball_id=game.shot_constraints.cueball(balls))
+    system = pt.System(table=table, balls=balls, cue=cue)
+    system.strike(V0=4, phi=89.9)
     pt.simulate(system, inplace=True)
-    game = pt.get_ruleset(pt.GameType.NINEBALL)()
 
     def color_map(ball_id, _):
         if ball_id == "cue":
@@ -226,9 +263,11 @@ if __name__ == "__main__":
         grayscale=True,
         cushion_color=(255, 255, 255),
         ball_color=color_map,
+        render_cushions=False,
+        offscreen=False,
     )
 
-    renderer = PygameRenderer.build(system.table, 300, config)
+    renderer = PygameRenderer.build(system.table, 200, config)
     renderer.init()
     renderer.set_state(State(system, game))
 
