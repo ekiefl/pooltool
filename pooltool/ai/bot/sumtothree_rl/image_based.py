@@ -128,7 +128,7 @@ def reset_single_player_env(env: LightZeroImageEnv) -> LightZeroImageEnv:
 def get_env(state: State) -> LightZeroImageEnv:
     """Create a SumToThree environment from a State"""
 
-    PX = 20
+    PX = 200
     WHITE = (255, 255, 255)
 
     render_config = RenderConfig(
