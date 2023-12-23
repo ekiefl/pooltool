@@ -144,7 +144,7 @@ def get_env(state: State) -> LightZeroImageEnv:
     renderer = PygameRenderer.build(state.system.table, PX, render_config)
     renderer.init()
 
-    return LightZeroImageEnv(
+    env = LightZeroImageEnv(
         system=state.system,
         game=state.game,
         spaces=Spaces(
@@ -164,6 +164,9 @@ def get_env(state: State) -> LightZeroImageEnv:
         ),
         renderer=renderer,
     )
+
+    env.renderer.set_state(env)
+    return env
 
 
 def config_from_model_descr(model_descr: ModelDescr) -> Tuple[dict, dict]:

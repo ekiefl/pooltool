@@ -122,6 +122,8 @@ class LightZeroImageEnv(BaseLightZeroEnv):
     def observation_array(self) -> NDArray[np.uint8]:
         """Return the system state as an image array"""
         self.renderer.render()
+        obs = self.renderer.observation()
+        assert obs.any()
         return self.renderer.observation()
 
     @staticmethod
