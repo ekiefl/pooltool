@@ -124,7 +124,6 @@ class PygameRenderer:
 
 
         if not self.render_config.render_cushions:
-            pygame.display.flip()
             return
 
         cushion_color = self.render_config.cushion_color
@@ -140,8 +139,6 @@ class PygameRenderer:
                 width=1,
             )
 
-        pygame.display.flip()
-
     def observation(self) -> np.ndarray:
         """Return the current screen as an array"""
         raw_data = pygame.surfarray.array3d(self.screen)
@@ -156,6 +153,7 @@ class PygameRenderer:
         assert not self.render_config.offscreen, "only call display_frame when offscreen is True"
 
         self.render()
+        pygame.display.flip()
 
         running = True
         while running:
@@ -291,7 +289,7 @@ if __name__ == "__main__":
     for i in range(len(system.events)):
         for ball in system.balls.values():
             ball.state = ball.history[i]
-        renderer.display_frame_matplotlib()
+        renderer.display_frame()
         break
 
     renderer.close()
