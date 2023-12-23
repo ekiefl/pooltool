@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Callable, Protocol, Tuple
 
 import os
+import matplotlib.pyplot as plt
 import attrs
 import numba
 import numpy as np
@@ -55,10 +56,15 @@ class RenderConfig:
     ball_color: Callable[[str, StateLike], Color]
     render_cushions: bool = attrs.field(default=True)
     offscreen: bool = attrs.field(default=True)
+    single_pixel_ball: bool = attrs.field(default=False)
 
 
 class PygameRenderer:
-    def __init__(self, coordinates: CoordinateManager, render_config: RenderConfig):
+    def __init__(
+        self,
+        coordinates: CoordinateManager,
+        render_config: RenderConfig,
+    ):
         self.coordinates: CoordinateManager = coordinates
         self.render_config: RenderConfig = render_config
 
@@ -104,12 +110,18 @@ class PygameRenderer:
             if self.render_config.grayscale:
                 ball_color = to_grayscale(ball_color)
 
-            pygame.draw.circle(
-                surface=self.screen,
-                color=ball_color,
-                center=self.coordinates.coords_to_px(x, y),
-                radius=self.coordinates.scale_dist(radius),
-            )
+            coords = self.coordinates.coords_to_px(x, y)
+
+            if self.render_config.single_pixel_ball:
+                self.screen.set_at([int(coord) for coord in coords], ball_color)
+            else:
+                pygame.draw.circle(
+                    surface=self.screen,
+                    color=ball_color,
+                    center=coords,
+                    radius=self.coordinates.scale_dist(radius),
+                )
+
 
         if not self.render_config.render_cushions:
             pygame.display.flip()
@@ -131,12 +143,11 @@ class PygameRenderer:
         pygame.display.flip()
 
     def observation(self) -> np.ndarray:
+        """Return the current screen as an array"""
         raw_data = pygame.surfarray.array3d(self.screen)
         if self.render_config.grayscale:
             # H, W, C
             return np.expand_dims(array_to_grayscale(raw_data, GRAYSCALE_CONVERSION_WEIGHTS), axis=-1).transpose((1, 0, 2))
-            # C, H, W
-            #return np.expand_dims(array_to_grayscale(raw_data, GRAYSCALE_CONVERSION_WEIGHTS), axis=0)
         else:
             return np.transpose(raw_data, (2, 0, 1))
 
@@ -146,13 +157,18 @@ class PygameRenderer:
 
         self.render()
 
-        # Display until exited
         running = True
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
             self.clock.tick(60)
+
+    def display_frame_matplotlib(self) -> None:
+        self.render()
+        plt.imshow(np.squeeze(self.observation()), cmap='gray')
+        plt.axis('off')
+        plt.show()
 
     def close(self) -> None:
         pygame.quit()
@@ -207,7 +223,7 @@ class CoordinateManager:
             return sx * (x + offset_x), sy * (y + offset_y)
 
         def scale_dist(d: float) -> float:
-            return d * max(sy, sx)
+            return max(1.0, d * max(sy, sx))
 
         return CoordinateManager(int(px_x), int(px_y), coords_to_px, scale_dist)
 
@@ -216,7 +232,7 @@ if __name__ == "__main__":
     import pooltool as pt
     from pooltool.ai.datatypes import State
 
-    game_type = pt.GameType.NINEBALL
+    game_type = pt.GameType.SUMTOTHREE
 
     game = pt.get_ruleset(game_type)()
     game.players = [
@@ -257,7 +273,7 @@ if __name__ == "__main__":
         elif ball_id == "9":
             return (204, 204, 0)  # 9-ball is a blackened yellow
         else:
-            return (255, 128, 128)  # Default color
+            return (128, 128, 128)  # Default color
 
     config = RenderConfig(
         grayscale=True,
@@ -265,15 +281,17 @@ if __name__ == "__main__":
         ball_color=color_map,
         render_cushions=False,
         offscreen=False,
+        single_pixel_ball=True,
     )
 
-    renderer = PygameRenderer.build(system.table, 200, config)
+    renderer = PygameRenderer.build(system.table, 40, config)
     renderer.init()
     renderer.set_state(State(system, game))
 
     for i in range(len(system.events)):
         for ball in system.balls.values():
             ball.state = ball.history[i]
-        renderer.display_frame()
+        renderer.display_frame_matplotlib()
+        break
 
     renderer.close()

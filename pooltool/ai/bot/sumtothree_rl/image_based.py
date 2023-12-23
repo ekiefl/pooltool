@@ -128,15 +128,17 @@ def reset_single_player_env(env: LightZeroImageEnv) -> LightZeroImageEnv:
 def get_env(state: State) -> LightZeroImageEnv:
     """Create a SumToThree environment from a State"""
 
-    PX = 200
+    PX = 40
     WHITE = (255, 255, 255)
+    GRAY = (128, 128, 128)
 
     render_config = RenderConfig(
         grayscale=True,
         cushion_color=WHITE,
-        ball_color=lambda ball_id, _: WHITE if ball_id == "cue" else (255, 128, 128),
+        ball_color=lambda ball_id, _: WHITE if ball_id == "cue" else GRAY,
         render_cushions=False,
         offscreen=True,
+        single_pixel_ball=True,
     )
 
     renderer = PygameRenderer.build(state.system.table, PX, render_config)
