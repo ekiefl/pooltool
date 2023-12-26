@@ -1,10 +1,9 @@
 #! /usr/bin/env python
 
 import gc
-from pathlib import Path
 import sys
 from functools import partial
-from typing import Generator, Optional, Tuple, cast
+from typing import Generator, Optional, Tuple
 
 import gltf  # FIXME at first glance this does nothing?
 import simplepbr
@@ -23,7 +22,6 @@ import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 import pooltool.terminal as terminal
 from pooltool.ani.camera import cam
-from pooltool.ai.bot.sumtothree_rl.coordinate_based import SumToThreeAI
 from pooltool.ani.collision import cue_avoid
 from pooltool.ani.environment import environment
 from pooltool.ani.globals import Global, require_showbase

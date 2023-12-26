@@ -46,7 +46,8 @@ from pooltool.game.layouts import (
     get_three_cushion_rack,
 )
 from pooltool.game.ruleset import EightBall, NineBall, Snooker, ThreeCushion, SumToThree, get_ruleset
-from pooltool.game.ruleset.datatypes import Player
+from pooltool.game.ruleset.datatypes import Player, Ruleset
+from pooltool.ai.datatypes import State
 from pooltool.objects import (
     Ball,
     BallHistory,
@@ -81,6 +82,7 @@ __all__ = [
     "get_nine_ball_rack",
     "get_three_cushion_rack",
     "get_snooker_rack",
+    "State",
     "System",
     "MultiSystem",
     "PhysicsEngine",
@@ -145,6 +147,7 @@ __all__ = [
     "EightBall",
     "Player",
     "NineBall",
+    "Ruleset",
     "SumToThree",
     "Snooker",
     "get_ball_set",
