@@ -141,12 +141,18 @@ class PygameRenderer:
 
     def observation(self) -> np.ndarray:
         """Return the current screen as an array"""
-        raw_data = pygame.surfarray.array3d(self.screen)
+        array = pygame.surfarray.array3d(self.screen)
+
         if self.render_config.grayscale:
-            # H, W, C
-            return np.expand_dims(array_to_grayscale(raw_data, GRAYSCALE_CONVERSION_WEIGHTS), axis=-1).transpose((1, 0, 2))
-        else:
-            return np.transpose(raw_data, (2, 0, 1))
+            array = np.expand_dims(array_to_grayscale(array, GRAYSCALE_CONVERSION_WEIGHTS), axis=-1)
+
+        # H, W, C
+        array = array.transpose((1, 0, 2))
+
+        # Convert to float and normalize [0, 1]
+        array = array.astype(np.float32) / 255.0
+
+        return array
 
     def display_frame(self) -> None:
         """Display the current frame in a window"""
