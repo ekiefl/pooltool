@@ -1,5 +1,6 @@
 from typing import Dict
 
+from pooltool.game.datatypes import GameType
 from pooltool.objects.table.specs import (
     BilliardTableSpecs,
     PocketTableSpecs,
@@ -15,6 +16,7 @@ class TableName(StrEnum):
     SEVEN_FOOT_SHOWOOD = auto()
     SNOOKER_GENERIC = auto()
     BILLIARD_WIP = auto()
+    SUMTOTHREE_WIP = auto()
 
 
 TABLE_SPECS: Dict[TableName, TableSpecs] = {
@@ -65,18 +67,39 @@ TABLE_SPECS: Dict[TableName, TableSpecs] = {
         lights_height=1.99,
         model_descr=TableModelDescr.null(),
     ),
+    TableName.SUMTOTHREE_WIP: BilliardTableSpecs(
+        l=3.05 / 2.5,
+        w=3.05 / 2 / 2.5,
+        cushion_width=2 * 2.54 / 100,
+        cushion_height=0.64 * 2 * 0.028575,
+        height=0.708,
+        lights_height=1.99,
+        model_descr=TableModelDescr.null(),
+    ),
 }
 
 
-_default_map: Dict[TableType, TableName] = {
+_default_table_type_map: Dict[TableType, TableName] = {
     TableType.POCKET: TableName.SEVEN_FOOT_SHOWOOD,
     TableType.SNOOKER: TableName.SNOOKER_GENERIC,
     TableType.BILLIARD: TableName.BILLIARD_WIP,
 }
 
+_default_game_type_map: Dict[GameType, TableName] = {
+    GameType.EIGHTBALL: TableName.SEVEN_FOOT_SHOWOOD,
+    GameType.NINEBALL: TableName.SEVEN_FOOT_SHOWOOD,
+    GameType.SNOOKER: TableName.SNOOKER_GENERIC,
+    GameType.THREECUSHION: TableName.BILLIARD_WIP,
+    GameType.SUMTOTHREE: TableName.SUMTOTHREE_WIP,
+}
 
-def get_default_specs(table_type: TableType) -> TableSpecs:
-    return prebuilt_specs(_default_map[table_type])
+
+def default_specs_from_table_type(table_type: TableType) -> TableSpecs:
+    return prebuilt_specs(_default_table_type_map[table_type])
+
+
+def default_specs_from_game_type(game_type: GameType) -> TableSpecs:
+    return prebuilt_specs(_default_game_type_map[game_type])
 
 
 def prebuilt_specs(name: TableName) -> TableSpecs:

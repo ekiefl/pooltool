@@ -7,7 +7,8 @@ from attrs import define, evolve, field
 from pooltool.game.datatypes import GameType
 from pooltool.objects.table.collection import (
     TableName,
-    get_default_specs,
+    default_specs_from_game_type,
+    default_specs_from_table_type,
     prebuilt_specs,
 )
 from pooltool.objects.table.components import CushionSegments, Pocket
@@ -78,20 +79,11 @@ class Table:
 
     @classmethod
     def default(cls, table_type: TableType = TableType.POCKET) -> Table:
-        return cls.from_table_specs(get_default_specs(table_type))
+        return cls.from_table_specs(default_specs_from_table_type(table_type))
 
     @classmethod
     def from_game_type(cls, game_type: GameType) -> Table:
-        _game_table_type_map: Dict[GameType, TableType] = {
-            GameType.EIGHTBALL: TableType.POCKET,
-            GameType.NINEBALL: TableType.POCKET,
-            GameType.THREECUSHION: TableType.BILLIARD,
-            GameType.SUMTOTHREE: TableType.BILLIARD,
-            GameType.SNOOKER: TableType.SNOOKER,
-            GameType.SANDBOX: TableType.POCKET,
-        }
-
-        return cls.default(_game_table_type_map[game_type])
+        return cls.from_table_specs(default_specs_from_game_type(game_type))
 
 
 __all__ = [
