@@ -233,8 +233,8 @@ class CoordinateManager:
         if (px_y % 2) > 0:
             px_x += 1
 
-        sy = (px_y-1) / (screen_y_max - screen_y_min)
-        sx = (px_x-1) / (screen_x_max - screen_x_min)
+        sy = (px_y - 1) / (screen_y_max - screen_y_min)
+        sx = (px_x - 1) / (screen_x_max - screen_x_min)
 
         offset_y = table_y_min - screen_y_min
         offset_x = table_x_min - screen_x_min
