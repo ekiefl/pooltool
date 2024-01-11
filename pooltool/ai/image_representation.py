@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from typing import Callable, Protocol, Tuple
-
 import os
-import matplotlib.pyplot as plt
+from typing import Callable, List, Protocol, Tuple
+
 import attrs
+import matplotlib.pyplot as plt
 import numba
 import numpy as np
 import pygame
+from numpy.typing import NDArray
 from pygame.surface import Surface
 from pygame.time import Clock
 
@@ -16,15 +17,14 @@ from pooltool.game.ruleset.datatypes import Ruleset
 from pooltool.objects.table.datatypes import Table
 from pooltool.system.datatypes import System
 
+Color = Tuple[int, int, int]
+WHITE: Color = (255, 255, 255)
+GRAYSCALE_CONVERSION_WEIGHTS = np.array([0.299, 0.587, 0.114], dtype=np.float64)
+
 
 class StateLike(Protocol):
     system: System
     game: Ruleset
-
-
-Color = Tuple[int, int, int]
-
-GRAYSCALE_CONVERSION_WEIGHTS = np.array([0.299, 0.587, 0.114], dtype=np.float64)
 
 
 def to_grayscale(color: Color) -> Color:
@@ -46,17 +46,19 @@ def array_to_grayscale(raw_data, weights):
                 + raw_data[i, j, 1] * weights[1]
                 + raw_data[i, j, 2] * weights[2]
             )
+
     return grayscale_data
 
 
 @attrs.define
+class RenderPlane:
+    ball_ids: List[str] = attrs.field(factory=list)
+    cushion_ids: List[str] = attrs.field(factory=list)
+
+
+@attrs.define
 class RenderConfig:
-    grayscale: bool = attrs.field()
-    cushion_color: Color = attrs.field()
-    ball_color: Callable[[str, StateLike], Color]
-    render_cushions: bool = attrs.field(default=True)
-    offscreen: bool = attrs.field(default=True)
-    single_pixel_ball: bool = attrs.field(default=False)
+    planes: List[RenderPlane]
 
 
 class PygameRenderer:
@@ -72,106 +74,120 @@ class PygameRenderer:
         self.clock: Clock
         self.state: StateLike
 
-    @property
-    def width(self) -> int:
-        return self.coordinates.width
-
-    @property
-    def height(self) -> int:
-        return self.coordinates.height
-
     def init(self) -> None:
-        if self.render_config.offscreen:
-            os.environ["SDL_DRIVER"] = "dummy"
+        # For off-screen rendering
+        os.environ["SDL_DRIVER"] = "dummy"
+
+        self.screen = pygame.Surface((self.coordinates.width, self.coordinates.height))
+        self.clock = pygame.time.Clock()
 
         pygame.init()
-
-        if self.render_config.offscreen:
-            self.screen = pygame.Surface((self.width, self.height))
-        else:
-            self.screen = pygame.display.set_mode((self.width, self.height))
-
-        self.clock = pygame.time.Clock()
 
     def set_state(self, state: StateLike) -> None:
         self.state = state
 
-    def render(self) -> None:
+    def draw_all(self) -> None:
+        all_balls = list(self.state.system.balls.keys())
+        all_cushions = list(self.state.system.table.cushion_segments.linear.keys())
+
+        self.draw_plane(
+            RenderPlane(
+                ball_ids=all_balls,
+                cushion_ids=all_cushions,
+            )
+        )
+
+    def draw_plane(self, plane: RenderPlane) -> None:
         self.screen.fill((0, 0, 0))
 
-        for ball in self.state.system.balls.values():
+        for ball_id in plane.ball_ids:
+            ball = self.state.system.balls.get(ball_id)
+
+            if ball is None:
+                continue
+
             if ball.state.s == const.pocketed:
                 continue
 
             x, y, _ = ball.state.rvw[0]
             radius = ball.params.R
 
-            ball_color = self.render_config.ball_color(ball.id, self.state)
-            if self.render_config.grayscale:
-                ball_color = to_grayscale(ball_color)
-
             coords = self.coordinates.coords_to_px(x, y)
 
-            if self.render_config.single_pixel_ball:
-                self.screen.set_at([int(coord) for coord in coords], ball_color)
-            else:
-                pygame.draw.circle(
-                    surface=self.screen,
-                    color=ball_color,
-                    center=coords,
-                    radius=self.coordinates.scale_dist(radius),
-                )
+            pygame.draw.circle(
+                surface=self.screen,
+                color=WHITE,
+                center=coords,
+                radius=self.coordinates.scale_dist(radius),
+            )
 
+        for cushion_id in plane.cushion_ids:
+            cushion = self.state.system.table.cushion_segments.linear.get(cushion_id)
 
-        if not self.render_config.render_cushions:
-            return
+            if cushion is None:
+                continue
 
-        cushion_color = self.render_config.cushion_color
-        if self.render_config.grayscale:
-            cushion_color = to_grayscale(cushion_color)
-
-        for cushion in self.state.system.table.cushion_segments.linear.values():
             pygame.draw.line(
                 surface=self.screen,
-                color=cushion_color,
+                color=WHITE,
                 start_pos=self.coordinates.coords_to_px(*cushion.p1[:2]),
                 end_pos=self.coordinates.coords_to_px(*cushion.p2[:2]),
                 width=1,
             )
 
-    def observation(self) -> np.ndarray:
+    def screen_as_array(self) -> NDArray[np.float32]:
         """Return the current screen as an array"""
-        array = pygame.surfarray.array3d(self.screen)
-
-        if self.render_config.grayscale:
-            array = np.expand_dims(array_to_grayscale(array, GRAYSCALE_CONVERSION_WEIGHTS), axis=-1)
+        array = array_to_grayscale(
+            pygame.surfarray.array3d(self.screen),
+            GRAYSCALE_CONVERSION_WEIGHTS,
+        )
 
         # H, W, C
-        array = array.transpose((1, 0, 2))
+        array = array.transpose((1, 0))
 
-        # Convert to float and normalize [0, 1]
+        # Convert to float and normalize to [0, 1]
         array = array.astype(np.float32) / 255.0
 
         return array
 
-    def display_frame(self) -> None:
-        """Display the current frame in a window"""
-        assert not self.render_config.offscreen, "only call display_frame when offscreen is True"
+    def observation(self) -> NDArray[np.float32]:
+        """Return the current screen as an array"""
+        array = np.zeros(
+            (
+                self.coordinates.height,
+                self.coordinates.width,
+                len(self.render_config.planes),
+            ),
+            dtype=np.float32,
+        )
 
-        self.render()
-        pygame.display.flip()
+        for plane_idx, plane in enumerate(self.render_config.planes):
+            self.draw_plane(plane)
+            array[..., plane_idx] = self.screen_as_array()
 
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-            self.clock.tick(60)
+        return array
 
-    def display_frame_matplotlib(self) -> None:
-        self.render()
-        plt.imshow(np.squeeze(self.observation()), cmap='gray')
-        plt.axis('off')
+    def display_observation(self, observation: NDArray[np.float32]):
+        observation = self.observation()
+        channels = observation.shape[-1]
+
+        ncols = int(np.ceil(np.sqrt(channels)))
+        nrows = int(np.ceil(channels / ncols))
+
+        _, axes = plt.subplots(nrows, ncols, figsize=(12, 8), facecolor="gray")
+
+        plt.tight_layout()
+
+        for i in range(channels):
+            row, col = divmod(i, ncols)
+            ax = axes[row, col]
+            ax.imshow(observation[:, :, i], cmap="gray")
+            ax.axis("off")
+            ax.set_title(f"Channel {i+1}")
+
+        for j in range(channels, nrows * ncols):
+            axes.flat[j].axis("off")
+
         plt.show()
 
     def close(self) -> None:
@@ -217,8 +233,8 @@ class CoordinateManager:
         if (px_y % 2) > 0:
             px_x += 1
 
-        sy = px_y / (screen_y_max - screen_y_min)
-        sx = px_x / (screen_x_max - screen_x_min)
+        sy = (px_y-1) / (screen_y_max - screen_y_min)
+        sx = (px_x-1) / (screen_x_max - screen_x_min)
 
         offset_y = table_y_min - screen_y_min
         offset_x = table_x_min - screen_x_min
@@ -255,47 +271,24 @@ if __name__ == "__main__":
     system.strike(V0=4, phi=89.9)
     pt.simulate(system, inplace=True)
 
-    def color_map(ball_id, _):
-        if ball_id == "cue":
-            return (255, 255, 255)  # Cue ball is white
-        elif ball_id == "1":
-            return (255, 255, 0)  # 1-ball is yellow
-        elif ball_id == "2":
-            return (0, 0, 255)  # 2-ball is blue
-        elif ball_id == "3":
-            return (255, 0, 0)  # 3-ball is red
-        elif ball_id == "4":
-            return (128, 0, 128)  # 4-ball is purple
-        elif ball_id == "5":
-            return (255, 165, 0)  # 5-ball is orange
-        elif ball_id == "6":
-            return (0, 128, 0)  # 6-ball is green
-        elif ball_id == "7":
-            return (128, 0, 0)  # 7-ball is burgundy
-        elif ball_id == "8":
-            return (0, 0, 0)  # 8-ball is black
-        elif ball_id == "9":
-            return (204, 204, 0)  # 9-ball is a blackened yellow
-        else:
-            return (128, 128, 128)  # Default color
-
     config = RenderConfig(
-        grayscale=True,
-        cushion_color=(255, 255, 255),
-        ball_color=color_map,
-        render_cushions=False,
-        offscreen=False,
-        single_pixel_ball=True,
+        planes=[
+            RenderPlane(ball_ids=["cue"]),
+            RenderPlane(ball_ids=["object"]),
+            RenderPlane(ball_ids=["cue", "object"]),
+            RenderPlane(cushion_ids=["3", "12", "9", "18"]),
+        ],
     )
 
-    renderer = PygameRenderer.build(system.table, 40, config)
+    renderer = PygameRenderer.build(system.table, 400, config)
+
     renderer.init()
     renderer.set_state(State(system, game))
 
     for i in range(len(system.events)):
         for ball in system.balls.values():
             ball.state = ball.history[i]
-        renderer.display_frame()
+        renderer.display_observation(renderer.observation())
         break
 
     renderer.close()
