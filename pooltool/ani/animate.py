@@ -436,7 +436,7 @@ class Game(Interface):
         """
         # Change this line to change the game played.
         # Pick from {NINEBALL, EIGHTBALL, THREECUSHION, SNOOKER, SANDBOX}
-        game_type = GameType.SUMTOTHREE
+        game_type = GameType.NINEBALL
 
         game = get_ruleset(game_type)()
         game.players = [
