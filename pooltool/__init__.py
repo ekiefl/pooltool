@@ -1,5 +1,8 @@
 __version__ = "0.2.1"
 
+import pooltool.ai as ai
+import pooltool.ai.aim as aim
+import pooltool.ai.pot as pot
 from pooltool import terminal
 from pooltool.ani.animate import FrameStepper, Game, ShotViewer
 from pooltool.ani.image import (
@@ -22,6 +25,10 @@ from pooltool.events import (
     filter_ball,
     filter_time,
     filter_type,
+    filter_events,
+    by_time,
+    by_type,
+    by_ball,
     null_event,
     rolling_spinning_transition,
     rolling_stationary_transition,
@@ -38,12 +45,14 @@ from pooltool.game.layouts import (
     get_snooker_rack,
     get_three_cushion_rack,
 )
-from pooltool.game.ruleset import EightBall, NineBall, Snooker, ThreeCushion
+from pooltool.game.ruleset import EightBall, NineBall, Snooker, ThreeCushion, SumToThree, get_ruleset
+from pooltool.game.ruleset.datatypes import Player, Ruleset
 from pooltool.objects import (
     Ball,
     BallHistory,
     BallOrientation,
     BallParams,
+    BallSet,
     BallState,
     BilliardTableSpecs,
     CircularCushionSegment,
@@ -58,6 +67,7 @@ from pooltool.objects import (
     Table,
     TableModelDescr,
     TableType,
+    get_ball_set,
 )
 from pooltool.physics.engine import PhysicsEngine
 from pooltool.system import MultiSystem, System, SystemController, multisystem, visual
@@ -80,6 +90,10 @@ __all__ = [
     "filter_ball",
     "filter_time",
     "filter_type",
+    "filter_events",
+    "by_type",
+    "by_ball",
+    "by_time",
     "FrameStepper",
     "null_event",
     "ball_ball_collision",
@@ -97,6 +111,7 @@ __all__ = [
     "AgentType",
     "Agent",
     "Ball",
+    "BallSet",
     "BallState",
     "BallParams",
     "BallHistory",
@@ -124,10 +139,17 @@ __all__ = [
     "ShotViewer",
     "simulate",
     "continuize",
-    "ptmath",
     "get_rack",
+    "get_ruleset",
     "ThreeCushion",
     "EightBall",
+    "Player",
     "NineBall",
+    "Ruleset",
+    "SumToThree",
     "Snooker",
+    "get_ball_set",
+    "ai",
+    "pot",
+    "aim",
 ]

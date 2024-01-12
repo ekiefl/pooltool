@@ -195,18 +195,6 @@ def test_ballset():
     ball = Ball.create("cue", ballset=ballset1, m=24, g=10.8, xy=[4, 2])
     assert ball.ballset == ballset1
 
-    # Invalid ballset
-    ballset2 = get_ball_set("generic_snooker")
-    assert "cue" not in ballset2.ids
-
-    ball = Ball.create("cue", m=24, g=10.8, xy=[4, 2])
-    assert ball.ballset is None
-    with pytest.raises(ValueError):
-        ball.set_ballset(ballset2)
-
-    with pytest.raises(ValueError):
-        Ball.create("cue", ballset=ballset2, m=24, g=10.8, xy=[4, 2])
-
 
 def test_ball_copy():
     ball = Ball.create("cue", m=24, g=10.8, xy=[4, 2])

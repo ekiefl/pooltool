@@ -110,12 +110,12 @@ def solve_many(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
     return roots
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def solve(a, b, c, d, e) -> NDArray[np.complex128]:
     return _solve(np.array([a, b, c, d, e], dtype=np.complex128))[0]
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def _solve_many(
     ps: NDArray[np.complex128],
 ) -> Tuple[NDArray[np.complex128], NDArray[np.uint8]]:
@@ -130,7 +130,7 @@ def _solve_many(
     return all_roots, indicators
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def _solve(
     p: NDArray[np.complex128], ftol: float = 1e-5
 ) -> Tuple[NDArray[np.complex128], int]:
@@ -196,12 +196,12 @@ def _solve(
     return numeric(p), 3
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def evaluate(p: NDArray[np.complex128], val: complex) -> complex:
     return p[0] * val**4 + p[1] * val**3 + p[2] * val**2 + p[3] * val + p[4]
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def instability(p: NDArray[np.complex128]) -> float:
     """Range is from [0, inf], 0 is most stable"""
     a, b = p[:2]
@@ -213,12 +213,12 @@ def instability(p: NDArray[np.complex128]) -> float:
     return t + 1 / t
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def numeric(p: NDArray[np.complex128]) -> NDArray[np.complex128]:
     return np.roots(p).astype(np.complex128)
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def analytic(p: NDArray[np.complex128]) -> NDArray[np.complex128]:
     """Calculate a quartic's roots using the closed-form solution
 

@@ -16,7 +16,7 @@ def _arr(*args) -> NDArray[np.float64]:
     return np.array(args, dtype=np.float64)
 
 
-def _create_billiard_table_cushion_segments(specs) -> CushionSegments:
+def create_billiard_table_cushion_segments(specs) -> CushionSegments:
     h = specs.cushion_height
     return CushionSegments(
         linear={
@@ -50,7 +50,7 @@ def _create_billiard_table_cushion_segments(specs) -> CushionSegments:
     )
 
 
-def _create_pocket_table_cushion_segments(specs) -> CushionSegments:
+def create_pocket_table_cushion_segments(specs) -> CushionSegments:
     # https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times
     # for diagram
     cw = specs.cushion_width
@@ -283,7 +283,7 @@ def _create_pocket_table_cushion_segments(specs) -> CushionSegments:
     )
 
 
-def _create_pocket_table_pockets(specs):
+def create_pocket_table_pockets(specs):
     pw = specs.corner_pocket_width
     cr = specs.corner_pocket_radius
     sr = specs.side_pocket_radius

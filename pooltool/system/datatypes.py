@@ -8,14 +8,12 @@ import numpy as np
 from attrs import define, field
 
 import pooltool.physics.utils as physics_utils
-import pooltool.ptmath as ptmath
-from pooltool.error import ConfigError
+import pooltool.constants as const
 from pooltool.events import Event
 from pooltool.objects.ball.datatypes import Ball, BallHistory
 from pooltool.objects.ball.sets import BallSet
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
-from pooltool.potting import PottingConfig
 from pooltool.serialize import conversion
 from pooltool.serialize.serializers import Pathish
 
@@ -80,131 +78,23 @@ class System:
             if not ball.history.empty:
                 ball.state = ball.history[0].copy()
 
-    def aim_at_pos(self, pos):
-        """Set phi to aim at a 3D position
+    def stop_balls(self):
+        """Change ball states to stationary and remove all momentum"""
+        for ball in self.balls.values():
+            ball.state.s = const.stationary
+            ball.state.rvw[1] = np.array([0.0, 0.0, 0.0], np.float64)
+            ball.state.rvw[2] = np.array([0.0, 0.0, 0.0], np.float64)
 
-        Parameters
-        ==========
-        pos : array-like
-            A length-3 iterable specifying the x, y, z coordinates of the position to be
-            aimed at
-        """
-
-        assert self.cue.cue_ball_id in self.balls
-
-        cueing_ball = self.balls[self.cue.cue_ball_id]
-
-        direction = ptmath.angle(
-            ptmath.unit_vector(np.array(pos) - cueing_ball.state.rvw[0])
-        )
-        self.cue.set_state(phi=direction * 180 / np.pi)
-
-    def aim_at_ball(self, ball_id: str, cut: Optional[float] = None):
-        """Set phi to aim directly at a ball
-
-        Parameters
-        ==========
-        ball : pooltool.objects.ball.Ball
-            A ball
-        cut : float, None
-            The cut angle in degrees, within [-89, 89]
-        """
-
-        assert self.cue.cue_ball_id in self.balls
-
-        cueing_ball = self.balls[self.cue.cue_ball_id]
-        object_ball = self.balls[ball_id]
-
-        self.aim_at_pos(object_ball.state.rvw[0])
-
-        if cut is None:
-            return
-
-        assert -89 < cut < 89, "Cut must be less than 89 and more than -89"
-
-        # Ok a cut angle has been requested. Unfortunately, there exists no analytical
-        # function phi(cut), at least as far as I have been able to calculate. Instead,
-        # it is a nasty transcendental equation that must be solved. The gaol is to make
-        # its value 0. To do this, I sweep from 0 to the max possible angle with 100
-        # values and find where the equation flips from positive to negative. The dphi
-        # that makes the equation lies somewhere between those two values, so then I do
-        # a new parameter sweep between the value that was positive and the value that
-        # was negative. Then I rinse and repeat this a total of 5 times.
-
-        left = True if cut < 0 else False
-        cut = np.abs(cut) * np.pi / 180
-        R = object_ball.params.R
-        d = ptmath.norm3d(object_ball.state.rvw[0] - cueing_ball.state.rvw[0])
-
-        lower_bound = 0
-        upper_bound = np.pi / 2 - np.arccos((2 * R) / d)
-
-        for _ in range(5):
-            dphis = np.linspace(lower_bound, upper_bound, 100)
-            transcendental = (
-                np.arctan(
-                    2 * R * np.sin(cut - dphis) / (d - 2 * R * np.cos(cut - dphis))
-                )
-                - dphis
-            )
-            for i in range(len(transcendental)):
-                if transcendental[i] < 0:
-                    lower_bound = dphis[i - 1] if i > 0 else 0
-                    upper_bound = dphis[i]
-                    dphi = dphis[i]
-                    break
-            else:
-                raise ConfigError(
-                    "System.aim_at_ball :: Wow this should never happen. The algorithm "
-                    "that finds the cut angle needs to be looked at again, because "
-                    "the transcendental equation could not be solved."
-                )
-
-        self.cue.phi = (self.cue.phi + 180 / np.pi * (dphi if left else -dphi)) % 360
-
-    def aim_for_pocket(
-        self,
-        ball_id: str,
-        pocket_id: str,
-        config: PottingConfig = PottingConfig.default(),
-    ):
-        """Set phi to pot a given ball into a given pocket"""
-        assert self.cue.cue_ball_id in self.balls
-
-        self.cue.set_state(
-            phi=config.calculate_angle(
-                self.balls[self.cue.cue_ball_id],
-                self.balls[ball_id],
-                self.table.pockets[pocket_id],
-            )
-        )
-
-    def aim_for_best_pocket(
-        self, ball_id: str, config: PottingConfig = PottingConfig.default()
-    ):
-        """Set phi to pot a given ball into the best/easiest pocket"""
-        assert self.cue.cue_ball_id in self.balls
-
-        cue_ball = self.balls[self.cue.cue_ball_id]
-        object_ball = self.balls[ball_id]
-        pockets = list(self.table.pockets.values())
-
-        self.aim_for_pocket(
-            ball_id=ball_id,
-            pocket_id=config.choose_pocket(cue_ball, object_ball, pockets).id,
-            config=config,
-        )
-
-    def strike(self, **state_kwargs) -> None:
+    def strike(self, **kwargs) -> None:
         """Set cue stick parameters
 
         Just a wrapper for self.cue.set_state
 
-        state_kwargs: **kwargs
+        kwargs: **kwargs
             Pass state parameters to be updated for the cue strike. Any parameters
             accepted by Cue.set_state are permissible.
         """
-        self.cue.set_state(**state_kwargs)
+        self.cue.set_state(**kwargs)
         assert self.cue.cue_ball_id in self.balls
 
     def get_system_energy(self):
@@ -316,8 +206,7 @@ class System:
                 "1": Ball.create("1", xy=(table.w / 2, 3 / 4 * table.l)),
             },
         )
-        system.aim_for_best_pocket("1")
-        system.cue.set_state(V0=1.5, b=-0.3)
+        system.cue.set_state(V0=1.5, b=-0.3, phi=95.07668213305062)
         return system
 
 

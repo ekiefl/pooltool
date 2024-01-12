@@ -66,9 +66,8 @@ system = pt.System(
     balls=pt.get_nine_ball_rack(table, spacing_factor=1e-3),
 )
 
-# Aim at the head ball then strike the cue ball
-system.aim_at_ball(ball_id="1")
-system.strike(V0=8)
+# Aim at the head ball
+system.strike(V0=8, phi=pt.aim.at_ball(system, "1"))
 
 # Simulate the system once to load cached numba functions
 pt.simulate(system, inplace=False)

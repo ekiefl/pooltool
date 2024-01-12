@@ -37,7 +37,7 @@ def _is_legal_break(shot: System) -> Tuple[bool, str]:
     enough_cushions = len(balls_that_hit_cushion(shot, exclude={"cue"})) >= 4
 
     legal = ball_pocketed or enough_cushions
-    reason = "" if legal else "Must contact 4 rails or pot 1 ball"
+    reason = "" if legal else "4 rails must be contacted, or 1 ball potted"
 
     return legal, reason
 
@@ -295,6 +295,9 @@ class EightBall(Ruleset):
                 shot.table.w / 2,
                 shot.table.l * 1 / 4,
             )
+
+    def copy(self) -> EightBall:
+        raise NotImplementedError("EightBall copy needs to be implemented")
 
 
 class BallGroup(StrEnum):

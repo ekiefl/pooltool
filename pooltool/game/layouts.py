@@ -18,6 +18,7 @@ from pooltool.utils.strenum import StrEnum, auto
 DEFAULT_STANDARD_BALLSET = get_ball_set("pooltool_pocket")
 DEFAULT_SNOOKER_BALLSET = get_ball_set("generic_snooker")
 DEFAULT_THREECUSH_BALLSET = None
+DEFAULT_SUMTOTHREE_BALLSET = None
 
 
 class Dir(StrEnum):
@@ -353,16 +354,16 @@ def get_three_cushion_rack(
     ball_params: Optional[BallParams] = None,
     **kwargs,
 ) -> Balls:
+    """A three cushion starting position (white to break)
+
+    Based on https://www.3cushionbilliards.com/rules/106-official-us-billiard-association-rules-of-play
+    """
+
     if ball_params is None:
         ball_params = BallParams.default(game_type=GameType.THREECUSHION)
 
     if ballset is None:
         ballset = DEFAULT_THREECUSH_BALLSET
-
-    """A three cushion starting position (white to break)
-
-    Based on https://www.3cushionbilliards.com/rules/106-official-us-billiard-association-rules-of-play
-    """
 
     white = BallPos([], (0.62, 0.25), {"white"})
     yellow = BallPos([], (0.5, 0.25), {"yellow"})
@@ -370,6 +371,27 @@ def get_three_cushion_rack(
 
     return generate_layout(
         [white, yellow, red], *args, ballset=ballset, ball_params=ball_params, **kwargs
+    )
+
+
+def get_sum_to_three_rack(
+    *args,
+    ballset: Optional[BallSet] = None,
+    ball_params: Optional[BallParams] = None,
+    **kwargs,
+) -> Balls:
+    # Borrow 3-cushion ball params
+    if ball_params is None:
+        ball_params = BallParams.default(game_type=GameType.THREECUSHION)
+
+    if ballset is None:
+        ballset = DEFAULT_SUMTOTHREE_BALLSET
+
+    cue_ball = BallPos([], (0.5, 0.25), {"cue"})
+    object_ball = BallPos([], (0.5, 0.75), {"object"})
+
+    return generate_layout(
+        [cue_ball, object_ball], *args, ballset=ballset, ball_params=ball_params, **kwargs
     )
 
 
@@ -447,6 +469,7 @@ _game_rack_map: Dict[str, GetRackProtocol] = {
     GameType.THREECUSHION: get_three_cushion_rack,
     GameType.SNOOKER: get_snooker_rack,
     GameType.SANDBOX: get_nine_ball_rack,
+    GameType.SUMTOTHREE: get_sum_to_three_rack,
 }
 
 

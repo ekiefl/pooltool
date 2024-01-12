@@ -3,7 +3,7 @@
 import gc
 import sys
 from functools import partial
-from typing import Generator, Optional, Tuple, cast
+from typing import Generator, Optional, Tuple
 
 import gltf  # FIXME at first glance this does nothing?
 import simplepbr
@@ -33,6 +33,7 @@ from pooltool.evolution.continuize import continuize
 from pooltool.game.datatypes import GameType
 from pooltool.game.layouts import get_rack
 from pooltool.game.ruleset import get_ruleset
+from pooltool.game.ruleset.datatypes import Player
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
 from pooltool.system.datatypes import System, multisystem
@@ -435,9 +436,12 @@ class Game(Interface):
         """
         # Change this line to change the game played.
         # Pick from {NINEBALL, EIGHTBALL, THREECUSHION, SNOOKER, SANDBOX}
-        game_type = GameType.NINEBALL
+        game_type = GameType.SUMTOTHREE
 
-        game = get_ruleset(game_type)
+        game = get_ruleset(game_type)()
+        game.players = [
+            Player("Player"),
+        ]
 
         table = Table.from_game_type(game_type)
         balls = get_rack(

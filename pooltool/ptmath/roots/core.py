@@ -64,7 +64,7 @@ def min_real_root(
     return candidates[candidates.real.argmin()]
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def find_first_row_with_value(arr, X) -> int:
     """Find the index of the first row in a 2D array that contains a specific value."""
     for i in range(arr.shape[0]):

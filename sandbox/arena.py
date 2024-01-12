@@ -4,6 +4,7 @@
 import numpy as np
 
 import pooltool as pt
+from pooltool.physics.utils import is_overlapping
 
 get_pos = lambda table, ball: (
     (table.w - 2 * ball.params.R) * np.random.rand() + ball.params.R,
@@ -19,7 +20,7 @@ def place_ball(i, balls, table):
         ball.state.rvw[0] = new_pos
 
         for other in balls.values():
-            if pt.physics.is_overlapping(
+            if is_overlapping(
                 ball.state.rvw, other.state.rvw, ball.params.R, other.params.R
             ):
                 break
@@ -41,8 +42,7 @@ def main(args):
         shot = pt.System(cue=cue, table=table, balls=balls)
 
         # Aim at the head ball then strike the cue ball
-        shot.aim_at_ball("1")
-        shot.strike(V0=40)
+        shot.strike(V0=40, phi=pt.aim.at_ball(shot, "1"))
 
         # Evolve the shot
         pt.simulate(shot, continuous=False, inplace=True)

@@ -10,3 +10,5 @@ fullscreen #f
 sync-video #f
 
 gl-check-errors #f
+
+gl-version 3 2

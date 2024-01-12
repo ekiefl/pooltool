@@ -6,6 +6,7 @@ from pooltool.events.filter import by_ball, by_type, filter_events, filter_type
 from pooltool.game.ruleset.datatypes import ShotConstraints
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.system.datatypes import System
+from pooltool.utils.strenum import StrEnum, auto
 
 
 def get_pocketed_ball_ids_during_shot(
@@ -108,17 +109,25 @@ def get_ball_ids_on_table(
     )
 
 
-def _probe_ball_state(ball: Ball, at_start: bool, simulated: bool) -> BallState:
+class StateProbe(StrEnum):
+    CURRENT = auto()
+    START = auto()
+    END = auto()
+
+
+def _probe_ball_state(ball: Ball, when: StateProbe, simulated: bool) -> BallState:
     if not simulated:
         return ball.state
 
-    if at_start:
+    if when is StateProbe.CURRENT:
+        return ball.state
+    elif when is StateProbe.START:
         return ball.history[0]
+    else:
+        return ball.history[-1]
 
-    return ball.history[-1]
 
-
-def get_lowest_ball(shot: System, at_start: bool) -> Ball:
+def get_lowest_ball(shot: System, when: StateProbe) -> Ball:
     """Get the lowest ball on the table at start or end of shot
 
     Args:
@@ -133,7 +142,7 @@ def get_lowest_ball(shot: System, at_start: bool) -> Ball:
     for ball in shot.balls.values():
         if ball.id == "cue":
             continue
-        if _probe_ball_state(ball, at_start, shot.simulated).s == const.pocketed:
+        if _probe_ball_state(ball, when, shot.simulated).s == const.pocketed:
             continue
         if int(ball.id) < int(lowest.id):
             lowest = ball
@@ -173,7 +182,7 @@ def is_lowest_hit_first(shot: System) -> bool:
     if (ball_id := get_id_of_first_ball_hit(shot, cue="cue")) is None:
         return False
 
-    return get_lowest_ball(shot, at_start=True).id == ball_id
+    return get_lowest_ball(shot, when=StateProbe.START).id == ball_id
 
 
 def balls_that_hit_cushion(

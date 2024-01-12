@@ -62,3 +62,6 @@ class SandBox(Ruleset):
             self.log.add_msg(
                 f"Ball(s) potted: {', '.join(ball_ids)}", sentiment="neutral"
             )
+
+    def copy(self) -> SandBox:
+        raise NotImplementedError("SandBox copy needs to be implemented")

@@ -3,27 +3,47 @@ from __future__ import annotations
 
 import copy
 from abc import ABC, abstractmethod
-from typing import Any, Counter, Dict, Generator, List, Optional, Tuple
+from typing import (
+    Any,
+    Callable,
+    Counter,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Protocol,
+    Tuple,
+)
 
 import attrs
 
+from pooltool.ai.action import Action
 from pooltool.system.datatypes import Balls, System
 from pooltool.terminal import Timer
 from pooltool.utils.strenum import StrEnum, auto
 
 
+class AIPlayer(Protocol):
+    def decide(
+        self,
+        system: System,
+        game: Ruleset,
+        callback: Optional[Callable[[Action], None]] = None,
+    ) -> Action:
+        ...
+
+    def apply(self, system: System, action: Action) -> None:
+        ...
+
+
 @attrs.define
 class Player:
     name: str
+    ai: Optional[AIPlayer] = None
 
-    @classmethod
-    def create_players(cls, names: Optional[List[str]] = None) -> List[Player]:
-        if names is None:
-            names = ["Player 1", "Player 2"]
-
-        assert len(names) == len(set(names)), "Player names must be unique"
-
-        return [cls(name) for name in names]
+    @property
+    def is_ai(self) -> bool:
+        return self.ai is not None
 
 
 @attrs.define
@@ -142,7 +162,12 @@ class Ruleset(ABC):
     methods to specify the behavior for specific pool games.
     """
 
-    def __init__(self, player_names: Optional[List[str]] = None) -> None:
+    def __init__(self, players: Optional[List[Player]] = None) -> None:
+        # Player info
+        players = [] if players is None else players
+        self.players: List[Player] = players
+        self.active_idx: int = 0
+
         # Game progress tracking
         self.score: Counter[str] = Counter()
         self.shot_number: int = 0
@@ -151,10 +176,6 @@ class Ruleset(ABC):
         # Game states
         self.shot_constraints: ShotConstraints = self.initial_shot_constraints()
         self.shot_info: ShotInfo
-
-        # Player info
-        self.players: List[Player] = Player.create_players(player_names)
-        self.active_idx: int = 0
 
         self.log: Log = Log()
 
@@ -264,3 +285,7 @@ class Ruleset(ABC):
         This method should decide which balls should be respotted, and respot them. This
         method should probably make use of pooltool.game.ruleset.utils.respot
         """
+
+    @abstractmethod
+    def copy(self) -> Ruleset:
+        pass

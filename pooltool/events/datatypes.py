@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional, Tuple, Type, Union
 from attrs import define, evolve, field
 from cattrs.converters import Converter
 
-from pooltool.objects.ball.datatypes import Ball, BallHistory
+from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.datatypes import NullObject
 from pooltool.objects.table.components import (
