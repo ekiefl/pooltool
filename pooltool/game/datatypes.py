@@ -7,3 +7,4 @@ class GameType(StrEnum):
     THREECUSHION = auto()
     SNOOKER = auto()
     SANDBOX = auto()
+    SUMTOTHREE = auto()

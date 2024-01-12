@@ -23,9 +23,8 @@ def main(args):
         balls=pt.get_nine_ball_rack(table, spacing_factor=args.spacing_factor),
     )
 
-    # Aim at the head ball then strike the cue ball
-    system.aim_at_ball(ball_id="1")
-    system.strike(V0=args.V0)
+    # Aim at the head ball
+    system.strike(V0=args.V0, phi=pt.aim.at_ball(system, "1"))
 
     # Evolve the shot
     pt.simulate(system, inplace=True)

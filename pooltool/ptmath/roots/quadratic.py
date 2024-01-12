@@ -3,7 +3,7 @@ from numba import jit
 import pooltool.constants as const
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def solve(a, b, c):
     """Solve a quadratic equation At^2 + Bt + C = 0 (just-in-time compiled)"""
     if a == 0:

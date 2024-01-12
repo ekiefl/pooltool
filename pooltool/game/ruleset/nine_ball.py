@@ -17,7 +17,9 @@ from pooltool.game.ruleset.datatypes import (
     ShotInfo,
 )
 from pooltool.game.ruleset.utils import (
+    StateProbe,
     balls_that_hit_cushion,
+    get_ball_ids_on_table,
     get_highest_ball,
     get_lowest_ball,
     get_pocketed_ball_ids_during_shot,
@@ -38,7 +40,7 @@ def _is_legal_break(shot: System) -> Tuple[bool, str]:
     enough_cushions = len(balls_that_hit_cushion(shot, exclude={"cue"})) >= 4
 
     legal = ball_pocketed or enough_cushions
-    reason = "" if legal else "Must contact 4 rails or pot 1 ball"
+    reason = "" if legal else "4 rails must be contacted, or 1 ball potted"
 
     return legal, reason
 
@@ -164,7 +166,7 @@ class NineBall(Ruleset):
             ),
             movable=[] if self.shot_info.legal else ["cue"],
             cueable=["cue"],
-            hittable=(get_lowest_ball(shot, at_start=False).id,),
+            hittable=(get_lowest_ball(shot, when=StateProbe.END).id,),
             call_shot=False,
         )
 
@@ -189,10 +191,11 @@ class NineBall(Ruleset):
     def respot_balls(self, shot: System) -> None:
         """Respot balls
 
-        This respots two circumstances:
+        This respots under the following circumstances:
 
         (1) The shot was illegal, in which case the cue is respotted
-        (2) If the highest ball on the table and the cue are sunk together, both are respotted
+        (2) If there are no balls on the table but it was an illegal shot, respot the
+            highest ball that was on the table at the start of the shot.
         """
         if not self.shot_info.legal:
             respot(
@@ -202,23 +205,15 @@ class NineBall(Ruleset):
                 shot.table.l * 1 / 4,
             )
 
-        highest = get_highest_ball(shot, at_start=True)
-        highest_id = highest.id
-        lowest_id = get_lowest_ball(shot, at_start=True).id
-
-        pocketed_ball_ids = get_pocketed_ball_ids_during_shot(shot)
-
-        if (
-            (highest_id == lowest_id)
-            and (highest_id in pocketed_ball_ids)
-            and not self.shot_info.legal
-        ):
-            respot(
-                shot,
-                highest_id,
-                shot.table.w / 2,
-                shot.table.l * 3 / 4,
-            )
+            ball_ids = get_ball_ids_on_table(shot, at_start=False, exclude={"cue"})
+            if not len(ball_ids):
+                highest = get_highest_ball(shot, at_start=True)
+                respot(
+                    shot,
+                    highest.id,
+                    shot.table.w / 2,
+                    shot.table.l * 3 / 4,
+                )
 
     def copy(self) -> NineBall:
         game = NineBall()

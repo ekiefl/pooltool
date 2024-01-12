@@ -6,7 +6,7 @@ All units are SI unless otherwise stated.
 
 import numpy as np
 
-numba_cache = True
+use_numba_cache = True
 np.set_printoptions(precision=16, suppress=True)
 
 EPS = np.finfo(float).eps * 100

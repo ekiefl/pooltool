@@ -67,7 +67,13 @@ class Cue:
         self.set_state(**field_defaults)
 
     def set_state(
-        self, V0=None, phi=None, theta=None, a=None, b=None, cue_ball_id=None
+        self,
+        V0: Optional[float] = None,
+        phi: Optional[float] = None,
+        theta: Optional[float] = None,
+        a: Optional[float] = None,
+        b: Optional[float] = None,
+        cue_ball_id: Optional[str] = None,
     ):
         """Set the cueing parameters
 

@@ -14,8 +14,7 @@ def main(args):
         )
 
         # Aim at the head ball then strike the cue ball
-        shot.aim_at_ball(ball_id="1", cut=0)
-        shot.strike(V0=args.V0)
+        shot.strike(V0=args.V0, phi=pt.aim.at_ball(shot, "1", cut=0))
 
         # Evolve the shot
         pt.simulate(shot, inplace=True)

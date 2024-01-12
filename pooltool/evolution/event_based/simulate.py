@@ -40,6 +40,8 @@ from pooltool.physics.engine import PhysicsEngine
 from pooltool.ptmath.roots.quartic import QuarticSolver
 from pooltool.system.datatypes import System
 
+DEFAULT_ENGINE = PhysicsEngine()
+
 
 def simulate(
     shot: System,
@@ -50,6 +52,7 @@ def simulate(
     t_final: Optional[float] = None,
     quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
     include: Set[EventType] = INCLUDED_EVENTS,
+    max_events: int = 0,
 ) -> System:
     """Run a simulation on a system and return it
 
@@ -82,6 +85,9 @@ def simulate(
         include:
             Which EventType are you interested in resolving? By default, all detected
             events are resolved.
+        max_events:
+            If this is greater than 0, and the shot has more than this many events, the
+            simulation is stopped and the balls are set to stationary.
 
     Examples:
         Standard usage:
@@ -126,7 +132,7 @@ def simulate(
         shot = shot.copy()
 
     if not engine:
-        engine = PhysicsEngine()
+        engine = DEFAULT_ENGINE
 
     shot.reset_history()
     shot.update_history(null_event(time=0))
@@ -145,9 +151,10 @@ def simulate(
 
     transition_cache = TransitionCache.create(shot)
 
+    events = 0
     while True:
         event = get_next_event(
-            shot, transition_cache=transition_cache, quartic_solver=quartic_solver
+            shot, transition_cache=transition_cache, quartic_solver=quartic_solver,
         )
 
         if event.time == np.inf:
@@ -166,6 +173,12 @@ def simulate(
             shot.update_history(null_event(time=shot.t))
             break
 
+        if max_events > 0 and events > max_events:
+            shot.stop_balls()
+            break
+
+        events += 1
+
     if continuous:
         continuize(shot, dt=0.01 if dt is None else dt, inplace=True)
 
@@ -181,7 +194,7 @@ def _evolve(shot: System, dt: float):
     """
 
     for ball_id, ball in shot.balls.items():
-        rvw, s = evolve.evolve_state_motion(
+        rvw, _ = evolve.evolve_ball_motion(
             state=ball.state.s,
             rvw=ball.state.rvw,
             R=ball.params.R,
@@ -192,7 +205,7 @@ def _evolve(shot: System, dt: float):
             g=ball.params.g,
             t=dt,
         )
-        ball.state = BallState(rvw, s, shot.t + dt)
+        ball.state = BallState(rvw, ball.state.s, shot.t + dt)
 
 
 def get_next_event(

@@ -5,7 +5,7 @@ import pooltool.constants as const
 import pooltool.ptmath as ptmath
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def rel_velocity(rvw, R):
     """Compute velocity of cloth with respect to ball's point of contact
 
@@ -15,7 +15,7 @@ def rel_velocity(rvw, R):
     return v + R * ptmath.cross(np.array([0.0, 0.0, 1.0], dtype=np.float64), w)
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def get_u_vec(rvw, phi, R, s):
     if s == const.rolling:
         return np.array([1.0, 0.0, 0.0])
@@ -28,18 +28,18 @@ def get_u_vec(rvw, phi, R, s):
     return ptmath.coordinate_rotation(ptmath.unit_vector(rel_vel), -phi)
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def get_slide_time(rvw, R, u_s, g):
     return 2 * ptmath.norm3d(rel_velocity(rvw, R)) / (7 * u_s * g)
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def get_roll_time(rvw, u_r, g):
     _, v, _ = rvw
     return ptmath.norm3d(v) / (u_r * g)
 
 
-@jit(nopython=True, cache=const.numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def get_spin_time(rvw, R, u_sp, g):
     _, _, w = rvw
     return np.abs(w[2]) * 2 / 5 * R / u_sp / g

@@ -14,8 +14,7 @@ shot = System(
 )
 
 # Aim at the head ball then strike the cue ball
-shot.aim_at_ball(ball_id="1")
-shot.strike(V0=8)
+shot.strike(V0=8, phi=pt.aim.at_ball(shot, "1"))
 
 # Evolve the shot
 pt.simulate(shot, inplace=True)

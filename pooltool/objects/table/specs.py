@@ -8,12 +8,12 @@ from attrs import define, field
 
 import pooltool.ani as ani
 from pooltool.error import ConfigError
-from pooltool.objects.table._layout import (
-    _create_billiard_table_cushion_segments,
-    _create_pocket_table_cushion_segments,
-    _create_pocket_table_pockets,
-)
 from pooltool.objects.table.components import CushionSegments, Pocket
+from pooltool.objects.table.layout import (
+    create_billiard_table_cushion_segments,
+    create_pocket_table_cushion_segments,
+    create_pocket_table_pockets,
+)
 from pooltool.utils import panda_path, strenum
 
 
@@ -105,10 +105,10 @@ class PocketTableSpecs(TableSpecs):
     table_type: TableType = field(init=False, default=TableType.POCKET)
 
     def create_cushion_segments(self) -> CushionSegments:
-        return _create_pocket_table_cushion_segments(self)
+        return create_pocket_table_cushion_segments(self)
 
     def create_pockets(self) -> Dict[str, Pocket]:
-        return _create_pocket_table_pockets(self)
+        return create_pocket_table_pockets(self)
 
 
 @define(frozen=True)
@@ -131,7 +131,7 @@ class BilliardTableSpecs(TableSpecs):
     table_type: TableType = field(init=False, default=TableType.BILLIARD)
 
     def create_cushion_segments(self) -> CushionSegments:
-        return _create_billiard_table_cushion_segments(self)
+        return create_billiard_table_cushion_segments(self)
 
     def create_pockets(self) -> Dict[str, Pocket]:
         return {}
@@ -175,7 +175,7 @@ class SnookerTableSpecs(TableSpecs):
     table_type: TableType = field(init=False, default=TableType.SNOOKER)
 
     def create_cushion_segments(self) -> CushionSegments:
-        return _create_pocket_table_cushion_segments(self)
+        return create_pocket_table_cushion_segments(self)
 
     def create_pockets(self) -> Dict[str, Pocket]:
-        return _create_pocket_table_pockets(self)
+        return create_pocket_table_pockets(self)

@@ -65,21 +65,21 @@ class LinearCushionSegment:
         return are_dataclasses_equal(self, other)
 
     @cached_property
-    def height(self):
+    def height(self) -> float:
         return self.p1[2]
 
     @cached_property
-    def lx(self):
+    def lx(self) -> float:
         p1x, p1y, _ = self.p1
         p2x, p2y, _ = self.p2
         return 1 if (p2x - p1x) == 0 else -(p2y - p1y) / (p2x - p1x)
 
     @cached_property
-    def ly(self):
+    def ly(self) -> float:
         return 0 if (self.p2[0] - self.p1[0]) == 0 else 1
 
     @cached_property
-    def l0(self):
+    def l0(self) -> float:
         p1x, p1y, _ = self.p1
         p2x, p2y, _ = self.p2
         return -p1x if (p2x - p1x) == 0 else (p2y - p1y) / (p2x - p1x) * p1x - p1y
@@ -213,29 +213,6 @@ class Pocket:
     @cached_property
     def b(self) -> float:
         return self.center[1]
-
-    @cached_property
-    def potting_point(self) -> NDArray[np.float64]:
-        """The 2D coordinates that should be aimed at for the ball to be sunk
-
-        Determines the coordinates of a point ahead of the pocket where, if a traveling
-        ball were to pass through it, would result in the ball being sunk. The point
-        would be a radius to left/right, and a radius up/down, depending on the pocket.
-        These values were determined empirically by trial and error.
-        """
-        (x, y, _), r = self.center, self.radius
-
-        if self.id[0] == "l":
-            x = x + r
-        else:
-            x = x - r
-
-        if self.id[1] == "b":
-            y = y + r
-        elif self.id[1] == "t":
-            y = y - r
-
-        return np.array([x, y], dtype=np.float64)
 
     def add(self, ball_id: str) -> None:
         self.contains.add(ball_id)

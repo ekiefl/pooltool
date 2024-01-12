@@ -11,12 +11,24 @@ from pooltool.events._events import (
     stick_ball_collision,
 )
 from pooltool.events.datatypes import Agent, AgentType, Event, EventType
-from pooltool.events.filter import filter_ball, filter_time, filter_type
+from pooltool.events.filter import (
+    by_ball,
+    by_time,
+    by_type,
+    filter_ball,
+    filter_events,
+    filter_time,
+    filter_type,
+)
 
 __all__ = [
     "filter_ball",
     "filter_time",
     "filter_type",
+    "filter_events",
+    "by_type",
+    "by_ball",
+    "by_time",
     "null_event",
     "ball_ball_collision",
     "ball_linear_cushion_collision",

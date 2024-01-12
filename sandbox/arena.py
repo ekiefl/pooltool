@@ -41,8 +41,7 @@ def main(args):
         shot = pt.System(cue=cue, table=table, balls=balls)
 
         # Aim at the head ball then strike the cue ball
-        shot.aim_at_ball("1")
-        shot.strike(V0=40)
+        shot.strike(V0=40, phi=pt.aim.at_ball(shot, "1"))
 
         # Evolve the shot
         pt.simulate(shot, continuous=False, inplace=True)
