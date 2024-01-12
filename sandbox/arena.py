@@ -4,6 +4,7 @@
 import numpy as np
 
 import pooltool as pt
+from pooltool.physics.utils import is_overlapping
 
 get_pos = lambda table, ball: (
     (table.w - 2 * ball.params.R) * np.random.rand() + ball.params.R,
@@ -19,7 +20,7 @@ def place_ball(i, balls, table):
         ball.state.rvw[0] = new_pos
 
         for other in balls.values():
-            if pt.physics.is_overlapping(
+            if is_overlapping(
                 ball.state.rvw, other.state.rvw, ball.params.R, other.params.R
             ):
                 break
