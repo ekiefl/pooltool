@@ -1,7 +1,19 @@
 include pooltool/config/*
 include pooltool/config/menus/*.xml
+
+recursive-include pooltool/ani/fonts *.ttf
+
 recursive-include pooltool/ README.md
 recursive-include pooltool/ani/camera/states *.json
+
 recursive-include pooltool/logo *
+recursive-exclude pooltool/logo *.blend *.svg *.exr
+
 recursive-include pooltool/models *
+recursive-exclude pooltool/models *_pbr.glb
 recursive-exclude pooltool/models *.blend *.blend1 *.pptx *.svg
+
+recursive-exclude pooltool/models/room *.png *.jpg *.jpeg
+recursive-exclude pooltool/models/table *.png *.jpg *.jpeg
+recursive-exclude pooltool/models/cue *.png *.jpg *.jpeg
+recursive-exclude pooltool/models/balls *.png *.jpg *.jpeg
