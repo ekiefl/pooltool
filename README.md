@@ -104,7 +104,7 @@ pt.simulate(shot, inplace=True)
 interface.show(shot)
 ```
 
-I haven't spent much time on the API yet but hopefully you get the idea.
+I've spent time carving out the API, but there is still no proper distinction between what is private and what is public. Furthermore, documentation describing the API is lacking. Pull requests for this noble work are welcomed.
 
 </details>
 
