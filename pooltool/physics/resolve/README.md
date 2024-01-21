@@ -1,6 +1,6 @@
 # Resolve
 
-This package oversees the process that determines the outcomes, or resolutions, of events. To clarify, [events](https://ekiefl.github.io/2020/12/20/pooltool-alg/#2-what-are-events) refer to either collisions or transitions. The way in which a ball-to-ball collision is managed depends on the strategy you choose to employ. Essentially, the package's purpose is to provide modular physics solutions that can be seamlessly integrated into pooltool.
+This package oversees the process that determines the outcomes, or resolutions, of events. To clarify, [events](https://ekiefl.github.io/2020/12/20/pooltool-alg/#2-what-are-events) refer to either collisions or transitions. The way in which an event is resolved depends on the strategy you choose to employ. Essentially, this package's purpose is to provide modular physics solutions that can be seamlessly integrated into pooltool.
 
 ## Modify
 
