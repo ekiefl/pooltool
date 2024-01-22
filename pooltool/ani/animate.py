@@ -21,7 +21,7 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 import pooltool.terminal as terminal
-from pooltool.ani.camera import cam
+from pooltool.ani.camera import cam, CameraState
 from pooltool.ani.collision import cue_avoid
 from pooltool.ani.environment import environment
 from pooltool.ani.globals import Global, require_showbase
@@ -327,7 +327,7 @@ class ShotViewer(Interface):
 
         self.stop()
 
-    def show(self, shot_or_shots=None, title=""):
+    def show(self, shot_or_shots=None, title="", camera_state: Optional[CameraState] = None):
         multisystem.reset()
         if isinstance(shot_or_shots, System):
             multisystem.append(shot_or_shots)
@@ -336,7 +336,10 @@ class ShotViewer(Interface):
 
         self.create_scene()
 
-        cam.load_saved_state("last_scene", ok_if_not_exists=True)
+        if camera_state is None:
+            cam.load_saved_state("last_scene", ok_if_not_exists=True)
+        else:
+            cam.load_state(camera_state)
 
         self.standby_screen.hide()
         self.create_title(title)
