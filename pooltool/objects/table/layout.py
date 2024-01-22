@@ -284,30 +284,35 @@ def create_pocket_table_cushion_segments(specs) -> CushionSegments:
 
 
 def create_pocket_table_pockets(specs):
-    pw = specs.corner_pocket_width
     cr = specs.corner_pocket_radius
     sr = specs.side_pocket_radius
     cd = specs.corner_pocket_depth
     sd = specs.side_pocket_depth
 
-    cD = cr + cd - pw / 2
-    sD = sr + sd
+    # When corner_pocket_depth is 0, the center of the pocket should be at the cushion
+    # intersection. As corner_pocket_depth increases, the pocket center moves diagonally
+    # outwards. The corner pocket radius does not affect the initial position of the
+    # pocket center
+    cD = cd / np.sqrt(2)
+
+    # For side pockets, the center position is simply moved out by the side_pocket_depth
+    sD = sd
 
     pockets = {
         "lb": Pocket(
-            "lb", center=_arr(-cD / np.sqrt(2), -cD / np.sqrt(2), 0), radius=cr
+            "lb", center=_arr(-cD, -cD, 0), radius=cr
         ),
         "lc": Pocket("lc", center=_arr(-sD, specs.l / 2, 0), radius=sr),
         "lt": Pocket(
-            "lt", center=_arr(-cD / np.sqrt(2), specs.l + cD / np.sqrt(2), 0), radius=cr
+            "lt", center=_arr(-cD, specs.l + cD, 0), radius=cr
         ),
         "rb": Pocket(
-            "rb", center=_arr(specs.w + cD / np.sqrt(2), -cD / np.sqrt(2), 0), radius=cr
+            "rb", center=_arr(specs.w + cD, -cD, 0), radius=cr
         ),
         "rc": Pocket("rc", center=_arr(specs.w + sD, specs.l / 2, 0), radius=sr),
         "rt": Pocket(
             "rt",
-            center=_arr(specs.w + cD / np.sqrt(2), specs.l + cD / np.sqrt(2), 0),
+            center=_arr(specs.w + cD, specs.l + cD, 0),
             radius=cr,
         ),
     }
