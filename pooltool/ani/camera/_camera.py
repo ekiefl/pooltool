@@ -252,7 +252,7 @@ class CameraState:
             np.rad2deg(np.arctan2(table.l / 2 - fix_y, table.w / 2 - fix_x)) + 180, 20
         )
 
-        return CameraState(
+        return cls(
             cam_hpr=(90, 0, rand(-10, 10)),
             cam_pos=(rand(1.5, 3.0), 0, 0),
             fixation_hpr=(deg, 0, rand(-45, -10)),
