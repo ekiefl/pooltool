@@ -293,3 +293,6 @@ class Snooker(Ruleset):
                 f"{self.last_player.name} is up!",
                 sentiment="good",
             )
+
+    def copy(self) -> Snooker:
+        raise NotImplementedError("Snooker copy needs to be implemented")
