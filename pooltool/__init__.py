@@ -1,4 +1,4 @@
-__version__ = "0.2.2.1"
+__version__ = "0.2.2.1-dev"
 
 import pooltool.ai as ai
 import pooltool.ai.aim as aim
