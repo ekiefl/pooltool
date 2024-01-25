@@ -7,8 +7,8 @@ from typing import Dict, Iterator, List, Optional
 import numpy as np
 from attrs import define, field
 
-import pooltool.physics.utils as physics_utils
 import pooltool.constants as const
+import pooltool.physics.utils as physics_utils
 from pooltool.events import Event
 from pooltool.objects.ball.datatypes import Ball, BallHistory
 from pooltool.objects.ball.sets import BallSet
@@ -22,12 +22,36 @@ Balls = Dict[str, Ball]
 
 @define
 class System:
-    cue: Cue
-    table: Table
-    balls: Balls
+    cue: Cue = field()
+    table: Table = field()
+    balls: Balls = field()
 
     t: float = field(default=0)
     events: List[Event] = field(factory=list)
+
+    @balls.validator  # type: ignore
+    def _validate_balls(self, _, value) -> None:
+        first_ball_m = None
+        first_ball_R = None
+
+        for key, ball in value.items():
+            assert key == ball.id, f"Key {key} does not match ball's id {ball.id}"
+
+            # This safeguards against a current limitation in pooltool, namely, that
+            # balls must have equal masses and radii. Equal mass is due to the current
+            # ball-ball resolver, and equal radius is due to the current ball-ball
+            # resolver as well as the quartic solver used for ball-ball collision
+            # detection
+            if first_ball_m is None and first_ball_R is None:
+                first_ball_m = ball.params.m
+                first_ball_R = ball.params.R
+            else:
+                assert (
+                    ball.params.m == first_ball_m
+                ), f"Ball with id {ball.id} has a different mass"
+                assert (
+                    ball.params.R == first_ball_R
+                ), f"Ball with id {ball.id} has a different radius"
 
     @property
     def continuized(self):
