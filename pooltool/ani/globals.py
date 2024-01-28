@@ -1,4 +1,5 @@
 import functools
+import sys
 from typing import Any
 
 from direct.showbase import ShowBaseGlobal
@@ -23,6 +24,10 @@ def require_showbase(func):
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        if "sphinx" in sys.modules:
+            # Sphinx's autodoc generation needs introspective access
+            return func(*args, **kwargs)
+
         if is_showbase_initialized():
             return func(*args, **kwargs)
 
