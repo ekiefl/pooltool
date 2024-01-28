@@ -1,5 +1,16 @@
 <img src="pooltool/logo/logo.png" width="600" />
 
+[![Documentation Status](https://readthedocs.org/projects/pooltool/badge/?version=latest)](https://pooltool.readthedocs.io/en/latest/?badge=latest)
+
+![GitHub Org's stars](https://img.shields.io/github/stars/ekiefl)
+[![GitHub stars](https://img.shields.io/github/stars/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/network)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/ekiefl/pooltool)
+[![GitHub issues](https://img.shields.io/github/issues/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/issues)
+[![GitHub pulls](https://img.shields.io/github/issues-pr/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/pulls)
+[![Contributors](https://img.shields.io/github/contributors/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/graphs/contributors)
+[![GitHub license](https://img.shields.io/github/license/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/blob/master/LICENSE)
+
 # Intro
 
 *pooltool* is a sandbox billiards game that emphasizes realistic physics. You can play different types of billiards, experiment with different physics settings, or you can use the API to investigate billiards-related research questions.
