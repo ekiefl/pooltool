@@ -27,7 +27,6 @@ def get_color_objects():
     functionality if it does not
 
     Notes
-    =====
     - Rather than using fore, back, and style, the progress bar should use the
       pooltool.terminal.tty_colors dictionary so that `colored` can be removed as a
       module altogether
@@ -98,6 +97,41 @@ def remove_spaces(text):
 
 
 class Progress:
+    """A class for managing progress updates in a terminal environment
+
+    This class is designed to display progress information, manage progress steps, and
+    calculate ETA for tasks in a command-line interface. It supports dynamic updates of
+    progress information and can handle multiple progress instances with unique
+    identifiers.
+
+    Attributes:
+        pid:
+            Unique identifier for the progress instance.
+        verbose:
+            Determines whether progress updates are displayed. Defaults to True.
+        terminal_width:
+            Width of the terminal window in characters.
+        current:
+            Current progress message being displayed.
+        progress_total_items:
+            Total number of items to track for progress.
+        progress_current_item:
+            Current progress item count.
+        t:
+            Timer object to calculate ETA and track progress time.
+
+    Methods:
+        new:
+            Starts a new progress with a given pid.
+        update:
+            Updates the progress display with a new message, optionally incrementing the
+            progress.
+        end:
+            Ends the current progress display and optionally stores timing information.
+        reset:
+            Resets the progress display.
+    """
+
     def __init__(self, verbose=True):
         self.pid = None
         self.verbose = verbose
