@@ -1,2 +1,3 @@
 sphinx==4.2.0
 pyyaml==6.0.1
+sphinx_rtd_theme==2023.11.17
