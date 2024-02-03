@@ -1,8 +1,16 @@
-API Reference
-=============
+===================
+What is *pooltool*?
+===================
+
+FIXME
+
+Contents
+========
 
 .. toctree::
-   :maxdepth: 8
+   :maxdepth: 3
 
-   ...
+   self
+   install
    autoapi/index
+   license
