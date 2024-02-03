@@ -2,6 +2,7 @@
 
 # Remove existing .rst files
 rm docs/source/*.rst
+rm -rf docs/reference/_autosummary
 
 # Read exclusion patterns into an array
 EXCLUDE_PATTERNS=()
@@ -16,6 +17,7 @@ echo -e "${EXCLUDE_PATTERNS[@]}\n"
 sphinx-apidoc --force -e -o docs/source . "${EXCLUDE_PATTERNS[@]}"
 
 # Build the HTML documentation
+make clean -C docs
 make -C docs html
 
 # Open the generated documentation index in the default web browser
