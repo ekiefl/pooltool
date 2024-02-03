@@ -48,32 +48,11 @@ class Player:
 
 @attrs.define
 class Log:
-    """Log docstring
-
-    This is good.
-
-    Attributes:
-        msgs: No one better than this
-        timer: Cept me
-        update: We love it
-    """
-    #: Tough love
-    msgs: List[Dict[str, Any]] = attrs.field(factory=list, metadata={"description": ""})
-    #: Wowwwww
+    msgs: List[Dict[str, Any]] = attrs.field(factory=list)
     timer: Timer = attrs.field(factory=Timer.factory)
-    #: Tough break
     update: bool = attrs.field(default=False)
 
-    def add_msg(self, msg, sentiment="neutral", quiet: bool=False) -> None:
-        """Msg doc
-
-        This is good.
-
-        Args:
-            msg: No one better than this
-            sentiment: Cept me
-            quiet: We love it
-        """
+    def add_msg(self, msg, sentiment="neutral", quiet=False) -> None:
         self.msgs.append(
             {
                 "time": self.timer.timestamp(),
@@ -102,116 +81,6 @@ class BallInHandOptions(StrEnum):
     BEHIND_LINE = auto()
     SEMICIRCLE = auto()
 
-
-from dataclasses import dataclass
-import attrs
-
-
-@attrs.define
-class Example:
-    """Title
-
-    Parameters:
-        foo:
-            desc for foo.
-        bar:
-            desc for bar.
-    """
-    foo: str
-    bar: bool
-
-    def c(self, no_one: List[int]) -> List[int]:
-        """Please work.
-
-        Does this look good?
-
-        Args:
-            no_one:
-                foobarfoobar.
-        """
-        pass
-
-
-@dataclass
-class ShotConstraints3:
-    """Constraints for a yet-to-happen shot
-
-    Attributes:
-        ball_in_hand:
-            Enum specifying if and how the player can place the cue ball by hand.
-        movable:
-            A list of identifiers for balls that the player is allowed to move
-            before the shot. If None, all balls are considered movable.
-        cueable:
-            A list of identifiers for balls that can be struck by the cue ball
-            during the shot. If None, all balls are considered cueable.
-        hittable:
-            A tuple of identifiers for balls that must be hit for the shot to be
-            considered legal.
-        call_shot:
-            A boolean indicating whether the shot must be called (i.e., the player must
-            declare which ball they intend to pocket and in which pocket). If False,
-            ball_call and pocket_call need not be defined.
-        ball_call:
-            The identifier of the ball the player has called to be pocketed.
-            If None, no specific ball has been called.
-        pocket_call:
-            The identifier of the pocket the player has called for the ball to
-            be pocketed in. If None, no specific pocket has been called.
-    """
-    ball_in_hand: BallInHandOptions
-    movable: Optional[List[str]]
-    cueable: Optional[List[str]]
-    hittable: Tuple[str, ...]
-    call_shot: bool
-    ball_call: Optional[str]
-    pocket_call: Optional[str]
-
-
-class ShotConstraints2:
-    """Constraints for a yet-to-happen shot
-
-    Attributes:
-        ball_in_hand:
-            Enum specifying if and how the player can place the cue ball by hand.
-        movable:
-            A list of identifiers for balls that the player is allowed to move
-            before the shot. If None, all balls are considered movable.
-        cueable:
-            A list of identifiers for balls that can be struck by the cue ball
-            during the shot. If None, all balls are considered cueable.
-        hittable:
-            A tuple of identifiers for balls that must be hit for the shot to be
-            considered legal.
-        call_shot:
-            A boolean indicating whether the shot must be called (i.e., the player must
-            declare which ball they intend to pocket and in which pocket). If False,
-            ball_call and pocket_call need not be defined.
-        ball_call:
-            The identifier of the ball the player has called to be pocketed.
-            If None, no specific ball has been called.
-        pocket_call:
-            The identifier of the pocket the player has called for the ball to
-            be pocketed in. If None, no specific pocket has been called.
-    """
-
-    def __init__(
-        self,
-        ball_in_hand: BallInHandOptions,
-        movable: Optional[List[str]],
-        cueable: Optional[List[str]],
-        hittable: Tuple[str, ...],
-        call_shot: bool,
-        ball_call: Optional[str],
-        pocket_call: Optional[str],
-    ) -> None:
-        self.ball_in_hand = ball_in_hand
-        self.movable = movable
-        self.cueable = cueable
-        self.hittable = hittable
-        self.call_shot = call_shot
-        self.ball_call = ball_call
-        self.pocket_call = pocket_call
 
 @attrs.define
 class ShotConstraints:
