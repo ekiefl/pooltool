@@ -23,7 +23,7 @@ Subpackages
 -----------
 .. toctree::
    :titlesonly:
-   :maxdepth: 3
+   :maxdepth: 1
 
 {% for subpackage in visible_subpackages %}
    {{ subpackage.short_name }}/index.rst

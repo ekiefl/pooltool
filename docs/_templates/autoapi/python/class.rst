@@ -44,15 +44,18 @@
    {% set visible_methods = obj.methods|rejectattr("inherited")|selectattr("display")|list %}
    {% endif %}
 
-   {% if visible_methods or visible_attributes %}
+   {% if visible_attributes %}
 
-   .. rubric:: Members
+   .. rubric:: Attributes:
 
    {% for attribute in visible_attributes %}
    {{ attribute.render()|indent(3) }}
    {% endfor %}
+   {% endif %}
 
-   .. rubric:: Methods
+   {% if visible_methods %}
+
+   .. rubric:: Methods:
 
    {% for method in visible_methods %}
    {{ method.render()|indent(3) }}

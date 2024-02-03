@@ -19,6 +19,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx_copybutton",
     "autoapi.extension",
+    "sphinx.ext.viewcode",
 ]
 
 
@@ -28,14 +29,8 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = [
-    '_build',
-    'Thumbs.db',
-    '.DS_Store',
-    '**/test_*.py',
-    '**/test_*/**',
-    #'.*',
-]
+# NOTE: Don't use this for excluding python files, use `autoapi_ignore` below
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # -- Global options ----------------------------------------------------------
 
@@ -77,6 +72,14 @@ autoapi_options = [
     "imported-members",
 ]
 autoapi_keep_files = True
+
+autoapi_ignore = [
+    '*/test_*.py',
+    "*/render.py",
+    "*/ai/*",
+    "*/ani/*",
+    "*/user_config.py"
+]
 
 
 # -- custom auto_summary() macro ---------------------------------------------
