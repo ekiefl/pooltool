@@ -3,6 +3,7 @@
 # Remove existing .rst files
 rm docs/source/*.rst
 rm -rf docs/reference/_autosummary
+rm -rf docs/autoapi
 
 # Read exclusion patterns into an array
 EXCLUDE_PATTERNS=()

@@ -1,9 +1,8 @@
-Pooltool documentation
-======================
+API Reference
+=============
 
 .. toctree::
-   :hidden:
-   :titlesonly:
+   :maxdepth: 8
 
-   user_guide/index
-   reference/index
+   ...
+   autoapi/index

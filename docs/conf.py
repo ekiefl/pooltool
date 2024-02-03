@@ -12,7 +12,7 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../'))
+sys.path.insert(0, os.path.abspath('../pooltool'))
 
 
 # -- Project information -----------------------------------------------------
@@ -24,21 +24,38 @@ author = 'Evan Kiefl'
 
 # -- General configuration ---------------------------------------------------
 
+def contains(seq, item):
+    return item in seq
+
+def prepare_jinja_env(jinja_env) -> None:
+    jinja_env.tests["contains"] = contains
+
+autoapi_prepare_jinja_env = prepare_jinja_env
+
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 # Add any Sphinx extension module names here, as strings
 
 extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx.ext.napoleon",
+    #"sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
-    "sphinx.ext.autosummary",
-    #"attr_utils.annotations",
-    #"attr_utils.autoattrs",
+    "autoapi.extension",
 ]
 
-autosummary_generate = True  # Turn on autosummary stub file generation
+autoapi_dirs = ['../pooltool/']
+autoapi_type = "python"
+autoapi_template_dir = "_templates/autoapi"
+autoapi_keep_files = True
+autodoc_typehints = "signature"
+
+autoapi_options = [
+    "members",
+    "undoc-members",
+    "show-inheritance",
+    "show-module-summary",
+    "imported-members",
+]
 
 # Napoleon settings
 napoleon_google_docstring = True
@@ -87,88 +104,3 @@ html_css_files = [
     "custom.css",
 ]
 
-# -- Sphinx Immaterial -----------------------------------------------------
-
-
-extensions.append("sphinx_immaterial")
-html_theme = "sphinx_immaterial"
-
-# material theme options (see theme.conf for more information)
-html_theme_options = {
-    "icon": {
-        "repo": "fontawesome/brands/github",
-        "edit": "material/file-edit-outline",
-    },
-    "site_url": "https://jbms.github.io/sphinx-immaterial/",
-    "repo_url": "https://github.com/jbms/sphinx-immaterial/",
-    "repo_name": "Sphinx-Immaterial",
-    "edit_uri": "blob/main/docs",
-    "globaltoc_collapse": True,
-    "features": [
-        "navigation.expand",
-        # "navigation.tabs",
-        # "toc.integrate",
-        "navigation.sections",
-        # "navigation.instant",
-        # "header.autohide",
-        "navigation.top",
-        # "navigation.tracking",
-        # "search.highlight",
-        "search.share",
-        "toc.follow",
-        "toc.sticky",
-        "content.tabs.link",
-        "announce.dismiss",
-    ],
-    "palette": [
-        {
-            "media": "(prefers-color-scheme: light)",
-            "scheme": "default",
-            "primary": "light-green",
-            "accent": "light-blue",
-            "toggle": {
-                "icon": "material/lightbulb-outline",
-                "name": "Switch to dark mode",
-            },
-        },
-        {
-            "media": "(prefers-color-scheme: dark)",
-            "scheme": "slate",
-            "primary": "deep-orange",
-            "accent": "lime",
-            "toggle": {
-                "icon": "material/lightbulb",
-                "name": "Switch to light mode",
-            },
-        },
-    ],
-    # BEGIN: version_dropdown
-    "version_dropdown": True,
-    "version_info": [
-        {
-            "version": "https://sphinx-immaterial.rtfd.io",
-            "title": "ReadTheDocs",
-            "aliases": [],
-        },
-        {
-            "version": "https://jbms.github.io/sphinx-immaterial",
-            "title": "Github Pages",
-            "aliases": [],
-        },
-    ],
-    # END: version_dropdown
-    "toc_title_is_page_title": True,
-    # BEGIN: social icons
-    "social": [
-        {
-            "icon": "fontawesome/brands/github",
-            "link": "https://github.com/jbms/sphinx-immaterial",
-            "name": "Source on github.com",
-        },
-        {
-            "icon": "fontawesome/brands/python",
-            "link": "https://pypi.org/project/sphinx-immaterial/",
-        },
-    ],
-    # END: social icons
-}
