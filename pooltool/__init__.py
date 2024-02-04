@@ -60,7 +60,8 @@ from pooltool.events import (
     spinning_stationary_transition,
     stick_ball_collision,
 )
-from pooltool.evolution import continuize, simulate
+from pooltool.evolution import simulate
+from pooltool.evolution.continuize import continuize
 from pooltool.game.datatypes import GameType
 from pooltool.game.layouts import (
     get_eight_ball_rack,

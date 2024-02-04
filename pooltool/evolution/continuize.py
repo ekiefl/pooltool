@@ -1,3 +1,8 @@
+"""Module for building a time-dense system trajectory
+
+For an explanation, see :func:`continuize`
+"""
+
 import pooltool.physics.evolve as evolve
 from pooltool.events import filter_ball
 from pooltool.objects.ball.datatypes import BallHistory, BallState
@@ -5,11 +10,27 @@ from pooltool.system.datatypes import System
 
 
 def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> System:
-    """Create BallHistory for each ball with many timepoints
+    """Create a ``BallHistory`` for each ball with many timepoints
 
-    All balls share the same timepoints, and the timepoints are uniformly spaced, except
-    for the last timepoint, which occurs at the final event, which is necessarily dt of
-    the second last timepoint.
+    When pooltool simulates a shot, it evolves the system using an `event-based shot
+    evolution algorithm
+    <https://ekiefl.github.io/2020/12/20/pooltool-alg/#continuous-event-based-evolution>`_.
+    This means pooltool only timestamps the ball states during events--not between
+    events. This makes simulation fast, but provides insufficient trajectory information
+    if you wanted to visualize or plot ball trajectories over time.
+
+    *Continuizing* the shot means tracking the ball states with higher temporal
+    resolution, so that the ball trajectories between events can be recapitulated. It's
+    a misnomer because the states are still tracked over discrete time steps ``dt``
+    seconds apart. *i.e.* not continuous.
+
+    This function calculates the "continous" timestamps for each ball and stores them in
+    :attr:`pooltool.objects.ball.datatypes.Ball.history_cts` (the event-based timestamps
+    are preserved, and are stored in :attr:`pooltool.objects.ball.datatypes.Ball.history`)
+
+    The continous timepoints are shared between all balls and are uniformly spaced
+    (except for the last timepoint, which occurs at the final event, which necessarily
+    occurs less than ``dt`` after the second last timepoint).
 
     Args:
         dt:
@@ -25,18 +46,37 @@ def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> Syste
     Examples:
         Standard usage:
 
-        >>> # Continuize a system
         >>> import pooltool as pt
         >>> system = pt.simulate(pt.System.example())
-        >>> continuized_system = pt.continuize(system, inplace=False)
-        >>> assert not system.continuized
-        >>> assert continuized_system.continuized
 
-        The returned system is continuized, but the passed system remains unchanged.
+        The system has been simulated, so their ``history`` attributes are populated:
+
+        >>> len(system.balls["cue"].history)
+        14
+        >>> system.balls["cue"].history[0]
+        BallState(rvw=array([[0.4953  , 0.9906  , 0.028575],
+               [0.      , 0.      , 0.      ],
+               [0.      , 0.      , 0.      ]]), s=0, t=0.0)
+        >>> system.balls["cue"].history[-1]
+        BallState(rvw=array([[0.7464286761774921, 1.247940272192023 , 0.028575          ],
+               [0.                , 0.                , 0.                ],
+               [0.                , 0.                , 0.                ]]), s=0, t=5.193035203405666)
+
+        However, the system has not been continuized, so their ``history_cts`` attributes are empty:
+
+        >>> len(system.balls["cue"].history_cts)
+        0
+
+        After continuizing, the continuous ball histories are populated with many timestamps:
+
+        >>> continuized_system = pt.continuize(system, inplace=False)
+        >>> continuized_system.continuized
+        True
+        >>> len(continuized_system.balls["cue"].history_cts)
+        523
 
         You can also modify the system in place:
 
-        >>> # Continuize a system in place
         >>> import pooltool as pt
         >>> system = pt.simulate(pt.System.example())
         >>> continuized_system = pt.continuize(system, inplace=True)
@@ -44,23 +84,18 @@ def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> Syste
         >>> assert continuized_system.continuized
         >>> assert system is continuized_system
 
-        Notice that the returned system _is_ the continuized system. Therefore, there is
+        Notice that the returned system *is* the continuized system. Therefore, there is
         no point catching the return object when inplace is True:
 
-        >>> # Simulate a system in place
         >>> import pooltool as pt
         >>> system = pt.simulate(pt.System.example())
         >>> assert not system.continuized
         >>> pt.continuize(system, inplace=True)
         >>> assert system.continuized
 
-    Notes:
-    The old continuize did not have uniform and equally spaced time points. That
-    implementation can be found with
-
-    `git checkout 7b2f7440f7d9ad18cba65c9e4862ee6bdc620631`
-
-    (Look for pooltool.system.datatypes.continuize_heterogeneous)
+    See Also:
+        - :attr:`pooltool.objects.ball.datatypes.Ball.history_cts`
+        - :func:`pooltool.evolution.event_based.simulate.simulate`
     """
     if not inplace:
         system = system.copy()

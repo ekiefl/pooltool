@@ -127,6 +127,9 @@ def simulate(
         >>> import pooltool as pt
         >>> system = pt.simulate(pt.System.example(), continuous=True)
         >>> for ball in system.balls.values(): assert len(ball.history_cts) > 0
+
+    See Also:
+        - :func:`pooltool.evolution.continuize.continuize`
     """
     if not inplace:
         shot = shot.copy()
