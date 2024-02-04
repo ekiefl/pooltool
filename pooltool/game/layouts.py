@@ -11,7 +11,6 @@ from pooltool.game.datatypes import GameType
 from pooltool.objects.ball.datatypes import Ball, BallParams
 from pooltool.objects.ball.sets import BallSet, get_ball_set
 from pooltool.objects.table.datatypes import Table
-from pooltool.system.datatypes import Balls
 from pooltool.utils import classproperty
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -176,7 +175,7 @@ def generate_layout(
     ball_params: Optional[BallParams] = None,
     spacing_factor: float = 1e-3,
     seed: Optional[int] = None,
-) -> Balls:
+) -> Dict[str, Ball]:
     """Generate Ball objects based on a given blueprint and table dimensions.
 
     The function calculates the absolute position of each ball on the table using the
@@ -224,7 +223,7 @@ def generate_layout(
     ball_radius = ball_params.R
     radius = ball_radius * (1 + spacing_factor)
 
-    balls: Balls = {}
+    balls: Dict[str, Ball] = {}
 
     ball_ids = _get_ball_ids(blueprint)
 
@@ -268,7 +267,7 @@ def get_nine_ball_rack(
     ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
     **kwargs,
-) -> Balls:
+) -> Dict[str, Ball]:
     if ball_params is None:
         ball_params = BallParams.default(game_type=GameType.NINEBALL)
 
@@ -308,7 +307,7 @@ def get_eight_ball_rack(
     ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
     **kwargs,
-) -> Balls:
+) -> Dict[str, Ball]:
     if ball_params is None:
         ball_params = BallParams.default(game_type=GameType.EIGHTBALL)
 
@@ -353,7 +352,7 @@ def get_three_cushion_rack(
     ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
     **kwargs,
-) -> Balls:
+) -> Dict[str, Ball]:
     """A three cushion starting position (white to break)
 
     Based on https://www.3cushionbilliards.com/rules/106-official-us-billiard-association-rules-of-play
@@ -379,7 +378,7 @@ def get_sum_to_three_rack(
     ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
     **kwargs,
-) -> Balls:
+) -> Dict[str, Ball]:
     # Borrow 3-cushion ball params
     if ball_params is None:
         ball_params = BallParams.default(game_type=GameType.THREECUSHION)
@@ -411,7 +410,7 @@ def get_snooker_rack(
     ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
     **kwargs,
-) -> Balls:
+) -> Dict[str, Ball]:
     if ball_params is None:
         ball_params = BallParams.default(game_type=GameType.SNOOKER)
 
@@ -459,7 +458,7 @@ class GetRackProtocol(Protocol):
         ballset: Optional[BallSet] = None,
         ball_params: Optional[BallParams] = None,
         **kwargs: Any,
-    ) -> Balls:
+    ) -> Dict[str, Ball]:
         ...
 
 
@@ -479,7 +478,7 @@ def get_rack(
     params: Optional[BallParams] = None,
     ballset: Optional[BallSet] = None,
     spacing_factor: float = 1e-3,
-) -> Balls:
+) -> Dict[str, Ball]:
     return _game_rack_map[game_type](
         table,
         ball_params=params,

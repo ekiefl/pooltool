@@ -17,17 +17,80 @@ from pooltool.objects.table.datatypes import Table
 from pooltool.serialize import conversion
 from pooltool.serialize.serializers import Pathish
 
-Balls = Dict[str, Ball]
-
-
 @define
 class System:
-    cue: Cue = field()
-    table: Table = field()
-    balls: Balls = field()
+    """A class representing the state of a billiards system.
 
-    t: float = field(default=0)
+    This is a container class which holds a collection of
+    :class:`pooltool.objects.ball.datatypes.Ball` objects, a
+    :class:`pooltool.objects.cue.datatypes.Cue`, and a
+    :class:`pooltool.objects.table.datatypes.Table`. Together, these objects, referred
+    to as the `system`, fully describe the state of a billiards system.
+
+    This object is not a snapshot, but rather a mutable object that can be evolved
+    over the course of system's evolution. When a billiards system is
+    simulated, a list of :class:`pooltool.events.datatypes.Event` objects is stored in this class.
+
+    This class also stores the duration of simulated time elapsed as ``t``, measured in
+    seconds.
+
+    Examples:
+
+        Constructing a system requires a cue, a table, and a dictionary of balls:
+
+        >>> import pooltool as pt
+        >>> pt.System(
+        >>>     cue=pt.Cue.default(),
+        >>>     table=pt.Table.default(),
+        >>>     balls={"1": pt.Ball.create("1", xy=(0.2, 0.3))},
+        >>> )
+
+        If you need a quick system to experiment with, call :meth:`example`:
+
+        >>> import pooltool as pt
+        >>> system = pt.System.example()
+
+        You can simulate this system and introspect its attributes:
+
+        >>> pt.simulate(system, inplace=True)
+        >>> system.simulated
+        True
+        >>> len(system.events)
+        14
+        >>> system.cue
+        <Cue object at 0x7fb838080190>
+         ├── V0    : 1.5
+         ├── phi   : 95.07668213305062
+         ├── a     : 0.0
+         ├── b     : -0.3
+         └── theta : 0.0
+
+        This ``system`` can also be visualized in the GUI:
+
+        >>> gui = pt.ShotViewer()
+        >>> gui.show(system)
+    """
+    cue: Cue = field()
+    """A cue stick (required)"""
+    table: Table = field()
+    """A table (required)"""
+    balls: Dict[str, Ball] = field()
+    """A dictionary of balls (required)
+
+    Each key must match each value's ``id`` (`e.g.` ``{"2": Ball(id="1")}`` is invalid).
+    """
+    t: float = field(default=0.0)
+    """The elapsed simulation time (default = 0.0)
+
+    If the system is in the process of being simulated, ``t`` is updated to be the
+    number of seconds the system has evolved. After being simulated, ``t`` remains at
+    the final simulation time.
+    """
     events: List[Event] = field(factory=list)
+    """The sequence of events in the simulation (default = [])
+
+    Like ``t``, this is updated incrementally as the system is evolved.
+    """
 
     @balls.validator  # type: ignore
     def _validate_balls(self, _, value) -> None:
@@ -55,27 +118,62 @@ class System:
 
     @property
     def continuized(self):
+        """Checks if all balls have a non-empty continuous history.
+
+        Returns:
+            bool: True if all balls have a non-empty continuous history, False otherwise.
+
+        See Also:
+            For a proper definition of `continuous history`, please see
+            :attr:`pooltool.objects.ball.datatypes.Ball.history_cts`.
+        """
         return all(not ball.history_cts.empty for ball in self.balls.values())
 
     @property
     def simulated(self):
+        """Checks if the simulation has any events.
+
+        If there are events, it is assumed that the system has been simulated.
+
+        Returns:
+            bool: True if there are events, False otherwise.
+        """
         return bool(len(self.events))
 
-    def set_meta(self, meta):
-        """Define any meta data for the shot"""
-        raise NotImplementedError()
-
     def set_ballset(self, ballset: BallSet) -> None:
-        """Set the ballset attribute for each Ball in self.balls
+        """Sets the ballset for each ball in the system.
+
+        This is an important method if these `both` apply to you:
+
+        (1) You are manually creating balls (rather than relying on built-in
+            utilities in :mod:`pooltool.game.layouts`)
+        (2) You care about what the balls look like
+
+        In this case, you need to manually associate a
+        :class:`pooltool.objects.ball.sets.BallSet` to the balls in the system, so
+        that the proper `model skin` can be applied to each. That's what this method
+        does.
+
+        Args:
+            ballset: The ballset to be assigned to each ball.
 
         Raises:
-            ValueError if any balls' IDs don't correspond to a model name
+            ValueError:
+                If any ball's ID does not correspond to a model name associated with the
+                ball set.
+
+        See Also:
+            See :mod:`pooltool.objects.ball.sets` for details about ball sets.
         """
         for ball in self.balls.values():
             ball.set_ballset(ballset)
 
-    def update_history(self, event: Event):
-        """Updates the history for all balls"""
+    def _update_history(self, event: Event):
+        """Updates the history for all balls based on the given event.
+
+        Args:
+            event (Event): The event to update the ball histories with.
+        """
         self.t = event.time
 
         for ball in self.balls.values():
@@ -85,25 +183,73 @@ class System:
         self.events.append(event)
 
     def reset_history(self):
-        """Remove all events, histories, and reset time"""
+        """Resets the history for all balls, clearing events and resetting time.
 
-        self.t = 0
+        Operations that this method performs:
+
+        (1) :attr:`t` is set to ``0.0``
+        (2) :attr:`events` is set to ``[]``
+
+        Additionally each ball :attrs:`balls`,
+
+        (1) :attr:`pooltool.objects.ball.datatypes.Ball.history` is set to ``BallHistory()``
+        (2) :attr:`pooltool.objects.ball.datatypes.Ball.history_cts` is set to ``BallHistory()``
+        (3) ``t`` (time) attribute of :attr:`pooltool.objects.ball.datatypes.Ball.state` is set to ``0.0``
+
+        Calling this method thus erases any history.
+        """
+
+        self.t = 0.0
 
         for ball in self.balls.values():
             ball.history = BallHistory()
             ball.history_cts = BallHistory()
-            ball.state.t = 0
+            ball.state.t = 0.0
 
         self.events = []
 
     def reset_balls(self):
-        """Reset balls to their initial states"""
+        """Resets balls to their initial states based on their history
+
+        This sets the ball states to each ball's initial historical state.
+
+        Example:
+            This example shows that calling this method resets the ball's states to
+            before the system is simulated.
+
+            First, create a system and store the cue ball's state
+
+            >>> import pooltool as pt
+            >>> system = pt.System.example()
+            >>> cue_ball_initial_state = system.balls["cue"].state.copy()
+            >>> cue_ball_initial_state
+            BallState(rvw=array([[0.4953  , 0.9906  , 0.028575],
+                   [0.      , 0.      , 0.      ],
+                   [0.      , 0.      , 0.      ]]), s=0, t=0.0)
+
+            Now simulate the system and assert that the cue ball's new state has changed:
+
+            >>> pt.simulate(system, inplace=True)
+            >>> assert system.balls["cue"].state != cue_ball_initial_state
+
+            But after resetting the balls, the cue ball state once again matches the
+            state before simulation.
+
+            >>> system.reset_balls()
+            >>> assert system.balls["cue"].state == cue_ball_initial_state
+        """
         for ball in self.balls.values():
             if not ball.history.empty:
                 ball.state = ball.history[0].copy()
 
     def stop_balls(self):
-        """Change ball states to stationary and remove all momentum"""
+        """Change ball states to stationary and remove all momentum
+
+        This method removes all kinetic energy from the system by:
+
+        (1) Setting the velocity and angular velocity vectors of each ball to <0, 0, 0>
+        (2) Setting the balls' motion states to stationary (i.e. 0)
+        """
         for ball in self.balls.values():
             ball.state.s = const.stationary
             ball.state.rvw[1] = np.array([0.0, 0.0, 0.0], np.float64)
@@ -112,16 +258,20 @@ class System:
     def strike(self, **kwargs) -> None:
         """Set cue stick parameters
 
-        Just a wrapper for self.cue.set_state
+        This is merely an alias for :meth:`pooltool.objects.cue.datatypes.Cue.set_state`
 
-        kwargs: **kwargs
-            Pass state parameters to be updated for the cue strike. Any parameters
-            accepted by Cue.set_state are permissible.
+        Args:
+            kwargs: **kwargs
+                Cue stick parameters.
+
+        See Also:
+            :meth:`pooltool.objects.cue.datatypes.Cue.set_state`
         """
         self.cue.set_state(**kwargs)
         assert self.cue.cue_ball_id in self.balls
 
-    def get_system_energy(self):
+    def get_system_energy(self) -> float:
+        """Calculate the energy of the system in Joules"""
         energy = 0
         for ball in self.balls.values():
             energy += physics_utils.get_ball_energy(
@@ -146,7 +296,7 @@ class System:
                 The number of iterations tried until the algorithm gives up.
 
         Returns:
-            True if all balls are non-overlapping. Returns False otherwise.
+            bool: True if all balls are non-overlapping. Returns False otherwise.
         """
 
         if ball_ids is None:
@@ -167,7 +317,12 @@ class System:
 
         return False
 
-    def is_balls_overlapping(self):
+    def is_balls_overlapping(self) -> bool:
+        """Determines if any balls are overlapping.
+
+        Returns:
+            bool: True if any balls overlap, False otherwise.
+        """
         for ball1 in self.balls.values():
             for ball2 in self.balls.values():
                 if ball1 is ball2:
@@ -185,7 +340,31 @@ class System:
         return False
 
     def copy(self) -> System:
-        """Make deepcopy of the system"""
+        """Creates a deep-`ish` copy of the system.
+
+        This method generates a copy of the system with a level of deep copying that is
+        contingent on the mutability of the objects within the system. Immutable
+        objects, frozen data structures, and read-only numpy arrays
+        (``array.flags["WRITEABLE"] = False``) remain shared between the original and the
+        copied system.
+
+        It's important to note that any changes to mutable objects in the system copy
+        will not impact the corresponding objects in the original system, ensuring that
+        the two systems remain distinct in their mutable states.
+
+        Returns:
+            System: A deepcopy of the system.
+
+        Example:
+            >>> import pooltool as pt
+            >>> system = pt.System.example()
+            >>> system_copy = pt.System.example()
+            >>> pt.simulate(system, inplace=True)
+            >>> system.simulated
+            True
+            >>> system_copy.simulated
+            False
+        """
         return System(
             cue=self.cue.copy(),
             table=self.table.copy(),
@@ -194,14 +373,103 @@ class System:
             events=[event.copy() for event in self.events],
         )
 
-    def save(self, path: Pathish, drop_continuized_history: bool = False):
-        """Save a System in a serialized format (e.g. json, msgpack)
+    def save(self, path: Pathish, drop_continuized_history: bool = False) -> None:
+        """Save a System to file in a serialized format.
+
+        Supported file extensions:
+
+        (1) ``.json``
+        (2) ``.msgpack``
 
         Args:
+            path:
+                Either a pathlib.Path object or a string. The extension should match the
+                supported filetypes mentioned above.
             drop_continuized_history:
-                If True, the `history_cts` attribute is not saved, which can save a lot
-                of disk space. If deserializing at a later time, these `history_cts`
-                attributes can be regenerated with a `shot.continuize()` call.
+                If True, :attr:`pooltool.objects.ball.datatypes.Ball.history_cts` is
+                wiped before the save operation, which can save a lot of disk space and
+                increase save/load speed. If loading (deserializing) at a later time,
+                the ``history_cts`` for each ball can be easily regenerated (see
+                Examples).
+
+        Example:
+
+            An example of saving to, and loading from, JSON:
+
+            >>> import pooltool as pt
+            >>> system = pt.System.example()
+            >>> system.save("case1.json")
+            >>> loaded_system = pt.System.load("case1.json")
+            >>> assert system == loaded_system
+
+            You can also save `simulated` systems:
+
+            >>> pt.simulate(system, inplace=True)
+            >>> system.save("case2.json")
+
+            Simulated systems contain the entire shot history, so they're larger:
+
+                $ du -sh case1.json case2.json
+                 12K	case1.json
+                 68K	case2.json
+
+        Example:
+
+            JSON may be human readable, but MSGPACK is faster:
+
+            >>> import pooltool as pt
+            >>> system = pt.System.example()
+            >>> pt.simulate(system, inplace=True)
+            >>> print("saving:")
+            >>> %timeit system.save("readable.json")
+            >>> %timeit system.save("fast.msgpack")
+            >>> print("loading:")
+            >>> %timeit pt.System.load("readable.json")
+            >>> %timeit pt.System.load("fast.msgpack")
+            saving:
+            5.4 ms ± 470 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+            725 µs ± 55.8 µs per loop (mean ± std. dev. of 7 runs, 1,000 loops each)
+            loading:
+            3.16 ms ± 38.3 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+            1.9 ms ± 15.2 µs per loop (mean ± std. dev. of 7 runs, 1,000 loops each)
+
+        Example:
+
+            If the system has been continuized (see
+            :func:`pooltool.evolution.continuize.continuize`), disk space and save/load
+            times can be decreased by using ``drop_continuized_history``:
+
+            >>> import pooltool as pt
+            >>> system = pt.System.example()
+            >>> # simulate and continuize the results
+            >>> pt.simulate(system, continuous=True, inplace=True)
+            >>> print("saving")
+            >>> %timeit system.save("no_drop.json")
+            >>> %timeit system.save("drop.json", drop_continuized_history=True)
+            >>> print("loading")
+            >>> %timeit pt.System.load("no_drop.json")
+            >>> %timeit pt.System.load("drop.json")
+            saving
+            36 ms ± 803 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
+            7.59 ms ± 342 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+            loading
+            18.3 ms ± 1.15 ms per loop (mean ± std. dev. of 7 runs, 100 loops each)
+            3.14 ms ± 30.3 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+
+                $ du -sh drop.json no_drop.json
+                 68K	drop.json
+                584K	no_drop.json
+
+            However, if the loaded system is no longer continuized. If you need it to
+            be, call :func:`pooltool.evolution.continuize.continuize`:
+
+            >>> loaded_system = pt.System.load("drop.json")
+            >>> assert loaded_system != system
+            >>> pt.continuize(loaded_system, inplace=True)
+            >>> assert loaded_system == system
+
+        See Also:
+            Load systems with :meth:`load`.
         """
         if drop_continuized_history:
             # We're dropping the continuized histories. To avoid losing them in `self`,
@@ -218,10 +486,65 @@ class System:
 
     @classmethod
     def load(cls, path: Pathish) -> System:
+        """Load a System from a file in a serialized format.
+
+        Supported file extensions:
+
+        (1) ``.json``
+        (2) ``.msgpack``
+
+        Args:
+            path:
+                Either a pathlib.Path object or a string representing the file path. The
+                extension should match the supported filetypes mentioned above.
+
+        Returns:
+            System: The deserialized System object loaded from the file.
+
+        Raises:
+            AssertionError: If the file specified by `path` does not exist.
+            ValueError: If the file extension is not supported.
+
+        Examples:
+
+        Please refer to the examples in :meth:`save`.
+
+        See Also:
+            Save systems with :meth:`save`.
+        """
         return conversion.structure_from(path, cls)
 
     @classmethod
     def example(cls) -> System:
+        """A simple example system
+
+        This system features 2 balls (IDs "1" and "cue") on a pocket table. The cue
+        stick parameters are set to pocket the "1" ball in the top-left pocket.
+
+        Example:
+
+            The system can be constructed and introspected like so:
+
+            >>> import pooltool as pt
+            >>> system = pt.System.example()
+            >>> system.balls["cue"].xyz
+            array([0.4953  , 0.9906  , 0.028575])
+            >>> system.balls["1"].xyz
+            array([0.4953  , 1.4859  , 0.028575])
+            >>> system.cue
+            <Cue object at 0x7f7a2641ce40>
+             ├── V0    : 1.5
+             ├── phi   : 95.07668213305062
+             ├── a     : 0.0
+             ├── b     : -0.3
+             └── theta : 0.0
+
+            It can be simulated and visualized:
+
+            >>> pt.simulate(system, inplace=True)
+            >>> gui = pt.ShotViewer()
+            >>> gui.show(system)
+        """
         system = cls(
             cue=Cue.default(),
             table=(table := Table.default()),
@@ -230,6 +553,7 @@ class System:
                 "1": Ball.create("1", xy=(table.w / 2, 3 / 4 * table.l)),
             },
         )
+        system.set_ballset(BallSet("pooltool_pocket"))
         system.cue.set_state(V0=1.5, b=-0.3, phi=95.07668213305062)
         return system
 

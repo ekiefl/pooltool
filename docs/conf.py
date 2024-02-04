@@ -66,6 +66,9 @@ intersphinx_mapping = {
     "numba": ("https://numba.readthedocs.io/en/stable/", None),
 }
 
+# -- copybutton options
+copybutton_exclude = '.linenos, .gp, .go'
+
 # -- autoapi configuration ---------------------------------------------------
 
 autodoc_typehints = "signature"  # autoapi respects this

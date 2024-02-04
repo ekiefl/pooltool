@@ -135,7 +135,7 @@ def simulate(
         engine = DEFAULT_ENGINE
 
     shot.reset_history()
-    shot.update_history(null_event(time=0))
+    shot._update_history(null_event(time=0))
 
     if shot.get_system_energy() == 0 and shot.cue.V0 > 0:
         # System has no energy, but the cue stick has an impact velocity. So create and
@@ -147,7 +147,7 @@ def simulate(
             set_initial=True,
         )
         engine.resolver.resolve(shot, event)
-        shot.update_history(event)
+        shot._update_history(event)
 
     transition_cache = TransitionCache.create(shot)
 
@@ -158,7 +158,7 @@ def simulate(
         )
 
         if event.time == np.inf:
-            shot.update_history(null_event(time=shot.t))
+            shot._update_history(null_event(time=shot.t))
             break
 
         _evolve(shot, event.time - shot.t)
@@ -167,10 +167,10 @@ def simulate(
             engine.resolver.resolve(shot, event)
             transition_cache.update(event)
 
-        shot.update_history(event)
+        shot._update_history(event)
 
         if t_final is not None and shot.t >= t_final:
-            shot.update_history(null_event(time=shot.t))
+            shot._update_history(null_event(time=shot.t))
             break
 
         if max_events > 0 and events > max_events:
