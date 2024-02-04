@@ -20,6 +20,8 @@ extensions = [
     "sphinx_copybutton",
     "autoapi.extension",
     "sphinx.ext.viewcode",
+    "sphinx.ext.intersphinx",
+    "myst_parser",
 ]
 
 
@@ -55,6 +57,14 @@ napoleon_include_init_with_doc = False
 napoleon_use_admonition_for_examples = True
 napoleon_use_admonition_for_notes = True
 napoleon_use_admonition_for_references = True
+
+# -- Intersphinx options
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "attrs": ("https://www.attrs.org/en/stable/", None),
+    "numba": ("https://numba.readthedocs.io/en/stable/", None),
+}
 
 # -- autoapi configuration ---------------------------------------------------
 
@@ -99,6 +109,15 @@ def contains(seq, item):
 def prepare_jinja_env(jinja_env) -> None:
     """Add `contains` custom test to Jinja environment."""
     jinja_env.tests["contains"] = contains
+
+
+def skip_member(app, what, name, obj, skip, options):
+    # Put debugger here to explore
+    return skip
+
+
+def setup(sphinx):
+    sphinx.connect("autoapi-skip-member", skip_member)
 
 
 autoapi_prepare_jinja_env = prepare_jinja_env

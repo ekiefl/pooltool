@@ -2,8 +2,10 @@
 
 {% if obj.display %}
 .. py:{{ obj.type }}:: {{ obj.short_name }}{% if obj.args %}({{ obj.args }}){% endif %}
+
 {% for (args, return_annotation) in obj.overloads %}
-   {{ " " * (obj.type | length) }}   {{ obj.short_name }}{% if args %}({{ args }}){% endif %}
+      {{ " " * (obj.type | length) }}   {{ obj.short_name }}{% if args %}({{ args }}){% endif %}
+
 {% endfor %}
 
 
@@ -34,10 +36,30 @@
    {{ klass.render()|indent(3) }}
    {% endfor %}
    {% if "inherited-members" in autoapi_options %}
+   {% set visible_properties = obj.properties|selectattr("display")|list %}
+   {% else %}
+   {% set visible_properties = obj.properties|rejectattr("inherited")|selectattr("display")|list %}
+   {% endif %}
+   {% if "inherited-members" in autoapi_options %}
    {% set visible_attributes = obj.attributes|selectattr("display")|list %}
    {% else %}
    {% set visible_attributes = obj.attributes|rejectattr("inherited")|selectattr("display")|list %}
    {% endif %}
+
+   {% if visible_attributes %}
+   .. rubric:: Attributes:
+   {% for attribute in visible_attributes %}
+   {{ attribute.render()|indent(3) }}
+   {% endfor %}
+   {% endif %}
+
+   {% if visible_attributes %}
+   .. rubric:: Properties:
+   {% for property in visible_properties %}
+   {{ property.render()|indent(3) }}
+   {% endfor %}
+   {% endif %}
+
    {% if "inherited-members" in autoapi_options %}
    {% set visible_methods = obj.methods|selectattr("display")|list %}
    {% else %}
@@ -45,18 +67,7 @@
    {% endif %}
 
    {% if visible_attributes %}
-
-   .. rubric:: Attributes:
-
-   {% for attribute in visible_attributes %}
-   {{ attribute.render()|indent(3) }}
-   {% endfor %}
-   {% endif %}
-
-   {% if visible_methods %}
-
    .. rubric:: Methods:
-
    {% for method in visible_methods %}
    {{ method.render()|indent(3) }}
    {% endfor %}
