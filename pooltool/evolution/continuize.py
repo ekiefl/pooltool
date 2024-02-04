@@ -8,7 +8,7 @@ def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> Syste
     """Create BallHistory for each ball with many timepoints
 
     All balls share the same timepoints, and the timepoints are uniformly spaced, except
-    for the last timepoint, which occurs at the final event, which is necessarily <dt of
+    for the last timepoint, which occurs at the final event, which is necessarily dt of
     the second last timepoint.
 
     Args:
@@ -55,12 +55,12 @@ def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> Syste
         >>> assert system.continuized
 
     Notes:
-    - The old continuize did not have uniform and equally spaced time points. That
-      implementation can be found with
+    The old continuize did not have uniform and equally spaced time points. That
+    implementation can be found with
 
-          `git checkout 7b2f7440f7d9ad18cba65c9e4862ee6bdc620631`
+    `git checkout 7b2f7440f7d9ad18cba65c9e4862ee6bdc620631`
 
-      (Look for pooltool.system.datatypes.continuize_heterogeneous)
+    (Look for pooltool.system.datatypes.continuize_heterogeneous)
     """
     if not inplace:
         system = system.copy()

@@ -245,13 +245,12 @@ def get_next_event(
     return event
 
 
+def _null():
+    return {"null": null_event(time=np.inf)}
+
 @attrs.define
 class TransitionCache:
-    transitions: Dict[str, Event] = attrs.field()
-
-    @transitions.default
-    def _null(self):
-        return {"null": null_event(time=np.inf)}
+    transitions: Dict[str, Event] = attrs.field(default=_null)
 
     def get_next(self) -> Event:
         return min(

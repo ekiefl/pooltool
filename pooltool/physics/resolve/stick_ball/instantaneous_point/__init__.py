@@ -12,6 +12,7 @@ from pooltool.physics.resolve.stick_ball.core import CoreStickBallCollision
 
 def cue_strike(m, M, R, V0, phi, theta, a, b, throttle_english: bool):
     """Strike a ball
+
                               , - ~  ,
     ◎───────────◎         , '          ' ,
     │           │       ,             ◎    ,
@@ -25,36 +26,35 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, throttle_english: bool):
       bottom cushion        ' - , _ , -
                      ______________________________
                               playing surface
-    Parameters
-    ==========
+    Args:
 
-    m : positive float
+    m:
         ball mass
 
-    M : positive float
+    M:
         cue mass
 
-    R : positive, float
+    R:
         ball radius
 
-    V0 : positive float
+    V0:
         What initial velocity does the cue strike the ball?
 
-    phi : float (degrees)
+    phi:
         The direction you strike the ball in relation to the bottom cushion
 
-    theta : float (degrees)
+    theta:
         How elevated is the cue from the playing surface, in degrees?
 
-    a : float
+    a:
         How much side english should be put on? -1 being rightmost side of ball, +1
         being leftmost side of ball
 
-    b : float
+    b:
         How much vertical english should be put on? -1 being bottom-most side of ball,
         +1 being topmost side of ball
 
-    throttle_english: bool
+    throttle_english:
         This function creates unrealistic magnitudes of spin. To compensate, this flag
         exists. If True, a 'fake' factor is added that scales down the passed a and b
         values, by an amount defined by pooltool.english_fraction

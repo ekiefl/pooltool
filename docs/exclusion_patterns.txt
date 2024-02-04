@@ -1,9 +1,0 @@
-# No tests, which I prefix with test_
-test_*
-*/test_* 
-
-# For now, I'm simply excluding the ani module, despite some public facing API there, such as camera states
-pooltool/ani/*
-
-# Same with render.py modules
-*render.py

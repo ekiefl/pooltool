@@ -1,20 +1,16 @@
-.. pooltool documentation master file, created by
-   sphinx-quickstart on Sun Jan 28 10:19:27 2024.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+===================
+What is *pooltool*?
+===================
 
-Welcome to pooltool's documentation!
-====================================
+FIXME
+
+Contents
+========
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   self
+   install
+   autoapi/index
+   license
