@@ -19,17 +19,20 @@ from pooltool.serialize.serializers import Pathish
 
 @define
 class System:
-    """A class representing the state of a billiards system.
+    """A class representing the billiards system.
 
-    This is a container class which holds a collection of
-    :class:`pooltool.objects.ball.datatypes.Ball` objects, a
-    :class:`pooltool.objects.cue.datatypes.Cue`, and a
-    :class:`pooltool.objects.table.datatypes.Table`. Together, these objects, referred
-    to as the `system`, fully describe the state of a billiards system.
+    This class holds:
 
-    This object is not a snapshot, but rather a mutable object that can be evolved
-    over the course of system's evolution. When a billiards system is
-    simulated, a list of :class:`pooltool.events.datatypes.Event` objects is stored in this class.
+    (1) a collection of balls (:class:`pooltool.objects.ball.datatypes.Ball`)
+    (2) a cue stick (:class:`pooltool.objects.cue.datatypes.Cue`)
+    (3) a table (:class:`pooltool.objects.table.datatypes.Table`)
+
+    Together, these objects, referred to as the `system`, fully describe the billiards
+    system.
+
+    This object is a mutable object that can be evolved over the course of system's
+    evolution. When a billiards system is simulated, a list of
+    :class:`pooltool.events.datatypes.Event` objects is stored in this class.
 
     This class also stores the duration of simulated time elapsed as ``t``, measured in
     seconds.
@@ -71,23 +74,23 @@ class System:
         >>> gui.show(system)
     """
     cue: Cue = field()
-    """A cue stick (required)"""
+    """A cue stick (`required`)"""
     table: Table = field()
-    """A table (required)"""
+    """A table (`required`)"""
     balls: Dict[str, Ball] = field()
-    """A dictionary of balls (required)
+    """A dictionary of balls (`required`)
 
     Each key must match each value's ``id`` (`e.g.` ``{"2": Ball(id="1")}`` is invalid).
     """
     t: float = field(default=0.0)
-    """The elapsed simulation time (default = 0.0)
+    """The elapsed simulation time (`default` = 0.0)
 
     If the system is in the process of being simulated, ``t`` is updated to be the
     number of seconds the system has evolved. After being simulated, ``t`` remains at
     the final simulation time.
     """
     events: List[Event] = field(factory=list)
-    """The sequence of events in the simulation (default = [])
+    """The sequence of events in the simulation (`default` = [])
 
     Like ``t``, this is updated incrementally as the system is evolved.
     """
@@ -190,7 +193,7 @@ class System:
         (1) :attr:`t` is set to ``0.0``
         (2) :attr:`events` is set to ``[]``
 
-        Additionally each ball :attrs:`balls`,
+        Additionally for each ball in :attr:`balls`,
 
         (1) :attr:`pooltool.objects.ball.datatypes.Ball.history` is set to ``BallHistory()``
         (2) :attr:`pooltool.objects.ball.datatypes.Ball.history_cts` is set to ``BallHistory()``
@@ -211,7 +214,8 @@ class System:
     def reset_balls(self):
         """Resets balls to their initial states based on their history
 
-        This sets the ball states to each ball's initial historical state.
+        This sets the state of each ball to the ball's initial historical state (`i.e.`
+        before evolving the system). It doesn't erase the history.
 
         Example:
             This example shows that calling this method resets the ball's states to
@@ -237,6 +241,15 @@ class System:
 
             >>> system.reset_balls()
             >>> assert system.balls["cue"].state == cue_ball_initial_state
+
+            The system history is not erased:
+
+            >>> system.simulated
+            True
+            >>> len(system.events)
+            14
+            >>> system.t
+            5.193035203405666
         """
         for ball in self.balls.values():
             if not ball.history.empty:
@@ -248,7 +261,7 @@ class System:
         This method removes all kinetic energy from the system by:
 
         (1) Setting the velocity and angular velocity vectors of each ball to <0, 0, 0>
-        (2) Setting the balls' motion states to stationary (i.e. 0)
+        (2) Setting the balls' motion states to stationary (`i.e.` 0)
         """
         for ball in self.balls.values():
             ball.state.s = const.stationary
@@ -348,9 +361,8 @@ class System:
         (``array.flags["WRITEABLE"] = False``) remain shared between the original and the
         copied system.
 
-        It's important to note that any changes to mutable objects in the system copy
-        will not impact the corresponding objects in the original system, ensuring that
-        the two systems remain distinct in their mutable states.
+        TLDR For all intents and purposes, mutating the system copy will not impact the
+        original system, and vice versa.
 
         Returns:
             System: A deepcopy of the system.
@@ -383,7 +395,7 @@ class System:
 
         Args:
             path:
-                Either a pathlib.Path object or a string. The extension should match the
+                Either a ``pathlib.Path`` object or a string. The extension should match the
                 supported filetypes mentioned above.
             drop_continuized_history:
                 If True, :attr:`pooltool.objects.ball.datatypes.Ball.history_cts` is
@@ -407,7 +419,7 @@ class System:
             >>> pt.simulate(system, inplace=True)
             >>> system.save("case2.json")
 
-            Simulated systems contain the entire shot history, so they're larger:
+            Simulated systems contain the events of the shot, so they're larger:
 
                 $ du -sh case1.json case2.json
                  12K	case1.json
@@ -460,7 +472,7 @@ class System:
                  68K	drop.json
                 584K	no_drop.json
 
-            However, if the loaded system is no longer continuized. If you need it to
+            However, the loaded system is no longer continuized. If you need it to
             be, call :func:`pooltool.evolution.continuize.continuize`:
 
             >>> loaded_system = pt.System.load("drop.json")
@@ -495,7 +507,7 @@ class System:
 
         Args:
             path:
-                Either a pathlib.Path object or a string representing the file path. The
+                Either a ``pathlib.Path`` object or a string representing the file path. The
                 extension should match the supported filetypes mentioned above.
 
         Returns:
@@ -560,8 +572,59 @@ class System:
 
 @define
 class MultiSystem:
-    multisystem: List[System] = field(factory=list)
+    """A storage for System objects
 
+    Houses a collection of systems, for example, shots taken sequentially in
+    a game.
+
+    Example:
+
+        This example illustrates the basics of multisystems.
+
+        First, make a system and evolve it.
+
+        >>> import pooltool as pt
+        >>> import numpy as np
+        >>> system = pt.System.example()
+        >>> system.strike(phi=90)
+        >>> pt.simulate(system, inplace=True)
+
+        Now add it to a multisystem.
+
+        >>> multisystem = pt.MultiSystem()
+        >>> multisystem.append(system)
+
+        Now copy the system, reset it's history, strike it differently, simulate it, and
+        add it to the mulisystem:
+
+        >>> next_system = multisystem[-1].copy()
+        >>> next_system.strike(phi=0)
+        >>> pt.simulate(next_system, inplace=True)
+        >>> multisystem.append(next_system)
+
+        The multisystem has a length,
+
+        >>> len(multisystem)
+        2
+
+        supports basic indexing,
+
+        >>> multisystem[0].t
+        6.017032496778012
+
+        and can be iterated through:
+
+        >>> for shot in multisystem: print(len(shot.events))
+        15
+        10
+
+        Now visualize the multisystem:
+
+        >>> gui = pt.ShotViewer()
+        >>> gui.show(multisystem, title="Press 'n' for next, 'p' for previous")
+    """
+    multisystem: List[System] = field(factory=list)
+    """A list of System objects (`default` = [])"""
     active_index: Optional[int] = field(default=None)
 
     def __len__(self) -> int:
@@ -592,6 +655,10 @@ class MultiSystem:
         self.multisystem = []
 
     def append(self, system: System) -> None:
+        """Append a system to the multisystem
+
+        This appends ``system`` to :attr:`multisystem`.
+        """
         if self.empty:
             self.active_index = 0
 
@@ -604,15 +671,6 @@ class MultiSystem:
         self.multisystem.extend(systems)
 
     def set_active(self, i) -> None:
-        """Change the active system in the collection
-
-        Parameters
-        ==========
-        i : int
-            The integer index of the shot you would like to make active. Negative
-            indexing is supported, e.g. set_active(-1) sets the last system in the
-            collection as active
-        """
         if self.active_index is not None:
             table = self.active.table
             self.active_index = i
@@ -625,12 +683,46 @@ class MultiSystem:
 
         self.active_index = i
 
-    def save(self, path: Pathish):
-        """Save a MultiSystem in a serialized format (e.g. json, msgpack)"""
+    def save(self, path: Pathish) -> None:
+        """Save the multisystem to file in a serialized format.
+
+        Supported file extensions:
+
+        (1) ``.json``
+        (2) ``.msgpack``
+
+        Args:
+            path:
+                Either a ``pathlib.Path`` object or a string. The extension should match the
+                supported filetypes mentioned above.
+
+        See Also:
+            - To load a multisystem, see :meth:`load`.
+            - To save/load single systems, see :meth:`System.save` and :meth:`System.load`
+        """
         conversion.unstructure_to(self, path)
 
     @classmethod
     def load(cls, path: Pathish) -> MultiSystem:
+        """Load a multisystem from a file in a serialized format.
+
+        Supported file extensions:
+
+        (1) ``.json``
+        (2) ``.msgpack``
+
+        Args:
+            path:
+                Either a pathlib.Path object or a string representing the file path. The
+                extension should match the supported filetypes mentioned above.
+
+        Returns:
+            MultiSystem: The deserialized MultiSystem object loaded from the file.
+
+        See Also:
+            - To save a multisystem, see :meth:`save`.
+            - To save/load single systems, see :meth:`System.save` and :meth:`System.load`
+        """
         return conversion.structure_from(path, cls)
 
 
