@@ -1,4 +1,5 @@
-#! /usr/bin/env python
+"""Module that holds :class:`Ball` and all of its constituents"""
+
 from __future__ import annotations
 
 from typing import Iterator, List, Optional, Sequence, Tuple
@@ -17,13 +18,29 @@ from pooltool.utils.dataclasses import are_dataclasses_equal
 
 @define(frozen=True)
 class BallOrientation:
-    """Stores a ball's rendered orientation"""
+    """Stores a ball's rendered BallOrientation
 
-    pos: Tuple[float, ...]
-    sphere: Tuple[float, ...]
+    From a **practical standpoint**, what needs to be understood about this class is
+    that its attributes uniquely specify a ball's rendered orientation. Less
+    practically, but more specifically, these attributes correspond to the nodes, 'pos'
+    and 'sphere', that make up a ball's visual rendering.
+    """
+
+    pos: Tuple[float, float, float, float]
+    """A quaternion"""
+    sphere: Tuple[float, float, float, float]
+    """Another quaternion"""
 
     @staticmethod
     def random() -> BallOrientation:
+        """Generate a random BallOrientation
+
+        This generates a ball orientation from a uniform sampling of possible
+        orientations.
+
+        Returns:
+            BallOrientation: A randomized ball orientation.
+        """
         quat = (tmp := 2 * np.random.rand(4) - 1) / ptmath.norm3d(tmp)
         q0, qx, qy, qz = quat
         return BallOrientation(
@@ -32,9 +49,14 @@ class BallOrientation:
         )
 
     def copy(self) -> BallOrientation:
-        """Create a deepish copy
+        """Create a copy
 
-        Class is frozen and attributes are immutable. Just return self
+        Returns:
+            BallOrientation: A copy of the ball orientation.
+
+        Note:
+            - Since the class is frozen and its attributes are immutate, this just
+              returns ``self``.
         """
         return self
 
@@ -45,15 +67,50 @@ def _null_rvw() -> NDArray[np.float64]:
 
 @define(eq=False)
 class BallState:
+    """Holds a ball's state
+
+    The ball's *state* is defined by the following:
+
+    - The *kinematic* state of the ball (see :attr:`rvw`)
+    - A label specifying the ball's *motion state* (see :attr:`s`)
+    - The point in time that the ball exists in (see :attr:`t`)
+    """
+
     rvw: NDArray[np.float64]
+    """The kinematic state of the ball
+
+    ``rvw`` is a :math:`3\\times3` matrix that stores the 3 vectors that characterize a
+    ball's kinematic state:
+
+    (1) :math:`r`: The displacement (from origin) vector (accessed with ``rvw[0]``)
+    (2) :math:`v`: The velocity vector (accessed with ``rvw[1]``)
+    (3) :math:`w`: The angular velocity vector (accessed with ``rvw[2]``)
+    """
     s: int = field(converter=int)
+    """The motion state label of the ball
+
+    ``s`` is an integer corresponding to the following motion state labels:
+
+    ::
+
+        0 = stationary
+        1 = spinning
+        2 = sliding
+        3 = rolling
+        4 = pocketed
+    """
     t: float = field(converter=float, default=0)
+    """The simulated time"""
 
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
 
     def copy(self) -> BallState:
-        """Create a deep copy"""
+        """Create a copy
+
+        Returns:
+            BallState: A copy of the ball state.
+        """
         # 3X faster than copy.deepcopy(self)
         # 1.5X faster than evolve(self, rvw=np.copy(self.rvw))
         return BallState(
@@ -64,6 +121,18 @@ class BallState:
 
     @staticmethod
     def default() -> BallState:
+        """Construct a default BallState
+
+        Returns:
+            BallState:
+                A valid yet undercooked state.
+
+                    >>> import pooltool as pt
+                    >>> pt.BallState.default()
+                    BallState(rvw=array([[nan, nan, nan],
+                           [ 0.,  0.,  0.],
+                           [ 0.,  0.,  0.]]), s=0, t=0.0)
+        """
         return BallState(
             rvw=_null_rvw(),
             s=c.stationary,
