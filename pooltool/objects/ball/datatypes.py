@@ -51,9 +51,6 @@ class BallOrientation:
     def copy(self) -> BallOrientation:
         """Create a copy
 
-        Returns:
-            BallOrientation: A copy of the ball orientation.
-
         Note:
             - Since the class is frozen and its attributes are immutate, this just
               returns ``self``.
@@ -106,11 +103,7 @@ class BallState:
         return are_dataclasses_equal(self, other)
 
     def copy(self) -> BallState:
-        """Create a copy
-
-        Returns:
-            BallState: A copy of the ball state.
-        """
+        """Create a copy"""
         # 3X faster than copy.deepcopy(self)
         # 1.5X faster than evolve(self, rvw=np.copy(self.rvw))
         return BallState(
@@ -140,14 +133,15 @@ class BallState:
         )
 
 
-F64Array = NDArray[np.float64]
-
-
 @define
 class BallHistory:
+    """A container of BallState objects"""
+
     states: List[BallState] = field(factory=list)
+    """A list of time-increasing BallState objects (*default* = ``[]``)"""
 
     def __getitem__(self, idx: int) -> BallState:
+        """Test"""
         return self.states[idx]
 
     def __len__(self) -> int:
@@ -159,13 +153,23 @@ class BallHistory:
 
     @property
     def empty(self) -> bool:
+        """Returns whether or not the ball history is empty
+
+        Returns:
+            bool: True if :attr:`states` has no length else False
+        """
         return not bool(len(self.states))
 
     def add(self, state: BallState) -> None:
-        """Append a state to self.states
+        """Append a state to the history
 
-        Note, state is not copied before appending to the history, so they share the
-        same memory address.
+        Raises:
+            AssertionError: If ``state.t < self.states[-1]``
+
+        Notes:
+            - This appends ``state`` to :attr:`states`
+            - ``state`` is not copied before appending to the history, so they
+              share the same memory address.
         """
         if not self.empty:
             assert state.t >= self.states[-1].t
@@ -173,15 +177,59 @@ class BallHistory:
         self.states.append(state)
 
     def copy(self) -> BallHistory:
-        """Create a deep copy"""
+        """Create a copy"""
         history = BallHistory()
         for state in self.states:
             history.add(state.copy())
 
         return history
 
-    def vectorize(self) -> Optional[Tuple[F64Array, F64Array, F64Array]]:
-        """Return rvw, s, and t as arrays"""
+    def vectorize(
+        self,
+    ) -> Optional[Tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]:
+        """Compile the attribute from each ball state into arrays
+
+        This method unzips each :class:`BallState` in :attr:`states`, resulting in an
+        array of :attr:`BallState.rvw` values, an array of :attr:`BallState.s` values,
+        and an array of :attr:`BallState.t` values.
+
+        The vectors have the following properties:
+
+        >>> import pooltool as pt
+        >>> history = pt.simulate(pt.System.example(), continuous=True).balls["cue"].history_cts
+        >>> rvws, ss, ts = history.vectorize()
+        >>> # Their lengths are equal to the BallHistory
+        >>> len(rvws) == len(ss) == len(ts) == len(history)
+        True
+        >>> # The indices of the arrays match the values of the history
+        >>> pt.BallState(rvws[26], ss[26], ts[26]) == history[26]
+        True
+
+        Returns:
+            A length 3 tuple (``rvws``, ``ss`` and ``ts``). Returns None if ``self`` has
+            no length.
+
+        Example:
+
+            ``vectorize`` can be useful for plotting trajectories.
+
+            .. code:: python
+
+                import pooltool as pt
+                import matplotlib.pyplot as plt
+
+                system = pt.System.example()
+                pt.simulate(system, continuous=True, inplace=True)
+
+                for ball in system.balls.values():
+                    rvw, ss, ts = ball.history_cts.vectorize()
+                    plt.plot(rvw[:, 0, 0], rvw[:, 0, 1], color=ss)
+
+                plt.show()
+
+        See Also:
+            - :meth:`vectorize`
+        """
         if self.empty:
             return None
 
@@ -200,8 +248,35 @@ class BallHistory:
 
     @staticmethod
     def from_vectorization(
-        vectorization: Optional[Tuple[F64Array, F64Array, F64Array]]
+        vectorization: Optional[
+            Tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
+        ]
     ) -> BallHistory:
+        """Zips a vectorization into a BallHistory
+
+        An inverse method of :meth:`vectorize`.
+
+        Returns:
+            BallHistory: A BallHistory constructed from the input vectors.
+
+        Example:
+
+            This illustrates a round-trip with :meth:`vectorize` and
+            :meth:`from_vectorization`.
+
+            First create history
+
+            >>> import pooltool as pt
+            >>> history = pt.simulate(pt.System.example(), continuous=True).balls["cue"].history_cts
+
+            Illustrate a lossless round trip: 
+
+            >>> pt.BallHistory.from_vectorization(history.vectorize()) == history
+            True
+
+        See Also:
+            - :meth:`from_vectorization`
+        """
         history = BallHistory()
 
         if vectorization is None:
