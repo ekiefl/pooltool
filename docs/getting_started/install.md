@@ -1,8 +1,18 @@
-# Getting Started
+# Installation
 
 You're just a few seconds away from exploring the interactive interface.
 
-<img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_6.png" width="350" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_7.png" width="350" />
+```{figure} ../_assets/gallery_6.jpg
+---
+height: 300px
+---
+```
+
+```{figure} ../_assets/gallery_7.jpg
+---
+height: 300px
+---
+```
 
 ## Requirements
 
@@ -133,44 +143,13 @@ run_pooltool
 
 </details>
 
-## Test installation
+## Next
 
-After installation, the GUI should be available from the command line:
-
-```bash
-run_pooltool
-```
-
-Or, if you're on Windows:
+Test your installation by printing the version:
 
 ```bash
-run_pooltool.bat
+$ python -c "import pooltool; print(pooltool.__version__)"
+0.2.2.1-dev
 ```
 
-You can also use the API. Here is a small python script that runs a shot simulation and then visualizes the results.
-
-```python
-#! /usr/bin/env python
-
-import pooltool as pt
-
-interface = pt.ShotViewer()
-
-# We need a table, some balls, and a cue stick
-table = pt.Table.default()
-balls = pt.get_nine_ball_rack(table)
-cue = pt.Cue(cue_ball_id="cue")
-
-# Wrap it up as a System
-shot = pt.System(table=table, balls=balls, cue=cue)
-
-# Aim at the head ball with a strong impact
-shot.strike(V0=8, phi=pt.aim.at_ball(shot, "1"))
-
-# Evolve the shot.
-pt.simulate(shot, inplace=True)
-
-# Open up the shot in the GUI
-interface.show(shot)
-```
-
+Next, it's time to learn about the interface.

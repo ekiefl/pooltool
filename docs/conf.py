@@ -69,6 +69,9 @@ intersphinx_mapping = {
 # -- copybutton options
 copybutton_exclude = '.linenos, .gp, .go'
 
+# -- myst options
+myst_enable_extensions = ["colon_fence"]
+
 # -- autoapi configuration ---------------------------------------------------
 
 autodoc_typehints = "signature"  # autoapi respects this
