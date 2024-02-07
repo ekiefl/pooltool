@@ -1,7 +1,7 @@
-"""**You are viewing the primary interface for the pooltool library**
+"""The primary interface for the pooltool library
 
-Members on this page have been chosen to selectively capture the most common / expected
-use cases of pooltool, and can be used simply by importing the ``pooltool``
+Members on this page have been chosen to selectively capture the most common /
+expected use cases of pooltool, and can be used simply by importing the ``pooltool``
 package. For instance:
 
     >>> import pooltool as pt
@@ -13,13 +13,13 @@ Note:
 
         >>> from pooltool.objects.ball.datatypes import Ball
 
-There are many other components of pooltool's API that can also be accessed, but that
-require a more detailed importing. As just an example:
+There are many other components of pooltool's API that can also be accessed, but
+that require a more detailed importing. As just an example:
 
     >>> from pooltool.physics.resolve.ball_cushion.han_2005 import model
 
-If you believe that a component deserves to graduate to the top-level API, your input is
-valuable and such changes can be considered.
+If you believe that a component deserves to graduate to the top-level API, your
+input is valuable and such changes can be considered.
 """
 
 __version__ = "0.2.2.1-dev"

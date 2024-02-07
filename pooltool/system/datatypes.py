@@ -74,11 +74,11 @@ class System:
         >>> gui.show(system)
     """
     cue: Cue = field()
-    """A cue stick (`required`)"""
+    """A cue stick (`required`)."""
     table: Table = field()
-    """A table (`required`)"""
+    """A table (`required`)."""
     balls: Dict[str, Ball] = field()
-    """A dictionary of balls (`required`)
+    """A dictionary of balls (`required`).
 
     Each key must match each value's ``id`` (`e.g.` ``{"2": Ball(id="1")}`` is invalid).
     """
@@ -90,7 +90,7 @@ class System:
     the final simulation time.
     """
     events: List[Event] = field(factory=list)
-    """The sequence of events in the simulation (`default` = [])
+    """The sequence of events in the simulation (`default` = ``[]``).
 
     Like ``t``, this is updated incrementally as the system is evolved.
     """
@@ -146,16 +146,13 @@ class System:
     def set_ballset(self, ballset: BallSet) -> None:
         """Sets the ballset for each ball in the system.
 
-        This is an important method if these `both` apply to you:
-
-        (1) You are manually creating balls (rather than relying on built-in
-            utilities in :mod:`pooltool.game.layouts`)
-        (2) You care about what the balls look like
+        Important only if rendering the system in a scene and you are manually creating
+        balls (rather than relying on built-in utilities in
+        :mod:`pooltool.game.layouts`)
 
         In this case, you need to manually associate a
-        :class:`pooltool.objects.ball.sets.BallSet` to the balls in the system, so
-        that the proper `model skin` can be applied to each. That's what this method
-        does.
+        :class:`pooltool.objects.ball.sets.BallSet` to the balls in the system, so that
+        the proper `model skin` can be applied to each. That's what this method does.
 
         Args:
             ballset: The ballset to be assigned to each ball.
@@ -166,7 +163,9 @@ class System:
                 ball set.
 
         See Also:
-            See :mod:`pooltool.objects.ball.sets` for details about ball sets.
+            - See :mod:`pooltool.objects.ball.sets` for details about ball sets.
+            - See :meth:`pooltool.objects.ball.datatypes.Ball.set_ballset` for setting
+              the ballset of an individual ball.
         """
         for ball in self.balls.values():
             ball.set_ballset(ballset)
@@ -624,7 +623,7 @@ class MultiSystem:
         >>> gui.show(multisystem, title="Press 'n' for next, 'p' for previous")
     """
     multisystem: List[System] = field(factory=list)
-    """A list of System objects (`default` = [])"""
+    """A list of System objects (`default` = ``[]``)"""
     active_index: Optional[int] = field(default=None)
 
     def __len__(self) -> int:

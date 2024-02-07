@@ -304,34 +304,143 @@ conversion.register_structure_hook(
 
 @define
 class Ball:
-    """A pool ball"""
+    """A billiards ball
+
+    This class represents a billiards ball. It stores its parameters (mass, radius,
+    etc.), it's state (coordinates, velocity, spin, etc), its history (a time-resolved
+    trajectory of its state), amongst other things.
+
+    Important:
+        To instantiate this class, consider using the :meth:`create` constructor. Or, use
+        functions within :mod:`pooltool.game.layouts` to generate entire collection of
+        balls. Alternatively, use the ``__init__`` method directly, providing at minimum the
+        attributes below labeled as "*required*".
+
+    Important:
+        The following explains how a ``Ball`` object is modified when its parent system
+        is simulated (:func:`pooltool.evolution.event_based.simulate.simulate`).
+
+        At the start of the simulation process, :attr:`state` represents the ball state
+        at :math:`t = 0`. A copy of :attr:`state` is appended to :attr:`history`.
+
+        For each timestep of the simulation, :attr:`state` is used to inform how the
+        system should advance forward in time. Once determined, :attr:`state` is updated
+        to reflect the ball's new state. A copy of :attr:`state` is appended to
+        :attr:`history`.
+
+        When the simulation is finished, :attr:`state` represents the final resting
+        state of the ball. So too does ``history[-1]``.
+
+        Finally, if the system is continuized (see
+        :func:`pooltool.evolution.continuize.continuize`), :attr:`history_cts` is
+        populated. Otherwise it remains empty.
+    """
 
     id: str
+    """An ID for the ball (*required*).
+    
+    Use strings (e.g. "1" not 1).
+    """
     state: BallState = field(factory=BallState.default)
-    params: BallParams = field(factory=BallParams.default)
+    """The ball's state (*default* = :meth:`pooltool.objects.balls.datatypes.BallState.default`)
 
+    This is the current state of the ball.
+
+    See Also:
+        - See the *Important* section in :class:`Ball` for a description of the role of
+          ``states`` during simulation.
+    """
+    params: BallParams = field(factory=BallParams.default)
+    """The ball's physical parameters (*default* = :meth:`pooltool.objects.balls.params.BallParams.default`)
+
+    The physical parameters of the ball.
+    """
     ballset: Optional[BallSet] = field(default=None)
+    """The ball set that the ball belongs to (*default* = None)
+
+    Important if rendering the ball in a scene.
+
+    See Also:
+        - See :meth:`Ball.set_ballset` for details
+    """
+
     initial_orientation: BallOrientation = field(factory=BallOrientation.random)
+    """The initial rendered orientation of the ball (*default* = :meth:`BallOrientation.random`)
+
+    Important if rendering the ball in a scene.
+
+    This is the orientation of the ball at :math:`t = 0`.
+    """
 
     history: BallHistory = field(factory=BallHistory.factory)
+    """The ball's state history
+
+    The historical states of the ball from :math:`t_{initial}` to :math:`t_{final}`.
+
+    See Also:
+        - See the *Important* section in :class:`Ball` for a description of
+          the role of ``history`` during simulation.
+    """
     history_cts: BallHistory = field(factory=BallHistory.factory)
+    """The ball's continuous state history
+
+    The historical states of the ball from :math:`t_{initial}` to :math:`t_{final}`
+    densely sampled with respect to time.
+
+    See Also:
+        - See :func:`pooltool.evolution.event_based.continuize.continuize` for a details
+          about continuizing a simulated system.
+        - See the *Important* section in :class:`Ball` for a description of
+          the role of ``history_cts`` during simulation.
+    """
 
     @property
     def xyz(self):
-        """Return the coordinate vector of the ball"""
+        """The displacement (from origin) vector of the ball.
+
+        A shortcut for ``self.state.rvw[0]``.
+        """
         return self.state.rvw[0]
 
+    @property
+    def vel(self):
+        """The velocity vector of the ball.
+
+        A shortcut for ``self.state.rvw[1]``.
+        """
+        return self.state.rvw[1]
+
+    @property
+    def avel(self):
+        """The angular velocity vector of the ball.
+
+        A shortcut for ``self.state.rvw[2]``.
+        """
+        return self.state.rvw[2]
+
     def set_ballset(self, ballset: BallSet) -> None:
-        """Update the BallSet
+        """Update the ballset
 
         Raises:
-            ValueError if any balls' IDs don't correspond to a model name
+            ValueError:
+                If the ball ID doesn't match to a model name of the ballset.
+
+        See Also:
+            - See :mod:`pooltool.objects.ball.sets` for details about ball sets.
+            - See :meth:`pooltool.system.datatypes.System.set_ballset` for setting the
+              ballset for all the balls in a system.
         """
         self.ballset = ballset
         validate(self)
 
     def copy(self, drop_history: bool = False) -> Ball:
-        """Create a deep copy"""
+        """Create a copy
+
+        Args:
+            drop_history:
+                If True, the returned copy :attr:`history` and :attr:`history_cts`
+                attributes are both set to empty :class:`BallHistory` objects.
+        """
         if drop_history:
             return evolve(
                 self,
@@ -357,13 +466,19 @@ class Ball:
         ballset: Optional[BallSet] = None,
         **kwargs,
     ) -> Ball:
-        """Create ball using a flattened parameter set
+        """Create a ball using keyword arguments.
+
+        This constructor flattens the tunable parameter space, allowing one to construct
+        a ``Ball`` without directly instancing objects like like
+        :class:`pooltool.objects.balls.params.BallParams` and :class:`BallState`.
 
         Args:
             xy:
                 The x and y coordinates of the ball position.
+            ballset:
+                A ballset.
             **kwargs:
-                Parameters accepted by BallParams
+                Arguments accepted by :class:`pooltool.objects.balls.params.BallParams`
         """
         params = BallParams(**kwargs)
         ball = Ball(id=id, ballset=ballset, params=params)
