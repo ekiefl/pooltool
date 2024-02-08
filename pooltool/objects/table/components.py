@@ -17,22 +17,30 @@ from pooltool.utils.dataclasses import are_dataclasses_equal
 class CushionDirection:
     """An Enum for the direction of a cushion
 
+    Important for constructing cushions if simulation performance speed is required.
+
     For most table geometries, the playing surface only exists on one side of the
     cushion, so collisions only need to be checked for one direction. This direction can
-    be specified with the CushionDirection Enum. To determine whether 0 or 1 should be
-    used, please experiment (FIXME: determine the rule, it is not straightforward like
-    "left or right of the vector from p1 to p2"). By default, both collision directions
-    are checked, which can be specified explicitly by passing 2, however this makes
-    collision checks twice as slow for event-based shot evolution algorithms.
+    be specified with this class's attributes.
 
-    NOTE: This used to be an Enum, but accessing the cushion direction in
-    `get_next_ball_linear_cushion_collision` somehow took up 20% of the functions
-    runtime so I removed it.
+    Unfortunately, the rule governing whether to use :attr:`SIDE1` or :attr:`SIDE2` is
+    not clear and instead requires experimentation.
+
+    If :attr:`BOTH` is used, both collision checks are performed which makes collision
+    checks twice as slow.
+
+    Note:
+        This used to inherit from ``Enum``, but accessing the cushion direction in
+        `get_next_ball_linear_cushion_collision` somehow took up 20% of the functions
+        runtime so I removed it.
     """
 
     SIDE1 = 0
+    """Use side 1"""
     SIDE2 = 1
+    """Use side 2"""
     BOTH = 2
+    """Use sides 1 and 2"""
 
 
 @define(eq=False, frozen=True, slots=False)
@@ -49,9 +57,24 @@ class LinearCushionSegment:
     """
 
     id: str
+    """The ID of the cushion segment (*required*)"""
     p1: NDArray[np.float64]
+    """A length-3 array defining the 3D coordinate where the cushion segment starts (*required*)
+
+    Note:
+        - p1 and p2 must share the same height (``p1[2] == p2[2]``).
+    """
     p2: NDArray[np.float64]
+    """A length-3 array defining the 3D coordinate where the cushion segment ends (*required*)
+
+    Note:
+        - p1 and p2 must share the same height (``p1[2] == p2[2]``).
+    """
     direction: int = field(default=CushionDirection.BOTH)
+    """The cushion direction (*default* = ``CushionDirection.BOTH``)
+    
+    See :class:`CushionDirection`.
+    """
 
     def __attrs_post_init__(self):
         # Segment must have constant height
@@ -66,10 +89,31 @@ class LinearCushionSegment:
 
     @cached_property
     def height(self) -> float:
+        """The height of the cushion
+
+        Note:
+			.. cached_property_note::
+        """
         return self.p1[2]
 
     @cached_property
     def lx(self) -> float:
+        """The x-coefficient (l_x) of the cushion's 2D general form line equation
+
+        The cushion's general form line equation in the XY plane is
+
+        ..math:: 
+
+            l_x x + l_y y + l_0 = 0
+
+        where 
+
+        ..math::
+
+            l_x = -\\frac{p_{2y} - p_{1y}}{p_{2x} - p_{1x}}
+            l_y = 1
+            l_0 = \\frac{p_{2y} - p_{1y}}{p_{2x} - p_{1x}} p_{1x} - p_{1y}
+        """
         p1x, p1y, _ = self.p1
         p2x, p2y, _ = self.p2
         return 1 if (p2x - p1x) == 0 else -(p2y - p1y) / (p2x - p1x)
@@ -89,15 +133,27 @@ class LinearCushionSegment:
         return ptmath.unit_vector(np.array([self.lx, self.ly, 0]))
 
     def get_normal(self, rvw):
+        """Calculates the normal vector
+
+        Args:
+            rvw: The kinematic state vectors of the contacting ball (see
+            :attr:`pooltool.objects.ball.datatypes.BallState.rvw`).
+
+        Returns:
+            NDArray[np.float64]:
+                The normal vector, with the z-component set to 0.
+
+        Important:
+            - This method only exists for call signature parity with
+              :meth:`CircularCushionSegment.get_normal`. Consider :meth:`normal` instead
+        """
         return self.normal
 
     def copy(self):
-        """Create a deep-ish copy
-
-        LinearCushionSegment is a frozen instance, and its attributes are either (a)
-        immutable, or (b) have read-only flags set. It is sufficient to simply return
-        oneself.
-        """
+        """Create a copy"""
+        # LinearCushionSegment is a frozen instance, and its attributes are either (a)
+        # immutable, or (b) have read-only flags set. It is sufficient to simply return
+        # oneself.
         return self
 
     @staticmethod
@@ -109,19 +165,19 @@ class LinearCushionSegment:
 
 @define(frozen=True, eq=False, slots=False)
 class CircularCushionSegment:
-    """A circular cushion segment defined a circle center and radius
-
-    Attributes:
-        center:
-            A length-3 tuple that defines a 3D point in space of the circle center.
-            starts. The last component (z-axis) is the height of the cushion segment.
-        radius:
-            The radius of the circular cushion segment.
-    """
+    """A circular cushion segment defined by a circle center and radius"""
 
     id: str
+    """The ID of the cushion segment (*required*)"""
     center: NDArray[np.float64]
+    """A length-3 array specifying the circular cushion's center (*required*)
+
+    ``center[0]``, ``center[1]``, and ``center[2]`` are the x-, y-, and z-coordinates of
+    the cushion's center. The circle is assumed to be parallel to the XY plane, which
+    makes ``center[2]`` is the height of the cushion.
+    """
     radius: float
+    """The radius of the cushion segment (*required*)"""
 
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
@@ -134,28 +190,53 @@ class CircularCushionSegment:
 
     @cached_property
     def height(self) -> float:
+        """The height of the cushion
+
+        Note:
+			.. cached_property_note::
+        """
         return self.center[2]
 
     @cached_property
     def a(self) -> float:
+        """The x-coordinate of the cushion's center
+
+        Note:
+			.. cached_property_note::
+        """
         return self.center[0]
 
     @cached_property
     def b(self) -> float:
+        """The y-coordinate of the cushion's center
+
+        Note:
+			.. cached_property_note::
+        """
         return self.center[1]
 
     def get_normal(self, rvw) -> NDArray[np.float64]:
+        """Calculates the normal vector for a ball contacting the cushion
+
+        Assumes that the ball is in fact in contact with the cushion.
+        
+        Args:
+            rvw: The kinematic state vectors of the contacting ball (see
+            :attr:`pooltool.objects.ball.datatypes.BallState.rvw`).
+
+        Returns:
+            NDArray[np.float64]:
+                The normal vector, with the z-component set to 0.
+        """
         normal = rvw[0, :] - self.center
         normal[2] = 0  # remove z-component
         return ptmath.unit_vector(normal)
 
     def copy(self) -> CircularCushionSegment:
-        """Create a deep-ish copy
-
-        CircularCushionSegment is a frozen instance, and its attributes are either (a)
-        immutable, or (b) have read-only flags set. It is sufficient to simply return
-        oneself.
-        """
+        """Create a copy"""
+        # CircularCushionSegment is a frozen instance, and its attributes are either (a)
+        # immutable, or (b) have read-only flags set. It is sufficient to simply return
+        # oneself.
         return self
 
     @staticmethod
@@ -170,17 +251,32 @@ CushionSegment = Union[LinearCushionSegment, CircularCushionSegment]
 
 @define
 class CushionSegments:
+    """A collection of cushion segments
+
+    Cushion segments can be either linear (see :class:`LinearCushionSegment`) or
+    circular (see :class:`CircularCushionSegment`). This class stores both.
+    """
     linear: Dict[str, LinearCushionSegment]
+    """A dictionary of linear cushion segments
+
+    Warning:
+        Keys must match the value IDs, _e.g._ ``{"2": LinearCushionSegment(id="2",
+        ...)}``
+    """
     circular: Dict[str, CircularCushionSegment]
+    """A dictionary of circular cushion segments
+
+    Warning:
+        Keys must match the value IDs, _e.g._ ``{"2t": CircularCushionSegment(id="2t",
+        ...)}``
+    """
 
     def copy(self) -> CushionSegments:
-        """Create a deep-ish copy
-
-        Delegates the deep-ish copying of LinearCushionSegment and
-        CircularCushionSegment elements to their respective copy() methods. Uses
-        dictionary comprehensions to construct equal but different `linear` and
-        `circular` attributes.
-        """
+        """Create a copy"""
+        # Delegates the deep-ish copying of LinearCushionSegment and
+        # CircularCushionSegment elements to their respective copy() methods. Uses
+        # dictionary comprehensions to construct equal but different `linear` and
+        # `circular` attributes.
         return evolve(
             self,
             linear={k: v.copy() for k, v in self.linear.items()},
@@ -222,7 +318,7 @@ class Pocket:
         """The x-coordinate of the pocket's center
 
         Note:
-            This is a (cached) property, call it like ``pocket.a``, not ``pocket.a()``.
+			.. cached_property_note::
         """
         return self.center[0]
 
@@ -231,7 +327,7 @@ class Pocket:
         """The y-coordinate of the pocket's center
 
         Note:
-            This is a (cached) property, call it like ``pocket.b``, not ``pocket.b()``.
+			.. cached_property_note::
         """
         return self.center[1]
 

@@ -70,8 +70,7 @@ class BallParams:
         This is equal to :attr:`u_sp_proportionality` * :attr:`R`
 
         Note:
-            This is a (cached) property, call it like ``ball_params.u_sp``, not
-            ``ball_params.u_sp()``.
+			.. cached_property_note::
         """
         return self.u_sp_proportionality * self.R
 

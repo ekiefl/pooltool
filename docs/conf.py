@@ -22,6 +22,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "myst_parser",
+    "custom_directives",
 ]
 
 
