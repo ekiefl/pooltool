@@ -89,7 +89,7 @@ class Cue:
     - :math:`b = +1` is the top-most side of the ball
     """
     cue_ball_id: str = field(default="cue")
-    """The ball ID of the ball being cued (*default* = "cue")"""
+    """The ball ID of the ball being cued (*default* = ``"cue"``)"""
 
     specs: CueSpecs = field(factory=CueSpecs.default)
     """The cue specs (*default* = :attr:`CueSpecs.default`)"""

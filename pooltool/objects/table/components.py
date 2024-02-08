@@ -190,11 +190,22 @@ class CushionSegments:
 
 @define(eq=False, frozen=True, slots=False)
 class Pocket:
+    """A circular pocket"""
     id: str
+    """The ID of the pocket (*required*)"""
     center: NDArray[np.float64]
+    """A length-3 array specifying the pocket's position (*required*)
+
+    - ``center[0]`` is the x-coordinate of the pocket's center
+    - ``center[1]`` is the y-coordinate of the pocket's center
+    - ``center[2]`` must be 0.0
+    """
     radius: float
+    """The radius of the pocket (*required*)"""
     depth: float = field(default=0.08)
+    """How deep the pocket is (*default* = 0.08)"""
     contains: set = field(factory=set)
+    """Stores the ball IDs of pocketed balls (*default* = ``set()``)"""
 
     def __attrs_post_init__(self):
         assert len(self.center) == 3
@@ -208,26 +219,36 @@ class Pocket:
 
     @cached_property
     def a(self) -> float:
+        """The x-coordinate of the pocket's center
+
+        Note:
+            This is a (cached) property, call it like ``pocket.a``, not ``pocket.a()``.
+        """
         return self.center[0]
 
     @cached_property
     def b(self) -> float:
+        """The y-coordinate of the pocket's center
+
+        Note:
+            This is a (cached) property, call it like ``pocket.b``, not ``pocket.b()``.
+        """
         return self.center[1]
 
     def add(self, ball_id: str) -> None:
+        """Add a ball ID to :attr:`contains`"""
         self.contains.add(ball_id)
 
     def remove(self, ball_id: str) -> None:
+        """Remove a ball ID to :attr:`contains`"""
         self.contains.remove(ball_id)
 
     def copy(self) -> Pocket:
-        """Create a deep-ish copy
-
-        Pocket is a frozen instance, and except for `contains`, its attributes are
-        either (a) immutable, or (b) have read-only flags set. Therefore, only a copy of
-        `contains` needs to be made. Since it's members are strs (immutable), a shallow
-        copy suffices.
-        """
+        """Create a copy"""
+        # Pocket is a frozen instance, and except for `contains`, its attributes are
+        # either (a) immutable, or (b) have read-only flags set. Therefore, only a copy
+        # of `contains` needs to be made. Since it's members are strs (immutable), a
+        # shallow copy suffices.
         return evolve(self, contains=copy.copy(self.contains))
 
     @staticmethod
