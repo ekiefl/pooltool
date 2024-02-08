@@ -92,7 +92,7 @@ from pooltool.objects import (
     Table,
     TableModelDescr,
     TableType,
-    get_ball_set,
+    get_ballset,
 )
 from pooltool.physics.engine import PhysicsEngine
 from pooltool.system import MultiSystem, System, SystemController, multisystem, visual
@@ -173,7 +173,7 @@ __all__ = [
     "Ruleset",
     "SumToThree",
     "Snooker",
-    "get_ball_set",
+    "get_ballset",
     "ai",
     "pot",
     "aim",

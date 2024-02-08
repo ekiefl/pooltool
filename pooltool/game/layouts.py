@@ -9,13 +9,13 @@ import numpy as np
 
 from pooltool.game.datatypes import GameType
 from pooltool.objects.ball.datatypes import Ball, BallParams
-from pooltool.objects.ball.sets import BallSet, get_ball_set
+from pooltool.objects.ball.sets import BallSet, get_ballset
 from pooltool.objects.table.datatypes import Table
 from pooltool.utils import classproperty
 from pooltool.utils.strenum import StrEnum, auto
 
-DEFAULT_STANDARD_BALLSET = get_ball_set("pooltool_pocket")
-DEFAULT_SNOOKER_BALLSET = get_ball_set("generic_snooker")
+DEFAULT_STANDARD_BALLSET = get_ballset("pooltool_pocket")
+DEFAULT_SNOOKER_BALLSET = get_ballset("generic_snooker")
 DEFAULT_THREECUSH_BALLSET = None
 DEFAULT_SUMTOTHREE_BALLSET = None
 
