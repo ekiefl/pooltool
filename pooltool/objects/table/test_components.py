@@ -188,3 +188,24 @@ def test_cushion_segments_copy(lin_seg, circ_seg):
     # But you can add new elements to `copy` without changing `segments`
     copy.linear["new"] = circ_seg
     assert "new" not in segments.linear
+
+
+def test_cushion_segments_id_clash(lin_seg, circ_seg):
+    # No problem
+    CushionSegments(
+        linear={lin_seg.id: lin_seg}, circular={circ_seg.id: circ_seg}
+    )
+
+    # Keys don't match value IDs
+    with pytest.raises(AssertionError):
+        CushionSegments(
+            linear={"wrong": lin_seg}, circular={circ_seg.id: circ_seg}
+        )
+    with pytest.raises(AssertionError):
+        CushionSegments(
+            linear={lin_seg.id: lin_seg}, circular={"wrong": circ_seg}
+        )
+    with pytest.raises(AssertionError):
+        CushionSegments(
+            linear={":(": lin_seg}, circular={"wrong": circ_seg}
+        )

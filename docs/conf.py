@@ -17,6 +17,7 @@ author = "Evan Kiefl"
 # ones.
 extensions = [
     "sphinx.ext.napoleon",
+    "sphinx.ext.mathjax",
     "sphinx_copybutton",
     "autoapi.extension",
     "sphinx.ext.viewcode",

@@ -59,13 +59,13 @@ class LinearCushionSegment:
     id: str
     """The ID of the cushion segment (*required*)"""
     p1: NDArray[np.float64]
-    """A length-3 array defining the 3D coordinate where the cushion segment starts (*required*)
+    """The 3D coordinate where the cushion segment starts (*required*)
 
     Note:
         - p1 and p2 must share the same height (``p1[2] == p2[2]``).
     """
     p2: NDArray[np.float64]
-    """A length-3 array defining the 3D coordinate where the cushion segment ends (*required*)
+    """The 3D coordinate where the cushion segment ends (*required*)
 
     Note:
         - p1 and p2 must share the same height (``p1[2] == p2[2]``).
@@ -92,27 +92,33 @@ class LinearCushionSegment:
         """The height of the cushion
 
         Note:
-			.. cached_property_note::
+            .. cached_property_note::
         """
         return self.p1[2]
 
     @cached_property
     def lx(self) -> float:
-        """The x-coefficient (l_x) of the cushion's 2D general form line equation
+        """The x-coefficient (:math:`l_x`) of the cushion's 2D general form line equation
 
-        The cushion's general form line equation in the XY plane is
+        The cushion's general form line equation in the :math:`XY` plane (*i.e.*
+        dismissing the z-component) is
 
-        ..math:: 
+        .. math:: 
 
             l_x x + l_y y + l_0 = 0
 
         where 
 
-        ..math::
+        .. math::
 
-            l_x = -\\frac{p_{2y} - p_{1y}}{p_{2x} - p_{1x}}
-            l_y = 1
-            l_0 = \\frac{p_{2y} - p_{1y}}{p_{2x} - p_{1x}} p_{1x} - p_{1y}
+            \\begin{align*}
+            l_x &= -\\frac{p_{2y} - p_{1y}}{p_{2x} - p_{1x}} \\\\
+            l_y &= 1 \\\\
+            l_0 &= \\frac{p_{2y} - p_{1y}}{p_{2x} - p_{1x}} p_{1x} - p_{1y} \\\\
+            \\end{align*}
+
+        Note:
+			.. cached_property_note::
         """
         p1x, p1y, _ = self.p1
         p2x, p2y, _ = self.p2
@@ -120,20 +126,50 @@ class LinearCushionSegment:
 
     @cached_property
     def ly(self) -> float:
+        """The x-coefficient (:math:`l_y`) of the cushion's 2D general form line equation
+
+        See :meth:`lx` for definition.
+
+        Note:
+            .. cached_property_note::
+        """
         return 0 if (self.p2[0] - self.p1[0]) == 0 else 1
 
     @cached_property
     def l0(self) -> float:
+        """The constant term (:math:`l_0`) of the cushion's 2D general form line equation
+
+        See :meth:`lx` for definition.
+
+        Note:
+            .. cached_property_note::
+        """
         p1x, p1y, _ = self.p1
         p2x, p2y, _ = self.p2
         return -p1x if (p2x - p1x) == 0 else (p2y - p1y) / (p2x - p1x) * p1x - p1y
 
     @cached_property
-    def normal(self):
+    def normal(self) -> NDArray[np.float64]:
+        """The line's normal vector, with the z-component set to 0.
+
+        Warning:
+            The returned normal vector is arbitrarily directed, meaning it may point
+            away from the table surface, rather than towards it. This nonideality is
+            properly handled in downstream simulation logic, however if you're using
+            this method for custom purposes, you may want to reverse the direction of
+            this vector by negating it.
+        """
         return ptmath.unit_vector(np.array([self.lx, self.ly, 0]))
 
-    def get_normal(self, rvw):
+    def get_normal(self, rvw: NDArray[np.float64]) -> NDArray[np.float64]:
         """Calculates the normal vector
+
+        Warning:
+            The returned normal vector is arbitrarily directed, meaning it may point
+            away from the table surface, rather than towards it. This nonideality is
+            properly handled in downstream simulation logic, however if you're using
+            this method for custom purposes, you may want to reverse the direction of
+            this vector by negating it.
 
         Args:
             rvw: The kinematic state vectors of the contacting ball (see
@@ -141,11 +177,12 @@ class LinearCushionSegment:
 
         Returns:
             NDArray[np.float64]:
-                The normal vector, with the z-component set to 0.
+                The line's normal vector, with the z-component set to 0.
 
-        Important:
+        Note:
             - This method only exists for call signature parity with
-              :meth:`CircularCushionSegment.get_normal`. Consider :meth:`normal` instead
+              :meth:`CircularCushionSegment.get_normal`. Consider using :meth:`normal`
+              instead.
         """
         return self.normal
 
@@ -193,7 +230,7 @@ class CircularCushionSegment:
         """The height of the cushion
 
         Note:
-			.. cached_property_note::
+            .. cached_property_note::
         """
         return self.center[2]
 
@@ -202,7 +239,7 @@ class CircularCushionSegment:
         """The x-coordinate of the cushion's center
 
         Note:
-			.. cached_property_note::
+            .. cached_property_note::
         """
         return self.center[0]
 
@@ -211,15 +248,15 @@ class CircularCushionSegment:
         """The y-coordinate of the cushion's center
 
         Note:
-			.. cached_property_note::
+            .. cached_property_note::
         """
         return self.center[1]
 
-    def get_normal(self, rvw) -> NDArray[np.float64]:
+    def get_normal(self, rvw: NDArray[np.float64]) -> NDArray[np.float64]:
         """Calculates the normal vector for a ball contacting the cushion
 
         Assumes that the ball is in fact in contact with the cushion.
-        
+
         Args:
             rvw: The kinematic state vectors of the contacting ball (see
             :attr:`pooltool.objects.ball.datatypes.BallState.rvw`).
@@ -256,20 +293,27 @@ class CushionSegments:
     Cushion segments can be either linear (see :class:`LinearCushionSegment`) or
     circular (see :class:`CircularCushionSegment`). This class stores both.
     """
-    linear: Dict[str, LinearCushionSegment]
-    """A dictionary of linear cushion segments
+
+    linear: Dict[str, LinearCushionSegment] = field()
+    """A dictionary of linear cushion segments.
 
     Warning:
-        Keys must match the value IDs, _e.g._ ``{"2": LinearCushionSegment(id="2",
+        Keys must match the value IDs, *e.g.* ``{"2": LinearCushionSegment(id="2",
         ...)}``
     """
-    circular: Dict[str, CircularCushionSegment]
-    """A dictionary of circular cushion segments
+    circular: Dict[str, CircularCushionSegment] = field()
+    """A dictionary of circular cushion segments.
 
     Warning:
-        Keys must match the value IDs, _e.g._ ``{"2t": CircularCushionSegment(id="2t",
+        Keys must match the value IDs, *e.g.* ``{"2t": CircularCushionSegment(id="2t",
         ...)}``
     """
+
+    @linear.validator  # type: ignore
+    @circular.validator  # type: ignore
+    def _keys_match_value_ids(self, _, attribute) -> None:
+        for key, val in attribute.items():
+            assert key == val.id, f"Key '{key}' mismatch with ID '{val.id}'"
 
     def copy(self) -> CushionSegments:
         """Create a copy"""
@@ -287,6 +331,7 @@ class CushionSegments:
 @define(eq=False, frozen=True, slots=False)
 class Pocket:
     """A circular pocket"""
+
     id: str
     """The ID of the pocket (*required*)"""
     center: NDArray[np.float64]
@@ -318,7 +363,7 @@ class Pocket:
         """The x-coordinate of the pocket's center
 
         Note:
-			.. cached_property_note::
+            .. cached_property_note::
         """
         return self.center[0]
 
@@ -327,7 +372,7 @@ class Pocket:
         """The y-coordinate of the pocket's center
 
         Note:
-			.. cached_property_note::
+            .. cached_property_note::
         """
         return self.center[1]
 
