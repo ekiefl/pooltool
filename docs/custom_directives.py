@@ -94,7 +94,7 @@ class AttrsClassDirective(SphinxDirective):
         
         # Final part of the text
         final_text = (
-            "), supply its attributes (see below) as arguments. Required arguments "
+            "), supply its attributes (see below) as arguments. Unless otherwise stated, required arguments "
             "are labeled, optional arguments display their defaults, and attributes "
             "not used for initialization are labeled as 'init = False'"
         )

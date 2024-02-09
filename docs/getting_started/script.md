@@ -63,7 +63,7 @@ shot.cue.set_state(V0=8, phi=pt.aim.at_ball(shot, "1"))
 
 :::{admonition} Cue Signature
 
-An description of the cue's parameters can be found in the API docs:
+A description of the cue's parameters can be found in the API docs:
 
 ```{eval-rst}
 .. autoclass:: pooltool.objects.cue.datatypes.Cue

@@ -2,7 +2,27 @@
 **This is under construction (work in progress)!**
 :::
 
-# Table Customization
+# Table Specification
+
+There are many ways to create a table object, each with varying levels of complexity and customizability. This resource will demonstrate each available option, least to most customizability.
+
+## The `Table` object
+
+The endpoint for table generation is the [](#pooltool.objects.table.datatypes.Table) [](#pooltool.system.datatypes.System) object.
+
+:::{admonition} The Table Object
+
+From the API docs:
+
+```{eval-rst}
+.. autoclass:: pooltool.objects.table.datatypes.Table
+    :noindex:
+```
+:::
+
+## Using default and prebuilt tables
+
+There are several ways to build a table. This document will describe 
 
 For pocket table specifications I have created a parametrization for table dimensions and cushion geometries involving several parameters. The point of this document is to make clear what each of these parameters does.
 
