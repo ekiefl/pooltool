@@ -47,13 +47,7 @@ class CushionDirection:
 class LinearCushionSegment:
     """A linear cushion segment defined by the line between points p1 and p2
 
-    Attributes:
-        p1:
-            A length-3 array that defines a 3D point in space where the cushion segment
-            starts.
-        p2:
-            A length-3 array that defines a 3D point in space where the cushion segment
-            ends.
+    .. attrs_note::
     """
 
     id: str
@@ -91,14 +85,15 @@ class LinearCushionSegment:
     def height(self) -> float:
         """The height of the cushion
 
-        Note:
-            .. cached_property_note::
+        .. cached_property_note::
         """
         return self.p1[2]
 
     @cached_property
     def lx(self) -> float:
         """The x-coefficient (:math:`l_x`) of the cushion's 2D general form line equation
+
+        .. cached_property_note::
 
         The cushion's general form line equation in the :math:`XY` plane (*i.e.*
         dismissing the z-component) is
@@ -116,9 +111,6 @@ class LinearCushionSegment:
             l_y &= 1 \\\\
             l_0 &= \\frac{p_{2y} - p_{1y}}{p_{2x} - p_{1x}} p_{1x} - p_{1y} \\\\
             \\end{align*}
-
-        Note:
-			.. cached_property_note::
         """
         p1x, p1y, _ = self.p1
         p2x, p2y, _ = self.p2
@@ -130,8 +122,7 @@ class LinearCushionSegment:
 
         See :meth:`lx` for definition.
 
-        Note:
-            .. cached_property_note::
+        .. cached_property_note::
         """
         return 0 if (self.p2[0] - self.p1[0]) == 0 else 1
 
@@ -141,8 +132,7 @@ class LinearCushionSegment:
 
         See :meth:`lx` for definition.
 
-        Note:
-            .. cached_property_note::
+        .. cached_property_note::
         """
         p1x, p1y, _ = self.p1
         p2x, p2y, _ = self.p2
@@ -202,7 +192,10 @@ class LinearCushionSegment:
 
 @define(frozen=True, eq=False, slots=False)
 class CircularCushionSegment:
-    """A circular cushion segment defined by a circle center and radius"""
+    """A circular cushion segment defined by a circle center and radius
+
+    .. attrs_note::
+    """
 
     id: str
     """The ID of the cushion segment (*required*)"""
@@ -229,8 +222,7 @@ class CircularCushionSegment:
     def height(self) -> float:
         """The height of the cushion
 
-        Note:
-            .. cached_property_note::
+        .. cached_property_note::
         """
         return self.center[2]
 
@@ -238,8 +230,7 @@ class CircularCushionSegment:
     def a(self) -> float:
         """The x-coordinate of the cushion's center
 
-        Note:
-            .. cached_property_note::
+        .. cached_property_note::
         """
         return self.center[0]
 
@@ -247,8 +238,7 @@ class CircularCushionSegment:
     def b(self) -> float:
         """The y-coordinate of the cushion's center
 
-        Note:
-            .. cached_property_note::
+        .. cached_property_note::
         """
         return self.center[1]
 
@@ -290,6 +280,8 @@ CushionSegment = Union[LinearCushionSegment, CircularCushionSegment]
 class CushionSegments:
     """A collection of cushion segments
 
+    .. attrs_note::
+
     Cushion segments can be either linear (see :class:`LinearCushionSegment`) or
     circular (see :class:`CircularCushionSegment`). This class stores both.
     """
@@ -330,7 +322,10 @@ class CushionSegments:
 
 @define(eq=False, frozen=True, slots=False)
 class Pocket:
-    """A circular pocket"""
+    """A circular pocket
+
+    .. attrs_note::
+    """
 
     id: str
     """The ID of the pocket (*required*)"""
@@ -362,8 +357,7 @@ class Pocket:
     def a(self) -> float:
         """The x-coordinate of the pocket's center
 
-        Note:
-            .. cached_property_note::
+        .. cached_property_note::
         """
         return self.center[0]
 
@@ -371,8 +365,7 @@ class Pocket:
     def b(self) -> float:
         """The y-coordinate of the pocket's center
 
-        Note:
-            .. cached_property_note::
+        .. cached_property_note::
         """
         return self.center[1]
 
@@ -381,7 +374,7 @@ class Pocket:
         self.contains.add(ball_id)
 
     def remove(self, ball_id: str) -> None:
-        """Remove a ball ID to :attr:`contains`"""
+        """Remove a ball ID from :attr:`contains`"""
         self.contains.remove(ball_id)
 
     def copy(self) -> Pocket:

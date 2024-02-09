@@ -13,6 +13,8 @@ from pooltool.utils.strenum import StrEnum, auto
 class BallParams:
     """Ball parameters and physical constants
 
+    .. attrs_note::
+
     Most of the default values (SI units) are taken from or based off of
     https://billiards.colostate.edu/faq/physics/physical-properties/.
 
@@ -69,8 +71,7 @@ class BallParams:
 
         This is equal to :attr:`u_sp_proportionality` * :attr:`R`
 
-        Note:
-			.. cached_property_note::
+        .. cached_property_note::
         """
         return self.u_sp_proportionality * self.R
 

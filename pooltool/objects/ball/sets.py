@@ -65,7 +65,10 @@ _expected_conversion_name = "conversion.json"
 
 @attrs.define(frozen=True, slots=False)
 class BallSet:
-    """A ballset"""
+    """A ballset
+
+    .. attrs_note::
+    """
     name: str = attrs.field()
     """The name of the ballset.
 

@@ -60,6 +60,10 @@ napoleon_use_admonition_for_examples = True
 napoleon_use_admonition_for_notes = True
 napoleon_use_admonition_for_references = True
 
+napolean_use_param = True  # Each parameter is its own :param: directive
+napolean_use_rtype = False  # This does't work :(
+napolean_attr_annotations = True
+
 # -- Intersphinx options
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
@@ -76,8 +80,8 @@ myst_enable_extensions = ["colon_fence"]
 
 # -- autoapi configuration ---------------------------------------------------
 
-autodoc_typehints = "signature"  # autoapi respects this
-#autodoc_typehints = "both"  # autoapi respects this
+#autodoc_typehints = "signature"  # autoapi respects this
+autodoc_typehints = "both"  # autoapi respects this
 
 autoapi_type = "python"
 autoapi_dirs = ["../pooltool"]

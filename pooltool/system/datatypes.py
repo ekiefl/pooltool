@@ -21,6 +21,8 @@ from pooltool.serialize.serializers import Pathish
 class System:
     """A class representing the billiards system.
 
+    .. attrs_note::
+
     This class holds:
 
     (1) a collection of balls (:class:`pooltool.objects.ball.datatypes.Ball`)
@@ -572,6 +574,8 @@ class System:
 @define
 class MultiSystem:
     """A storage for System objects
+
+    .. attrs_note::
 
     Houses a collection of systems, for example, shots taken sequentially in
     a game.

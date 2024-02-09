@@ -11,6 +11,8 @@ from attrs import define, evolve, field, fields_dict
 class CueSpecs:
     """Cue stick specifications
 
+    .. attrs_note::
+
     All units are SI.
     """
 
@@ -37,7 +39,10 @@ class CueSpecs:
 
 @define
 class Cue:
-    """A cue stick"""
+    """A cue stick
+
+    .. attrs_note::
+    """
 
     id: str = field(default="cue_stick")
     """An ID for the cue (*default* = "cue_stick")."""

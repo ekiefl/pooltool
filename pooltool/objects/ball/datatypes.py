@@ -20,6 +20,8 @@ from pooltool.utils.dataclasses import are_dataclasses_equal
 class BallOrientation:
     """Stores a ball's rendered BallOrientation
 
+    .. attrs_note::
+
     From a **practical standpoint**, what needs to be understood about this class is
     that its attributes uniquely specify a ball's rendered orientation. Less
     practically, but more specifically, these attributes correspond to the nodes, 'pos'
@@ -27,9 +29,9 @@ class BallOrientation:
     """
 
     pos: Tuple[float, float, float, float]
-    """A quaternion"""
+    """A quaternion (*required*)"""
     sphere: Tuple[float, float, float, float]
-    """Another quaternion"""
+    """Another quaternion (*required*)"""
 
     @staticmethod
     def random() -> BallOrientation:
@@ -65,6 +67,8 @@ def _null_rvw() -> NDArray[np.float64]:
 @define(eq=False)
 class BallState:
     """Holds a ball's state
+
+    .. attrs_note::
 
     The ball's *state* is defined by the following:
 
@@ -135,7 +139,10 @@ class BallState:
 
 @define
 class BallHistory:
-    """A container of BallState objects"""
+    """A container of BallState objects
+
+    .. attrs_note::
+    """
 
     states: List[BallState] = field(factory=list)
     """A list of time-increasing BallState objects (*default* = ``[]``)"""
@@ -305,6 +312,8 @@ conversion.register_structure_hook(
 @define
 class Ball:
     """A billiards ball
+
+    .. attrs_note::
 
     This class represents a billiards ball. It stores its parameters (mass, radius,
     etc.), it's state (coordinates, velocity, spin, etc), its history (a time-resolved
