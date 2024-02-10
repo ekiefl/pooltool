@@ -29,6 +29,29 @@ from pooltool.objects.table.specs import (
 
 @define
 class Table:
+    """A table.
+
+    While a table can be constructed by passing all of the following initialization
+    parameters, there are many easier ways, all of which are detailed in the `Table
+    Specification </resources/table_specs>` resource.
+
+    Attributes:
+        cushion_segments:
+            The table's linear and circular cushion segments.
+        pockets:
+            The table's pockets.
+        table_type:
+            An Enum specifying the type of table.
+        height:
+            The height of the playing surface (measured from the ground).
+
+            This is just used for visualization.
+        lights_height:
+            The height of the table lights (measured from the playing surface).
+
+            This is just used for visualization.
+    """
+
     cushion_segments: CushionSegments
     pockets: Dict[str, Pocket]
     table_type: TableType
@@ -38,20 +61,45 @@ class Table:
 
     @property
     def w(self) -> float:
-        """The width of the table"""
+        """The width of the table.
+
+        Warning:
+            This assumes the table follows the layout similar to `this diagram
+            <https://ekiefl.github.io/images/pooltool/pooltool-alg/cushion_count.jpg>`_.
+            Specifically, it must have the linear cushion segments with IDs ``"3"``` and
+            ``"12"``.
+        """
+
+        assert "12" in self.cushion_segments.linear
+        assert "3" in self.cushion_segments.linear
         x2 = self.cushion_segments.linear["12"].p1[0]
         x1 = self.cushion_segments.linear["3"].p1[0]
         return x2 - x1
 
     @property
     def l(self) -> float:
-        """The length of the table"""
+        """The length of the table.
+
+        Warning:
+            This assumes the table follows the layout similar to `this diagram
+            <https://ekiefl.github.io/images/pooltool/pooltool-alg/cushion_count.jpg>`_.
+            Specifically, it must have the linear cushion segments with IDs ``"9"``` and
+            ``"18"``.
+        """
+        assert "9" in self.cushion_segments.linear
+        assert "18" in self.cushion_segments.linear
         y2 = self.cushion_segments.linear["9"].p1[1]
         y1 = self.cushion_segments.linear["18"].p1[1]
         return y2 - y1
 
     @property
     def center(self) -> Tuple[float, float]:
+        """Return the 2D coordinates of the table's center
+
+        Warning:
+            This assumes :meth:`l` and :meth:`w` are defined.
+        """
+
         return self.w / 2, self.l / 2
 
     def copy(self) -> Table:
@@ -67,6 +115,28 @@ class Table:
 
     @staticmethod
     def from_table_specs(specs: TableSpecs) -> Table:
+        """Build a table from a table specifications object
+
+        Args:
+            specs:
+                A valid table specification.
+
+                Accepted objects:
+                    - :class:`pooltool.objects.table.specs.PocketTableSpecs`
+                    - :class:`pooltool.objects.table.specs.BilliardTableSpecs`
+                    - :class:`pooltool.objects.table.specs.SnookerTableSpecs`
+
+        Returns:
+            Table:
+                A table matching the specifications of the input.
+
+                - :class:`pooltool.objects.table.specs.PocketTableSpecs` has
+                  :attr:`table_type` set to `pooltool.objects.table.specs.TableType.POCKET`
+                - :class:`pooltool.objects.table.specs.BilliardTableSpecs` has
+                  :attr:`table_type` set to `pooltool.objects.table.specs.TableType.BILLIARD`
+                - :class:`pooltool.objects.table.specs.SnookerTableSpecs` has
+                  :attr:`table_type` set to `pooltool.objects.table.specs.TableType.SNOOKER`
+        """
         if specs.table_type == TableType.BILLIARD:
             assert isinstance(specs, BilliardTableSpecs)
             segments = create_billiard_table_cushion_segments(specs)

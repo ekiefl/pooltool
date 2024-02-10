@@ -13,7 +13,7 @@ class CueSpecs:
 
     All units are SI.
 
-    Parameters:
+    Attributes:
         brand:
             The brand.
         M:
@@ -46,7 +46,7 @@ class CueSpecs:
 class Cue:
     """A cue stick
 
-    Parameters:
+    Attributes:
         id:
             An ID for the cue.
         V0:
@@ -121,13 +121,13 @@ class Cue:
         """Create a copy
 
         Note:
-            :attr:`specs` is shared between self and the copy, but that's ok because
+            :attr:`specs` is shared between ``self`` and the copy, but that's ok because
             it's frozen and has no mutable attributes.
         """
         return evolve(self)
 
     def reset_state(self) -> None:
-        """Resets :attr:`V0`, :attr:`phi`, :attr:`theta`, :attr:`a` and :attr:`b` to their defaults"""
+        """Resets :attr:`V0`, :attr:`phi`, :attr:`theta`, :attr:`a` and :attr:`b` to their defaults."""
         field_defaults = {
             fname: field.default
             for fname, field in fields_dict(self.__class__).items()

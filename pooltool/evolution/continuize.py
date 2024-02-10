@@ -26,7 +26,8 @@ def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> Syste
 
     This function calculates the "continous" timestamps for each ball and stores them in
     :attr:`pooltool.objects.ball.datatypes.Ball.history_cts` (the event-based timestamps
-    are preserved, and are stored in :attr:`pooltool.objects.ball.datatypes.Ball.history`)
+    are preserved, and are stored in
+    :attr:`pooltool.objects.ball.datatypes.Ball.history`)
 
     The continous timepoints are shared between all balls and are uniformly spaced
     (except for the last timepoint, which occurs at the final event, which necessarily

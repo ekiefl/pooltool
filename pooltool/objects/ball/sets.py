@@ -67,7 +67,7 @@ _expected_conversion_name = "conversion.json"
 class BallSet:
     """A ballset
 
-    Parameters:
+    Attributes:
         name:
             The name of the ballset.
 

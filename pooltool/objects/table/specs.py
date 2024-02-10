@@ -15,7 +15,7 @@ from pooltool.utils import panda_path, strenum
 class TableModelDescr:
     """A table model specifier
 
-    Parameters:
+    Attributes:
         name:
             The name of the table model.
     """
@@ -60,6 +60,7 @@ class TableType(strenum.StrEnum):
     POCKET = strenum.auto()
     BILLIARD = strenum.auto()
     SNOOKER = strenum.auto()
+    OTHER = strenum.auto()
 
 
 class TableSpecs(Protocol):

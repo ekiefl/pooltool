@@ -23,6 +23,11 @@ class CushionDirection:
     cushion, so collisions only need to be checked for one direction. This direction can
     be specified with this class's attributes.
 
+    Attributes:
+        SIDE1: Use side 1.
+        SIDE2: Use side 2.
+        BOTH: Use sides 1 and 2.
+
     Unfortunately, the rule governing whether to use :attr:`SIDE1` or :attr:`SIDE2` is
     not clear and instead requires experimentation.
 
@@ -31,23 +36,20 @@ class CushionDirection:
 
     Note:
         This used to inherit from ``Enum``, but accessing the cushion direction in
-        `get_next_ball_linear_cushion_collision` somehow took up 20% of the functions
+        ``get_next_ball_linear_cushion_collision`` somehow took up 20% of the functions
         runtime so I removed it.
     """
 
     SIDE1 = 0
-    """Use side 1"""
     SIDE2 = 1
-    """Use side 2"""
     BOTH = 2
-    """Use sides 1 and 2"""
 
 
 @define(eq=False, frozen=True, slots=False)
 class LinearCushionSegment:
     """A linear cushion segment defined by the line between points p1 and p2
 
-    Parameters:
+    Attributes:
         id:
             The ID of the cushion segment.
         p1:
@@ -166,7 +168,7 @@ class LinearCushionSegment:
             rvw:
                 The kinematic state vectors of the contacting balls.
 
-                See :attr:`pooltool.objects.ball.datatypes.BallState.rvw`.
+                See ``rvw`` parameter of :class:`pooltool.objects.ball.datatypes.BallState`.
 
         Returns:
             NDArray[np.float64]:
@@ -197,7 +199,7 @@ class LinearCushionSegment:
 class CircularCushionSegment:
     """A circular cushion segment defined by a circle center and radius
 
-    Parameters:
+    Attributes:
         id:
             The ID of the cushion segment.
         center:
@@ -288,7 +290,7 @@ class CushionSegments:
     Cushion segments can be either linear (see :class:`LinearCushionSegment`) or
     circular (see :class:`CircularCushionSegment`). This class stores both.
 
-    Parameters:
+    Attributes:
         linear:
             A dictionary of linear cushion segments.
 
@@ -329,7 +331,7 @@ class CushionSegments:
 class Pocket:
     """A circular pocket
 
-    Parameters:
+    Attributes:
         id:
             The ID of the pocket.
         center:

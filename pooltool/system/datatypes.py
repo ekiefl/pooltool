@@ -37,7 +37,7 @@ class System:
     This class also stores the duration of simulated time elapsed as ``t``, measured in
     seconds.
 
-    Parameters:
+    Attributes:
         cue:
             A cue stick.
         table:
@@ -130,7 +130,7 @@ class System:
             bool: True if all balls have a non-empty continuous history, False otherwise.
 
         See Also:
-            For a proper definition of `continuous history`, please see
+            For a proper definition of *continuous history*, please see
             :attr:`pooltool.objects.ball.datatypes.Ball.history_cts`.
         """
         return all(not ball.history_cts.empty for ball in self.balls.values())
@@ -195,11 +195,14 @@ class System:
         (1) :attr:`t` is set to ``0.0``
         (2) :attr:`events` is set to ``[]``
 
-        Additionally for each ball in :attr:`balls`,
+        Additionally for each ball in ``self.balls``,
 
-        (1) :attr:`pooltool.objects.ball.datatypes.Ball.history` is set to ``BallHistory()``
-        (2) :attr:`pooltool.objects.ball.datatypes.Ball.history_cts` is set to ``BallHistory()``
-        (3) ``t`` (time) attribute of :attr:`pooltool.objects.ball.datatypes.Ball.state` is set to ``0.0``
+        (1) :attr:`pooltool.objects.ball.datatypes.Ball.history` is set to
+        ``BallHistory()``
+        (2) :attr:`pooltool.objects.ball.datatypes.Ball.history_cts` is set to
+        ``BallHistory()``
+        (3) The ``t`` attribute of :attr:`pooltool.objects.ball.datatypes.Ball.state`
+        is set to ``0.0``
 
         Calling this method thus erases any history.
         """
@@ -579,7 +582,7 @@ class MultiSystem:
     Houses a collection of systems, for example, shots taken sequentially in
     a game.
 
-    Parameters:
+    Attributes:
         multisystem:
             A list of System objects (`default` = ``[]``)
 
@@ -662,7 +665,7 @@ class MultiSystem:
     def append(self, system: System) -> None:
         """Append a system to the multisystem
 
-        This appends ``system`` to :attr:`multisystem`.
+        This appends ``system`` to ``self.multisystem``.
         """
         if self.empty:
             self.active_index = 0

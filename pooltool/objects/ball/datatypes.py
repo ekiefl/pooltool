@@ -25,7 +25,7 @@ class BallOrientation:
     practically, but more specifically, these attributes correspond to the nodes, 'pos'
     and 'sphere', that make up a ball's visual rendering.
 
-    Parameters:
+    Attributes:
         pos:
             A quaternion.
         sphere:
@@ -70,40 +70,39 @@ def _null_rvw() -> NDArray[np.float64]:
 class BallState:
     """Holds a ball's state
 
-    .. attrs_note::
+    The ball's *state* is defined **(1)** the *kinematic* state of the ball, **(2)** a
+    label specifying the ball's *motion state*, and **(3)** the point in time that the
+    ball exists in.
 
-    The ball's *state* is defined by the following:
+    Attributes:
+        rvw:
+            The kinematic state of the ball.
 
-    - The *kinematic* state of the ball (see :attr:`rvw`)
-    - A label specifying the ball's *motion state* (see :attr:`s`)
-    - The point in time that the ball exists in (see :attr:`t`)
+            ``rvw`` is a :math:`3\\times3` matrix that stores the 3 vectors that characterize a
+            ball's kinematic state:
+
+            (1) :math:`r`: The displacement (from origin) vector (accessed with ``rvw[0]``)
+            (2) :math:`v`: The velocity vector (accessed with ``rvw[1]``)
+            (3) :math:`w`: The angular velocity vector (accessed with ``rvw[2]``)
+        s (int):
+            The motion state label of the ball.
+
+            ``s`` is an integer corresponding to the following motion state labels:
+
+            ::
+
+                0 = stationary
+                1 = spinning
+                2 = sliding
+                3 = rolling
+                4 = pocketed
+        t (float):
+            The simulated time. 
     """
 
     rvw: NDArray[np.float64]
-    """The kinematic state of the ball
-
-    ``rvw`` is a :math:`3\\times3` matrix that stores the 3 vectors that characterize a
-    ball's kinematic state:
-
-    (1) :math:`r`: The displacement (from origin) vector (accessed with ``rvw[0]``)
-    (2) :math:`v`: The velocity vector (accessed with ``rvw[1]``)
-    (3) :math:`w`: The angular velocity vector (accessed with ``rvw[2]``)
-    """
     s: int = field(converter=int)
-    """The motion state label of the ball
-
-    ``s`` is an integer corresponding to the following motion state labels:
-
-    ::
-
-        0 = stationary
-        1 = spinning
-        2 = sliding
-        3 = rolling
-        4 = pocketed
-    """
     t: float = field(converter=float, default=0)
-    """The simulated time"""
 
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
@@ -143,7 +142,7 @@ class BallState:
 class BallHistory:
     """A container of BallState objects
 
-    Parameters:
+    Attributes:
         states:
             A list of time-increasing BallState objects (*default* = ``[]``).
     """
@@ -321,7 +320,7 @@ class Ball:
     etc.), it's state (coordinates, velocity, spin, etc), its history (a time-resolved
     trajectory of its state), amongst other things.
 
-    Parameters:
+    Attributes:
         id:
             An ID for the ball.
             

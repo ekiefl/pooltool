@@ -13,7 +13,7 @@ from pooltool.utils.strenum import StrEnum, auto
 class BallParams:
     """Ball parameters and physical constants
 
-    Parameters:
+    Attributes:
         m:
             The mass of the ball (*default* = 0.170097
         R:
