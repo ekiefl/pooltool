@@ -47,28 +47,29 @@ class CushionDirection:
 class LinearCushionSegment:
     """A linear cushion segment defined by the line between points p1 and p2
 
-    .. attrs_note::
+    Parameters:
+        id:
+            The ID of the cushion segment.
+        p1:
+            The 3D coordinate where the cushion segment starts.
+
+            Note:
+                - p1 and p2 must share the same height (``p1[2] == p2[2]``). 
+        p2:
+            The 3D coordinate where the cushion segment ends.
+
+            Note:
+                - p1 and p2 must share the same height (``p1[2] == p2[2]``). 
+        direction:
+            The cushion direction (*default* = :attr:`CushionDirection.BOTH`).
+        
+            See :class:`CushionDirection` for explanation.
     """
 
     id: str
-    """The ID of the cushion segment (*required*)"""
     p1: NDArray[np.float64]
-    """The 3D coordinate where the cushion segment starts (*required*)
-
-    Note:
-        - p1 and p2 must share the same height (``p1[2] == p2[2]``).
-    """
     p2: NDArray[np.float64]
-    """The 3D coordinate where the cushion segment ends (*required*)
-
-    Note:
-        - p1 and p2 must share the same height (``p1[2] == p2[2]``).
-    """
     direction: int = field(default=CushionDirection.BOTH)
-    """The cushion direction (*default* = ``CushionDirection.BOTH``)
-    
-    See :class:`CushionDirection`.
-    """
 
     def __attrs_post_init__(self):
         # Segment must have constant height
@@ -194,20 +195,22 @@ class LinearCushionSegment:
 class CircularCushionSegment:
     """A circular cushion segment defined by a circle center and radius
 
-    .. attrs_note::
+    Parameters:
+        id:
+            The ID of the cushion segment.
+        center:
+            A length-3 array specifying the circular cushion's center.
+
+            ``center[0]``, ``center[1]``, and ``center[2]`` are the x-, y-, and
+            z-coordinates of the cushion's center. The circle is assumed to be parallel to
+            the XY plane, which makes ``center[2]`` is the height of the cushion. 
+        radius:
+            The radius of the cushion segment.
     """
 
     id: str
-    """The ID of the cushion segment (*required*)"""
     center: NDArray[np.float64]
-    """A length-3 array specifying the circular cushion's center (*required*)
-
-    ``center[0]``, ``center[1]``, and ``center[2]`` are the x-, y-, and z-coordinates of
-    the cushion's center. The circle is assumed to be parallel to the XY plane, which
-    makes ``center[2]`` is the height of the cushion.
-    """
     radius: float
-    """The radius of the cushion segment (*required*)"""
 
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
@@ -280,26 +283,26 @@ CushionSegment = Union[LinearCushionSegment, CircularCushionSegment]
 class CushionSegments:
     """A collection of cushion segments
 
-    .. attrs_note::
-
     Cushion segments can be either linear (see :class:`LinearCushionSegment`) or
     circular (see :class:`CircularCushionSegment`). This class stores both.
+
+    Parameters:
+        linear:
+            A dictionary of linear cushion segments.
+
+            Warning:
+                Keys must match the value IDs, *e.g.* ``{"2":
+                LinearCushionSegment(id="2", ...)}`` 
+        circular:
+            A dictionary of circular cushion segments.
+
+            Warning:
+                Keys must match the value IDs, *e.g.* ``{"2t":
+                CircularCushionSegment(id="2t", ...)}`` 
     """
 
     linear: Dict[str, LinearCushionSegment] = field()
-    """A dictionary of linear cushion segments.
-
-    Warning:
-        Keys must match the value IDs, *e.g.* ``{"2": LinearCushionSegment(id="2",
-        ...)}``
-    """
     circular: Dict[str, CircularCushionSegment] = field()
-    """A dictionary of circular cushion segments.
-
-    Warning:
-        Keys must match the value IDs, *e.g.* ``{"2t": CircularCushionSegment(id="2t",
-        ...)}``
-    """
 
     @linear.validator  # type: ignore
     @circular.validator  # type: ignore
@@ -324,24 +327,28 @@ class CushionSegments:
 class Pocket:
     """A circular pocket
 
-    .. attrs_note::
+    Parameters:
+        id:
+            The ID of the pocket.
+        center:
+            A length-3 array specifying the pocket's position.
+
+            - ``center[0]`` is the x-coordinate of the pocket's center
+            - ``center[1]`` is the y-coordinate of the pocket's center
+            - ``center[2]`` must be 0.0 
+        radius:
+            The radius of the pocket.
+        depth:
+            How deep the pocket is.
+        contains:
+            Stores the ball IDs of pocketed balls (*default* = ``set()``).
     """
 
     id: str
-    """The ID of the pocket (*required*)"""
     center: NDArray[np.float64]
-    """A length-3 array specifying the pocket's position (*required*)
-
-    - ``center[0]`` is the x-coordinate of the pocket's center
-    - ``center[1]`` is the y-coordinate of the pocket's center
-    - ``center[2]`` must be 0.0
-    """
     radius: float
-    """The radius of the pocket (*required*)"""
     depth: float = field(default=0.08)
-    """How deep the pocket is (*default* = 0.08)"""
     contains: set = field(factory=set)
-    """Stores the ball IDs of pocketed balls (*default* = ``set()``)"""
 
     def __attrs_post_init__(self):
         assert len(self.center) == 3

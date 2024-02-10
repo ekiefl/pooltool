@@ -13,7 +13,43 @@ from pooltool.utils.strenum import StrEnum, auto
 class BallParams:
     """Ball parameters and physical constants
 
-    .. attrs_note::
+    Parameters:
+        m:
+            The mass of the ball (*default* = 0.170097
+        R:
+            The radius of the ball (*default* = 0.028575).
+        u_s:
+            The sliding coefficient of friction (*default* = 0.2).
+
+            References:
+                - https://ekiefl.github.io/2020/04/24/pooltool-theory/#case-4-sliding
+        u_r:
+            The rolling coefficient of friction (*default* = 0.01).
+
+            References:
+                - https://ekiefl.github.io/2020/04/24/pooltool-theory/#case-3-rolling
+        u_sp_proportionality:
+            The spinning coefficient of friction, with R factored out (*default* = 0.01).
+
+            See Also:
+                - For the coefficient of spinning friction, use the property :meth:`u_sp`.
+
+            References:
+                - https://ekiefl.github.io/2020/04/24/pooltool-theory/#case-2-spinning
+        e_c:
+            The cushion coefficient of restitution (*default* = 0.85).
+
+            Note:
+                This is a potentially model-dependent ball-cushion parameter and should be
+                placed elsewhere, either as a model parameter or as a cushion segment parameter.
+        f_c:
+            The cushion coefficient of friction (*default* = 0.2).
+
+            Note:
+                This is a potentially model-dependent ball-cushion parameter and should be
+                placed elsewhere, either as a model parameter or as a cushion segment parameter.
+        g:
+            The gravitational constant (*default* = 9.81).
 
     Most of the default values (SI units) are taken from or based off of
     https://billiards.colostate.edu/faq/physics/physical-properties/.
@@ -24,46 +60,13 @@ class BallParams:
     """
 
     m: float = attrs.field(default=0.170097)
-    """The mass of the ball (*default* = 0.170097"""
     R: float = attrs.field(default=0.028575)
-    """The radius of the ball (*default* = 0.028575)."""
     u_s: float = attrs.field(default=0.2)
-    """The sliding coefficient of friction (*default* = 0.2).
-
-    References:
-        - https://ekiefl.github.io/2020/04/24/pooltool-theory/#case-4-sliding
-    """
     u_r: float = attrs.field(default=0.01)
-    """The rolling coefficient of friction (*default* = 0.01).
-
-    References:
-        - https://ekiefl.github.io/2020/04/24/pooltool-theory/#case-3-rolling
-    """
     u_sp_proportionality: float = attrs.field(default=10 * 2 / 5 / 9)
-    """The spinning coefficient of friction, with R factored out (*default* = 0.01).
-
-    See Also:
-        - For the coefficient of spinning friction, use the property :meth:`u_sp`.
-
-    References:
-        - https://ekiefl.github.io/2020/04/24/pooltool-theory/#case-2-spinning
-    """
     e_c: float = attrs.field(default=0.85)
-    """The cushion coefficient of restitution (*default* = 0.85).
-
-    Todo:
-        This is a potentially model-dependent ball-cushion parameter and should be
-        placed elsewhere, either as a model parameter or as a cushion segment parameter.
-    """
     f_c: float = attrs.field(default=0.2)
-    """The cushion coefficient of friction (*default* = 0.2).
-
-    Todo:
-        This is a potentially model-dependent ball-cushion parameter and should be
-        placed elsewhere, either as a model parameter or as a cushion segment parameter.
-    """
     g: float = attrs.field(default=9.81)
-    """The gravitational constant (*default* = 9.81)."""
 
     @cached_property
     def u_sp(self) -> float:

@@ -34,6 +34,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "myst_parser",
     "custom_directives",
+    "custom_extensions",
 ]
 
 
@@ -152,6 +153,7 @@ rst_prolog = """
 # Related custom CSS
 html_css_files = [
     "css/label.css",
+    "css/sig.css",
 ]
 
 

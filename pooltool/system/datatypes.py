@@ -21,8 +21,6 @@ from pooltool.serialize.serializers import Pathish
 class System:
     """A class representing the billiards system.
 
-    .. attrs_note::
-
     This class holds:
 
     (1) a collection of balls (:class:`pooltool.objects.ball.datatypes.Ball`)
@@ -38,6 +36,25 @@ class System:
 
     This class also stores the duration of simulated time elapsed as ``t``, measured in
     seconds.
+
+    Parameters:
+        cue:
+            A cue stick.
+        table:
+            A table.
+        balls:
+            A dictionary of balls. 
+
+            Warning:
+                Each key must match each value's ``id`` (`e.g.` ``{"2": Ball(id="1")}``
+                is invalid). 
+        t:
+            The elapsed simulation time. If the system is in the process of being
+            simulated, ``t`` is updated to be the number of seconds the system has
+            evolved. After being simulated, ``t`` remains at the final simulation time.
+        events:
+            The sequence of events in the simulation. Like ``t``, this is updated
+            incrementally as the system is evolved. (*default* = ``[]``)
 
     Examples:
 
@@ -76,26 +93,10 @@ class System:
         >>> gui.show(system)
     """
     cue: Cue = field()
-    """A cue stick (`required`)."""
     table: Table = field()
-    """A table (`required`)."""
     balls: Dict[str, Ball] = field()
-    """A dictionary of balls (`required`).
-
-    Each key must match each value's ``id`` (`e.g.` ``{"2": Ball(id="1")}`` is invalid).
-    """
     t: float = field(default=0.0)
-    """The elapsed simulation time (`default` = 0.0)
-
-    If the system is in the process of being simulated, ``t`` is updated to be the
-    number of seconds the system has evolved. After being simulated, ``t`` remains at
-    the final simulation time.
-    """
     events: List[Event] = field(factory=list)
-    """The sequence of events in the simulation (`default` = ``[]``).
-
-    Like ``t``, this is updated incrementally as the system is evolved.
-    """
 
     @balls.validator  # type: ignore
     def _validate_balls(self, _, value) -> None:
@@ -575,10 +576,12 @@ class System:
 class MultiSystem:
     """A storage for System objects
 
-    .. attrs_note::
-
     Houses a collection of systems, for example, shots taken sequentially in
     a game.
+
+    Parameters:
+        multisystem:
+            A list of System objects (`default` = ``[]``)
 
     Example:
 
@@ -627,8 +630,7 @@ class MultiSystem:
         >>> gui.show(multisystem, title="Press 'n' for next, 'p' for previous")
     """
     multisystem: List[System] = field(factory=list)
-    """A list of System objects (`default` = ``[]``)"""
-    active_index: Optional[int] = field(default=None)
+    active_index: Optional[int] = field(default=None, init=False)
 
     def __len__(self) -> int:
         return len(self.multisystem)

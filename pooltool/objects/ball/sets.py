@@ -67,14 +67,14 @@ _expected_conversion_name = "conversion.json"
 class BallSet:
     """A ballset
 
-    .. attrs_note::
+    Parameters:
+        name:
+            The name of the ballset.
+
+            During instantiation, the validity of this name will be checked, and a
+            ValueError will be raised if the ballset doesn't exist. 
     """
     name: str = attrs.field()
-    """The name of the ballset.
-
-    During instantiation, the validity of this name will be checked, and a ValueError
-    will be raised if the ballset doesn't exist.
-    """
 
     @name.validator  # type: ignore
     def _check_name(self, _, value):

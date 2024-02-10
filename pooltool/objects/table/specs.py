@@ -15,11 +15,12 @@ from pooltool.utils import panda_path, strenum
 class TableModelDescr:
     """A table model specifier
 
-    .. attrs_note::
+    Parameters:
+        name:
+            The name of the table model.
     """
 
     name: str
-    """The name of the table model (*required*)"""
 
     @property
     def path(self) -> str:
@@ -86,13 +87,9 @@ Question = Union[float, int, List[str]]
 class PocketTableSpecs:
     """Parameter specifications for a pocket table.
 
-    .. attrs_note::
-
     See Also:
         - See the :doc:`Table Specification </resources/table_specs>` resource for
           visualizations and descriptions of each attribute.
-        - See :meth:`pooltool.objects.table.datatypes.Table.from_table_specs` for
-          generating a table from pocket table specs.
         - See :class:`BilliardTableSpecs` for billiard table specs.
         - See :class:`SnookerTableSpecs` for pocket table specs.
     """
@@ -126,13 +123,9 @@ class PocketTableSpecs:
 class BilliardTableSpecs:
     """Parameter specifications for a billiards (pocketless) table.
 
-    .. attrs_note::
-
     See Also:
         - See the :doc:`Table Specification </resources/table_specs>` resource for
           visualizations and descriptions of each attribute.
-        - See :meth:`pooltool.objects.table.datatypes.Table.from_table_specs` for
-          generating a table from pocket table specs.
         - See :class:`PocketTableSpecs` for billiard table specs.
         - See :class:`SnookerTableSpecs` for pocket table specs.
     """
@@ -157,13 +150,9 @@ class BilliardTableSpecs:
 class SnookerTableSpecs:
     """Parameter specifications for a snooker table.
 
-    .. attrs_note::
-
     See Also:
         - See the :doc:`Table Specification </resources/table_specs>` resource for
           visualizations and descriptions of each attribute.
-        - See :meth:`pooltool.objects.table.datatypes.Table.from_table_specs` for
-          generating a table from snooker table specs.
         - See :class:`BilliardTableSpecs` for billiard table specs.
         - See :class:`PocketTableSpecs` for pocket table specs.
 

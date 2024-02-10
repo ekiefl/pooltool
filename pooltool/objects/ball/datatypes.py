@@ -20,18 +20,20 @@ from pooltool.utils.dataclasses import are_dataclasses_equal
 class BallOrientation:
     """Stores a ball's rendered BallOrientation
 
-    .. attrs_note::
-
     From a **practical standpoint**, what needs to be understood about this class is
     that its attributes uniquely specify a ball's rendered orientation. Less
     practically, but more specifically, these attributes correspond to the nodes, 'pos'
     and 'sphere', that make up a ball's visual rendering.
+
+    Parameters:
+        pos:
+            A quaternion.
+        sphere:
+            Another quaternion.
     """
 
     pos: Tuple[float, float, float, float]
-    """A quaternion (*required*)"""
     sphere: Tuple[float, float, float, float]
-    """Another quaternion (*required*)"""
 
     @staticmethod
     def random() -> BallOrientation:
@@ -141,7 +143,9 @@ class BallState:
 class BallHistory:
     """A container of BallState objects
 
-    .. attrs_note::
+    Parameters:
+        states:
+            A list of time-increasing BallState objects (*default* = ``[]``).
     """
 
     states: List[BallState] = field(factory=list)
@@ -313,17 +317,66 @@ conversion.register_structure_hook(
 class Ball:
     """A billiards ball
 
-    .. attrs_note::
-
     This class represents a billiards ball. It stores its parameters (mass, radius,
     etc.), it's state (coordinates, velocity, spin, etc), its history (a time-resolved
     trajectory of its state), amongst other things.
 
+    Parameters:
+        id:
+            An ID for the ball.
+            
+            Use strings (e.g. "1" not 1).
+        state:
+            The ball's state. 
+
+            This is the current state of the ball.
+
+            See Also:
+                - See the *Important* section in :class:`Ball` for a description of the
+                  role of ``states`` during simulation.
+        params:
+            The ball's physical parameters.
+
+            The physical parameters of the ball.
+        ballset:
+            The ball set that the ball belongs to.
+
+            Important if rendering the ball in a scene.
+
+            See Also:
+                - See :meth:`Ball.set_ballset` for details
+        initial_orientation:
+            The initial rendered orientation of the ball.
+
+            Important if rendering the ball in a scene.
+
+            This is the orientation of the ball at :math:`t = 0`.
+        history:
+            The ball's state history
+
+            The historical states of the ball from :math:`t_{initial}` to
+            :math:`t_{final}`.
+
+            See Also:
+                - See the *Important* section in :class:`Ball` for a description of the
+                  role of ``history`` during simulation.
+        history_cts:
+            The ball's continuous state history
+
+            The historical states of the ball from :math:`t_{initial}` to
+            :math:`t_{final}` densely sampled with respect to time.
+
+            See Also:
+                - See :func:`pooltool.evolution.event_based.continuize.continuize` for a
+                  details about continuizing a simulated system.
+                - See the *Important* section in :class:`Ball` for a description of the
+                  role of ``history_cts`` during simulation.
+
     Important:
-        To instantiate this class, consider using the :meth:`create` constructor. Or, use
-        functions within :mod:`pooltool.game.layouts` to generate entire collection of
-        balls. Alternatively, use the ``__init__`` method directly, providing at minimum the
-        attributes below labeled as "*required*".
+        To instantiate this class, consider using the :meth:`create` constructor. Or,
+        use functions within :mod:`pooltool.game.layouts` to generate entire collection
+        of balls. Alternatively, use the ``__init__`` method directly, providing at
+        minimum the attributes below labeled as "*required*".
 
     Important:
         The following explains how a ``Ball`` object is modified when its parent system
@@ -346,62 +399,12 @@ class Ball:
     """
 
     id: str
-    """An ID for the ball (*required*).
-    
-    Use strings (e.g. "1" not 1).
-    """
     state: BallState = field(factory=BallState.default)
-    """The ball's state (*default* = :meth:`pooltool.objects.balls.datatypes.BallState.default`)
-
-    This is the current state of the ball.
-
-    See Also:
-        - See the *Important* section in :class:`Ball` for a description of the role of
-          ``states`` during simulation.
-    """
     params: BallParams = field(factory=BallParams.default)
-    """The ball's physical parameters (*default* = :meth:`pooltool.objects.balls.params.BallParams.default`)
-
-    The physical parameters of the ball.
-    """
     ballset: Optional[BallSet] = field(default=None)
-    """The ball set that the ball belongs to (*default* = None)
-
-    Important if rendering the ball in a scene.
-
-    See Also:
-        - See :meth:`Ball.set_ballset` for details
-    """
-
     initial_orientation: BallOrientation = field(factory=BallOrientation.random)
-    """The initial rendered orientation of the ball (*default* = :meth:`BallOrientation.random`)
-
-    Important if rendering the ball in a scene.
-
-    This is the orientation of the ball at :math:`t = 0`.
-    """
-
     history: BallHistory = field(factory=BallHistory.factory)
-    """The ball's state history
-
-    The historical states of the ball from :math:`t_{initial}` to :math:`t_{final}`.
-
-    See Also:
-        - See the *Important* section in :class:`Ball` for a description of
-          the role of ``history`` during simulation.
-    """
     history_cts: BallHistory = field(factory=BallHistory.factory)
-    """The ball's continuous state history
-
-    The historical states of the ball from :math:`t_{initial}` to :math:`t_{final}`
-    densely sampled with respect to time.
-
-    See Also:
-        - See :func:`pooltool.evolution.event_based.continuize.continuize` for a details
-          about continuizing a simulated system.
-        - See the *Important* section in :class:`Ball` for a description of
-          the role of ``history_cts`` during simulation.
-    """
 
     @property
     def xyz(self):
