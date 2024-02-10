@@ -93,6 +93,9 @@ myst_enable_extensions = ["colon_fence"]
 
 #autodoc_typehints = "signature"  # autoapi respects this
 autodoc_typehints = "both"  # autoapi respects this
+autodoc_typehints_description_target = "documented_params"  # autoapi respects this
+autodoc_class_signature = "mixed"
+autoclass_content = "class"
 
 autoapi_type = "python"
 autoapi_dirs = ["../pooltool"]
