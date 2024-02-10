@@ -163,8 +163,10 @@ class LinearCushionSegment:
             this vector by negating it.
 
         Args:
-            rvw: The kinematic state vectors of the contacting ball (see
-            :attr:`pooltool.objects.ball.datatypes.BallState.rvw`).
+            rvw:
+                The kinematic state vectors of the contacting balls.
+
+                See :attr:`pooltool.objects.ball.datatypes.BallState.rvw`.
 
         Returns:
             NDArray[np.float64]:
@@ -177,7 +179,7 @@ class LinearCushionSegment:
         """
         return self.normal
 
-    def copy(self):
+    def copy(self) -> LinearCushionSegment:
         """Create a copy"""
         # LinearCushionSegment is a frozen instance, and its attributes are either (a)
         # immutable, or (b) have read-only flags set. It is sufficient to simply return
