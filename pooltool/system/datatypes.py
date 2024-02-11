@@ -665,7 +665,7 @@ class MultiSystem:
     def append(self, system: System) -> None:
         """Append a system to the multisystem
 
-        This appends ``system`` to ``self.multisystem``.
+        This appends ``system`` to :attr:`multisystem`.
         """
         if self.empty:
             self.active_index = 0

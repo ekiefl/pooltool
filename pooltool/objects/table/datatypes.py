@@ -162,14 +162,48 @@ class Table:
 
     @classmethod
     def prebuilt(cls, name: TableName) -> Table:
+        """Create a default table based on name
+
+        Args:
+            name:
+                The name of the prebuilt table specs.
+
+        Returns:
+            Table:
+                A prebuilt table.
+        """
         return cls.from_table_specs(prebuilt_specs(name))
 
     @classmethod
     def default(cls, table_type: TableType = TableType.POCKET) -> Table:
+        """Create a default table based on table type
+
+        A default table is associated to each table type.
+
+        Args:
+            table_type:
+                The type of table.
+                
+        Returns:
+            Table:
+                The default table for the given table type.
+        """
         return cls.from_table_specs(default_specs_from_table_type(table_type))
 
     @classmethod
     def from_game_type(cls, game_type: GameType) -> Table:
+        """Create a default table based on table type
+
+        A default table is associated with each game type.
+
+        Args:
+            game_type:
+                The game type.
+                
+        Returns:
+            Table:
+                The default table for the given game type.
+        """
         return cls.from_table_specs(default_specs_from_game_type(game_type))
 
 
