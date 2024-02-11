@@ -7,6 +7,11 @@ from attrs import define, evolve, field
 
 @define
 class NullObject:
+    """A null object
+
+    Attributes:
+        id: Object ID.
+    """
     id: str = field(default="dummy")
 
     def copy(self) -> NullObject:
