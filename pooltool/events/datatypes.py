@@ -298,7 +298,7 @@ class Event:
             The time at which the event occurs.
     """
     event_type: EventType
-    agents: Union[Tuple[Agent], Tuple[Agent, Agent]]
+    agents: Tuple[Agent, ...]
     time: float
 
     def __repr__(self):
@@ -311,7 +311,7 @@ class Event:
         return "\n".join(lines) + "\n"
 
     @property
-    def ids(self) -> Union[Tuple[str], Tuple[str, str]]:
+    def ids(self) -> Tuple[str, ...]:
         """Retrieves the IDs of the agents involved in the event.
 
         This property provides access to a tuple of agent IDs, allowing identification
