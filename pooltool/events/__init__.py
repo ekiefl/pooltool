@@ -1,4 +1,4 @@
-from pooltool.events._events import (
+from pooltool.events.factory import (
     ball_ball_collision,
     ball_circular_cushion_collision,
     ball_linear_cushion_collision,

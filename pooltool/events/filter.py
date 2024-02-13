@@ -133,10 +133,6 @@ def filter_events(events: List[Event], *funcs: FilterFunc) -> List[Event]:
         List[Event]:
             A filtered event list containing only events passing the supplied criteria.
 
-    If you are filtering by multiple cr
-
-    This is the most general filtering 
-
     Examples:
 
         Generate a list of events.
