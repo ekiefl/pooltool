@@ -63,7 +63,7 @@ if args.seed:
 system = pt.System(
     cue=pt.Cue(cue_ball_id="cue"),
     table=(table := pt.Table.default()),
-    balls=pt.get_nine_ball_rack(table, spacing_factor=1e-3),
+    balls=pt.get_rack(pt.GameType.NINEBALL, table, spacing_factor=1e-3),
 )
 
 # Aim at the head ball

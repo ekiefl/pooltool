@@ -94,7 +94,7 @@ interface = pt.ShotViewer()
 
 # We need a table, some balls, and a cue stick
 table = pt.Table.default()
-balls = pt.get_nine_ball_rack(table)
+balls = pt.get_rack(pt.GameType.NINEBALL, table)
 cue = pt.Cue(cue_ball_id="cue")
 
 # Wrap it up as a System

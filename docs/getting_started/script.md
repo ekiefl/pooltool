@@ -15,7 +15,7 @@ import pooltool as pt
 
 # We need a table, some balls, and a cue stick
 table = pt.Table.default()
-balls = pt.get_nine_ball_rack(table)
+balls = pt.get_rack(pt.GameType.NINEBALL, table)
 cue = pt.Cue(cue_ball_id="cue")
 
 # Wrap it up as a System
@@ -47,7 +47,7 @@ Then a table, a cue stick, and a collection of balls are created and wrapped up 
 ```python
 # We need a table, some balls, and a cue stick
 table = pt.Table.default()
-balls = pt.get_nine_ball_rack(table)
+balls = pt.get_rack(pt.GameType.NINEBALL, table)
 cue = pt.Cue(cue_ball_id="cue")
 
 # Wrap it up as a System

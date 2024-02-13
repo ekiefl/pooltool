@@ -270,7 +270,7 @@ def _wiggle(x: float, y: float, spacer: float) -> Tuple[float, float]:
     return x + rad * np.cos(ang), y + rad * np.sin(ang)
 
 
-def get_nine_ball_rack(
+def _get_nine_ball_rack(
     table: Table,
     ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
@@ -310,7 +310,7 @@ def get_nine_ball_rack(
     )
 
 
-def get_eight_ball_rack(
+def _get_eight_ball_rack(
     table: Table,
     ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
@@ -352,10 +352,10 @@ def get_eight_ball_rack(
     cue = BallPos([], (0.6, 0.23), {"cue"})
     blueprint += [cue]
 
-    return generate_layout(blueprint, *args, ballset=ballset, **kwargs)
+    return generate_layout(blueprint, table, ballset=ballset, **kwargs)
 
 
-def get_three_cushion_rack(
+def _get_three_cushion_rack(
     table: Table,
     ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
@@ -381,7 +381,7 @@ def get_three_cushion_rack(
     )
 
 
-def get_sum_to_three_rack(
+def _get_sum_to_three_rack(
     table: Table,
     ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
@@ -417,7 +417,7 @@ snooker_color_locs: Dict[str, BallPos] = {
 }
 
 
-def get_snooker_rack(
+def _get_snooker_rack(
     table: Table,
     ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
@@ -475,32 +475,25 @@ class GetRackProtocol(Protocol):
 
 
 _game_rack_map: Dict[str, GetRackProtocol] = {
-    GameType.NINEBALL: get_nine_ball_rack,
-    GameType.EIGHTBALL: get_eight_ball_rack,
-    GameType.THREECUSHION: get_three_cushion_rack,
-    GameType.SNOOKER: get_snooker_rack,
-    GameType.SANDBOX: get_nine_ball_rack,
-    GameType.SUMTOTHREE: get_sum_to_three_rack,
+    GameType.NINEBALL: _get_nine_ball_rack,
+    GameType.EIGHTBALL: _get_eight_ball_rack,
+    GameType.THREECUSHION: _get_three_cushion_rack,
+    GameType.SNOOKER: _get_snooker_rack,
+    GameType.SANDBOX: _get_nine_ball_rack,
+    GameType.SUMTOTHREE: _get_sum_to_three_rack,
 }
 
 
 def get_rack(
     game_type: GameType,
     table: Table,
-    params: Optional[BallParams] = None,
+    ball_params: Optional[BallParams] = None,
     ballset: Optional[BallSet] = None,
     spacing_factor: float = 1e-3,
 ) -> Dict[str, Ball]:
     """Generate a ball rack.
 
-    This function delegates to the following functions:
-        - :func:`get_nine_ball_rack`
-        - :func:`get_eight_ball_rack`
-        - :func:`get_three_cushion_rack`
-        - :func:`get_sum_to_three_rack`
-        - :func:`get_snooker_rack`
-
-    And these functions themselves delegate to :func:`generate_layout`.
+    This function ultimately delegates to :func:`generate_layout`.
 
     Args:
         game_type:
@@ -508,7 +501,7 @@ def get_rack(
         table:
             A table. This must exist so the rack can be created with respect to
             the table's dimensions.
-        params:
+        ball_params:
             Ball parameters that all balls will be created with.
         spacing_factor:
             This factor adjusts the spacing between balls to ensure they do not touch
@@ -528,7 +521,7 @@ def get_rack(
     """
     return _game_rack_map[game_type](
         table,
-        ball_params=params,
+        ball_params=ball_params,
         ballset=ballset,
         spacing_factor=spacing_factor,
     )
