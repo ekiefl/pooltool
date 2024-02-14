@@ -1,5 +1,5 @@
-from pooltool.game.ruleset.snooker.core import Snooker
+from pooltool.game.ruleset.snooker.core import _Snooker
 
 __all__ = [
-    "Snooker",
+    "_Snooker",
 ]

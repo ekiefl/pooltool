@@ -75,7 +75,7 @@ def next_cue(current_cue: str, num_players: int) -> str:
     return "white" if current_cue == "yellow" else "yellow"
 
 
-class ThreeCushion(Ruleset):
+class _ThreeCushion(Ruleset):
     def __init__(self, *args, win_condition: int = 10, **kwargs):
         self.win_condition = win_condition
         Ruleset.__init__(self, *args, **kwargs)
@@ -140,5 +140,5 @@ class ThreeCushion(Ruleset):
         if self.shot_info.turn_over:
             self.log.add_msg(f"{self.last_player.name} is up!", sentiment="good")
 
-    def copy(self) -> ThreeCushion:
+    def copy(self) -> _ThreeCushion:
         raise NotImplementedError("ThreeCushion copy needs to be implemented")

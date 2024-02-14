@@ -39,6 +39,14 @@ class AIPlayer(Protocol):
 
 @attrs.define
 class Player:
+    """A player
+
+    Attributes:
+        name:
+            Player's name.
+        ai:
+            Not implemented yet...
+    """
     name: str
     ai: Optional[AIPlayer] = None
 
@@ -85,7 +93,7 @@ class BallInHandOptions(StrEnum):
 
 @attrs.define
 class ShotConstraints:
-    """Constraints for a yet-to-happen shot
+    """Constraints for a player's upcoming shot
 
     Attributes:
         ball_in_hand:
@@ -146,6 +154,26 @@ class ShotConstraints:
 
 @attrs.define(frozen=True)
 class ShotInfo:
+    """Info about a played shot
+
+    Attributes:
+        player:
+            The player who played the shot.
+        legal:
+            Whether or not the shot was legal.
+        reason:
+            A textual description providing the rationale for whether the shot was
+            legal.
+        turn_over:
+            Whether the player's turn is over.
+        game_over:
+            Whether or not the game is over as a result of the shot.
+        winner:
+            Who the winner is. None if :attr:`game_over` is False.
+        score:
+            The total game score (tallied after the shot). Keys are player names and
+            values are points.
+    """
     player: Player
     legal: bool
     reason: str
@@ -159,8 +187,9 @@ class Ruleset(ABC):
     """Abstract base class for a pool game ruleset.
 
     This class defines the skeleton of a pool game ruleset, including player management,
-    score tracking, and shot handling. Concrete subclasses must implement the abstract
-    methods to specify the behavior for specific pool games.
+    score tracking, and shot handling. Subclasses must implement the abstract methods to
+    specify the behavior for specific games. For examples, see currently implemented
+    games.
     """
 
     def __init__(self, players: Optional[List[Player]] = None) -> None:
@@ -194,7 +223,7 @@ class Ruleset(ABC):
         last_idx = (self.active_idx - 1) % len(self.players)
         return self.players[last_idx]
 
-    def set_next_player(self):
+    def set_next_player(self) -> None:
         """Sets the index for the next player
 
         It is through this index that self.last_player and self.active_player are
@@ -207,7 +236,7 @@ class Ruleset(ABC):
         for i in range(len(self.players)):
             yield self.players[(self.turn_number + i) % len(self.players)]
 
-    def process_shot(self, shot: System):
+    def process_shot(self, shot: System) -> None:
         """Processes the information of the shot just played
 
         Args:
@@ -217,7 +246,7 @@ class Ruleset(ABC):
         self.score = self.shot_info.score
         self.respot_balls(shot)
 
-    def advance(self, shot: System):
+    def advance(self, shot: System) -> None:
         """Advances the game state after a shot has been made and processed
 
         Args:
@@ -238,7 +267,7 @@ class Ruleset(ABC):
         shot.cue.cue_ball_id = self.shot_constraints.cueball(shot.balls)
         self.set_next_player()
 
-    def process_and_advance(self, shot: System):
+    def process_and_advance(self, shot: System) -> None:
         self.process_shot(shot)
         self.advance(shot)
 
@@ -253,8 +282,9 @@ class Ruleset(ABC):
             shot: The current shot being played.
 
         Returns:
-            A ShotInfo instance containing details about the legality of the shot,
-            whether the turn and game are over, and who the winner is, if there is one.
+            ShotInfo:
+                Contains details about the legality of the shot, whether the turn and
+                game are over, and who the winner is, if there is one.
         """
 
     @abstractmethod
@@ -268,7 +298,8 @@ class Ruleset(ABC):
             shot: The current shot being played.
 
         Returns:
-            A ShotConstraints instance representing the rules for the next shot.
+            ShotConstraints:
+                Shot constraints for the next shot.
         """
 
     @abstractmethod
@@ -276,17 +307,27 @@ class Ruleset(ABC):
         """Define the initial constraints for the first shot of the game.
 
         Returns:
-            A ShotConstraints instance with predefined constraints for the initial shot.
+            ShotConstraints:
+                Predefined shot constraints for the initial shot.
         """
 
     @abstractmethod
-    def respot_balls(self, shot: System):
+    def respot_balls(self, shot: System) -> None:
         """Respot balls
 
         This method should decide which balls should be respotted, and respot them. This
-        method should probably make use of pooltool.game.ruleset.utils.respot
+        method should probably make use of ``pooltool.game.ruleset.utils.respot``
         """
 
     @abstractmethod
     def copy(self) -> Ruleset:
+        """Copy the game state
+
+        If you don't know how to implement this method, you can create a placeholder
+        function:
+
+        ::
+            def copy(self):
+                return self
+        """
         pass

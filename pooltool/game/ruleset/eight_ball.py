@@ -167,7 +167,7 @@ def decide_winner(
     return active if legal else other
 
 
-class EightBall(Ruleset):
+class _EightBall(Ruleset):
     @property
     def active_group(self) -> BallGroup:
         return BallGroup.get(self.shot_constraints.hittable)
@@ -296,7 +296,7 @@ class EightBall(Ruleset):
                 shot.table.l * 1 / 4,
             )
 
-    def copy(self) -> EightBall:
+    def copy(self) -> _EightBall:
         raise NotImplementedError("EightBall copy needs to be implemented")
 
 

@@ -65,11 +65,6 @@ from pooltool.evolution.continuize import continuize
 from pooltool.game.datatypes import GameType
 from pooltool.game.layouts import generate_layout, get_rack
 from pooltool.game.ruleset import (
-    EightBall,
-    NineBall,
-    Snooker,
-    SumToThree,
-    ThreeCushion,
     get_ruleset,
 )
 from pooltool.game.ruleset.datatypes import Player, Ruleset
@@ -164,13 +159,8 @@ __all__ = [
     "get_rack",
     "generate_layout",
     "get_ruleset",
-    "ThreeCushion",
-    "EightBall",
     "Player",
-    "NineBall",
     "Ruleset",
-    "SumToThree",
-    "Snooker",
     "get_ballset",
     "ai",
     "pot",
