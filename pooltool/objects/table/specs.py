@@ -81,9 +81,6 @@ class TableSpecs(Protocol):
         ...
 
 
-Question = Union[float, int, List[str]]
-
-
 @define(frozen=True)
 class PocketTableSpecs:
     """Parameter specifications for a pocket table.
