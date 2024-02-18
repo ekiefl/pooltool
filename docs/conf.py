@@ -35,6 +35,7 @@ extensions = [
     "myst_parser",
     "custom_directives",
     "custom_extensions",
+    "custom_skip_members",
 ]
 
 
@@ -102,7 +103,6 @@ autoapi_dirs = ["../pooltool"]
 autoapi_template_dir = "_templates/autoapi"
 autoapi_options = [
     "members",
-    #"undoc-members",
     "show-inheritance",
     "show-module-summary",
     "imported-members",
@@ -113,9 +113,26 @@ autoapi_ignore = [
     '*/test_*.py',
     "*/render.py",
     "*/ai/*",
-    "*/ani/*",
-    "*/user_config.py"
+    "*/user_config.py",
 ]
+# Everything in ani/ except animate.py
+autoapi_ignore.extend([
+    "*/ani/camera/*",
+    "*/ani/fonts/*",
+    "*/ani/image/*",
+    "*/ani/modes/*",
+    "*/ani/__init__.py",
+    "*/ani/action.py",
+    "*/ani/collision.py",
+    "*/ani/environment.py",
+    "*/ani/globals.py",
+    "*/ani/hud.py",
+    "*/ani/menu.py",
+    "*/ani/mouse.py",
+    "*/ani/tasks.py",
+    "*/ani/utils.py",
+])
+
 
 
 # -- custom auto_summary() macro ---------------------------------------------
@@ -137,15 +154,6 @@ def prepare_jinja_env(jinja_env) -> None:
     jinja_env.tests["contains"] = contains
 
 
-def skip_member(app, what, name, obj, skip, options):
-    # Put debugger here to explore
-    return skip
-
-
-def setup(sphinx):
-    sphinx.connect("autoapi-skip-member", skip_member)
-
-
 autoapi_prepare_jinja_env = prepare_jinja_env
 
 # Custom role for labels used in auto_summary() tables.
@@ -158,34 +166,3 @@ html_css_files = [
     "css/label.css",
     "css/sig.css",
 ]
-
-
-#def autoapi_skip_members(app, what, name, obj, skip, options):
-#    # skip submodules
-#    if what == "module":
-#        skip = True
-#    elif what == "data":
-#        if obj.name in ["EASING_FUNCTIONS", "ParamType"]:
-#            skip = True
-#    elif what == "function":
-#        if obj.name in ["working_directory"]:
-#            skip = True
-#    elif "vsketch.SketchClass" in name:
-#        if obj.name in [
-#            "vsk",
-#            "param_set",
-#            "execute_draw",
-#            "ensure_finalized",
-#            "execute",
-#            "get_params",
-#            "set_param_set",
-#        ]:
-#            skip = True
-#    elif "vsketch.Param" in name:
-#        if obj.name in ["set_value", "set_value_with_validation"]:
-#            skip = True
-#    return skip
-#
-#
-#def setup(app):
-#    app.connect("autoapi-skip-member", autoapi_skip_members)
