@@ -82,7 +82,7 @@ class BallParams:
         """Return a copy
 
         Note:
-            - Since the class is frozen and its attributes are immutate, this just
+            - Since the class is frozen and its attributes are immutable, this just
               returns ``self``.
         """
         return self

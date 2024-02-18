@@ -10,7 +10,6 @@
 .. py:module:: {{ obj.name }}
 
 {% if obj.docstring %}
-.. admonition::
     {{ obj.docstring|indent(3) }}
 {% endif %}
 

@@ -56,7 +56,7 @@ class BallOrientation:
         """Create a copy
 
         Note:
-            - Since the class is frozen and its attributes are immutate, this just
+            - Since the class is frozen and its attributes are immutable, this just
               returns ``self``.
         """
         return self
@@ -151,7 +151,6 @@ class BallHistory:
     """A list of time-increasing BallState objects (*default* = ``[]``)"""
 
     def __getitem__(self, idx: int) -> BallState:
-        """Test"""
         return self.states[idx]
 
     def __len__(self) -> int:
