@@ -80,7 +80,7 @@ pt.simulate(shot, inplace=True)
 
 The system has now been evolved from its initial to its final state.
 
-To visualize the shot, open the GUI with [](#pooltool.ani.animate.ShotViewer):
+To visualize the shot, open the GUI with [](#pooltool.interact.ShotViewer):
 
 ```python
 # Open up the shot in the GUI

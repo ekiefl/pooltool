@@ -62,6 +62,14 @@ The first thing you should do is press *h* to toggle some brief instructions. Th
 
 Make sure you play a game or two to get comfortable with the controls.
 
+## From within python
+
+**NOTE**: This section is incomplete.
+
+To visualize shots generated from within a python script, see [](#pooltool.interact.ShotViewer).
+
+Once a shot is visualized in the interface, all of the controls related to camera movement and animation control are applicable. If a multisystem is being visualized, different shots can be toggled by pressing *n* (next) and *p* (previous).
+
 ##  Next
 
 Next, you'll write a small Python script that simulates a pool shot and visualizes the results in the interface.

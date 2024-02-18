@@ -28,7 +28,7 @@ import pooltool.ai as ai
 import pooltool.ai.aim as aim
 import pooltool.ai.pot as pot
 from pooltool import terminal
-from pooltool.ani.animate import FrameStepper, Game, ShotViewer
+from pooltool.ani.animate import FrameStepper
 from pooltool.ani.image import (
     GzipArrayImages,
     HDF5Images,
@@ -64,10 +64,9 @@ from pooltool.evolution import simulate
 from pooltool.evolution.continuize import continuize
 from pooltool.game.datatypes import GameType
 from pooltool.game.layouts import generate_layout, get_rack
-from pooltool.game.ruleset import (
-    get_ruleset,
-)
+from pooltool.game.ruleset import get_ruleset
 from pooltool.game.ruleset.datatypes import Player, Ruleset
+from pooltool.interact import Game, ShotViewer
 from pooltool.objects import (
     Ball,
     BallHistory,
