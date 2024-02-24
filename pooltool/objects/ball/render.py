@@ -21,13 +21,13 @@ import pooltool.ani.utils as autils
 import pooltool.constants as c
 from pooltool.ani.globals import Global
 from pooltool.objects.ball.datatypes import Ball, BallHistory, BallOrientation
-from pooltool.objects.ball.sets import get_ball_set
+from pooltool.objects.ball.sets import get_ballset
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.datatypes import Render
 from pooltool.utils import panda_path
 
 FALLBACK_ID = "cue"
-FALLBACK_BALLSET = get_ball_set("pooltool_pocket")
+FALLBACK_BALLSET = get_ballset("pooltool_pocket")
 FALLBACK_PATH = FALLBACK_BALLSET.ball_path(FALLBACK_ID)
 
 

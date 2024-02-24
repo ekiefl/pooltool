@@ -66,7 +66,7 @@ def main():
     table = pt.Table.from_table_specs(table_specs)
 
     # Now build the ball layout from the ball parameters and table
-    balls = pt.get_eight_ball_rack(table=table, ball_params=ball_params)
+    balls = pt.get_rack(pt.GameType.EIGHTBALL, table=table, ball_params=ball_params)
 
     # Build a cue stick
     cue = pt.Cue.default()

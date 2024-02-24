@@ -10,7 +10,7 @@ interface = pt.ShotViewer()
 shot = System(
     cue=pt.Cue(cue_ball_id="cue"),
     table=(table := pt.Table.default()),
-    balls=pt.get_nine_ball_rack(table, spacing_factor=1e-2),
+    balls=pt.get_rack(pt.GameType.NINEBALL, table, spacing_factor=1e-2),
 )
 
 # Aim at the head ball then strike the cue ball

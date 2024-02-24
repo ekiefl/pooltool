@@ -9,14 +9,13 @@ import numpy as np
 
 from pooltool.game.datatypes import GameType
 from pooltool.objects.ball.datatypes import Ball, BallParams
-from pooltool.objects.ball.sets import BallSet, get_ball_set
+from pooltool.objects.ball.sets import BallSet, get_ballset
 from pooltool.objects.table.datatypes import Table
-from pooltool.system.datatypes import Balls
 from pooltool.utils import classproperty
 from pooltool.utils.strenum import StrEnum, auto
 
-DEFAULT_STANDARD_BALLSET = get_ball_set("pooltool_pocket")
-DEFAULT_SNOOKER_BALLSET = get_ball_set("generic_snooker")
+DEFAULT_STANDARD_BALLSET = get_ballset("pooltool_pocket")
+DEFAULT_SNOOKER_BALLSET = get_ballset("generic_snooker")
 DEFAULT_THREECUSH_BALLSET = None
 DEFAULT_SUMTOTHREE_BALLSET = None
 
@@ -176,7 +175,7 @@ def generate_layout(
     ball_params: Optional[BallParams] = None,
     spacing_factor: float = 1e-3,
     seed: Optional[int] = None,
-) -> Balls:
+) -> Dict[str, Ball]:
     """Generate Ball objects based on a given blueprint and table dimensions.
 
     The function calculates the absolute position of each ball on the table using the
@@ -195,7 +194,15 @@ def generate_layout(
             A BallParams object, which all balls will be created with. This
             contains info like ball radius.
         spacing_factor:
-            FIXME Get ChatGPT to explain this.
+            This factor adjusts the spacing between balls to ensure they do not touch
+            each other directly. Instead of being in direct contact, each ball is
+            allocated within a larger, virtual radius defined as ``(1 + spacing_factor)
+            * R``, where ``R`` represents the actual radius of the ball. Within this
+            expanded radius, the ball's position is determined randomly, allowing for a
+            controlled separation between each ball. The `spacing_factor` therefore
+            dictates the degree of this separation, with higher values resulting in
+            greater distances between adjacent balls. Setting this to 0 is not
+            recommended.
         seed:
             Set a seed for reproducibility. That's because getting a rack
             involves two random procedures. First, some ball positions can be
@@ -205,13 +212,13 @@ def generate_layout(
             spacing_factor.
 
     Returns:
-        balls:
+        Dict[str, Ball]:
             A dictionary mapping ball IDs to their respective Ball objects, with
             their absolute positions on the table.
 
     Notes:
-    - The table dimensions are normalized such that the bottom-left corner is
-      (0.0, 0.0) and the top-right corner is (1.0, 1.0).
+        - The table dimensions are normalized such that the bottom-left corner is (0.0,
+          0.0) and the top-right corner is (1.0, 1.0).
     """
 
     if ball_params is None:
@@ -224,7 +231,7 @@ def generate_layout(
     ball_radius = ball_params.R
     radius = ball_radius * (1 + spacing_factor)
 
-    balls: Balls = {}
+    balls: Dict[str, Ball] = {}
 
     ball_ids = _get_ball_ids(blueprint)
 
@@ -263,12 +270,12 @@ def _wiggle(x: float, y: float, spacer: float) -> Tuple[float, float]:
     return x + rad * np.cos(ang), y + rad * np.sin(ang)
 
 
-def get_nine_ball_rack(
-    *args,
+def _get_nine_ball_rack(
+    table: Table,
     ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
     **kwargs,
-) -> Balls:
+) -> Dict[str, Ball]:
     if ball_params is None:
         ball_params = BallParams.default(game_type=GameType.NINEBALL)
 
@@ -299,16 +306,16 @@ def get_nine_ball_rack(
     blueprint += [cue]
 
     return generate_layout(
-        blueprint, *args, ballset=ballset, ball_params=ball_params, **kwargs
+        blueprint, table, ballset=ballset, ball_params=ball_params, **kwargs
     )
 
 
-def get_eight_ball_rack(
-    *args,
+def _get_eight_ball_rack(
+    table: Table,
     ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
     **kwargs,
-) -> Balls:
+) -> Dict[str, Ball]:
     if ball_params is None:
         ball_params = BallParams.default(game_type=GameType.EIGHTBALL)
 
@@ -345,15 +352,15 @@ def get_eight_ball_rack(
     cue = BallPos([], (0.6, 0.23), {"cue"})
     blueprint += [cue]
 
-    return generate_layout(blueprint, *args, ballset=ballset, **kwargs)
+    return generate_layout(blueprint, table, ballset=ballset, **kwargs)
 
 
-def get_three_cushion_rack(
-    *args,
+def _get_three_cushion_rack(
+    table: Table,
     ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
     **kwargs,
-) -> Balls:
+) -> Dict[str, Ball]:
     """A three cushion starting position (white to break)
 
     Based on https://www.3cushionbilliards.com/rules/106-official-us-billiard-association-rules-of-play
@@ -370,16 +377,16 @@ def get_three_cushion_rack(
     red = BallPos([], (0.5, 0.75), {"red"})
 
     return generate_layout(
-        [white, yellow, red], *args, ballset=ballset, ball_params=ball_params, **kwargs
+        [white, yellow, red], table, ballset=ballset, ball_params=ball_params, **kwargs
     )
 
 
-def get_sum_to_three_rack(
-    *args,
+def _get_sum_to_three_rack(
+    table: Table,
     ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
     **kwargs,
-) -> Balls:
+) -> Dict[str, Ball]:
     # Borrow 3-cushion ball params
     if ball_params is None:
         ball_params = BallParams.default(game_type=GameType.THREECUSHION)
@@ -391,7 +398,11 @@ def get_sum_to_three_rack(
     object_ball = BallPos([], (0.5, 0.75), {"object"})
 
     return generate_layout(
-        [cue_ball, object_ball], *args, ballset=ballset, ball_params=ball_params, **kwargs
+        [cue_ball, object_ball],
+        table,
+        ballset=ballset,
+        ball_params=ball_params,
+        **kwargs,
     )
 
 
@@ -406,12 +417,12 @@ snooker_color_locs: Dict[str, BallPos] = {
 }
 
 
-def get_snooker_rack(
-    *args,
+def _get_snooker_rack(
+    table: Table,
     ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
     **kwargs,
-) -> Balls:
+) -> Dict[str, Ball]:
     if ball_params is None:
         ball_params = BallParams.default(game_type=GameType.SNOOKER)
 
@@ -448,41 +459,69 @@ def get_snooker_rack(
     blueprint += colors
 
     return generate_layout(
-        blueprint, *args, ballset=ballset, ball_params=ball_params, **kwargs
+        blueprint, table, ballset=ballset, ball_params=ball_params, **kwargs
     )
 
 
 class GetRackProtocol(Protocol):
     def __call__(
         self,
-        *args: Any,
+        table: Table,
         ballset: Optional[BallSet] = None,
         ball_params: Optional[BallParams] = None,
         **kwargs: Any,
-    ) -> Balls:
+    ) -> Dict[str, Ball]:
         ...
 
 
 _game_rack_map: Dict[str, GetRackProtocol] = {
-    GameType.NINEBALL: get_nine_ball_rack,
-    GameType.EIGHTBALL: get_eight_ball_rack,
-    GameType.THREECUSHION: get_three_cushion_rack,
-    GameType.SNOOKER: get_snooker_rack,
-    GameType.SANDBOX: get_nine_ball_rack,
-    GameType.SUMTOTHREE: get_sum_to_three_rack,
+    GameType.NINEBALL: _get_nine_ball_rack,
+    GameType.EIGHTBALL: _get_eight_ball_rack,
+    GameType.THREECUSHION: _get_three_cushion_rack,
+    GameType.SNOOKER: _get_snooker_rack,
+    GameType.SANDBOX: _get_nine_ball_rack,
+    GameType.SUMTOTHREE: _get_sum_to_three_rack,
 }
 
 
 def get_rack(
     game_type: GameType,
     table: Table,
-    params: Optional[BallParams] = None,
+    ball_params: Optional[BallParams] = None,
     ballset: Optional[BallSet] = None,
     spacing_factor: float = 1e-3,
-) -> Balls:
+) -> Dict[str, Ball]:
+    """Generate a ball rack.
+
+    This function ultimately delegates to :func:`generate_layout`.
+
+    Args:
+        game_type:
+            The game type being played. This will determine what rack is returned.
+        table:
+            A table. This must exist so the rack can be created with respect to
+            the table's dimensions.
+        ball_params:
+            Ball parameters that all balls will be created with.
+        spacing_factor:
+            This factor adjusts the spacing between balls to ensure they do not touch
+            each other directly. Instead of being in direct contact, each ball is
+            allocated within a larger, virtual radius defined as ``(1 + spacing_factor)
+            * R``, where ``R`` represents the actual radius of the ball. Within this
+            expanded radius, the ball's position is determined randomly, allowing for a
+            controlled separation between each ball. The `spacing_factor` therefore
+            dictates the degree of this separation, with higher values resulting in
+            greater distances between adjacent balls. Setting this to 0 is not
+            recommended.
+
+    Returns:
+        Dict[str, Ball]:
+            A dictionary mapping ball IDs to their respective Ball objects, with
+            their absolute positions on the table.
+    """
     return _game_rack_map[game_type](
         table,
-        ball_params=params,
+        ball_params=ball_params,
         ballset=ballset,
         spacing_factor=spacing_factor,
     )

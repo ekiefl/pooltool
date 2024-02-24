@@ -4,6 +4,16 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+# -- Path setup --------------------------------------------------------------
+
+# If extensions (or modules to document with autodoc) are in another directory,
+# add these directories to sys.path here. If the directory is relative to the
+# documentation root, use os.path.abspath to make it absolute, like shown here.
+
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../'))
+
 # -- Project information -----------------------------------------------------
 
 project = "pooltool"
@@ -17,11 +27,15 @@ author = "Evan Kiefl"
 # ones.
 extensions = [
     "sphinx.ext.napoleon",
+    "sphinx.ext.mathjax",
     "sphinx_copybutton",
     "autoapi.extension",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "myst_parser",
+    "custom_directives",
+    "custom_extensions",
+    "custom_skip_members",
 ]
 
 
@@ -58,6 +72,10 @@ napoleon_use_admonition_for_examples = True
 napoleon_use_admonition_for_notes = True
 napoleon_use_admonition_for_references = True
 
+napolean_use_param = True  # Each parameter is its own :param: directive
+napolean_use_rtype = False  # This does't work :(
+napolean_attr_annotations = True
+
 # -- Intersphinx options
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
@@ -66,17 +84,25 @@ intersphinx_mapping = {
     "numba": ("https://numba.readthedocs.io/en/stable/", None),
 }
 
+# -- copybutton options
+copybutton_exclude = '.linenos, .gp, .go'
+
+# -- myst options
+myst_enable_extensions = ["colon_fence"]
+
 # -- autoapi configuration ---------------------------------------------------
 
-autodoc_typehints = "signature"  # autoapi respects this
-#autodoc_typehints = "both"  # autoapi respects this
+#autodoc_typehints = "signature"  # autoapi respects this
+autodoc_typehints = "both"  # autoapi respects this
+autodoc_typehints_description_target = "documented_params"  # autoapi respects this
+autodoc_class_signature = "mixed"
+autoclass_content = "class"
 
 autoapi_type = "python"
 autoapi_dirs = ["../pooltool"]
 autoapi_template_dir = "_templates/autoapi"
 autoapi_options = [
     "members",
-    "undoc-members",
     "show-inheritance",
     "show-module-summary",
     "imported-members",
@@ -87,9 +113,26 @@ autoapi_ignore = [
     '*/test_*.py',
     "*/render.py",
     "*/ai/*",
-    "*/ani/*",
-    "*/user_config.py"
+    "*/user_config.py",
 ]
+# Everything in ani/ except animate.py
+autoapi_ignore.extend([
+    "*/ani/camera/*",
+    "*/ani/fonts/*",
+    "*/ani/image/*",
+    "*/ani/modes/*",
+    "*/ani/__init__.py",
+    "*/ani/action.py",
+    "*/ani/collision.py",
+    "*/ani/environment.py",
+    "*/ani/globals.py",
+    "*/ani/hud.py",
+    "*/ani/menu.py",
+    "*/ani/mouse.py",
+    "*/ani/tasks.py",
+    "*/ani/utils.py",
+])
+
 
 
 # -- custom auto_summary() macro ---------------------------------------------
@@ -111,15 +154,6 @@ def prepare_jinja_env(jinja_env) -> None:
     jinja_env.tests["contains"] = contains
 
 
-def skip_member(app, what, name, obj, skip, options):
-    # Put debugger here to explore
-    return skip
-
-
-def setup(sphinx):
-    sphinx.connect("autoapi-skip-member", skip_member)
-
-
 autoapi_prepare_jinja_env = prepare_jinja_env
 
 # Custom role for labels used in auto_summary() tables.
@@ -130,35 +164,5 @@ rst_prolog = """
 # Related custom CSS
 html_css_files = [
     "css/label.css",
+    "css/sig.css",
 ]
-
-
-#def autoapi_skip_members(app, what, name, obj, skip, options):
-#    # skip submodules
-#    if what == "module":
-#        skip = True
-#    elif what == "data":
-#        if obj.name in ["EASING_FUNCTIONS", "ParamType"]:
-#            skip = True
-#    elif what == "function":
-#        if obj.name in ["working_directory"]:
-#            skip = True
-#    elif "vsketch.SketchClass" in name:
-#        if obj.name in [
-#            "vsk",
-#            "param_set",
-#            "execute_draw",
-#            "ensure_finalized",
-#            "execute",
-#            "get_params",
-#            "set_param_set",
-#        ]:
-#            skip = True
-#    elif "vsketch.Param" in name:
-#        if obj.name in ["set_value", "set_value_with_validation"]:
-#            skip = True
-#    return skip
-#
-#
-#def setup(app):
-#    app.connect("autoapi-skip-member", autoapi_skip_members)

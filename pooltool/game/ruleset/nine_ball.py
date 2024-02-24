@@ -113,7 +113,7 @@ def is_game_over(shot: System, legal: bool) -> bool:
     ).id in get_pocketed_ball_ids_during_shot(shot)
 
 
-class NineBall(Ruleset):
+class _NineBall(Ruleset):
     def process_shot(self, shot: System):
         """Override process_shot to add log messages"""
         super().process_shot(shot)
@@ -215,8 +215,8 @@ class NineBall(Ruleset):
                     shot.table.l * 3 / 4,
                 )
 
-    def copy(self) -> NineBall:
-        game = NineBall()
+    def copy(self) -> _NineBall:
+        game = _NineBall()
         game.score = copy.deepcopy(self.score)
         game.shot_number = self.shot_number
         game.turn_number = self.turn_number

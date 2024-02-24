@@ -14,7 +14,7 @@ def main():
     # Create a system
     shot = pt.System(
         table=(table := pt.Table.default()),
-        balls=pt.get_nine_ball_rack(table),
+        balls=pt.get_rack(pt.GameType.NINEBALL, table),
         cue=pt.Cue(cue_ball_id="cue"),
     )
     shot.strike(V0=8, phi=pt.aim.at_ball(shot, "1"))

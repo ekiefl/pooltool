@@ -11,38 +11,56 @@ from pooltool.utils.strenum import StrEnum, auto
 
 @attrs.define(frozen=True, slots=False)
 class BallParams:
-    """Pool ball parameters and physical constants
-
-    Most of the default values are taken from or based off of
-    https://billiards.colostate.edu/faq/physics/physical-properties/. All units are SI.
-    Some of the parameters aren't truly _ball_ parameters, e.g. the gravitational
-    constant, however it is nice to be able to tune such parameters on a ball-by-ball
-    basis.
+    """Ball parameters and physical constants
 
     Attributes:
         m:
-            Mass.
+            The mass of the ball (*default* = 0.170097
         R:
-            Radius.
+            The radius of the ball (*default* = 0.028575).
         u_s:
-            Coefficient of sliding friction.
+            The sliding coefficient of friction (*default* = 0.2).
+
+            References:
+                - https://ekiefl.github.io/2020/04/24/pooltool-theory/#case-4-sliding
         u_r:
-            Coefficient of rolling friction.
+            The rolling coefficient of friction (*default* = 0.01).
+
+            References:
+                - https://ekiefl.github.io/2020/04/24/pooltool-theory/#case-3-rolling
         u_sp_proportionality:
-            The coefficient of spinning friction is proportional ball radius. This is
-            the proportionality constant. To obtain the coefficient of spinning
-            friction, use the property `u_sp`.
+            The spinning coefficient of friction, with R factored out (*default* = 0.01).
+
+            See Also:
+                - For the coefficient of spinning friction, use the property :meth:`u_sp`.
+
+            References:
+                - https://ekiefl.github.io/2020/04/24/pooltool-theory/#case-2-spinning
         e_c:
-            Cushion coefficient of restitution.
+            The cushion coefficient of restitution (*default* = 0.85).
+
+            Note:
+                This is a potentially model-dependent ball-cushion parameter and should be
+                placed elsewhere, either as a model parameter or as a cushion segment parameter.
         f_c:
-            Cushion coefficient of friction.
+            The cushion coefficient of friction (*default* = 0.2).
+
+            Note:
+                This is a potentially model-dependent ball-cushion parameter and should be
+                placed elsewhere, either as a model parameter or as a cushion segment parameter.
         g:
-            Gravitational constant.
+            The gravitational constant (*default* = 9.81).
+
+    Most of the default values (SI units) are taken from or based off of
+    https://billiards.colostate.edu/faq/physics/physical-properties/.
+
+    Some of the parameters aren't truly *ball* parameters, e.g. the gravitational
+    constant. However, it is nice to be able to tune such parameters on a ball-by-ball
+    basis, so they are included here.
     """
 
     m: float = attrs.field(default=0.170097)
     R: float = attrs.field(default=0.028575)
-
     u_s: float = attrs.field(default=0.2)
     u_r: float = attrs.field(default=0.01)
     u_sp_proportionality: float = attrs.field(default=10 * 2 / 5 / 9)
@@ -52,26 +70,57 @@ class BallParams:
 
     @cached_property
     def u_sp(self) -> float:
-        """Coefficient of spinning friction (radius dependent)"""
+        """Coefficient of spinning friction
+
+        This is equal to :attr:`u_sp_proportionality` * :attr:`R`
+
+        .. cached_property_note::
+        """
         return self.u_sp_proportionality * self.R
 
     def copy(self) -> BallParams:
-        """Return deepish copy
+        """Return a copy
 
-        Class is frozen and attributes are immutable. Just return self
+        Note:
+            - Since the class is frozen and its attributes are immutable, this just
+              returns ``self``.
         """
         return self
 
     @classmethod
     def default(cls, game_type: GameType = GameType.EIGHTBALL) -> BallParams:
-        return get_default_ball_params(game_type=game_type)
+        """Return prebuilt ball parameters based on game type
+
+        Args:
+            game_type:
+                What type of game is being played?
+
+        Returns:
+            BallParams:
+                The prebuilt ball parameters associated with the passed game type.
+        """
+        return _get_default_ball_params(game_type=game_type)
 
     @classmethod
     def prebuilt(cls, name: PrebuiltBallParams) -> BallParams:
-        return prebuilt_ball_params(name)
+        """Return prebuilt ball parameters based on name
+
+        Args:
+            name:
+                A :class:`PrebuiltBallParams` member.
+
+        All prebuilt ball parameters are named with the :class:`PrebuiltBallParams`
+        Enum. This constructor takes a prebuilt name and returns the corresponding ball
+        parameters.
+
+        See Also:
+            - :class:`PrebuiltBallParams`
+        """
+        return _prebuilt_ball_params(name)
 
 
 class PrebuiltBallParams(StrEnum):
+    """An Enum specifying prebuilt ball parameters"""
     POOL_GENERIC = auto()
     SNOOKER_GENERIC = auto()
     BILLIARD_GENERIC = auto()
@@ -123,9 +172,9 @@ _default_map: Dict[GameType, PrebuiltBallParams] = {
 }
 
 
-def get_default_ball_params(game_type: GameType) -> BallParams:
-    return prebuilt_ball_params(_default_map[game_type])
+def _get_default_ball_params(game_type: GameType) -> BallParams:
+    return _prebuilt_ball_params(_default_map[game_type])
 
 
-def prebuilt_ball_params(name: PrebuiltBallParams) -> BallParams:
+def _prebuilt_ball_params(name: PrebuiltBallParams) -> BallParams:
     return BALL_PARAMS[name]

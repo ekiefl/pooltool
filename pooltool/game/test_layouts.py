@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from itertools import combinations
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import attrs
 import numpy as np
 import pytest
 from numpy.typing import NDArray
+from pooltool.objects.ball.datatypes import Ball
 
 import pooltool.ptmath as ptmath
 from pooltool.game.layouts import (
@@ -19,7 +20,6 @@ from pooltool.game.layouts import (
     generate_layout,
 )
 from pooltool.objects import BallParams, Table
-from pooltool.system.datatypes import Balls
 
 
 def test_get_ball_ids():
@@ -154,7 +154,7 @@ class SeedTestResult:
     ball2_pos: NDArray
 
     @classmethod
-    def from_rack(cls, balls: Balls) -> SeedTestResult:
+    def from_rack(cls, balls: Dict[str, Ball]) -> SeedTestResult:
         ascending_order = balls["1"].state.rvw[0, 0] < balls["2"].state.rvw[0, 0]
 
         return cls(

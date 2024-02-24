@@ -1,5 +1,7 @@
 """A place for horrible stuff to happen"""
 
+from typing import Dict, Union
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -10,13 +12,20 @@ from pooltool.objects.table.components import (
     LinearCushionSegment,
     Pocket,
 )
+from pooltool.objects.table.specs import (
+    BilliardTableSpecs,
+    PocketTableSpecs,
+    SnookerTableSpecs,
+)
 
 
 def _arr(*args) -> NDArray[np.float64]:
     return np.array(args, dtype=np.float64)
 
 
-def create_billiard_table_cushion_segments(specs) -> CushionSegments:
+def create_billiard_table_cushion_segments(
+    specs: BilliardTableSpecs,
+) -> CushionSegments:
     h = specs.cushion_height
     return CushionSegments(
         linear={
@@ -50,7 +59,9 @@ def create_billiard_table_cushion_segments(specs) -> CushionSegments:
     )
 
 
-def create_pocket_table_cushion_segments(specs) -> CushionSegments:
+def create_pocket_table_cushion_segments(
+    specs: Union[PocketTableSpecs, SnookerTableSpecs]
+) -> CushionSegments:
     # https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times
     # for diagram
     cw = specs.cushion_width
@@ -283,7 +294,9 @@ def create_pocket_table_cushion_segments(specs) -> CushionSegments:
     )
 
 
-def create_pocket_table_pockets(specs):
+def create_pocket_table_pockets(
+    specs: Union[PocketTableSpecs, SnookerTableSpecs]
+) -> Dict[str, Pocket]:
     cr = specs.corner_pocket_radius
     sr = specs.side_pocket_radius
     cd = specs.corner_pocket_depth
@@ -299,16 +312,10 @@ def create_pocket_table_pockets(specs):
     sD = sd
 
     pockets = {
-        "lb": Pocket(
-            "lb", center=_arr(-cD, -cD, 0), radius=cr
-        ),
+        "lb": Pocket("lb", center=_arr(-cD, -cD, 0), radius=cr),
         "lc": Pocket("lc", center=_arr(-sD, specs.l / 2, 0), radius=sr),
-        "lt": Pocket(
-            "lt", center=_arr(-cD, specs.l + cD, 0), radius=cr
-        ),
-        "rb": Pocket(
-            "rb", center=_arr(specs.w + cD, -cD, 0), radius=cr
-        ),
+        "lt": Pocket("lt", center=_arr(-cD, specs.l + cD, 0), radius=cr),
+        "rb": Pocket("rb", center=_arr(specs.w + cD, -cD, 0), radius=cr),
         "rc": Pocket("rc", center=_arr(specs.w + sD, specs.l / 2, 0), radius=sr),
         "rt": Pocket(
             "rt",

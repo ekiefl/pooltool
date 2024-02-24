@@ -23,7 +23,7 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, throttle_english: bool):
     │           │      ,                    ,
     │           │       ,                  ,
     ◎───────────◎         ,               '
-      bottom cushion        ' - , _ , -
+      foot rail             ' - , _ , -
                      ______________________________
                               playing surface
     Args:

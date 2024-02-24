@@ -30,17 +30,26 @@ def get_u_vec(rvw, phi, R, s):
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def get_slide_time(rvw, R, u_s, g):
+    if u_s == 0.0:
+        return np.inf
+
     return 2 * ptmath.norm3d(rel_velocity(rvw, R)) / (7 * u_s * g)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def get_roll_time(rvw, u_r, g):
+    if u_r == 0.0:
+        return np.inf
+
     _, v, _ = rvw
     return ptmath.norm3d(v) / (u_r * g)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def get_spin_time(rvw, R, u_sp, g):
+    if u_sp == 0.0:
+        return np.inf
+
     _, _, w = rvw
     return np.abs(w[2]) * 2 / 5 * R / u_sp / g
 

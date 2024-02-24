@@ -62,10 +62,8 @@ def simulate(
             otherwise there will be nothing to simulate.
         engine:
             The engine holds all of the physics. You can instantiate your very own
-            `PhysicsEngine` object, or you can modify
-            `~/.config/pooltool/physics/resolver.json` to change the default engine.
-            Either way, check out the README.md in pooltool/physics/resolve/README.md
-            for more information.
+            :class:`pooltool.physics.engine.PhysicsEngine` object, or you can modify
+            ``~/.config/pooltool/physics/resolver.json`` to change the default engine.
         inplace:
             By default, a copy of the passed system is simulated and returned. This
             leaves the passed system unmodified. If inplace is set to True, the passed
@@ -78,8 +76,8 @@ def simulate(
         dt:
             The small fixed timestep used when continuous is True.
         t_final:
-            If set, the simulation will end prematurely after the first time an event
-            with time > t_final is detected.
+            If set, the simulation will end prematurely after the calculation of an
+            event with ``event.time > t_final``.
         quartic_solver:
             Which QuarticSolver do you want to use for solving quartic polynomials?
         include:
@@ -88,6 +86,9 @@ def simulate(
         max_events:
             If this is greater than 0, and the shot has more than this many events, the
             simulation is stopped and the balls are set to stationary.
+
+    Returns:
+        System: The simulated system.
 
     Examples:
         Standard usage:
@@ -127,6 +128,9 @@ def simulate(
         >>> import pooltool as pt
         >>> system = pt.simulate(pt.System.example(), continuous=True)
         >>> for ball in system.balls.values(): assert len(ball.history_cts) > 0
+
+    See Also:
+        - :func:`pooltool.evolution.continuize.continuize`
     """
     if not inplace:
         shot = shot.copy()
@@ -135,7 +139,7 @@ def simulate(
         engine = DEFAULT_ENGINE
 
     shot.reset_history()
-    shot.update_history(null_event(time=0))
+    shot._update_history(null_event(time=0))
 
     if shot.get_system_energy() == 0 and shot.cue.V0 > 0:
         # System has no energy, but the cue stick has an impact velocity. So create and
@@ -147,7 +151,7 @@ def simulate(
             set_initial=True,
         )
         engine.resolver.resolve(shot, event)
-        shot.update_history(event)
+        shot._update_history(event)
 
     transition_cache = TransitionCache.create(shot)
 
@@ -158,7 +162,7 @@ def simulate(
         )
 
         if event.time == np.inf:
-            shot.update_history(null_event(time=shot.t))
+            shot._update_history(null_event(time=shot.t))
             break
 
         _evolve(shot, event.time - shot.t)
@@ -167,10 +171,10 @@ def simulate(
             engine.resolver.resolve(shot, event)
             transition_cache.update(event)
 
-        shot.update_history(event)
+        shot._update_history(event)
 
         if t_final is not None and shot.t >= t_final:
-            shot.update_history(null_event(time=shot.t))
+            shot._update_history(null_event(time=shot.t))
             break
 
         if max_events > 0 and events > max_events:

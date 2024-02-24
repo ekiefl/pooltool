@@ -1,10 +1,34 @@
+"""The primary interface for the pooltool library
+
+Members on this page have been chosen to selectively capture the most common /
+expected use cases of pooltool, and can be used simply by importing the ``pooltool``
+package. For instance:
+
+    >>> import pooltool as pt
+    >>> ball = pt.Ball("cue")
+
+Note:
+    You can of course, also import ``Ball`` from it's source
+    (:class:`pooltool.objects.ball.datatypes.Ball`):
+
+        >>> from pooltool.objects.ball.datatypes import Ball
+
+There are many other components of pooltool's API that can also be accessed, but
+that require a more detailed importing. As just an example:
+
+    >>> from pooltool.physics.resolve.ball_cushion.han_2005 import model
+
+If you believe that a component deserves to graduate to the top-level API, your
+input is valuable and such changes can be considered.
+"""
+
 __version__ = "0.2.2.1-dev"
 
 import pooltool.ai as ai
 import pooltool.ai.aim as aim
 import pooltool.ai.pot as pot
 from pooltool import terminal
-from pooltool.ani.animate import FrameStepper, Game, ShotViewer
+from pooltool.ani.animate import FrameStepper
 from pooltool.ani.image import (
     GzipArrayImages,
     HDF5Images,
@@ -22,13 +46,13 @@ from pooltool.events import (
     ball_circular_cushion_collision,
     ball_linear_cushion_collision,
     ball_pocket_collision,
-    filter_ball,
-    filter_time,
-    filter_type,
-    filter_events,
+    by_ball,
     by_time,
     by_type,
-    by_ball,
+    filter_ball,
+    filter_events,
+    filter_time,
+    filter_type,
     null_event,
     rolling_spinning_transition,
     rolling_stationary_transition,
@@ -36,17 +60,13 @@ from pooltool.events import (
     spinning_stationary_transition,
     stick_ball_collision,
 )
-from pooltool.evolution import continuize, simulate
+from pooltool.evolution import simulate
+from pooltool.evolution.continuize import continuize
 from pooltool.game.datatypes import GameType
-from pooltool.game.layouts import (
-    get_eight_ball_rack,
-    get_nine_ball_rack,
-    get_rack,
-    get_snooker_rack,
-    get_three_cushion_rack,
-)
-from pooltool.game.ruleset import EightBall, NineBall, Snooker, ThreeCushion, SumToThree, get_ruleset
+from pooltool.game.layouts import generate_layout, get_rack
+from pooltool.game.ruleset import get_ruleset
 from pooltool.game.ruleset.datatypes import Player, Ruleset
+from pooltool.interact import Game, ShotViewer
 from pooltool.objects import (
     Ball,
     BallHistory,
@@ -67,7 +87,7 @@ from pooltool.objects import (
     Table,
     TableModelDescr,
     TableType,
-    get_ball_set,
+    get_ballset,
 )
 from pooltool.physics.engine import PhysicsEngine
 from pooltool.system import MultiSystem, System, SystemController, multisystem, visual
@@ -77,10 +97,6 @@ progress = terminal.Progress()
 
 
 __all__ = [
-    "get_eight_ball_rack",
-    "get_nine_ball_rack",
-    "get_three_cushion_rack",
-    "get_snooker_rack",
     "System",
     "MultiSystem",
     "PhysicsEngine",
@@ -140,15 +156,11 @@ __all__ = [
     "simulate",
     "continuize",
     "get_rack",
+    "generate_layout",
     "get_ruleset",
-    "ThreeCushion",
-    "EightBall",
     "Player",
-    "NineBall",
     "Ruleset",
-    "SumToThree",
-    "Snooker",
-    "get_ball_set",
+    "get_ballset",
     "ai",
     "pot",
     "aim",

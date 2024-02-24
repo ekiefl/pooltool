@@ -11,7 +11,7 @@ from pooltool.objects.ball.datatypes import (
     BallState,
     _null_rvw,
 )
-from pooltool.objects.ball.sets import BallSet, get_ball_set
+from pooltool.objects.ball.sets import BallSet, get_ballset
 
 
 def test__null_rvw():
@@ -184,7 +184,7 @@ def test_ball_params():
 
 def test_ballset():
     # Valid ballset
-    ballset1 = get_ball_set("pooltool_pocket")
+    ballset1 = get_ballset("pooltool_pocket")
     assert "cue" in ballset1.ids
 
     ball = Ball.create("cue", m=24, g=10.8, xy=[4, 2])

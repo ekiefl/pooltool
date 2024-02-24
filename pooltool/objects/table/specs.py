@@ -2,32 +2,42 @@
 
 from __future__ import annotations
 
-from typing import Dict, Protocol
+from typing import List, Protocol, Union
 
 from attrs import define, field
 
 import pooltool.ani as ani
 from pooltool.error import ConfigError
-from pooltool.objects.table.components import CushionSegments, Pocket
-from pooltool.objects.table.layout import (
-    create_billiard_table_cushion_segments,
-    create_pocket_table_cushion_segments,
-    create_pocket_table_pockets,
-)
 from pooltool.utils import panda_path, strenum
 
 
 @define(frozen=True)
 class TableModelDescr:
+    """A table model specifier
+
+    Attributes:
+        name:
+            The name of the table model.
+    """
+
     name: str
 
     @property
-    def path(self):
+    def path(self) -> str:
         """The path of the model
 
-        The path is searched for in pooltool/models/table/{name}/{name}[_pbr].glb. If
-        physical based rendering (PBR) is requested, a model suffixed with _pbr will be
-        looked for. ConfigError is raised if model path cannot be determined from name.
+        The path is searched for in ``pooltool/models/table/{name}/{name}[_pbr].glb``.
+        If physical based rendering (PBR) is requested, a model suffixed with _pbr will
+        be looked for.
+
+        Raises:
+            ConfigError:
+                If model path cannot be found from name.
+
+        Returns:
+            str:
+                A filename specified with Panda3D filename syntax (see
+                https://docs.panda3d.org/1.10/python/programming/advanced-loading/filename-syntax).
         """
 
         if ani.settings["graphics"]["physical_based_rendering"]:
@@ -46,12 +56,13 @@ class TableModelDescr:
 
 
 class TableType(strenum.StrEnum):
+    """An Enum describing the table type"""
     POCKET = strenum.auto()
     BILLIARD = strenum.auto()
     SNOOKER = strenum.auto()
+    OTHER = strenum.auto()
 
 
-@define
 class TableSpecs(Protocol):
     @property
     def table_type(self) -> TableType:
@@ -69,16 +80,17 @@ class TableSpecs(Protocol):
     def model_descr(self) -> TableModelDescr:
         ...
 
-    def create_cushion_segments(self) -> CushionSegments:
-        ...
-
-    def create_pockets(self) -> Dict[str, Pocket]:
-        ...
-
 
 @define(frozen=True)
-class PocketTableSpecs(TableSpecs):
-    """Parameters that specify a pocket table"""
+class PocketTableSpecs:
+    """Parameter specifications for a pocket table.
+
+    See Also:
+        - See the :doc:`Table Specification </resources/table_specs>` resource for
+          visualizations and descriptions of each attribute.
+        - See :class:`BilliardTableSpecs` for billiard table specs.
+        - See :class:`SnookerTableSpecs` for pocket table specs.
+    """
 
     # 7-foot table (78x39 in^2 playing surface)
     l: float = field(default=1.9812)
@@ -104,16 +116,17 @@ class PocketTableSpecs(TableSpecs):
 
     table_type: TableType = field(init=False, default=TableType.POCKET)
 
-    def create_cushion_segments(self) -> CushionSegments:
-        return create_pocket_table_cushion_segments(self)
-
-    def create_pockets(self) -> Dict[str, Pocket]:
-        return create_pocket_table_pockets(self)
-
 
 @define(frozen=True)
-class BilliardTableSpecs(TableSpecs):
-    """Parameters that specify a billiard (pocketless) table"""
+class BilliardTableSpecs:
+    """Parameter specifications for a billiards (pocketless) table.
+
+    See Also:
+        - See the :doc:`Table Specification </resources/table_specs>` resource for
+          visualizations and descriptions of each attribute.
+        - See :class:`PocketTableSpecs` for billiard table specs.
+        - See :class:`SnookerTableSpecs` for pocket table specs.
+    """
 
     # 10-foot table (imprecise)
     l: float = field(default=3.05)
@@ -130,42 +143,41 @@ class BilliardTableSpecs(TableSpecs):
 
     table_type: TableType = field(init=False, default=TableType.BILLIARD)
 
-    def create_cushion_segments(self) -> CushionSegments:
-        return create_billiard_table_cushion_segments(self)
-
-    def create_pockets(self) -> Dict[str, Pocket]:
-        return {}
-
 
 @define(frozen=True)
-class SnookerTableSpecs(TableSpecs):
-    """Parameters that specify a snooker table
+class SnookerTableSpecs:
+    """Parameter specifications for a snooker table.
 
-    NOTE Currently, the SnookerTableSpecs class is an identical clone of
-    PocketTableSpecs, but with different defaults. That's not very useful, but
-    it's likely that some time in the future, snooker tables may have some
-    parameters distinct from standard pool tables (e.g. directional cloth). For
-    this reason, let's keep SnookerTableSpecs.
+    See Also:
+        - See the :doc:`Table Specification </resources/table_specs>` resource for
+          visualizations and descriptions of each attribute.
+        - See :class:`BilliardTableSpecs` for billiard table specs.
+        - See :class:`PocketTableSpecs` for pocket table specs.
+
+    Note:
+        Currently, this class is an identical clone of :class:`PocketTableSpecs`, but
+        with different defaults. That's not very useful, but it's likely that some time
+        in the future, snooker tables may have some parameters distinct from standard
+        pool tables (*e.g.* directional cloth), causing these classes to diverge.
     """
-
     # https://wpbsa.com/rules/
     # The playing area is within the cushion faces and shall measure
     # 11 ft 8½ in x 5 ft 10 in (3569 mm x 1778 mm) with a tolerance on both dimensions of +/- ½ in (13 mm).
-    l: float = field(default=3.566)  # my table size
-    w: float = field(default=1.770)  # my table size
+    l: float = field(default=3.5445)
+    w: float = field(default=1.7465)
 
-    cushion_width: float = field(default=2 * 25.4 / 1000)
-    cushion_height: float = field(default=0.04)
+    cushion_width: float = field(default=1.55 * 25.4 / 1000)
+    cushion_height: float = field(default=0.028)
     corner_pocket_width: float = field(default=0.083)
-    corner_pocket_angle: float = field(default=0)  # degrees  # TODO how to measure that
-    corner_pocket_depth: float = field(default=0.04)
+    corner_pocket_angle: float = field(default=0)
+    corner_pocket_depth: float = field(default=0.036)
     corner_pocket_radius: float = field(default=4 * 25.4 / 1000)
     corner_jaw_radius: float = field(default=4 * 25.4 / 1000)
     side_pocket_width: float = field(default=0.087)
-    side_pocket_angle: float = field(default=0)  # degrees # TODO how to measure that
-    side_pocket_depth: float = field(default=0.004)
-    side_pocket_radius: float = field(default=2 * 25.4 / 1000)
-    side_jaw_radius: float = field(default=3 * 25.4 / 1000)
+    side_pocket_angle: float = field(default=0)
+    side_pocket_depth: float = field(default=0.95 * 25.4 / 1000)
+    side_pocket_radius: float = field(default=1.68 * 25.4 / 1000)
+    side_jaw_radius: float = field(default=2.5 * 25.4 / 1000)
 
     # For visualization
     height: float = field(default=0.708)
@@ -173,9 +185,3 @@ class SnookerTableSpecs(TableSpecs):
     model_descr: TableModelDescr = field(factory=TableModelDescr.null)
 
     table_type: TableType = field(init=False, default=TableType.SNOOKER)
-
-    def create_cushion_segments(self) -> CushionSegments:
-        return create_pocket_table_cushion_segments(self)
-
-    def create_pockets(self) -> Dict[str, Pocket]:
-        return create_pocket_table_pockets(self)

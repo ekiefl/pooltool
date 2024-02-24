@@ -26,8 +26,8 @@ def _solve(
 
     Args:
         restitution:
-            By default, the ball's momentum is reflected without loss. Set this to true
-            if the ball's restitution coefficient should dampen the outgoing velocity.
+            By default, the ball's momentum is reflected with loss. Set this to False if
+            the ball's restitution coefficient shouldn't dampen the outgoing velocity.
     """
     rvw = ball.state.rvw
 

@@ -145,7 +145,7 @@ def decide_winner(
     raise ValueError(f"points key '{player_name}' doesn't match passed Player names")
 
 
-class Snooker(Ruleset):
+class _Snooker(Ruleset):
     def __init__(self, *args, **kwargs):
         Ruleset.__init__(self, *args, **kwargs)
         self.phase: GamePhase = GamePhase.ALTERNATING
@@ -294,5 +294,5 @@ class Snooker(Ruleset):
                 sentiment="good",
             )
 
-    def copy(self) -> Snooker:
+    def copy(self) -> _Snooker:
         raise NotImplementedError("Snooker copy needs to be implemented")

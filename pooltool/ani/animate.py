@@ -3,7 +3,7 @@
 import gc
 import sys
 from functools import partial
-from typing import Generator, Optional, Tuple
+from typing import Generator, Optional, Tuple, Union
 
 import gltf  # FIXME at first glance this does nothing?
 import simplepbr
@@ -21,7 +21,7 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 import pooltool.terminal as terminal
-from pooltool.ani.camera import cam, CameraState
+from pooltool.ani.camera import CameraState, cam
 from pooltool.ani.collision import cue_avoid
 from pooltool.ani.environment import environment
 from pooltool.ani.globals import Global, require_showbase
@@ -36,7 +36,7 @@ from pooltool.game.ruleset import get_ruleset
 from pooltool.game.ruleset.datatypes import Player
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
-from pooltool.system.datatypes import System, multisystem
+from pooltool.system.datatypes import MultiSystem, System, multisystem
 from pooltool.system.render import PlaybackMode, visual
 from pooltool.utils import get_total_memory_usage
 
@@ -147,10 +147,10 @@ class Interface(ShowBase):
         if config.monitor:
             tasks.add(self.monitor, "monitor")
 
-        self.listen_constant_events()
+        self._listen_constant_events()
         self.stdout = terminal.Run()
 
-    def listen_constant_events(self):
+    def _listen_constant_events(self):
         """Listen for events that are mode independent"""
         tasks.register_event("window-event", window_task)
         tasks.register_event("close-scene", self.close_scene)
@@ -314,25 +314,113 @@ class FrameStepper(Interface):
 
 
 class ShotViewer(Interface):
-    """An interface for viewing shots from within a python script"""
+    """An interface for viewing shots from within python.
+
+    Important:
+        For instructions on how to use the interactive interface, see :doc:`The
+        Interface </getting_started/interface>`.
+
+    Important:
+        Only one instance of this class can be created per python process. You'll
+        receive a runtime error if you try. Instead, create one instance and use it for
+        the lifetime of your python process.
+
+    For usage, see :meth:`show`.
+    """
 
     def __init__(self, config=ShowBaseConfig.default()):
         Interface.__init__(self, config=config)
-        self.create_standby_screen()
-        self.create_title("")
+        self._create_standby_screen()
+        self._create_title("")
 
         # Set ShotMode to view only. This prevents giving cue stick control to the user
         # and dictates that esc key closes scene rather than going to a menu
         Global.mode_mgr.modes[Mode.shot].view_only = True
 
-        self.stop()
+        self._stop()
 
-    def show(self, shot_or_shots=None, title="", camera_state: Optional[CameraState] = None):
+    def show(
+        self,
+        shot_or_shots: Union[System, MultiSystem],
+        title: str = "",
+        camera_state: Optional[CameraState] = None,
+    ):
+        """Opens the interactive interface for one or more shots.
+
+        Important:
+            For instructions on how to use the interactive interface, see :doc:`The
+            Interface </getting_started/interface>`.
+
+        Args:
+            shot_or_shots:
+                The shot or collection of shots to visualize. This can be a single
+                :class:`pooltool.system.datatypes.System` object or a
+                :class:`pooltool.system.datatypes.MultiSystem` object containing
+                multiple systems.
+
+                Note:
+                    If a multisystem is passed, the systems can be scrolled through by
+                    pressing *n* (next) and *p* (previous).
+            title:
+                The title to display in the visualization. Defaults to an empty string.
+            camera_state:
+                The initial camera state that the visualization is rendered with.
+
+        Example:
+
+            This example visualizes a single shot.
+
+            >>> import pooltool as pt
+            >>> system = pt.System.example()
+
+            Make sure the shot is simulated, otherwise it will make for a boring
+            visualization:
+
+            >>> pt.simulate(system, inplace=True)
+
+            Create a :class:`ShotViewer` object:
+
+            >>> gui = pt.ShotViewer()
+
+            Now visualize the shot:
+
+            >>> gui.show(system)
+
+            (Press *escape* to exit the interface and continue script execution)
+
+        Example:
+
+            This example explains the order in which events and script execution
+            happens.
+
+            .. code-block:: python
+
+                import pooltool as pt
+                system = pt.System.example()
+                pt.simulate(system, inplace=True)
+
+                # This line takes a view seconds to execute. It will generate a visible
+                # window. Once the window has been generated, script execution continues
+                gui = pt.ShotViewer() 
+
+                # When this line is called, the window is populated with an animated
+                # scene of the shot.
+                gui.show(system)
+
+                # This line will not execute until <esc> is pressed while the window is
+                # active.
+                print('script continues')
+
+                # For subsequent calls to `show`, you must use the same `ShotViewer`
+                # object:
+                gui.show(system)
+        """
         multisystem.reset()
         if isinstance(shot_or_shots, System):
             multisystem.append(shot_or_shots)
         else:
-            multisystem.extend(shot_or_shots)
+            for shot in shot_or_shots:
+                multisystem.append(shot)
 
         self.create_scene()
 
@@ -342,7 +430,7 @@ class ShotViewer(Interface):
             cam.load_state(camera_state)
 
         self.standby_screen.hide()
-        self.create_title(title)
+        self._create_title(title)
         self.title_node.show()
 
         if ani.settings["graphics"]["hud"]:
@@ -356,12 +444,12 @@ class ShotViewer(Interface):
         Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
         Global.task_mgr.run()
 
-    def listen_constant_events(self):
+    def _listen_constant_events(self):
         """Listen for events that are mode independent"""
-        Interface.listen_constant_events(self)
-        tasks.register_event("stop", self.stop)
+        Interface._listen_constant_events(self)
+        tasks.register_event("stop", self._stop)
 
-    def create_title(self, title):
+    def _create_title(self, title):
         self.title_node = autils.CustomOnscreenText(
             text=title,
             pos=(-1.55, -0.93),
@@ -372,7 +460,7 @@ class ShotViewer(Interface):
         )
         self.title_node.hide()
 
-    def create_standby_screen(self):
+    def _create_standby_screen(self):
         self.standby_screen = GenericMenu(frame_color=(0.3, 0.3, 0.3, 1))
         self.standby_screen.add_image(
             ani.logo_paths["default"], pos=(0, 0, 0), scale=(0.5, 1, 0.44)
@@ -388,7 +476,7 @@ class ShotViewer(Interface):
             scale=0.8 * ani.menu_text_scale,
         )
 
-    def stop(self):
+    def _stop(self):
         """Display the standby screen and halt the main loop"""
 
         self.standby_screen.show()
@@ -402,6 +490,8 @@ class ShotViewer(Interface):
 
 
 class Game(Interface):
+    """This class runs the pooltool application"""
+
     def __init__(self, config=ShowBaseConfig.default()):
         Interface.__init__(self, config=config)
 
@@ -450,7 +540,7 @@ class Game(Interface):
         balls = get_rack(
             game_type=game_type,
             table=table,
-            params=None,
+            ball_params=None,
             ballset=None,
             spacing_factor=1e-3,
         )
@@ -463,3 +553,10 @@ class Game(Interface):
 
     def start(self):
         Global.task_mgr.run()
+
+
+__all__ = [
+    "Game",
+    "ShotViewer",
+    "FrameStepper",
+]

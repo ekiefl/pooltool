@@ -20,7 +20,9 @@ def main(args):
     system = pt.System(
         cue=pt.Cue(cue_ball_id="cue"),
         table=(table := pt.Table.default()),
-        balls=pt.get_nine_ball_rack(table, spacing_factor=args.spacing_factor),
+        balls=pt.get_rack(
+            pt.GameType.NINEBALL, table, spacing_factor=args.spacing_factor
+        ),
     )
 
     # Aim at the head ball

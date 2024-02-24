@@ -15,10 +15,7 @@ from pooltool.game.ruleset.utils import get_pocketed_ball_ids_during_shot, respo
 from pooltool.system.datatypes import System
 
 
-class SandBox(Ruleset):
-    def __init__(self):
-        Ruleset.__init__(self, ["Player 1"])
-
+class _SandBox(Ruleset):
     def build_shot_info(self, _: System) -> ShotInfo:
         return ShotInfo(
             player=self.active_player,
@@ -63,5 +60,5 @@ class SandBox(Ruleset):
                 f"Ball(s) potted: {', '.join(ball_ids)}", sentiment="neutral"
             )
 
-    def copy(self) -> SandBox:
+    def copy(self) -> _SandBox:
         raise NotImplementedError("SandBox copy needs to be implemented")
