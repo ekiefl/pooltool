@@ -95,8 +95,9 @@ class ResolverConfig:
 class Resolver:
     """A physics engine component that characterizes event resolution
 
-    See Also:
-        - See :doc:`Modular Physics </resources/custom_physics>`
+    Important:
+        For everything you need to know about this class, see :doc:`Modular Physics
+        </resources/custom_physics>`.
     """
     ball_ball: BallBallCollisionStrategy
     ball_linear_cushion: BallLCushionCollisionStrategy

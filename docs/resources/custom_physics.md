@@ -1,15 +1,19 @@
+:::{note}
+**This is under construction (work in progress)!**
+:::
+
 # Modular Physics
 
 One of pooltool's founding ambitions is completely customizable physics.
 
 Loosely speaking, the physics in pooltool can be simplified into two categories:
 
-1. Evolution - refers to the physics that governs ball trajectories over time in the absence of interupting collisions.
-2. Resolution - refers to the physics that resolves the outcome of a collision, _e.g._ a ball-ball collision or ball-cushion collision.
+1. **Evolution** - refers to the physics that governs ball trajectories over time in the absence of interupting collisions.
+2. **Resolution** - refers to the physics that resolves the outcome of a collision, _e.g._ a ball-ball collision or ball-cushion collision.
 
 ## Evolution
 
-Unfortunately, evolution physics are not yet modular. That means the ball trajectories are governed by the equations presented in [this blog](https://ekiefl.github.io/2020/04/24/pooltool-theory/#3-ball-with-arbitrary-spin) and no other equations can be easily substituted in without overwriting these equations in the source code.
+Unfortunately, **evolution** physics are not yet modular. That means the ball trajectories are governed by the equations presented in [this blog](https://ekiefl.github.io/2020/04/24/pooltool-theory/#3-ball-with-arbitrary-spin) and no other equations can be easily substituted in without overwriting these equations in the source code.
 
 **The equations can still be modified by changing parameters governing the trajectories**, like ball mass, radius, and coefficients of friction, but no matter how you change these parameters, it's still the same underlying model.
 
@@ -25,7 +29,7 @@ This section guides you on how to switch between existing models within the code
 
 The handling of events is determined by the resolver configuration file, which is located at `~/.config/pooltool/physics/resolver.yaml`. Here's an example of what that looks like:
 
-```
+```yaml
 ball_ball: frictionless_elastic
 ball_ball_params: {}
 ball_circular_cushion: han_2005
@@ -122,25 +126,25 @@ The structure of `ResolverConfig` is as follows:
 
 ```python
 class ResolverConfig:
-ball_ball: BallBallModel
-ball_ball_params: ModelArgs
-ball_linear_cushion: BallLCushionModel
-ball_linear_cushion_params: ModelArgs
-ball_circular_cushion: BallCCushionModel
-ball_circular_cushion_params: ModelArgs
-ball_pocket: BallPocketModel
-ball_pocket_params: ModelArgs
-stick_ball: StickBallModel
-stick_ball_params: ModelArgs
-transition: BallTransitionModel
-transition_params: ModelArgs
+    ball_ball: BallBallModel
+    ball_ball_params: ModelArgs
+    ball_linear_cushion: BallLCushionModel
+    ball_linear_cushion_params: ModelArgs
+    ball_circular_cushion: BallCCushionModel
+    ball_circular_cushion_params: ModelArgs
+    ball_pocket: BallPocketModel
+    ball_pocket_params: ModelArgs
+    stick_ball: StickBallModel
+    stick_ball_params: ModelArgs
+    transition: BallTransitionModel
+    transition_params: ModelArgs
 
-def save(self, path: Pathish) -> Path:
-# Code to serialize the object to YAML and save it to a file...
+    def save(self, path: Pathish) -> Path:
+        # Code to serialize the object to YAML and save it to a file...
 
-@classmethod
-def load(cls, path: Pathish) -> ResolverConfig:
-# Code to load a YAML file and deserialize it into a ResolverConfig object...
+    @classmethod
+    def load(cls, path: Pathish) -> ResolverConfig:
+        # Code to load a YAML file and deserialize it into a ResolverConfig object...
 ```
 
 You might observe that this closely resembles the YAML configuration file. That's because the `resolver.yaml` file is simply a serialization of this class. When you modify `resolver.yaml`, a `ResolverConfig` is created from the `resolver.yaml` file using `ResolverConfig.load(...)` during runtime. This configuration is then used to build the `Resolver` object employed by the shot evolution algorithm, using `Resolver.from_config(resolver_config)`.
@@ -209,7 +213,13 @@ class UnrealisticLinear(CoreBallLCushionCollision):
 
 Here's the example code: [af507032217914629e53954965c982d21fdc8094](https://github.com/ekiefl/pooltool/commit/af507032217914629e53954965c982d21fdc8094)
 
+As you can see, `resolve` currently does *nothing*, it just returns what is handed to it.
+
 #### Implement the logic
+
+:::{note}
+You may prefer **registering** and **activating** your model before you start implementing the logic. Even though your model doesn't do anything at this point, you may prefer registering and activating it now, so that you can make changes, and immediately see how your implementation affects a test case.
+:::
 
 This is where you come in, but there are a few points to make. First, I really like type hints, but I remember a time when I didn't. If that's you, don't worry about them--or any other conventions I follow, for that matter. This is your code, just do your thing and don't get overwhelmed in my conventions.
 
