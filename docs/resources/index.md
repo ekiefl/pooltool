@@ -14,4 +14,5 @@ All current development bandwidth is being spent on documenting the API. Once th
    :maxdepth: 1
 
    table_specs 
+   custom_physics 
 ```

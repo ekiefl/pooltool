@@ -1,4 +1,4 @@
-"""Evolve ball motion
+"""Evolve ball motion.
 
 FIXME My vision for this package is to be somewhat like pooltool/physics/resolve/ but
 specifically for the evolution of rolling, sliding, and spinning ball motion states,
