@@ -10,7 +10,7 @@
 
 Pooltool is a general purpose billiards simulator crafted specifically for science and engineering.
 
-*pooltool* is a sandbox billiards game that emphasizes realistic physics. You can play different types of billiards, experiment with different physics settings, or you can use the API to investigate billiards-related research questions.
+Its core design principles focus on speed, flexibility, and the ease of visualization and analysis. With an interactive 3D interface, a robust API, and extensive documentation, pooltool aims to be a systemic tool in billiards-related research. Continuously evolving through active maintenance and bolstered by a growing community, this vision for pooltool emphasizes not just its current capabilities, but also its potential for growth and adaptation within billiards simulation.
 
 # Gallery
 
