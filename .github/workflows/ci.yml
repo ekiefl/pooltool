@@ -46,7 +46,7 @@ jobs:
         pyright_status=$?
         if [ $pyright_status -ne 0 ]; then
           echo "Pyright failed with status $pyright_status"
-          echo "::set-output name=pyright_failed::true"
+          echo "::set-output name=failed::true"
         fi
 
     # --- Ruff
@@ -93,7 +93,7 @@ jobs:
           passed+=("pytest")
         fi
 
-        if [[ "${{ steps.pyright.outputs.pyright_failed }}" == "true" ]]; then
+        if [[ "${{ steps.pyright.outputs.failed }}" == "true" ]]; then
           failed+=("pyright")
         else
           passed+=("pyright")
