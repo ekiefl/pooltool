@@ -36,5 +36,5 @@ jobs:
       continue-on-error: true
 
     - name: Run Pyright type checking
-      run: pyright --project pyproject.toml
+      run: pyright --project ./pyrightconfig.ci.json
       continue-on-error: true
