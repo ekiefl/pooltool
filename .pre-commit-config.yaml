@@ -3,11 +3,11 @@ repos:
     hooks:
       - id: isort
         name: isort
-        entry: isort
+        entry: isort .
         language: system
       - id: black
         name: black
-        entry: black
+        entry: black .
         language: system
         types_or: [python, pyi]
       - id: pytest
