@@ -21,22 +21,22 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
 
-    - name: Run Pytest
+    - name: Pytest
       id: pytest_check
       run: |
         pytest || { echo "##[error]Pytest failed"; echo "::set-output name=status::failed"; }
 
-    - name: Run Pyright type checking
+    - name: Pyright
       id: pyright_check
       run: |
         pyright --project ./pyrightconfig.ci.json || { echo "##[error]Pyright failed"; echo "::set-output name=status::failed"; }
 
-    - name: Check compliance with Ruff
+    - name: Ruff
       id: ruff_check
       run: |
         ruff check . || { echo "##[error]Ruff format compliance failed"; echo "::set-output name=status::failed"; }
 
-    - name: Check compliance with isort
+    - name: isort
       id: isort_check
       run: |
         isort . --check-only || { echo "##[error]isort format compliance failed"; echo "::set-output name=status::failed"; }
@@ -44,21 +44,43 @@ jobs:
     - name: Test results
       if: always()
       run: |
-        status=0
+        passed=()
+        failed=()
+        
         if [[ "${{ steps.pytest_check.outputs.status }}" == "failed" ]]; then
-          echo "Pytest failed"
-          status=1
+          failed+=("pytest")
+        else
+          passed+=("pytest")
         fi
+        
         if [[ "${{ steps.pyright_check.outputs.status }}" == "failed" ]]; then
-          echo "Pyright failed"
-          status=1
+          failed+=("pyright")
+        else
+          passed+=("pyright")
         fi
+        
         if [[ "${{ steps.ruff_check.outputs.status }}" == "failed" ]]; then
-          echo "Ruff failed"
-          status=1
+          failed+=("ruff")
+        else
+          passed+=("ruff")
         fi
+        
         if [[ "${{ steps.isort_check.outputs.status }}" == "failed" ]]; then
-          echo "isort failed"
-          status=1
+          failed+=("isort")
+        else
+          passed+=("isort")
         fi
-        exit $status
+
+        echo "PASSED:"
+        for check in "${passed[@]}"; do
+          echo "    - $check"
+        done
+        
+        echo "FAILED:"
+        for check in "${failed[@]}"; do
+          echo "    - $check"
+        done
+        
+        if [ ${#failed[@]} -ne 0 ]; then
+          exit 1
+        fi
