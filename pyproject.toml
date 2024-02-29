@@ -3,3 +3,14 @@ line-length = 88
 
 [tool.isort]
 profile = "black"
+
+[tool.pyright]
+include = ["pooltool"]
+ignore = [
+  "pooltool/ani",
+]
+exclude = [
+  "**/test_*",
+  "**/render.py",
+  "**/__pycache__",
+]

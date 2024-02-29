@@ -3,6 +3,7 @@ colored
 ipython
 pytest
 pre-commit
+pyright
 black
 isort
 types-Pillow
