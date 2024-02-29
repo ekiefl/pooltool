@@ -27,7 +27,7 @@ jobs:
 
     - name: Check formatting complies with Black
       run: |
-        black --check .
+        ruff check .
       continue-on-error: true
 
     - name: Check import order complies with isort

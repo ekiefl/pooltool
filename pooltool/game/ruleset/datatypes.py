@@ -258,7 +258,7 @@ class Ruleset(ABC):
             if (winner := self.shot_info.winner) is not None:
                 self.log.add_msg(f"Game over! {winner.name} wins!", sentiment="good")
             else:
-                self.log.add_msg(f"Game over! Tie game!", sentiment="good")
+                self.log.add_msg("Game over! Tie game!", sentiment="good")
             return
 
         if self.shot_info.turn_over:

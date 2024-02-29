@@ -5,7 +5,6 @@ import sys
 from functools import partial
 from typing import Generator, Optional, Tuple, Union
 
-import gltf  # FIXME at first glance this does nothing?
 import simplepbr
 from attrs import define
 from direct.showbase.ShowBase import ShowBase

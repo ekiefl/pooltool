@@ -11,7 +11,7 @@ from pooltool.objects.ball.datatypes import (
     BallState,
     _null_rvw,
 )
-from pooltool.objects.ball.sets import BallSet, get_ballset
+from pooltool.objects.ball.sets import get_ballset
 
 
 def test__null_rvw():

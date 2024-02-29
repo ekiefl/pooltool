@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, Protocol, Union
+from typing import Protocol
 
 from attrs import define, field
 

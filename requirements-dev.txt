@@ -4,7 +4,7 @@ ipython
 pytest
 pre-commit
 pyright
-black
+ruff
 isort
 types-Pillow
 twine

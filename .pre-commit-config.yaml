@@ -5,9 +5,9 @@ repos:
         name: isort
         entry: isort .
         language: system
-      - id: black
-        name: black
-        entry: black .
+      - id: ruff
+        name: ruff
+        entry: ruff . --fix
         language: system
         types_or: [python, pyi]
       - id: pytest
