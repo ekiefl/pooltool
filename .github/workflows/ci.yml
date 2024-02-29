@@ -25,41 +25,57 @@ jobs:
 
     - name: Pytest
       id: pytest
-      run: pytest
+      continue-on-error: true
+      run: |
+        pytest
 
-    - name: Set failed output for Pytest
-      if: ${{ steps.pytest.outcome == 'failure' }}
-      run: echo "::set-output name=pytest_failed::true"
+        status=$?
+        if [ $status -ne 0 ]; then
+          echo "Pytest failed with status $status"
+          echo "::set-output name=pytest_failed::true"
+        fi
 
     # --- Pyright
 
     - name: Pyright
       id: pyright
-      run: pyright --project ./pyrightconfig.ci.json
+      continue-on-error: true
+      run: |
+        pyright --project ./pyrightconfig.ci.json
 
-    - name: Set failed output for Pyright
-      if: ${{ steps.pyright.outcome == 'failure' }}
-      run: echo "::set-output name=pyright_failed::true"
+        status=$?
+        if [ $status -ne 0 ]; then
+          echo "Pyright failed with status $status"
+          echo "::set-output name=pyright_failed::true"
+        fi
 
     # --- Ruff
 
     - name: Ruff
       id: ruff
-      run: ruff check .
+      continue-on-error: true
+      run: |
+        ruff check .
 
-    - name: Set failed output for Ruff
-      if: ${{ steps.ruff.outcome == 'failure' }}
-      run: echo "::set-output name=ruff_failed::true"
+        status=$?
+        if [ $status -ne 0 ]; then
+          echo "Ruff failed with status $status"
+          echo "::set-output name=ruff_failed::true"
+        fi
 
     # --- isort
 
     - name: isort
       id: isort
-      run: isort . --check-only
+      continue-on-error: true
+      run: |
+        isort . --check-only
 
-    - name: Set failed output for isort
-      if: ${{ steps.isort.outcome == 'failure' }}
-      run: echo "::set-output name=isort_failed::true"
+        status=$?
+        if [ $status -ne 0 ]; then
+          echo "isort failed with status $status"
+          echo "::set-output name=isort_failed::true"
+        fi
 
     # --- Main
 
