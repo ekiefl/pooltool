@@ -28,12 +28,7 @@ jobs:
       continue-on-error: true
       run: |
         pytest
-
-        pytest_status=$?
-        if [ $pytest_status -ne 0 ]; then
-          echo "Pytest failed with status $pytest_status"
-          echo "::set-output name=pytest_failed::true"
-        fi
+        echo "pytest_failed=$?" >> $GITHUB_ENV
 
     # --- Pyright
 
@@ -42,12 +37,7 @@ jobs:
       continue-on-error: true
       run: |
         pyright --project ./pyrightconfig.ci.json
-
-        pyright_status=$?
-        if [ $pyright_status -ne 0 ]; then
-          echo "Pyright failed with status $pyright_status"
-          echo "::set-output name=failed::true"
-        fi
+        echo "pyright_failed=$?" >> $GITHUB_ENV
 
     # --- Ruff
 
@@ -56,12 +46,7 @@ jobs:
       continue-on-error: true
       run: |
         ruff check .
-
-        ruff_status=$?
-        if [ $ruff_status -ne 0 ]; then
-          echo "Ruff failed with status $ruff_status"
-          echo "::set-output name=ruff_failed::true"
-        fi
+        echo "ruff_failed=$?" >> $GITHUB_ENV
 
     # --- isort
 
@@ -70,12 +55,7 @@ jobs:
       continue-on-error: true
       run: |
         isort . --check-only
-
-        isort_status=$?
-        if [ $isort_status -ne 0 ]; then
-          echo "isort failed with status $isort_status"
-          echo "::set-output name=isort_failed::true"
-        fi
+        echo "isort_failed=$?" >> $GITHUB_ENV
 
     # --- Main
 
@@ -85,33 +65,32 @@ jobs:
         passed=()
         failed=()
 
-        # --- Add all test outputs here {{{
+        echo "${{ env.pytest_failed }}"
+        echo "${{ env.pytest_pyright }}"
 
-        if [[ "${{ steps.pytest.outputs.pytest_failed }}" == "true" ]]; then
+        if [[ "${{ env.pytest_failed }}" != "0" ]]; then
           failed+=("pytest")
         else
           passed+=("pytest")
         fi
 
-        if [[ "${{ steps.pyright.outputs.failed }}" == "true" ]]; then
+        if [[ "${{ env.pyright_failed }}" != "0" ]]; then
           failed+=("pyright")
         else
           passed+=("pyright")
         fi
 
-        if [[ "${{ steps.ruff.outputs.ruff_failed }}" == "true" ]]; then
+        if [[ "${{ env.ruff_failed }}" != "0" ]]; then
           failed+=("ruff")
         else
           passed+=("ruff")
         fi
 
-        if [[ "${{ steps.isort.outputs.isort_failed }}" == "true" ]]; then
+        if [[ "${{ env.isort_failed }}" != "0" ]]; then
           failed+=("isort")
         else
           passed+=("isort")
         fi
-
-        # --- }}}
 
         if [ ${#passed[@]} -ne 0 ]; then
           echo "PASSED:"
