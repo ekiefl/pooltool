@@ -1,4 +1,5 @@
 """Resolve collisions and transitions"""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -99,6 +100,7 @@ class Resolver:
         For everything you need to know about this class, see :doc:`Modular Physics
         </resources/custom_physics>`.
     """
+
     ball_ball: BallBallCollisionStrategy
     ball_linear_cushion: BallLCushionCollisionStrategy
     ball_circular_cushion: BallCCushionCollisionStrategy

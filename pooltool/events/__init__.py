@@ -1,3 +1,4 @@
+from pooltool.events.datatypes import Agent, AgentType, Event, EventType
 from pooltool.events.factory import (
     ball_ball_collision,
     ball_circular_cushion_collision,
@@ -10,7 +11,6 @@ from pooltool.events.factory import (
     spinning_stationary_transition,
     stick_ball_collision,
 )
-from pooltool.events.datatypes import Agent, AgentType, Event, EventType
 from pooltool.events.filter import (
     by_ball,
     by_time,

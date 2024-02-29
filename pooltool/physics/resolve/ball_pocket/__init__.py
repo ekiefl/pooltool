@@ -4,6 +4,7 @@ NOTE: If this module is ever extended to support multiple treatments for ball po
 collisions, expand this file into a file structure modelled after ../ball_ball or
 ../ball_cushion
 """
+
 from typing import Dict, Optional, Protocol, Tuple, Type
 
 import numpy as np

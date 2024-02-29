@@ -1,9 +1,6 @@
 import pytest
 
-from pooltool.ptmath._ptmath import (
-    are_points_on_same_side,
-    solve_transcendental,
-)
+from pooltool.ptmath._ptmath import are_points_on_same_side, solve_transcendental
 
 
 def test_are_points_on_same_side():

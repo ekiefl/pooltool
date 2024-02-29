@@ -72,8 +72,9 @@ class BallSet:
             The name of the ballset.
 
             During instantiation, the validity of this name will be checked, and a
-            ValueError will be raised if the ballset doesn't exist. 
+            ValueError will be raised if the ballset doesn't exist.
     """
+
     name: str = attrs.field()
 
     @name.validator  # type: ignore

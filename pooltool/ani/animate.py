@@ -401,7 +401,7 @@ class ShotViewer(Interface):
 
                 # This line takes a view seconds to execute. It will generate a visible
                 # window. Once the window has been generated, script execution continues
-                gui = pt.ShotViewer() 
+                gui = pt.ShotViewer()
 
                 # When this line is called, the window is populated with an animated
                 # scene of the shot.

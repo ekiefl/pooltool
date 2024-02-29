@@ -17,6 +17,7 @@ from pooltool.objects.table.datatypes import Table
 from pooltool.serialize import conversion
 from pooltool.serialize.serializers import Pathish
 
+
 @define
 class System:
     """A class representing the billiards system.
@@ -43,11 +44,11 @@ class System:
         table:
             A table.
         balls:
-            A dictionary of balls. 
+            A dictionary of balls.
 
             Warning:
                 Each key must match each value's ``id`` (`e.g.` ``{"2": Ball(id="1")}``
-                is invalid). 
+                is invalid).
         t:
             The elapsed simulation time. If the system is in the process of being
             simulated, ``t`` is updated to be the number of seconds the system has
@@ -92,6 +93,7 @@ class System:
         >>> gui = pt.ShotViewer()
         >>> gui.show(system)
     """
+
     cue: Cue = field()
     table: Table = field()
     balls: Dict[str, Ball] = field()
@@ -632,6 +634,7 @@ class MultiSystem:
         >>> gui = pt.ShotViewer()
         >>> gui.show(multisystem, title="Press 'n' for next, 'p' for previous")
     """
+
     multisystem: List[System] = field(factory=list)
     active_index: Optional[int] = field(default=None, init=False)
 

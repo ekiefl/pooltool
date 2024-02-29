@@ -6,8 +6,8 @@ from pooltool.game.ruleset.eight_ball import _EightBall
 from pooltool.game.ruleset.nine_ball import _NineBall
 from pooltool.game.ruleset.sandbox import _SandBox
 from pooltool.game.ruleset.snooker import _Snooker
-from pooltool.game.ruleset.three_cushion import _ThreeCushion
 from pooltool.game.ruleset.sum_to_three import _SumToThree
+from pooltool.game.ruleset.three_cushion import _ThreeCushion
 
 _ruleset_classes = {
     GameType.NINEBALL: _NineBall,

@@ -57,6 +57,7 @@ class TableModelDescr:
 
 class TableType(strenum.StrEnum):
     """An Enum describing the table type"""
+
     POCKET = strenum.auto()
     BILLIARD = strenum.auto()
     SNOOKER = strenum.auto()
@@ -160,6 +161,7 @@ class SnookerTableSpecs:
         in the future, snooker tables may have some parameters distinct from standard
         pool tables (*e.g.* directional cloth), causing these classes to diverge.
     """
+
     # https://wpbsa.com/rules/
     # The playing area is within the cushion faces and shall measure
     # 11 ft 8½ in x 5 ft 10 in (3569 mm x 1778 mm) with a tolerance on both dimensions of +/- ½ in (13 mm).

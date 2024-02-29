@@ -18,4 +18,5 @@ class PhysicsEngine:
         resolver:
             The physics engine responsible for resolving events.
     """
+
     resolver: Resolver = attrs.field(factory=Resolver.default)

@@ -158,7 +158,9 @@ def simulate(
     events = 0
     while True:
         event = get_next_event(
-            shot, transition_cache=transition_cache, quartic_solver=quartic_solver,
+            shot,
+            transition_cache=transition_cache,
+            quartic_solver=quartic_solver,
         )
 
         if event.time == np.inf:
@@ -251,6 +253,7 @@ def get_next_event(
 
 def _null():
     return {"null": null_event(time=np.inf)}
+
 
 @attrs.define
 class TransitionCache:

@@ -97,7 +97,7 @@ class BallState:
                 3 = rolling
                 4 = pocketed
         t (float):
-            The simulated time. 
+            The simulated time.
     """
 
     rvw: NDArray[np.float64]
@@ -278,7 +278,7 @@ class BallHistory:
             >>> import pooltool as pt
             >>> history = pt.simulate(pt.System.example(), continuous=True).balls["cue"].history_cts
 
-            Illustrate a lossless round trip: 
+            Illustrate a lossless round trip:
 
             >>> pt.BallHistory.from_vectorization(history.vectorize()) == history
             True
@@ -322,10 +322,10 @@ class Ball:
     Attributes:
         id:
             An ID for the ball.
-            
+
             Use strings (e.g. "1" not 1).
         state:
-            The ball's state. 
+            The ball's state.
 
             This is the current state of the ball.
 

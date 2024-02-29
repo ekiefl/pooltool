@@ -56,15 +56,15 @@ class LinearCushionSegment:
             The 3D coordinate where the cushion segment starts.
 
             Note:
-                - p1 and p2 must share the same height (``p1[2] == p2[2]``). 
+                - p1 and p2 must share the same height (``p1[2] == p2[2]``).
         p2:
             The 3D coordinate where the cushion segment ends.
 
             Note:
-                - p1 and p2 must share the same height (``p1[2] == p2[2]``). 
+                - p1 and p2 must share the same height (``p1[2] == p2[2]``).
         direction:
             The cushion direction (*default* = :attr:`CushionDirection.BOTH`).
-        
+
             See :class:`CushionDirection` for explanation.
     """
 
@@ -207,7 +207,7 @@ class CircularCushionSegment:
 
             ``center[0]``, ``center[1]``, and ``center[2]`` are the x-, y-, and
             z-coordinates of the cushion's center. The circle is assumed to be parallel to
-            the XY plane, which makes ``center[2]`` is the height of the cushion. 
+            the XY plane, which makes ``center[2]`` is the height of the cushion.
         radius:
             The radius of the cushion segment.
     """
@@ -296,13 +296,13 @@ class CushionSegments:
 
             Warning:
                 Keys must match the value IDs, *e.g.* ``{"2":
-                LinearCushionSegment(id="2", ...)}`` 
+                LinearCushionSegment(id="2", ...)}``
         circular:
             A dictionary of circular cushion segments.
 
             Warning:
                 Keys must match the value IDs, *e.g.* ``{"2t":
-                CircularCushionSegment(id="2t", ...)}`` 
+                CircularCushionSegment(id="2t", ...)}``
     """
 
     linear: Dict[str, LinearCushionSegment] = field()
@@ -339,7 +339,7 @@ class Pocket:
 
             - ``center[0]`` is the x-coordinate of the pocket's center
             - ``center[1]`` is the y-coordinate of the pocket's center
-            - ``center[2]`` must be 0.0 
+            - ``center[2]`` must be 0.0
         radius:
             The radius of the pocket.
         depth:

@@ -12,6 +12,7 @@ class NullObject:
     Attributes:
         id: Object ID.
     """
+
     id: str = field(default="dummy")
 
     def copy(self) -> NullObject:

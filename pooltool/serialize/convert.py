@@ -1,13 +1,14 @@
-from typing import Dict, Iterable, TypeVar, Callable, Type, Any, Optional
-
 from pathlib import Path
+from typing import Any, Callable, Dict, Iterable, Optional, Type, TypeVar
+
 from attrs import define
 from cattrs.converters import Converter
+
 from pooltool.serialize.serializers import (
-    SerializeFormat,
-    serializers,
-    deserializers,
     Pathish,
+    SerializeFormat,
+    deserializers,
+    serializers,
 )
 
 T = TypeVar("T")

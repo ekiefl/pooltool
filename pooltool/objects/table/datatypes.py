@@ -183,7 +183,7 @@ class Table:
         Args:
             table_type:
                 The type of table.
-                
+
         Returns:
             Table:
                 The default table for the given table type.
@@ -199,7 +199,7 @@ class Table:
         Args:
             game_type:
                 The game type.
-                
+
         Returns:
             Table:
                 The default table for the given game type.

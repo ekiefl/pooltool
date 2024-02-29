@@ -47,6 +47,7 @@ class Player:
         ai:
             Not implemented yet...
     """
+
     name: str
     ai: Optional[AIPlayer] = None
 
@@ -174,6 +175,7 @@ class ShotInfo:
             The total game score (tallied after the shot). Keys are player names and
             values are points.
     """
+
     player: Player
     legal: bool
     reason: str
