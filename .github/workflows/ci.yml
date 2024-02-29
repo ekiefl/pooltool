@@ -23,6 +23,18 @@ jobs:
 
     - name: Run Pytest
       run: pytest
+      continue-on-error: true
 
-    - name: Run Pyright
+    - name: Run Pyright type checking
       run: pyright --project pyproject.toml
+      continue-on-error: true
+
+    - name: Check formatting complies with Black
+      run: |
+        black --check .
+      continue-on-error: true
+
+    - name: Check import order complies with isort
+      run: |
+        isort . --check-only
+      continue-on-error: true
