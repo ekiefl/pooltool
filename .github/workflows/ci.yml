@@ -13,7 +13,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.8' # Choose the Python version you need
+        python-version: '3.8'
     
     - name: Install dependencies
       run: |
@@ -21,66 +21,93 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
 
+    # --- Pytest
+
     - name: Pytest
-      id: pytest_check
-      run: |
-        pytest || (echo "##[error]Pytest failed" && echo "::set-output name=status::failed")
+      id: pytest
+      run: pytest
+
+    - name: Set failed output for Pytest
+      if: ${{ steps.pytest.outcome == 'failure' }}
+      run: echo "::set-output name=pytest_failed::true"
+
+    # --- Pyright
 
     - name: Pyright
-      id: pyright_check
-      run: |
-        pyright --project ./pyrightconfig.ci.json || (echo "##[error]Pyright failed" && echo "::set-output name=status::failed")
+      id: pyright
+      run: pyright --project ./pyrightconfig.ci.json
+
+    - name: Set failed output for Pyright
+      if: ${{ steps.pyright.outcome == 'failure' }}
+      run: echo "::set-output name=pyright_failed::true"
+
+    # --- Ruff
 
     - name: Ruff
-      id: ruff_check
-      run: |
-        ruff check . || (echo "##[error]Ruff format compliance failed" && echo "::set-output name=status::failed")
+      id: ruff
+      run: ruff check .
+
+    - name: Set failed output for Ruff
+      if: ${{ steps.ruff.outcome == 'failure' }}
+      run: echo "::set-output name=ruff_failed::true"
+
+    # --- isort
 
     - name: isort
-      id: isort_check
-      run: |
-        isort . --check-only || (echo "##[error]isort format compliance failed" && echo "::set-output name=status::failed")
+      id: isort
+      run: isort . --check-only
+
+    - name: Set failed output for isort
+      if: ${{ steps.isort.outcome == 'failure' }}
+      run: echo "::set-output name=isort_failed::true"
+
+    # --- Main
 
     - name: Test results
       if: always()
       run: |
         passed=()
         failed=()
-        
-        if [[ "${{ steps.pytest_check.outputs.status }}" == "failed" ]]; then
+
+        # --- Add all test outputs here {{{
+
+        if [[ "${{ steps.pytest.outputs.pytest_failed }}" == "true" ]]; then
           failed+=("pytest")
         else
           passed+=("pytest")
         fi
-        
-        if [[ "${{ steps.pyright_check.outputs.status }}" == "failed" ]]; then
+
+        if [[ "${{ steps.pyright.outputs.pyright_failed }}" == "true" ]]; then
           failed+=("pyright")
         else
           passed+=("pyright")
         fi
-        
-        if [[ "${{ steps.ruff_check.outputs.status }}" == "failed" ]]; then
+
+        if [[ "${{ steps.ruff.outputs.ruff_failed }}" == "true" ]]; then
           failed+=("ruff")
         else
           passed+=("ruff")
         fi
-        
-        if [[ "${{ steps.isort_check.outputs.status }}" == "failed" ]]; then
+
+        if [[ "${{ steps.isort.outputs.isort_failed }}" == "true" ]]; then
           failed+=("isort")
         else
           passed+=("isort")
         fi
 
-        echo "PASSED:"
-        for check in "${passed[@]}"; do
-          echo "    - $check"
-        done
-        
-        echo "FAILED:"
-        for check in "${failed[@]}"; do
-          echo "    - $check"
-        done
-        
+        # --- }}}
+
+        if [ ${#passed[@]} -ne 0 ]; then
+          echo "PASSED:"
+          for check in "${passed[@]}"; do
+            echo "    - $check"
+          done
+        fi
+
         if [ ${#failed[@]} -ne 0 ]; then
+          echo "FAILED:"
+          for check in "${failed[@]}"; do
+            echo "    - $check"
+          done
           exit 1
         fi
