@@ -65,9 +65,6 @@ jobs:
         passed=()
         failed=()
 
-        echo "${{ env.pytest_failed }}"
-        echo "${{ env.pytest_pyright }}"
-
         if [[ "${{ env.pytest_failed }}" != "0" ]]; then
           failed+=("pytest")
         else
@@ -106,3 +103,6 @@ jobs:
           done
           exit 1
         fi
+
+        echo ""
+        echo "Click above jobs for details on each success/failure"
