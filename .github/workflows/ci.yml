@@ -29,9 +29,9 @@ jobs:
       run: |
         pytest
 
-        status=$?
-        if [ $status -ne 0 ]; then
-          echo "Pytest failed with status $status"
+        pytest_status=$?
+        if [ $pytest_status -ne 0 ]; then
+          echo "Pytest failed with status $pytest_status"
           echo "::set-output name=pytest_failed::true"
         fi
 
@@ -43,9 +43,9 @@ jobs:
       run: |
         pyright --project ./pyrightconfig.ci.json
 
-        status=$?
-        if [ $status -ne 0 ]; then
-          echo "Pyright failed with status $status"
+        pyright_status=$?
+        if [ $pyright_status -ne 0 ]; then
+          echo "Pyright failed with status $pyright_status"
           echo "::set-output name=pyright_failed::true"
         fi
 
@@ -57,9 +57,9 @@ jobs:
       run: |
         ruff check .
 
-        status=$?
-        if [ $status -ne 0 ]; then
-          echo "Ruff failed with status $status"
+        ruff_status=$?
+        if [ $ruff_status -ne 0 ]; then
+          echo "Ruff failed with status $ruff_status"
           echo "::set-output name=ruff_failed::true"
         fi
 
@@ -71,9 +71,9 @@ jobs:
       run: |
         isort . --check-only
 
-        status=$?
-        if [ $status -ne 0 ]; then
-          echo "isort failed with status $status"
+        isort_status=$?
+        if [ $isort_status -ne 0 ]; then
+          echo "isort failed with status $isort_status"
           echo "::set-output name=isort_failed::true"
         fi
 
