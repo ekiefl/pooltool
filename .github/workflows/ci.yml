@@ -24,22 +24,22 @@ jobs:
     - name: Pytest
       id: pytest_check
       run: |
-        pytest || { echo "##[error]Pytest failed"; echo "::set-output name=status::failed"; }
+        pytest || (echo "##[error]Pytest failed" && echo "::set-output name=status::failed")
 
     - name: Pyright
       id: pyright_check
       run: |
-        pyright --project ./pyrightconfig.ci.json || { echo "##[error]Pyright failed"; echo "::set-output name=status::failed"; }
+        pyright --project ./pyrightconfig.ci.json || (echo "##[error]Pyright failed" && echo "::set-output name=status::failed")
 
     - name: Ruff
       id: ruff_check
       run: |
-        ruff check . || { echo "##[error]Ruff format compliance failed"; echo "::set-output name=status::failed"; }
+        ruff check . || (echo "##[error]Ruff format compliance failed" && echo "::set-output name=status::failed")
 
     - name: isort
       id: isort_check
       run: |
-        isort . --check-only || { echo "##[error]isort format compliance failed"; echo "::set-output name=status::failed"; }
+        isort . --check-only || (echo "##[error]isort format compliance failed" && echo "::set-output name=status::failed")
 
     - name: Test results
       if: always()
