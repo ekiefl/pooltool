@@ -21,8 +21,8 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
 
-    - name: Run Pyright
-      run: pyright --project pyproject.toml
-
     - name: Run Pytest
       run: pytest
+
+    - name: Run Pyright
+      run: pyright --project pyproject.toml
