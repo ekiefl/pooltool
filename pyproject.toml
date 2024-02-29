@@ -4,8 +4,15 @@ line-length = 88
 [tool.isort]
 profile = "black"
 
+[tool.pytest.ini_options]
+testpaths = [
+    "pooltool",
+]
+
 [tool.pyright]
-include = ["pooltool"]
+include = [
+    "pooltool",
+]
 ignore = [
   "pooltool/ani",
 ]
@@ -14,3 +21,4 @@ exclude = [
   "**/render.py",
   "**/__pycache__",
 ]
+
