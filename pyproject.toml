@@ -12,16 +12,5 @@ testpaths = [
     "pooltool",
 ]
 
-[tool.pyright]
-include = [
-    "pooltool",
-]
-ignore = [
-  "pooltool/ani",
-]
-exclude = [
-  "**/test_*",
-  "**/render.py",
-  "**/__pycache__",
-]
-
+# [tool.pyright]
+# pyright config is stored in pyrightconfig.json (local) and pyrightconfig.ci.json (CI)
