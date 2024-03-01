@@ -60,6 +60,7 @@ jobs:
     - name: Test results
       if: always()
       run: |
+        # Print out test results
         passed=()
         failed=()
 
