@@ -90,14 +90,16 @@ jobs:
         fi
 
         if [ ${#passed[@]} -ne 0 ]; then
-          echo "PASSED:"
+          echo "✅ PASSED:"
           for check in "${passed[@]}"; do
             echo "    - $check"
           done
         fi
 
+        echo ""
+
         if [ ${#failed[@]} -ne 0 ]; then
-          echo "FAILED:"
+          echo "❌ FAILED:"
           for check in "${failed[@]}"; do
             echo "    - $check"
           done
