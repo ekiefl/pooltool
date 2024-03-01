@@ -45,14 +45,14 @@ jobs:
       id: ruff_lint
       continue-on-error: true
       run: |
-        ruff check . --verbose
+        ruff check . --verbose --diff
         echo "ruff_lint_failed=$?" >> $GITHUB_ENV
 
     - name: ruff (format)
       id: ruff_format
       continue-on-error: true
       run: |
-        ruff format . --check --verbose
+        ruff format . --check --verbose --diff
         echo "ruff_format_failed=$?" >> $GITHUB_ENV
 
     # --- Main
