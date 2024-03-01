@@ -52,7 +52,7 @@ class BaseMode(ABC):
 
         elif self.keymap.get(Action.introspect):
             self.keymap[Action.introspect] = False
-            shot = multisystem.active
+            shot = multisystem.active  # noqa F841
             pdb.set_trace()
 
         elif self.keymap.get(Action.show_help):

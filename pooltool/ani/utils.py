@@ -197,4 +197,4 @@ CL = DGG.CL = (0, -1)  # CENTER LEFT
 CR = DGG.CR = (1, -1)  # CENTER RIGHT
 CB = DGG.CB = (-1, 2)  # CENTER BOTTOM
 CT = DGG.CT = (-1, 3)  # CENTER TOP
-O = DGG.O = 0  # ORIGIN
+OO = DGG.O = 0  # ORIGIN

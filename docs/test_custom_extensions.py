@@ -18,7 +18,7 @@ def just_a_func():
     pass
 
 
-lambda_func = lambda x: x
+lambda_func = lambda x: x  # noqa: E731
 
 
 def test_a_class_method():

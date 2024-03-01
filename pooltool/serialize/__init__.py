@@ -62,4 +62,5 @@ __all__ = [
     "from_json",
     "from_msgpack",
     "from_yaml",
+    "Pathish",
 ]

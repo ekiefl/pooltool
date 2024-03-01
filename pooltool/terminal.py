@@ -919,7 +919,7 @@ def get_terminal_size():
             import termios
 
             cr = struct.unpack("hh", fcntl.ioctl(fd, termios.TIOCGWINSZ, "1234"))
-        except:
+        except Exception:
             return None
         return cr
 
@@ -929,11 +929,11 @@ def get_terminal_size():
             fd = os.open(os.ctermid(), os.O_RDONLY)
             cr = ioctl_GWINSZ(fd)
             os.close(fd)
-        except:
+        except Exception:
             pass
     if not cr:
         try:
             cr = (os.environ["LINES"], os.environ["COLUMNS"])
-        except:
+        except Exception:
             cr = (25, 80)
     return int(cr[1]), int(cr[0])

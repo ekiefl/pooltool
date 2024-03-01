@@ -6,7 +6,7 @@ import numpy as np
 import pooltool as pt
 from pooltool.physics.utils import is_overlapping
 
-get_pos = lambda table, ball: (
+get_pos = lambda table, ball: (  # noqa E731
     (table.w - 2 * ball.params.R) * np.random.rand() + ball.params.R,
     (table.l - 2 * ball.params.R) * np.random.rand() + ball.params.R,
     ball.params.R,

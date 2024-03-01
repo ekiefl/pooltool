@@ -49,7 +49,7 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
     c = rvw_R[1, 0] * np.cos(theta_a)  # 2D assumption
 
     # Eqs 16
-    I = 2 / 5 * m * R**2
+    II = 2 / 5 * m * R**2
     A = 7 / 2 / m
     B = 1 / m
 
@@ -78,9 +78,9 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
     # rvw_R[1,2] += PZ/m
 
     # Update angular velocity
-    rvw_R[2, 0] += -R / I * PY * np.sin(theta_a)
-    rvw_R[2, 1] += R / I * (PX * np.sin(theta_a) - PZ * np.cos(theta_a))
-    rvw_R[2, 2] += R / I * PY * np.cos(theta_a)
+    rvw_R[2, 0] += -R / II * PY * np.sin(theta_a)
+    rvw_R[2, 1] += R / II * (PX * np.sin(theta_a) - PZ * np.cos(theta_a))
+    rvw_R[2, 2] += R / II * PY * np.cos(theta_a)
 
     # Change back to table reference frame
     rvw = ptmath.coordinate_rotation(rvw_R.T, psi).T
