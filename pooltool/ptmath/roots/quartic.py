@@ -329,7 +329,7 @@ def analytic(p: NDArray[np.complex128]) -> NDArray[np.complex128]:
 
 
 def _truth(a_val, b_val, c_val, d_val, e_val, digits=50):
-    import sympy
+    import sympy  # type: ignore
 
     x, a, b, c, d, e = sympy.symbols("x a b c d e")
     general_solution = sympy.solve(a * x**4 + b * x**3 + c * x**2 + d * x + e, x)
