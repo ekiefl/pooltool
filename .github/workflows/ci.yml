@@ -21,12 +21,31 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
 
+    # --- Ruff
+
+    - name: ruff (lint)
+      id: ruff_lint
+      continue-on-error: true
+      run: |
+        ruff --version
+        ruff check . --verbose --diff
+        echo "ruff_lint_failed=$?" >> $GITHUB_ENV
+
+    - name: ruff (format)
+      id: ruff_format
+      continue-on-error: true
+      run: |
+        ruff --version
+        ruff format . --check --verbose --diff
+        echo "ruff_format_failed=$?" >> $GITHUB_ENV
+
     # --- Pytest
 
     - name: pytest
       id: pytest
       continue-on-error: true
       run: |
+        pytest --version
         pytest
         echo "pytest_failed=$?" >> $GITHUB_ENV
 
@@ -36,24 +55,9 @@ jobs:
       id: pyright
       continue-on-error: true
       run: |
+        pyright --version
         pyright --project ./pyrightconfig.ci.json
         echo "pyright_failed=$?" >> $GITHUB_ENV
-
-    # --- Ruff
-
-    - name: ruff (lint)
-      id: ruff_lint
-      continue-on-error: true
-      run: |
-        ruff check . --verbose --diff
-        echo "ruff_lint_failed=$?" >> $GITHUB_ENV
-
-    - name: ruff (format)
-      id: ruff_format
-      continue-on-error: true
-      run: |
-        ruff format . --check --verbose --diff
-        echo "ruff_format_failed=$?" >> $GITHUB_ENV
 
     # --- Main
 
