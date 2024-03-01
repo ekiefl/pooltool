@@ -10,13 +10,11 @@ from pooltool.system.datatypes import System
 
 
 @overload
-def at_pos(system: System, pos: NDArray[np.float64]) -> float:
-    ...
+def at_pos(system: System, pos: NDArray[np.float64]) -> float: ...
 
 
 @overload
-def at_pos(cue_ball: Ball, pos: NDArray[np.float64]) -> float:
-    ...
+def at_pos(cue_ball: Ball, pos: NDArray[np.float64]) -> float: ...
 
 
 def at_pos(*args) -> float:  # type: ignore
@@ -38,13 +36,11 @@ def _at_pos(cue_ball: Ball, pos: NDArray[np.float64]) -> float:
 
 
 @overload
-def at_ball(system: System, ball_id: str, *, cut: float = 0.0) -> float:
-    ...
+def at_ball(system: System, ball_id: str, *, cut: float = 0.0) -> float: ...
 
 
 @overload
-def at_ball(cue_ball: Ball, object_ball: Ball, *, cut: float = 0.0) -> float:
-    ...
+def at_ball(cue_ball: Ball, object_ball: Ball, *, cut: float = 0.0) -> float: ...
 
 
 def at_ball(*args, **kwargs) -> float:  # type: ignore

@@ -17,8 +17,9 @@ from pooltool.utils.strenum import StrEnum, auto
 
 
 class BallTransitionStrategy(Protocol):
-    def resolve(self, ball: Ball, transition: EventType, inplace: bool = False) -> Ball:
-        ...
+    def resolve(
+        self, ball: Ball, transition: EventType, inplace: bool = False
+    ) -> Ball: ...
 
 
 class CanonicalTransition:

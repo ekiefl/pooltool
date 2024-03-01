@@ -13,37 +13,31 @@ from pooltool.objects.table.components import (
 
 
 class _BaseLinearStrategy(Protocol):
-    def make_kiss(self, ball: Ball, cushion: LinearCushionSegment) -> Ball:
-        ...
+    def make_kiss(self, ball: Ball, cushion: LinearCushionSegment) -> Ball: ...
 
     def resolve(
         self, ball: Ball, cushion: LinearCushionSegment, inplace: bool = False
-    ) -> Tuple[Ball, LinearCushionSegment]:
-        ...
+    ) -> Tuple[Ball, LinearCushionSegment]: ...
 
 
 class _BaseCircularStrategy(Protocol):
-    def make_kiss(self, ball: Ball, cushion: CircularCushionSegment) -> Ball:
-        ...
+    def make_kiss(self, ball: Ball, cushion: CircularCushionSegment) -> Ball: ...
 
     def resolve(
         self, ball: Ball, cushion: CircularCushionSegment, inplace: bool = False
-    ) -> Tuple[Ball, CircularCushionSegment]:
-        ...
+    ) -> Tuple[Ball, CircularCushionSegment]: ...
 
 
 class BallLCushionCollisionStrategy(_BaseLinearStrategy, Protocol):
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
-    ) -> Tuple[Ball, LinearCushionSegment]:
-        ...
+    ) -> Tuple[Ball, LinearCushionSegment]: ...
 
 
 class BallCCushionCollisionStrategy(_BaseCircularStrategy, Protocol):
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment
-    ) -> Tuple[Ball, CircularCushionSegment]:
-        ...
+    ) -> Tuple[Ball, CircularCushionSegment]: ...
 
 
 class CoreBallLCushionCollision(ABC):

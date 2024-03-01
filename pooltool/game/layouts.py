@@ -470,8 +470,7 @@ class GetRackProtocol(Protocol):
         ballset: Optional[BallSet] = None,
         ball_params: Optional[BallParams] = None,
         **kwargs: Any,
-    ) -> Dict[str, Ball]:
-        ...
+    ) -> Dict[str, Ball]: ...
 
 
 _game_rack_map: Dict[str, GetRackProtocol] = {

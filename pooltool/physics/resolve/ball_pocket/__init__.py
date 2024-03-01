@@ -19,8 +19,7 @@ from pooltool.utils.strenum import StrEnum, auto
 class BallPocketStrategy(Protocol):
     def resolve(
         self, ball: Ball, pocket: Pocket, inplace: bool = False
-    ) -> Tuple[Ball, Pocket]:
-        ...
+    ) -> Tuple[Ball, Pocket]: ...
 
 
 class CanonicalBallPocket:

@@ -30,11 +30,9 @@ class AIPlayer(Protocol):
         system: System,
         game: Ruleset,
         callback: Optional[Callable[[Action], None]] = None,
-    ) -> Action:
-        ...
+    ) -> Action: ...
 
-    def apply(self, system: System, action: Action) -> None:
-        ...
+    def apply(self, system: System, action: Action) -> None: ...
 
 
 @attrs.define
