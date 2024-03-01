@@ -3,27 +3,26 @@
 """Borrowed from https://github.com/merenlab/anvio/blob/master/anvio/errors.py"""
 
 import textwrap
+from typing import Optional
 
 from pooltool.terminal import color_text
 
 
-def remove_spaces(text):
+def remove_spaces(text: Optional[str]) -> str:
     if not text:
         return ""
 
-    while True:
-        if text.find("  ") > -1:
-            text = text.replace("  ", " ")
-        else:
-            break
+    while "  " in text:
+        text = text.replace("  ", " ")
 
     return text
 
 
 class PoolToolError(Exception):
-    def __init__(self, e=None):
-        Exception.__init__(self)
-        return
+    def __init__(self, e: Optional[str] = None) -> None:
+        super().__init__()
+        self.e: str = e if e is not None else ""
+        self.error_type = "General Error"
 
     def __str__(self):
         max_len = max([len(line) for line in textwrap.fill(self.e, 80).split("\n")])
@@ -47,21 +46,18 @@ class PoolToolError(Exception):
 
 
 class ConfigError(PoolToolError):
-    def __init__(self, e=None):
-        self.e = remove_spaces(e)
+    def __init__(self, e: Optional[str] = None) -> None:
+        super().__init__(remove_spaces(e))
         self.error_type = "Config Error"
-        PoolToolError.__init__(self)
 
 
 class StrokeError(PoolToolError):
-    def __init__(self, e=None):
-        self.e = remove_spaces(e)
+    def __init__(self, e: Optional[str] = None) -> None:
+        super().__init__(remove_spaces(e))
         self.error_type = "Stroke Error"
-        PoolToolError.__init__(self)
 
 
 class SimulateError(PoolToolError):
-    def __init__(self, e=None):
-        self.e = remove_spaces(e)
+    def __init__(self, e: Optional[str] = None) -> None:
+        super().__init__(remove_spaces(e))
         self.error_type = "Simulate Error"
-        PoolToolError.__init__(self)
