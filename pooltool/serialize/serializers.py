@@ -43,7 +43,9 @@ def from_yaml(path: Pathish) -> Any:
 
 def to_msgpack(o: Any, path: Pathish) -> None:
     with open(path, "wb") as fp:
-        fp.write(msgpack.packb(o, default=m.encode))
+        packed = msgpack.packb(o, default=m.encode)
+        assert isinstance(packed, bytes), "msgpack.packb must return bytes"
+        fp.write(packed)
 
 
 def from_msgpack(path: Pathish) -> Any:

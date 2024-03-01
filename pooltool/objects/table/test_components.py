@@ -161,7 +161,7 @@ def test_pocket_copy(pocket):
     assert pocket == copy
 
     # center is read only, so its safe that they share the same reference
-    pocket.center is copy.center
+    pocket.center is copy.center  # type: ignore
 
     # contains is mutable, so separate objects is necessary
     assert pocket.contains == copy.contains

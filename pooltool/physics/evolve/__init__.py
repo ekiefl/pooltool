@@ -59,6 +59,8 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
         else:
             return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), const.spinning
 
+    raise ValueError
+
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):

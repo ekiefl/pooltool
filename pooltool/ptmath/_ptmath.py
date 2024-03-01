@@ -50,6 +50,33 @@ def solve_transcendental(f, a, b, tol=1e-5, max_iter=100) -> float:
     return c
 
 
+@jit(nopython=True, cache=const.use_numba_cache)
+def orientation(p, q, r):
+    """Find the orientation of an ordered triplet (p, q, r)
+
+    See https://www.geeksforgeeks.org/orientation-3-ordered-points/amp/
+
+    Notes
+    =====
+    - 3D points may be passed but only the x and y components are used
+
+    Returns
+    =======
+    output : int
+        0 : Collinear points, 1 : Clockwise points, 2 : Counterclockwise
+    """
+    val = ((q[1] - p[1]) * (r[0] - q[0])) - ((q[0] - p[0]) * (r[1] - q[1]))
+    if val > 0:
+        # Clockwise orientation
+        return 1
+    elif val < 0:
+        # Counterclockwise orientation
+        return 2
+    else:
+        # Collinear orientation
+        return 0
+
+
 def convert_2D_to_3D(array: NDArray) -> NDArray:
     """Convert a 2D vector to a 3D vector, setting z=0"""
     return np.pad(array, (0, 1), "constant", constant_values=(0,))  # type: ignore

@@ -20,8 +20,9 @@ class StrEnum(str, Enum):
                 raise TypeError("%r is not a string" % (values[0],))
         if len(values) >= 2:
             # check that encoding argument is a string
-            if not isinstance(values[1], str):
-                raise TypeError("encoding must be a string, not %r" % (values[1],))
+            value = values[1]  # type: ignore
+            if not isinstance(value, str):
+                raise TypeError("encoding must be a string, not %r" % (value,))
         if len(values) == 3:
             # check that errors argument is a string
             if not isinstance(values[2], str):
@@ -31,7 +32,7 @@ class StrEnum(str, Enum):
         member._value_ = value
         return member
 
-    __str__ = str.__str__
+    __str__ = str.__str__  # type: ignore
 
     @staticmethod
     def _generate_next_value_(

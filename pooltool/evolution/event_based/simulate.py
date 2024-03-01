@@ -199,7 +199,7 @@ def _evolve(shot: System, dt: float):
     partial function so parameters don't continuously need to be passed
     """
 
-    for ball_id, ball in shot.balls.items():
+    for ball in shot.balls.values():
         rvw, _ = evolve.evolve_ball_motion(
             state=ball.state.s,
             rvw=ball.state.rvw,
