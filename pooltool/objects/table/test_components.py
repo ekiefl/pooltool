@@ -161,7 +161,7 @@ def test_pocket_copy(pocket):
     assert pocket == copy
 
     # center is read only, so its safe that they share the same reference
-    pocket.center is copy.center
+    pocket.center is copy.center  # type: ignore
 
     # contains is mutable, so separate objects is necessary
     assert pocket.contains == copy.contains
@@ -192,20 +192,12 @@ def test_cushion_segments_copy(lin_seg, circ_seg):
 
 def test_cushion_segments_id_clash(lin_seg, circ_seg):
     # No problem
-    CushionSegments(
-        linear={lin_seg.id: lin_seg}, circular={circ_seg.id: circ_seg}
-    )
+    CushionSegments(linear={lin_seg.id: lin_seg}, circular={circ_seg.id: circ_seg})
 
     # Keys don't match value IDs
     with pytest.raises(AssertionError):
-        CushionSegments(
-            linear={"wrong": lin_seg}, circular={circ_seg.id: circ_seg}
-        )
+        CushionSegments(linear={"wrong": lin_seg}, circular={circ_seg.id: circ_seg})
     with pytest.raises(AssertionError):
-        CushionSegments(
-            linear={lin_seg.id: lin_seg}, circular={"wrong": circ_seg}
-        )
+        CushionSegments(linear={lin_seg.id: lin_seg}, circular={"wrong": circ_seg})
     with pytest.raises(AssertionError):
-        CushionSegments(
-            linear={":(": lin_seg}, circular={"wrong": circ_seg}
-        )
+        CushionSegments(linear={":(": lin_seg}, circular={"wrong": circ_seg})

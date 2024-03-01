@@ -470,8 +470,7 @@ class GetRackProtocol(Protocol):
         ballset: Optional[BallSet] = None,
         ball_params: Optional[BallParams] = None,
         **kwargs: Any,
-    ) -> Dict[str, Ball]:
-        ...
+    ) -> Dict[str, Ball]: ...
 
 
 _game_rack_map: Dict[str, GetRackProtocol] = {
@@ -509,7 +508,7 @@ def get_rack(
             allocated within a larger, virtual radius defined as ``(1 + spacing_factor)
             * R``, where ``R`` represents the actual radius of the ball. Within this
             expanded radius, the ball's position is determined randomly, allowing for a
-            controlled separation between each ball. The `spacing_factor` therefore
+            controlled separation between each ball. The ``spacing_factor`` therefore
             dictates the degree of this separation, with higher values resulting in
             greater distances between adjacent balls. Setting this to 0 is not
             recommended.

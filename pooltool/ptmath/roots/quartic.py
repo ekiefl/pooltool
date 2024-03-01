@@ -63,22 +63,21 @@ def solve_many_numerical(p):
             the columns are in the order a, b, c, d, e, where these coefficients make up
             the polynomial equation at^4 + bt^3 + ct^2 + dt + e = 0
 
-    Notes
-    =====
-    - Not yet amenable to numbaization (0.56.4). Problem is the numba implementation of
-      np.linalg.eigvals, which only supports 2D arrays, but the strategy here is to pass
-      np.lingalg.eigvals as a vectorized 3D array. Nevertheless, here is a numba
-      implementation that is just slightly slower (7% slower) than this function:
+    Notes:
+        - Not yet amenable to numbaization (0.56.4). Problem is the numba implementation of
+          np.linalg.eigvals, which only supports 2D arrays, but the strategy here is to pass
+          np.lingalg.eigvals as a vectorized 3D array. Nevertheless, here is a numba
+          implementation that is just slightly slower (7% slower) than this function:
 
-          n = p.shape[-1]
-          A = np.zeros(p.shape[:1] + (n - 1, n - 1), dtype=np.complex128)
-          A[:, 1:, :-1] = np.eye(n - 2)
-          p0 = np.copy(p[:, 0]).reshape((-1, 1))
-          A[:, 0, :] = -p[:, 1:] / p0
-          roots = np.zeros((p.shape[0], n - 1), dtype=np.complex128)
-          for i in range(p.shape[0]):
-              roots[i, :] = np.linalg.eigvals(A[i, :, :])
-          return roots
+              n = p.shape[-1]
+              A = np.zeros(p.shape[:1] + (n - 1, n - 1), dtype=np.complex128)
+              A[:, 1:, :-1] = np.eye(n - 2)
+              p0 = np.copy(p[:, 0]).reshape((-1, 1))
+              A[:, 0, :] = -p[:, 1:] / p0
+              roots = np.zeros((p.shape[0], n - 1), dtype=np.complex128)
+              for i in range(p.shape[0]):
+                  roots[i, :] = np.linalg.eigvals(A[i, :, :])
+              return roots
     """
     n = p.shape[-1]
     A = np.zeros(p.shape[:1] + (n - 1, n - 1), np.float64)
@@ -294,9 +293,9 @@ def analytic(p: NDArray[np.complex128]) -> NDArray[np.complex128]:
     x25 = b * x0 / 4
     x26 = x24 + x25
     x27 = -(c**2) * x2 / 12 - x13
-    x28 = (
-        x12 / 16 - x14 * x5 / 6 + x6 / 216 + np.sqrt(x15**2 / 4 + x27**3 / 27)
-    ) ** (1 / 3) or const.EPS
+    x28 = (x12 / 16 - x14 * x5 / 6 + x6 / 216 + np.sqrt(x15**2 / 4 + x27**3 / 27)) ** (
+        1 / 3
+    ) or const.EPS
     x29 = 2 * x28
     x30 = 2 * x27 / (3 * x28)
     x31 = -x29 + x30
@@ -329,7 +328,7 @@ def analytic(p: NDArray[np.complex128]) -> NDArray[np.complex128]:
 
 
 def _truth(a_val, b_val, c_val, d_val, e_val, digits=50):
-    import sympy
+    import sympy  # type: ignore
 
     x, a, b, c, d, e = sympy.symbols("x a b c d e")
     general_solution = sympy.solve(a * x**4 + b * x**3 + c * x**2 + d * x + e, x)

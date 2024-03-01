@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, Protocol, Union
+from typing import Protocol
 
 from attrs import define, field
 
@@ -57,6 +57,7 @@ class TableModelDescr:
 
 class TableType(strenum.StrEnum):
     """An Enum describing the table type"""
+
     POCKET = strenum.auto()
     BILLIARD = strenum.auto()
     SNOOKER = strenum.auto()
@@ -65,20 +66,16 @@ class TableType(strenum.StrEnum):
 
 class TableSpecs(Protocol):
     @property
-    def table_type(self) -> TableType:
-        ...
+    def table_type(self) -> TableType: ...
 
     @property
-    def height(self) -> float:
-        ...
+    def height(self) -> float: ...
 
     @property
-    def lights_height(self) -> float:
-        ...
+    def lights_height(self) -> float: ...
 
     @property
-    def model_descr(self) -> TableModelDescr:
-        ...
+    def model_descr(self) -> TableModelDescr: ...
 
 
 @define(frozen=True)
@@ -93,7 +90,7 @@ class PocketTableSpecs:
     """
 
     # 7-foot table (78x39 in^2 playing surface)
-    l: float = field(default=1.9812)
+    l: float = field(default=1.9812)  # noqa  E741
     w: float = field(default=1.9812 / 2)
 
     cushion_width: float = field(default=2 * 2.54 / 100)
@@ -129,7 +126,7 @@ class BilliardTableSpecs:
     """
 
     # 10-foot table (imprecise)
-    l: float = field(default=3.05)
+    l: float = field(default=3.05)  # noqa  E741
     w: float = field(default=3.05 / 2)
 
     # FIXME height should be adjusted for 3-cushion sized balls
@@ -160,10 +157,11 @@ class SnookerTableSpecs:
         in the future, snooker tables may have some parameters distinct from standard
         pool tables (*e.g.* directional cloth), causing these classes to diverge.
     """
+
     # https://wpbsa.com/rules/
     # The playing area is within the cushion faces and shall measure
     # 11 ft 8½ in x 5 ft 10 in (3569 mm x 1778 mm) with a tolerance on both dimensions of +/- ½ in (13 mm).
-    l: float = field(default=3.5445)
+    l: float = field(default=3.5445)  # noqa  E741
     w: float = field(default=1.7465)
 
     cushion_width: float = field(default=1.55 * 25.4 / 1000)

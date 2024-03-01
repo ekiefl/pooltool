@@ -7,7 +7,6 @@ import attrs
 import numpy as np
 import pytest
 from numpy.typing import NDArray
-from pooltool.objects.ball.datatypes import Ball
 
 import pooltool.ptmath as ptmath
 from pooltool.game.layouts import (
@@ -20,6 +19,7 @@ from pooltool.game.layouts import (
     generate_layout,
 )
 from pooltool.objects import BallParams, Table
+from pooltool.objects.ball.datatypes import Ball
 
 
 def test_get_ball_ids():

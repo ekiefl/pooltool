@@ -70,7 +70,7 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, throttle_english: bool):
     phi *= np.pi / 180
     theta *= np.pi / 180
 
-    I = 2 / 5 * m * R**2
+    II = 2 / 5 * m * R**2
 
     c = np.sqrt(R**2 - a**2 - b**2)
 
@@ -96,7 +96,7 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, throttle_english: bool):
     vec_z = -a * np.cos(theta)
 
     vec = np.array([vec_x, vec_y, vec_z])
-    w_B = F / I * vec
+    w_B = F / II * vec
 
     # Rotate to table reference
     rot_angle = phi + np.pi / 2

@@ -125,9 +125,9 @@ class CueAvoid:
 
         # Correct for cue's cylindrical radius at collision point
         # distance from cue tip (E) to desired collision point (D)
-        l = np.sqrt((Dx - Ex) ** 2 + (Dy - Ey) ** 2 + (Dz - Ez) ** 2)
-        cue_radius = self.get_cue_radius(l)
-        min_theta += np.arctan2(cue_radius, l)
+        ll = np.sqrt((Dx - Ex) ** 2 + (Dy - Ey) ** 2 + (Dz - Ez) ** 2)
+        cue_radius = self.get_cue_radius(ll)
+        min_theta += np.arctan2(cue_radius, ll)
 
         return max(0, min_theta) * 180 / np.pi
 
@@ -185,7 +185,7 @@ class CueAvoid:
         min_theta = min_theta_no_english + beta
         return max(0, min_theta) * 180 / np.pi
 
-    def get_cue_radius(self, l):
+    def get_cue_radius(self, length):
         """Returns cue radius at collision point, given point is distance l from tip"""
 
         bounds = visual.cue.get_node("cue_stick").get_tight_bounds()
@@ -197,7 +197,7 @@ class CueAvoid:
         m = (R - r) / L  # rise/run
         b = r  # intercept
 
-        return m * l + b
+        return m * length + b
 
     def get_cushion(self, entry):
         expected_suffix = "cushion_cplane_"

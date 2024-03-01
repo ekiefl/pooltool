@@ -1,3 +1,4 @@
+import pooltool.ptmath.roots as roots
 from pooltool.ptmath._ptmath import (
     angle,
     angle_between_vectors,
@@ -8,6 +9,7 @@ from pooltool.ptmath._ptmath import (
     find_intersection_2D,
     norm2d,
     norm3d,
+    orientation,
     point_on_line_closest_to_point,
     solve_transcendental,
     unit_vector,
@@ -16,7 +18,9 @@ from pooltool.ptmath._ptmath import (
 )
 
 __all__ = [
+    "roots",
     "angle",
+    "orientation",
     "angle_between_vectors",
     "coordinate_rotation",
     "cross",

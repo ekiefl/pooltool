@@ -1,0 +1,14 @@
+{
+  "include": [
+    "pooltool"
+  ],
+
+  "exclude": [
+    "**/render.py",
+    "**/__pycache__"
+  ],
+
+  "ignore": [
+    "pooltool/ani"
+  ]
+}

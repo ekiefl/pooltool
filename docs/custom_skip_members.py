@@ -1,4 +1,4 @@
-#def autoapi_skip_members(app, what, name, obj, skip, options):
+# def autoapi_skip_members(app, what, name, obj, skip, options):
 #    print(what, name, skip)
 #    # skip submodules
 #    if what == "module":
@@ -26,5 +26,5 @@
 #    return skip
 #
 #
-#def setup(app):
+# def setup(app):
 #    app.connect("autoapi-skip-member", autoapi_skip_members)

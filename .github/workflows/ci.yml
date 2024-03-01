@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+
+    # --- Ruff
+
+    - name: ruff (lint)
+      id: ruff_lint
+      continue-on-error: true
+      run: |
+        ruff --version
+        ruff check . --verbose --diff
+        echo "ruff_lint_failed=$?" >> $GITHUB_ENV
+
+    - name: ruff (format)
+      id: ruff_format
+      continue-on-error: true
+      run: |
+        ruff --version
+        ruff format . --check --verbose --diff
+        echo "ruff_format_failed=$?" >> $GITHUB_ENV
+
+    # --- Pytest
+
+    - name: pytest
+      id: pytest
+      continue-on-error: true
+      run: |
+        pytest --version
+        pytest
+        echo "pytest_failed=$?" >> $GITHUB_ENV
+
+    # --- Pyright
+
+    - name: pyright
+      id: pyright
+      continue-on-error: true
+      run: |
+        pyright --version
+        pyright --project ./pyrightconfig.ci.json
+        echo "pyright_failed=$?" >> $GITHUB_ENV
+
+    # --- Main
+
+    - name: Test results
+      if: always()
+      run: |
+        # Print out test results
+        passed=()
+        failed=()
+
+        if [[ "${{ env.pytest_failed }}" != "0" ]]; then
+          failed+=("pytest")
+        else
+          passed+=("pytest")
+        fi
+
+        if [[ "${{ env.pyright_failed }}" != "0" ]]; then
+          failed+=("pyright")
+        else
+          passed+=("pyright")
+        fi
+
+        if [[ "${{ env.ruff_lint_failed }}" != "0" ]]; then
+          failed+=("ruff_lint")
+        else
+          passed+=("ruff_lint")
+        fi
+
+        if [[ "${{ env.ruff_format_failed }}" != "0" ]]; then
+          failed+=("ruff_format")
+        else
+          passed+=("ruff_format")
+        fi
+
+        if [ ${#passed[@]} -ne 0 ]; then
+          echo "✅ PASSED:"
+          for check in "${passed[@]}"; do
+            echo "    - $check"
+          done
+        fi
+
+        echo ""
+
+        if [ ${#failed[@]} -ne 0 ]; then
+          echo "❌ FAILED:"
+          for check in "${failed[@]}"; do
+            echo "    - $check"
+          done
+        else
+          echo "🚀🚀 ALL TESTS PASSED 🚀🚀"
+        fi
+
+        echo ""
+        echo "Click above jobs for details on each success/failure"
+
+        if [ ${#failed[@]} -ne 0 ]; then
+          exit 1
+        fi

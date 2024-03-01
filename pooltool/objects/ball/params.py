@@ -121,6 +121,7 @@ class BallParams:
 
 class PrebuiltBallParams(StrEnum):
     """An Enum specifying prebuilt ball parameters"""
+
     POOL_GENERIC = auto()
     SNOOKER_GENERIC = auto()
     BILLIARD_GENERIC = auto()

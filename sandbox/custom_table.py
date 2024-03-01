@@ -2,9 +2,12 @@
 """This examples how to make a custom pool table and ball parameters"""
 
 from typing import Optional
-import pooltool as pt
+
 import numpy as np
+
+import pooltool as pt
 from pooltool.ptmath import norm3d
+
 
 def custom_ball_params() -> pt.BallParams:
     return pt.BallParams(
@@ -18,22 +21,23 @@ def custom_ball_params() -> pt.BallParams:
         g=9.81,
     )
 
+
 def custom_table_specs() -> pt.PocketTableSpecs:
     return pt.PocketTableSpecs(
-        l = 1.9812,
-        w = 1.9812 / 2,
-        cushion_width = 2 * 2.54 / 100,
-        cushion_height = 0.64 * 2 * 0.028575,
-        corner_pocket_width = 0.10,
-        corner_pocket_angle = 1,
-        corner_pocket_depth = 0.0398,
-        corner_pocket_radius = 0.124 / 2,
-        corner_jaw_radius = 0.08,
-        side_pocket_width = 0.08,
-        side_pocket_angle = 3,
-        side_pocket_depth = 0.00437,
-        side_pocket_radius = 0.129 / 2,
-        side_jaw_radius = 0.03,
+        l=1.9812,
+        w=1.9812 / 2,
+        cushion_width=2 * 2.54 / 100,
+        cushion_height=0.64 * 2 * 0.028575,
+        corner_pocket_width=0.10,
+        corner_pocket_angle=1,
+        corner_pocket_depth=0.0398,
+        corner_pocket_radius=0.124 / 2,
+        corner_jaw_radius=0.08,
+        side_pocket_width=0.08,
+        side_pocket_angle=3,
+        side_pocket_depth=0.00437,
+        side_pocket_radius=0.129 / 2,
+        side_jaw_radius=0.03,
     )
 
 
@@ -54,7 +58,6 @@ def closest_ball(system: pt.System) -> str:
 
     assert closest_id is not None
     return closest_id
-
 
 
 def main():

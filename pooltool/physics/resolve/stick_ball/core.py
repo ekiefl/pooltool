@@ -6,13 +6,13 @@ from pooltool.objects.cue.datatypes import Cue
 
 
 class _BaseStrategy(Protocol):
-    def resolve(self, cue: Cue, ball: Ball, inplace: bool = False) -> Tuple[Cue, Ball]:
-        ...
+    def resolve(
+        self, cue: Cue, ball: Ball, inplace: bool = False
+    ) -> Tuple[Cue, Ball]: ...
 
 
 class StickBallCollisionStrategy(_BaseStrategy, Protocol):
-    def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]:
-        ...
+    def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]: ...
 
 
 class CoreStickBallCollision(ABC):

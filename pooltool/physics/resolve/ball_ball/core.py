@@ -7,18 +7,15 @@ from pooltool.objects.ball.datatypes import Ball
 
 
 class _BaseStrategy(Protocol):
-    def make_kiss(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
-        ...
+    def make_kiss(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]: ...
 
     def resolve(
         self, ball1: Ball, ball2: Ball, inplace: bool = False
-    ) -> Tuple[Ball, Ball]:
-        ...
+    ) -> Tuple[Ball, Ball]: ...
 
 
 class BallBallCollisionStrategy(_BaseStrategy, Protocol):
-    def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
-        ...
+    def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]: ...
 
 
 class CoreBallBallCollision(ABC):

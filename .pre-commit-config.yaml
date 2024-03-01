@@ -1,15 +1,13 @@
 repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.0
+    hooks:
+      - id: ruff
+        args: [ --fix ]
+      - id: ruff-format
+
   - repo: local
     hooks:
-      - id: isort
-        name: isort
-        entry: isort
-        language: system
-      - id: black
-        name: black
-        entry: black
-        language: system
-        types_or: [python, pyi]
       - id: pytest
         name: pytest
         entry: pytest

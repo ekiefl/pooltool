@@ -14,7 +14,7 @@ from pooltool.ani.fonts import load_font
 
 class CustomOnscreenText(OnscreenText):
     def __init__(self, **kwargs):
-        assert "font" not in kwargs, f"Cannot modify 'font', use 'font_name' instead"
+        assert "font" not in kwargs, "Cannot modify 'font', use 'font_name' instead"
 
         if "font_name" in kwargs:
             font = load_font(kwargs["font_name"])
@@ -197,4 +197,4 @@ CL = DGG.CL = (0, -1)  # CENTER LEFT
 CR = DGG.CR = (1, -1)  # CENTER RIGHT
 CB = DGG.CB = (-1, 2)  # CENTER BOTTOM
 CT = DGG.CT = (-1, 3)  # CENTER TOP
-O = DGG.O = 0  # ORIGIN
+OO = DGG.O = 0  # ORIGIN

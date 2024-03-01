@@ -3,8 +3,8 @@ colored
 ipython
 pytest
 pre-commit
-black
-isort
+pyright
+ruff
 types-Pillow
 twine
 types-PyYAML

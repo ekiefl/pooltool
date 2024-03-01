@@ -218,12 +218,12 @@ class CameraState:
         return cls(
             cam_hpr=_vec_to_tuple(camera.node.getHpr()),
             cam_pos=_vec_to_tuple(camera.node.getPos()),
-            fixation_hpr=_vec_to_tuple(camera.fixation.getHpr())
-            if camera.fixated
-            else None,
-            fixation_pos=_vec_to_tuple(camera.fixation.getPos())
-            if camera.fixated
-            else None,
+            fixation_hpr=(
+                _vec_to_tuple(camera.fixation.getHpr()) if camera.fixated else None
+            ),
+            fixation_pos=(
+                _vec_to_tuple(camera.fixation.getPos()) if camera.fixated else None
+            ),
         )
 
     @classmethod

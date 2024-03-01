@@ -4,6 +4,7 @@ NOTE: If this module is ever extended to support multiple treatments for ball po
 collisions, expand this file into a file structure modelled after ../ball_ball or
 ../ball_cushion
 """
+
 from typing import Dict, Optional, Protocol, Tuple, Type
 
 import numpy as np
@@ -18,8 +19,7 @@ from pooltool.utils.strenum import StrEnum, auto
 class BallPocketStrategy(Protocol):
     def resolve(
         self, ball: Ball, pocket: Pocket, inplace: bool = False
-    ) -> Tuple[Ball, Pocket]:
-        ...
+    ) -> Tuple[Ball, Pocket]: ...
 
 
 class CanonicalBallPocket:

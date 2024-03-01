@@ -16,7 +16,7 @@ from pooltool.system.datatypes import System
 
 
 class _SandBox(Ruleset):
-    def build_shot_info(self, _: System) -> ShotInfo:
+    def build_shot_info(self, shot: System) -> ShotInfo:
         return ShotInfo(
             player=self.active_player,
             legal=True,
@@ -36,7 +36,7 @@ class _SandBox(Ruleset):
             call_shot=False,
         )
 
-    def next_shot_constraints(self, _: System) -> ShotConstraints:
+    def next_shot_constraints(self, shot: System) -> ShotConstraints:
         return self.initial_shot_constraints()
 
     def respot_balls(self, shot: System):

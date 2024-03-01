@@ -1,5 +1,13 @@
-[tool.black]
+[tool.ruff]
 line-length = 88
 
-[tool.isort]
-profile = "black"
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "pooltool",
+]
+
+# [tool.pyright]
+# pyright config is stored in pyrightconfig.json (local) and pyrightconfig.ci.json (CI)

@@ -37,7 +37,7 @@ class GameOverMode(BaseMode):
         if (winner := Global.game.shot_info.winner) is not None:
             title = f"Game over! {winner.name} wins!"
         else:
-            title = f"Game over! Tie game!"
+            title = "Game over! Tie game!"
 
         self.game_over_menu = GenericMenu(
             title=title,

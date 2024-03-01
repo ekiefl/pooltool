@@ -33,17 +33,18 @@ class EventType(strenum.StrEnum):
         BALL_POCKET:
             A ball pocket "collision". This marks the point at which the ball crosses
             the *point of no return*.
-        STICK_BALL: 
+        STICK_BALL:
             A cue-stick ball collision.
-        SPINNING_STATIONARY: 
+        SPINNING_STATIONARY:
             A ball transition from spinning to stationary.
-        ROLLING_STATIONARY: 
+        ROLLING_STATIONARY:
             A ball transition from rolling to stationary.
-        ROLLING_SPINNING: 
+        ROLLING_SPINNING:
             A ball transition from rolling to spinning.
-        SLIDING_ROLLING: 
+        SLIDING_ROLLING:
             A ball transition from sliding to rolling.
     """
+
     NONE = strenum.auto()
     BALL_BALL = strenum.auto()
     BALL_LINEAR_CUSHION = strenum.auto()
@@ -96,6 +97,7 @@ class AgentType(strenum.StrEnum):
         LINEAR_CUSHION_SEGMENT: A linear cushion segment agent.
         CIRCULAR_CUSHION_SEGMENT: A circular cushion segment agent.
     """
+
     NULL = strenum.auto()
     CUE = strenum.auto()
     BALL = strenum.auto()
@@ -130,6 +132,7 @@ class Agent:
         initial: The state of the agent before an event.
         final: The state of the agent after an event.
     """
+
     id: str
     agent_type: AgentType
 
@@ -270,7 +273,6 @@ conversion.register_structure_hook(
 )
 
 
-
 @define
 class Event:
     """Represents an event.
@@ -297,6 +299,7 @@ class Event:
         time:
             The time at which the event occurs.
     """
+
     event_type: EventType
     agents: Tuple[Agent, ...]
     time: float

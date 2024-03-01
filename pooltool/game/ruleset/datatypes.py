@@ -30,11 +30,9 @@ class AIPlayer(Protocol):
         system: System,
         game: Ruleset,
         callback: Optional[Callable[[Action], None]] = None,
-    ) -> Action:
-        ...
+    ) -> Action: ...
 
-    def apply(self, system: System, action: Action) -> None:
-        ...
+    def apply(self, system: System, action: Action) -> None: ...
 
 
 @attrs.define
@@ -47,6 +45,7 @@ class Player:
         ai:
             Not implemented yet...
     """
+
     name: str
     ai: Optional[AIPlayer] = None
 
@@ -174,6 +173,7 @@ class ShotInfo:
             The total game score (tallied after the shot). Keys are player names and
             values are points.
     """
+
     player: Player
     legal: bool
     reason: str
@@ -256,7 +256,7 @@ class Ruleset(ABC):
             if (winner := self.shot_info.winner) is not None:
                 self.log.add_msg(f"Game over! {winner.name} wins!", sentiment="good")
             else:
-                self.log.add_msg(f"Game over! Tie game!", sentiment="good")
+                self.log.add_msg("Game over! Tie game!", sentiment="good")
             return
 
         if self.shot_info.turn_over:

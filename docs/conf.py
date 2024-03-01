@@ -12,7 +12,8 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../'))
+
+sys.path.insert(0, os.path.abspath("../"))
 
 # -- Project information -----------------------------------------------------
 
@@ -46,7 +47,7 @@ templates_path = ["_templates"]
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 # NOTE: Don't use this for excluding python files, use `autoapi_ignore` below
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # -- Global options ----------------------------------------------------------
 
@@ -59,7 +60,7 @@ smartquotes_action = "qe"
 # a list of builtin themes.
 #
 html_theme = "furo"
-html_logo = '../pooltool/logo/logo_small.png'
+html_logo = "../pooltool/logo/logo_small.png"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -85,14 +86,14 @@ intersphinx_mapping = {
 }
 
 # -- copybutton options
-copybutton_exclude = '.linenos, .gp, .go'
+copybutton_exclude = ".linenos, .gp, .go"
 
 # -- myst options
 myst_enable_extensions = ["colon_fence"]
 
 # -- autoapi configuration ---------------------------------------------------
 
-#autodoc_typehints = "signature"  # autoapi respects this
+# autodoc_typehints = "signature"  # autoapi respects this
 autodoc_typehints = "both"  # autoapi respects this
 autodoc_typehints_description_target = "documented_params"  # autoapi respects this
 autodoc_class_signature = "mixed"
@@ -110,29 +111,30 @@ autoapi_options = [
 autoapi_keep_files = True
 
 autoapi_ignore = [
-    '*/test_*.py',
+    "*/test_*.py",
     "*/render.py",
     "*/ai/*",
     "*/user_config.py",
 ]
 # Everything in ani/ except animate.py
-autoapi_ignore.extend([
-    "*/ani/camera/*",
-    "*/ani/fonts/*",
-    "*/ani/image/*",
-    "*/ani/modes/*",
-    "*/ani/__init__.py",
-    "*/ani/action.py",
-    "*/ani/collision.py",
-    "*/ani/environment.py",
-    "*/ani/globals.py",
-    "*/ani/hud.py",
-    "*/ani/menu.py",
-    "*/ani/mouse.py",
-    "*/ani/tasks.py",
-    "*/ani/utils.py",
-])
-
+autoapi_ignore.extend(
+    [
+        "*/ani/camera/*",
+        "*/ani/fonts/*",
+        "*/ani/image/*",
+        "*/ani/modes/*",
+        "*/ani/__init__.py",
+        "*/ani/action.py",
+        "*/ani/collision.py",
+        "*/ani/environment.py",
+        "*/ani/globals.py",
+        "*/ani/hud.py",
+        "*/ani/menu.py",
+        "*/ani/mouse.py",
+        "*/ani/tasks.py",
+        "*/ani/utils.py",
+    ]
+)
 
 
 # -- custom auto_summary() macro ---------------------------------------------

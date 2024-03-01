@@ -221,7 +221,7 @@ def test_case4(solver: quartic.QuarticSolver):
     angle of 45 (and not once in 4500 shots with a cut angle of 0)
     """
 
-    shot = System.load(TEST_DIR / "case4.msgpack")
+    shot = System.load(TEST_DIR / "case4.msgpack")  # noqa F841
 
     # FIXME This will go on for a very, very, very long time. To introspect, add an
     # early break after 8 events. This represents one cycle of the loop

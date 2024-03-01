@@ -12,6 +12,7 @@ class GameType(StrEnum):
         SANDBOX:
         SUMTOTHREE:
     """
+
     EIGHTBALL = auto()
     NINEBALL = auto()
     THREECUSHION = auto()

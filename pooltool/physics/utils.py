@@ -64,8 +64,7 @@ def get_ball_energy(rvw, R, m):
     LKE = m * ptmath.norm3d(rvw[1]) ** 2 / 2
 
     # Rotational
-    I = 2 / 5 * m * R**2
-    RKE = I * ptmath.norm3d(rvw[2]) ** 2 / 2
+    RKE = (2 / 5 * m * R**2) * ptmath.norm3d(rvw[2]) ** 2 / 2
 
     return LKE + RKE
 

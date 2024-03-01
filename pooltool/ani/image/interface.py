@@ -15,8 +15,7 @@ DEFAULT_CAMERA = camera_states["7_foot_offcenter"]
 
 
 class Exporter(Protocol):
-    def save(self, data: NDArray[np.uint8]) -> Any:
-        ...
+    def save(self, data: NDArray[np.uint8]) -> Any: ...
 
 
 def get_graphics_texture() -> Texture:

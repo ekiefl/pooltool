@@ -60,7 +60,7 @@ def create_billiard_table_cushion_segments(
 
 
 def create_pocket_table_cushion_segments(
-    specs: Union[PocketTableSpecs, SnookerTableSpecs]
+    specs: Union[PocketTableSpecs, SnookerTableSpecs],
 ) -> CushionSegments:
     # https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times
     # for diagram
@@ -295,7 +295,7 @@ def create_pocket_table_cushion_segments(
 
 
 def create_pocket_table_pockets(
-    specs: Union[PocketTableSpecs, SnookerTableSpecs]
+    specs: Union[PocketTableSpecs, SnookerTableSpecs],
 ) -> Dict[str, Pocket]:
     cr = specs.corner_pocket_radius
     sr = specs.side_pocket_radius

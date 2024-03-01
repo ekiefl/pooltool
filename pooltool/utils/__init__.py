@@ -8,10 +8,7 @@ import tracemalloc
 
 import pandas as pd
 import pprofile
-from numba import jit
 from panda3d.core import Filename
-
-import pooltool.constants as c
 
 
 class classproperty(property):
@@ -25,8 +22,8 @@ class classproperty(property):
         >>>         return cls.__name__
     """
 
-    def __get__(self, owner_self, owner_cls):
-        return self.fget(owner_cls)
+    def __get__(self, owner_self, owner_cls):  # type: ignore
+        return self.fget(owner_cls)  # type: ignore
 
 
 def save_pickle(x, path):
@@ -226,48 +223,21 @@ def human_readable_file_size(nbytes):
     return "%s %s" % (f, suffixes[i])
 
 
-@jit(nopython=True, cache=c.use_numba_cache)
-def orientation(p, q, r):
-    """Find the orientation of an ordered triplet (p, q, r)
-
-    See https://www.geeksforgeeks.org/orientation-3-ordered-points/amp/
-
-    Notes
-    =====
-    - 3D points may be passed but only the x and y components are used
-
-    Returns
-    =======
-    output : int
-        0 : Collinear points, 1 : Clockwise points, 2 : Counterclockwise
-    """
-    val = ((q[1] - p[1]) * (r[0] - q[0])) - ((q[0] - p[0]) * (r[1] - q[1]))
-    if val > 0:
-        # Clockwise orientation
-        return 1
-    elif val < 0:
-        # Counterclockwise orientation
-        return 2
-    else:
-        # Collinear orientation
-        return 0
-
-
 class PProfile(pprofile.Profile):
     """Small wrapper for pprofile that accepts a filepath and outputs cachegrind file"""
 
-    def __init__(self, path, run=True):
-        self.run = run
+    def __init__(self, path, should_run: bool = True):
+        self.should_run = should_run
         self.path = path
         pprofile.Profile.__init__(self)
 
     def __enter__(self):
-        if self.run:
-            return pprofile.Profile.__enter__(self)
+        if self.should_run:
+            return super().__enter__()
         else:
             return self
 
     def __exit__(self, *args):
-        if self.run:
+        if self.should_run:
             pprofile.Profile.__exit__(self, *args)
             self.dump_stats(self.path)

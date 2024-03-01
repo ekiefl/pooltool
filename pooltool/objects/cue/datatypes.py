@@ -55,7 +55,7 @@ class Cue:
             Units are *m/s*.
 
             Warning: This is the speed of the cue stick upon impact, not the speed of the
-            ball upon impact. 
+            ball upon impact.
         phi:
             The directional strike angle.
 
@@ -69,7 +69,7 @@ class Cue:
             - :math:`\\phi = 90` corresponds to striking the cue ball towards the foot rail
             - :math:`\\phi = 180` corresponds to striking the cue ball to the left
             - :math:`\\phi = 270` corresponds to striking the cue ball towards the head rail
-            - :math:`\\phi = 360` corresponds to striking the cue ball to the right 
+            - :math:`\\phi = 360` corresponds to striking the cue ball to the right
         theta:
             The cue inclination angle.
 
@@ -79,17 +79,17 @@ class Cue:
             - :math:`\\theta = 0` corresponds to striking the cue ball parallel with the
               table (no massé)
             - :math:`\\theta = 90` corresponds to striking the cue ball downwards into the
-              table (max massé) 
+              table (max massé)
         a:
             The amount and direction of side spin.
 
             - :math:`a = -1` is the rightmost side of ball
-            - :math:`a = +1` is the leftmost side of the ball 
+            - :math:`a = +1` is the leftmost side of the ball
         b:
             The amount of top/bottom spin.
 
             - :math:`b = -1` is the bottom-most side of the ball
-            - :math:`b = +1` is the top-most side of the ball 
+            - :math:`b = +1` is the top-most side of the ball
         cue_ball_id:
             The ball ID of the ball being cued.
         specs:

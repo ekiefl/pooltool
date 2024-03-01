@@ -4,6 +4,7 @@ NOTE: If this module is ever extended to support multiple treatments for ball
 transitions, expand this file into a file structure modelled after ../ball_ball or
 ../ball_cushion
 """
+
 from typing import Dict, Optional, Protocol, Tuple, Type
 
 import numpy as np
@@ -16,8 +17,9 @@ from pooltool.utils.strenum import StrEnum, auto
 
 
 class BallTransitionStrategy(Protocol):
-    def resolve(self, ball: Ball, transition: EventType, inplace: bool = False) -> Ball:
-        ...
+    def resolve(
+        self, ball: Ball, transition: EventType, inplace: bool = False
+    ) -> Ball: ...
 
 
 class CanonicalTransition:

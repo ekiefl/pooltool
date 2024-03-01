@@ -82,7 +82,7 @@ class _SumToThree(Ruleset):
             call_shot=False,
         )
 
-    def next_shot_constraints(self, _: System) -> ShotConstraints:
+    def next_shot_constraints(self, shot: System) -> ShotConstraints:
         return self.shot_constraints
 
     def get_score(self, score: Counter, turn_over: bool) -> Counter:
@@ -92,7 +92,7 @@ class _SumToThree(Ruleset):
         score[self.active_player.name] += 1
         return score
 
-    def respot_balls(self, _: System) -> None:
+    def respot_balls(self, shot: System) -> None:
         pass
 
     def process_shot(self, shot: System):

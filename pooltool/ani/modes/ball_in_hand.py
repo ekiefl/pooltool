@@ -127,8 +127,9 @@ class BallInHandMode(BaseMode):
 
         If no, places and returns True. If yes, returns False
         """
-        r, pos = self.grabbed_ball._ball.params.R, np.array(
-            self.grab_ball_node.getPos()
+        r, pos = (
+            self.grabbed_ball._ball.params.R,
+            np.array(self.grab_ball_node.getPos()),
         )
 
         for ball in visual.balls.values():

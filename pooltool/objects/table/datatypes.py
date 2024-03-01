@@ -77,7 +77,7 @@ class Table:
         return x2 - x1
 
     @property
-    def l(self) -> float:
+    def l(self) -> float:  # noqa F743
         """The length of the table.
 
         Warning:
@@ -183,7 +183,7 @@ class Table:
         Args:
             table_type:
                 The type of table.
-                
+
         Returns:
             Table:
                 The default table for the given table type.
@@ -199,7 +199,7 @@ class Table:
         Args:
             game_type:
                 The game type.
-                
+
         Returns:
             Table:
                 The default table for the given game type.

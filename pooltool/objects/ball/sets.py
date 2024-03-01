@@ -28,7 +28,7 @@ same model, a ``conversion.json`` file is used. For example, see how the
 ``generic_snooker`` ballset matches the red ball IDs to the same model ID:
 
 .. code::
- 
+
     $ cat $(python -c "import pooltool; print(pooltool.__file__[:-12])")/models/balls/generic_snooker/conversion.json
     {
       "red_01": "red",
@@ -72,8 +72,9 @@ class BallSet:
             The name of the ballset.
 
             During instantiation, the validity of this name will be checked, and a
-            ValueError will be raised if the ballset doesn't exist. 
+            ValueError will be raised if the ballset doesn't exist.
     """
+
     name: str = attrs.field()
 
     @name.validator  # type: ignore

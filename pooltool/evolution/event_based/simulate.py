@@ -158,7 +158,9 @@ def simulate(
     events = 0
     while True:
         event = get_next_event(
-            shot, transition_cache=transition_cache, quartic_solver=quartic_solver,
+            shot,
+            transition_cache=transition_cache,
+            quartic_solver=quartic_solver,
         )
 
         if event.time == np.inf:
@@ -197,7 +199,7 @@ def _evolve(shot: System, dt: float):
     partial function so parameters don't continuously need to be passed
     """
 
-    for ball_id, ball in shot.balls.items():
+    for ball in shot.balls.values():
         rvw, _ = evolve.evolve_ball_motion(
             state=ball.state.s,
             rvw=ball.state.rvw,
@@ -251,6 +253,7 @@ def get_next_event(
 
 def _null():
     return {"null": null_event(time=np.inf)}
+
 
 @attrs.define
 class TransitionCache:

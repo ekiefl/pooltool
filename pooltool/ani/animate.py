@@ -5,7 +5,6 @@ import sys
 from functools import partial
 from typing import Generator, Optional, Tuple, Union
 
-import gltf  # FIXME at first glance this does nothing?
 import simplepbr
 from attrs import define
 from direct.showbase.ShowBase import ShowBase
@@ -401,7 +400,7 @@ class ShotViewer(Interface):
 
                 # This line takes a view seconds to execute. It will generate a visible
                 # window. Once the window has been generated, script execution continues
-                gui = pt.ShotViewer() 
+                gui = pt.ShotViewer()
 
                 # When this line is called, the window is populated with an animated
                 # scene of the shot.
