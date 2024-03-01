@@ -41,15 +41,19 @@ jobs:
 
     # --- Ruff
 
-    - name: ruff
-      id: ruff
+    - name: ruff (lint)
+      id: ruff_lint
       continue-on-error: true
       run: |
-        # Lint and check. Since the && operator is used, $? will capture 0 if neither commands fail,
-        # will capture the lint exit code if it fails, and will capture the format exit code if it
-        # fails.
-        ruff check . && ruff format . --check
-        echo "ruff_failed=$?" >> $GITHUB_ENV
+        ruff check . --verbose
+        echo "ruff_lint_failed=$?" >> $GITHUB_ENV
+
+    - name: ruff (format)
+      id: ruff_format
+      continue-on-error: true
+      run: |
+        ruff format . --check --verbose
+        echo "ruff_format_failed=$?" >> $GITHUB_ENV
 
     # --- Main
 
@@ -71,10 +75,16 @@ jobs:
           passed+=("pyright")
         fi
 
-        if [[ "${{ env.ruff_failed }}" != "0" ]]; then
-          failed+=("ruff")
+        if [[ "${{ env.ruff_lint_failed }}" != "0" ]]; then
+          failed+=("ruff_lint")
         else
-          passed+=("ruff")
+          passed+=("ruff_lint")
+        fi
+
+        if [[ "${{ env.ruff_format_failed }}" != "0" ]]; then
+          failed+=("ruff_format")
+        else
+          passed+=("ruff_format")
         fi
 
         if [ ${#passed[@]} -ne 0 ]; then
@@ -92,7 +102,7 @@ jobs:
             echo "    - $check"
           done
         else
-          echo "🚀✅ ALL TESTS PASSED ✅🚀"
+          echo "🚀🚀 ALL TESTS PASSED 🚀🚀"
         fi
 
         echo ""
