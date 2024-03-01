@@ -14,8 +14,7 @@ import sys
 import textwrap
 import time
 from collections import OrderedDict
-
-import pandas as pd
+from typing import Optional
 
 
 def get_color_objects():
@@ -37,7 +36,7 @@ def get_color_objects():
     else:
 
         class NoColored(object):
-            def __getattr__(self, attr):
+            def __getattr__(self, _):
                 return ""
 
         class Fore(NoColored):
@@ -135,8 +134,8 @@ class Progress:
     def __init__(self, verbose=True):
         self.pid = None
         self.verbose = verbose
-        self.terminal_width = None
         self.is_tty = sys.stdout.isatty()
+        self.terminal_width: int
 
         self.get_terminal_width()
 
@@ -214,39 +213,44 @@ class Progress:
                 # see a full list of color codes: https://gitlab.com/dslackw/colored
                 if p_length >= break_point:
                     sys.stderr.write(
-                        back.CYAN
-                        + fore.BLACK
+                        getattr(back, "CYAN")
+                        + getattr(fore, "BLACK")
                         + c[:break_point]
-                        + back.GREY_30
-                        + fore.WHITE
+                        + getattr(back, "GREY_30")
+                        + getattr(fore, "WHITE")
                         + c[break_point:end_point]
-                        + back.CYAN
-                        + fore.CYAN
+                        + getattr(back, "CYAN")
+                        + getattr(fore, "CYAN")
                         + c[end_point]
-                        + back.GREY_50
-                        + fore.LIGHT_CYAN
+                        + getattr(back, "GREY_50")
+                        + getattr(fore, "LIGHT_CYAN")
                         + c[end_point:]
-                        + style.RESET
+                        + getattr(style, "RESET")
                     )
                 else:
                     sys.stderr.write(
-                        back.CYAN
-                        + fore.BLACK
+                        getattr(back, "CYAN")
+                        + getattr(fore, "BLACK")
                         + c[: break_point - p_length]
-                        + back.SALMON_1
-                        + fore.BLACK
+                        + getattr(back, "SALMON_1")
+                        + getattr(fore, "BLACK")
                         + p_text
-                        + back.GREY_30
-                        + fore.WHITE
+                        + getattr(back, "GREY_30")
+                        + getattr(fore, "WHITE")
                         + c[break_point:end_point]
-                        + back.GREY_50
-                        + fore.LIGHT_CYAN
+                        + getattr(back, "GREY_50")
+                        + getattr(fore, "LIGHT_CYAN")
                         + c[end_point:]
-                        + style.RESET
+                        + getattr(style, "RESET")
                     )
                 sys.stderr.flush()
             else:
-                sys.stderr.write(back.CYAN + fore.BLACK + c + style.RESET)
+                sys.stderr.write(
+                    getattr(back, "CYAN")
+                    + getattr(fore, "BLACK")
+                    + c
+                    + getattr(style, "RESET")
+                )
                 sys.stderr.flush()
 
     def reset(self):
@@ -313,7 +317,7 @@ class Progress:
         self.clear()
         self.write("\r[%s] %s" % (self.pid, msg))
 
-    def end(self, timing_filepath=None):
+    def end(self):
         """End the current progress
 
         Parameters
@@ -323,13 +327,11 @@ class Progress:
             will only be made if a progress_total_items parameter was made during
             self.new()
         """
-
-        if timing_filepath and self.progress_total_items is not None:
-            self.t.gen_file_report(timing_filepath)
-
         self.pid = None
+
         if not self.verbose:
             return
+
         self.clear()
 
 
@@ -442,10 +444,10 @@ class Run:
 
         if progress:
             progress.clear()
-            self.write(message_line, overwrite_verbose=False)
+            self.write(message_line, overwrite_verbose=overwrite_verbose)
             progress.update(progress.msg)
         else:
-            self.write(message_line, overwrite_verbose=False)
+            self.write(message_line, overwrite_verbose=overwrite_verbose)
 
     def warning(
         self,
@@ -569,48 +571,6 @@ class Timer:
 
         return checkpoint
 
-    def gen_report(self, title="Time Report", run=Run()):
-        checkpoint_last = self.initial_checkpoint_key
-
-        run.warning("", header=title, lc="yellow", nl_before=1, nl_after=0)
-
-        for checkpoint_key, checkpoint in self.checkpoints.items():
-            if checkpoint_key == self.initial_checkpoint_key:
-                continue
-
-            run.info(
-                str(checkpoint_key),
-                "+%s"
-                % self.timedelta_to_checkpoint(
-                    checkpoint, checkpoint_key=checkpoint_last
-                ),
-            )
-            checkpoint_last = checkpoint_key
-
-        run.info(
-            "Total elapsed",
-            "=%s"
-            % self.timedelta_to_checkpoint(
-                checkpoint, checkpoint_key=self.initial_checkpoint_key
-            ),
-        )
-
-    def gen_dataframe_report(self):
-        """Returns a dataframe"""
-
-        d = {"key": [], "time": [], "score": []}
-        for checkpoint_key, checkpoint in self.checkpoints.items():
-            d["key"].append(checkpoint_key)
-            d["time"].append(checkpoint)
-            d["score"].append(self.scores[checkpoint_key])
-
-        return pd.DataFrame(d)
-
-    def gen_file_report(self, filepath):
-        """Writes to filepath, will overwrite"""
-
-        self.gen_dataframe_report().to_csv(filepath, sep="\t", index=False)
-
     def calculate_time_remaining(self, infinite_default="∞:∞:∞"):
         if self.complete:
             return datetime.timedelta(seconds=0)
@@ -656,7 +616,9 @@ class Timer:
     def time_elapsed_precise(self):
         return self.timedelta_to_checkpoint(self.timestamp(), checkpoint_key=0)
 
-    def format_time(self, timedelta, fmt="{hours}:{minutes}:{seconds}", zero_padding=2):
+    def format_time(
+        self, timedelta, fmt: Optional[str] = "{hours}:{minutes}:{seconds}", zero_padding: int = 2
+    ):
         """Formats time
 
         Examples of `fmt`. Suppose the timedelta is seconds = 1, minutes = 1, hours = 1.
@@ -676,7 +638,7 @@ class Timer:
             "seconds": 1,
         }
 
-        if not fmt:
+        if fmt is None:
             # use the highest two non-zero units, e.g. if it is 7200s, use
             # {hours}h{minutes}m
             seconds = int(timedelta.total_seconds())
@@ -703,6 +665,8 @@ class Timer:
                         break
                     else:
                         m *= unit_denominations[unit]
+
+        assert isinstance(fmt, str)
 
         # parse units present in fmt
         format_order = []
@@ -885,6 +849,9 @@ class TimeCode(object):
         return_code = 0 if exception_type is None else 1
 
         msg, color = (self.s_msg, self.sc) if not return_code else (self.f_msg, self.fc)
+
+        assert msg is not None
+
         self.run.info_single(
             msg + str(self.time), nl_before=1, mc=color, level=return_code
         )
@@ -918,7 +885,7 @@ def get_terminal_size():
             import fcntl
             import termios
 
-            cr = struct.unpack("hh", fcntl.ioctl(fd, termios.TIOCGWINSZ, "1234"))
+            cr = struct.unpack("hh", fcntl.ioctl(fd, termios.TIOCGWINSZ, "1234"))  # type: ignore
         except Exception:
             return None
         return cr
