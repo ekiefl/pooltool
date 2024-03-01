@@ -2,10 +2,7 @@
 line-length = 88
 
 [tool.ruff.lint]
-ignore-init-module-imports = true
-
-[tool.isort]
-profile = "black"
+extend-select = ["I"]
 
 [tool.pytest.ini_options]
 testpaths = [

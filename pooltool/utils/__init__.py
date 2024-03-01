@@ -226,7 +226,7 @@ def human_readable_file_size(nbytes):
 class PProfile(pprofile.Profile):
     """Small wrapper for pprofile that accepts a filepath and outputs cachegrind file"""
 
-    def __init__(self, path, should_run: bool=True):
+    def __init__(self, path, should_run: bool = True):
         self.should_run = should_run
         self.path = path
         pprofile.Profile.__init__(self)

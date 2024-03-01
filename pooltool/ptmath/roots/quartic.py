@@ -293,9 +293,9 @@ def analytic(p: NDArray[np.complex128]) -> NDArray[np.complex128]:
     x25 = b * x0 / 4
     x26 = x24 + x25
     x27 = -(c**2) * x2 / 12 - x13
-    x28 = (
-        x12 / 16 - x14 * x5 / 6 + x6 / 216 + np.sqrt(x15**2 / 4 + x27**3 / 27)
-    ) ** (1 / 3) or const.EPS
+    x28 = (x12 / 16 - x14 * x5 / 6 + x6 / 216 + np.sqrt(x15**2 / 4 + x27**3 / 27)) ** (
+        1 / 3
+    ) or const.EPS
     x29 = 2 * x28
     x30 = 2 * x27 / (3 * x28)
     x31 = -x29 + x30

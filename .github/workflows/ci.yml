@@ -45,17 +45,11 @@ jobs:
       id: ruff
       continue-on-error: true
       run: |
-        ruff check .
+        # Lint and check. Since the && operator is used, $? will capture 0 if neither commands fail,
+        # will capture the lint exit code if it fails, and will capture the format exit code if it
+        # fails.
+        ruff check . && ruff format . --check
         echo "ruff_failed=$?" >> $GITHUB_ENV
-
-    # --- isort
-
-    - name: isort
-      id: isort
-      continue-on-error: true
-      run: |
-        isort . --check-only
-        echo "isort_failed=$?" >> $GITHUB_ENV
 
     # --- Main
 
@@ -81,12 +75,6 @@ jobs:
           failed+=("ruff")
         else
           passed+=("ruff")
-        fi
-
-        if [[ "${{ env.isort_failed }}" != "0" ]]; then
-          failed+=("isort")
-        else
-          passed+=("isort")
         fi
 
         if [ ${#passed[@]} -ne 0 ]; then

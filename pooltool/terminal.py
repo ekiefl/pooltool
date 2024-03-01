@@ -617,7 +617,10 @@ class Timer:
         return self.timedelta_to_checkpoint(self.timestamp(), checkpoint_key=0)
 
     def format_time(
-        self, timedelta, fmt: Optional[str] = "{hours}:{minutes}:{seconds}", zero_padding: int = 2
+        self,
+        timedelta,
+        fmt: Optional[str] = "{hours}:{minutes}:{seconds}",
+        zero_padding: int = 2,
     ):
         """Formats time
 

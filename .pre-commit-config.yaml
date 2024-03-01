@@ -1,13 +1,14 @@
 repos:
   - repo: local
     hooks:
-      - id: isort
-        name: isort
-        entry: isort .
+      - id: ruff_lint
+        name: ruff (lint)
+        entry: ruff check . --fix
         language: system
-      - id: ruff
-        name: ruff
-        entry: ruff . --fix
+        types_or: [python, pyi]
+      - id: ruff_format
+        name: ruff (format)
+        entry: ruff format .
         language: system
         types_or: [python, pyi]
       - id: pytest

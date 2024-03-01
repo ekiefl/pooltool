@@ -259,7 +259,7 @@ class BallHistory:
     def from_vectorization(
         vectorization: Optional[
             Tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-        ]
+        ],
     ) -> BallHistory:
         """Zips a vectorization into a BallHistory
 
