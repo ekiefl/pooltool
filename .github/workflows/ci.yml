@@ -103,6 +103,8 @@ jobs:
           for check in "${failed[@]}"; do
             echo "    - $check"
           done
+        else
+          echo "🚀✅ ALL TESTS PASSED ✅🚀"
         fi
 
         echo ""
