@@ -23,7 +23,7 @@ jobs:
 
     # --- Pytest
 
-    - name: Pytest
+    - name: pytest
       id: pytest
       continue-on-error: true
       run: |
@@ -32,7 +32,7 @@ jobs:
 
     # --- Pyright
 
-    - name: Pyright
+    - name: pyright
       id: pyright
       continue-on-error: true
       run: |
@@ -41,7 +41,7 @@ jobs:
 
     # --- Ruff
 
-    - name: Ruff
+    - name: ruff
       id: ruff
       continue-on-error: true
       run: |
@@ -103,8 +103,11 @@ jobs:
           for check in "${failed[@]}"; do
             echo "    - $check"
           done
-          exit 1
         fi
 
         echo ""
         echo "Click above jobs for details on each success/failure"
+
+        if [ ${#failed[@]} -ne 0 ]; then
+          exit 1
+        fi
