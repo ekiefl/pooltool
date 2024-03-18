@@ -4,6 +4,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 
 import pooltool as pt
+import pooltool.constants as constants
 
 
 def plot_ball_trajectory(ball: pt.Ball):
@@ -83,9 +84,22 @@ def get_deflection_system(cut: float, V0: float = 2, b: float = 0.2):
         balls={"cue": cue_ball, "2": obj_ball},
     )
     system.strike(V0=V0, phi=pt.aim.at_ball(system, "2", cut=cut), b=b)
+
     # Evolve the shot
     _ = pt.simulate(system, inplace=True)
+
+    # The cue ball must be rolling at impact
+    _assert_cue_rolling_at_impact(system)
+
     return system
+
+
+def _assert_cue_rolling_at_impact(system: pt.System) -> None:
+    event = pt.filter_type(system.events, pt.EventType.BALL_BALL)[0]
+    for agent in event.agents:
+        if agent.id != "cue":
+            continue
+        assert agent.initial.state.s == constants.rolling, "Cue ball isn't rolling!"
 
 
 def get_deflection_angle(cut: float, V0: float = 2, b: float = 0.2) -> float:
