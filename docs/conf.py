@@ -133,6 +133,8 @@ autoapi_ignore.extend(
         "*/ani/mouse.py",
         "*/ani/tasks.py",
         "*/ani/utils.py",
+        "*/error.py",
+        "*/terminal.py",
     ]
 )
 
