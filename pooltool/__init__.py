@@ -45,7 +45,7 @@ from pooltool.objects import (
     Table,
     TableType,
 )
-from pooltool.system import MultiSystem, System, SystemController
+from pooltool.system import MultiSystem, System
 
 __all__ = [
     # subpackages
@@ -68,7 +68,6 @@ __all__ = [
     "System",
     "GameType",
     "MultiSystem",
-    "SystemController",
     "Ball",
     "BallParams",
     "Cue",
