@@ -1,19 +1,17 @@
 """The top-level API for the pooltool library
 
-Members found in this top-level API have been explicitly surfaced from
-their respective locations in the codebase due to the their ubiquity in pooltool. For
-example, ``System`` is such a central class that you can import it directly from the top
-module:
+**Important and highly used objects are placed in this top-level API**. For example,
+``System`` can be imported directly from the top module:
 
     >>> import pooltool as pt
     >>> system = pt.System.example()
 
-Alternatively, you can import any object from its source location:
+Alternatively, it can be imported directly from its source location:
 
     >>> from pooltool.system.datatypes import System
     >>> system = System.example()
 
-If the object you're looking for isn't in this top level interface, **search for it in
+If the object you're looking for isn't in this top-level API, **search for it in
 the submodules** listed below. Relatedly, if you believe that an objects deserves to
 graduate to the top-level API, **your input is valuable** and such changes can be
 considered.
@@ -25,6 +23,7 @@ import pooltool.ai as ai
 import pooltool.ai.aim as aim
 import pooltool.ai.pot as pot
 import pooltool.ani.image as image
+import pooltool.constants as constants
 import pooltool.events as events
 import pooltool.evolution as evolution
 import pooltool.game as game
@@ -50,6 +49,7 @@ from pooltool.system import MultiSystem, System, SystemController
 
 __all__ = [
     # subpackages
+    "constants",
     "game",
     "system",
     "engine",
