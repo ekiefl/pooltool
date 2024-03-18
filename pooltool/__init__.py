@@ -1,25 +1,22 @@
-"""The primary interface for the pooltool library
+"""The top-level API for the pooltool library
 
-Members on this page have been chosen to selectively capture the most common /
-expected use cases of pooltool, and can be used simply by importing the ``pooltool``
-package. For instance:
+Members found in this top-level API have been explicitly surfaced from
+their respective locations in the codebase due to the their ubiquity in pooltool. For
+example, ``System`` is such a central class that you can import it directly from the top
+module:
 
     >>> import pooltool as pt
-    >>> ball = pt.Ball("cue")
+    >>> system = pt.System.example()
 
-Note:
-    You can of course, also import ``Ball`` from it's source
-    (:class:`pooltool.objects.ball.datatypes.Ball`):
+Alternatively, you can import any object from its source location:
 
-        >>> from pooltool.objects.ball.datatypes import Ball
+    >>> from pooltool.system.datatypes import System
+    >>> system = System.example()
 
-There are many other components of pooltool's API that can also be accessed, but
-that require a more detailed importing. As just an example:
-
-    >>> from pooltool.physics.resolve.ball_cushion.han_2005 import model
-
-If you believe that a component deserves to graduate to the top-level API, your
-input is valuable and such changes can be considered.
+If the object you're looking for isn't in this top level interface, **search for it in
+the submodules** listed below. Relatedly, if you believe that an objects deserves to
+graduate to the top-level API, **your input is valuable** and such changes can be
+considered.
 """
 
 __version__ = "0.2.2.1-dev"
@@ -27,136 +24,61 @@ __version__ = "0.2.2.1-dev"
 import pooltool.ai as ai
 import pooltool.ai.aim as aim
 import pooltool.ai.pot as pot
+import pooltool.ani.image as image
+import pooltool.events as events
+import pooltool.evolution as evolution
+import pooltool.game as game
+import pooltool.game.layouts as layouts
+import pooltool.game.ruleset as ruleset
+import pooltool.interact as interact
+import pooltool.objects as objects
+import pooltool.physics.engine as engine
+import pooltool.system as system
 import pooltool.terminal as terminal
-from pooltool.ani.image import (
-    GzipArrayImages,
-    HDF5Images,
-    ImageZip,
-    NpyImages,
-    image_stack,
-    save_images,
-)
-from pooltool.events import (
-    Agent,
-    AgentType,
-    Event,
-    EventType,
-    ball_ball_collision,
-    ball_circular_cushion_collision,
-    ball_linear_cushion_collision,
-    ball_pocket_collision,
-    by_ball,
-    by_time,
-    by_type,
-    filter_ball,
-    filter_events,
-    filter_time,
-    filter_type,
-    null_event,
-    rolling_spinning_transition,
-    rolling_stationary_transition,
-    sliding_rolling_transition,
-    spinning_stationary_transition,
-    stick_ball_collision,
-)
-from pooltool.evolution import simulate
-from pooltool.evolution.continuize import continuize
+from pooltool.evolution import continuize, simulate
 from pooltool.game.datatypes import GameType
 from pooltool.game.layouts import generate_layout, get_rack
-from pooltool.game.ruleset import get_ruleset
-from pooltool.game.ruleset.datatypes import Player, Ruleset
 from pooltool.interact import Game, ShotViewer
 from pooltool.objects import (
     Ball,
-    BallHistory,
-    BallOrientation,
     BallParams,
-    BallSet,
-    BallState,
-    BilliardTableSpecs,
-    CircularCushionSegment,
     Cue,
-    CueSpecs,
-    CushionDirection,
-    CushionSegments,
-    LinearCushionSegment,
-    Pocket,
-    PocketTableSpecs,
-    SnookerTableSpecs,
     Table,
-    TableModelDescr,
     TableType,
-    get_ballset,
 )
-from pooltool.physics.engine import PhysicsEngine
-from pooltool.system import MultiSystem, System, SystemController, multisystem, visual
+from pooltool.system import MultiSystem, System, SystemController
 
 __all__ = [
-    "System",
-    "MultiSystem",
-    "PhysicsEngine",
+    # subpackages
+    "game",
+    "system",
+    "engine",
+    "objects",
+    "interact",
+    "ruleset",
+    "evolution",
+    "layouts",
+    "events",
     "terminal",
-    "multisystem",
-    "SystemController",
-    "visual",
-    "filter_ball",
-    "filter_time",
-    "filter_type",
-    "filter_events",
-    "by_type",
-    "by_ball",
-    "by_time",
-    "null_event",
-    "ball_ball_collision",
-    "ball_linear_cushion_collision",
-    "ball_circular_cushion_collision",
-    "ball_pocket_collision",
-    "stick_ball_collision",
-    "spinning_stationary_transition",
-    "rolling_stationary_transition",
-    "rolling_spinning_transition",
-    "sliding_rolling_transition",
-    "GameType",
-    "Event",
-    "EventType",
-    "AgentType",
-    "Agent",
-    "Ball",
-    "BallSet",
-    "BallState",
-    "BallParams",
-    "BallHistory",
-    "BallOrientation",
-    "CueSpecs",
-    "Cue",
-    "Pocket",
-    "LinearCushionSegment",
-    "CircularCushionSegment",
-    "CushionSegments",
-    "CushionDirection",
-    "ImageZip",
-    "HDF5Images",
-    "GzipArrayImages",
-    "NpyImages",
-    "Table",
-    "TableModelDescr",
-    "TableType",
-    "PocketTableSpecs",
-    "BilliardTableSpecs",
-    "SnookerTableSpecs",
-    "Game",
-    "save_images",
-    "image_stack",
-    "ShotViewer",
-    "simulate",
-    "continuize",
-    "get_rack",
-    "generate_layout",
-    "get_ruleset",
-    "Player",
-    "Ruleset",
-    "get_ballset",
+    "image",
     "ai",
     "pot",
     "aim",
+    # objects
+    "System",
+    "GameType",
+    "MultiSystem",
+    "SystemController",
+    "Ball",
+    "BallParams",
+    "Cue",
+    "Table",
+    "TableType",
+    "Game",
+    "ShotViewer",
+    # functions
+    "get_rack",
+    "simulate",
+    "continuize",
+    "generate_layout",
 ]

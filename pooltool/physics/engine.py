@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import attrs
 
+import pooltool.physics.evolve as evolve
+import pooltool.physics.resolve as resolve
 from pooltool.physics.resolve import Resolver
 
 
@@ -20,3 +22,10 @@ class PhysicsEngine:
     """
 
     resolver: Resolver = attrs.field(factory=Resolver.default)
+
+
+__all__ = [
+    "PhysicsEngine",
+    "evolve",
+    "resolve",
+]

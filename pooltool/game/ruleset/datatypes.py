@@ -18,7 +18,6 @@ from typing import (
 import attrs
 
 from pooltool.ai.action import Action
-from pooltool.objects.ball.datatypes import Ball
 from pooltool.system.datatypes import System
 from pooltool.terminal import Timer
 from pooltool.utils.strenum import StrEnum, auto
@@ -126,7 +125,7 @@ class ShotConstraints:
     ball_call: Optional[str] = attrs.field(default=None)
     pocket_call: Optional[str] = attrs.field(default=None)
 
-    def cueball(self, balls: Dict[str, Ball]) -> str:
+    def cueball(self, balls: Dict[str, Any]) -> str:
         if self.cueable is None:
             assert len(balls)
 
