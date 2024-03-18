@@ -373,8 +373,7 @@ class Ball:
     Important:
         To instantiate this class, consider using the :meth:`create` constructor. Or,
         use functions within :mod:`pooltool.game.layouts` to generate entire collection
-        of balls. Alternatively, use the ``__init__`` method directly, providing at
-        minimum the attributes below labeled as "*required*".
+        of balls. Or, of course, construct as normal with ``__init__``.
 
     Important:
         The following explains how a ``Ball`` object is modified when its parent system
