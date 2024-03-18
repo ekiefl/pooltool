@@ -27,7 +27,6 @@ __version__ = "0.2.2.1-dev"
 import pooltool.ai as ai
 import pooltool.ai.aim as aim
 import pooltool.ai.pot as pot
-from pooltool.ani.animate import FrameStepper
 import pooltool.terminal as terminal
 from pooltool.ani.image import (
     GzipArrayImages,
@@ -107,7 +106,6 @@ __all__ = [
     "by_type",
     "by_ball",
     "by_time",
-    "FrameStepper",
     "null_event",
     "ball_ball_collision",
     "ball_linear_cushion_collision",
