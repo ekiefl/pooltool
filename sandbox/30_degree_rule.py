@@ -7,12 +7,12 @@ import pooltool as pt
 import pooltool.constants as constants
 
 
-def plot_ball_trajectory(ball: pt.Ball):
+def plot_ball_trajectory(ball: pt.Ball, fig: go.Figure = go.Figure()) -> go.Figure:
     """
     Plot the trajectory of the ball on a plane using the displacement vector (rvw[0]) with Plotly.
 
     Args:
-        ball_history (BallHistory): The ball history object containing the ball states.
+        ball (Ball): The ball history object containing the ball states.
     """
     ball_history = ball.history_cts
     # Extract the x and y components of the displacement vector from each BallState
@@ -20,7 +20,6 @@ def plot_ball_trajectory(ball: pt.Ball):
     y_coords = [state.rvw[0][1] for state in ball_history.states]
 
     # Create the plot
-    fig = go.Figure()
     fig.add_trace(
         go.Scatter(x=x_coords, y=y_coords, mode="lines+markers", name="Trajectory")
     )
@@ -35,8 +34,7 @@ def plot_ball_trajectory(ball: pt.Ball):
         height=1000,
     )
 
-    # Show the plot
-    fig.show()
+    return fig
 
 
 def ball_history_to_dataframe(ball: pt.Ball, cts: bool = True) -> pd.DataFrame:
