@@ -37,7 +37,7 @@ def plot_ball_trajectory(ball: pt.Ball, fig: go.Figure = go.Figure()) -> go.Figu
     return fig
 
 
-def get_deflection_system(cut: float, V0: float = 2, b: float = 0.2):
+def get_deflection_system(cut: float, V0: float = 2, b: float = 0.2) -> pt.System:
     ballset = pt.get_ballset("pooltool_pocket")
     cue_ball = pt.Ball.create("cue", xy=(98, 50), ballset=ballset)
     obj_ball = pt.Ball.create("2", xy=(97, 50), ballset=ballset)
@@ -110,7 +110,11 @@ if __name__ == "__main__":
     V0s = np.arange(0.5, 3, 0.2).round(2)
     deflection_angles_df = pd.DataFrame(
         [
-            [np.cos(np.radians(cut)), get_deflection_angle(cut=cut, V0=V0, b=0.8), V0]
+            [
+                1 - np.sin(np.deg2rad(cut)),
+                get_deflection_angle(cut=cut, V0=V0, b=0.8),
+                V0,
+            ]
             for cut in cut_angles
             for V0 in V0s
         ],
