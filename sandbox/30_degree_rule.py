@@ -1,53 +1,35 @@
+"""This script validates the 30-degree rule proposed by Dr. Dave Billiards
+
+For more information about the 30-degree rule, see https://billiards.colostate.edu/faq/30-90-rules/30-degree-rule/
+"""
+
 import numpy as np
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objs as go
 
 import pooltool as pt
 import pooltool.constants as constants
 
 
-def plot_ball_trajectory(ball: pt.Ball, fig: go.Figure = go.Figure()) -> go.Figure:
-    """
-    Plot the trajectory of the ball on a plane using the displacement vector (rvw[0]) with Plotly.
-
-    Args:
-        ball (Ball): The ball history object containing the ball states.
-    """
-    ball_history = ball.history_cts
-    # Extract the x and y components of the displacement vector from each BallState
-    x_coords = [state.rvw[0][0] for state in ball_history.states]
-    y_coords = [state.rvw[0][1] for state in ball_history.states]
-
-    # Create the plot
-    fig.add_trace(
-        go.Scatter(x=x_coords, y=y_coords, mode="lines+markers", name="Trajectory")
-    )
-
-    # Update plot layout
-    fig.update_layout(
-        title="Ball Trajectory",
-        xaxis_title="X Position",
-        yaxis_title="Y Position",
-        showlegend=True,
-        width=1000,
-        height=1000,
-    )
-
-    return fig
+def _assert_cue_rolling_at_impact(system: pt.System) -> None:
+    event = pt.filter_type(system.events, pt.EventType.BALL_BALL)[0]
+    for agent in event.agents:
+        if agent.id != "cue":
+            continue
+        assert agent.initial.state.s == constants.rolling, "Cue ball isn't rolling!"
 
 
 def get_deflection_system(cut: float, V0: float = 2, b: float = 0.2) -> pt.System:
     ballset = pt.get_ballset("pooltool_pocket")
-    cue_ball = pt.Ball.create("cue", xy=(98, 50), ballset=ballset)
-    obj_ball = pt.Ball.create("2", xy=(97, 50), ballset=ballset)
+    cue_ball = pt.Ball.create("cue", xy=(50, 50), ballset=ballset)
+    obj_ball = pt.Ball.create("2", xy=(49, 50), ballset=ballset)
     cue = pt.Cue(cue_ball_id="cue")
     table = pt.Table.from_table_specs(
         specs=pt.BilliardTableSpecs(
             l=100,
             w=100,
         )
-    )  # Use a very large table to make sure the cue ball eventually is rolling
+    )
     system = pt.System(
         cue=cue,
         table=table,
@@ -62,14 +44,6 @@ def get_deflection_system(cut: float, V0: float = 2, b: float = 0.2) -> pt.Syste
     _assert_cue_rolling_at_impact(system)
 
     return system
-
-
-def _assert_cue_rolling_at_impact(system: pt.System) -> None:
-    event = pt.filter_type(system.events, pt.EventType.BALL_BALL)[0]
-    for agent in event.agents:
-        if agent.id != "cue":
-            continue
-        assert agent.initial.state.s == constants.rolling, "Cue ball isn't rolling!"
 
 
 def get_deflection_angle(cut: float, V0: float = 2, b: float = 0.2) -> float:
