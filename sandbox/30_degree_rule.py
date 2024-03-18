@@ -37,34 +37,6 @@ def plot_ball_trajectory(ball: pt.Ball, fig: go.Figure = go.Figure()) -> go.Figu
     return fig
 
 
-def ball_history_to_dataframe(ball: pt.Ball, cts: bool = True) -> pd.DataFrame:
-    """
-    Convert BallHistory to a pandas DataFrame.
-
-    Args:
-        ball_history (BallHistory): The ball history object.
-
-    Returns:
-        pd.DataFrame: A DataFrame with columns for time, position, velocity, angular velocity, and state.
-    """
-    ball_history = ball.history_cts if cts else ball.history
-    data = {
-        "time": [state.t for state in ball_history.states],
-        "rx": [state.rvw[0][0] for state in ball_history.states],
-        "ry": [state.rvw[0][1] for state in ball_history.states],
-        "vx": [state.rvw[1][0] for state in ball_history.states],
-        "vy": [state.rvw[1][1] for state in ball_history.states],
-        "v_angle": [
-            np.degrees(pt.ptmath.angle([state.rvw[1][0], state.rvw[1][1]]))
-            for state in ball_history.states
-        ],
-        "wx": [state.rvw[2][0] for state in ball_history.states],
-        "wy": [state.rvw[2][1] for state in ball_history.states],
-        "state": [state.s for state in ball_history.states],
-    }
-    return pd.DataFrame(data)
-
-
 def get_deflection_system(cut: float, V0: float = 2, b: float = 0.2):
     ballset = pt.get_ballset("pooltool_pocket")
     cue_ball = pt.Ball.create("cue", xy=(98, 50), ballset=ballset)
@@ -102,18 +74,35 @@ def _assert_cue_rolling_at_impact(system: pt.System) -> None:
 
 def get_deflection_angle(cut: float, V0: float = 2, b: float = 0.2) -> float:
     system = get_deflection_system(cut=cut, V0=V0, b=b)
-    df = ball_history_to_dataframe(system.balls["cue"], cts=False)
-    collision_time = None
-    for event in system.events:
-        if event.event_type == pt.EventType.BALL_BALL:
-            collision_time = event.time
+
+    # Get the ball-ball collision
+    collision = pt.filter_type(system.events, pt.EventType.BALL_BALL)[0]
+
+    # Get the velocity of the cue right before impact
+    for agent in collision.agents:
+        if agent.id == "cue":
             break
-    assert collision_time is not None, "ball never contacted"
-    angle_in = df[df["time"] < collision_time]["v_angle"].iloc[-1]
-    angle_out = df[(df["time"] > collision_time) & (df["state"] == 3)]["v_angle"].iloc[
-        0
-    ]
-    return np.abs(angle_in - angle_out)
+    cue_velocity_pre_collision = agent.initial.state.rvw[1]
+
+    # Get event when object ball transitions from sliding to rolling
+    sliding_to_rolling = pt.filter_events(
+        system.events,
+        pt.by_time(collision.time, after=True),
+        pt.by_ball("cue"),
+        pt.by_type(pt.EventType.SLIDING_ROLLING),
+    )[0]
+
+    # Get the velocity of the cue after it is done sliding
+    cue_velocity_post_slide = sliding_to_rolling.agents[0].final.state.rvw[1]
+
+    return np.rad2deg(
+        np.arccos(
+            np.dot(
+                pt.ptmath.unit_vector(cue_velocity_pre_collision),
+                pt.ptmath.unit_vector(cue_velocity_post_slide),
+            )
+        )
+    )
 
 
 if __name__ == "__main__":
