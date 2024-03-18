@@ -123,7 +123,7 @@ if __name__ == "__main__":
     V0s = np.arange(0.5, 3, 0.2).round(2)
     deflection_angles_df = pd.DataFrame(
         [
-            [np.cos(np.radians(cut)), get_deflection_angle(cut=cut, V0=V0), V0]
+            [np.cos(np.radians(cut)), get_deflection_angle(cut=cut, V0=V0, b=0.8), V0]
             for cut in cut_angles
             for V0 in V0s
         ],
