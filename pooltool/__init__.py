@@ -27,8 +27,8 @@ __version__ = "0.2.2.1-dev"
 import pooltool.ai as ai
 import pooltool.ai.aim as aim
 import pooltool.ai.pot as pot
-from pooltool import terminal
 from pooltool.ani.animate import FrameStepper
+import pooltool.terminal as terminal
 from pooltool.ani.image import (
     GzipArrayImages,
     HDF5Images,
@@ -92,14 +92,11 @@ from pooltool.objects import (
 from pooltool.physics.engine import PhysicsEngine
 from pooltool.system import MultiSystem, System, SystemController, multisystem, visual
 
-run = terminal.Run()
-progress = terminal.Progress()
-
-
 __all__ = [
     "System",
     "MultiSystem",
     "PhysicsEngine",
+    "terminal",
     "multisystem",
     "SystemController",
     "visual",
