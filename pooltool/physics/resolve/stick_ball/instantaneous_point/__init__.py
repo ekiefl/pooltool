@@ -111,6 +111,16 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, throttle_english: bool):
 
 @attrs.define
 class InstantaneousPoint(CoreStickBallCollision):
+    """Instantaneous and point-like stick-ball interaction
+
+    This collision assumes the stick-ball interaction is instantaneous and point-like.
+    The equation comes from Leckie and Greenspan's 2006 "An Event-Based Pool Physics
+    Simulator" (https://link.springer.com/chapter/10.1007/11922155_19). Since they
+    provide no citations in it's brief derivation (which is missing in the [free
+    preprint](https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.89.4627&rep=rep1&type=pdf)),
+    we can in good faith assume this is their own equation.
+    """
+
     throttle_english: bool
 
     def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]:

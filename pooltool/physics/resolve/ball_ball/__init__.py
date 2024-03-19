@@ -7,6 +7,14 @@ from pooltool.utils.strenum import StrEnum, auto
 
 
 class BallBallModel(StrEnum):
+    """An Enum for different ball-ball collision models
+
+    Attributes:
+        FRICTIONLESS_ELASTIC:
+            Frictionless, instantaneous, elastic, equal mass collision
+            (:class:`FrictionlessElastic`).
+    """
+
     FRICTIONLESS_ELASTIC = auto()
 
 
@@ -18,6 +26,19 @@ _ball_ball_models: Dict[BallBallModel, Type[BallBallCollisionStrategy]] = {
 def get_ball_ball_model(
     model: Optional[BallBallModel] = None, params: ModelArgs = {}
 ) -> BallBallCollisionStrategy:
+    """Returns a ball-ball collision model
+
+    Args:
+        model:
+            An Enum specifying the desired model. If not passed,
+            :class:`FrictionlessElastic` is passed with empty params.
+        params:
+            A mapping of parameters accepted by the model.
+
+    Returns:
+        An instantiated model that satisfies the :class:`BallBallCollisionStrategy`
+        protocol.
+    """
     if model is None:
         return FrictionlessElastic()
 

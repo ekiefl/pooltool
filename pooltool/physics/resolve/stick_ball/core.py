@@ -12,7 +12,11 @@ class _BaseStrategy(Protocol):
 
 
 class StickBallCollisionStrategy(_BaseStrategy, Protocol):
-    def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]: ...
+    """Stick-ball collision models must satisfy this protocol"""
+
+    def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]:
+        """This method resolves a ball-circular cushion collision"""
+        ...
 
 
 class CoreStickBallCollision(ABC):
