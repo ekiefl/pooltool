@@ -1,4 +1,5 @@
-#! /usr/bin/env python
+"""Functions and utilities for creating ball predetermined ball layouts"""
+
 from __future__ import annotations
 
 import random

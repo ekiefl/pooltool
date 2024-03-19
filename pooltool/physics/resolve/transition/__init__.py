@@ -1,8 +1,9 @@
 """Defining and handling ball state transitions
 
-NOTE: If this module is ever extended to support multiple treatments for ball
-transitions, expand this file into a file structure modelled after ../ball_ball or
-../ball_cushion
+Note:
+    If this module is ever extended to support multiple treatments for ball transitions,
+    expand this file into a file structure modelled after ../ball_ball or
+    ../ball_cushion
 """
 
 from typing import Dict, Optional, Protocol, Tuple, Type

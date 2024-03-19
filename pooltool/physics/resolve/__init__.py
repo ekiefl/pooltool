@@ -1,3 +1,5 @@
+"""Resolve events"""
+
 from pooltool.physics.resolve.ball_ball import (
     BallBallCollisionStrategy,
     BallBallModel,

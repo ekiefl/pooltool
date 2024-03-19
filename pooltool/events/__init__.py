@@ -1,3 +1,9 @@
+"""Event, detection, and filtration
+
+See `here <https://ekiefl.github.io/2020/12/20/pooltool-alg/#2-what-are-events>`_ to
+learn about events and why they matter.
+"""
+
 from pooltool.events.datatypes import Agent, AgentType, Event, EventType
 from pooltool.events.factory import (
     ball_ball_collision,

@@ -1,3 +1,5 @@
+"""Math functions"""
+
 import pooltool.ptmath.roots as roots
 from pooltool.ptmath._ptmath import (
     angle,

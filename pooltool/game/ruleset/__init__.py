@@ -1,3 +1,5 @@
+"""Ruleset logic"""
+
 from typing import Type
 
 from pooltool.game.datatypes import GameType
