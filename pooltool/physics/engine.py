@@ -28,6 +28,4 @@ class PhysicsEngine:
 
 __all__ = [
     "PhysicsEngine",
-    "evolve",
-    "resolve",
 ]

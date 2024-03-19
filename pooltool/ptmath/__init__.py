@@ -1,7 +1,7 @@
 """Math functions"""
 
 import pooltool.ptmath.roots as roots
-from pooltool.ptmath._ptmath import (
+from pooltool.ptmath.utils import (
     angle,
     angle_between_vectors,
     are_points_on_same_side,
