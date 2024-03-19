@@ -33,6 +33,7 @@ import pooltool.objects as objects
 import pooltool.physics as physics
 import pooltool.ptmath as ptmath
 import pooltool.ruleset as ruleset
+import pooltool.serialize as serialize
 import pooltool.system as system
 import pooltool.terminal as terminal
 import pooltool.utils as utils
@@ -53,6 +54,7 @@ from pooltool.system import MultiSystem, System
 
 __all__ = [
     # subpackages
+    "serialize",
     "constants",
     "game",
     "system",
