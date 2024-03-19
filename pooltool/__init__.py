@@ -31,7 +31,8 @@ import pooltool.game.layouts as layouts
 import pooltool.game.ruleset as ruleset
 import pooltool.interact as interact
 import pooltool.objects as objects
-import pooltool.physics.engine as engine
+import pooltool.physics as physics
+import pooltool.ptmath as ptmath
 import pooltool.system as system
 import pooltool.terminal as terminal
 import pooltool.utils as utils
@@ -54,7 +55,8 @@ __all__ = [
     "constants",
     "game",
     "system",
-    "engine",
+    "physics",
+    "ptmath",
     "objects",
     "interact",
     "ruleset",

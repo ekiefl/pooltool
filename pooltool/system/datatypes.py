@@ -8,7 +8,7 @@ import numpy as np
 from attrs import define, field
 
 import pooltool.constants as const
-import pooltool.physics.utils as physics_utils
+import pooltool.ptmath as ptmath
 from pooltool.events import Event
 from pooltool.objects.ball.datatypes import Ball, BallHistory
 from pooltool.objects.ball.sets import BallSet
@@ -294,7 +294,7 @@ class System:
         """Calculate the energy of the system in Joules"""
         energy = 0
         for ball in self.balls.values():
-            energy += physics_utils.get_ball_energy(
+            energy += ptmath.get_ball_energy(
                 ball.state.rvw, ball.params.R, ball.params.m
             )
 
@@ -352,7 +352,7 @@ class System:
                     ball1.params.R == ball2.params.R
                 ), "Balls are assumed to be equal radii"
 
-                if physics_utils.is_overlapping(
+                if ptmath.is_overlapping(
                     ball1.state.rvw, ball2.state.rvw, ball1.params.R, ball2.params.R
                 ):
                     return True

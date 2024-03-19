@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import attrs
 
-import pooltool.physics.evolve as evolve
-from pooltool.physics import resolve
 from pooltool.physics.resolve import Resolver
 
 
