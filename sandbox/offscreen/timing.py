@@ -18,6 +18,7 @@ import pandas as pd
 
 import pooltool as pt
 from pooltool.ani.camera import camera_states
+from pooltool.ani.image.interface import FrameStepper, image_stack
 from pooltool.ani.image.io import (
     GzipArrayImages,
     HDF5Images,
@@ -55,7 +56,7 @@ def _dir_size(path):
 # -------------------------------------------------------------------------------------
 
 
-stepper = pt.FrameStepper()
+stepper = FrameStepper()
 
 if args.seed:
     np.random.seed(args.seed)
@@ -119,7 +120,7 @@ for name in exporters:
 # -------------------------------------------------------------------------------------
 
 # Run one to avoid cache loading
-pt.image_stack(
+image_stack(
     system,
     stepper,
     size=(int(80 * 1.6), 80),
@@ -138,7 +139,7 @@ for res in resolutions:
     stats["gray"].append(args.gray)
 
     with pt.terminal.TimeCode(quiet=True) as t:
-        imgs = pt.image_stack(
+        imgs = image_stack(
             system=system,
             interface=stepper,
             camera_state=camera_states["7_foot_overhead"],

@@ -9,10 +9,11 @@ import numpy as np
 import pooltool as pt
 from pooltool.ani.camera import camera_states
 from pooltool.ani.image import HDF5Images, ImageZip, NpyImages, image_stack
+from pooltool.ani.image.interface import FrameStepper
 
 
 def main(args):
-    stepper = pt.FrameStepper()
+    stepper = FrameStepper()
 
     if args.seed:
         np.random.seed(args.seed)

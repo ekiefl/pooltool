@@ -13,19 +13,22 @@ from pooltool.physics.resolve.stick_ball.core import CoreStickBallCollision
 def cue_strike(m, M, R, V0, phi, theta, a, b, throttle_english: bool):
     """Strike a ball
 
-                              , - ~  ,
-    ◎───────────◎         , '          ' ,
-    │           │       ,             ◎    ,
-    │      /    │      ,              │     ,
-    │     /     │     ,               │ b    ,
-    ◎    / phi  ◎     ,           ────┘      ,
-    │   /___    │     ,            -a        ,
-    │           │      ,                    ,
-    │           │       ,                  ,
-    ◎───────────◎         ,               '
-      foot rail             ' - , _ , -
-                     ______________________________
-                              playing surface
+    .. code::
+
+                                  , - ~  ,
+        ◎───────────◎         , '          ' ,
+        │           │       ,             ◎    ,
+        │      /    │      ,              │     ,
+        │     /     │     ,               │ b    ,
+        ◎    / phi  ◎     ,           ────┘      ,
+        │   /___    │     ,            -a        ,
+        │           │      ,                    ,
+        │           │       ,                  ,
+        ◎───────────◎         ,               '
+          foot rail             ' - , _ , -
+                         ______________________________
+                                  playing surface
+
     Args:
 
     m:

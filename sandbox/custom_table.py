@@ -22,8 +22,8 @@ def custom_ball_params() -> pt.BallParams:
     )
 
 
-def custom_table_specs() -> pt.PocketTableSpecs:
-    return pt.PocketTableSpecs(
+def custom_table_specs() -> pt.objects.PocketTableSpecs:
+    return pt.objects.PocketTableSpecs(
         l=1.9812,
         w=1.9812 / 2,
         cushion_width=2 * 2.54 / 100,

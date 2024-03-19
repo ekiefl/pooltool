@@ -34,6 +34,8 @@ import pooltool.objects as objects
 import pooltool.physics.engine as engine
 import pooltool.system as system
 import pooltool.terminal as terminal
+import pooltool.utils as utils
+from pooltool.events import EventType
 from pooltool.evolution import continuize, simulate
 from pooltool.game.datatypes import GameType
 from pooltool.game.layouts import generate_layout, get_rack
@@ -64,6 +66,7 @@ __all__ = [
     "ai",
     "pot",
     "aim",
+    "utils",
     # objects
     "System",
     "GameType",
@@ -75,6 +78,7 @@ __all__ = [
     "TableType",
     "Game",
     "ShotViewer",
+    "EventType",
     # functions
     "get_rack",
     "simulate",

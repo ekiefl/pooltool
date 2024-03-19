@@ -9,7 +9,7 @@ def main(args):
     while True:
         shot = pt.System(
             cue=pt.Cue(cue_ball_id="cue"),
-            table=(table := pt.Table.default(table_type="pocket")),
+            table=(table := pt.Table.default(table_type=pt.TableType.POCKET)),
             balls=pt.get_rack(
                 pt.GameType.NINEBALL, table, spacing_factor=args.spacing_factor
             ),

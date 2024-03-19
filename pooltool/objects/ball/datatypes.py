@@ -126,7 +126,7 @@ class BallState:
                 A valid yet undercooked state.
 
                     >>> import pooltool as pt
-                    >>> pt.BallState.default()
+                    >>> pt.objects.BallState.default()
                     BallState(rvw=array([[nan, nan, nan],
                            [ 0.,  0.,  0.],
                            [ 0.,  0.,  0.]]), s=0, t=0.0)
@@ -211,7 +211,7 @@ class BallHistory:
         >>> len(rvws) == len(ss) == len(ts) == len(history)
         True
         >>> # The indices of the arrays match the values of the history
-        >>> pt.BallState(rvws[26], ss[26], ts[26]) == history[26]
+        >>> pt.objects.BallState(rvws[26], ss[26], ts[26]) == history[26]
         True
 
         Returns:
@@ -280,7 +280,7 @@ class BallHistory:
 
             Illustrate a lossless round trip:
 
-            >>> pt.BallHistory.from_vectorization(history.vectorize()) == history
+            >>> pt.objects.BallHistory.from_vectorization(history.vectorize()) == history
             True
 
         See Also:
