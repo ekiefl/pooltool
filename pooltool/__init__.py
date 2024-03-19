@@ -28,18 +28,19 @@ import pooltool.events as events
 import pooltool.evolution as evolution
 import pooltool.game as game
 import pooltool.interact as interact
+import pooltool.layouts as layouts
 import pooltool.objects as objects
 import pooltool.physics as physics
 import pooltool.ptmath as ptmath
+import pooltool.ruleset as ruleset
 import pooltool.system as system
 import pooltool.terminal as terminal
 import pooltool.utils as utils
 from pooltool.events import EventType
 from pooltool.evolution import continuize, simulate
 from pooltool.game.datatypes import GameType
-from pooltool.game.layouts import generate_layout, get_rack
-from pooltool.game.ruleset import get_ruleset
 from pooltool.interact import Game, ShotViewer
+from pooltool.layouts import generate_layout, get_rack
 from pooltool.objects import (
     Ball,
     BallParams,
@@ -47,6 +48,7 @@ from pooltool.objects import (
     Table,
     TableType,
 )
+from pooltool.ruleset import Player, get_ruleset
 from pooltool.system import MultiSystem, System
 
 __all__ = [
@@ -59,6 +61,8 @@ __all__ = [
     "objects",
     "interact",
     "evolution",
+    "ruleset",
+    "layouts",
     "events",
     "terminal",
     "image",
@@ -67,6 +71,7 @@ __all__ = [
     "aim",
     "utils",
     # objects
+    "Player",
     "System",
     "GameType",
     "MultiSystem",

@@ -5,15 +5,15 @@ from __future__ import annotations
 from collections import Counter
 from typing import List, Optional, Tuple
 
-from pooltool.game.ruleset.datatypes import (
+from pooltool.ruleset.datatypes import (
     BallInHandOptions,
     Player,
     Ruleset,
     ShotConstraints,
     ShotInfo,
 )
-from pooltool.game.ruleset.snooker.balls import BallGroup, ball_info
-from pooltool.game.ruleset.snooker.utils import (
+from pooltool.ruleset.snooker.balls import BallGroup, ball_info
+from pooltool.ruleset.snooker.utils import (
     GamePhase,
     Reason,
     game_phase,
@@ -26,7 +26,7 @@ from pooltool.game.ruleset.snooker.utils import (
     is_off_ball_pocketed,
     on_final_black,
 )
-from pooltool.game.ruleset.utils import (
+from pooltool.ruleset.utils import (
     get_ball_ids_on_table,
     get_id_of_first_ball_hit,
     get_pocketed_ball_ids_during_shot,

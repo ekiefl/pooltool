@@ -30,11 +30,11 @@ from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
 from pooltool.evolution.continuize import continuize
 from pooltool.game.datatypes import GameType
-from pooltool.game.layouts import get_rack
-from pooltool.game.ruleset import get_ruleset
-from pooltool.game.ruleset.datatypes import Player
+from pooltool.layouts import get_rack
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
+from pooltool.ruleset import get_ruleset
+from pooltool.ruleset.datatypes import Player
 from pooltool.system.datatypes import MultiSystem, System, multisystem
 from pooltool.system.render import PlaybackMode, visual
 from pooltool.utils import get_total_memory_usage

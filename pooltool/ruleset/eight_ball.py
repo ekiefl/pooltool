@@ -6,14 +6,14 @@ from typing import Counter, Dict, Optional, Tuple
 
 from pooltool.events.datatypes import EventType
 from pooltool.events.filter import by_ball, by_time, by_type, filter_events
-from pooltool.game.ruleset.datatypes import (
+from pooltool.ruleset.datatypes import (
     BallInHandOptions,
     Player,
     Ruleset,
     ShotConstraints,
     ShotInfo,
 )
-from pooltool.game.ruleset.utils import (
+from pooltool.ruleset.utils import (
     balls_that_hit_cushion,
     get_pocketed_ball_ids,
     get_pocketed_ball_ids_during_shot,

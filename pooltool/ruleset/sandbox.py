@@ -5,13 +5,13 @@ from __future__ import annotations
 from typing import Counter
 
 import pooltool.constants as const
-from pooltool.game.ruleset.datatypes import (
+from pooltool.ruleset.datatypes import (
     BallInHandOptions,
     Ruleset,
     ShotConstraints,
     ShotInfo,
 )
-from pooltool.game.ruleset.utils import get_pocketed_ball_ids_during_shot, respot
+from pooltool.ruleset.utils import get_pocketed_ball_ids_during_shot, respot
 from pooltool.system.datatypes import System
 
 

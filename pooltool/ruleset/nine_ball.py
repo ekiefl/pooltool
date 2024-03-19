@@ -10,13 +10,13 @@ import attrs
 
 from pooltool.events.datatypes import EventType
 from pooltool.events.filter import by_ball, by_time, by_type, filter_events
-from pooltool.game.ruleset.datatypes import (
+from pooltool.ruleset.datatypes import (
     BallInHandOptions,
     Ruleset,
     ShotConstraints,
     ShotInfo,
 )
-from pooltool.game.ruleset.utils import (
+from pooltool.ruleset.utils import (
     StateProbe,
     balls_that_hit_cushion,
     get_ball_ids_on_table,

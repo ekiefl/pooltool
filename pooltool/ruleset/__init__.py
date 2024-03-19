@@ -3,7 +3,8 @@
 from typing import Type
 
 from pooltool.game.datatypes import GameType
-from pooltool.game.ruleset.datatypes import (
+from pooltool.ruleset import utils
+from pooltool.ruleset.datatypes import (
     AIPlayer,
     BallInHandOptions,
     Player,
@@ -11,12 +12,12 @@ from pooltool.game.ruleset.datatypes import (
     ShotConstraints,
     ShotInfo,
 )
-from pooltool.game.ruleset.eight_ball import _EightBall
-from pooltool.game.ruleset.nine_ball import _NineBall
-from pooltool.game.ruleset.sandbox import _SandBox
-from pooltool.game.ruleset.snooker import _Snooker
-from pooltool.game.ruleset.sum_to_three import _SumToThree
-from pooltool.game.ruleset.three_cushion import _ThreeCushion
+from pooltool.ruleset.eight_ball import _EightBall
+from pooltool.ruleset.nine_ball import _NineBall
+from pooltool.ruleset.sandbox import _SandBox
+from pooltool.ruleset.snooker import _Snooker
+from pooltool.ruleset.sum_to_three import _SumToThree
+from pooltool.ruleset.three_cushion import _ThreeCushion
 
 _ruleset_classes = {
     GameType.NINEBALL: _NineBall,
@@ -50,4 +51,5 @@ __all__ = [
     "ShotInfo",
     "Ruleset",
     "get_ruleset",
+    "utils",
 ]

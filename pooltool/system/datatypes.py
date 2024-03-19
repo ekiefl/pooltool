@@ -153,7 +153,7 @@ class System:
 
         Important only if rendering the system in a scene and you are manually creating
         balls (rather than relying on built-in utilities in
-        :mod:`pooltool.game.layouts`)
+        :mod:`pooltool.layouts`)
 
         In this case, you need to manually associate a
         :class:`pooltool.objects.ball.sets.BallSet` to the balls in the system, so that

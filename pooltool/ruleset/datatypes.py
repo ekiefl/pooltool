@@ -315,7 +315,7 @@ class Ruleset(ABC):
         """Respot balls
 
         This method should decide which balls should be respotted, and respot them. This
-        method should probably make use of ``pooltool.game.ruleset.utils.respot``
+        method should probably make use of ``pooltool.ruleset.utils.respot``
         """
 
     @abstractmethod
