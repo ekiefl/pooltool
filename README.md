@@ -6,39 +6,49 @@
 [![GitHub license](https://img.shields.io/github/license/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/blob/master/LICENSE)
 [![Documentation Status](https://readthedocs.org/projects/pooltool/badge/?version=latest)](https://pooltool.readthedocs.io/en/latest/?badge=latest)
 
-# Intro
+# Pooltool
 
-Pooltool is a general purpose billiards simulator crafted specifically for science and engineering.
+*Pooltool* is a general purpose billiards simulator crafted specifically for science and engineering.
 
 Its core design principles focus on speed, flexibility, and the ease of visualization and analysis. With an interactive 3D interface, a robust API, and extensive documentation, pooltool aims to be a systemic tool in billiards-related research. Continuously evolving through active maintenance and bolstered by a growing community, this vision for pooltool emphasizes not just its current capabilities, but also its potential for growth and adaptation within billiards simulation.
 
-# Gallery
-
 <img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_1.png" width="350" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_2.png" width="350" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_3.png" width="350" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_5.png" width="350" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_6.png" width="350" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_7.png" width="350" />
 
-# Installation / Documentation / API / Tutorials
+# Documentation
 
-Please check the documentation [here](https://pooltool.readthedocs.io/en/latest/). 
+<a href="https://pooltool.readthedocs.io">
+  <img src="https://github.com/ekiefl/pooltool/assets/8688665/744fcd33-2e6a-4b8d-a727-634bb8295124" width="250" alt="rtd">
+</a>
 
-# Blog
+All learning resources are found on *Read the Docs*.
 
-I have blogged about many aspects of this project. Read the detailed account [here](https://ekiefl.github.io/projects/pooltool/).
+Quick links:
+
+1. [Homepage](https://pooltool.readthedocs.io/en/latest/index.html)
+1. [Installation](https://pooltool.readthedocs.io/en/latest/getting_started/install.html)
+1. [Getting started](https://pooltool.readthedocs.io/en/latest/getting_started/index.html)
+1. [General resources](https://pooltool.readthedocs.io/en/latest/resources/index.html)
+1. [API Reference](https://pooltool.readthedocs.io/en/latest/autoapi/pooltool/index.html)
 
 # Join the discussion
 
-If you want to ask questions, get help, or contribute to the codebase, please join the Discord and introduce yourself.
-
 [![Discord](https://img.shields.io/badge/Discord-Join%20Server-7289da?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/8Y8qUgzZhz)
+
+If you want to ask questions, get help, or contribute to the codebase, please join the Discord and introduce yourself.
 
 If the Discord link is expired, please make an issue in this repo.
 
 # Contribute/collaborate
 
-pooltool needs and welcomes contributors/collaborators of all skill levels who are excited about this project, but especially those who have skill or passion in:
+Pooltool needs and welcomes contributors/collaborators of all skill levels who are excited about this project, but especially those who have skill or passion in:
 
-1) Game development (especially for the Panda3D game engine!)
-2) Creating 3D models (tables, balls, cues, rooms, etc)
-3) Projector/camera systems
-4) Computer vision / machine learning / reinforcement learning
+1. **Game development** (especially for the Panda3D game engine)
+1. **Creating 3D models** (tables, balls, cues, rooms, etc)
+1. **Projector/camera systems**
+1. **Computer vision / machine learning / reinforcement learning**
 
 Please reach out in the Discord.
+
+# Blog
+
+I have blogged about many aspects of this project. Read the detailed account [here](https://ekiefl.github.io/projects/pooltool/).
