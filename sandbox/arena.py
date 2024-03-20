@@ -32,7 +32,7 @@ def main(args):
         interface = pt.ShotViewer()
     while True:
         # Setup the system
-        table = pt.Table.from_table_specs(pt.BilliardTableSpecs(l=4, w=2))
+        table = pt.Table.from_table_specs(pt.objects.BilliardTableSpecs(l=4, w=2))
         balls = {}
         balls["cue"] = place_ball("cue", balls, table)
         for i in range(args.N):

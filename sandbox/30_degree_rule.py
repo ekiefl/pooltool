@@ -12,7 +12,7 @@ import pooltool.constants as constants
 
 
 def _assert_cue_rolling_at_impact(system: pt.System) -> None:
-    event = pt.filter_type(system.events, pt.EventType.BALL_BALL)[0]
+    event = pt.events.filter_type(system.events, pt.EventType.BALL_BALL)[0]
     for agent in event.agents:
         if agent.id != "cue":
             continue
@@ -20,12 +20,12 @@ def _assert_cue_rolling_at_impact(system: pt.System) -> None:
 
 
 def get_deflection_system(cut: float, V0: float = 2, b: float = 0.2) -> pt.System:
-    ballset = pt.get_ballset("pooltool_pocket")
+    ballset = pt.objects.get_ballset("pooltool_pocket")
     cue_ball = pt.Ball.create("cue", xy=(50, 50), ballset=ballset)
     obj_ball = pt.Ball.create("2", xy=(49, 50), ballset=ballset)
     cue = pt.Cue(cue_ball_id="cue")
     table = pt.Table.from_table_specs(
-        specs=pt.BilliardTableSpecs(
+        specs=pt.objects.BilliardTableSpecs(
             l=100,
             w=100,
         )
@@ -50,7 +50,7 @@ def get_deflection_angle(cut: float, V0: float = 2, b: float = 0.2) -> float:
     system = get_deflection_system(cut=cut, V0=V0, b=b)
 
     # Get the ball-ball collision
-    collision = pt.filter_type(system.events, pt.EventType.BALL_BALL)[0]
+    collision = pt.events.filter_type(system.events, pt.EventType.BALL_BALL)[0]
 
     # Get the velocity of the cue right before impact
     for agent in collision.agents:
@@ -59,11 +59,11 @@ def get_deflection_angle(cut: float, V0: float = 2, b: float = 0.2) -> float:
     cue_velocity_pre_collision = agent.initial.state.rvw[1]
 
     # Get event when object ball transitions from sliding to rolling
-    sliding_to_rolling = pt.filter_events(
+    sliding_to_rolling = pt.events.filter_events(
         system.events,
-        pt.by_time(collision.time, after=True),
-        pt.by_ball("cue"),
-        pt.by_type(pt.EventType.SLIDING_ROLLING),
+        pt.events.by_time(collision.time, after=True),
+        pt.events.by_ball("cue"),
+        pt.events.by_type(pt.EventType.SLIDING_ROLLING),
     )[0]
 
     # Get the velocity of the cue after it is done sliding
