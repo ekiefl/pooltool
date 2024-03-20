@@ -13,7 +13,7 @@ from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
-from pooltool.game.ruleset.datatypes import BallInHandOptions
+from pooltool.ruleset.datatypes import BallInHandOptions
 from pooltool.system.render import visual
 from pooltool.utils import panda_path
 

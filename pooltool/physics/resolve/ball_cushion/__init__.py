@@ -17,11 +17,33 @@ from pooltool.utils.strenum import StrEnum, auto
 
 
 class BallLCushionModel(StrEnum):
+    """An Enum for different ball-linear cushion collision models
+
+    Attributes:
+        HAN_2005:
+            https://ekiefl.github.io/2020/04/24/pooltool-theory/#3-han-2005
+            (:class:`Han2005Linear`).
+        UNREALISTIC:
+            An unrealistic model in which balls are perfectly reflected. Spin is left
+            untouched by the interaction (:class:`UnrealisticLinear`).
+    """
+
     HAN_2005 = auto()
     UNREALISTIC = auto()
 
 
 class BallCCushionModel(StrEnum):
+    """An Enum for different ball-circular cushion collision models
+
+    Attributes:
+        HAN_2005:
+            https://ekiefl.github.io/2020/04/24/pooltool-theory/#3-han-2005
+            (:class:`Han2005Linear`).
+        UNREALISTIC:
+            An unrealistic model in which balls are perfectly reflected. Spin is left
+            untouched by the interaction (:class:`UnrealisticCircular`).
+    """
+
     HAN_2005 = auto()
     UNREALISTIC = auto()
 
@@ -40,6 +62,19 @@ _ball_ccushion_models: Dict[BallCCushionModel, Type[BallCCushionCollisionStrateg
 def get_ball_lin_cushion_model(
     model: Optional[BallLCushionModel] = None, params: ModelArgs = {}
 ) -> BallLCushionCollisionStrategy:
+    """Returns a ball-linear cushion collision model
+
+    Args:
+        model:
+            An Enum specifying the desired model. If not passed,
+            :class:`Han2005Linear` is passed with empty params.
+        params:
+            A mapping of parameters accepted by the model.
+
+    Returns:
+        An instantiated model that satisfies the :class:`BallLCushionCollisionStrategy`
+        protocol.
+    """
     if model is None:
         return Han2005Linear()
 
@@ -49,6 +84,19 @@ def get_ball_lin_cushion_model(
 def get_ball_circ_cushion_model(
     model: Optional[BallCCushionModel] = None, params: ModelArgs = {}
 ) -> BallCCushionCollisionStrategy:
+    """Returns a ball-circular cushion collision model
+
+    Args:
+        model:
+            An Enum specifying the desired model. If not passed,
+            :class:`Han2005Circular` is passed with empty params.
+        params:
+            A mapping of parameters accepted by the model.
+
+    Returns:
+        An instantiated model that satisfies the :class:`BallCCushionCollisionStrategy`
+        protocol.
+    """
     if model is None:
         return Han2005Circular()
 

@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+"""Utilities"""
 
 import importlib.util
 import linecache

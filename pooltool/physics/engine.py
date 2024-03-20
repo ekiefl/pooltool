@@ -1,3 +1,5 @@
+"""The physics engine of pooltool"""
+
 from __future__ import annotations
 
 import attrs
@@ -20,3 +22,8 @@ class PhysicsEngine:
     """
 
     resolver: Resolver = attrs.field(factory=Resolver.default)
+
+
+__all__ = [
+    "PhysicsEngine",
+]

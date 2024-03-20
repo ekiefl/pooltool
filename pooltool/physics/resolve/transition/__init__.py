@@ -1,8 +1,9 @@
 """Defining and handling ball state transitions
 
-NOTE: If this module is ever extended to support multiple treatments for ball
-transitions, expand this file into a file structure modelled after ../ball_ball or
-../ball_cushion
+Note:
+    If this module is ever extended to support multiple treatments for ball transitions,
+    expand this file into a file structure modelled after ../ball_ball or
+    ../ball_cushion
 """
 
 from typing import Dict, Optional, Protocol, Tuple, Type
@@ -17,9 +18,11 @@ from pooltool.utils.strenum import StrEnum, auto
 
 
 class BallTransitionStrategy(Protocol):
-    def resolve(
-        self, ball: Ball, transition: EventType, inplace: bool = False
-    ) -> Ball: ...
+    """Ball transition models must satisfy this protocol"""
+
+    def resolve(self, ball: Ball, transition: EventType, inplace: bool = False) -> Ball:
+        """This method resolves a ball transition"""
+        ...
 
 
 class CanonicalTransition:
@@ -77,6 +80,14 @@ def _ball_transition_motion_states(event_type: EventType) -> Tuple[int, int]:
 
 
 class BallTransitionModel(StrEnum):
+    """An Enum for different transition models
+
+    Attributes:
+        CANONICAL:
+            Sets the ball to appropriate state. Sets any residual quantities to 0 when
+            appropriate (:class:`CanonicalTransition`).
+    """
+
     CANONICAL = auto()
 
 
@@ -89,6 +100,19 @@ def get_transition_model(
     model: Optional[BallTransitionModel] = None,
     params: ModelArgs = {},
 ) -> BallTransitionStrategy:
+    """Returns a transition model
+
+    Args:
+        model:
+            An Enum specifying the desired model. If not passed,
+            :class:`CanonicalTransition` is passed with empty params.
+        params:
+            A mapping of parameters accepted by the model.
+
+    Returns:
+        An instantiated model that satisfies the :class:`BallTransitionStrategy`
+        protocol.
+    """
     if model is None:
         return CanonicalTransition()
 

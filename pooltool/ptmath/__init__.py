@@ -1,5 +1,7 @@
+"""Math functions"""
+
 import pooltool.ptmath.roots as roots
-from pooltool.ptmath._ptmath import (
+from pooltool.ptmath.utils import (
     angle,
     angle_between_vectors,
     are_points_on_same_side,
@@ -7,10 +9,17 @@ from pooltool.ptmath._ptmath import (
     coordinate_rotation,
     cross,
     find_intersection_2D,
+    get_ball_energy,
+    get_roll_time,
+    get_slide_time,
+    get_spin_time,
+    get_u_vec,
+    is_overlapping,
     norm2d,
     norm3d,
     orientation,
     point_on_line_closest_to_point,
+    rel_velocity,
     solve_transcendental,
     unit_vector,
     unit_vector_slow,
@@ -34,4 +43,11 @@ __all__ = [
     "unit_vector",
     "unit_vector_slow",
     "wiggle",
+    "rel_velocity",
+    "get_u_vec",
+    "get_slide_time",
+    "get_roll_time",
+    "get_spin_time",
+    "get_ball_energy",
+    "is_overlapping",
 ]

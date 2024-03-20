@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typing import Iterable, List, Tuple
 
-from pooltool.game.ruleset.datatypes import ShotConstraints
-from pooltool.game.ruleset.snooker.balls import (
+from pooltool.ruleset.datatypes import ShotConstraints
+from pooltool.ruleset.snooker.balls import (
     BallGroup,
     ball_info,
     ball_infos,
     ball_infos_dict,
 )
-from pooltool.game.ruleset.utils import (
+from pooltool.ruleset.utils import (
     get_ball_ids_on_table,
     get_pocketed_ball_ids_during_shot,
     is_ball_pocketed,

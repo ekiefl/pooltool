@@ -41,10 +41,18 @@ from pooltool.serialize import Pathish, conversion
 from pooltool.system.datatypes import System
 
 RESOLVER_CONFIG_PATH = pooltool.user_config.PHYSICS_DIR / "resolver.yaml"
+"""The location of the resolver config path YAML"""
 
 
 @attrs.define
 class ResolverConfig:
+    """A structured form of the user resolver config
+
+    Important:
+        For everything you need to know about this class, see :doc:`Modular Physics
+        </resources/custom_physics>`_.
+    """
+
     ball_ball: BallBallModel
     ball_ball_params: ModelArgs
     ball_linear_cushion: BallLCushionModel
@@ -98,7 +106,7 @@ class Resolver:
 
     Important:
         For everything you need to know about this class, see :doc:`Modular Physics
-        </resources/custom_physics>`.
+        </resources/custom_physics>`_.
     """
 
     ball_ball: BallBallCollisionStrategy

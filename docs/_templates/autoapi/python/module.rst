@@ -10,7 +10,16 @@
 .. py:module:: {{ obj.name }}
 
 {% if obj.docstring %}
-    {{ obj.docstring|indent(3) }}
+    {% set docstring_lines = obj.docstring.split('\n') %}
+    {% set first_line = docstring_lines[0] %}
+    {{ first_line }}
+    {{ "-" * first_line|length }}
+    
+    {% if docstring_lines|length > 1 %}
+    {% for line in docstring_lines[1:] %}
+    {{ line }}
+    {% endfor %}
+    {% endif %}
 {% endif %}
 
 {% block subpackages %}

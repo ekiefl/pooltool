@@ -1,3 +1,12 @@
+"""Simulation object classes
+
+The three main simulation objects are :class:`pooltool.objects.ball.datatypes.Ball`,
+:class:`pooltool.objects.cue.datatypes.Cue`, and
+:class:`pooltool.objects.table.datatypes.Table`, however there are many more objects
+that either help create the primary objects or comprise the primary objects. Those are
+all kept in this module.
+"""
+
 from pooltool.objects.ball.datatypes import (
     Ball,
     BallHistory,

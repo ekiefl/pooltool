@@ -3,8 +3,8 @@ from typing import List, Optional, Set, Tuple
 import pooltool.constants as const
 from pooltool.events.datatypes import EventType
 from pooltool.events.filter import by_ball, by_type, filter_events, filter_type
-from pooltool.game.ruleset.datatypes import ShotConstraints
 from pooltool.objects.ball.datatypes import Ball, BallState
+from pooltool.ruleset.datatypes import ShotConstraints
 from pooltool.system.datatypes import System
 from pooltool.utils.strenum import StrEnum, auto
 

@@ -15,7 +15,11 @@ class _BaseStrategy(Protocol):
 
 
 class BallBallCollisionStrategy(_BaseStrategy, Protocol):
-    def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]: ...
+    """Ball-ball collision models must satisfy this protocol"""
+
+    def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
+        """This method resolves a ball-ball collision"""
+        ...
 
 
 class CoreBallBallCollision(ABC):

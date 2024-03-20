@@ -15,12 +15,6 @@ from numba import jit
 
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
-from pooltool.physics.utils import (
-    get_roll_time,
-    get_slide_time,
-    get_spin_time,
-    rel_velocity,
-)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -29,7 +23,7 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
         return rvw, state
 
     if state == const.sliding:
-        dtau_E_slide = get_slide_time(rvw, R, u_s, g)
+        dtau_E_slide = ptmath.get_slide_time(rvw, R, u_s, g)
 
         if t >= dtau_E_slide:
             rvw = evolve_slide_state(rvw, R, m, u_s, u_sp, g, dtau_E_slide)
@@ -39,7 +33,7 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
             return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), const.sliding
 
     if state == const.rolling:
-        dtau_E_roll = get_roll_time(rvw, u_r, g)
+        dtau_E_roll = ptmath.get_roll_time(rvw, u_r, g)
 
         if t >= dtau_E_roll:
             rvw = evolve_roll_state(rvw, R, u_r, u_sp, g, dtau_E_roll)
@@ -49,7 +43,7 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
             return evolve_roll_state(rvw, R, u_r, u_sp, g, t), const.rolling
 
     if state == const.spinning:
-        dtau_E_spin = get_spin_time(rvw, R, u_sp, g)
+        dtau_E_spin = ptmath.get_spin_time(rvw, R, u_sp, g)
 
         if t >= dtau_E_spin:
             return (
@@ -73,7 +67,9 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
     rvw_B0 = ptmath.coordinate_rotation(rvw.T, -phi).T
 
     # Relative velocity unit vector in ball frame
-    u_0 = ptmath.coordinate_rotation(ptmath.unit_vector(rel_velocity(rvw, R)), -phi)
+    u_0 = ptmath.coordinate_rotation(
+        ptmath.unit_vector(ptmath.rel_velocity(rvw, R)), -phi
+    )
 
     # Calculate quantities according to the ball frame. NOTE w_B in this code block
     # is only accurate of the x and y evolution of angular velocity. z evolution of

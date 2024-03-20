@@ -9,7 +9,7 @@ import pytest
 from numpy.typing import NDArray
 
 import pooltool.ptmath as ptmath
-from pooltool.game.layouts import (
+from pooltool.layouts import (
     BallPos,
     Dir,
     Jump,

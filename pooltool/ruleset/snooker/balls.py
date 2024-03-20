@@ -4,7 +4,7 @@ from typing import Dict, Iterable, Optional, Tuple
 
 import attrs
 
-from pooltool.game.layouts import snooker_color_locs
+from pooltool.layouts import snooker_color_locs
 from pooltool.utils.strenum import StrEnum, auto
 
 

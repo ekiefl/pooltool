@@ -147,8 +147,8 @@ def filter_events(events: List[Event], *funcs: FilterFunc) -> List[Event]:
         filtering for the cue-ball pocket event. Option 1 is to call :func:`filter_type`
         and then :func:`filter_ball`:
 
-        >>> filtered_events = pt.filter_type(events, pt.EventType.BALL_POCKET)
-        >>> filtered_events = pt.filter_ball(filtered_events, "cue")
+        >>> filtered_events = pt.events.filter_type(events, pt.EventType.BALL_POCKET)
+        >>> filtered_events = pt.events.filter_ball(filtered_events, "cue")
         >>> event_of_interest = filtered_events[0]
         >>> event_of_interest
         <Event object at 0x7fa855e7e6c0>
@@ -158,10 +158,10 @@ def filter_events(events: List[Event], *funcs: FilterFunc) -> List[Event]:
 
         Option 2, the better option, is to use :func:`filter_events`:
 
-        >>> filtered_events = pt.filter_events(
+        >>> filtered_events = pt.events.filter_events(
         >>>     events,
-        >>>     pt.by_type(pt.EventType.BALL_POCKET),
-        >>>     pt.by_ball("cue"),
+        >>>     pt.events.by_type(pt.EventType.BALL_POCKET),
+        >>>     pt.events.by_ball("cue"),
         >>> )
         >>> event_of_interest = filtered_events[0]
         >>> event_of_interest

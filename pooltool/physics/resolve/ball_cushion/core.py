@@ -29,15 +29,23 @@ class _BaseCircularStrategy(Protocol):
 
 
 class BallLCushionCollisionStrategy(_BaseLinearStrategy, Protocol):
+    """Ball-linear cushion collision models must satisfy this protocol"""
+
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
-    ) -> Tuple[Ball, LinearCushionSegment]: ...
+    ) -> Tuple[Ball, LinearCushionSegment]:
+        """This method resolves a ball-circular cushion collision"""
+        ...
 
 
 class BallCCushionCollisionStrategy(_BaseCircularStrategy, Protocol):
+    """Ball-circular cushion collision models must satisfy this protocol"""
+
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment
-    ) -> Tuple[Ball, CircularCushionSegment]: ...
+    ) -> Tuple[Ball, CircularCushionSegment]:
+        """This method resolves a ball-circular cushion collision"""
+        ...
 
 
 class CoreBallLCushionCollision(ABC):
