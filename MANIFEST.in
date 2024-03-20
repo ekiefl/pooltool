@@ -3,11 +3,10 @@ include pooltool/config/menus/*.xml
 
 recursive-include pooltool/ani/fonts *.ttf
 
-recursive-include pooltool/ README.md
 recursive-include pooltool/ani/camera/states *.json
 
 recursive-include pooltool/logo *
-recursive-exclude pooltool/logo *.blend *.svg *.exr
+recursive-exclude pooltool/logo *.blend *.blend* *.svg *.exr logo_v*p*.png
 
 recursive-include pooltool/models *
 recursive-exclude pooltool/models *_pbr.glb
