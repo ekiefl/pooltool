@@ -1,4 +1,4 @@
-These are instructions for myself on how to make new pip-installable pooltool versions on PyPi.
+These are instructions for how to make new pip-installable pooltool versions on PyPi.
 Information comes from
 https://betterscientificsoftware.github.io/python-for-hpc/tutorials/python-pypi-packaging/#creating-a-python-package
 
@@ -7,9 +7,9 @@ https://betterscientificsoftware.github.io/python-for-hpc/tutorials/python-pypi-
 1. Change the version in `setup.py`. Rather than X.X.X, use X.X.X.dev0. This
    version is temporary until I'm positive that things are working properly.
 
-2. In my development environment, run `python setup.py check`, then `python setup.py sdist`. This creates a tar.gz source distribution in the directory `dist/`
+2. In your development environment, run `python setup.py check`, then `python setup.py sdist`. This creates a tar.gz source distribution in the directory `dist/`
 
-3. Time to upload this distribution to test.pypi. Run `twine upload --repository-url https://test.pypi.org/legacy/ dist/pooltool-billiards-X.X.X.dev0.tar.gz -u __token__ -p <API_PASSWORD>`. <API_PASSWORD> is in your keychain under "TestPyPi pooltool".
+3. Time to upload this distribution to test.pypi. Run `twine upload --repository-url https://test.pypi.org/legacy/ dist/pooltool-billiards-X.X.X.dev0.tar.gz -u __token__ -p <API_PASSWORD>`. <API_PASSWORD> is in your keychain under "TestPyPi pooltool". If test PyPi is timing out, skip to step 5.
 
 4. Create a fresh python environment to test the installation
 

@@ -17,7 +17,7 @@ graduate to the top-level API, **your input is valuable** and such changes can b
 considered.
 """
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 import pooltool.ai as ai
 import pooltool.ai.aim as aim
