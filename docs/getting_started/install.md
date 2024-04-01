@@ -46,7 +46,7 @@ pip install --pre --extra-index-url https://archive.panda3d.org/ panda3d
 
 </details>
 
-## Install option (2): manual
+## Install option (2): developer
 
 | GUI | API | Develop |
 |-----|-----|---------|
