@@ -8,9 +8,9 @@ authors:
   - name: Evan Kiefl
     orcid: 0000-0002-6473-0921
     affiliation: 1
-affiliations:
- - name: Graduate Program in Biophysical Sciences, University of Chicago, USA
-   index: 1
+#affiliations:
+# - name: Graduate Program in Biophysical Sciences, University of Chicago, USA
+#   index: 1
 date: 3 April 2024
 bibliography: paper.bib
 ---
@@ -27,55 +27,10 @@ Billiards simulation serves as the foundation for a wide array of research topic
 
 Unfortunately, the current billiards simulation software landscape reveals a stark contrast between the realistic physics seen in some commercially-produced games (i.e., *Shooterspool* and *VirtualPool4*) and the limited functionality of open-source projects. Commercial products have little, if any, utility in research contexts due to closed source code and a lack of open APIs. Conversely, available open source tools lack realism, usability, and adaptability for generic research needs. The most widely cited simulator in research studies, *FastFiz*[^1], is unpackaged, unmaintained, provides no modularity for custom geometries nor for physical models, offers restrictive 2D visualizations, outputs minimal simulation results with no built-in capabilities for introspection, and was custom built for hosting the Association for the Advancement of Artificial Intelligence (AAAI) Computational Pool Tournament from 2005-2008 [@Archibald2010-av]. Another option, *Billiards*[^2], offers a visually appealing 3D game experience, realistic physics, and supports customization via Lua scripting. However, as a standalone application, it lacks interoperability with commonly used systems and tools in research. Written in Lua, an uncommon language in the scientific community, it has limited appeal in research settings. The lack of Windows support is another drawback. *FooBilliard++*[^3] is a 3D game with realistic physics, yet is not a general purpose billiards simulator, instead focusing on game experience and aesthetics. Other offerings suffer from drawbacks already mentioned.
 
-[^1]: [https://github.com/ekiefl/FastFiz]
-[^2]: [https://www.nongnu.org/billiards/]
-[^3]: [https://foobillardplus.sourceforge.net/]
+[^1]: [https://github.com/ekiefl/FastFiz](https://github.com/ekiefl/FastFiz)
+[^2]: [https://www.nongnu.org/billiards/](https://www.nongnu.org/billiards/)
+[^3]: [https://foobillardplus.sourceforge.net/](https://foobillardplus.sourceforge.net/)
 
 The lack of suitable software for billiards simulation in research contexts forces researchers to develop case-specific simulators that meet their research requirements but fall short of serving the broader community as general purpose simulators. This fragments the research collective, renders cross-study results difficult or impossible to compare, and leads to wasted effort spent reinventing the wheel. `pooltool` fills this niche with its open-source billiards simulation platform, built in Python. Designed to be flexible and extendable, it has applications across a wide range of use cases.
-
-# Mathematics
-
-Single dollars ($) are required for inline mathematics e.g. $f(x) = e^{\pi/x}$
-
-Double dollars make self-standing equations:
-
-$$\Theta(x) = \left\{\begin{array}{l}
-0\textrm{ if } x < 0\cr
-1\textrm{ else}
-\end{array}\right.$$
-
-You can also use plain \LaTeX for equations
-\begin{equation}\label{eq:fourier}
-\hat f(\omega) = \int_{-\infty}^{\infty} f(x) e^{i\omega x} dx
-\end{equation}
-and refer to \autoref{eq:fourier} from text.
-
-# Citations
-
-Citations to entries in paper.bib should be in
-[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
-
-If you want to cite a software repository URL (e.g. something on GitHub without a preferred
-citation) then you can do it with the example BibTeX entry below for @fidgit.
-
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
-
-# Figures
-
-Figures can be included like this:
-![Caption for example figure.\label{fig:example}](figure.png)
-and referenced from text using \autoref{fig:example}.
-
-Figure sizes can be customized by adding an optional second parameter:
-![Caption for example figure.](figure.png){ width=20% }
-
-# Acknowledgements
-
-We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
-Oh, and support from Kathryn Johnston during the genesis of this project.
 
 # References
