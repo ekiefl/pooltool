@@ -3,7 +3,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/network)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/ekiefl/pooltool)
-[![GitHub license](https://img.shields.io/github/license/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/blob/master/LICENSE)
+[![GitHub license](https://img.shields.io/github/license/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/blob/master/LICENSE.txt)
 [![Documentation Status](https://readthedocs.org/projects/pooltool/badge/?version=latest)](https://pooltool.readthedocs.io/en/latest/?badge=latest)
 
 # Pooltool
