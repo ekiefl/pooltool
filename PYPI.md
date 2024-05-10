@@ -46,6 +46,8 @@ cd ~
 
 10. Test installation: `pip install pooltool-billiards==X.X.X` (you may need to wait for version to be live)
 
-11. Make a release on github. Run `python setup.py sdist bdist_wheel` **back in the development environment** and upload the `.whl` and `.tar.gz` found in `dist/`
+12. Push changes to main.
 
-12. **After** the release is made, in `pooltool/__init__.py` set the version to X.X.X+dev. Commit and push.
+12. Make a release on github. Run `python setup.py sdist bdist_wheel` **back in the development environment** and upload the `.whl` and `.tar.gz` found in `dist/`
+
+13. **After** the release is made, in `pooltool/__init__.py` set the version to X.X.X+dev. Commit and push.
