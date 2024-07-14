@@ -44,16 +44,16 @@ jobs:
         id: ruff_lint
         continue-on-error: true
         run: |
-          poetry ruff --version
-          poetry ruff check . --verbose --diff
+          poetry run ruff --version
+          poetry run ruff check . --verbose --diff
           echo "ruff_lint_failed=$?" >> $GITHUB_ENV
 
       - name: ruff (format)
         id: ruff_format
         continue-on-error: true
         run: |
-          poetry ruff --version
-          poetry ruff format . --check --verbose --diff
+          poetry run ruff --version
+          poetry run ruff format . --check --verbose --diff
           echo "ruff_format_failed=$?" >> $GITHUB_ENV
 
       # --- Pytest
@@ -62,8 +62,8 @@ jobs:
         id: pytest
         continue-on-error: true
         run: |
-          poetry pytest --version
-          poetry pytest
+          poetry run pytest --version
+          poetry run pytest
           echo "pytest_failed=$?" >> $GITHUB_ENV
 
       # --- Pyright
@@ -72,8 +72,8 @@ jobs:
         id: pyright
         continue-on-error: true
         run: |
-          poetry pyright --version
-          poetry pyright --project ./pyrightconfig.ci.json
+          poetry run pyright --version
+          poetry run pyright --project ./pyrightconfig.ci.json
           echo "pyright_failed=$?" >> $GITHUB_ENV
 
       # --- Main
