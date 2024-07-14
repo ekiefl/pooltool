@@ -58,28 +58,7 @@ If you want to develop for pooltool, have access to the most up-to-date version 
 
 A small note. If you don't have the ability to create isolated python environments, I would recommend installing `conda` ([here](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)) so you can isolate pooltool from your other business.
 
-**(i)** create a new, python environment that uses Python 3.8.10.
-
-With `conda`, you could do the following:
-
-```bash
-conda deactivate
-conda env remove --name pooltool
-conda create -y -n pooltool python=3.8.10
-conda activate pooltool
-```
-
-Regardless of how you managed your python environment, please verify you're running `3.8.10`
-
-```
-$ python
-Python 3.8.10 (default, May 19 2021, 11:01:55)
-[Clang 10.0.0 ] :: Anaconda, Inc. on darwin
-Type "help", "copyright", "credits" or "license" for more information.
->>> exit()
-```
-
-**(ii)** grab the codebase:
+**(i)** Grab a copy of the codebase.
 
 ```bash
 cd <A_DIRECTORY_YOU_LIKE>
@@ -87,25 +66,50 @@ git clone https://github.com/ekiefl/pooltool.git
 cd pooltool
 ```
 
-**(iii)** install the dependencies:
+**(ii)** Create a new python environment that uses Python 3.8.10.
+
+If you have `conda`, just run this:
 
 ```bash
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+conda env create -f environment.yml
+conda activate pooltool
 ```
 
-In addition to `requirements.txt`, `requirements-dev.txt` includes some modules required for developement.
+Regardless of how you managed your python environment, please verify you're running `3.8.10`
 
-**NOTE**: If you're on Linux or Windows, you must _also_ run this:
-
-```python
-pip uninstall panda3d -y
-pip install --pre --extra-index-url https://archive.panda3d.org/ panda3d
+```bash
+$ python
+Python 3.8.10 (default, May 19 2021, 11:01:55)
+[Clang 10.0.0 ] :: Anaconda, Inc. on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>> exit()
 ```
 
-(_This is because there is a bug where the mouse moves off of the screen when aiming in the GUI, making you lose mouse control on Linux and Windows. The solution is to install Panda3D v1.11, which is currently unreleased but still installable._)
+**(iii)** Install poetry, a popular python package/environment manager.
 
-**(iv)** install the pre-commit hooks:
+If you created your environment with conda, you've already installed poetry.
+
+Otherwise, install with
+
+```bash
+pip install poetry
+```
+
+Verify your installation:
+
+```bash
+$ poetry --version
+Poetry (version 1.8.3)
+```
+
+**(iv)** Install pooltool.
+
+```bash
+poetry install
+pip install -e .
+```
+
+**(v)** install the pre-commit hooks:
 
 This will automatically format your code according to the pooltool standard whenever you commit.
 
@@ -113,7 +117,7 @@ This will automatically format your code according to the pooltool standard when
 pre-commit install
 ```
 
-**(v)** test out your installation:
+**(vi)** test out your installation:
 
 ```bash
 python run_pooltool

@@ -11,6 +11,8 @@ authors = ["Evan Kiefl <kiefl.evan@gmail.com>"]
 maintainers = ["Evan Kiefl <kiefl.evan@gmail.com>"]
 license = "Apache-2.0"
 readme = "README.md"
+
+# TODO (untested)
 include = [
     "pooltool/config/*",
     "pooltool/config/menus/*.xml",
@@ -20,6 +22,8 @@ include = [
     "pooltool/models/*",
     "run_pooltool.bat",
 ]
+
+# TODO (untested)
 exclude = [
     "pooltool/logo/*.blend",
     "pooltool/logo/*.blend*",
@@ -45,6 +49,7 @@ exclude = [
     "pooltool/models/balls/*.jpeg",
 ]
 
+# TODO (fix and make sure .bat works on windows)
 [tool.poetry.scripts]
 run_pooltool = "run_pooltool:run"
 
