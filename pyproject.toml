@@ -1,3 +1,103 @@
+[tool.poetry]
+name = "pooltool"
+version = "0.3.3+dev"
+description = "A sandbox billiards game that emphasizes realistic physics."
+repository = "https://github.com/ekiefl/pooltool"
+documentation = "https://pooltool.readthedocs.io/en/latest/"
+keywords = ["simulation", "physics", "pool", "billiards", "panda3d", "snooker", "eight-ball"]
+classifiers = ["Topic :: Scientific/Engineering :: Visualization", "Topic :: Scientific/Engineering :: Physics", "Topic :: Games/Entertainment :: Simulation"]
+packages = [{include = "pooltool"}]
+authors = ["Evan Kiefl <kiefl.evan@gmail.com>"]
+maintainers = ["Evan Kiefl <kiefl.evan@gmail.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+include = [
+    "pooltool/config/*",
+    "pooltool/config/menus/*.xml",
+    "pooltool/ani/fonts/*.ttf",
+    "pooltool/ani/camera/states/*.json",
+    "pooltool/logo/*",
+    "pooltool/models/*",
+    "run_pooltool.bat",
+]
+exclude = [
+    "pooltool/logo/*.blend",
+    "pooltool/logo/*.blend*",
+    "pooltool/logo/*.svg",
+    "pooltool/logo/*.exr",
+    "pooltool/logo/logo_v*p*.png",
+    "pooltool/models/*_pbr.glb",
+    "pooltool/models/*.blend",
+    "pooltool/models/*.blend1",
+    "pooltool/models/*.pptx",
+    "pooltool/models/*.svg",
+    "pooltool/models/room/*.png",
+    "pooltool/models/room/*.jpg",
+    "pooltool/models/room/*.jpeg",
+    "pooltool/models/table/*.png",
+    "pooltool/models/table/*.jpg",
+    "pooltool/models/table/*.jpeg",
+    "pooltool/models/cue/*.png",
+    "pooltool/models/cue/*.jpg",
+    "pooltool/models/cue/*.jpeg",
+    "pooltool/models/balls/*.png",
+    "pooltool/models/balls/*.jpg",
+    "pooltool/models/balls/*.jpeg",
+]
+
+[tool.poetry.scripts]
+run_pooltool = "run_pooltool:run"
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
+[[tool.poetry.source]]
+name = "Panda3D-Archive"
+url = "https://archive.panda3d.org/simple/"
+priority = "explicit"
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+numpy = "*"
+pandas = "*"
+numba = "*"
+scipy = "*"
+panda3d = { version = "1.11.0.dev3005", allow-prereleases = true, source = "Panda3D-Archive" }
+panda3d-gltf = "*"
+panda3d-simplepbr = "*"
+Pillow = "*"
+cattrs = "*"
+attrs = "*"
+pprofile = "*"
+msgpack = "*"
+msgpack-numpy = "*"
+h5py = "*"
+pyyaml = "*"
+
+[tool.poetry.group.dev.dependencies]
+psutil = "*"
+colored = "*"
+ipython = "*"
+pytest = "*"
+pre-commit = "*"
+pyright = "*"
+ruff = "*"
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+sphinx = "*"
+sphinx-copybutton = "*"
+furo = "*"
+myst-parser = "*"
+sphinx-autoapi = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.ruff]
 line-length = 88
 
