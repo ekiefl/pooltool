@@ -4,49 +4,35 @@ version = "0.3.3+dev"
 description = "A sandbox billiards game that emphasizes realistic physics."
 repository = "https://github.com/ekiefl/pooltool"
 documentation = "https://pooltool.readthedocs.io/en/latest/"
-keywords = ["simulation", "physics", "pool", "billiards", "panda3d", "snooker", "eight-ball"]
-classifiers = ["Topic :: Scientific/Engineering :: Visualization", "Topic :: Scientific/Engineering :: Physics", "Topic :: Games/Entertainment :: Simulation"]
-packages = [{include = "pooltool"}]
 authors = ["Evan Kiefl <kiefl.evan@gmail.com>"]
 maintainers = ["Evan Kiefl <kiefl.evan@gmail.com>"]
 license = "Apache-2.0"
 readme = "README.md"
-
-# TODO (untested)
-include = [
-    "pooltool/config/*",
-    "pooltool/config/menus/*.xml",
-    "pooltool/ani/fonts/*.ttf",
-    "pooltool/ani/camera/states/*.json",
-    "pooltool/logo/*",
-    "pooltool/models/*",
-    "run_pooltool.bat",
+keywords = ["simulation", "physics", "pool", "billiards", "panda3d", "snooker", "eight-ball"]
+classifiers = [
+  "Topic :: Scientific/Engineering :: Visualization",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Games/Entertainment :: Simulation",
 ]
 
-# TODO (untested)
+packages = [{include = "pooltool"}]
+
+include = [
+]
+
 exclude = [
-    "pooltool/logo/*.blend",
-    "pooltool/logo/*.blend*",
-    "pooltool/logo/*.svg",
-    "pooltool/logo/*.exr",
-    "pooltool/logo/logo_v*p*.png",
-    "pooltool/models/*_pbr.glb",
-    "pooltool/models/*.blend",
-    "pooltool/models/*.blend1",
-    "pooltool/models/*.pptx",
-    "pooltool/models/*.svg",
-    "pooltool/models/room/*.png",
-    "pooltool/models/room/*.jpg",
-    "pooltool/models/room/*.jpeg",
-    "pooltool/models/table/*.png",
-    "pooltool/models/table/*.jpg",
-    "pooltool/models/table/*.jpeg",
-    "pooltool/models/cue/*.png",
-    "pooltool/models/cue/*.jpg",
-    "pooltool/models/cue/*.jpeg",
-    "pooltool/models/balls/*.png",
-    "pooltool/models/balls/*.jpg",
-    "pooltool/models/balls/*.jpeg",
+  "pooltool/**/test_*",
+  "pooltool/logo/**/*.blend*",
+  "pooltool/logo/**/*.svg",
+  "pooltool/logo/**/*.exr",
+  "pooltool/logo/logo_v*p*.png",
+  "pooltool/models/**/*_pbr.glb",
+  "pooltool/models/**/*.blend*",
+  "pooltool/models/**/*.pptx",
+  "pooltool/models/**/*.svg",
+  "pooltool/models/**/*.png",
+  "pooltool/models/**/*.jpg",
+  "pooltool/models/**/*.jpeg",
 ]
 
 # TODO (fix and make sure .bat works on windows)
@@ -56,6 +42,10 @@ run_pooltool = "run_pooltool:run"
 [[tool.poetry.source]]
 name = "PyPI"
 priority = "primary"
+
+[[tool.poetry.source]]
+name = "pypi_test"
+url = "https://test.pypi.org/legacy/"
 
 [[tool.poetry.source]]
 name = "Panda3D-Archive"
