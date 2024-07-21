@@ -37,7 +37,7 @@ exclude = [
 
 # TODO (fix and make sure .bat works on windows)
 [tool.poetry.scripts]
-run_pooltool = "run_pooltool:run"
+run-pooltool = "main:run"
 
 [[tool.poetry.source]]
 name = "PyPI"
