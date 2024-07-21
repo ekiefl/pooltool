@@ -120,30 +120,10 @@ pre-commit install
 **(vi)** test out your installation:
 
 ```bash
-python run_pooltool
+run-pooltool
 ```
 
 The game window should appear (escape key to exit).
-
-**(vi)** if you used a conda environment that you named `pooltool`, create this script that runs whenever the conda environment is activated. This script modifies `$PATH` and `$PYTHONPATH` so that python knows where to find pooltool libraries and the shell knows where to find the pooltool binary. **These path modifications live safely inside the pooltool conda environment, and do not propagate into your global
-environment**:
-
-(_This is a multi-line command. Paste the entire block into your command line prompt._)
-
-```
-mkdir -p ${CONDA_PREFIX}/etc/conda/activate.d
-cat <<EOF >${CONDA_PREFIX}/etc/conda/activate.d/pooltool.sh
-export PYTHONPATH=\$PYTHONPATH:$(pwd)
-export PATH=\$PATH:$(pwd)
-EOF
-```
-
-The next time you activate your conda environment (`conda activate pooltool`), `run_pooltool` (or `run_pooltool.bat` if you're on Windows) is now a binary that can be run anywhere in your filesystem whenever you are in the `pooltool` conda environment. Test it out:
-```
-conda activate pooltool
-cd ~
-run_pooltool
-```
 
 </details>
 

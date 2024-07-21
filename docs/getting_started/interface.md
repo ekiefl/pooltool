@@ -5,13 +5,13 @@
 The interface (GUI) can be accessed from the command line:
 
 ```bash
-run_pooltool
+run-pooltool
 ```
 
-Or, if you're on Windows:
+Or, if you're on Windows (FIXME is this true?):
 
 ```bash
-run_pooltool.bat
+run-pooltool.bat
 ```
 
 This will produce the following window:

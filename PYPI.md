@@ -49,7 +49,7 @@ If test PyPi is timing out, you can instead consider testing the installation wi
 pip install dist/pooltool-billiards-X.X.X.dev0.tar.gz --force-reinstall
 ```
 
-- Test it out. Make sure `cd ~; which run_pooltool` leads to the asdf environment: `/Users/evan/anaconda3/envs/asdf/bin/run_pooltool`. Then see if it works: `run_pooltool`. Additionally, check the path of `python -c "import pooltool; print(pooltool.__file__)"`. It should be in site-packages of asdf environment.
+- Test it out. Make sure `which run-pooltool` leads to the asdf environment: `/Users/evan/anaconda3/envs/asdf/bin/run_pooltool`. Then see if it works: `run-pooltool`. Additionally, check the path of `cd ~; python -c "import pooltool; print(pooltool.__file__)"; cd -`. It should be in site-packages of asdf environment.
 
 ## 4. Rebuild with correct version tag
 
