@@ -69,6 +69,7 @@ msgpack = "*"
 msgpack-numpy = "*"
 h5py = "*"
 pyyaml = "*"
+click = "^8.1.7"
 
 [tool.poetry.group.dev.dependencies]
 psutil = "*"
