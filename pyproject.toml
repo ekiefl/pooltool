@@ -3,6 +3,7 @@ name = "pooltool"
 version = "0.3.3+dev"
 description = "A sandbox billiards game that emphasizes realistic physics."
 repository = "https://github.com/ekiefl/pooltool"
+homepage = "https://pooltool.readthedocs.io/en/latest/"
 documentation = "https://pooltool.readthedocs.io/en/latest/"
 authors = ["Evan Kiefl <kiefl.evan@gmail.com>"]
 maintainers = ["Evan Kiefl <kiefl.evan@gmail.com>"]
@@ -17,25 +18,32 @@ classifiers = [
 
 packages = [{include = "pooltool"}]
 
+# Include globs override exclude globs below.
 include = [
+  # Logo variants
+  "pooltool/logo/logo_pt.png",
+  "pooltool/logo/logo_pt_smaller.png",
+  "pooltool/logo/logo.png",
+  # Image assets for HUD and menu
+  "pooltool/models/hud/*.png",
+  "pooltool/models/menu/*.png",
 ]
 
 exclude = [
+  # All test files
   "pooltool/**/test_*",
-  "pooltool/logo/**/*.blend*",
-  "pooltool/logo/**/*.svg",
-  "pooltool/logo/**/*.exr",
-  "pooltool/logo/logo_v*p*.png",
+  # All intermediate modeling formats (Blender, SVG, etc.)
+  "pooltool/**/*.blend*",
+  "pooltool/**/*.svg",
+  "pooltool/**/*.exr",
+  "pooltool/**/*.pptx",
+  "pooltool/**/*.png",  # Some PNGs in `include` override this exclusion
+  "pooltool/**/*.jpg",
+  "pooltool/**/*.jpeg",
+  # To save package size, models with physical based rendering (PBR) are excluded
   "pooltool/models/**/*_pbr.glb",
-  "pooltool/models/**/*.blend*",
-  "pooltool/models/**/*.pptx",
-  "pooltool/models/**/*.svg",
-  "pooltool/models/**/*.png",
-  "pooltool/models/**/*.jpg",
-  "pooltool/models/**/*.jpeg",
 ]
 
-# TODO (fix and make sure .bat works on windows)
 [tool.poetry.scripts]
 run-pooltool = "main:run"
 

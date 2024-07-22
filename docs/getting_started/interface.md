@@ -8,12 +8,6 @@ The interface (GUI) can be accessed from the command line:
 run-pooltool
 ```
 
-Or, if you're on Windows (FIXME is this true?):
-
-```bash
-run-pooltool.bat
-```
-
 This will produce the following window:
 
 ![interface](../_assets/interface.jpg)

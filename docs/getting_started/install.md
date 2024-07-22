@@ -92,7 +92,7 @@ If you created your environment with conda, you've already installed poetry.
 Otherwise, install with
 
 ```bash
-pip install poetry
+pip install "poetry>=1.8.3"
 ```
 
 Verify your installation:
