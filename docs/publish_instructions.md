@@ -1,4 +1,4 @@
-# Publishing pooltool
+# Publishing a new pooltool release
 
 These are instructions for how to make new pip-installable pooltool versions on PyPi.
 
