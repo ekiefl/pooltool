@@ -1,6 +1,25 @@
+[build-system]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+strict = true
+bump = true
+vcs = "git"
+# The 'pep440' style appends the git commit hash to the version number when
+# there are commits since the last tag.
+style = "pep440"
+# Append a flag to the version number if there are uncommitted changes.
+dirty = true
+# Untracked files don't count as dirty
+ignore-untracked = true
+
 [tool.poetry]
 name = "pooltool"
-version = "0.3.3+dev"
+# This version is a placeholder. It will be updated at build time by
+# poetry-dynamic-versioning from the latest git tag.
+version = "0.0.0"
 description = "A sandbox billiards game that emphasizes realistic physics."
 repository = "https://github.com/ekiefl/pooltool"
 homepage = "https://pooltool.readthedocs.io/en/latest/"
@@ -61,7 +80,7 @@ url = "https://archive.panda3d.org/simple/"
 priority = "explicit"
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = ">=3.8,<4.0"
 numpy = "*"
 pandas = "*"
 numba = "*"
@@ -87,6 +106,7 @@ pytest = "*"
 pre-commit = "*"
 pyright = "*"
 ruff = "*"
+poetry-dynamic-versioning = {extras = ["plugin"], version = "^1.4.0"}
 
 [tool.poetry.group.docs]
 optional = true
@@ -97,10 +117,6 @@ sphinx-copybutton = ">=0.5.2"
 furo = ">=2024.5.6"
 myst-parser = ">=3.0.1"
 sphinx-autoapi = ">=3.1.2"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 88
