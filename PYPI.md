@@ -1,17 +1,32 @@
+# Publishing pooltool
+
 These are instructions for how to make new pip-installable pooltool versions on PyPi.
-Information comes from
-https://betterscientificsoftware.github.io/python-for-hpc/tutorials/python-pypi-packaging/#creating-a-python-package
 
-0. Little stuff: check that `requirements.txt` matches install_requires in `setup.py`. Make sure `pooltool.__init__.py` has version X.X.X. If you added data files, make sure they are included in the `MANIFEST.in`. Update `logo.png` if its not a sub-version (rename logo_small.png to previous version (e.g. logo_v0p1.png) open Blender file, update textures, render at top, save as logo.png). Then make a copy of logo.png that is 640 x 360 called logo_small.png.
+## 1. House keeping
 
-1. Change the version in `setup.py`. Rather than X.X.X, use X.X.X.dev0. This
-   version is temporary until I'm positive that things are working properly.
+- Make sure `pooltool.__init__.py` has version X.X.X.
 
-2. In your development environment, run `python setup.py check`, then `python setup.py sdist`. This creates a tar.gz source distribution in the directory `dist/`
+- If you added data files since the last release, make sure they have been added to the `pyproject.toml.
 
-3. Time to upload this distribution to test.pypi. Run `twine upload --repository-url https://test.pypi.org/legacy/ dist/pooltool-billiards-X.X.X.dev0.tar.gz -u __token__ -p <API_PASSWORD>`. <API_PASSWORD> is in your keychain under "TestPyPi pooltool". If test PyPi is timing out, skip to step 5.
+- Update `logo.png` if its not a sub-version (rename logo_small.png to previous version (e.g. logo_v0p1.png) open Blender file, update textures, render at top, save as logo.png). Then make a copy of logo.png that is 640 x 360 called logo_small.png.
 
-4. Create a fresh python environment to test the installation
+- Change the version in `pyproject.toml`. Rather than X.X.X, use X.X.X.dev0. This version is temporary until you're positive that things are working properly.
+
+## 2. Build the distribution
+
+```bash
+poetry build
+```
+
+You can find it at `dist/pooltool-0.3.3+dev.tar.gz` (along with the wheel (`.whl`))
+
+## 3. Publish to the **test** PyPI repository
+
+- Populate your `.env` using `.env.copy` as a template.
+
+- Run `make test-publish`. If this fails due to timing out (slow upload speed that gets cut short), skip ahead to trying out the installation locally.
+
+- Create a fresh python environment to test the installation
 
 ```
 source ~/.bashrc
@@ -22,17 +37,33 @@ PYTHONPATH=""
 conda activate asdf
 ```
 
-5. Test the installation:
-   `pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple pooltool-billiards==X.X.X.dev0 --force-reinstall`. If test PyPi is timing out, you can instead consider testing the installation with `pip install dist/pooltool-billiards-X.X.X.dev0.tar.gz --force-reinstall`
+- Install:
 
-6. Make sure `cd ~; which run_pooltool` leads to the asdf environment: `/Users/evan/anaconda3/envs/asdf/bin/run_pooltool`
-   Then see if it works: `run_pooltool`. Additionally, check path of `python -c "import pooltool; print(pooltool.__file__)"`. It should be in site-packages of asdf environment.
+```bash
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple pooltool-billiards==X.X.X.dev0 --force-reinstall
+```
 
-7. Change version to X.X.X in `setup.py`, then **back in the development environment** create dist: `python setup.py sdist`
+If test PyPi is timing out, you can instead consider testing the installation with 
 
-8. Upload to pypi `twine upload dist/pooltool-billiards-X.X.X.tar.gz -u __token__ -p <API_PASSWORD>`. <API_PASSWORD> is in your keychain under "PyPi pooltool".
+```bash
+pip install dist/pooltool-billiards-X.X.X.dev0.tar.gz --force-reinstall
+```
 
-9. Create a new python environment
+- Test it out. Make sure `which run-pooltool` leads to the asdf environment: `/Users/evan/anaconda3/envs/asdf/bin/run_pooltool`. Then see if it works: `run-pooltool`. Additionally, check the path of `cd ~; python -c "import pooltool; print(pooltool.__file__)"; cd -`. It should be in site-packages of asdf environment.
+
+## 4. Rebuild with correct version tag
+
+- Change version to X.X.X in `pyproject.toml`, then **back in the development environment** create the dist:
+
+```bash
+poetry build
+```
+
+## 5. Publish to the **real** PyPI repository
+
+- Run `make publish`
+
+- Create a new python environment
 
 ```
 source ~/.bashrc
@@ -44,10 +75,14 @@ conda activate asdf
 cd ~
 ```
 
-10. Test installation: `pip install pooltool-billiards==X.X.X` (you may need to wait for version to be live)
+- Test installation: `pip install pooltool-billiards==X.X.X` (you may need to wait for version to be live)
 
-12. Push changes to main.
+- Push changes to main.
 
-12. Make a release on github. Run `python setup.py sdist bdist_wheel` **back in the development environment** and upload the `.whl` and `.tar.gz` found in `dist/`
+## 6. Make a release
 
-13. **After** the release is made, in `pooltool/__init__.py` set the version to X.X.X+dev. Commit and push.
+- Make a release on github. Run `python setup.py sdist bdist_wheel` **back in the development environment** and upload the `.whl` and `.tar.gz` found in `dist/`
+
+## 7. Update version tag with +dev
+
+- **After** the release is made, in `pooltool/__init__.py` set the version to X.X.X+dev. Commit and push.

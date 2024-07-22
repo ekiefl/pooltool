@@ -45,7 +45,7 @@ transition: canonical
 transition_params: {}
 ```
 
-The resolver configuration file is automatically generated during the initial execution. If you don't have one yet, execute pooltool with the command `run_pooltool`, start a new game, and take a shot--one will be generated.
+The resolver configuration file is automatically generated during the initial execution. If you don't have one yet, execute pooltool with the command `run-pooltool`, start a new game, and take a shot--one will be generated.
 
 Models are identified by their names. You can view the names of all available models by executing the following command:
 

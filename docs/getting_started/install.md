@@ -58,28 +58,7 @@ If you want to develop for pooltool, have access to the most up-to-date version 
 
 A small note. If you don't have the ability to create isolated python environments, I would recommend installing `conda` ([here](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)) so you can isolate pooltool from your other business.
 
-**(i)** create a new, python environment that uses Python 3.8.10.
-
-With `conda`, you could do the following:
-
-```bash
-conda deactivate
-conda env remove --name pooltool
-conda create -y -n pooltool python=3.8.10
-conda activate pooltool
-```
-
-Regardless of how you managed your python environment, please verify you're running `3.8.10`
-
-```
-$ python
-Python 3.8.10 (default, May 19 2021, 11:01:55)
-[Clang 10.0.0 ] :: Anaconda, Inc. on darwin
-Type "help", "copyright", "credits" or "license" for more information.
->>> exit()
-```
-
-**(ii)** grab the codebase:
+**(i)** Grab a copy of the codebase.
 
 ```bash
 cd <A_DIRECTORY_YOU_LIKE>
@@ -87,25 +66,50 @@ git clone https://github.com/ekiefl/pooltool.git
 cd pooltool
 ```
 
-**(iii)** install the dependencies:
+**(ii)** Create a new python environment that uses Python 3.8.10.
+
+If you have `conda`, just run this:
 
 ```bash
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+conda env create -f environment.yml
+conda activate pooltool
 ```
 
-In addition to `requirements.txt`, `requirements-dev.txt` includes some modules required for developement.
+Regardless of how you managed your python environment, please verify you're running `3.8.10`
 
-**NOTE**: If you're on Linux or Windows, you must _also_ run this:
-
-```python
-pip uninstall panda3d -y
-pip install --pre --extra-index-url https://archive.panda3d.org/ panda3d
+```bash
+$ python
+Python 3.8.10 (default, May 19 2021, 11:01:55)
+[Clang 10.0.0 ] :: Anaconda, Inc. on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>> exit()
 ```
 
-(_This is because there is a bug where the mouse moves off of the screen when aiming in the GUI, making you lose mouse control on Linux and Windows. The solution is to install Panda3D v1.11, which is currently unreleased but still installable._)
+**(iii)** Install poetry, a popular python package/environment manager.
 
-**(iv)** install the pre-commit hooks:
+If you created your environment with conda, you've already installed poetry.
+
+Otherwise, install with
+
+```bash
+pip install "poetry>=1.8.3"
+```
+
+Verify your installation:
+
+```bash
+$ poetry --version
+Poetry (version 1.8.3)
+```
+
+**(iv)** Install pooltool.
+
+```bash
+poetry install
+pip install -e .
+```
+
+**(v)** install the pre-commit hooks:
 
 This will automatically format your code according to the pooltool standard whenever you commit.
 
@@ -113,33 +117,13 @@ This will automatically format your code according to the pooltool standard when
 pre-commit install
 ```
 
-**(v)** test out your installation:
+**(vi)** test out your installation:
 
 ```bash
-python run_pooltool
+run-pooltool
 ```
 
 The game window should appear (escape key to exit).
-
-**(vi)** if you used a conda environment that you named `pooltool`, create this script that runs whenever the conda environment is activated. This script modifies `$PATH` and `$PYTHONPATH` so that python knows where to find pooltool libraries and the shell knows where to find the pooltool binary. **These path modifications live safely inside the pooltool conda environment, and do not propagate into your global
-environment**:
-
-(_This is a multi-line command. Paste the entire block into your command line prompt._)
-
-```
-mkdir -p ${CONDA_PREFIX}/etc/conda/activate.d
-cat <<EOF >${CONDA_PREFIX}/etc/conda/activate.d/pooltool.sh
-export PYTHONPATH=\$PYTHONPATH:$(pwd)
-export PATH=\$PATH:$(pwd)
-EOF
-```
-
-The next time you activate your conda environment (`conda activate pooltool`), `run_pooltool` (or `run_pooltool.bat` if you're on Windows) is now a binary that can be run anywhere in your filesystem whenever you are in the `pooltool` conda environment. Test it out:
-```
-conda activate pooltool
-cd ~
-run_pooltool
-```
 
 </details>
 

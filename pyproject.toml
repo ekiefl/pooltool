@@ -1,3 +1,107 @@
+[tool.poetry]
+name = "pooltool"
+version = "0.3.3+dev"
+description = "A sandbox billiards game that emphasizes realistic physics."
+repository = "https://github.com/ekiefl/pooltool"
+homepage = "https://pooltool.readthedocs.io/en/latest/"
+documentation = "https://pooltool.readthedocs.io/en/latest/"
+authors = ["Evan Kiefl <kiefl.evan@gmail.com>"]
+maintainers = ["Evan Kiefl <kiefl.evan@gmail.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+keywords = ["simulation", "physics", "pool", "billiards", "panda3d", "snooker", "eight-ball"]
+classifiers = [
+  "Topic :: Scientific/Engineering :: Visualization",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Games/Entertainment :: Simulation",
+]
+
+packages = [{include = "pooltool"}]
+
+# Include globs override exclude globs below.
+include = [
+  # Logo variants
+  "pooltool/logo/logo_pt.png",
+  "pooltool/logo/logo_pt_smaller.png",
+  "pooltool/logo/logo.png",
+  # Image assets for HUD and menu
+  "pooltool/models/hud/*.png",
+  "pooltool/models/menu/*.png",
+]
+
+exclude = [
+  # All test files
+  "pooltool/**/test_*",
+  # All intermediate modeling formats (Blender, SVG, etc.)
+  "pooltool/**/*.blend*",
+  "pooltool/**/*.svg",
+  "pooltool/**/*.exr",
+  "pooltool/**/*.pptx",
+  "pooltool/**/*.png",  # Some PNGs in `include` override this exclusion
+  "pooltool/**/*.jpg",
+  "pooltool/**/*.jpeg",
+  # To save package size, models with physical based rendering (PBR) are excluded
+  "pooltool/models/**/*_pbr.glb",
+]
+
+[tool.poetry.scripts]
+run-pooltool = "main:run"
+
+[[tool.poetry.source]]
+name = "pypi"
+priority = "primary"
+
+[[tool.poetry.source]]
+name = "pypi-test"
+url = "https://test.pypi.org/legacy/"
+
+[[tool.poetry.source]]
+name = "panda3d-archive"
+url = "https://archive.panda3d.org/simple/"
+priority = "explicit"
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+numpy = "*"
+pandas = "*"
+numba = "*"
+scipy = "*"
+panda3d = { version = "1.11.0.dev3005", allow-prereleases = true, source = "panda3d-archive" }
+panda3d-gltf = "*"
+panda3d-simplepbr = "*"
+Pillow = "*"
+cattrs = "*"
+attrs = "*"
+pprofile = "*"
+msgpack = "*"
+msgpack-numpy = "*"
+h5py = "*"
+pyyaml = "*"
+click = "^8.1.7"
+
+[tool.poetry.group.dev.dependencies]
+psutil = "*"
+colored = "*"
+ipython = "*"
+pytest = "*"
+pre-commit = "*"
+pyright = "*"
+ruff = "*"
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+sphinx = ">=6.1.0"
+sphinx-copybutton = ">=0.5.2"
+furo = ">=2024.5.6"
+myst-parser = ">=3.0.1"
+sphinx-autoapi = ">=3.1.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.ruff]
 line-length = 88
 
