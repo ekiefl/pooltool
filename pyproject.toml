@@ -48,15 +48,15 @@ exclude = [
 run-pooltool = "main:run"
 
 [[tool.poetry.source]]
-name = "PyPI"
+name = "pypi"
 priority = "primary"
 
 [[tool.poetry.source]]
-name = "pypi_test"
+name = "pypi-test"
 url = "https://test.pypi.org/legacy/"
 
 [[tool.poetry.source]]
-name = "Panda3D-Archive"
+name = "panda3d-archive"
 url = "https://archive.panda3d.org/simple/"
 priority = "explicit"
 
@@ -66,7 +66,7 @@ numpy = "*"
 pandas = "*"
 numba = "*"
 scipy = "*"
-panda3d = { version = "1.11.0.dev3005", allow-prereleases = true, source = "Panda3D-Archive" }
+panda3d = { version = "1.11.0.dev3005", allow-prereleases = true, source = "panda3d-archive" }
 panda3d-gltf = "*"
 panda3d-simplepbr = "*"
 Pillow = "*"
