@@ -19,7 +19,7 @@ ignore-untracked = true
 # The package name is "Pooltool". The PyPI project name is "pooltool-billiards"
 name = "pooltool-billiards"
 # This version is a placeholder. It will be updated at build time by
-# poetry-dynamic-versioning from the latest git tag.
+# poetry-dynamic-versioning from the latest git tag. See PYPI.md.
 version = "0.0.0"
 description = "A sandbox billiards game that emphasizes realistic physics."
 repository = "https://github.com/ekiefl/pooltool"
