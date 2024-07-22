@@ -65,18 +65,20 @@ conda activate asdf
 - Install:
 
 ```bash
-pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple pooltool-billiards==${RELEASE_VERSION} --force-reinstall
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple --extra-index-url https://archive.panda3d.org/ pooltool-billiards==${RELEASE_VERSION} --force-reinstall
 ```
 
 If test PyPi is timing out, you can instead consider testing the installation with 
 
 ```bash
-pip install dist/pooltool-billiards-${RELEASE_VERSION}.tar.gz --force-reinstall
+pip install dist/pooltool-billiards-${RELEASE_VERSION}.tar.gz --force-reinstall --extra-index-url https://archive.panda3d.org/
 ```
 
 - Test it out. Make sure `which run-pooltool` leads to the asdf environment: `/Users/evan/anaconda3/envs/asdf/bin/run_pooltool`. Then see if the interactive interface can be loaded: `run-pooltool`. Additionally, check the path of `cd ~; python -c "import pooltool; print(pooltool.__file__)"; cd -`. It should be in site-packages of asdf environment.
 
 ## 5. Publish to the **real** PyPI repository
+
+- Go back to the dev environment.
 
 - Run `make publish`
 
