@@ -71,7 +71,7 @@ pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://
 If test PyPi is timing out, you can instead consider testing the installation with 
 
 ```bash
-pip install dist/pooltool-billiards-${RELEASE_VERSION}.tar.gz --force-reinstall --extra-index-url https://archive.panda3d.org/
+pip install dist/pooltool_billiards-${RELEASE_VERSION}.tar.gz --force-reinstall --extra-index-url https://archive.panda3d.org/
 ```
 
 - Test it out. Make sure `which run-pooltool` leads to the asdf environment: `/Users/evan/anaconda3/envs/asdf/bin/run_pooltool`. Then see if the interactive interface can be loaded: `run-pooltool`. Additionally, check the path of `cd ~; python -c "import pooltool; print(pooltool.__file__)"; cd -`. It should be in site-packages of asdf environment.

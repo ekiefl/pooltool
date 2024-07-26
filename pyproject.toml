@@ -65,7 +65,7 @@ exclude = [
 ]
 
 [tool.poetry.scripts]
-run-pooltool = "main:run"
+run-pooltool = "pooltool.main:run"
 
 [[tool.poetry.source]]
 name = "pypi"
