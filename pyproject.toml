@@ -45,8 +45,9 @@ include = [
   "pooltool/logo/logo_pt_smaller.png",
   "pooltool/logo/logo.png",
   # Image assets for HUD and menu
-  "pooltool/models/hud/*.png",
-  "pooltool/models/menu/*.png",
+  "pooltool/models/hud/**/*.png",
+  "pooltool/models/menu/**/*.png",
+  "pooltool/models/menu/**/*.jpeg",
 ]
 
 exclude = [
