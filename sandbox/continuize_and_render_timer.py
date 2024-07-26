@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
 import sys
-from pathlib import Path
 
 import pooltool as pt
 from pooltool.ani.globals import Global
@@ -16,23 +15,7 @@ def main(args):
     pt.simulate(copy, inplace=True)
     pt.continuize(copy, inplace=True)
 
-    if args.profile_it:
-        with pt.utils.PProfile(path=Path("cachegrind.out.simulate")):
-            pt.simulate(shot, inplace=True)
-
-        with pt.utils.PProfile(path=Path("cachegrind.out.continuize")):
-            pt.continuize(shot, inplace=True)
-
-        class TimedModeManager(ModeManager):
-            def change_mode(self, *args, **kwargs):
-                with pt.utils.PProfile(path=Path("cachegrind.out.render")):
-                    super().change_mode(*args, **kwargs)
-                sys.exit()
-
-        interface = pt.ShotViewer()
-        Global.register_mode_mgr(TimedModeManager(all_modes))
-        Global.mode_mgr.init_modes()
-        interface.show(shot)
+    shot = shot.copy()
 
     with pt.terminal.TimeCode(success_msg="Trajectories simulated in: "):
         pt.simulate(shot, inplace=True)
@@ -63,11 +46,6 @@ if __name__ == "__main__":
         type=str,
         required=True,
         help="Filepath to a shot (you could generate this with sandbox/break.py, for example)",
-    )
-    ap.add_argument(
-        "--profile-it",
-        action="store_true",
-        help="Profile and spit out a cachegrind file (cachegrind.out.simulate, cachegrind.out.continuize, and cachegrind.out.render)",
     )
 
     args = ap.parse_args()

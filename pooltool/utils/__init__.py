@@ -7,7 +7,6 @@ import pickle
 import tracemalloc
 
 import pandas as pd
-import pprofile
 from panda3d.core import Filename
 
 
@@ -221,23 +220,3 @@ def human_readable_file_size(nbytes):
         i += 1
     f = ("%.2f" % nbytes).rstrip("0").rstrip(".")
     return "%s %s" % (f, suffixes[i])
-
-
-class PProfile(pprofile.Profile):
-    """Small wrapper for pprofile that accepts a filepath and outputs cachegrind file"""
-
-    def __init__(self, path, should_run: bool = True):
-        self.should_run = should_run
-        self.path = path
-        pprofile.Profile.__init__(self)
-
-    def __enter__(self):
-        if self.should_run:
-            return super().__enter__()
-        else:
-            return self
-
-    def __exit__(self, *args):
-        if self.should_run:
-            pprofile.Profile.__exit__(self, *args)
-            self.dump_stats(self.path)
