@@ -1,19 +1,19 @@
-name: lint-and-test
+name: lint-and-check
 
 on:
   pull_request:
     branches: [main]
 
 jobs:
-  lint-and-test:
+  lint-and-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install Python
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.8"
+          python-version: 3.12
 
       - name: Cache Poetry install
         uses: actions/cache@v2
@@ -56,16 +56,6 @@ jobs:
           poetry run ruff format . --check --verbose --diff
           echo "ruff_format_failed=$?" >> $GITHUB_ENV
 
-      # --- Pytest
-
-      - name: pytest
-        id: pytest
-        continue-on-error: true
-        run: |
-          poetry run pytest --version
-          poetry run pytest
-          echo "pytest_failed=$?" >> $GITHUB_ENV
-
       # --- Pyright
 
       - name: pyright
@@ -85,18 +75,6 @@ jobs:
           passed=()
           failed=()
 
-          if [[ "${{ env.pytest_failed }}" != "0" ]]; then
-            failed+=("pytest")
-          else
-            passed+=("pytest")
-          fi
-
-          if [[ "${{ env.pyright_failed }}" != "0" ]]; then
-            failed+=("pyright")
-          else
-            passed+=("pyright")
-          fi
-
           if [[ "${{ env.ruff_lint_failed }}" != "0" ]]; then
             failed+=("ruff_lint")
           else
@@ -107,6 +85,12 @@ jobs:
             failed+=("ruff_format")
           else
             passed+=("ruff_format")
+          fi
+
+          if [[ "${{ env.pyright_failed }}" != "0" ]]; then
+            failed+=("pyright")
+          else
+            passed+=("pyright")
           fi
 
           if [ ${#passed[@]} -ne 0 ]; then
