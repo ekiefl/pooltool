@@ -16,11 +16,7 @@ height: 300px
 
 ## Requirements
 
-Pooltool is compatible with Python >=3.8 and has been explicitly tested with the following versions:
-
-- Python 3.8.10 (default, May 19 2021, 11:01:55)
-- Python 3.9.0 (default, Nov 15 2020, 06:25:35)
-- Python 3.10.0 (default, Nov 10 2021, 11:24:47) [Clang 12.0.0 ] on darwin
+Pooltool is compatible with Python >=3.9,<3.13.
 
 ## Install option (1): pip
 
@@ -30,18 +26,16 @@ Pooltool is compatible with Python >=3.8 and has been explicitly tested with the
 
 <details><summary style="font-style: italic;">[Click to expand/collapse]</summary>
 
-
-With a compatible python version, install via
+### MacOS
 
 ```python
 pip install pooltool-billiards
 ```
 
-**NOTE**: If you're on Linux or Windows, you must _also_ run this:
+### Linux & Windows
 
 ```python
-pip uninstall panda3d -y
-pip install --pre --extra-index-url https://archive.panda3d.org/ panda3d
+pip install pooltool-billiards --extra-index-url https://archive.panda3d.org/
 ```
 
 </details>
@@ -66,16 +60,16 @@ git clone https://github.com/ekiefl/pooltool.git
 cd pooltool
 ```
 
-**(ii)** Create a new python environment that uses Python 3.8.10.
+**(ii)** Create a new python environment that uses Python 3.12.4.
 
 If you have `conda`, just run this:
 
 ```bash
 conda env create -f environment.yml
-conda activate pooltool
+conda activate pooltool-dev
 ```
 
-Regardless of how you managed your python environment, please verify you're running `3.8.10`
+Regardless of how you managed your python environment, please verify you're running `3.12.4`
 
 ```bash
 $ python
@@ -133,7 +127,9 @@ Test your installation by printing the version:
 
 ```bash
 $ python -c "import pooltool; print(pooltool.__version__)"
-0.2.2.1-dev
+0.4.0
 ```
+
+(If you installed via the developer instructions, the output should be `0.0.0`)
 
 Next, it's time to learn about the interface.
