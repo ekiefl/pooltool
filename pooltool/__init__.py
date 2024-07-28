@@ -17,7 +17,8 @@ graduate to the top-level API, **your input is valuable** and such changes can b
 considered.
 """
 
-__version__ = "0.3.3+dev"
+# This is a placeholder that is replaced during package building (`poetry build`)
+__version__ = "0.0.0"
 
 import pooltool.ai as ai
 import pooltool.ai.aim as aim

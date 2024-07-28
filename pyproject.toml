@@ -1,6 +1,26 @@
+[build-system]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
+
+[tool.poetry-dynamic-versioning]
+enable = false
+strict = true
+bump = true
+vcs = "git"
+# The 'pep440' style appends the git commit hash to the version number when
+# there are commits since the last tag.
+style = "pep440"
+# Append a flag to the version number if there are uncommitted changes.
+dirty = true
+# Untracked files don't count as dirty
+ignore-untracked = true
+
 [tool.poetry]
-name = "pooltool"
-version = "0.3.3+dev"
+# The package name is "Pooltool". The PyPI project name is "pooltool-billiards"
+name = "pooltool-billiards"
+# This version is a placeholder. It will be updated at build time by
+# poetry-dynamic-versioning from the latest git tag. See PYPI.md.
+version = "0.0.0"
 description = "A sandbox billiards game that emphasizes realistic physics."
 repository = "https://github.com/ekiefl/pooltool"
 homepage = "https://pooltool.readthedocs.io/en/latest/"
@@ -25,8 +45,9 @@ include = [
   "pooltool/logo/logo_pt_smaller.png",
   "pooltool/logo/logo.png",
   # Image assets for HUD and menu
-  "pooltool/models/hud/*.png",
-  "pooltool/models/menu/*.png",
+  "pooltool/models/hud/**/*.png",
+  "pooltool/models/menu/**/*.png",
+  "pooltool/models/menu/**/*.jpeg",
 ]
 
 exclude = [
@@ -45,7 +66,7 @@ exclude = [
 ]
 
 [tool.poetry.scripts]
-run-pooltool = "main:run"
+run-pooltool = "pooltool.main:run"
 
 [[tool.poetry.source]]
 name = "pypi"
@@ -61,32 +82,38 @@ url = "https://archive.panda3d.org/simple/"
 priority = "explicit"
 
 [tool.poetry.dependencies]
-python = ">=3.8"
-numpy = "*"
-pandas = "*"
-numba = "*"
-scipy = "*"
-panda3d = { version = "1.11.0.dev3005", allow-prereleases = true, source = "panda3d-archive" }
-panda3d-gltf = "*"
-panda3d-simplepbr = "*"
-Pillow = "*"
-cattrs = "*"
-attrs = "*"
-pprofile = "*"
-msgpack = "*"
-msgpack-numpy = "*"
-h5py = "*"
-pyyaml = "*"
-click = "^8.1.7"
+python = ">=3.9,<3.13"
+panda3d = [
+  {platform = "darwin", version=">=1.10.13,<1.11"},
+  {platform = "linux", version = "1.11.0.dev3444", allow-prereleases = true, source = "panda3d-archive"},
+  {platform = "win32", version = "1.11.0.dev3444", allow-prereleases = true, source = "panda3d-archive"},
+]
+panda3d-gltf = ">=1.2.0"
+panda3d-simplepbr = ">=0.12.0"
+numpy = ">=1.26.0"  # Lower bound for 3.12 (https://github.com/numpy/numpy/releases/tag/v1.26.0)
+numba = ">=0.59.0"  # # Lower bound for 3.12 (https://numba.readthedocs.io/en/latest/user/installing.html#version-support-information)
+scipy = ">=1.12.0"  # Required for numba. Lower bound for 3.12 is officially 1.11, but in practice seems to be 1.12 on MacOS
+attrs = ">=21.3.0"
+cattrs = ">=22.1.0"
+msgpack = ">=1.0.0"  # cattrs structuring fails with msgpack<1
+msgpack-numpy = ">=0.4.8"
+pyyaml = ">=5.2"
+click = ">=8.0.0"
+Pillow = ">=6.2.0"
+h5py = ">=3.10"
 
 [tool.poetry.group.dev.dependencies]
-psutil = "*"
-colored = "*"
-ipython = "*"
-pytest = "*"
-pre-commit = "*"
-pyright = "*"
-ruff = "*"
+# Testing and formatting
+pytest = ">=8.3.2"
+pre-commit = ">=3.7.1"
+pyright = ">=1.1.373"
+ruff = ">=0.5.5"
+# Diagnostics
+psutil = ">=6.0.0"
+colored = ">=2.2.4"  # TODO switch to something ubiquitous
+ipython = ">=8.18.1"
+# Publishing
+poetry-dynamic-versioning = {extras = ["plugin"], version = ">=1.4.0"}
 
 [tool.poetry.group.docs]
 optional = true
@@ -97,10 +124,6 @@ sphinx-copybutton = ">=0.5.2"
 furo = ">=2024.5.6"
 myst-parser = ">=3.0.1"
 sphinx-autoapi = ">=3.1.2"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 88
