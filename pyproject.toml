@@ -85,7 +85,7 @@ priority = "explicit"
 python = ">=3.9,<3.13"
 panda3d = [
   {platform = "darwin", version=">=1.10.13,<1.11"},
-  {platform = "linux", version = "1.11.0.dev3005", allow-prereleases = true, source = "panda3d-archive"},
+  {platform = "linux", version = ">=1.11.0", allow-prereleases = true, source = "panda3d-archive"},
   {platform = "win32", version = "1.11.0.dev3005", allow-prereleases = true, source = "panda3d-archive"},
 ]
 panda3d-gltf = ">=1.2.0"
