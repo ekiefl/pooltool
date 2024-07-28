@@ -66,7 +66,7 @@ If you have `conda`, just run this:
 
 ```bash
 conda env create -f environment.yml
-conda activate pooltool
+conda activate pooltool-dev
 ```
 
 Regardless of how you managed your python environment, please verify you're running `3.12.4`

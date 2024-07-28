@@ -57,7 +57,7 @@ Also open `pooltool/__init__.py` and make sure the `__version__` variable was po
 source ~/.bashrc
 conda deactivate
 conda env remove --name asdf
-conda create -y -n asdf python=3.8.10
+conda create -y -n asdf python=3.12.4
 PYTHONPATH=""
 conda activate asdf
 ```
