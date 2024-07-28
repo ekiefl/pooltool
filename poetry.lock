@@ -1385,32 +1385,21 @@ files = [
 
 [[package]]
 name = "panda3d"
-version = "1.11.0.dev3005"
+version = "1.11.0.dev3444"
 description = "Panda3D is a framework for 3D rendering and game development for Python and C++ programs."
 optional = false
 python-versions = "*"
 files = [
-    {file = "panda3d-1.11.0.dev3005-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:50a267920accb645ba2d289572a86da53d14488eef9f65c900ad2bae41e520d0"},
-    {file = "panda3d-1.11.0.dev3005-cp310-cp310-macosx_11_0_universal2.whl", hash = "sha256:acba4149da3b426c38ede5b7b8c2849c165abdc97bdef3d083f5f6669042d41b"},
-    {file = "panda3d-1.11.0.dev3005-cp310-cp310-manylinux2014_x86_64.whl", hash = "sha256:f700c6324b0da56d85091769e5196834be51905c5444dffd644ecdf2b252ad88"},
-    {file = "panda3d-1.11.0.dev3005-cp310-cp310-win_amd64.whl", hash = "sha256:5f2ea1a8a9f4312fe891590143e8323333e314eeb1d6dd9a26bdc1c13b1d56cc"},
-    {file = "panda3d-1.11.0.dev3005-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:685f15e1a76102effbdae2bf8eb8e0125a7d93bf647d6c67f7f19f3f3851fa15"},
-    {file = "panda3d-1.11.0.dev3005-cp311-cp311-macosx_11_0_universal2.whl", hash = "sha256:ad22c6254f92c059d97ac3a5339d55073a5699b6a75b1eec31e4a72f14f769a6"},
-    {file = "panda3d-1.11.0.dev3005-cp311-cp311-manylinux2014_x86_64.whl", hash = "sha256:8375426ecac807b618be76f9ecdedd5c37a92f6ed5c49e565469a7c551303aa1"},
-    {file = "panda3d-1.11.0.dev3005-cp311-cp311-win_amd64.whl", hash = "sha256:f48962cac0fb334691513dfb4cfb0a8eda719df2fa4316c31cbcb1c49a931f3a"},
-    {file = "panda3d-1.11.0.dev3005-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:238442290ca4437af96ac602f4ed015a70006d7918f985e380f5dbdcb319e1dc"},
-    {file = "panda3d-1.11.0.dev3005-cp36-cp36m-win_amd64.whl", hash = "sha256:e245d0079b01ea7059223316adaca0412f0e0a736efd7c98b21d4a1f8d2a4250"},
-    {file = "panda3d-1.11.0.dev3005-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:49d4d077e2aaa0f98f204aee457b835f638516094e3bf7e72da66313649725f0"},
-    {file = "panda3d-1.11.0.dev3005-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:2bc9c0fe8c5ac28445ee1f2f56af85f2e28e6115d33878a6ea8b9e22f541c9db"},
-    {file = "panda3d-1.11.0.dev3005-cp37-cp37m-win_amd64.whl", hash = "sha256:af893733b50eb16663a6b688b98331817139c5c7c537c3090898b91ecf7653c5"},
-    {file = "panda3d-1.11.0.dev3005-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:5d75e88ac67489eaa61b45c666b3513c275effa561c2bcb35421e102c7580612"},
-    {file = "panda3d-1.11.0.dev3005-cp38-cp38-macosx_11_0_universal2.whl", hash = "sha256:fc2c2e8b62f36429d98067e3464c820660ba9a389da7242ef3fb8fca5f492a26"},
-    {file = "panda3d-1.11.0.dev3005-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:38d8dd66298bfe2d0f36ace72094f38f637fd2ec9c58788097e8acc4bbe0d765"},
-    {file = "panda3d-1.11.0.dev3005-cp38-cp38-win_amd64.whl", hash = "sha256:43307fb97f0ba84835ac1ec6423708524faa45425354bc8a8e6755b7552ee330"},
-    {file = "panda3d-1.11.0.dev3005-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:15682b5dbe2697a3050369c98f0216ced4a60ed32f743b1da7d5184ab340e93c"},
-    {file = "panda3d-1.11.0.dev3005-cp39-cp39-macosx_11_0_universal2.whl", hash = "sha256:6b3f0fd1b80b5671b286b0ffda4c21675ee5d81b67a95051fe6297f765fd50b5"},
-    {file = "panda3d-1.11.0.dev3005-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:2fe5b406f91502e05dde96e1e6d433c97054ce18cd9aa10e8095e0a85f32ed67"},
-    {file = "panda3d-1.11.0.dev3005-cp39-cp39-win_amd64.whl", hash = "sha256:478806e14bf3c19e179ebccf859bbb745c83bb5355cdd1fe62cce8361a511fe6"},
+    {file = "panda3d-1.11.0.dev3444-cp310-cp310-manylinux2014_x86_64.whl", hash = "sha256:aec1a4d3728f7f0129b43584aeb37fe09f7811ef43cbee24f25742d5cb2d5f6b"},
+    {file = "panda3d-1.11.0.dev3444-cp310-cp310-win_amd64.whl", hash = "sha256:18692374823096e4f2058ace5833567f1f7da93d215a8ceb8c1ceacee3a87928"},
+    {file = "panda3d-1.11.0.dev3444-cp311-cp311-manylinux2014_x86_64.whl", hash = "sha256:6391ddb1e296d801cb852f0bcc2152c9ac9a4ce5719c20c20640fc85fa73dde0"},
+    {file = "panda3d-1.11.0.dev3444-cp311-cp311-win_amd64.whl", hash = "sha256:2fd110a91c6bbdf6b0a5424d3e32becb8b4a2710db5d23a954a9800281d56991"},
+    {file = "panda3d-1.11.0.dev3444-cp312-cp312-manylinux2014_x86_64.whl", hash = "sha256:6f91a291adc702af643de4d7786b9b624da00ecfc57a989389a67576b316685d"},
+    {file = "panda3d-1.11.0.dev3444-cp312-cp312-win_amd64.whl", hash = "sha256:75b1b5b645d4fa308b22a90fc68edb53c8e067b879cc1f08f1a239e693e84c47"},
+    {file = "panda3d-1.11.0.dev3444-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:c3a92f4f69caa29fed48e931490ecc66493ad791a288bc3af4daae73dc24eef1"},
+    {file = "panda3d-1.11.0.dev3444-cp38-cp38-win_amd64.whl", hash = "sha256:d7a9e6b2e61233e42eeb3a686f1845c0caa4de8aa4bdc9afc402194f7212d58e"},
+    {file = "panda3d-1.11.0.dev3444-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:774727725c664706f879295745ab4d9b8df687780c1d7482fcfbc60b6fcf0b6b"},
+    {file = "panda3d-1.11.0.dev3444-cp39-cp39-win_amd64.whl", hash = "sha256:37d0f0c25f847223b4cecf2e625ead2d1cc152cffa415ac8a3b227c629e4a4d4"},
 ]
 
 [package.source]
@@ -2614,4 +2603,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "1878ab1cc9277d79810dad267ecddb4af64c73232e2afa7fcf92adc95ef8e4d7"
+content-hash = "d980ca9a1625a58e905a372da98ab01fedef9f76f1f3ea827f8f535fcad76db6"
