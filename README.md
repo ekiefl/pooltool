@@ -6,6 +6,7 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/ekiefl/pooltool)
 [![GitHub license](https://img.shields.io/github/license/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/blob/master/LICENSE.txt)
 [![Documentation Status](https://readthedocs.org/projects/pooltool/badge/?version=latest)](https://pooltool.readthedocs.io/en/latest/?badge=latest)
+[![codecov](https://codecov.io/gh/ekiefl/pooltool/branch/latest/graph/badge.svg)](https://codecov.io/gh/ekiefl/pooltool)
 
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pooltool-billiards)
 ![PyPI - Version](https://img.shields.io/pypi/v/pooltool-billiards)
