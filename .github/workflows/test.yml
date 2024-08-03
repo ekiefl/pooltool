@@ -34,7 +34,7 @@ jobs:
       - name: Install project dependencies
         run: poetry install
       - name: Run tests and build coverage statistics
-        run: poetry run pytest --cov app ${{ env.CODECOV_ATS_TESTS }}
+        run: poetry run pytest --cov pooltool ${{ env.CODECOV_ATS_TESTS }}
       - name: Upload test coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
