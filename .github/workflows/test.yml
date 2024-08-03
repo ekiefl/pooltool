@@ -37,8 +37,8 @@ jobs:
         run: poetry run pytest --cov pooltool ${{ env.CODECOV_ATS_TESTS }}
       - name: Upload test coverage to Codecov
         if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
-        uses: codecov/codecov-action@v4
-        with:
-          verbose: true
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          # Replace `linux` below with the appropriate OS (Options are `alpine`, `linux`, `macos`, `windows`)
+          curl -Os https://cli.codecov.io/latest/linux/codecov
+          chmod +x codecov
+          ./codecov --verbose upload-process --fail-on-error -t ${{ secrets.CODECOV_TOKEN }} -n 'service'-${{ github.run_id }} -F service -f coverage-service.xml
