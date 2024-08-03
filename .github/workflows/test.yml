@@ -35,6 +35,15 @@ jobs:
         run: poetry install
       - name: Run tests and build coverage statistics
         run: poetry run pytest --cov pooltool ${{ env.CODECOV_ATS_TESTS }}
+
+  upload-coverage:
+    runs-on: ubuntu-latest
+    needs: test
+    if:
+      # Only upload on one build
+      matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v4
       - name: Upload test coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
