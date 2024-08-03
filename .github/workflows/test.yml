@@ -33,5 +33,11 @@ jobs:
           key: venv-${{ hashFiles('poetry.lock') }}
       - name: Install project dependencies
         run: poetry install
-      - name: Run tests
-        run: poetry run pytest
+      - name: Run tests and build coverage statistics
+        run: poetry run pytest --cov app ${{ env.CODECOV_ATS_TESTS }}
+      - name: Upload test coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          verbose: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
