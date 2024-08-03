@@ -101,11 +101,11 @@ pyyaml = ">=5.2"
 click = ">=8.0.0"
 Pillow = ">=6.2.0"
 h5py = ">=3.10"
-pytest-cov = "^5.0.0"
 
 [tool.poetry.group.dev.dependencies]
 # Testing and formatting
 pytest = ">=8.3.2"
+pytest-cov = "^5.0.0"
 pre-commit = ">=3.7.1"
 pyright = ">=1.1.373"
 ruff = ">=0.5.5"
