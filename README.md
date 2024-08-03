@@ -7,7 +7,8 @@
 [![GitHub license](https://img.shields.io/github/license/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/blob/master/LICENSE.txt)
 [![Documentation Status](https://readthedocs.org/projects/pooltool/badge/?version=latest)](https://pooltool.readthedocs.io/en/latest/?badge=latest)
 
-[![Supported Python versions](https://img.shields.io/pypi/pyversions/pooltool-billiards)]
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pooltool-billiards)
+![PyPI - Version](https://img.shields.io/pypi/v/pooltool-billiards)
 
 # Pooltool
 
