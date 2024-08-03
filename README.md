@@ -1,5 +1,6 @@
 <img src="pooltool/logo/logo.png" width="600" />
 
+[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![GitHub stars](https://img.shields.io/github/stars/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/network)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/ekiefl/pooltool)
