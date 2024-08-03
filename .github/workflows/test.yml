@@ -39,9 +39,7 @@ jobs:
   upload-coverage:
     runs-on: ubuntu-latest
     needs: test
-    if:
-      # Only upload on one build
-      matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
+    if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
     steps:
       - uses: actions/checkout@v4
       - name: Upload test coverage to Codecov
