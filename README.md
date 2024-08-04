@@ -23,6 +23,10 @@ Its core design principles focus on speed, flexibility, and the ease of visualiz
 
 <img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_1.png" width="350" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_2.png" width="350" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_3.png" width="350" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_5.png" width="350" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_6.png" width="350" /><img src="https://ekiefl.github.io/images/pooltool/pooltool-graphics/gallery_7.png" width="350" />
 
+# Installation
+
+[Installation instructions](https://pooltool.readthedocs.io/en/latest/getting_started/install.html) are hosted on ReadtheDocs.
+
 # Documentation
 
 <a href="https://pooltool.readthedocs.io">
