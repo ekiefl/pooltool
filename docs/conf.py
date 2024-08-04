@@ -13,6 +13,7 @@
 import os
 import sys
 
+sys.path.insert(0, os.path.abspath("./"))
 sys.path.insert(0, os.path.abspath("../"))
 
 # -- Project information -----------------------------------------------------
@@ -30,6 +31,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.mathjax",
     "sphinx_copybutton",
+    "sphinx_tabs.tabs",
     "autoapi.extension",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
@@ -84,6 +86,9 @@ intersphinx_mapping = {
     "attrs": ("https://www.attrs.org/en/stable/", None),
     "numba": ("https://numba.readthedocs.io/en/stable/", None),
 }
+
+# -- sphinx-tabs options
+sphinx_tabs_disable_tab_closing = True
 
 # -- copybutton options
 copybutton_exclude = ".linenos, .gp, .go"

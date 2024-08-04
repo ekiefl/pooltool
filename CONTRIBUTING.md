@@ -22,7 +22,7 @@ Pooltool needs and welcomes people of all skill levels who are excited about thi
 Contributions to pooltool are made via GitHub. To get started:
 
 1. Fork the repo and create your branch from `main`.
-1. Install pooltool using the "developer" instructions [here](https://pooltool.readthedocs.io/en/latest/getting_started/install.html).
+1. Install pooltool using the "install from source" instructions [here](https://pooltool.readthedocs.io/en/latest/getting_started/install.html).
 1. If you've added code that should be tested, add tests.
 1. If you've changed [the API](https://pooltool.readthedocs.io/en/latest/autoapi/index.html), update the documentation.
 1. Create a pull request (PR), ensuring you have a clear description of the problem you're solving and the solution.

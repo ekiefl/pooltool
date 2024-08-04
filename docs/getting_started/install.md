@@ -1,58 +1,48 @@
 # Installation
 
-You're just a few seconds away from exploring the interactive interface.
+Pooltool is available on Linux, Mac, and Windows for the following Python versions:
 
-```{figure} ../_assets/gallery_6.jpg
----
-height: 300px
----
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pooltool-billiards)
+
+## With pip:
+
+Pooltool is hosted on the [Python Package Index (PyPI)](https://pypi.org/project/pooltool-billiards/) and can be installed with pip.
+
+```{eval-rst}
+.. tabs::
+
+   .. tab:: Linux
+
+      .. code-block:: bash
+
+         pip install pooltool-billiards --extra-index-url https://archive.panda3d.org/
+
+      (*Providing the Panda3D archive is required until Panda3D v1.11 is released*)
+
+   .. tab:: MacOS
+
+      .. code-block:: bash
+
+         pip install pooltool-billiards
+
+   .. tab:: Windows
+
+      .. code-block:: bash
+
+         pip install pooltool-billiards --extra-index-url https://archive.panda3d.org/
+
+      (*Providing the Panda3D archive is required until Panda3D v1.11 is released*)
 ```
 
-```{figure} ../_assets/gallery_7.jpg
----
-height: 300px
----
-```
-
-## Requirements
-
-Pooltool is compatible with Python >=3.9,<3.13.
-
-## Install option (1): pip
-
-| GUI | API | Develop |
-|-----|-----|---------|
-| ✅  | ✅  | ❌      |
-
-<details><summary style="font-style: italic;">[Click to expand/collapse]</summary>
-
-### MacOS
-
-```python
-pip install pooltool-billiards
-```
-
-### Linux & Windows
-
-```python
-pip install pooltool-billiards --extra-index-url https://archive.panda3d.org/
-```
-
-</details>
-
-## Install option (2): developer
-
-| GUI | API | Develop |
-|-----|-----|---------|
-| ✅  | ✅  | ✅      |
-
-<details><summary style="font-style: italic;">[Click to expand/collapse]</summary>
+## From source:
 
 If you want to develop for pooltool, have access to the most up-to-date version of the codebase, or modify the code to your liking, this is for you.
 
+<details><summary style="font-style: italic;">[Click to expand/collapse]</summary>
+
 A small note. If you don't have the ability to create isolated python environments, I would recommend installing `conda` ([here](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)) so you can isolate pooltool from your other business.
 
-**(i)** Grab a copy of the codebase.
+**1.** Grab a copy of the codebase.
 
 ```bash
 cd <A_DIRECTORY_YOU_LIKE>
@@ -60,7 +50,7 @@ git clone https://github.com/ekiefl/pooltool.git
 cd pooltool
 ```
 
-**(ii)** Create a new python environment that uses Python 3.12.4.
+**2.** Create a new python environment that uses Python 3.12.4.
 
 If you have `conda`, just run this:
 
@@ -73,15 +63,14 @@ Regardless of how you managed your python environment, please verify you're runn
 
 ```bash
 $ python
-Python 3.8.10 (default, May 19 2021, 11:01:55)
-[Clang 10.0.0 ] :: Anaconda, Inc. on darwin
+Python 3.12.4 | packaged by Anaconda, Inc. | (main, Jun 18 2024, 10:14:12) [Clang 14.0.6 ] on darwin
 Type "help", "copyright", "credits" or "license" for more information.
 >>> exit()
 ```
 
-**(iii)** Install poetry, a popular python package/environment manager.
+**3.** Install poetry, a popular python package/environment manager.
 
-If you created your environment with conda, you've already installed poetry.
+If you created your environment with conda (_e.g._ `conda env create -f environment.yml`), poetry is already part of your `pooltool-dev` environment.
 
 Otherwise, install with
 
@@ -96,22 +85,22 @@ $ poetry --version
 Poetry (version 1.8.3)
 ```
 
-**(iv)** Install pooltool.
+**4.** Install pooltool.
 
 ```bash
 poetry install
 pip install -e .
 ```
 
-**(v)** install the pre-commit hooks:
+**5.** install the pre-commit hooks:
 
-This will automatically format your code according to the pooltool standard whenever you commit.
+If you plan on contributing to pooltool, install the pre-commit hooks. They will automatically format your code according to the pooltool standard whenever you commit.
 
 ```
 pre-commit install
 ```
 
-**(vi)** test out your installation:
+**6.** test out your installation:
 
 ```bash
 run-pooltool
@@ -121,15 +110,14 @@ The game window should appear (escape key to exit).
 
 </details>
 
-## Next
+## Test
 
 Test your installation by printing the version:
 
 ```bash
-$ python -c "import pooltool; print(pooltool.__version__)"
-0.4.0
+python -c "import pooltool; print(pooltool.__version__)"
 ```
 
-(If you installed via the developer instructions, the output should be `0.0.0`)
+If installed from source, output should be `0.0.0`.
 
 Next, it's time to learn about the interface.
