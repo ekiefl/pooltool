@@ -4,14 +4,14 @@ Pooltool is available on Linux, Mac, and Windows for the following Python versio
 
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pooltool-billiards)
 
-## With pip:
+## Using pip 
 
 Pooltool is hosted on the [Python Package Index (PyPI)](https://pypi.org/project/pooltool-billiards/) and can be installed with pip.
 
 ```{eval-rst}
 .. tabs::
 
-   .. tab:: Linux
+   .. tab:: **Linux**
 
       .. code-block:: bash
 
@@ -19,13 +19,13 @@ Pooltool is hosted on the [Python Package Index (PyPI)](https://pypi.org/project
 
       (*Providing the Panda3D archive is required until Panda3D v1.11 is released*)
 
-   .. tab:: MacOS
+   .. tab:: **MacOS**
 
       .. code-block:: bash
 
          pip install pooltool-billiards
 
-   .. tab:: Windows
+   .. tab:: **Windows**
 
       .. code-block:: bash
 
@@ -34,7 +34,7 @@ Pooltool is hosted on the [Python Package Index (PyPI)](https://pypi.org/project
       (*Providing the Panda3D archive is required until Panda3D v1.11 is released*)
 ```
 
-## From source:
+## From source
 
 If you want to develop for pooltool, have access to the most up-to-date version of the codebase, or modify the code to your liking, this is for you.
 
