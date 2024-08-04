@@ -15,7 +15,7 @@
 
 [![Discord](https://img.shields.io/badge/Discord-Join%20Server-7289da?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/8Y8qUgzZhz)
 
-# Pooltool
+# Description
 
 *Pooltool* is a general purpose billiards simulator crafted specifically for science and engineering.
 
