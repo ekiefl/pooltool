@@ -3,6 +3,7 @@
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![GitHub license](https://img.shields.io/github/license/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/blob/master/LICENSE.txt)
 [![Documentation Status](https://readthedocs.org/projects/pooltool/badge/?version=latest)](https://pooltool.readthedocs.io/en/latest/?badge=latest)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ekiefl/pooltool/test.yml)
 
 [![GitHub stars](https://img.shields.io/github/stars/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/network)
