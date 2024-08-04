@@ -1,15 +1,18 @@
 <img src="pooltool/logo/logo.png" width="600" />
 
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![GitHub license](https://img.shields.io/github/license/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/blob/master/LICENSE.txt)
+[![Documentation Status](https://readthedocs.org/projects/pooltool/badge/?version=latest)](https://pooltool.readthedocs.io/en/latest/?badge=latest)
+
 [![GitHub stars](https://img.shields.io/github/stars/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/network)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/ekiefl/pooltool)
-[![GitHub license](https://img.shields.io/github/license/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/blob/master/LICENSE.txt)
-[![Documentation Status](https://readthedocs.org/projects/pooltool/badge/?version=latest)](https://pooltool.readthedocs.io/en/latest/?badge=latest)
+
+![PyPI - Version](https://img.shields.io/pypi/v/pooltool-billiards)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pooltool-billiards)
 [![codecov](https://codecov.io/gh/ekiefl/pooltool/branch/latest/graph/badge.svg)](https://codecov.io/gh/ekiefl/pooltool)
 
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pooltool-billiards)
-![PyPI - Version](https://img.shields.io/pypi/v/pooltool-billiards)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Server-7289da?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/8Y8qUgzZhz)
 
 # Pooltool
 
