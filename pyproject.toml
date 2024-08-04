@@ -125,6 +125,7 @@ sphinx-copybutton = ">=0.5.2"
 furo = ">=2024.5.6"
 myst-parser = ">=3.0.1"
 sphinx-autoapi = ">=3.1.2"
+sphinx-tabs = ">=3.4.5"
 
 [tool.ruff]
 line-length = 88
