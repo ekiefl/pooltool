@@ -5,7 +5,9 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
-from pooltool.ptmath.roots.core import find_first_row_with_value, min_real_root
+from pooltool.ptmath.roots.core import (
+    get_real_positive_smallest_roots,
+)
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -14,10 +16,10 @@ class QuarticSolver(StrEnum):
     NUMERIC = auto()
 
 
-def minimum_quartic_root(
+def solve_quartics(
     ps: NDArray[np.float64], solver: QuarticSolver = QuarticSolver.HYBRID
-) -> Tuple[float, int]:
-    """Solves an array of quartic coefficients, returns smallest, real, positive root
+) -> NDArray[np.float64]:
+    """Returns the smallest positive and real root for each quartic polynomial.
 
     Args:
         ps:
@@ -29,24 +31,18 @@ def minimum_quartic_root(
             pooltool.ptmath.roots.quartic.QuarticSolver.
 
     Returns:
-        (real_root, index):
-            real_root is the minimum real root from the set of polynomials, and `index`
-            specifies the index of the responsible polynomial. i.e. the polynomial with
-            the root real_root is ps[index, :]
+        roots:
+            An array of shape m. Each value is the smallest root that is real and
+            positive. If no such root exists (e.g. all roots have complex), then
+            `np.inf` is returned.
     """
     # Get the roots for the polynomials
     assert QuarticSolver(solver)
-    roots = _quartic_routine[solver](ps)
 
-    best_root = min_real_root(roots.flatten())
+    roots = _quartic_routine[solver](ps)  # Shape m x 4, dtype complex128
+    best_roots = get_real_positive_smallest_roots(roots)  # Shape m, dtype float64
 
-    if best_root == np.inf:
-        return np.inf, 0
-
-    index = find_first_row_with_value(roots, best_root)
-    assert index > -1
-
-    return float(best_root.real), index
+    return best_roots
 
 
 def solve_many_numerical(p):

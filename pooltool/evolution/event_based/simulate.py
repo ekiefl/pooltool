@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from itertools import combinations
-from typing import Dict, Optional, Set
+from typing import Dict, Optional, Set, Tuple
 
 import attrs
 import numpy as np
@@ -36,7 +36,7 @@ from pooltool.objects.table.components import (
     Pocket,
 )
 from pooltool.physics.engine import PhysicsEngine
-from pooltool.ptmath.roots.quartic import QuarticSolver
+from pooltool.ptmath.roots.quartic import QuarticSolver, solve_quartics
 from pooltool.system.datatypes import System
 
 DEFAULT_ENGINE = PhysicsEngine()
@@ -217,6 +217,7 @@ def get_next_event(
     shot: System,
     *,
     transition_cache: Optional[TransitionCache] = None,
+    collision_cache: Optional[CollisionCache] = None,
     quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
     # Start by assuming next event doesn't happen
@@ -225,11 +226,16 @@ def get_next_event(
     if transition_cache is None:
         transition_cache = TransitionCache.create(shot)
 
+    if collision_cache is None:
+        collision_cache = CollisionCache()
+
     transition_event = transition_cache.get_next()
     if transition_event.time < event.time:
         event = transition_event
 
-    ball_ball_event = get_next_ball_ball_collision(shot, solver=quartic_solver)
+    ball_ball_event = get_next_ball_ball_collision(
+        shot, collision_cache=collision_cache, solver=quartic_solver
+    )
     if ball_ball_event.time < event.time:
         event = ball_ball_event
 
@@ -310,13 +316,21 @@ def _next_transition(ball: Ball) -> Event:
         raise NotImplementedError(f"Unknown '{ball.state.s=}'")
 
 
+@attrs.define
+class CollisionCache:
+    ball_ball: Dict[Tuple[str, str], float] = attrs.field(factory=dict)
+
+
 def get_next_ball_ball_collision(
-    shot: System, solver: QuarticSolver = QuarticSolver.HYBRID
+    shot: System,
+    collision_cache: Optional[CollisionCache] = None,
+    solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
     """Returns next ball-ball collision"""
 
     dtau_E = np.inf
-    ball_ids = []
+
+    ball_pairs = []
     collision_coeffs = []
 
     for ball1, ball2 in combinations(shot.balls.values(), 2):
@@ -366,17 +380,16 @@ def get_next_ball_ball_collision(
             )
         )
 
-        ball_ids.append((ball1.id, ball2.id))
+        ball_pairs.append((ball1.id, ball2.id))
 
     if not len(collision_coeffs):
         # There are no collisions to test for
         return ball_ball_collision(Ball.dummy(), Ball.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = ptmath.roots.quartic.minimum_quartic_root(
-        ps=np.array(collision_coeffs), solver=solver
-    )
+    roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+    dtau_E, index = roots.min(), roots.argmin()
 
-    ball1_id, ball2_id = ball_ids[index]
+    ball1_id, ball2_id = ball_pairs[index]
     ball1, ball2 = shot.balls[ball1_id], shot.balls[ball2_id]
 
     return ball_ball_collision(ball1, ball2, shot.t + dtau_E)
@@ -421,9 +434,8 @@ def get_next_ball_circular_cushion_event(
             Ball.dummy(), CircularCushionSegment.dummy(), shot.t + dtau_E
         )
 
-    dtau_E, index = ptmath.roots.quartic.minimum_quartic_root(
-        ps=np.array(collision_coeffs), solver=solver
-    )
+    roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+    dtau_E, index = roots.min(), roots.argmin()
 
     ball_id, cushion_id = agent_ids[index]
     ball, cushion = (
@@ -509,9 +521,8 @@ def get_next_ball_pocket_collision(
         # There are no collisions to test for
         return ball_pocket_collision(Ball.dummy(), Pocket.dummy(), shot.t + dtau_E)
 
-    dtau_E, index = ptmath.roots.quartic.minimum_quartic_root(
-        ps=np.array(collision_coeffs), solver=solver
-    )
+    roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+    dtau_E, index = roots.min(), roots.argmin()
 
     ball_id, pocket_id = agent_ids[index]
     ball, pocket = shot.balls[ball_id], shot.table.pockets[pocket_id]

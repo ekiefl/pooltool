@@ -18,7 +18,7 @@ def test_case1(solver: quartic.QuarticSolver):
 
     expected = 0.048943195217641386
     coeffs_array = np.array(coeffs)[np.newaxis, :]
-    assert quartic.minimum_quartic_root(coeffs_array, solver)[0] == pytest.approx(
+    assert quartic.solve_quartics(coeffs_array, solver)[0] == pytest.approx(
         expected, rel=1e-4
     )
 

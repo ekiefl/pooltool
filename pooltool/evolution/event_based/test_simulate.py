@@ -173,7 +173,7 @@ def test_case3(solver: quartic.QuarticSolver):
     expected = pytest.approx(5.810383731499328e-06, abs=1e-9)
 
     assert event.time == expected
-    assert quartic.minimum_quartic_root(coeffs_array, solver=solver)[0] == expected
+    assert quartic.solve_quartics(coeffs_array, solver=solver)[0] == expected
 
 
 @pytest.mark.parametrize(
@@ -319,7 +319,7 @@ def test_grazing_ball_ball_collision(solver: quartic.QuarticSolver):
 
         coeffs_array = np.array([coeffs], dtype=np.float64)
 
-        root = quartic.minimum_quartic_root(coeffs_array)[0]
+        root = quartic.solve_quartics(coeffs_array)[0]
 
         if phi < 90:
             assert root == np.inf
@@ -423,7 +423,7 @@ def test_almost_touching_ball_ball_collision(solver: quartic.QuarticSolver):
         coeffs_array = np.array([coeffs], dtype=np.float64)
 
         truth = true_time_to_collision(eps, V0, ball1.params.u_r, ball1.params.g)
-        calculated = quartic.minimum_quartic_root(coeffs_array, solver=solver)[0]
+        calculated = quartic.solve_quartics(coeffs_array, solver=solver)[0]
         diff = abs(calculated - truth)
 
         assert diff < 10e-12  # Less than 10 femptosecond difference
