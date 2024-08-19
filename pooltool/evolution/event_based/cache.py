@@ -89,11 +89,7 @@ class CollisionCache:
 
     @property
     def size(self) -> int:
-        count = 0
-        for cache in self.times.values():
-            count += len(cache)
-
-        return count
+        return sum(len(cache) for cache in self.times.values())
 
     def _get_invalid_ball_ids(self, event: Event) -> Set[str]:
         invalid_ball_ids = set()
@@ -137,3 +133,7 @@ class CollisionCache:
 
             for key in keys_to_delete:
                 del event_times[key]
+
+    @classmethod
+    def create(cls) -> CollisionCache:
+        return cls()

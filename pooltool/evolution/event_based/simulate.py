@@ -27,7 +27,6 @@ from pooltool.evolution.event_based.config import INCLUDED_EVENTS
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.table.components import (
     CircularCushionSegment,
-    LinearCushionSegment,
     Pocket,
 )
 from pooltool.physics.engine import PhysicsEngine
@@ -170,7 +169,7 @@ def simulate(
         engine.resolver.resolve(shot, event)
         shot._update_history(event)
 
-    collision_cache = CollisionCache()
+    collision_cache = CollisionCache.create()
     transition_cache = TransitionCache.create(shot)
 
     events = 0
@@ -225,7 +224,7 @@ def get_next_event(
         transition_cache = TransitionCache.create(shot)
 
     if collision_cache is None:
-        collision_cache = CollisionCache()
+        collision_cache = CollisionCache.create()
 
     transition_event = transition_cache.get_next()
     if transition_event.time < event.time:
@@ -237,7 +236,9 @@ def get_next_event(
     if ball_ball_event.time < event.time:
         event = ball_ball_event
 
-    ball_linear_cushion_event = get_next_ball_linear_cushion_collision(shot)
+    ball_linear_cushion_event = get_next_ball_linear_cushion_collision(
+        shot, collision_cache=collision_cache
+    )
     if ball_linear_cushion_event.time < event.time:
         event = ball_linear_cushion_event
 
@@ -396,20 +397,27 @@ def get_next_ball_circular_cushion_event(
     return ball_circular_cushion_collision(ball, cushion, shot.t + dtau_E)
 
 
-def get_next_ball_linear_cushion_collision(shot: System) -> Event:
+def get_next_ball_linear_cushion_collision(
+    shot: System, collision_cache: CollisionCache
+) -> Event:
     """Returns next ball-cushion collision (linear cushion segment)"""
 
-    dtau_E_min = np.inf
-    involved_agents = (Ball.dummy(), LinearCushionSegment.dummy())
+    cache = collision_cache.times.setdefault(EventType.BALL_LINEAR_CUSHION, {})
 
     for ball in shot.balls.values():
-        if ball.state.s in const.nontranslating:
-            continue
-
         state = ball.state
         params = ball.params
 
         for cushion in shot.table.cushion_segments.linear.values():
+            obj_ids = (ball.id, cushion.id)
+
+            if obj_ids in cache:
+                continue
+
+            if ball.state.s in const.nontranslating:
+                cache[obj_ids] = np.inf
+                continue
+
             dtau_E = solve.ball_linear_cushion_collision_time(
                 rvw=state.rvw,
                 s=state.s,
@@ -425,13 +433,15 @@ def get_next_ball_linear_cushion_collision(shot: System) -> Event:
                 R=params.R,
             )
 
-            if dtau_E < dtau_E_min:
-                involved_agents = (ball, cushion)
-                dtau_E_min = dtau_E
+            cache[obj_ids] = shot.t + dtau_E
 
-    dtau_E = dtau_E_min
+    obj_ids = min(cache, key=lambda k: cast(float, cache.get(k)))
 
-    return ball_linear_cushion_collision(*involved_agents, shot.t + dtau_E)
+    return ball_linear_cushion_collision(
+        ball=shot.balls[obj_ids[0]],
+        cushion=shot.table.cushion_segments.linear[obj_ids[1]],
+        time=cache[obj_ids],
+    )
 
 
 def get_next_ball_pocket_collision(
