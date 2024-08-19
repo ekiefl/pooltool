@@ -5,8 +5,8 @@ from numpy.typing import NDArray
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.events import EventType, ball_ball_collision, ball_pocket_collision
+from pooltool.evolution.event_based.cache import CollisionCache
 from pooltool.evolution.event_based.simulate import (
-    CollisionCache,
     get_next_ball_ball_collision,
     get_next_event,
     simulate,
