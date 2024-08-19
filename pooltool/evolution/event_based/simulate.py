@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from itertools import combinations
-from typing import Dict, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple, cast
 
 import attrs
 import numpy as np
@@ -152,6 +152,7 @@ def simulate(
         engine.resolver.resolve(shot, event)
         shot._update_history(event)
 
+    collision_cache = CollisionCache()
     transition_cache = TransitionCache.create(shot)
 
     events = 0
@@ -159,6 +160,7 @@ def simulate(
         event = get_next_event(
             shot,
             transition_cache=transition_cache,
+            collision_cache=collision_cache,
             quartic_solver=quartic_solver,
         )
 
@@ -171,6 +173,7 @@ def simulate(
         if event.event_type in include:
             engine.resolver.resolve(shot, event)
             transition_cache.update(event)
+            collision_cache.invalidate(event)
 
         shot._update_history(event)
 
@@ -318,22 +321,77 @@ def _next_transition(ball: Ball) -> Event:
 
 @attrs.define
 class CollisionCache:
-    ball_ball: Dict[Tuple[str, str], float] = attrs.field(factory=dict)
+    times: Dict[EventType, Dict[Tuple[str, str], float]] = attrs.field(factory=dict)
+
+    @property
+    def size(self) -> int:
+        count = 0
+        for cache in self.times.values():
+            count += len(cache)
+
+        return count
+
+    def _get_invalid_ball_ids(self, event: Event) -> Set[str]:
+        invalid_ball_ids = set()
+
+        if event.event_type == EventType.BALL_BALL:
+            invalid_ball_ids.update(event.ids)
+        elif event.event_type in {
+            EventType.BALL_LINEAR_CUSHION,
+            EventType.BALL_CIRCULAR_CUSHION,
+            EventType.BALL_POCKET,
+        }:
+            invalid_ball_ids.add(event.agents[0].id)
+        elif event.event_type == EventType.STICK_BALL:
+            invalid_ball_ids.add(event.agents[1].id)
+        else:
+            assert event.event_type.is_transition()
+            invalid_ball_ids.add(event.agents[0].id)
+
+        return invalid_ball_ids
+
+    def invalidate(self, event: Event) -> None:
+        invalid_ball_ids = self._get_invalid_ball_ids(event)
+
+        for event_type, event_times in self.times.items():
+            keys_to_delete = []
+
+            for key in event_times:
+                if event_type == EventType.BALL_BALL:
+                    if key[0] in invalid_ball_ids or key[1] in invalid_ball_ids:
+                        keys_to_delete.append(key)
+                elif event_type in {
+                    EventType.BALL_LINEAR_CUSHION,
+                    EventType.BALL_CIRCULAR_CUSHION,
+                    EventType.BALL_POCKET,
+                }:
+                    if key[0] in invalid_ball_ids:
+                        keys_to_delete.append(key)
+                elif event_type == EventType.STICK_BALL:
+                    if key[1] in invalid_ball_ids:
+                        keys_to_delete.append(key)
+
+            for key in keys_to_delete:
+                del event_times[key]
 
 
 def get_next_ball_ball_collision(
     shot: System,
-    collision_cache: Optional[CollisionCache] = None,
+    collision_cache: CollisionCache,
     solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
     """Returns next ball-ball collision"""
 
-    dtau_E = np.inf
+    ball_pairs: List[Tuple[str, str]] = []
+    collision_coeffs: List[Tuple[float, ...]] = []
 
-    ball_pairs = []
-    collision_coeffs = []
+    cache = collision_cache.times.setdefault(EventType.BALL_BALL, {})
 
     for ball1, ball2 in combinations(shot.balls.values(), 2):
+        ball_pair = (ball1.id, ball2.id)
+        if ball_pair in cache:
+            continue
+
         ball1_state = ball1.state
         ball1_params = ball1.params
 
@@ -341,58 +399,71 @@ def get_next_ball_ball_collision(
         ball2_params = ball2.params
 
         if ball1_state.s == const.pocketed or ball2_state.s == const.pocketed:
-            continue
-
-        if (
+            cache[ball_pair] = np.inf
+        elif (
             ball1_state.s in const.nontranslating
             and ball2_state.s in const.nontranslating
         ):
-            continue
-
-        if (
+            cache[ball_pair] = np.inf
+        elif (
             ptmath.norm3d(ball1_state.rvw[0] - ball2_state.rvw[0])
             < ball1_params.R + ball2_params.R
         ):
             # If balls are intersecting, avoid internal collisions
-            continue
-
-        collision_coeffs.append(
-            solve.ball_ball_collision_coeffs(
-                rvw1=ball1_state.rvw,
-                rvw2=ball2_state.rvw,
-                s1=ball1_state.s,
-                s2=ball2_state.s,
-                mu1=(
-                    ball1_params.u_s
-                    if ball1_state.s == const.sliding
-                    else ball1_params.u_r
-                ),
-                mu2=(
-                    ball2_params.u_s
-                    if ball2_state.s == const.sliding
-                    else ball2_params.u_r
-                ),
-                m1=ball1_params.m,
-                m2=ball2_params.m,
-                g1=ball1_params.g,
-                g2=ball2_params.g,
-                R=ball1_params.R,
+            cache[ball_pair] = np.inf
+        else:
+            ball_pairs.append(ball_pair)
+            collision_coeffs.append(
+                solve.ball_ball_collision_coeffs(
+                    rvw1=ball1_state.rvw,
+                    rvw2=ball2_state.rvw,
+                    s1=ball1_state.s,
+                    s2=ball2_state.s,
+                    mu1=(
+                        ball1_params.u_s
+                        if ball1_state.s == const.sliding
+                        else ball1_params.u_r
+                    ),
+                    mu2=(
+                        ball2_params.u_s
+                        if ball2_state.s == const.sliding
+                        else ball2_params.u_r
+                    ),
+                    m1=ball1_params.m,
+                    m2=ball2_params.m,
+                    g1=ball1_params.g,
+                    g2=ball2_params.g,
+                    R=ball1_params.R,
+                )
             )
-        )
 
-        ball_pairs.append((ball1.id, ball2.id))
+    if len(collision_coeffs):
+        roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        for root, ball_pair in zip(roots, ball_pairs, strict=True):
+            cache[ball_pair] = shot.t + root
 
-    if not len(collision_coeffs):
-        # There are no collisions to test for
-        return ball_ball_collision(Ball.dummy(), Ball.dummy(), shot.t + dtau_E)
+    # The cache is now populated and up-to-date
 
-    roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
-    dtau_E, index = roots.min(), roots.argmin()
+    # Let's be sure of it
+    for ball1, ball2 in combinations(shot.balls.values(), 2):
+        assert (
+            ball1.id,
+            ball2.id,
+        ) in cache, f"{ball1.id}, {ball2.id} not in cache"
 
-    ball1_id, ball2_id = ball_pairs[index]
+    # Let's be sure of it
+    for ball1_id, ball2_id in cache:
+        assert (
+            cache[(ball1_id, ball2_id)] > shot.t
+        ), f"{ball1_id}, {ball2_id} event time in past!"
+
+    ball_pair = min(cache, key=lambda k: cast(float, cache.get(k)))
+
+    ball1_id, ball2_id = ball_pair
     ball1, ball2 = shot.balls[ball1_id], shot.balls[ball2_id]
+    event_time = cache[ball_pair]
 
-    return ball_ball_collision(ball1, ball2, shot.t + dtau_E)
+    return ball_ball_collision(ball1, ball2, event_time)
 
 
 def get_next_ball_circular_cushion_event(

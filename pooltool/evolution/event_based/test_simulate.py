@@ -6,6 +6,7 @@ import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.events import EventType, ball_ball_collision, ball_pocket_collision
 from pooltool.evolution.event_based.simulate import (
+    CollisionCache,
     get_next_ball_ball_collision,
     get_next_event,
     simulate,
@@ -478,4 +479,7 @@ def test_no_ball_ball_collisions_for_intersecting_balls(solver: quartic.QuarticS
     assert (
         get_next_event(system, quartic_solver=solver).event_type != EventType.BALL_BALL
     )
-    assert get_next_ball_ball_collision(system, solver=solver).time == np.inf
+    assert (
+        get_next_ball_ball_collision(system, CollisionCache(), solver=solver).time
+        == np.inf
+    )
