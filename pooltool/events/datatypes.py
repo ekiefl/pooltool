@@ -58,22 +58,22 @@ class EventType(strenum.StrEnum):
 
     def is_collision(self) -> bool:
         """Returns whether the member is a collision"""
-        return self in (
+        return self in {
             EventType.BALL_BALL,
             EventType.BALL_CIRCULAR_CUSHION,
             EventType.BALL_LINEAR_CUSHION,
             EventType.BALL_POCKET,
             EventType.STICK_BALL,
-        )
+        }
 
     def is_transition(self) -> bool:
         """Returns whether the member is a transition"""
-        return self in (
+        return self in {
             EventType.SPINNING_STATIONARY,
             EventType.ROLLING_STATIONARY,
             EventType.ROLLING_SPINNING,
             EventType.SLIDING_ROLLING,
-        )
+        }
 
 
 Object = Union[
