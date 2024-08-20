@@ -24,11 +24,7 @@ from pooltool.evolution.continuize import continuize
 from pooltool.evolution.event_based import solve
 from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
-from pooltool.objects.ball.datatypes import Ball, BallState
-from pooltool.objects.table.components import (
-    CircularCushionSegment,
-    Pocket,
-)
+from pooltool.objects.ball.datatypes import BallState
 from pooltool.physics.engine import PhysicsEngine
 from pooltool.ptmath.roots.quartic import QuarticSolver, solve_quartics
 from pooltool.system.datatypes import System
@@ -236,19 +232,21 @@ def get_next_event(
     if ball_ball_event.time < event.time:
         event = ball_ball_event
 
+    ball_circular_cushion_event = get_next_ball_circular_cushion_event(
+        shot, collision_cache=collision_cache, solver=quartic_solver
+    )
+    if ball_circular_cushion_event.time < event.time:
+        event = ball_circular_cushion_event
+
     ball_linear_cushion_event = get_next_ball_linear_cushion_collision(
         shot, collision_cache=collision_cache
     )
     if ball_linear_cushion_event.time < event.time:
         event = ball_linear_cushion_event
 
-    ball_circular_cushion_event = get_next_ball_circular_cushion_event(
-        shot, solver=quartic_solver
+    ball_pocket_event = get_next_ball_pocket_collision(
+        shot, collision_cache=collision_cache, solver=quartic_solver
     )
-    if ball_circular_cushion_event.time < event.time:
-        event = ball_circular_cushion_event
-
-    ball_pocket_event = get_next_ball_pocket_collision(shot, solver=quartic_solver)
     if ball_pocket_event.time < event.time:
         event = ball_pocket_event
 
@@ -347,22 +345,35 @@ def get_next_ball_ball_collision(
 
 
 def get_next_ball_circular_cushion_event(
-    shot: System, solver: QuarticSolver = QuarticSolver.HYBRID
+    shot: System,
+    collision_cache: CollisionCache,
+    solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
     """Returns next ball-cushion collision (circular cushion segment)"""
 
-    dtau_E = np.inf
-    agent_ids = []
-    collision_coeffs = []
+    if not shot.table.has_circular_cushions:
+        return null_event(np.inf)
+
+    ball_cushion_pairs: List[Tuple[str, str]] = []
+    collision_coeffs: List[Tuple[float, ...]] = []
+
+    cache = collision_cache.times.setdefault(EventType.BALL_CIRCULAR_CUSHION, {})
 
     for ball in shot.balls.values():
-        if ball.state.s in const.nontranslating:
-            continue
-
         state = ball.state
         params = ball.params
 
         for cushion in shot.table.cushion_segments.circular.values():
+            obj_ids = (ball.id, cushion.id)
+
+            if obj_ids in cache:
+                continue
+
+            if ball.state.s in const.nontranslating:
+                cache[obj_ids] = np.inf
+                continue
+
+            ball_cushion_pairs.append(obj_ids)
             collision_coeffs.append(
                 solve.ball_circular_cushion_collision_coeffs(
                     rvw=state.rvw,
@@ -377,30 +388,29 @@ def get_next_ball_circular_cushion_event(
                 )
             )
 
-            agent_ids.append((ball.id, cushion.id))
+    if len(collision_coeffs):
+        roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        for root, ball_cushion_pair in zip(roots, ball_cushion_pairs, strict=True):
+            cache[ball_cushion_pair] = shot.t + root
 
-    if not len(collision_coeffs):
-        # There are no collisions to test for
-        return ball_circular_cushion_collision(
-            Ball.dummy(), CircularCushionSegment.dummy(), shot.t + dtau_E
-        )
+    # The cache is now populated and up-to-date
 
-    roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
-    dtau_E, index = roots.min(), roots.argmin()
+    ball_id, cushion_id = min(cache, key=lambda k: cast(float, cache.get(k)))
 
-    ball_id, cushion_id = agent_ids[index]
-    ball, cushion = (
-        shot.balls[ball_id],
-        shot.table.cushion_segments.circular[cushion_id],
+    return ball_circular_cushion_collision(
+        ball=shot.balls[ball_id],
+        cushion=shot.table.cushion_segments.circular[cushion_id],
+        time=cache[(ball_id, cushion_id)],
     )
-
-    return ball_circular_cushion_collision(ball, cushion, shot.t + dtau_E)
 
 
 def get_next_ball_linear_cushion_collision(
     shot: System, collision_cache: CollisionCache
 ) -> Event:
     """Returns next ball-cushion collision (linear cushion segment)"""
+
+    if not shot.table.has_linear_cushions:
+        return null_event(np.inf)
 
     cache = collision_cache.times.setdefault(EventType.BALL_LINEAR_CUSHION, {})
 
@@ -445,22 +455,35 @@ def get_next_ball_linear_cushion_collision(
 
 
 def get_next_ball_pocket_collision(
-    shot: System, solver: QuarticSolver = QuarticSolver.HYBRID
+    shot: System,
+    collision_cache: CollisionCache,
+    solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
     """Returns next ball-pocket collision"""
 
-    dtau_E = np.inf
-    agent_ids = []
-    collision_coeffs = []
+    if not shot.table.has_circular_cushions:
+        return null_event(np.inf)
+
+    ball_pocket_pairs: List[Tuple[str, str]] = []
+    collision_coeffs: List[Tuple[float, ...]] = []
+
+    cache = collision_cache.times.setdefault(EventType.BALL_POCKET, {})
 
     for ball in shot.balls.values():
-        if ball.state.s in const.nontranslating:
-            continue
-
         state = ball.state
         params = ball.params
 
         for pocket in shot.table.pockets.values():
+            obj_ids = (ball.id, pocket.id)
+
+            if obj_ids in cache:
+                continue
+
+            if ball.state.s in const.nontranslating:
+                cache[obj_ids] = np.inf
+                continue
+
+            ball_pocket_pairs.append(obj_ids)
             collision_coeffs.append(
                 solve.ball_pocket_collision_coeffs(
                     rvw=state.rvw,
@@ -475,16 +498,17 @@ def get_next_ball_pocket_collision(
                 )
             )
 
-            agent_ids.append((ball.id, pocket.id))
+    if len(collision_coeffs):
+        roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        for root, ball_pocket_pair in zip(roots, ball_pocket_pairs, strict=True):
+            cache[ball_pocket_pair] = shot.t + root
 
-    if not len(collision_coeffs):
-        # There are no collisions to test for
-        return ball_pocket_collision(Ball.dummy(), Pocket.dummy(), shot.t + dtau_E)
+    # The cache is now populated and up-to-date
 
-    roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
-    dtau_E, index = roots.min(), roots.argmin()
+    ball_id, pocket_id = min(cache, key=lambda k: cast(float, cache.get(k)))
 
-    ball_id, pocket_id = agent_ids[index]
-    ball, pocket = shot.balls[ball_id], shot.table.pockets[pocket_id]
-
-    return ball_pocket_collision(ball, pocket, shot.t + dtau_E)
+    return ball_pocket_collision(
+        ball=shot.balls[ball_id],
+        pocket=shot.table.pockets[pocket_id],
+        time=cache[(ball_id, pocket_id)],
+    )

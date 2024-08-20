@@ -102,6 +102,18 @@ class Table:
 
         return self.w / 2, self.l / 2
 
+    @property
+    def has_linear_cushions(self) -> bool:
+        return bool(len(self.cushion_segments.linear))
+
+    @property
+    def has_circular_cushions(self) -> bool:
+        return bool(len(self.cushion_segments.circular))
+
+    @property
+    def has_pockets(self) -> bool:
+        return bool(len(self.pockets))
+
     def copy(self) -> Table:
         """Create a copy."""
         # Delegates the deep-ish copying of CushionSegments and Pocket to their respective
