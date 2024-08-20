@@ -19,6 +19,7 @@ from pooltool.events import (
     sliding_rolling_transition,
     spinning_stationary_transition,
 )
+from pooltool.events.utils import event_type_to_ball_indices
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.system.datatypes import System
 
@@ -92,23 +93,10 @@ class CollisionCache:
         return sum(len(cache) for cache in self.times.values())
 
     def _get_invalid_ball_ids(self, event: Event) -> Set[str]:
-        invalid_ball_ids = set()
-
-        if event.event_type == EventType.BALL_BALL:
-            invalid_ball_ids.update(event.ids)
-        elif event.event_type in {
-            EventType.BALL_LINEAR_CUSHION,
-            EventType.BALL_CIRCULAR_CUSHION,
-            EventType.BALL_POCKET,
-        }:
-            invalid_ball_ids.add(event.agents[0].id)
-        elif event.event_type == EventType.STICK_BALL:
-            invalid_ball_ids.add(event.agents[1].id)
-        else:
-            assert event.event_type.is_transition()
-            invalid_ball_ids.add(event.agents[0].id)
-
-        return invalid_ball_ids
+        return {
+            event.ids[ball_idx]
+            for ball_idx in event_type_to_ball_indices[event.event_type]
+        }
 
     def invalidate(self, event: Event) -> None:
         invalid_ball_ids = self._get_invalid_ball_ids(event)
@@ -117,19 +105,12 @@ class CollisionCache:
             keys_to_delete = []
 
             for key in event_times:
-                if event_type == EventType.BALL_BALL:
-                    if key[0] in invalid_ball_ids or key[1] in invalid_ball_ids:
-                        keys_to_delete.append(key)
-                elif event_type in {
-                    EventType.BALL_LINEAR_CUSHION,
-                    EventType.BALL_CIRCULAR_CUSHION,
-                    EventType.BALL_POCKET,
-                }:
-                    if key[0] in invalid_ball_ids:
-                        keys_to_delete.append(key)
-                elif event_type == EventType.STICK_BALL:
-                    if key[1] in invalid_ball_ids:
-                        keys_to_delete.append(key)
+                # Identify which indices in the key should be checked based on the event type
+                ball_indices = event_type_to_ball_indices.get(event_type, [])
+
+                # Check if any of the relevant ball IDs in the key match the invalid IDs
+                if any(key[idx] in invalid_ball_ids for idx in ball_indices):
+                    keys_to_delete.append(key)
 
             for key in keys_to_delete:
                 del event_times[key]
