@@ -135,8 +135,11 @@ line-length = 88
 extend-select = ["I"]
 
 [tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
 testpaths = [
-    "pooltool",
+    "tests",
 ]
 
 # [tool.pyright]

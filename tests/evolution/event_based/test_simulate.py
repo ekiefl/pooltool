@@ -12,10 +12,10 @@ from pooltool.evolution.event_based.simulate import (
     simulate,
 )
 from pooltool.evolution.event_based.solve import ball_ball_collision_coeffs
-from pooltool.evolution.event_based.test_data import TEST_DIR
 from pooltool.objects import Ball, BilliardTableSpecs, Cue, Table
 from pooltool.ptmath.roots import quadratic, quartic
 from pooltool.system import System
+from tests.evolution.event_based.test_data import TEST_DIR
 
 
 def test_simulate_inplace():
