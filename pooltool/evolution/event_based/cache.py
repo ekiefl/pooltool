@@ -30,6 +30,21 @@ def _null() -> Dict[str, Event]:
 
 @attrs.define
 class TransitionCache:
+    """A cache for managing and retrieving the next transition events for balls.
+
+    This class maintains a dictionary of transitions, where each key is ball ID, and
+    each value is the next transition associated with that object.
+
+    Attributes:
+        transitions:
+            A dictionary mapping ball IDs to their corresponding next event.
+
+    See Also:
+        - For practical and historical reasons, events are cached differently depending
+          on whether they are collision events or transition events. For collision
+          event caching, see :class:`CollisionCache`.
+    """
+
     transitions: Dict[str, Event] = attrs.field(factory=_null)
 
     def get_next(self) -> Event:
@@ -86,6 +101,34 @@ def _next_transition(ball: Ball) -> Event:
 
 @attrs.define
 class CollisionCache:
+    """A cache for storing and managing collision times between objects.
+
+    This class is used as a cache for possible future collision times. By caching
+    collision times whenever they are calculated, re-calculating them during each step
+    of the shot evolution algorithm can be avoided in many instances.
+
+    It also provides functionality to invalidate cached events based on realized events,
+    ensuring that outdated data does not persist in the cache. For example, if a
+    ball-transition event for ball with ID "6" is passed to :meth:`invalidate`, all
+    cached event times involving ball ID "6" are removed from the cache, since they are
+    no longer valid.
+
+    Attributes:
+        times:
+            A dictionary where each key is an event type, and each value is another
+            dictionary mapping tuples of object IDs to their corresponding collision
+            times.
+
+    Properties:
+        size:
+            The total number of cached events.
+
+    See Also:
+        - For practical and historical reasons, events are cached differently depending
+          on whether they are collision events or transition events. For transition
+          event caching, see :class:`TransitionCache`.
+    """
+
     times: Dict[EventType, Dict[Tuple[str, str], float]] = attrs.field(factory=dict)
 
     @property
