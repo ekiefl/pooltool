@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from itertools import combinations
-from typing import List, Optional, Set, Tuple, cast
+from typing import List, Optional, Set, Tuple
 
 import numpy as np
 
@@ -322,20 +322,7 @@ def get_next_ball_ball_collision(
 
     # The cache is now populated and up-to-date
 
-    # Let's be sure of it
-    for ball1, ball2 in combinations(shot.balls.values(), 2):
-        assert (
-            ball1.id,
-            ball2.id,
-        ) in cache, f"{ball1.id}, {ball2.id} not in cache"
-
-    # Let's be sure of it
-    for ball1_id, ball2_id in cache:
-        assert (
-            cache[(ball1_id, ball2_id)] > shot.t
-        ), f"{ball1_id}, {ball2_id} event time in past!"
-
-    ball_pair = min(cache, key=lambda k: cast(float, cache.get(k)))
+    ball_pair = min(cache, key=lambda k: cache[k])
 
     return ball_ball_collision(
         ball1=shot.balls[ball_pair[0]],
@@ -395,7 +382,7 @@ def get_next_ball_circular_cushion_event(
 
     # The cache is now populated and up-to-date
 
-    ball_id, cushion_id = min(cache, key=lambda k: cast(float, cache.get(k)))
+    ball_id, cushion_id = min(cache, key=lambda k: cache[k])
 
     return ball_circular_cushion_collision(
         ball=shot.balls[ball_id],
@@ -445,7 +432,7 @@ def get_next_ball_linear_cushion_collision(
 
             cache[obj_ids] = shot.t + dtau_E
 
-    obj_ids = min(cache, key=lambda k: cast(float, cache.get(k)))
+    obj_ids = min(cache, key=lambda k: cache[k])
 
     return ball_linear_cushion_collision(
         ball=shot.balls[obj_ids[0]],
@@ -505,7 +492,7 @@ def get_next_ball_pocket_collision(
 
     # The cache is now populated and up-to-date
 
-    ball_id, pocket_id = min(cache, key=lambda k: cast(float, cache.get(k)))
+    ball_id, pocket_id = min(cache, key=lambda k: cache[k])
 
     return ball_pocket_collision(
         ball=shot.balls[ball_id],
