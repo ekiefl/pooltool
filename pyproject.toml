@@ -136,7 +136,7 @@ extend-select = ["I"]
 
 [tool.pytest.ini_options]
 testpaths = [
-    "pooltool",
+    "tests",
 ]
 
 # [tool.pyright]
