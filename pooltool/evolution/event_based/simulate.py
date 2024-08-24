@@ -317,7 +317,7 @@ def get_next_ball_ball_collision(
 
     if len(collision_coeffs):
         roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
-        for root, ball_pair in zip(roots, ball_pairs, strict=True):
+        for root, ball_pair in zip(roots, ball_pairs):
             cache[ball_pair] = shot.t + root
 
     # The cache is now populated and up-to-date
@@ -377,7 +377,7 @@ def get_next_ball_circular_cushion_event(
 
     if len(collision_coeffs):
         roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
-        for root, ball_cushion_pair in zip(roots, ball_cushion_pairs, strict=True):
+        for root, ball_cushion_pair in zip(roots, ball_cushion_pairs):
             cache[ball_cushion_pair] = shot.t + root
 
     # The cache is now populated and up-to-date
@@ -487,7 +487,7 @@ def get_next_ball_pocket_collision(
 
     if len(collision_coeffs):
         roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
-        for root, ball_pocket_pair in zip(roots, ball_pocket_pairs, strict=True):
+        for root, ball_pocket_pair in zip(roots, ball_pocket_pairs):
             cache[ball_pocket_pair] = shot.t + root
 
     # The cache is now populated and up-to-date
