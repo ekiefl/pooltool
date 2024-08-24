@@ -448,7 +448,7 @@ def get_next_ball_pocket_collision(
 ) -> Event:
     """Returns next ball-pocket collision"""
 
-    if not shot.table.has_circular_cushions:
+    if not shot.table.has_pockets:
         return null_event(np.inf)
 
     ball_pocket_pairs: List[Tuple[str, str]] = []
