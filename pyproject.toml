@@ -115,6 +115,7 @@ colored = ">=2.2.4"  # TODO switch to something ubiquitous
 ipython = ">=8.18.1"
 # Publishing
 poetry-dynamic-versioning = {extras = ["plugin"], version = ">=1.4.0"}
+ipdb = "^0.13.13"
 
 [tool.poetry.group.docs]
 optional = true
