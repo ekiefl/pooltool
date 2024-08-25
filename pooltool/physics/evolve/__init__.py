@@ -10,15 +10,28 @@ The code should be configurable and passed to `PhysicsEngine` in `physics/engine
 just like the `Resolver` class in `physics/resolve/resolver.py`
 """
 
+from typing import Tuple
+
 import numpy as np
 from numba import jit
+from numpy.typing import NDArray
 
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
+def evolve_ball_motion(
+    state: int,
+    rvw: NDArray[np.float64],
+    R: float,
+    m: float,
+    u_s: float,
+    u_sp: float,
+    u_r: float,
+    g: float,
+    t: float,
+) -> Tuple[NDArray[np.float64], int]:
     if state == const.stationary or state == const.pocketed:
         return rvw, state
 
@@ -57,7 +70,15 @@ def evolve_ball_motion(state, rvw, R, m, u_s, u_sp, u_r, g, t):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
+def evolve_slide_state(
+    rvw: NDArray[np.float64],
+    R: float,
+    m: float,
+    u_s: float,
+    u_sp: float,
+    g: float,
+    t: float,
+) -> NDArray[np.float64]:
     if t == 0:
         return rvw
 
@@ -96,7 +117,9 @@ def evolve_slide_state(rvw, R, m, u_s, u_sp, g, t):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
+def evolve_roll_state(
+    rvw: NDArray[np.float64], R: float, u_r: float, u_sp: float, g: float, t: float
+) -> NDArray[np.float64]:
     if t == 0:
         return rvw
 
@@ -122,7 +145,9 @@ def evolve_roll_state(rvw, R, u_r, u_sp, g, t):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def evolve_perpendicular_spin_component(wz, R, u_sp, g, t):
+def evolve_perpendicular_spin_component(
+    wz: float, R: float, u_sp: float, g: float, t: float
+) -> float:
     if t == 0:
         return wz
 
@@ -143,7 +168,9 @@ def evolve_perpendicular_spin_component(wz, R, u_sp, g, t):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def evolve_perpendicular_spin_state(rvw, R, u_sp, g, t):
+def evolve_perpendicular_spin_state(
+    rvw: NDArray[np.float64], R: float, u_sp: float, g: float, t: float
+) -> NDArray[np.float64]:
     # Otherwise ball.state.rvw will be modified and corresponding entry in self.history
     # FIXME framework has changed, this may not be true. EDIT This is still true.
     rvw = rvw.copy()

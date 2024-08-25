@@ -45,7 +45,7 @@ def solve_quartics(
     return best_roots
 
 
-def solve_many_numerical(p):
+def solve_many_numerical(p: NDArray[np.float64]) -> NDArray[np.complex128]:
     """Solve multiple polynomial equations using companion matrix eigenvalues
 
     This is a vectorized implementation of numpy.roots that can solve multiple
@@ -79,7 +79,7 @@ def solve_many_numerical(p):
     A = np.zeros(p.shape[:1] + (n - 1, n - 1), np.float64)
     A[..., 1:, :-1] = np.eye(n - 2)
     A[..., 0, :] = -p[..., 1:] / p[..., None, 0]
-    return np.linalg.eigvals(A)
+    return np.linalg.eigvals(A)  # type: ignore
 
 
 def solve_many(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
@@ -101,12 +101,12 @@ def solve_many(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
             The columns are in the order a, b, c, d, e, where these coefficients make up
             the polynomial equation at^4 + bt^3 + ct^2 + dt + e = 0
     """
-    roots, indicators = _solve_many(ps.astype(np.complex128))
+    roots, _ = _solve_many(ps.astype(np.complex128))
     return roots
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def solve(a, b, c, d, e) -> NDArray[np.complex128]:
+def solve(a: float, b: float, c: float, d: float, e: float) -> NDArray[np.complex128]:
     return _solve(np.array([a, b, c, d, e], dtype=np.complex128))[0]
 
 
