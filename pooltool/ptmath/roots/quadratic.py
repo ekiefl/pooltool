@@ -1,10 +1,12 @@
+from typing import Tuple
+
 from numba import jit
 
 import pooltool.constants as const
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def solve(a, b, c):
+def solve(a: float, b: float, c: float) -> Tuple[float, float]:
     """Solve a quadratic equation At^2 + Bt + C = 0 (just-in-time compiled)"""
     if a == 0:
         u = -c / b

@@ -193,7 +193,7 @@ def calc_cut_angle(
 ) -> float:
     aim_vector = ghost_ball[0] - cueball[0], ghost_ball[1] - cueball[1]
     pocket_vector = potting_point[0] - ghost_ball[0], potting_point[1] - ghost_ball[1]
-    return angle_between_vectors(aim_vector, pocket_vector)
+    return angle_between_vectors(np.array(aim_vector), np.array(pocket_vector))
 
 
 def ball_ids_occluding_ballpath(

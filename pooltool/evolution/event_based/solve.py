@@ -1,7 +1,9 @@
 from math import acos
+from typing import Tuple
 
 import numpy as np
 from numba import jit
+from numpy.typing import NDArray
 
 import pooltool.constants as const
 import pooltool.physics.evolve as evolve
@@ -9,7 +11,14 @@ import pooltool.ptmath as ptmath
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def skip_ball_ball_collision(rvw1, rvw2, s1, s2, R1, R2):
+def skip_ball_ball_collision(
+    rvw1: NDArray[np.float64],
+    rvw2: NDArray[np.float64],
+    s1: int,
+    s2: int,
+    R1: float,
+    R2: float,
+) -> bool:
     if (s1 == const.spinning or s1 == const.pocketed or s1 == const.stationary) and (
         s2 == const.spinning or s2 == const.pocketed or s2 == const.stationary
     ):
@@ -71,7 +80,9 @@ def skip_ball_ball_collision(rvw1, rvw2, s1, s2, R1, R2):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def get_u(rvw, R, phi, s):
+def get_u(
+    rvw: NDArray[np.float64], R: float, phi: float, s: int
+) -> NDArray[np.float64]:
     if s == const.rolling:
         return np.array([1, 0, 0], dtype=np.float64)
 
@@ -83,7 +94,19 @@ def get_u(rvw, R, phi, s):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
+def ball_ball_collision_coeffs(
+    rvw1: NDArray[np.float64],
+    rvw2: NDArray[np.float64],
+    s1: int,
+    s2: int,
+    mu1: float,
+    mu2: float,
+    m1: float,
+    m2: float,
+    g1: float,
+    g2: float,
+    R: float,
+) -> Tuple[float, float, float, float, float]:
     """Get quartic coeffs required to determine the ball-ball collision time
 
     (just-in-time compiled)
@@ -139,7 +162,19 @@ def ball_ball_collision_coeffs(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
     return a, b, c, d, e
 
 
-def ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
+def ball_ball_collision_time(
+    rvw1: NDArray[np.float64],
+    rvw2: NDArray[np.float64],
+    s1: int,
+    s2: int,
+    mu1: float,
+    mu2: float,
+    m1: float,
+    m2: float,
+    g1: float,
+    g2: float,
+    R: float,
+) -> float:
     """Get the time until collision between 2 balls
 
     NOTE This is deprecated. Rather than solve the roots of a single polynomial
@@ -157,53 +192,20 @@ def ball_ball_collision_time(rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def skip_ball_linear_cushion_collision(rvw, s, u_r, g, R, p1, p2, normal):
-    if s == const.spinning or s == const.pocketed or s == const.stationary:
-        # Ball isn't moving. No collision.
-        return True
-
-    if s == const.rolling:
-        # Since the ball is rolling, it is a straight line trajectory. The strategy here
-        # is to see whether the trajectory of the ball is going to intersect with either
-        # of the collisions defined by a linear cushion segment. Let r1 be the position
-        # of the ball and r2 be the final position of the ball (rolling to a stop). Let
-        # p11 and p21 be the intersection points of the first intersection line, and let
-        # p12 and p22 be the intersection points of the second. This code uses
-        # orientation to determine if If r1 -> r2 intersects p11 -> p21 or p12 -> p22
-        p11 = p1 + R * normal
-        p12 = p1 - R * normal
-        p21 = p2 + R * normal
-        p22 = p2 - R * normal
-
-        t = ptmath.norm3d(rvw[1]) / (u_r * g)
-        v_0_hat = ptmath.unit_vector(rvw[1])
-        r1 = rvw[0]
-        r2 = r1 + rvw[1] * t - 0.5 * u_r * g * t**2 * v_0_hat
-
-        o1 = ptmath.orientation(r1, r2, p11)
-        o2 = ptmath.orientation(r1, r2, p21)
-        o3 = ptmath.orientation(p11, p21, r1)
-        o4 = ptmath.orientation(p11, p21, r2)
-        # Whether or not trajectory intersects with first intersection line
-        int1 = (o1 != o2) and (o3 != o4)
-
-        o1 = ptmath.orientation(r1, r2, p12)
-        o2 = ptmath.orientation(r1, r2, p22)
-        o3 = ptmath.orientation(p12, p22, r1)
-        o4 = ptmath.orientation(p12, p22, r2)
-        # Whether or not trajectory intersects with first intersection line
-        int2 = (o1 != o2) and (o3 != o4)
-
-        if not int1 and not int2:
-            return True
-
-    return False
-
-
-@jit(nopython=True, cache=const.use_numba_cache)
 def ball_linear_cushion_collision_time(
-    rvw, s, lx, ly, l0, p1, p2, direction, mu, m, g, R
-):
+    rvw: NDArray[np.float64],
+    s: int,
+    lx: float,
+    ly: float,
+    l0: float,
+    p1: NDArray[np.float64],
+    p2: NDArray[np.float64],
+    direction: int,
+    mu: float,
+    m: float,
+    g: float,
+    R: float,
+) -> float:
     """Get time until collision between ball and linear cushion segment
 
     (just-in-time compiled)
@@ -264,7 +266,17 @@ def ball_linear_cushion_collision_time(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
+def ball_circular_cushion_collision_coeffs(
+    rvw: NDArray[np.float64],
+    s: int,
+    a: float,
+    b: float,
+    r: float,
+    mu: float,
+    m: float,
+    g: float,
+    R: float,
+) -> Tuple[float, float, float, float, float]:
     """Get quartic coeffs required to determine the ball-circular-cushion collision time
 
     (just-in-time compiled)
@@ -297,7 +309,17 @@ def ball_circular_cushion_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def ball_pocket_collision_coeffs(rvw, s, a, b, r, mu, m, g, R):
+def ball_pocket_collision_coeffs(
+    rvw: NDArray[np.float64],
+    s: int,
+    a: float,
+    b: float,
+    r: float,
+    mu: float,
+    m: float,
+    g: float,
+    R: float,
+) -> Tuple[float, float, float, float, float]:
     """Get quartic coeffs required to determine the ball-pocket collision time
 
     (just-in-time compiled)

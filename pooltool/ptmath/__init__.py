@@ -17,7 +17,6 @@ from pooltool.ptmath.utils import (
     is_overlapping,
     norm2d,
     norm3d,
-    orientation,
     point_on_line_closest_to_point,
     rel_velocity,
     solve_transcendental,
@@ -29,7 +28,6 @@ from pooltool.ptmath.utils import (
 __all__ = [
     "roots",
     "angle",
-    "orientation",
     "angle_between_vectors",
     "coordinate_rotation",
     "cross",

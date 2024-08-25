@@ -1,5 +1,5 @@
 from math import degrees, sqrt
-from typing import Tuple
+from typing import Callable, Tuple
 
 import numpy as np
 from numba import jit
@@ -8,7 +8,13 @@ from numpy.typing import NDArray
 import pooltool.constants as const
 
 
-def solve_transcendental(f, a, b, tol=1e-5, max_iter=100) -> float:
+def solve_transcendental(
+    f: Callable[[float], float],
+    a: float,
+    b: float,
+    tol: float = 1e-5,
+    max_iter: int = 100,
+) -> float:
     """Solve transcendental equation f(x) = 0 in interval [a, b] using bisection method
 
     Args:
@@ -50,50 +56,23 @@ def solve_transcendental(f, a, b, tol=1e-5, max_iter=100) -> float:
     return c
 
 
-@jit(nopython=True, cache=const.use_numba_cache)
-def orientation(p, q, r):
-    """Find the orientation of an ordered triplet (p, q, r)
-
-    See https://www.geeksforgeeks.org/orientation-3-ordered-points/amp/
-
-    Notes
-    =====
-    - 3D points may be passed but only the x and y components are used
-
-    Returns
-    =======
-    output : int
-        0 : Collinear points, 1 : Clockwise points, 2 : Counterclockwise
-    """
-    val = ((q[1] - p[1]) * (r[0] - q[0])) - ((q[0] - p[0]) * (r[1] - q[1]))
-    if val > 0:
-        # Clockwise orientation
-        return 1
-    elif val < 0:
-        # Counterclockwise orientation
-        return 2
-    else:
-        # Collinear orientation
-        return 0
-
-
-def convert_2D_to_3D(array: NDArray) -> NDArray:
+def convert_2D_to_3D(array: NDArray[np.float64]) -> NDArray[np.float64]:
     """Convert a 2D vector to a 3D vector, setting z=0"""
-    return np.pad(array, (0, 1), "constant", constant_values=(0,))  # type: ignore
+    return np.pad(array, (0, 1), "constant", constant_values=(0,))
 
 
-def angle_between_vectors(v1, v2) -> float:
+def angle_between_vectors(v1: NDArray[np.float64], v2: NDArray[np.float64]) -> float:
     """Returns angles between [-180, 180]"""
     angle = np.math.atan2(np.linalg.det([v1, v2]), np.dot(v1, v2))  # type: ignore
     return degrees(angle)
 
 
-def wiggle(x, val):
+def wiggle(x: float, val: float):
     """Vary a float or int x by +- val according to a uniform distribution"""
     return x + val * (2 * np.random.rand() - 1)
 
 
-def are_points_on_same_side(p1, p2, p3, p4):
+def are_points_on_same_side(p1, p2, p3, p4) -> bool:
     """Are points p3, p4 are on the same side of the line formed by points p1 and p2?
 
     Accepts indexable objects. This is a 2D function, but if higher dimensions are
@@ -147,7 +126,7 @@ def find_intersection_2D(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def cross(u, v):
+def cross(u: NDArray[np.float64], v: NDArray[np.float64]) -> NDArray[np.float64]:
     """Compute cross product u x v, where u and v are 3-dimensional vectors
 
     (just-in-time compiled)
@@ -161,7 +140,9 @@ def cross(u, v):
     )
 
 
-def unit_vector_slow(vector, handle_zero=False):
+def unit_vector_slow(
+    vector: NDArray[np.float64], handle_zero: bool = False
+) -> NDArray[np.float64]:
     """Returns the unit vector of the vector.
 
     "Slow", but supports more than just 3D.
@@ -184,7 +165,9 @@ def unit_vector_slow(vector, handle_zero=False):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def unit_vector(vector, handle_zero=False):
+def unit_vector(
+    vector: NDArray[np.float64], handle_zero: bool = False
+) -> NDArray[np.float64]:
     """Returns the unit vector of the vector (just-in-time compiled)
 
     Parameters
@@ -203,7 +186,7 @@ def unit_vector(vector, handle_zero=False):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def angle(v2, v1=(1, 0)):
+def angle(v2: NDArray[np.float64], v1: NDArray[np.float64] = np.array([1, 0])) -> float:
     """Returns counter-clockwise angle of projections of v1 and v2 onto the x-y plane
 
     (just-in-time compiled)
@@ -217,7 +200,7 @@ def angle(v2, v1=(1, 0)):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def coordinate_rotation(v, phi):
+def coordinate_rotation(v: NDArray[np.float64], phi: float) -> NDArray[np.float64]:
     """Rotate vector/matrix from one frame of reference to another (3D FIXME)
 
     (just-in-time compiled)
@@ -235,7 +218,9 @@ def coordinate_rotation(v, phi):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def point_on_line_closest_to_point(p1, p2, p0):
+def point_on_line_closest_to_point(
+    p1: NDArray[np.float64], p2: NDArray[np.float64], p0: NDArray[np.float64]
+) -> NDArray[np.float64]:
     """Returns point on line defined by points p1 and p2 closest to the point p0
 
     Equations from https://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
@@ -246,7 +231,7 @@ def point_on_line_closest_to_point(p1, p2, p0):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def norm3d(vec):
+def norm3d(vec: NDArray[np.float64]) -> float:
     """Calculate the norm of a 3D vector
 
     This is ~10x faster than np.linalg.norm
@@ -264,7 +249,7 @@ def norm3d(vec):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def norm2d(vec):
+def norm2d(vec: NDArray[np.float64]) -> float:
     """Calculate the norm of a 2D vector
 
     This is faster than np.linalg.norm
@@ -273,7 +258,7 @@ def norm2d(vec):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def rel_velocity(rvw, R):
+def rel_velocity(rvw: NDArray[np.float64], R: float) -> NDArray[np.float64]:
     """Compute velocity of cloth with respect to ball's point of contact
 
     This vector is non-zero whenever the ball is sliding
@@ -283,7 +268,9 @@ def rel_velocity(rvw, R):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def get_u_vec(rvw, phi, R, s):
+def get_u_vec(
+    rvw: NDArray[np.float64], phi: float, R: float, s: int
+) -> NDArray[np.float64]:
     if s == const.rolling:
         return np.array([1.0, 0.0, 0.0])
 
@@ -296,7 +283,7 @@ def get_u_vec(rvw, phi, R, s):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def get_slide_time(rvw, R, u_s, g):
+def get_slide_time(rvw: NDArray[np.float64], R: float, u_s: float, g: float) -> float:
     if u_s == 0.0:
         return np.inf
 
@@ -304,7 +291,7 @@ def get_slide_time(rvw, R, u_s, g):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def get_roll_time(rvw, u_r, g):
+def get_roll_time(rvw: NDArray[np.float64], u_r: float, g: float) -> float:
     if u_r == 0.0:
         return np.inf
 
@@ -313,7 +300,7 @@ def get_roll_time(rvw, u_r, g):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def get_spin_time(rvw, R, u_sp, g):
+def get_spin_time(rvw: NDArray[np.float64], R: float, u_sp: float, g: float) -> float:
     if u_sp == 0.0:
         return np.inf
 
@@ -321,7 +308,7 @@ def get_spin_time(rvw, R, u_sp, g):
     return np.abs(w[2]) * 2 / 5 * R / u_sp / g
 
 
-def get_ball_energy(rvw, R, m):
+def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float) -> float:
     """Get the energy of a ball
 
     Currently calculating linear and rotational kinetic energy. Need to add potential
@@ -336,5 +323,7 @@ def get_ball_energy(rvw, R, m):
     return LKE + RKE
 
 
-def is_overlapping(rvw1, rvw2, R1, R2):
+def is_overlapping(
+    rvw1: NDArray[np.float64], rvw2: NDArray[np.float64], R1: float, R2: float
+) -> bool:
     return norm3d(rvw1[0] - rvw2[0]) < (R1 + R2)
