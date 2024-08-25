@@ -11,7 +11,7 @@
 
 ![PyPI - Version](https://img.shields.io/pypi/v/pooltool-billiards)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pooltool-billiards)
-[![codecov](https://codecov.io/gh/ekiefl/pooltool/branch/latest/graph/badge.svg)](https://codecov.io/gh/ekiefl/pooltool)
+[![codecov](https://codecov.io/gh/ekiefl/pooltool/graph/badge.svg)](https://codecov.io/gh/ekiefl/pooltool)
 
 [![Discord](https://img.shields.io/badge/Discord-Join%20Server-7289da?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/8Y8qUgzZhz)
 
