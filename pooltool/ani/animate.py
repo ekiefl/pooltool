@@ -514,6 +514,7 @@ class Game(Interface):
         menus.hide_all()
         self.create_system()
         self.create_scene()
+        visual.cue.hide_nodes()
         cue_avoid.init_collisions()
 
         if ani.settings["graphics"]["hud"]:
