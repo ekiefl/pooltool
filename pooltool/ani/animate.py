@@ -28,6 +28,7 @@ from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.menu import GenericMenu, menus
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
+from pooltool.evolution import simulate
 from pooltool.evolution.continuize import continuize
 from pooltool.game.datatypes import GameType
 from pooltool.layouts import get_rack
@@ -517,6 +518,16 @@ class Game(Interface):
 
         if ani.settings["graphics"]["hud"]:
             hud.init()
+
+        code_comp_menu = GenericMenu(
+            title="Compiling simulation code...",
+            frame_color=(0, 0, 0, 0.4),
+            title_pos=(0, 0, 0),
+        )
+        code_comp_menu.show()
+        boop(2)
+        simulate(System.example(), inplace=True)
+        code_comp_menu.hide()
 
         Global.mode_mgr.change_mode(Mode.aim)
 

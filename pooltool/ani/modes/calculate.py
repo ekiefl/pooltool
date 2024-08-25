@@ -9,7 +9,7 @@ from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.evolution import simulate
-from pooltool.system.datatypes import multisystem
+from pooltool.system.datatypes import System, multisystem
 
 
 class CalculateMode(BaseMode):
@@ -30,7 +30,13 @@ class CalculateMode(BaseMode):
             title_pos=(0, 0, -0.2),
         )
 
-        tasks.add(self.run_simulation, "run_simulation", taskChain="simulation")
+        tasks.add(
+            self.run_simulation,
+            "run_simulation",
+            extraArgs=[multisystem.active],
+            taskChain="simulation",
+            appendTask=True,
+        )
 
         self.register_keymap_event("escape", Action.quit, True)
         self.register_keymap_event("mouse1", Action.zoom, True)
@@ -74,11 +80,11 @@ class CalculateMode(BaseMode):
 
         return task.cont
 
-    def run_simulation(self, task):
+    def run_simulation(self, system: System, task):
         """Run a pool simulation"""
 
         simulate(
-            multisystem.active,
+            system,
             continuous=True,
             inplace=True,
         )
