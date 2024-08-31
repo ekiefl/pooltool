@@ -28,6 +28,7 @@ author = "Evan Kiefl"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "nbsphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.mathjax",
     "sphinx_copybutton",
@@ -55,6 +56,12 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # Don't mess with double-dash used in CLI options
 smartquotes_action = "qe"
+
+# -- Notebook rendering -------------------------------------------------
+
+nbsphinx_custom_formats = {
+    ".pct.py": ["jupytext.reads", {"fmt": "py:percent"}],
+}
 
 # -- Options for HTML output -------------------------------------------------
 

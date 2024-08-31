@@ -3,7 +3,7 @@ requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
 build-backend = "poetry_dynamic_versioning.backend"
 
 [tool.poetry-dynamic-versioning]
-enable = true
+enable = false
 strict = true
 bump = true
 vcs = "git"
@@ -20,7 +20,7 @@ ignore-untracked = true
 name = "pooltool-billiards"
 # This version is a placeholder. It will be updated at build time by
 # poetry-dynamic-versioning from the latest git tag. See PYPI.md.
-version = "0.0.0"
+version = "0.4.1.dev52+fb53cba.dirty"
 description = "A sandbox billiards game that emphasizes realistic physics."
 repository = "https://github.com/ekiefl/pooltool"
 homepage = "https://pooltool.readthedocs.io/en/latest/"
@@ -111,8 +111,13 @@ pyright = ">=1.1.373"
 ruff = ">=0.5.5"
 # Diagnostics
 psutil = ">=6.0.0"
-colored = ">=2.2.4"  # TODO switch to something ubiquitous
+colored = ">=2.2.4"  # TODO switch to something ubiquitous (like rich)
 ipython = ">=8.18.1"
+# Vignettes
+jupytext = ">=1.15.0"  # First release compatible with JupyterLab 4.X
+jupyterlab = ">=4.0.0"
+pandas = ">=2"
+plotly = ">=5"
 # Publishing
 poetry-dynamic-versioning = {extras = ["plugin"], version = ">=1.4.0"}
 ipdb = "^0.13.13"
@@ -127,6 +132,10 @@ furo = ">=2024.5.6"
 myst-parser = ">=3.0.1"
 sphinx-autoapi = ">=3.1.2"
 sphinx-tabs = ">=3.4.5"
+nbsphinx = "^0.9.5"
+
+[tool.jupytext]
+formats = "ipynb,py:percent"
 
 [tool.ruff]
 line-length = 88
