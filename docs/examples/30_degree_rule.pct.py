@@ -10,10 +10,13 @@
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.io as pio
 
 # %%
 import pooltool as pt
 import pooltool.constants as constants
+
+pio.renderers.default = "sphinx_gallery"
 
 
 # %%
@@ -110,5 +113,6 @@ fig = px.line(
     title="Deflection angles",
 )
 fig.show()
+print(fig)
 
 # %%

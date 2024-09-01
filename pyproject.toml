@@ -3,7 +3,7 @@ requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
 build-backend = "poetry_dynamic_versioning.backend"
 
 [tool.poetry-dynamic-versioning]
-enable = false
+enable = true
 strict = true
 bump = true
 vcs = "git"
@@ -20,7 +20,7 @@ ignore-untracked = true
 name = "pooltool-billiards"
 # This version is a placeholder. It will be updated at build time by
 # poetry-dynamic-versioning from the latest git tag. See PYPI.md.
-version = "0.4.1.dev52+fb53cba.dirty"
+version = "0.0.0"
 description = "A sandbox billiards game that emphasizes realistic physics."
 repository = "https://github.com/ekiefl/pooltool"
 homepage = "https://pooltool.readthedocs.io/en/latest/"
