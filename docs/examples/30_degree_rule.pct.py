@@ -1,6 +1,8 @@
 # %% [markdown]
 # # The 30 Degree Rule
 #
+# ## Intro
+#
 # The 30 degree rule states that the cue ball, when colliding with a ball over a wide range of cut angles, will be deflected roughly 30 degrees from it's initial course after the collision. In this sense, it is more of a *rule of thumb* used by pool players to improve their game, rather than a truism of pool physics.
 #
 # In this example, we will setup simulations that test the 30 degree rule and some of the physics equations defined by [Dr. Dave Billiards](https://drdavebilliards.com/).
@@ -11,7 +13,7 @@
 #
 # ## Definitions
 #
-# **The rule, stated in full:***
+# **The rule, stated in full:**
 #
 # > The 30° rule states that for a rolling-CB shot, over a wide range of cut angles, between a 1/4-ball hit (49 degree cut) and 3/4-ball hit (14 degree cut), the CB will deflect or carom off by very close to 30° (the “natural angle“) from its original direction after hitting the OB. If you want to be more precise, the angle is a little more (about 34°) closer to a 1/2-ball hit and a little less (about 27°) closer to a 1/4-ball or 3/4-ball hit.
 #
@@ -35,11 +37,11 @@
 # $$
 
 # %% [markdown]
-# # Visualizing a single collision
+# ## Visualizing a single collision
 #
 # To start, we'll need to create a billiards system. That means defining a table, a cue stick, and a collection of balls.
 #
-# We'll start with a table. Since we don't want collisions with cushions to interfere with our trajectory, let's make an unrealistically large $5\text{m} \times 5\text{m}$  table.
+# We'll start with a table. Since we don't want collisions with cushions to interfere with our trajectory, let's make an unrealistically large $5\text{m} \times 5\text{m}$  [Table](../autoapi/pooltool/index.rst#pooltool.Table).
 
 # %%
 import pooltool as pt
@@ -48,20 +50,20 @@ table_specs = pt.objects.BilliardTableSpecs(l=5, w=5)
 table = pt.Table.from_table_specs(table_specs)
 
 # %% [markdown]
-# Next, we'll create two balls.
+# Next, we'll create two [`Ball`](../autoapi/pooltool/index.rst#pooltool.Ball) objects.
 
 # %%
 cue_ball = pt.Ball.create("cue", xy=(2.5, 2.0))
 obj_ball = pt.Ball.create("obj", xy=(2.5, 3.0))
 
 # %% [markdown]
-# Next, we'll need a cue stick.
+# Next, we'll need a [`Cue`](../autoapi/pooltool/index.rst#pooltool.Cue).
 
 # %%
 cue = pt.Cue(cue_ball_id="cue")
 
 # %% [markdown]
-# Finally, we'll need to wrap these objects up into a system. We'll call this our system *template*, with the intention of reusing it for many different shots.
+# Finally, we'll need to wrap these objects up into a [`System`](../autoapi/pooltool/index.rst#pooltool.System). We'll call this our system *template*, with the intention of reusing it for many different shots.
 
 # %%
 system_template = pt.System(
@@ -85,7 +87,7 @@ phi = pt.aim.at_ball(system, "obj", cut=30)
 system.cue.set_state(V0=3, phi=phi, b=0.2)
 
 # %% [markdown]
-# Now, we simulate the shot and "continuize" it so that we have coordinate data in $10\text{ms}$ timestep intervals.
+# Now, we [`simulate`](../autoapi/pooltool/index.rst#pooltool.simulate) the shot and then [`continuize`](../autoapi/pooltool/evolution/continuize/index.html#pooltool.evolution.continuize.continuize) it to store ball state data (like coordinates) in $10\text{ms}$ timestep intervals.
 
 # %%
 pt.simulate(system, inplace=True)
@@ -104,26 +106,18 @@ print(f"System simulated: {system.simulated}")
 # Since that can't be embedded into the documentation, we'll instead plot the trajectory of the cue ball by accessing its historical states.
 
 # %%
-import plotly.express as px
-import plotly.io as pio
-pio.renderers.default = "sphinx_gallery"
-
 cue_ball = system.balls["cue"]
 history = cue_ball.history_cts
 type(history)
 
 # %% [markdown]
-# The [](#pooltool.objects.ball.datatypes.BallHistory) has a convenient method 
-#
-# :::{admonition} The BallHistory object
-#
-# From the API docs:
-#
-# ```{eval-rst}
-# .. autoclass:: pooltool.objects.ball.datatypes.BallHistory
-#     :noindex:
-# ```
-# :::
+# The [`BallHistory`](../autoapi/pooltool/objects/index.rst#pooltool.objects.BallHistory) holds the ball's historical states, each stored as a [`BallState`](../autoapi/pooltool/objects/index.rst#pooltool.objects.BallState) object. Each attribute of the ball states can be concatenated into numpy arrays with the [`BallHistory.vectorize`](../autoapi/pooltool/objects/index.rst#pooltool.objects.BallHistory.vectorize) method.
+
+# %%
+import plotly.express as px
+import plotly.io as pio
+pio.renderers.default = "sphinx_gallery"
+
 
 # %%
 import numpy as np
