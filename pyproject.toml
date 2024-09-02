@@ -121,6 +121,7 @@ plotly = ">=5"
 # Publishing
 poetry-dynamic-versioning = {extras = ["plugin"], version = ">=1.4.0"}
 ipdb = "^0.13.13"
+matplotlib = ">=3.8"
 
 [tool.poetry.group.docs]
 optional = true
@@ -139,6 +140,9 @@ formats = "ipynb,py:percent"
 
 [tool.ruff]
 line-length = 88
+exclude = [
+    "docs",
+]
 
 [tool.ruff.lint]
 extend-select = ["I"]

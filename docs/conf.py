@@ -59,6 +59,10 @@ smartquotes_action = "qe"
 
 # -- Notebook rendering -------------------------------------------------
 
+# Something to consider: https://dokk.org/documentation/nbsphinx/0.9.3/prolog-and-epilog/
+nbsphinx_epilog = """"""
+nbsphinx_prolog = """"""
+
 nbsphinx_custom_formats = {
     ".pct.py": ["jupytext.reads", {"fmt": "py:percent"}],
 }

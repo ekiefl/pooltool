@@ -1,11 +1,7 @@
 # Examples
 
-## Contents
-
 ```{eval-rst}
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
+.. nbgallery::
    30_degree_rule
 ```
+

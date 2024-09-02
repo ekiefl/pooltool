@@ -1,18 +1,120 @@
 # %% [markdown]
-# # 30-degree rule
+# # The 30 Degree Rule
 #
-# """This script validates the 30-degree rule proposed by Dr. Dave Billiards
+# The 30 degree rule states that the cue ball, when colliding with a ball over a wide range of cut angles, will be deflected roughly 30 degrees from it's initial course after the collision. In this sense, it is more of a *rule of thumb* used by pool players to improve their game, rather than a truism of pool physics.
 #
-# For more information about the 30-degree rule, see https://billiards.colostate.edu/faq/30-90-rules/30-degree-rule/
-# """
+# In this example, we will setup simulations that test the 30 degree rule and some of the physics equations defined by [Dr. Dave Billiards](https://drdavebilliards.com/).
+#
+# ## Assumptions
+#
+# We will use the default pooltool physics, which assume perfectly elastic and frictionless ball-ball collisions. Read more [here](https://ekiefl.github.io/2020/04/24/pooltool-theory/#section-ii-ball-ball-interactions).
+#
+# ## Definitions
+#
+# **The rule, stated in full:***
+#
+# > The 30° rule states that for a rolling-CB shot, over a wide range of cut angles, between a 1/4-ball hit (49 degree cut) and 3/4-ball hit (14 degree cut), the CB will deflect or carom off by very close to 30° (the “natural angle“) from its original direction after hitting the OB. If you want to be more precise, the angle is a little more (about 34°) closer to a 1/2-ball hit and a little less (about 27°) closer to a 1/4-ball or 3/4-ball hit.
+#
+# *(source: https://billiards.colostate.edu/faq/30-90-rules/30-degree-rule/)*
+#
+# **Ball-hit fraction and cut angle**
+#
+# - Ball-hit fraction, $f$, describes the fraction of overlap between the cue ball and object ball, projected in the direction of the aiming line.
+# - Cut angle, $\phi$, refers to the angle that the cue ball glances the object ball, where $0$ refers to a full ball hit (straight on), and $90$ refers to the lower bound of the thinnest hit possible.
+#
+# These two are visualized in this diagram, where $f = \text{ball overlap} / (2R)$:
+#
+# <img src="assets/30_degree_rule/diagram1.png" width="500px" />
+#
+# *(source: https://billiards.colostate.edu/technical_proofs/new/TP_A-23.pdf)*
+#
+# Establishing the relationship between these quantities is important, since the 30 degree rule makes reference to both cut angle *and* ball-hit fraction. One can calculate the ball-hit fraction from cut angle with the following equation:
+#
+# $$
+# f(\phi) = 1 - \sin{\phi}
+# $$
+
+# %% [markdown]
+# # Setting up the system
+#
+# To start, we'll need to create a billiards system. That means defining a table, a cue stick, and a collection of balls.
+#
+# We'll start with a table. Since we don't want collisions with cushions to interfere with our trajectory, let's make an unrealistically large $5\text{m} \times 5\text{m}$  table.
+
+# %%
+import pooltool as pt
+
+table_specs = pt.objects.BilliardTableSpecs(l=5, w=5)
+table = pt.Table.from_table_specs(table_specs)
+
+# %% [markdown]
+# Next, we'll create two balls.
+
+# %%
+cue_ball = pt.Ball.create("cue", xy=(2.5, 2.0))
+obj_ball = pt.Ball.create("obj", xy=(2.5, 3.0))
+
+# %% [markdown]
+# Next, we'll need a cue stick.
+
+# %%
+cue = pt.Cue(cue_ball_id="cue")
+
+# %% [markdown]
+# Finally, we'll need to wrap these objects up into a system.
+
+# %%
+system = pt.System(
+    table=table,
+    cue=cue,
+    balls={"cue": cue_ball, "obj": obj_ball},
+)
+
+# %% [markdown]
+# Let's set up a shot by aiming at the object ball with a cut angle of 30 degrees. There is a small clash in terminology here, because in pooltool, `phi` is an angle defined with respect to the table, not the cut angle:
+#
+# <img src="https://ekiefl.github.io/images/pooltool/pooltool-theory/table_coordinates.jpg" width="130px" />
+#
+# So in the function call below, `pt.aim.at_ball(system, "obj", cut=30)` returns the angle `phi` that the cue ball should be directed at such that a cut angle of 30 degrees with the object ball is achieved.
+
+# %%
+phi = pt.aim.at_ball(system, "obj", cut=30)
+system.cue.set_state(V0=3, phi=phi, b=0.2)
+
+# %% [markdown]
+# Now, we simulate the shot and "continuize" it so that we have coordinate data in $10\text{ms}$ timestep intervals.
+
+# %%
+pt.simulate(system, inplace=True)
+pt.continuize(system, inplace=True)
+
+print(f"System simulated: {system.simulated}")
+
+# %% [markdown]
+# If you have a graphics card,
+
+# %%
+from pathlib import Path
+
+from pooltool.ani.animate import FrameStepper
+from pooltool.ani.image.io import ImageZip
+
+path = Path("out")
+path.mkdir(exist_ok=True)
+
+stepper = FrameStepper()
+exporter = ImageZip(path, "jpg", compress=False)
+
+# %%
+from pooltool.ani.image.utils import gif
+
+# save_images(exporter, system, stepper, fps=10)
+gif(list(exporter.path.glob("*.jpg")), "shot.gif", 10)
 
 # %%
 import numpy as np
-import pandas as pd
-import plotly.express as px
 import plotly.io as pio
 
-# %%
 import pooltool as pt
 import pooltool.constants as constants
 
@@ -91,28 +193,5 @@ def get_deflection_angle(cut: float, V0: float = 2, b: float = 0.2) -> float:
 
 
 # %%
-cut_angles = np.linspace(5, 85, 10)
-V0s = np.arange(0.5, 3, 0.2).round(2)
-deflection_angles_df = pd.DataFrame(
-    [
-        [
-            1 - np.sin(np.deg2rad(cut)),
-            get_deflection_angle(cut=cut, V0=V0, b=0.8),
-            V0,
-        ]
-        for cut in cut_angles
-        for V0 in V0s
-    ],
-    columns=["fullness", "deflection_angle", "v0"],
-)
-fig = px.line(
-    deflection_angles_df,
-    x="fullness",
-    y="deflection_angle",
-    color="v0",
-    title="Deflection angles",
-)
-fig.show()
-print(fig)
 
 # %%
