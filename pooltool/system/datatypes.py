@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Dict, Iterator, List, Optional
 
 import numpy as np
@@ -16,6 +17,13 @@ from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
 from pooltool.serialize import conversion
 from pooltool.serialize.serializers import Pathish
+
+
+def _convert_balls(balls: Sequence) -> Dict[str, Ball]:
+    if isinstance(balls, dict):
+        return balls
+
+    return {ball.id: ball for ball in balls}
 
 
 @define
@@ -96,7 +104,7 @@ class System:
 
     cue: Cue = field()
     table: Table = field()
-    balls: Dict[str, Ball] = field()
+    balls: Dict[str, Ball] = field(converter=_convert_balls)
     t: float = field(default=0.0)
     events: List[Event] = field(factory=list)
 

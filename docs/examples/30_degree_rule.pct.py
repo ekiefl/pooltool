@@ -3,21 +3,27 @@
 #
 # ## Intro
 #
-# The 30 degree rule states that the cue ball, when colliding with a ball over a wide range of cut angles, will be deflected roughly 30 degrees from it's initial course after the collision. In this sense, it is more of a *rule of thumb* used by pool players to improve their game, rather than a truism of pool physics.
+# The 30 degree rule states that the cue ball, when colliding with a ball over a wide range of cut angles, will be deflected roughly 30 degrees from it's initial course after the collision. It is more of a *rule of thumb* used by pool players to improve their game, rather than a truism of pool physics.
 #
 # In this example, we will setup simulations that test the 30 degree rule and some of the physics equations defined by [Dr. Dave Billiards](https://drdavebilliards.com/).
 #
 # ## Assumptions
 #
-# We will use the default pooltool physics, which assume perfectly elastic and frictionless ball-ball collisions. Read more [here](https://ekiefl.github.io/2020/04/24/pooltool-theory/#section-ii-ball-ball-interactions).
+# We will use the default pooltool physics engine, which assume perfectly elastic and frictionless ball-ball collisions. Read more [here](https://ekiefl.github.io/2020/04/24/pooltool-theory/#section-ii-ball-ball-interactions).
+#
+# Importantly, the cue ball must be rolling (without slippage) when it contacts the object ball. Otherwise, the 30-degree rule will not hold. As an extreme example of this, a cue ball with no spin will deflect off the object ball along the [tangent line](https://billiards.colostate.edu/faq/stun/90-degree-rule/).
 #
 # ## Definitions
 #
 # **The rule, stated in full:**
 #
-# > The 30° rule states that for a rolling-CB shot, over a wide range of cut angles, between a 1/4-ball hit (49 degree cut) and 3/4-ball hit (14 degree cut), the CB will deflect or carom off by very close to 30° (the “natural angle“) from its original direction after hitting the OB. If you want to be more precise, the angle is a little more (about 34°) closer to a 1/2-ball hit and a little less (about 27°) closer to a 1/4-ball or 3/4-ball hit.
+# > The 30° rule states that for a rolling cue ball (CB) shot, over a wide range of cut angles, between a 1/4-ball hit (49 degree cut) and 3/4-ball hit (14 degree cut), the CB will deflect or carom off by very close to 30° (the “natural angle“) from its original direction after hitting the object ball (OB). If you want to be more precise, the angle is a little more (about 34°) closer to a 1/2-ball hit and a little less (about 27°) closer to a 1/4-ball or 3/4-ball hit.
 #
-# *(source: https://billiards.colostate.edu/faq/30-90-rules/30-degree-rule/)*
+# *(source: [https://billiards.colostate.edu/faq/30-90-rules/30-degree-rule/](https://billiards.colostate.edu/faq/30-90-rules/30-degree-rule/))*
+#
+# **The carom angle**
+#
+# The carom angle is the angle that the rule claims is 30 degrees. Formally, it is the angle between the velocity of the cue ball directly before impact, and the velocity of the cue ball after the collision once the cue ball is no longer sliding on the cloth. We will see that this angle is independent of the cue's initial speed.
 #
 # **Ball-hit fraction and cut angle**
 #
@@ -28,48 +34,49 @@
 #
 # <img src="assets/30_degree_rule/diagram1.png" width="500px" />
 #
-# *(source: https://billiards.colostate.edu/technical_proofs/new/TP_A-23.pdf)*
+# *(source: [https://billiards.colostate.edu/technical_proofs/new/TP_A-23.pdf](https://billiards.colostate.edu/technical_proofs/new/TP_A-23.pdf))*
 #
-# Establishing the relationship between these quantities is important, since the 30 degree rule makes reference to both cut angle *and* ball-hit fraction. One can calculate the ball-hit fraction from cut angle with the following equation:
+# Establishing the relationship between these quantities is important, since the 30 degree rule makes reference to both cut angle and ball-hit fraction. One can calculate the ball-hit fraction from cut angle with the following equation:
 #
 # $$
 # f(\phi) = 1 - \sin{\phi}
 # $$
 
 # %% [markdown]
-# ## Visualizing a single collision
+# ## Simulating a collision
 #
 # To start, we'll need to create a billiards system. That means defining a table, a cue stick, and a collection of balls.
 #
-# We'll start with a table. Since we don't want collisions with cushions to interfere with our trajectory, let's make an unrealistically large $5\text{m} \times 5\text{m}$  [Table](../autoapi/pooltool/index.rst#pooltool.Table).
+# We'll start with a table. Since we don't want collisions with cushions to interfere with our trajectory, let's make an unrealistically large $10\text{m} \times 10\text{m}$  [Table](../autoapi/pooltool/index.rst#pooltool.Table).
 
 # %%
 import pooltool as pt
 
-table_specs = pt.objects.BilliardTableSpecs(l=5, w=5)
+table_specs = pt.objects.BilliardTableSpecs(l=10, w=10)
 table = pt.Table.from_table_specs(table_specs)
 
+
 # %% [markdown]
-# Next, we'll create two [`Ball`](../autoapi/pooltool/index.rst#pooltool.Ball) objects.
+# Next, we'll create two [Ball](../autoapi/pooltool/index.rst#pooltool.Ball) objects.
 
 # %%
-cue_ball = pt.Ball.create("cue", xy=(2.5, 2.0))
+cue_ball = pt.Ball.create("cue", xy=(2.5, 1.5))
 obj_ball = pt.Ball.create("obj", xy=(2.5, 3.0))
 
 # %% [markdown]
-# Next, we'll need a [`Cue`](../autoapi/pooltool/index.rst#pooltool.Cue).
+# Next, we'll need a [Cue](../autoapi/pooltool/index.rst#pooltool.Cue).
 
 # %%
 cue = pt.Cue(cue_ball_id="cue")
 
 # %% [markdown]
-# Finally, we'll need to wrap these objects up into a [`System`](../autoapi/pooltool/index.rst#pooltool.System). We'll call this our system *template*, with the intention of reusing it for many different shots.
+# Finally, we'll need to wrap these objects up into a [System](../autoapi/pooltool/index.rst#pooltool.System). We'll call this our system *template*, with the intention of reusing it for many different shots.
 
 # %%
 system_template = pt.System(
     table=table,
     cue=cue,
-    balls={"cue": cue_ball, "obj": obj_ball},
+    balls=(cue_ball, obj_ball),
 )
 
 # %% [markdown]
@@ -84,16 +91,19 @@ system_template = pt.System(
 system = system_template.copy()
 
 phi = pt.aim.at_ball(system, "obj", cut=30)
-system.cue.set_state(V0=3, phi=phi, b=0.2)
+system.cue.set_state(V0=3, phi=phi, b=0.8)
 
 # %% [markdown]
-# Now, we [`simulate`](../autoapi/pooltool/index.rst#pooltool.simulate) the shot and then [`continuize`](../autoapi/pooltool/evolution/continuize/index.html#pooltool.evolution.continuize.continuize) it to store ball state data (like coordinates) in $10\text{ms}$ timestep intervals.
+# Now, we [simulate](../autoapi/pooltool/index.rst#pooltool.simulate) the shot and then [continuize](../autoapi/pooltool/evolution/continuize/index.html#pooltool.evolution.continuize.continuize) it to store ball state data (like coordinates) in $10\text{ms}$ timestep intervals.
 
 # %%
 pt.simulate(system, inplace=True)
 pt.continuize(system, dt=0.01, inplace=True)
 
 print(f"System simulated: {system.simulated}")
+
+# %% [markdown]
+# ## Visualizing the collision
 
 # %% [markdown]
 # If you have a graphics card, you can immediately visualize this shot in 3D with
@@ -103,104 +113,339 @@ print(f"System simulated: {system.simulated}")
 # gui.show(system)
 # ```
 #
-# Since that can't be embedded into the documentation, we'll instead plot the trajectory of the cue ball by accessing its historical states.
+# Since that can't be embedded into the documentation, we'll instead plot the trajectory of the cue ball and object ball by accessing ther historical states.
 
 # %%
 cue_ball = system.balls["cue"]
-history = cue_ball.history_cts
-type(history)
+obj_ball = system.balls["obj"]
+cue_history = cue_ball.history_cts
+obj_history = obj_ball.history_cts
+type(cue_history)
 
 # %% [markdown]
-# The [`BallHistory`](../autoapi/pooltool/objects/index.rst#pooltool.objects.BallHistory) holds the ball's historical states, each stored as a [`BallState`](../autoapi/pooltool/objects/index.rst#pooltool.objects.BallState) object. Each attribute of the ball states can be concatenated into numpy arrays with the [`BallHistory.vectorize`](../autoapi/pooltool/objects/index.rst#pooltool.objects.BallHistory.vectorize) method.
+# The [BallHistory](../autoapi/pooltool/objects/index.rst#pooltool.objects.BallHistory) holds the ball's historical states, each stored as a [BallState](../autoapi/pooltool/objects/index.rst#pooltool.objects.BallState) object. Each attribute of the ball states can be concatenated into numpy arrays with the [BallHistory.vectorize](../autoapi/pooltool/objects/index.rst#pooltool.objects.BallHistory.vectorize) method.
 
 # %%
-import plotly.express as px
+rvw_cue, s_cue, t_cue = cue_history.vectorize()
+rvw_obj, s_obj, t_obj = obj_history.vectorize()
+
+print(rvw_cue.shape)
+print(s_cue.shape)
+print(t_cue.shape)
+
+# %% [markdown]
+# We can grab the xy-coordinates from the `rvw` array by with the following.
+
+# %%
+coords_cue = rvw_cue[:, 0, :2]
+coords_obj = rvw_obj[:, 0, :2]
+coords_cue.shape
+
+# %%
+import plotly.graph_objects as go
 import plotly.io as pio
+
 pio.renderers.default = "sphinx_gallery"
 
+fig = go.Figure()
+fig.add_trace(
+    go.Scatter(x=coords_cue[:, 0], y=coords_cue[:, 1], mode="lines", name="cue")
+)
+fig.add_trace(
+    go.Scatter(x=coords_obj[:, 0], y=coords_obj[:, 1], mode="lines", name="obj")
+)
+fig.update_layout(
+    title="Ball trajectories",
+    xaxis_title="X [m]",
+    yaxis_title="Y [m]",
+    yaxis_scaleanchor="x",
+    yaxis_scaleratio=1,
+    width=600,
+    template="presentation",
+)
+
+fig.show()
+
+
+# %% [markdown]
+# ## Calculating the carom angle
+#
+# One could calculate the carom angle for the above trajectory by manually splicing the trajectory coordinates of the cue ball and determining ball direction by comparing temporally adjacent coordinates. However, pooltool has much more precise methods for dissecting shot dynamics.
+#
+# As mentioned before, the carom angle is the angle between the cue ball velocity right before collision, and the cue ball velocity post-collision, once the ball has stopped sliding on the cloth. Hidden somewhere in the system **event list** one can find the events corresponding to these precise moments in time:
 
 # %%
-import numpy as np
-import pandas as pd
-import plotly.express as px
-import plotly.io as pio
+system.events[:6]
 
-import pooltool as pt
-import pooltool.constants as constants
+# %% [markdown]
+# Programatically, we can pick out these two events of interest with event selection syntax.
+#
+# Since there is only one ball-ball collision, it's easy to select with [filter_type](../autoapi/pooltool/events/index.rst#pooltool.events.filter_type):
 
-pio.renderers.default = "sphinx_gallery"
+# %%
+collision = pt.events.filter_type(system.events, pt.EventType.BALL_BALL)[0]
+collision
+
+# %% [markdown]
+# To get the event when the cue ball stops sliding, we can similarly try filtering by the sliding to rolling transition event:
+
+# %%
+pt.events.filter_type(system.events, pt.EventType.SLIDING_ROLLING)
+
+# %% [markdown]
+# But there are many sliding to rolling transition events, and to make matters worse, they are shared by both the cue ball and the object ball. What we need is the **first** **sliding to rolling** transition that the **cue ball** undergoes **after** the **ball-ball** collision. We can achieve this multi-criteria query with [filter_events](../autoapi/pooltool/events/index.rst#pooltool.events.filter_events):
+
+# %%
+transition = pt.events.filter_events(
+    system.events,
+    pt.events.by_time(t=collision.time, after=True),
+    pt.events.by_ball("cue"),
+    pt.events.by_type(pt.EventType.SLIDING_ROLLING),
+)[0]
+transition
+
+# %% [markdown]
+# Now, we can dive into these two events and pull out the cue ball velocities we need to calculate the carom angle.
+
+# %%
+# Velocity prior to impact
+for agent in collision.agents:
+    if agent.id == "cue":
+        # agent.initial is a copy of the Ball before resolving the collision
+        velocity_initial = agent.initial.state.rvw[1, :2]
+
+# Velocity post sliding
+# We choose `final` here for posterity, but the velocity is the same both before and after resolving the transition.
+velocity_final = transition.agents[0].final.state.rvw[1, :2]
+
+carom_angle = pt.ptmath.utils.angle_between_vectors(velocity_final, velocity_initial)
+
+print(f"The carom angle is {carom_angle:.1f} degrees")
+
+
+# %% [markdown]
+# ## Carom angle as a function of cut angle
+
+# %% [markdown]
+# We calculated the carom angle for a single cut angle, 30 degrees. Let's write a function called `get_carom_angle` so we can do that repeatedly for different cut angles.
 
 
 # %%
-def _assert_cue_rolling_at_impact(system: pt.System) -> None:
-    event = pt.events.filter_type(system.events, pt.EventType.BALL_BALL)[0]
-    for agent in event.agents:
-        if agent.id != "cue":
-            continue
-        assert agent.initial.state.s == constants.rolling, "Cue ball isn't rolling!"
+def get_carom_angle(system: pt.System) -> float:
+    assert system.simulated
 
-
-# %%
-def get_deflection_system(cut: float, V0: float = 2, b: float = 0.2) -> pt.System:
-    ballset = pt.objects.get_ballset("pooltool_pocket")
-    cue_ball = pt.Ball.create("cue", xy=(50, 50), ballset=ballset)
-    obj_ball = pt.Ball.create("2", xy=(49, 50), ballset=ballset)
-    cue = pt.Cue(cue_ball_id="cue")
-    table = pt.Table.from_table_specs(
-        specs=pt.objects.BilliardTableSpecs(
-            l=100,
-            w=100,
-        )
-    )
-    system = pt.System(
-        cue=cue,
-        table=table,
-        balls={"cue": cue_ball, "2": obj_ball},
-    )
-    system.strike(V0=V0, phi=pt.aim.at_ball(system, "2", cut=cut), b=b)
-
-    # Evolve the shot
-    _ = pt.simulate(system, inplace=True)
-
-    # The cue ball must be rolling at impact
-    _assert_cue_rolling_at_impact(system)
-
-    return system
-
-
-# %%
-def get_deflection_angle(cut: float, V0: float = 2, b: float = 0.2) -> float:
-    system = get_deflection_system(cut=cut, V0=V0, b=b)
-
-    # Get the ball-ball collision
     collision = pt.events.filter_type(system.events, pt.EventType.BALL_BALL)[0]
-
-    # Get the velocity of the cue right before impact
-    for agent in collision.agents:
-        if agent.id == "cue":
-            break
-    cue_velocity_pre_collision = agent.initial.state.rvw[1]
-
-    # Get event when object ball transitions from sliding to rolling
-    sliding_to_rolling = pt.events.filter_events(
+    transition = pt.events.filter_events(
         system.events,
-        pt.events.by_time(collision.time, after=True),
+        pt.events.by_time(t=collision.time, after=True),
         pt.events.by_ball("cue"),
         pt.events.by_type(pt.EventType.SLIDING_ROLLING),
     )[0]
 
-    # Get the velocity of the cue after it is done sliding
-    cue_velocity_post_slide = sliding_to_rolling.agents[0].final.state.rvw[1]
+    velocity_final = transition.agents[0].final.state.rvw[1, :2]
+    for agent in collision.agents:
+        if agent.id == "cue":
+            velocity_initial = agent.initial.state.rvw[1, :2]
 
-    return np.rad2deg(
-        np.arccos(
-            np.dot(
-                pt.ptmath.unit_vector(cue_velocity_pre_collision),
-                pt.ptmath.unit_vector(cue_velocity_post_slide),
-            )
+    return pt.ptmath.utils.angle_between_vectors(velocity_final, velocity_initial)
+
+
+# %% [markdown]
+# `get_carom_angle` assumes the passed system has already been simulated, so we'll need another function to take care of that. We'll cue stick speed and cut angle as parameters.
+
+
+# %%
+def simulate_experiment(V0: float, cut_angle: float) -> pt.System:
+    system = system_template.copy()
+    phi = pt.aim.at_ball(system, "obj", cut=cut_angle)
+    system.cue.set_state(V0=V0, phi=phi, b=0.8)
+    pt.simulate(system, inplace=True)
+    return system
+
+
+# %% [markdown]
+# We'll also want the ball hit fraction:
+
+
+# %%
+def get_ball_hit_fraction(cut_angle: float) -> float:
+    return 1 - np.sin(cut_angle * np.pi / 180)
+
+
+# %% [markdown]
+# With these functions, we are ready to simulate how carom angle varies as a function of cut angle.
+
+# %%
+import pandas as pd
+
+data = {
+    "phi": [],
+    "f": [],
+    "theta": [],
+}
+
+V0 = 2.5
+
+for cut_angle in np.linspace(0, 88, 50):
+    system = simulate_experiment(V0, cut_angle)
+    data["theta"].append(get_carom_angle(system))
+    data["f"].append(get_ball_hit_fraction(cut_angle))
+    data["phi"].append(cut_angle)
+
+frame = pd.DataFrame(data)
+frame.head(10)
+
+# %% [markdown]
+# From this dataframe we can make some plots. On top of the ball-hit fraction, plot, I'll create a box between a $1/4$ ball hit and a $3/4$ ball hit, since this is the carom angle range that the 30-degree rule is defined with respect to.
+
+# %%
+x_min = 0.25
+x_max = 0.75
+y_min = frame.loc[(frame.f >= x_min) & (frame.f <= x_max), "theta"].min()
+y_max = frame.loc[(frame.f >= x_min) & (frame.f <= x_max), "theta"].max()
+box_data_x = [x_min, x_min, x_max, x_max, x_min]
+box_data_y = [y_min, y_max, y_max, y_min, y_min]
+
+fig1 = go.Figure()
+fig1.add_trace(
+    go.Scatter(
+        x=box_data_x,
+        y=box_data_y,
+        mode="lines",
+        name="30-degree range",
+        line=dict(dash="dash", color="gray"),
+    )
+)
+fig1.add_trace(
+    go.Scatter(
+        x=frame["f"],
+        y=frame["theta"],
+        mode="markers",
+        name="Simulation",
+        marker=dict(color="#1f77b4"),
+    )
+)
+fig1.update_layout(
+    title="Carom Angle vs Ball Hit Fraction",
+    xaxis_title="Ball Hit Fraction (f)",
+    yaxis_title="Carom Angle (theta, degrees)",
+    template="presentation",
+)
+
+fig1.show()
+
+# %% [markdown]
+# Between a $1/4$ and $3/4$ ball hit, there is a relative invariance in the carom angle, with a range of around 6 degrees.
+#
+# For your reference, here is the same plot but with cut angle $\phi$ as the x-axis:
+
+# %%
+fig2 = go.Figure()
+fig2.add_trace(
+    go.Scatter(
+        x=frame["phi"],
+        y=frame["theta"],
+        mode="markers",
+    )
+)
+fig2.update_layout(
+    title="Carom Angle vs Cut Angle",
+    xaxis_title="Cut Angle (phi, degrees)",
+    yaxis_title="Carom Angle (theta, degrees)",
+    template="presentation",
+)
+
+fig2.show()
+
+
+# %% [markdown]
+# ## Comparison to theory
+#
+# Under the assumption of a perfectly elastic and frictionless ball-ball collision, Dr. Dave has calculated the theoretical carom angle $\theta$ to be
+#
+# $$
+# \theta_{\text{ideal}}(\phi) = \arctan{\frac{\sin\phi \times \cos\phi}{\sin^2\phi + \frac{2}{5}}}
+# $$
+#
+# *(source: [https://billiards.colostate.edu/technical_proofs/new/TP_B-13.pdf](https://billiards.colostate.edu/technical_proofs/new/TP_B-13.pdf))*
+#
+# Since pooltool's baseline physics engine makes the same assumptions, we should expect the results to be the same. Let's directly compare:
+
+
+# %%
+def get_theoretical_carom_angle(phi) -> float:
+    return np.atan2(np.sin(phi) * np.cos(phi), (np.sin(phi) ** 2 + 2 / 5))
+
+
+phi_theory = np.linspace(0, np.pi / 2, 500)
+theta_theory = get_theoretical_carom_angle(phi_theory)
+
+phi_theory *= 180 / np.pi
+theta_theory *= 180 / np.pi
+f_theory = get_ball_hit_fraction(phi_theory)
+
+fig1.add_trace(go.Scatter(x=f_theory, y=theta_theory, mode="lines", name="Theory"))
+fig1.show()
+
+# %% [markdown]
+# A perfect match.
+
+# %% [markdown]
+# ## Impact speed independence
+#
+# Interestingly, the carom angle is independent of the speed:
+
+# %%
+for V0 in np.linspace(1, 4, 20):
+    system = simulate_experiment(V0, 30)
+    carom_angle = get_carom_angle(system)
+    print(f"Carom angle for V0={V0:2f} is {carom_angle:4f}")
+
+# %% [markdown]
+# This doesn't mean that the trajectories are the same though. Here are the trajectories:
+
+# %%
+import numpy as np
+import plotly.graph_objects as go
+
+
+def get_coordinates(system: pt.System):
+    rvw, s, t = system.balls["cue"].history_cts.vectorize()
+    xy = rvw[:, 0, :2]
+
+    return xy, s, t
+
+
+fig = go.Figure()
+
+for V0 in np.linspace(1, 3, 6):
+    system = simulate_experiment(V0, 30)
+    pt.continuize(system, dt=0.03, inplace=True)
+    rvw, s, t = system.balls["cue"].history_cts.vectorize()
+    xy = rvw[:, 0, :2]
+
+    fig.add_trace(
+        go.Scatter(
+            x=xy[:, 0],
+            y=xy[:, 1],
+            mode="lines",
+            name=f"Speed {V0}",
+            showlegend=True,
         )
     )
 
-# %%
+fig.update_layout(
+    title="Ball trajectories",
+    xaxis_title="X [m]",
+    yaxis_title="Y [m]",
+    yaxis_scaleanchor="x",
+    yaxis_scaleratio=1,
+    width=600,
+    xaxis=dict(range=[1.5, 4.5]),
+    yaxis=dict(range=[1.5, 4.5]),
+    template="presentation",
+)
+fig.show()
 
-# %%
+# %% [markdown]
+# Harder shots follow the *tangent line* (aka the line perpendicular to the line connected the balls' centers during contact) for longer, but they all converge to the same outgoing angle.
