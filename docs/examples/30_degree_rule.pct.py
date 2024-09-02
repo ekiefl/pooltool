@@ -35,7 +35,7 @@
 # $$
 
 # %% [markdown]
-# # Setting up the system
+# # Visualizing a single collision
 #
 # To start, we'll need to create a billiards system. That means defining a table, a cue stick, and a collection of balls.
 #
@@ -61,10 +61,10 @@ obj_ball = pt.Ball.create("obj", xy=(2.5, 3.0))
 cue = pt.Cue(cue_ball_id="cue")
 
 # %% [markdown]
-# Finally, we'll need to wrap these objects up into a system.
+# Finally, we'll need to wrap these objects up into a system. We'll call this our system *template*, with the intention of reusing it for many different shots.
 
 # %%
-system = pt.System(
+system_template = pt.System(
     table=table,
     cue=cue,
     balls={"cue": cue_ball, "obj": obj_ball},
@@ -78,6 +78,9 @@ system = pt.System(
 # So in the function call below, `pt.aim.at_ball(system, "obj", cut=30)` returns the angle `phi` that the cue ball should be directed at such that a cut angle of 30 degrees with the object ball is achieved.
 
 # %%
+# Creates a deep copy of the template
+system = system_template.copy()
+
 phi = pt.aim.at_ball(system, "obj", cut=30)
 system.cue.set_state(V0=3, phi=phi, b=0.2)
 
@@ -86,33 +89,36 @@ system.cue.set_state(V0=3, phi=phi, b=0.2)
 
 # %%
 pt.simulate(system, inplace=True)
-pt.continuize(system, inplace=True)
+pt.continuize(system, dt=0.01, inplace=True)
 
 print(f"System simulated: {system.simulated}")
 
 # %% [markdown]
-# If you have a graphics card,
+# If you have a graphics card, you can immediately visualize this shot in 3D with
+#
+# ```python
+# gui = pt.ShotViewer()
+# gui.show(system)
+# ```
+#
+# Since that can't be embedded into the documentation, we'll instead plot the trajectory of the cue ball by accessing it's historical states.
 
 # %%
-from pathlib import Path
+import plotly.express as px
+import plotly.io as pio
+pio.renderers.default = "sphinx_gallery"
 
-from pooltool.ani.animate import FrameStepper
-from pooltool.ani.image.io import ImageZip
+cue_ball = system.balls["cue"]
+history = cue_ball.history_cts
+type(history)
 
-path = Path("out")
-path.mkdir(exist_ok=True)
-
-stepper = FrameStepper()
-exporter = ImageZip(path, "jpg", compress=False)
-
-# %%
-from pooltool.ani.image.utils import gif
-
-# save_images(exporter, system, stepper, fps=10)
-gif(list(exporter.path.glob("*.jpg")), "shot.gif", 10)
+# %% [markdown]
+# You can read about the `BallHistory` state 
 
 # %%
 import numpy as np
+import pandas as pd
+import plotly.express as px
 import plotly.io as pio
 
 import pooltool as pt
@@ -190,7 +196,6 @@ def get_deflection_angle(cut: float, V0: float = 2, b: float = 0.2) -> float:
             )
         )
     )
-
 
 # %%
 
