@@ -101,7 +101,7 @@ print(f"System simulated: {system.simulated}")
 # gui.show(system)
 # ```
 #
-# Since that can't be embedded into the documentation, we'll instead plot the trajectory of the cue ball by accessing it's historical states.
+# Since that can't be embedded into the documentation, we'll instead plot the trajectory of the cue ball by accessing its historical states.
 
 # %%
 import plotly.express as px
@@ -113,7 +113,17 @@ history = cue_ball.history_cts
 type(history)
 
 # %% [markdown]
-# You can read about the `BallHistory` state 
+# The [](#pooltool.objects.ball.datatypes.BallHistory) has a convenient method 
+#
+# :::{admonition} The BallHistory object
+#
+# From the API docs:
+#
+# ```{eval-rst}
+# .. autoclass:: pooltool.objects.ball.datatypes.BallHistory
+#     :noindex:
+# ```
+# :::
 
 # %%
 import numpy as np
