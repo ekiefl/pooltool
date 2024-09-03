@@ -137,6 +137,7 @@ nbsphinx = "^0.9.5"
 
 [tool.jupytext]
 formats = "ipynb,py:percent"
+notebook_metadata_filter="all"
 
 [tool.ruff]
 line-length = 88
