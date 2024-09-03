@@ -90,5 +90,5 @@ interface.show(shot)
 
 ## Next
 
-Obviously this script is just the beginning. Pooltool offers much more than this, which means you have much more to learn. From here, I suggest you check out the [Resources](resources) page and dive into whatever topic interests you.
+Obviously this script is just the beginning. Pooltool offers much more than this, which means you have much more to learn. From here, I suggest you check out the [Examples](examples) page and dive into whatever topic interests you.
 

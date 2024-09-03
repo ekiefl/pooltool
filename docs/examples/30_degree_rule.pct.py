@@ -449,3 +449,8 @@ fig.show()
 
 # %% [markdown]
 # Harder shots follow the *tangent line* (aka the line perpendicular to the line connected the balls' centers during contact) for longer, but they all converge to the same outgoing angle.
+
+# %%
+import matplotlib.pyplot as plt
+
+plt.plot(np.arange(10))
