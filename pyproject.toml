@@ -113,15 +113,15 @@ ruff = ">=0.5.5"
 psutil = ">=6.0.0"
 colored = ">=2.2.4"  # TODO switch to something ubiquitous (like rich)
 ipython = ">=8.18.1"
+ipdb = "^0.13.13"
 # Vignettes
 jupytext = ">=1.15.0"  # First release compatible with JupyterLab 4.X
 jupyterlab = ">=4.0.0"
 pandas = ">=2"
 plotly = ">=5"
+matplotlib = ">=3.8"
 # Publishing
 poetry-dynamic-versioning = {extras = ["plugin"], version = ">=1.4.0"}
-ipdb = "^0.13.13"
-matplotlib = ">=3.8"
 
 [tool.poetry.group.docs]
 optional = true
