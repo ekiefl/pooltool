@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Optional
 
 import attrs
 
@@ -72,7 +73,7 @@ class ResolverConfig:
     transition: BallTransitionModel
     transition_params: ModelArgs
 
-    version: int | None = None
+    version: Optional[int] = None
 
     def save(self, path: Pathish) -> Path:
         path = Path(path)
