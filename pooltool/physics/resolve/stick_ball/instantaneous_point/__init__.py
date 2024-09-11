@@ -10,7 +10,7 @@ from pooltool.objects.cue.datatypes import Cue
 from pooltool.physics.resolve.stick_ball.core import CoreStickBallCollision
 
 
-def cue_strike(m, M, R, V0, phi, theta, a, b, throttle_english: bool):
+def cue_strike(m, M, R, V0, phi, theta, a, b, english_throttle: float):
     """Strike a ball
 
     .. code::
@@ -57,18 +57,18 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, throttle_english: bool):
         How much vertical english should be put on? -1 being bottom-most side of ball,
         +1 being topmost side of ball
 
-    throttle_english:
-        This function creates unrealistic magnitudes of spin. To compensate, this flag
-        exists. If True, a 'fake' factor is added that scales down the passed a and b
-        values, by an amount defined by pooltool.english_fraction
+    english_throttle:
+        This modulates the amount of spin that is generated from a cue strike, where
+        english_throttle < 1 produces less spin than the model's default, and
+        english_throttle > 1 produces more. In the interactive interface,
+        english_throttle of 0.5 produces somewhat realistic seeming spin.
     """
 
     a *= R
     b *= R
 
-    if throttle_english:
-        a *= const.english_fraction
-        b *= const.english_fraction
+    a *= english_throttle
+    b *= english_throttle
 
     phi *= np.pi / 180
     theta *= np.pi / 180
@@ -121,7 +121,7 @@ class InstantaneousPoint(CoreStickBallCollision):
     we can in good faith assume this is their own equation.
     """
 
-    throttle_english: bool
+    english_throttle: float = 1.0
 
     def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]:
         v, w = cue_strike(
@@ -133,7 +133,7 @@ class InstantaneousPoint(CoreStickBallCollision):
             cue.theta,
             cue.a,
             cue.b,
-            throttle_english=self.throttle_english,
+            english_throttle=self.english_throttle,
         )
 
         rvw = np.array([ball.state.rvw[0], v, w])

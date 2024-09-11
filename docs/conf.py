@@ -28,6 +28,7 @@ author = "Evan Kiefl"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "nbsphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.mathjax",
     "sphinx_copybutton",
@@ -49,12 +50,22 @@ templates_path = ["_templates"]
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 # NOTE: Don't use this for excluding python files, use `autoapi_ignore` below
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**.ipynb_checkpoints", "**.ipynb", "**README.md"]
 
 # -- Global options ----------------------------------------------------------
 
 # Don't mess with double-dash used in CLI options
 smartquotes_action = "qe"
+
+# -- Notebook rendering -------------------------------------------------
+
+# Something to consider: https://dokk.org/documentation/nbsphinx/0.9.3/prolog-and-epilog/
+nbsphinx_epilog = """"""
+nbsphinx_prolog = """"""
+
+nbsphinx_custom_formats = {
+    ".pct.py": ["jupytext.reads", {"fmt": "py:percent"}],
+}
 
 # -- Options for HTML output -------------------------------------------------
 

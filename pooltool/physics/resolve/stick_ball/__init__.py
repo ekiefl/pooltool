@@ -40,6 +40,6 @@ def get_stick_ball_model(
         protocol.
     """
     if model is None:
-        return InstantaneousPoint(throttle_english=True)
+        return InstantaneousPoint()
 
     return _stick_ball_models[model](**params)

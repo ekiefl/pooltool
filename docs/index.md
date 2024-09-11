@@ -11,6 +11,7 @@ Its core design principles focus on speed, flexibility, and the ease of visualiz
 
    self
    getting_started/index
+   examples/index
    resources/index
    autoapi/index
    license/index

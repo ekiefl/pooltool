@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Optional
 
 import attrs
 
@@ -39,9 +40,15 @@ from pooltool.physics.resolve.transition import (
 from pooltool.physics.resolve.types import ModelArgs
 from pooltool.serialize import Pathish, conversion
 from pooltool.system.datatypes import System
+from pooltool.terminal import Run
 
 RESOLVER_CONFIG_PATH = pooltool.user_config.PHYSICS_DIR / "resolver.yaml"
 """The location of the resolver config path YAML"""
+
+VERSION: int = 1
+
+
+run = Run()
 
 
 @attrs.define
@@ -66,6 +73,8 @@ class ResolverConfig:
     transition: BallTransitionModel
     transition_params: ModelArgs
 
+    version: Optional[int] = None
+
     def save(self, path: Pathish) -> Path:
         path = Path(path)
         conversion.unstructure_to(self, path)
@@ -79,7 +88,16 @@ class ResolverConfig:
     def default(cls) -> ResolverConfig:
         """Load ~/.config/pooltool/physics/resolver.yaml if exists, create otherwise"""
         if RESOLVER_CONFIG_PATH.exists():
-            return cls.load(RESOLVER_CONFIG_PATH)
+            config = cls.load(RESOLVER_CONFIG_PATH)
+
+            if config.version == VERSION:
+                return config
+            else:
+                run.info_single(
+                    f"{RESOLVER_CONFIG_PATH} is has version {config.version}, which is not up to "
+                    f"date with the most current version: {VERSION}. It will be replaced with the "
+                    f"default."
+                )
 
         config = cls(
             ball_ball=BallBallModel.FRICTIONLESS_ELASTIC,
@@ -91,9 +109,10 @@ class ResolverConfig:
             ball_pocket=BallPocketModel.CANONICAL,
             ball_pocket_params={},
             stick_ball=StickBallModel.INSTANTANEOUS_POINT,
-            stick_ball_params={"throttle_english": True},
+            stick_ball_params={"english_throttle": 1.0},
             transition=BallTransitionModel.CANONICAL,
             transition_params={},
+            version=VERSION,
         )
 
         config.save(RESOLVER_CONFIG_PATH)

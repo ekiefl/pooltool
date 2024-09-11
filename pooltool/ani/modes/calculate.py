@@ -9,7 +9,18 @@ from pooltool.ani.menu import GenericMenu
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.evolution import simulate
+from pooltool.physics.engine import PhysicsEngine
+from pooltool.physics.resolve.stick_ball.instantaneous_point import InstantaneousPoint
 from pooltool.system.datatypes import System, multisystem
+
+
+def _interactive_physics_engine() -> PhysicsEngine:
+    engine = PhysicsEngine()
+    engine.resolver.stick_ball = InstantaneousPoint(english_throttle=0.5)
+    return engine
+
+
+ENGINE = _interactive_physics_engine()
 
 
 class CalculateMode(BaseMode):
@@ -87,6 +98,7 @@ class CalculateMode(BaseMode):
             system,
             continuous=True,
             inplace=True,
+            engine=ENGINE,
         )
 
         tasks.remove("run_simulation")

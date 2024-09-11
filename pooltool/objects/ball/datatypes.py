@@ -237,7 +237,7 @@ class BallHistory:
                 plt.show()
 
         See Also:
-            - :meth:`vectorize`
+            - :meth:`from_vectorization`
         """
         if self.empty:
             return None
@@ -284,7 +284,7 @@ class BallHistory:
             True
 
         See Also:
-            - :meth:`from_vectorization`
+            - :meth:`vectorize`
         """
         history = BallHistory()
 
@@ -365,7 +365,7 @@ class Ball:
             :math:`t_{final}` densely sampled with respect to time.
 
             See Also:
-                - See :func:`pooltool.evolution.event_based.continuize.continuize` for a
+                - See :func:`pooltool.evolution.continuize.continuize` for a
                   details about continuizing a simulated system.
                 - See the *Important* section in :class:`Ball` for a description of the
                   role of ``history_cts`` during simulation.

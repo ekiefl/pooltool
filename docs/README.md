@@ -6,6 +6,8 @@ To generate a local copy of the documentation, make sure you've installed poetry
 poetry install --with docs
 ```
 
+Additionally, `pandoc` needs to be installed: https://pandoc.org/installing.html
+
 Then navigate to this directory and run:
 
 ```

@@ -63,7 +63,7 @@ def convert_2D_to_3D(array: NDArray[np.float64]) -> NDArray[np.float64]:
 
 def angle_between_vectors(v1: NDArray[np.float64], v2: NDArray[np.float64]) -> float:
     """Returns angles between [-180, 180]"""
-    angle = np.math.atan2(np.linalg.det([v1, v2]), np.dot(v1, v2))  # type: ignore
+    angle = np.atan2(np.linalg.det([v1, v2]), np.dot(v1, v2))  # type: ignore
     return degrees(angle)
 
 
