@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 import numpy as np
 from attrs import define, field
@@ -19,7 +18,7 @@ from pooltool.serialize import conversion
 from pooltool.serialize.serializers import Pathish
 
 
-def _convert_balls(balls: Sequence) -> Dict[str, Ball]:
+def _convert_balls(balls: Any) -> Dict[str, Ball]:
     if isinstance(balls, dict):
         return balls
 
@@ -57,6 +56,10 @@ class System:
             Warning:
                 Each key must match each value's ``id`` (`e.g.` ``{"2": Ball(id="1")}``
                 is invalid).
+
+            Note:
+                If, during construction, a sequence (`e.g.` list, tuple, etc.) of balls
+                is passed instead of a dictionary, it will be converted to a dictionary.
         t:
             The elapsed simulation time. If the system is in the process of being
             simulated, ``t`` is updated to be the number of seconds the system has
