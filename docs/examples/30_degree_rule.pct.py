@@ -117,7 +117,7 @@ system_template = pt.System(
 system = system_template.copy()
 
 phi = pt.aim.at_ball(system, "obj", cut=30)
-system.cue.set_state(V0=3, phi=phi, b=0.4)
+system.cue.set_state(V0=3, phi=phi, b=0.8)
 
 # %% [markdown]
 # Now, we [simulate](../autoapi/pooltool/index.rst#pooltool.simulate) the shot and then [continuize](../autoapi/pooltool/evolution/continuize/index.html#pooltool.evolution.continuize.continuize) it to store ball state data (like coordinates) in $10\text{ms}$ timestep intervals.
@@ -284,7 +284,7 @@ def get_carom_angle(system: pt.System) -> float:
 def simulate_experiment(V0: float, cut_angle: float) -> pt.System:
     system = system_template.copy()
     phi = pt.aim.at_ball(system, "obj", cut=cut_angle)
-    system.cue.set_state(V0=V0, phi=phi, b=0.4)
+    system.cue.set_state(V0=V0, phi=phi, b=0.8)
     pt.simulate(system, inplace=True)
     return system
 
