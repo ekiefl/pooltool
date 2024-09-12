@@ -8,6 +8,8 @@ import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.physics.resolve.stick_ball.core import CoreStickBallCollision
+from pooltool.physics.resolve.stick_ball.squirt import get_squirt_angle
+from pooltool.ptmath.utils import coordinate_rotation
 
 
 def cue_strike(m, M, R, V0, phi, theta, a, b, english_throttle: float):
@@ -119,9 +121,13 @@ class InstantaneousPoint(CoreStickBallCollision):
     provide no citations in it's brief derivation (which is missing in the [free
     preprint](https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.89.4627&rep=rep1&type=pdf)),
     we can in good faith assume this is their own equation.
+
+    Additionally, a deflection (squirt) angle is calculated via
+    :mod:`pooltool.physics.resolve.stick_ball.squirt`).
     """
 
     english_throttle: float = 1.0
+    squirt_throttle: float = 1.0
 
     def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]:
         v, w = cue_strike(
@@ -135,6 +141,14 @@ class InstantaneousPoint(CoreStickBallCollision):
             cue.b,
             english_throttle=self.english_throttle,
         )
+
+        alpha = get_squirt_angle(
+            ball.params.m,
+            cue.specs.end_mass,
+            cue.a,
+            self.squirt_throttle,
+        )
+        v = coordinate_rotation(v, alpha)
 
         rvw = np.array([ball.state.rvw[0], v, w])
         s = const.sliding

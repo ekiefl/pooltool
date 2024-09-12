@@ -24,6 +24,11 @@ class CueSpecs:
             The cue tip radius.
         butt_radius:
             The butt radius.
+        end_mass:
+            The mass of the of the cue's end. This controls the amount of deflection
+            (squirt) that occurs when using sidespin. Lower means less deflection. It is
+            defined here:
+            https://billiards.colostate.edu/technical_proofs/new/TP_A-31.pdf.
     """
 
     brand: str = field(default="Predator")
@@ -31,6 +36,7 @@ class CueSpecs:
     length: float = field(default=1.4732)
     tip_radius: float = field(default=0.007)
     butt_radius: float = field(default=0.02)
+    end_mass: float = field(default=0.170097 / 30)
 
     @staticmethod
     def default() -> CueSpecs:
