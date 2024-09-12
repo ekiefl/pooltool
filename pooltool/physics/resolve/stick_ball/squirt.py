@@ -17,6 +17,11 @@ def get_squirt_angle(m_b: float, m_e: float, a: float, throttle: float) -> float
             See https://billiards.colostate.edu/technical_proofs/new/TP_A-31.pdf.
         throttle:
             Scale the calculated squirt by this factor. Set to 0.0 to turn off squirt.
+
+    Returns:
+        float:
+            The amount of squirt deflection in radians. Negative deflection is to the
+            right and positive deflection is to the left.
     """
     m_r = m_b / m_e
 
@@ -25,4 +30,4 @@ def get_squirt_angle(m_b: float, m_e: float, a: float, throttle: float) -> float
     numerator = 5 / 2 * a * np.sqrt(A)
     denominator = 1 + m_r + 5 / 2 * A
 
-    return -throttle * np.arctan2(numerator, denominator) * 180 / np.pi
+    return -throttle * np.arctan2(numerator, denominator)
