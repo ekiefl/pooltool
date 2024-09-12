@@ -122,6 +122,7 @@ class InstantaneousPoint(CoreStickBallCollision):
     """
 
     english_throttle: float = 1.0
+    squirt_throttle: float = 0.0
 
     def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]:
         v, w = cue_strike(
