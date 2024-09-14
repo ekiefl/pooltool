@@ -24,7 +24,7 @@
 # ---
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# # Straight shot difficulty
+# # Straight Shot Difficulty
 #
 # Consider a straight shot into a pocket where the cue ball (CB) is a total distance $D$ from the pocket. Which object ball (OB) position (distance $d$ from the CB) results in the most difficult pot?
 #
