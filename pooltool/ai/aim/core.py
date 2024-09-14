@@ -43,22 +43,81 @@ def at_ball(system: System, ball_id: str, *, cut: float = 0.0) -> float: ...
 def at_ball(cue_ball: Ball, object_ball: Ball, *, cut: float = 0.0) -> float: ...
 
 
-def at_ball(*args, **kwargs) -> float:  # type: ignore
+def at_ball(*args, **kwargs) -> float:
     """Returns phi to hit ball with specified cut angle (assumes straight line shot)"""
-    if len(kwargs):
-        assert len(kwargs) == 1
-        assert "cut" in kwargs
 
-    if isinstance(system := args[0], System) and isinstance(args[1], str):
-        assert len(args) == 2
+    # Extract 'cut' from kwargs, defaulting to 0.0
+    cut = kwargs.pop("cut", 0.0)
+
+    # Initialize variables
+    cue_ball = None
+    object_ball = None
+    system = None
+    ball_id = None
+
+    # Collect positional arguments
+    positional_args = list(args)
+
+    # Process keyword arguments
+    cue_ball_kwarg = kwargs.pop("cue_ball", None)
+    object_ball_kwarg = kwargs.pop("object_ball", None)
+    system_kwarg = kwargs.pop("system", None)
+    ball_id_kwarg = kwargs.pop("ball_id", None)
+
+    # Assign positional arguments based on their types
+    while positional_args:
+        arg = positional_args.pop(0)
+        if isinstance(arg, System):
+            if system is not None:
+                raise TypeError("Multiple 'system' arguments provided")
+            system = arg
+        elif isinstance(arg, Ball):
+            if cue_ball is None:
+                cue_ball = arg
+            elif object_ball is None:
+                object_ball = arg
+            else:
+                raise TypeError("Too many Ball instances provided")
+        elif isinstance(arg, str):
+            if ball_id is not None:
+                raise TypeError("Multiple 'ball_id' arguments provided")
+            ball_id = arg
+        else:
+            raise TypeError(
+                f"Unexpected positional argument of type {type(arg).__name__}"
+            )
+
+    # Override with keyword arguments if provided
+    cue_ball = cue_ball_kwarg if cue_ball_kwarg is not None else cue_ball
+    object_ball = object_ball_kwarg if object_ball_kwarg is not None else object_ball
+    system = system_kwarg if system_kwarg is not None else system
+    ball_id = ball_id_kwarg if ball_id_kwarg is not None else ball_id
+
+    # Validate combinations
+    if system and ball_id:
+        if cue_ball or object_ball:
+            raise TypeError(
+                "Provide either 'system' and 'ball_id', or 'cue_ball' and 'object_ball', not both"
+            )
         cue_ball = system.balls[system.cue.cue_ball_id]
-        object_ball = system.balls[args[1]]
-        return _at_ball(cue_ball, object_ball, **kwargs)
-    elif isinstance(args[0], Ball) and isinstance(args[1], Ball):
-        assert len(args) == 2
-        return _at_pos(*args, **kwargs)
+        object_ball = system.balls[ball_id]
+    elif cue_ball and object_ball:
+        pass  # Both are already set
     else:
-        raise TypeError("Invalid arguments for at_ball")
+        raise TypeError(
+            "Invalid arguments: must provide 'cue_ball' and 'object_ball', or 'system' and 'ball_id'"
+        )
+
+    # Ensure no unexpected keyword arguments are left
+    if kwargs:
+        unexpected_args = ", ".join(kwargs.keys())
+        raise TypeError(f"Unexpected keyword arguments: {unexpected_args}")
+
+    # Validate types
+    if not isinstance(cue_ball, Ball) or not isinstance(object_ball, Ball):
+        raise TypeError("cue_ball and object_ball must be Ball instances")
+
+    return _at_ball(cue_ball, object_ball, cut=cut)
 
 
 def _at_ball(cue_ball: Ball, object_ball: Ball, cut: float = 0.0) -> float:

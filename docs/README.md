@@ -8,8 +8,8 @@ poetry install --with docs
 
 Additionally, `pandoc` needs to be installed: https://pandoc.org/installing.html
 
-Then navigate to this directory and run:
+Then, in the root directory run:
 
 ```
-bash local.sh
+make docs
 ```
