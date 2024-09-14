@@ -33,6 +33,9 @@ jobs:
           key: venv-${{ hashFiles('poetry.lock') }}
       - name: Install project dependencies
         run: poetry install
+        env:
+          # Don't give up too soon
+          PIP_DEFAULT_TIMEOUT: '120'
       - name: Run tests
         run: poetry run pytest
 
