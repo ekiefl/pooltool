@@ -26,7 +26,7 @@ git push origin :refs/tags/<tagname> # If you pushed it
 ## 3. Build the distribution
 
 ```bash
-poetry build
+make build
 ```
 
 You should see something like this:
@@ -49,7 +49,7 @@ Also open `pooltool/__init__.py` and make sure the `__version__` variable was po
 
 - Populate your `.env` using `.env.copy` as a template.
 
-- Run `make test-publish`. If this fails due to timing out (slow upload speed that gets cut short), skip ahead to trying out the installation locally.
+- Run `make build-and-test-publish`. If this fails due to timing out (slow upload speed that gets cut short), run `make build` and then skip ahead to trying out the installation locally.
 
 - Create a fresh python environment to test the installation
 
@@ -80,7 +80,7 @@ pip install dist/pooltool_billiards-${RELEASE_VERSION}.tar.gz --force-reinstall 
 
 - Go back to the dev environment.
 
-- Run `make publish`
+- Run `make build-and-publish`
 
 - Create a new python environment
 

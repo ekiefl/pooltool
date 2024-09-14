@@ -24,7 +24,7 @@
 # ---
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# # What straight shot is most difficult?
+# # Straight shot difficulty
 #
 # Consider a straight shot into a pocket where the cue ball (CB) is a total distance $D$ from the pocket. Which object ball (OB) position (distance $d$ from the CB) results in the most difficult pot?
 #
@@ -231,9 +231,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Vary from 1mm separation between CB and OB to 1mm from pocket's edge
-d_values = np.linspace(2.001*cue_ball.params.R, D-0.001, 15)
+d_values = np.linspace(2.001*cue_ball.params.R, D-0.001, 12)
 
-num_trials = 400
+num_trials = 200
 pot_fractions = []
 
 for d in d_values:
@@ -269,12 +269,12 @@ plt.show()
 
 # %% editable=true slideshow={"slide_type": ""} tags=["nbsphinx-gallery"]
 # Define the range of 'd' values you want to test
-d_values = np.linspace(2.001 * cue_ball.params.R, D - 0.001, 15)
+d_values = np.linspace(2.001 * cue_ball.params.R, D - 0.001, 12)
 
 # Define the range of 'dphi' values (in degrees)
 dphi_values = [0.15, 0.25, 0.5]
 
-num_trials = 300
+num_trials = 200
 results = {}
 
 for dphi in dphi_values:
@@ -306,7 +306,7 @@ plt.grid(True)
 plt.show()
 
 # %% [markdown]
-# Regardless of skill level, when $ \lim_{d \rightarrow 2R^{+}} $ and $ \lim_{d \rightarrow D^{-}} $, the success rate converges to $100\%$. That's expected—when the object ball OB is practically touching the CB or hanging over the pocket, potting becomes nearly automatic for all skill levels. 
+# Regardless of skill level, when $\lim_{d \rightarrow 2R^{+}}$ and $\lim_{d \rightarrow D^{-}}$, the success rate converges to $100\%$. That's expected—when the object ball OB is practically touching the CB or hanging over the pocket, potting becomes nearly automatic for all skill levels. 
 #
 # But what’s more interesting is observing the extent and sharpness with which success rate drops when the OB is at an intermediate distance $d$. The least skilled players experience the earliest, sharpest, and lowest plummet in sucess rate, whereas high skilled players maintain higher success rate for longer. Yet no matter the skill, the minimum seems to be right at around $d=D/2$.
 
