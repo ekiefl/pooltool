@@ -43,9 +43,7 @@ The lack of suitable software for billiards simulation in research contexts forc
 
 [^4]: [https://www.panda3d.org/](https://www.panda3d.org/)
 
-![interface](interface.png)
-
-*Figure 1: Screenshots from the interactive interface.*
+![Screenshots from the interactive interface.](interface.png)
 
 # Usage
 
