@@ -132,6 +132,8 @@ class Interface(ShowBase):
         # https://discourse.panda3d.org/t/cant-change-base-background-after-simplepbr-init/28945
         Global.base.setBackgroundColor(0.04, 0.04, 0.04)
 
+        _init_simplepbr()
+
         if isinstance(self.win, GraphicsWindow):
             mouse.init()
 
@@ -453,7 +455,7 @@ class Game(Interface):
     """This class runs the pooltool application"""
 
     def __init__(self, config=ShowBaseConfig.default()):
-        Interface.__init__(self, showbase_config=config)
+        Interface.__init__(self, config=config)
 
         # FIXME can this be added to MenuMode.enter? It produces a lot of events that
         # end up being part of the baseline due to the update_event_baseline call below.
