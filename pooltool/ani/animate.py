@@ -434,7 +434,7 @@ class ShotViewer(Interface):
         else:
             cam.load_state(camera_state)
 
-        self.standby_screen.hide()
+        # self.standby_screen.hide()
         self._create_title(title)
         self.title_node.show()
 
@@ -484,11 +484,17 @@ class ShotViewer(Interface):
     def _start(self):
         # self.openMainWindow(keepCamera=True)
 
-        self.openMainWindow(
-            fbprops=self.showbase_config.fb_prop,
-            size=self.showbase_config.window_size,
-            keepCamera=True,
-        )
+        # self.openMainWindow(
+        #    fbprops=self.showbase_config.fb_prop,
+        #    size=self.showbase_config.window_size,
+        #    keepCamera=True,
+        # )
+
+        from panda3d.core import WindowProperties
+
+        winprop = WindowProperties()
+        winprop.minimized = False
+        self.win.requestProperties(winprop)
 
         # Background doesn't apply if ran after simplepbr.init(). See
         # https://discourse.panda3d.org/t/cant-change-base-background-after-simplepbr-init/28945
@@ -506,15 +512,21 @@ class ShotViewer(Interface):
     def _stop(self):
         """Display the standby screen and halt the main loop"""
 
-        self.standby_screen.show()
-        self.title_node.hide()
+        # self.standby_screen.show()
+        # self.title_node.hide()
 
-        # Advance a couple of frames to render changes
-        boop(2)
+        from panda3d.core import WindowProperties
+
+        winprop = WindowProperties()
+        winprop.minimized = True
+        self.win.requestProperties(winprop)
 
         # win = self.win
-        self.closeWindow(self.win, keepCamera=True, removeWindow=True)
+        # self.closeWindow(self.win, keepCamera=True, removeWindow=True)
         # self.win = win
+
+        # Advance a couple of frames to render changes
+        boop(100)
 
         # Stop the main loop
         Global.task_mgr.stop()
