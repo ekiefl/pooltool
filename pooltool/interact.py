@@ -1,19 +1,13 @@
 """An endpoint for classes that enable interaction"""
 
-from typing import Optional, Union
+from typing import Optional
 
 from pooltool.ani.animate import Game, ShotViewer
-from pooltool.ani.camera import CameraState
-from pooltool.system.datatypes import MultiSystem, System
 
 _shot_viewer: Optional[ShotViewer] = None
 
 
-def show(
-    shot_or_shots: Union[System, MultiSystem],
-    title: str = "",
-    camera_state: Optional[CameraState] = None,
-):
+def show(*args, **kwargs):
     """Opens the interactive interface for one or more shots.
 
     Important:
@@ -58,7 +52,7 @@ def show(
     if _shot_viewer is None:
         _shot_viewer = ShotViewer()
 
-    _shot_viewer.show(shot_or_shots, title, camera_state)
+    _shot_viewer.show(*args, **kwargs)
 
 
 __all__ = [
