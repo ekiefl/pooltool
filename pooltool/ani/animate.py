@@ -489,20 +489,20 @@ class ShotViewer(Interface):
         #    size=self.showbase_config.window_size,
         #    keepCamera=True,
         # )
-
-        from panda3d.core import WindowProperties
-
-        winprop = WindowProperties()
-        winprop.minimized = False
-        self.win.requestProperties(winprop)
+        # self.win = self.oldwin
+        # self.cam = self.oldcam
+        # self.camLens = self.oldlens
+        # self.win.setActive(True)
+        self.openMainWindow(keepCamera=True)
+        self.graphicsEngine.openWindows()
 
         # Background doesn't apply if ran after simplepbr.init(). See
         # https://discourse.panda3d.org/t/cant-change-base-background-after-simplepbr-init/28945
         Global.base.setBackgroundColor(0.04, 0.04, 0.04)
 
-        # simplepbr.init(
-        #    enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
-        # )
+        simplepbr.init(
+            enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
+        )
 
         if isinstance(self.win, GraphicsWindow):
             mouse.init()
@@ -515,18 +515,10 @@ class ShotViewer(Interface):
         # self.standby_screen.show()
         # self.title_node.hide()
 
-        from panda3d.core import WindowProperties
-
-        winprop = WindowProperties()
-        winprop.minimized = True
-        self.win.requestProperties(winprop)
-
-        # win = self.win
-        # self.closeWindow(self.win, keepCamera=True, removeWindow=True)
-        # self.win = win
-
-        # Advance a couple of frames to render changes
-        boop(100)
+        self.oldwin = self.win
+        self.oldcam = self.cam
+        self.oldlens = self.camLens
+        self.closeWindow(self.win, keepCamera=True, removeWindow=True)
 
         # Stop the main loop
         Global.task_mgr.stop()
