@@ -584,7 +584,7 @@ class System:
             },
         )
         system.set_ballset(BallSet("pooltool_pocket"))
-        system.cue.set_state(V0=1.5, b=-0.3, a=-0.4, phi=95.14)
+        system.cue.set_state(V0=1.5, b=-0.3, a=-0.3, phi=94.0)
         return system
 
 
