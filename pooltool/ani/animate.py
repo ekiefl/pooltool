@@ -513,7 +513,7 @@ class ShotViewer(Interface):
         boop(2)
 
         # win = self.win
-        self.closeWindow(self.win, keepCamera=True, removeWindow=False)
+        self.closeWindow(self.win, keepCamera=True, removeWindow=True)
         # self.win = win
 
         # Stop the main loop
