@@ -28,8 +28,6 @@ def place_ball(i, balls, table):
 
 
 def main(args):
-    if not args.no_viz:
-        interface = pt.ShotViewer()
     while True:
         # Setup the system
         table = pt.Table.from_table_specs(pt.objects.BilliardTableSpecs(l=4, w=2))
@@ -47,7 +45,7 @@ def main(args):
         pt.simulate(shot, continuous=False, inplace=True)
 
         if not args.no_viz:
-            interface.show(shot)
+            pt.show(shot)
 
 
 if __name__ == "__main__":

@@ -91,8 +91,7 @@ def main():
     pt.simulate(system, inplace=True)
 
     # Now visualize it
-    interface = pt.ShotViewer()
-    interface.show(system)
+    pt.show(system)
 
 
 if __name__ == "__main__":

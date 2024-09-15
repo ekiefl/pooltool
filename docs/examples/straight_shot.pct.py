@@ -131,8 +131,7 @@ system = create_system(d, D)
 # If you have a graphics card, you can visualize the system in 3D with
 #
 # ```python
-# gui = pt.ShotViewer()
-# gui.show(system)
+# pt.show(system)
 # ```
 #
 # ## Simulating a shot

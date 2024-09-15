@@ -135,8 +135,7 @@ print(f"System simulated: {system.simulated}")
 # If you have a graphics card, you can immediately visualize this shot in 3D with
 #
 # ```python
-# gui = pt.ShotViewer()
-# gui.show(system)
+# pt.show(system)
 # ```
 #
 # Since that can't be embedded into the documentation, we'll instead plot the trajectory of the cue ball and object ball by accessing ther historical states.

@@ -64,8 +64,7 @@ In the next section you'll become more familiar with the Python API, however bel
 import pooltool as pt
 system = pt.System.example()
 pt.simulate(system, inplace=True)
-gui = pt.ShotViewer()
-gui.show(system)
+pt.show(system)
 ```
 
 Once a shot is visualized in the interface, all of the controls related to camera movement and animation control are applicable. If a multisystem is being visualized, different shots can be toggled by pressing *n* (next) and *p* (previous).
