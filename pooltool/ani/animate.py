@@ -114,9 +114,12 @@ def _resize_offscreen_window(size: Tuple[int, int]):
 
 class Interface(ShowBase):
     def __init__(self, config: ShowBaseConfig):
-        super().__init__(self, windowType=config.window_type)
+        self.showbase_config = config
+        super().__init__(self, windowType=self.showbase_config.window_type)
 
-        self.openMainWindow(fbprops=config.fb_prop, size=config.window_size)
+        self.openMainWindow(
+            fbprops=self.showbase_config.fb_prop, size=self.showbase_config.window_size
+        )
 
         # Background doesn't apply if ran after simplepbr.init(). See
         # https://discourse.panda3d.org/t/cant-change-base-background-after-simplepbr-init/28945
@@ -144,7 +147,7 @@ class Interface(ShowBase):
         self.frame = 0
         tasks.add(self.increment_frame, "increment_frame")
 
-        if config.monitor:
+        if self.showbase_config.monitor:
             tasks.add(self.monitor, "monitor")
 
         self._listen_constant_events()
@@ -415,6 +418,8 @@ class ShotViewer(Interface):
                 # object:
                 gui.show(system)
         """
+        self._start()
+
         multisystem.reset()
         if isinstance(shot_or_shots, System):
             multisystem.append(shot_or_shots)
@@ -476,6 +481,28 @@ class ShotViewer(Interface):
             scale=0.8 * ani.menu_text_scale,
         )
 
+    def _start(self):
+        # self.openMainWindow(keepCamera=True)
+
+        self.openMainWindow(
+            fbprops=self.showbase_config.fb_prop,
+            size=self.showbase_config.window_size,
+            keepCamera=True,
+        )
+
+        # Background doesn't apply if ran after simplepbr.init(). See
+        # https://discourse.panda3d.org/t/cant-change-base-background-after-simplepbr-init/28945
+        Global.base.setBackgroundColor(0.04, 0.04, 0.04)
+
+        # simplepbr.init(
+        #    enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
+        # )
+
+        if isinstance(self.win, GraphicsWindow):
+            mouse.init()
+
+        cam.init()
+
     def _stop(self):
         """Display the standby screen and halt the main loop"""
 
@@ -485,6 +512,10 @@ class ShotViewer(Interface):
         # Advance a couple of frames to render changes
         boop(2)
 
+        # win = self.win
+        self.closeWindow(self.win, keepCamera=True, removeWindow=False)
+        # self.win = win
+
         # Stop the main loop
         Global.task_mgr.stop()
 
@@ -493,7 +524,7 @@ class Game(Interface):
     """This class runs the pooltool application"""
 
     def __init__(self, config=ShowBaseConfig.default()):
-        Interface.__init__(self, config=config)
+        Interface.__init__(self, showbase_config=config)
 
         # FIXME can this be added to MenuMode.enter? It produces a lot of events that
         # end up being part of the baseline due to the update_event_baseline call below.
