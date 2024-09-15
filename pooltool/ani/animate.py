@@ -112,19 +112,27 @@ def _resize_offscreen_window(size: Tuple[int, int]):
     Global.base.win.setSize(*[int(dim) for dim in size])
 
 
+def _init_simplepbr():
+    simplepbr.init(
+        enable_shadows=ani.settings["graphics"]["shadows"],
+        max_lights=ani.settings["graphics"]["max_lights"],
+    )
+
+
 class Interface(ShowBase):
     def __init__(self, config: ShowBaseConfig):
-        super().__init__(self, windowType=config.window_type)
+        self.showbase_config = config
+        super().__init__(self, windowType=self.showbase_config.window_type)
 
-        self.openMainWindow(fbprops=config.fb_prop, size=config.window_size)
+        self.openMainWindow(
+            fbprops=self.showbase_config.fb_prop, size=self.showbase_config.window_size
+        )
 
         # Background doesn't apply if ran after simplepbr.init(). See
         # https://discourse.panda3d.org/t/cant-change-base-background-after-simplepbr-init/28945
         Global.base.setBackgroundColor(0.04, 0.04, 0.04)
 
-        simplepbr.init(
-            enable_shadows=ani.settings["graphics"]["shadows"], max_lights=13
-        )
+        _init_simplepbr()
 
         if isinstance(self.win, GraphicsWindow):
             mouse.init()
@@ -144,7 +152,7 @@ class Interface(ShowBase):
         self.frame = 0
         tasks.add(self.increment_frame, "increment_frame")
 
-        if config.monitor:
+        if self.showbase_config.monitor:
             tasks.add(self.monitor, "monitor")
 
         self._listen_constant_events()
@@ -330,7 +338,6 @@ class ShotViewer(Interface):
 
     def __init__(self, config=ShowBaseConfig.default()):
         Interface.__init__(self, config=config)
-        self._create_standby_screen()
         self._create_title("")
 
         # Set ShotMode to view only. This prevents giving cue stick control to the user
@@ -342,7 +349,7 @@ class ShotViewer(Interface):
     def show(
         self,
         shot_or_shots: Union[System, MultiSystem],
-        title: str = "",
+        title: str = "Press <esc> to continue program execution",
         camera_state: Optional[CameraState] = None,
     ):
         """Opens the interactive interface for one or more shots.
@@ -387,34 +394,9 @@ class ShotViewer(Interface):
             >>> gui.show(system)
 
             (Press *escape* to exit the interface and continue script execution)
-
-        Example:
-
-            This example explains the order in which events and script execution
-            happens.
-
-            .. code-block:: python
-
-                import pooltool as pt
-                system = pt.System.example()
-                pt.simulate(system, inplace=True)
-
-                # This line takes a view seconds to execute. It will generate a visible
-                # window. Once the window has been generated, script execution continues
-                gui = pt.ShotViewer()
-
-                # When this line is called, the window is populated with an animated
-                # scene of the shot.
-                gui.show(system)
-
-                # This line will not execute until <esc> is pressed while the window is
-                # active.
-                print('script continues')
-
-                # For subsequent calls to `show`, you must use the same `ShotViewer`
-                # object:
-                gui.show(system)
         """
+        self._start()
+
         multisystem.reset()
         if isinstance(shot_or_shots, System):
             multisystem.append(shot_or_shots)
@@ -429,7 +411,6 @@ class ShotViewer(Interface):
         else:
             cam.load_state(camera_state)
 
-        self.standby_screen.hide()
         self._create_title(title)
         self.title_node.show()
 
@@ -460,32 +441,13 @@ class ShotViewer(Interface):
         )
         self.title_node.hide()
 
-    def _create_standby_screen(self):
-        self.standby_screen = GenericMenu(frame_color=(0.3, 0.3, 0.3, 1))
-        self.standby_screen.add_image(
-            ani.logo_paths["default"], pos=(0, 0, 0), scale=(0.5, 1, 0.44)
-        )
-
-        autils.CustomOnscreenText(
-            text="GUI standing by...",
-            style=1,
-            fg=(1, 1, 1, 1),
-            parent=self.standby_screen.titleMenu,
-            align=TextNode.ALeft,
-            pos=(-1.55, 0.93),
-            scale=0.8 * ani.menu_text_scale,
-        )
+    def _start(self):
+        self.openMainWindow(keepCamera=True)
+        _init_simplepbr()
+        mouse.init()
 
     def _stop(self):
-        """Display the standby screen and halt the main loop"""
-
-        self.standby_screen.show()
-        self.title_node.hide()
-
-        # Advance a couple of frames to render changes
-        boop(2)
-
-        # Stop the main loop
+        self.closeWindow(self.win)
         Global.task_mgr.stop()
 
 
