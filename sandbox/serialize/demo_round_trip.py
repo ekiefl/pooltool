@@ -5,8 +5,6 @@ from pathlib import Path
 import pooltool as pt
 from pooltool.system import System
 
-interface = pt.ShotViewer()
-
 shot = System(
     cue=pt.Cue(cue_ball_id="cue"),
     table=(table := pt.Table.default()),
@@ -29,4 +27,4 @@ json_hydrated = System.load(json_path)
 msgpack_hydrated = System.load(msgpack_path)
 assert json_hydrated == msgpack_hydrated == shot
 
-interface.show(shot, title="Serialized/deserialized shot")
+pt.show(shot, title="Serialized/deserialized shot")

@@ -28,8 +28,7 @@ shot.cue.set_state(V0=8, phi=pt.aim.at_ball(shot, "1"))
 pt.simulate(shot, inplace=True)
 
 # Open up the shot in the GUI
-interface = pt.ShotViewer()
-interface.show(shot)
+pt.show(shot)
 ```
 
 For those interested in some exposition, below is a line-by-line explanation.
@@ -80,12 +79,11 @@ pt.simulate(shot, inplace=True)
 
 The system has now been evolved from its initial to its final state.
 
-To visualize the shot, open the GUI with {py:class}`pooltool.ShotViewer`:
+To visualize the shot, open the GUI with {py:func}`pooltool.show`:
 
 ```python
 # Open up the shot in the GUI
-interface = pt.ShotViewer()
-interface.show(shot)
+pt.show(shot)
 ```
 
 ## Next

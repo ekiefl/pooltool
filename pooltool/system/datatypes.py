@@ -101,8 +101,7 @@ class System:
 
         This ``system`` can also be visualized in the GUI:
 
-        >>> gui = pt.ShotViewer()
-        >>> gui.show(system)
+        >>> pt.show(system)
     """
 
     cue: Cue = field()
@@ -572,8 +571,7 @@ class System:
             It can be simulated and visualized:
 
             >>> pt.simulate(system, inplace=True)
-            >>> gui = pt.ShotViewer()
-            >>> gui.show(system)
+            >>> pt.show(system)
         """
         system = cls(
             cue=Cue.default(),
@@ -642,8 +640,7 @@ class MultiSystem:
 
         Now visualize the multisystem:
 
-        >>> gui = pt.ShotViewer()
-        >>> gui.show(multisystem, title="Press 'n' for next, 'p' for previous")
+        >>> pt.show(multisystem, title="Press 'n' for next, 'p' for previous")
     """
 
     multisystem: List[System] = field(factory=list)

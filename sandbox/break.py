@@ -7,9 +7,6 @@ import pooltool as pt
 
 
 def main(args):
-    if not args.no_viz:
-        interface = pt.ShotViewer()
-
     if args.seed:
         np.random.seed(args.seed)
 
@@ -66,7 +63,7 @@ def main(args):
     pt.simulate(shot, inplace=True)
 
     if not args.no_viz:
-        interface.show(shot)
+        pt.show(shot)
 
     if args.save:
         shot.save(args.save)

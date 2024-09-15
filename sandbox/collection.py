@@ -29,7 +29,8 @@ for x in np.linspace(0, 0.7, 20):
 json_path = Path(__file__).parent / "collection.json"
 collection.save(json_path)
 new_collection = pt.MultiSystem.load(json_path)
-assert new_collection == collection
 
-interface = pt.ShotViewer()
-interface.show(new_collection)
+for old_system, new_system in zip(collection.multisystem, new_collection.multisystem):
+    assert old_system == new_system
+
+pt.show(new_collection)

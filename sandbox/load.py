@@ -12,8 +12,7 @@ import pooltool as pt
 
 
 def main(args):
-    interface = pt.ShotViewer()
-    interface.show(pt.System.load(args.path))
+    pt.show(pt.System.load(args.path))
 
 
 if __name__ == "__main__":

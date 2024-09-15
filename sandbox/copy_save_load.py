@@ -8,9 +8,6 @@ import pooltool as pt
 
 
 def main():
-    # Initialize the GUI
-    interface = pt.ShotViewer()
-
     # Create a system
     shot = pt.System(
         table=(table := pt.Table.default()),
@@ -23,11 +20,11 @@ def main():
     pt.simulate(shot, inplace=True)
 
     # Visualize it
-    interface.show(shot, title="Original system state")
+    pt.show(shot, title="Original system state")
 
     # You can copy it and visualize the copy
     new = shot.copy()
-    interface.show(new, title="A deep-ish copy of the original")
+    pt.show(new, title="A deep-ish copy of the original")
 
     # You can also save it to a file, and load it up again.
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -35,7 +32,7 @@ def main():
         new.save(path)
         newer = pt.System.load(path)
 
-    interface.show(newer, title="A copy of the original, loaded from the disk space")
+    pt.show(newer, title="A copy of the original, loaded from the disk space")
 
 
 if __name__ == "__main__":
