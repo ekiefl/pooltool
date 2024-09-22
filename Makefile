@@ -21,7 +21,7 @@ build: clean
 .PHONY: build-and-test-publish
 build-and-test-publish: build
 	poetry publish \
-		--repository pypi_test \
+		--repository pypi-test \
 		--username __token__ \
 		--password ${POETRY_PYPI_TOKEN_PYPI_TEST}
 
