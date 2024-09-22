@@ -4,6 +4,8 @@ tags:
   - Python
   - billiards
   - simulation
+  - rigid body physics
+  - newtonian physics
 authors:
   - name: Evan Kiefl
     orcid: 0000-0002-6473-0921
@@ -11,7 +13,7 @@ authors:
 affiliations:
  - name: Independent Researcher
    index: 1
-date: 3 April 2024
+date: 22 September 2024
 bibliography: paper.bib
 ---
 
