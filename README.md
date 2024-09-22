@@ -1,4 +1,4 @@
-<img src="pooltool/logo/logo.png" width="600" />
+<img src="https://github.com/ekiefl/pooltool/blob/main/pooltool/logo/logo.png" width="600" />
 
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![GitHub license](https://img.shields.io/github/license/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/blob/master/LICENSE.txt)
