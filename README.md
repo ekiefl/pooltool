@@ -59,12 +59,6 @@ I have blogged about many aspects of this project. Read the detailed account [he
 
 # Citation
 
-If you use Pooltool in your research/project/product, please cite it.
+If you use pooltool in your research/project/product, please cite it.
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13119651.svg)](https://doi.org/10.5281/zenodo.13119651)
-
-For your convenience, here are some common citation file formats:
-
-- BibTeX: `wget https://zenodo.org/records/13119651/export/bibtex -O pooltool.bib`
-- Citation File Format: `wget https://zenodo.org/records/13119651/export/cff -O pooltool.cff`
-- DataCite XML: `wget https://zenodo.org/records/13119651/export/datacite-xml -O pooltool.xml`
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10995499.svg)](https://doi.org/10.5281/zenodo.10995499)
