@@ -1,4 +1,7 @@
-<img src="pooltool/logo/logo.png" width="600" />
+<img src="https://github.com/ekiefl/pooltool/blob/main/pooltool/logo/logo.png" width="600" />
+
+[![pyOpenSci Peer-Reviewed](https://pyopensci.org/badges/peer-reviewed.svg)](https://github.com/pyOpenSci/software-review/issues/173)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10995499.svg)](https://doi.org/10.5281/zenodo.10995499)
 
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![GitHub license](https://img.shields.io/github/license/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/blob/master/LICENSE.txt)
@@ -59,12 +62,6 @@ I have blogged about many aspects of this project. Read the detailed account [he
 
 # Citation
 
-If you use Pooltool in your research/project/product, please cite it.
+If you use pooltool in your research/project/product, please cite it.
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13119651.svg)](https://doi.org/10.5281/zenodo.13119651)
-
-For your convenience, here are some common citation file formats:
-
-- BibTeX: `wget https://zenodo.org/records/13119651/export/bibtex -O pooltool.bib`
-- Citation File Format: `wget https://zenodo.org/records/13119651/export/cff -O pooltool.cff`
-- DataCite XML: `wget https://zenodo.org/records/13119651/export/datacite-xml -O pooltool.xml`
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10995499.svg)](https://doi.org/10.5281/zenodo.10995499)
