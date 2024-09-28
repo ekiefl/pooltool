@@ -11,7 +11,7 @@ authors:
     orcid: 0000-0002-6473-0921
     affiliation: 1
 affiliations:
- - name: Independent Researcher
+ - name: Independent Researcher, Canada
    index: 1
 date: 22 September 2024
 bibliography: paper.bib
