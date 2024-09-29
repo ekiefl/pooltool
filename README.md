@@ -36,7 +36,7 @@ All resources are hosted on [Read the Docs](https://pooltool.readthedocs.io/en/l
 
 Quick links:
 
-1. [Installation](https://pooltool.readthedocs.io/en/latest/getting_started/install.html)
+1. [**Installation**](https://pooltool.readthedocs.io/en/latest/getting_started/install.html)
 1. [Examples](https://pooltool.readthedocs.io/en/latest/examples/index.html)
 1. [API Reference](https://pooltool.readthedocs.io/en/latest/autoapi/pooltool/index.html)
 
