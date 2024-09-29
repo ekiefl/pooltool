@@ -4,7 +4,7 @@ Pooltool is a general purpose billiards simulator crafted specifically for scien
 
 Its core design principles focus on speed, flexibility, and the ease of visualization and analysis. With an interactive 3D interface, a robust API, and extensive documentation, pooltool aims to be a systemic tool in billiards-related research. Continuously evolving through active maintenance and bolstered by a growing community, this vision for pooltool emphasizes not just its current capabilities, but also its potential for growth and adaptation within billiards simulation.
 
-Pooltool is published in the *Journal of Open Source Software* and has been peer-reviewed by *pyOpenSci*.
+Pooltool is published in the **Journal of Open Source Software** (JOSS) and has been peer-reviewed in **pyOpenSci**.
 
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.07301/status.svg)](https://doi.org/10.21105/joss.07301)
 [![pyOpenSci Peer-Reviewed](https://pyopensci.org/badges/peer-reviewed.svg)](https://github.com/pyOpenSci/software-review/issues/173)
