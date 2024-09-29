@@ -19,9 +19,6 @@ Its core design principles focus on speed, flexibility, and the ease of visualiz
 
 Pooltool is published in the **Journal of Open Source Software** (JOSS) and has been peer-reviewed in **pyOpenSci**.
 
-| JOSS | [![DOI](https://joss.theoj.org/papers/10.21105/joss.07301/status.svg)](https://doi.org/10.21105/joss.07301) |
-| pyOpenSci | [![pyOpenSci Peer-Reviewed](https://pyopensci.org/badges/peer-reviewed.svg)](https://github.com/pyOpenSci/software-review/issues/173) |
-
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.07301/status.svg)](https://doi.org/10.21105/joss.07301)
 [![pyOpenSci Peer-Reviewed](https://pyopensci.org/badges/peer-reviewed.svg)](https://github.com/pyOpenSci/software-review/issues/173)
 
