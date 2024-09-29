@@ -1,7 +1,7 @@
 <img src="https://github.com/ekiefl/pooltool/blob/main/pooltool/logo/logo.png" width="600" />
 
 [![pyOpenSci Peer-Reviewed](https://pyopensci.org/badges/peer-reviewed.svg)](https://github.com/pyOpenSci/software-review/issues/173)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10995499.svg)](https://doi.org/10.5281/zenodo.10995499)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.07301/status.svg)](https://doi.org/10.21105/joss.07301)
 
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![GitHub license](https://img.shields.io/github/license/ekiefl/pooltool)](https://github.com/ekiefl/pooltool/blob/master/LICENSE.txt)
@@ -62,6 +62,12 @@ I have blogged about many aspects of this project. Read the detailed account [he
 
 # Citation
 
-If you use pooltool in your research/project/product, please cite it.
+If you use pooltool in your research/project/product, please cite the JOSS publication:
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10995499.svg)](https://doi.org/10.5281/zenodo.10995499)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.07301/status.svg)](https://doi.org/10.21105/joss.07301)
+
+> Kiefl, E., (2024). Pooltool: A Python package for realistic billiards simulation. Journal of Open Source Software, 9(101), 7301, https://doi.org/10.21105/joss.07301
+
+```
+@article{Kiefl2024, doi = {10.21105/joss.07301}, url = {https://doi.org/10.21105/joss.07301}, year = {2024}, publisher = {The Open Journal}, volume = {9}, number = {101}, pages = {7301}, author = {Evan Kiefl}, title = {Pooltool: A Python package for realistic billiards simulation}, journal = {Journal of Open Source Software} }
+```
