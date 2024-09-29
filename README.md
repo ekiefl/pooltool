@@ -32,13 +32,13 @@ Pooltool is published in the **Journal of Open Source Software** (JOSS) and has 
   <img src="https://github.com/ekiefl/pooltool/assets/8688665/744fcd33-2e6a-4b8d-a727-634bb8295124" width="200" alt="rtd">
 </a>
 
-All resources are hosted on [Read the Docs](https://pooltool.readthedocs.io/en/latest).
+All resources are hosted at [https://pooltool.readthedocs.io](https://pooltool.readthedocs.io).
 
 Quick links:
 
-1. [**Installation**](https://pooltool.readthedocs.io/en/latest/getting_started/install.html)
-1. [Examples](https://pooltool.readthedocs.io/en/latest/examples/index.html)
-1. [API Reference](https://pooltool.readthedocs.io/en/latest/autoapi/pooltool/index.html)
+1. [🛠️ **Installation**](https://pooltool.readthedocs.io/en/latest/getting_started/install.html)
+1. [📚 Examples](https://pooltool.readthedocs.io/en/latest/examples/index.html)
+1. [🔌 API Reference](https://pooltool.readthedocs.io/en/latest/autoapi/pooltool/index.html)
 
 # Join the community
 
