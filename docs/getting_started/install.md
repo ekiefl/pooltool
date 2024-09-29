@@ -92,7 +92,7 @@ poetry install
 pip install -e .
 ```
 
-**5.** install the pre-commit hooks:
+**5.** Install the pre-commit hooks:
 
 If you plan on contributing to pooltool, install the pre-commit hooks. They will automatically format your code according to the pooltool standard whenever you commit.
 
@@ -100,7 +100,7 @@ If you plan on contributing to pooltool, install the pre-commit hooks. They will
 pre-commit install
 ```
 
-**6.** test out your installation:
+**6.** Test out your installation:
 
 ```bash
 run-pooltool

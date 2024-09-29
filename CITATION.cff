@@ -1,0 +1,26 @@
+cff-version: "1.2.0"
+authors:
+- family-names: Kiefl
+  given-names: Evan
+  orcid: "https://orcid.org/0000-0002-6473-0921"
+doi: 10.5281/zenodo.13824503
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Kiefl
+    given-names: Evan
+    orcid: "https://orcid.org/0000-0002-6473-0921"
+  date-published: 2024-09-28
+  doi: 10.21105/joss.07301
+  issn: 2475-9066
+  issue: 101
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 7301
+  title: "Pooltool: A Python package for realistic billiards simulation"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.07301"
+  volume: 9
+title: "Pooltool: A Python package for realistic billiards simulation"
