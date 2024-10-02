@@ -1,0 +1,11 @@
+{
+    "creators": [
+        {
+            "orcid": "0000-0002-6473-0921",
+            "affiliation": "Independent Researcher, Canada",
+            "name": "Kiefl, Evan"
+        }
+    ],
+    "license": "Apache-2.0",
+    "title": "Pooltool: A Python package for realistic billiards simulation"
+}
