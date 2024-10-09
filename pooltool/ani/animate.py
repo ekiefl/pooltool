@@ -5,6 +5,7 @@ import sys
 from functools import partial
 from typing import Generator, Optional, Tuple, Union
 
+import complexpbr
 import simplepbr
 from attrs import define
 from direct.showbase.ShowBase import ShowBase
@@ -132,7 +133,8 @@ class Interface(ShowBase):
         # https://discourse.panda3d.org/t/cant-change-base-background-after-simplepbr-init/28945
         Global.base.setBackgroundColor(0.04, 0.04, 0.04)
 
-        _init_simplepbr()
+        # _init_simplepbr()
+        complexpbr.apply_shader(self.render)
 
         if isinstance(self.win, GraphicsWindow):
             mouse.init()
