@@ -1,5 +1,6 @@
 from typing import Tuple
 
+from numba import jit
 import numpy as np
 from numpy import sqrt, dot, array
 import pooltool.constants as const
@@ -57,14 +58,14 @@ class FrictionalMathavan(CoreBallBallCollision):
 INF = float('inf')
 z_loc = array([0, 1, 0], dtype=np.float64)
 
+@jit(nopython=True, cache=const.use_numba_cache)
 def _collide_balls(r_i, v_i, omega_i,
                    r_j, v_j, omega_j,
                    R, M,
                    mu_s=0.21,
                    mu_b=0.05,
                    e=0.89,
-                   deltaP=None,
-                   return_all=False):
+                   deltaP=None):
     r_ij = r_j - r_i
     r_ij_mag_sqrd = dot(r_ij, r_ij)
     # D = 2*R
@@ -92,11 +93,6 @@ def _collide_balls(r_i, v_i, omega_i,
     W_c = None
     W = 0
     niters = 0
-    if return_all:
-        v_is = [array((v_ix, v_iy, 0))]
-        v_js = [array((v_jx, v_jy, 0))]
-        omega_is = [array((omega_ix, omega_iy, omega_iz))]
-        omega_js = [array((omega_jx, omega_jy, omega_jz))]
     while v_ijy < 0 or W < W_f:
         # determine impulse deltas:
         if u_ijC_xz_mag < 1e-16:
@@ -163,11 +159,6 @@ def _collide_balls(r_i, v_i, omega_i,
         deltaW = deltaP__2 * abs(v_ijy0 + v_ijy)
         W += deltaW
         niters += 1
-        if return_all:
-            v_is.append(array((v_ix, v_iy, 0)))
-            v_js.append(array((v_jx, v_jy, 0)))
-            omega_is.append(array((omega_ix, omega_iy, omega_iz)))
-            omega_js.append(array((omega_jx, omega_jy, omega_jz)))
         if W_c is None and v_ijy > 0:
             W_c = W
             W_f = (1 + e**2) * W_c
@@ -182,17 +173,6 @@ def _collide_balls(r_i, v_i, omega_i,
     # END OF RESTITUTION PHASE
     # niters = %d
     # ''', niters)
-    if return_all:
-        v_is = array(v_is)
-        v_js = array(v_js)
-        omega_is = array(omega_is)
-        omega_js = array(omega_js)
-        for i in range(len(v_is)):
-            dot(G.T, v_is[i], out=v_is[i])
-            dot(G.T, v_js[i], out=v_js[i])
-            dot(G.T, omega_is[i], out=omega_is[i])
-            dot(G.T, omega_js[i], out=omega_js[i])
-        return v_is, omega_is, v_js, omega_js
     v_i = array((v_ix, v_iy, 0))
     v_j = array((v_jx, v_jy, 0))
     omega_i = array((omega_ix, omega_iy, omega_iz))
