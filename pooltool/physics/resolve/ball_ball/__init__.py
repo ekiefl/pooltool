@@ -17,10 +17,12 @@ class BallBallModel(StrEnum):
     """
 
     FRICTIONLESS_ELASTIC = auto()
+    FRICTIONAL_MATHAVAN = auto()
 
 
 _ball_ball_models: Dict[BallBallModel, Type[BallBallCollisionStrategy]] = {
     BallBallModel.FRICTIONLESS_ELASTIC: FrictionlessElastic,
+    BallBallModel.FRICTIONAL_MATHAVAN: FrictionalMathavan,
 }
 
 
@@ -40,7 +42,6 @@ def get_ball_ball_model(
         An instantiated model that satisfies the :class:`BallBallCollisionStrategy`
         protocol.
     """
-    return FrictionalMathavan()
 
     if model is None:
         return FrictionlessElastic()

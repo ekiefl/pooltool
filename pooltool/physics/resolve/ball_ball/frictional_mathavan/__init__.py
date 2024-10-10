@@ -3,7 +3,6 @@ from typing import Tuple
 import numpy as np
 from numpy import sqrt, dot, array
 import pooltool.constants as const
-import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.physics.resolve.ball_ball.core import CoreBallBallCollision
 
@@ -22,12 +21,11 @@ def _resolve_ball_ball(rvw1, rvw2, R, m):
 
     v_i1, omega_i1, v_j1, omega_j1 = _collide_balls(r_i, v_i, omega_i, r_j, v_j, omega_j, R, m)
 
+    rvw1[1,:2] = v_i1[::2]
+    rvw2[1,:2] = v_j1[::2]
     omega_i1[1], omega_i1[2] = omega_i1[2], omega_i1[1]
     omega_j1[1], omega_j1[2] = omega_j1[2], omega_j1[1]
-
-    rvw1[1,:2] = v_i1[::2]
     rvw1[2] = omega_i1
-    rvw2[1,:2] = v_j1[::2]
     rvw2[2] = omega_j1
     return rvw1, rvw2
 
@@ -57,7 +55,7 @@ class FrictionalMathavan(CoreBallBallCollision):
 
 
 INF = float('inf')
-
+z_loc = array([0, 1, 0], dtype=np.float64)
 
 def _collide_balls(r_i, v_i, omega_i,
                    r_j, v_j, omega_j,
@@ -72,7 +70,6 @@ def _collide_balls(r_i, v_i, omega_i,
     # D = 2*R
     # assert  abs(r_ij_mag_sqrd - D**2) / D**2  <  1e-8, "abs(r_ij_mag_sqrd - D**2) / D**2 = %s" % (abs(r_ij_mag_sqrd - D**2) / D**2)
     r_ij_mag = sqrt(r_ij_mag_sqrd)
-    z_loc = array([0, 1, 0], dtype=np.float64)
     y_loc = r_ij / r_ij_mag
     x_loc = array((-y_loc[2], 0, y_loc[0]))
     G = np.vstack((x_loc, y_loc, z_loc))
@@ -183,8 +180,8 @@ def _collide_balls(r_i, v_i, omega_i,
             # ''', W_c, W_f, niters_c)
     # _logger.debug('''
     # END OF RESTITUTION PHASE
-    # niters_r = %s
-    # ''', niters - niters_c)
+    # niters = %d
+    # ''', niters)
     if return_all:
         v_is = array(v_is)
         v_js = array(v_js)
