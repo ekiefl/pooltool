@@ -2,6 +2,7 @@ from typing import Dict, Optional, Type
 
 from pooltool.physics.resolve.ball_ball.core import BallBallCollisionStrategy
 from pooltool.physics.resolve.ball_ball.frictionless_elastic import FrictionlessElastic
+from pooltool.physics.resolve.ball_ball.frictional_mathavan import FrictionalMathavan
 from pooltool.physics.resolve.types import ModelArgs
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -39,6 +40,8 @@ def get_ball_ball_model(
         An instantiated model that satisfies the :class:`BallBallCollisionStrategy`
         protocol.
     """
+    return FrictionalMathavan()
+
     if model is None:
         return FrictionlessElastic()
 
