@@ -61,7 +61,7 @@ def collide_balls(r_i, v_i, w_i,
     r_ij_mag_sqrd = dot(r_ij, r_ij)
     r_ij_mag = sqrt(r_ij_mag_sqrd)
     y_loc = r_ij / r_ij_mag
-    x_loc = array((-y_loc[1], y_loc[0], 0))
+    x_loc = np.cross(y_loc, z_loc)
     G = np.vstack((x_loc, y_loc, z_loc))
     v_ix, v_iy = dot(v_i, x_loc), dot(v_i, y_loc)
     v_jx, v_jy = dot(v_j, x_loc), dot(v_j, y_loc)
