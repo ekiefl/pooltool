@@ -8,7 +8,7 @@ from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.physics.resolve.ball_ball.core import CoreBallBallCollision
 
 
-def _resolve_ball_ball(rvw1, rvw2, R, m):
+def _resolve_ball_ball(rvw1, rvw2, *args, **kwargs):
     r_i, v_i, w_i = rvw1.copy()
     r_j, v_j, w_j = rvw2.copy()
 
@@ -20,7 +20,7 @@ def _resolve_ball_ball(rvw1, rvw2, R, m):
     v_j[2], v_j[1] = v_j[1], 0
     w_j[2], w_j[1] = w_j[1], w_j[2]
 
-    v_i1, w_i1, v_j1, w_j1 = _collide_balls(r_i, v_i, w_i, r_j, v_j, w_j, R, m)
+    v_i1, w_i1, v_j1, w_j1 = collide_balls(r_i, v_i, w_i, r_j, v_j, w_j, *args, **kwargs)
 
     rvw1[1,:2] = v_i1[::2]
     rvw2[1,:2] = v_j1[::2]
@@ -46,7 +46,10 @@ class FrictionalMathavan(CoreBallBallCollision):
             ball1.state.rvw.copy(),
             ball2.state.rvw.copy(),
             ball1.params.R,
-            ball1.params.m
+            ball1.params.m,
+            u_s=ball1.params.u_s,
+            u_b=0.21, # ball-ball sliding friction coefficient
+            e=0.89 # coefficient of restitution
         )
 
         ball1.state = BallState(rvw1, const.sliding)
@@ -59,17 +62,15 @@ INF = float('inf')
 z_loc = array([0, 1, 0], dtype=np.float64)
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def _collide_balls(r_i, v_i, w_i,
-                   r_j, v_j, w_j,
-                   R, M,
-                   mu_s=0.21,
-                   mu_b=0.05,
-                   e=0.92,
-                   deltaP=None):
+def collide_balls(r_i, v_i, w_i,
+                  r_j, v_j, w_j,
+                  R, M,
+                  u_s=0.21,
+                  u_b=0.05,
+                  e=0.89,
+                  deltaP=None):
     r_ij = r_j - r_i
     r_ij_mag_sqrd = dot(r_ij, r_ij)
-    # D = 2*R
-    # assert  abs(r_ij_mag_sqrd - D**2) / D**2  <  1e-8, "abs(r_ij_mag_sqrd - D**2) / D**2 = %s" % (abs(r_ij_mag_sqrd - D**2) / D**2)
     r_ij_mag = sqrt(r_ij_mag_sqrd)
     y_loc = r_ij / r_ij_mag
     x_loc = array((-y_loc[2], 0, y_loc[0]))
@@ -89,6 +90,7 @@ def _collide_balls(r_i, v_i, w_i,
     if deltaP is None:
         deltaP = 0.5 * (1 + e) * M * abs(v_ijy) / 1000
     deltaP__2 = 0.5 * deltaP
+    C = 5 / (2 * M * R)
     W_f = INF
     W_c = None
     W = 0
@@ -99,37 +101,36 @@ def _collide_balls(r_i, v_i, w_i,
             deltaP_1 = deltaP_2 = 0
             deltaP_ix = deltaP_iy = deltaP_jx = deltaP_jy = 0
         else:
-            deltaP_1 = -mu_b * deltaP * u_ijC_x / u_ijC_xz_mag
+            deltaP_1 = -u_b * deltaP * u_ijC_x / u_ijC_xz_mag
             if abs(u_ijC_z) < 1e-16:
                 deltaP_2 = 0
                 deltaP_ix = deltaP_iy = deltaP_jx = deltaP_jy = 0
             else:
-                deltaP_2 = -mu_b * deltaP * u_ijC_z / u_ijC_xz_mag
+                deltaP_2 = -u_b * deltaP * u_ijC_z / u_ijC_xz_mag
                 if deltaP_2 > 0:
                     deltaP_ix = deltaP_iy = 0
                     if u_jR_xy_mag == 0:
                         deltaP_jx = deltaP_jy = 0
                     else:
-                        deltaP_jx = -mu_s * (u_jR_x / u_jR_xy_mag) * deltaP_2
-                        deltaP_jy = -mu_s * (u_jR_y / u_jR_xy_mag) * deltaP_2
+                        deltaP_jx = -u_s * (u_jR_x / u_jR_xy_mag) * deltaP_2
+                        deltaP_jy = -u_s * (u_jR_y / u_jR_xy_mag) * deltaP_2
                 else:
                     deltaP_jx = deltaP_jy = 0
                     if u_iR_xy_mag == 0:
                         deltaP_ix = deltaP_iy = 0
                     else:
-                        deltaP_ix = mu_s * (u_iR_x / u_iR_xy_mag) * deltaP_2
-                        deltaP_iy = mu_s * (u_iR_y / u_iR_xy_mag) * deltaP_2
+                        deltaP_ix = u_s * (u_iR_x / u_iR_xy_mag) * deltaP_2
+                        deltaP_iy = u_s * (u_iR_y / u_iR_xy_mag) * deltaP_2
         # calc velocity changes:
         deltaV_ix = ( deltaP_1 + deltaP_ix) / M
         deltaV_iy = (-deltaP   + deltaP_iy) / M
         deltaV_jx = (-deltaP_1 + deltaP_jx) / M
         deltaV_jy = ( deltaP   + deltaP_jy) / M
         # calc angular velocity changes:
-        _ = 5/(2*M*R)
-        deltaOm_ix = _ * ( deltaP_2 + deltaP_iy)
-        deltaOm_iy = _ * (-deltaP_ix)
-        deltaOm_iz = _ * (-deltaP_1)
-        deltaOm_j = _ * array([( deltaP_2 + deltaP_jy),
+        deltaOm_ix = C * ( deltaP_2 + deltaP_iy)
+        deltaOm_iy = C * (-deltaP_ix)
+        deltaOm_iz = C * (-deltaP_1)
+        deltaOm_j = C * array([( deltaP_2 + deltaP_jy),
                                (-deltaP_jx),
                                (-deltaP_1)])
         # update velocities:
