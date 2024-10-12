@@ -16,6 +16,8 @@ def _resolve_ball_ball(rvw1, rvw2, *args, **kwargs):
 
     rvw1[1,:2] = v_i1[:2]
     rvw2[1,:2] = v_j1[:2]
+    rvw1[2] = w_i1
+    rvw2[2] = w_j1
     return rvw1, rvw2
 
 
