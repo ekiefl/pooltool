@@ -12,22 +12,10 @@ def _resolve_ball_ball(rvw1, rvw2, *args, **kwargs):
     r_i, v_i, w_i = rvw1.copy()
     r_j, v_j, w_j = rvw2.copy()
 
-    r_i[2], r_i[1] = r_i[1], r_i[2]
-    v_i[2], v_i[1] = v_i[1], 0
-    w_i[2], w_i[1] = w_i[1], w_i[2]
-
-    r_j[2], r_j[1] = r_j[1], r_j[2]
-    v_j[2], v_j[1] = v_j[1], 0
-    w_j[2], w_j[1] = w_j[1], w_j[2]
-
     v_i1, w_i1, v_j1, w_j1 = collide_balls(r_i, v_i, w_i, r_j, v_j, w_j, *args, **kwargs)
 
-    rvw1[1,:2] = v_i1[::2]
-    rvw2[1,:2] = v_j1[::2]
-    w_i1[1], w_i1[2] = w_i1[2], w_i1[1]
-    w_j1[1], w_j1[2] = w_j1[2], w_j1[1]
-    rvw1[2] = w_i1
-    rvw2[2] = w_j1
+    rvw1[1,:2] = v_i1[:2]
+    rvw2[1,:2] = v_j1[:2]
     return rvw1, rvw2
 
 
@@ -48,7 +36,7 @@ class FrictionalMathavan(CoreBallBallCollision):
             ball1.params.R,
             ball1.params.m,
             u_s=ball1.params.u_s,
-            u_b=0.21, # ball-ball sliding friction coefficient
+            u_b=0.05, # ball-ball sliding friction coefficient
             e=0.89 # coefficient of restitution
         )
 
@@ -59,7 +47,7 @@ class FrictionalMathavan(CoreBallBallCollision):
 
 
 INF = float('inf')
-z_loc = array([0, 1, 0], dtype=np.float64)
+z_loc = array([0, 0, 1], dtype=np.float64)
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def collide_balls(r_i, v_i, w_i,
@@ -73,7 +61,7 @@ def collide_balls(r_i, v_i, w_i,
     r_ij_mag_sqrd = dot(r_ij, r_ij)
     r_ij_mag = sqrt(r_ij_mag_sqrd)
     y_loc = r_ij / r_ij_mag
-    x_loc = array((-y_loc[2], 0, y_loc[0]))
+    x_loc = array((-y_loc[1], y_loc[0], 0))
     G = np.vstack((x_loc, y_loc, z_loc))
     v_ix, v_iy = dot(v_i, x_loc), dot(v_i, y_loc)
     v_jx, v_jy = dot(v_j, x_loc), dot(v_j, y_loc)
@@ -89,7 +77,6 @@ def collide_balls(r_i, v_i, w_i,
     v_ijy = v_jy - v_iy
     if deltaP is None:
         deltaP = 0.5 * (1 + e) * M * abs(v_ijy) / 1000
-    deltaP__2 = 0.5 * deltaP
     C = 5 / (2 * M * R)
     W_f = INF
     W_c = None
@@ -157,8 +144,7 @@ def collide_balls(r_i, v_i, w_i,
         # increment work:
         v_ijy0 = v_ijy
         v_ijy = v_jy - v_iy
-        deltaW = deltaP__2 * abs(v_ijy0 + v_ijy)
-        W += deltaW
+        W += 0.5 * deltaP * abs(v_ijy0 + v_ijy)
         niters += 1
         if W_c is None and v_ijy > 0:
             W_c = W
