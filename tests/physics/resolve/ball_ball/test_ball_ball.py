@@ -31,14 +31,21 @@ def test_head_on_zero_spin(model: BallBallCollisionStrategy):
 
 @pytest.mark.parametrize("model", [FrictionalMathavan()])
 def test_head_on_z_spin(model: BallBallCollisionStrategy):
+    """Cue ball has positive z-spin (e.g. hitting right-hand-side of cue ball)"""
     cb_i, ob_i = head_on()
-
-    # Apply +z spin (e.g. hitting right side of cue ball)
-    wz_i = 0.1
-    cb_i.state.rvw[2][2] = wz_i
+    cb_i.state.rvw[2][2] = (cb_wz_i := 0.1)
 
     cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
 
-    wz_f = cb_f.state.rvw[2][2]
-    assert wz_f > 0, "Spin direction shouldn't reverse"
-    assert wz_f < wz_i, "Spin should be decay"
+    assert ob_f.state.rvw[1][1] > 0, "Object ball should be thrown left"
+
+    ob_wz_f = ob_f.state.rvw[2][2]
+    opposing_zspin = np.sign(ob_wz_f) == -np.sign(cb_wz_i)
+    assert opposing_zspin, "Final OB z-spin should oppose initial CB z-spin"
+
+    cb_wz_f = cb_f.state.rvw[2][2]
+    assert cb_wz_f > 0, "Spin direction shouldn't reverse"
+    assert cb_wz_f < cb_wz_i, "Spin should be decay"
+
+
+
