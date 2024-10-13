@@ -13,6 +13,12 @@ from pooltool.utils.strenum import StrEnum, auto
 class BallParams:
     """Ball parameters and physical constants
 
+    Note:
+        The presence of an attribute does not guarantee its usage by the physics engine.
+        For example, if the frictionless elastic ball-ball collision model is used, then
+        `u_b`, the ball-ball sliding coefficient of friction, will have no affect on the
+        simulation.
+
     Attributes:
         m:
             The mass of the ball (*default* = 0.170097
@@ -36,6 +42,10 @@ class BallParams:
 
             References:
                 - https://ekiefl.github.io/2020/04/24/pooltool-theory/#case-2-spinning
+        u_b:
+            The ball-ball coefficient of sliding friction (*default* = 0.05).
+        e_b:
+            The ball-ball coefficient of restitution (*default* = FIXME).
         e_c:
             The cushion coefficient of restitution (*default* = 0.85).
 
@@ -64,6 +74,8 @@ class BallParams:
     u_s: float = attrs.field(default=0.2)
     u_r: float = attrs.field(default=0.01)
     u_sp_proportionality: float = attrs.field(default=10 * 2 / 5 / 9)
+    u_b: float = attrs.field(default=0.05)
+    e_b: float = attrs.field(default=0.95)
     e_c: float = attrs.field(default=0.85)
     f_c: float = attrs.field(default=0.2)
     g: float = attrs.field(default=9.81)
