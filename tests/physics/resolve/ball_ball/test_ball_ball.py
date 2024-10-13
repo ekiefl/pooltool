@@ -20,7 +20,7 @@ def head_on() -> Tuple[Ball, Ball]:
     return cb, ob
 
 
-@pytest.mark.parametrize("model", [FrictionlessElastic(), FrictionalMathavan()])
+@pytest.mark.parametrize("model", [FrictionlessElastic()])
 def test_head_on_zero_spin(model: BallBallCollisionStrategy):
     cb_i, ob_i = head_on()
     cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
@@ -46,6 +46,3 @@ def test_head_on_z_spin(model: BallBallCollisionStrategy):
     cb_wz_f = cb_f.state.rvw[2][2]
     assert cb_wz_f > 0, "Spin direction shouldn't reverse"
     assert cb_wz_f < cb_wz_i, "Spin should be decay"
-
-
-

@@ -37,9 +37,11 @@ class FrictionalMathavan(CoreBallBallCollision):
             ball2.state.rvw.copy(),
             ball1.params.R,
             ball1.params.m,
-            u_s=ball1.params.u_s,
-            u_b=0.05, # ball-ball sliding friction coefficient
-            e=0.89 # coefficient of restitution
+            u_s1=ball1.params.u_s,
+            u_s2=ball2.params.u_s,
+            # Assume the interaction coefficients are the average of the two balls
+            u_b=(ball1.params.u_b + ball2.params.u_b) / 2,
+            e_b=(ball1.params.e_b + ball2.params.e_b) / 2,
         )
 
         ball1.state = BallState(rvw1, const.sliding)
@@ -55,9 +57,10 @@ z_loc = array([0, 0, 1], dtype=np.float64)
 def collide_balls(r_i, v_i, w_i,
                   r_j, v_j, w_j,
                   R, M,
-                  u_s=0.21,
+                  u_s1=0.21,
+                  u_s2=0.21,
                   u_b=0.05,
-                  e=0.89,
+                  e_b=0.89,
                   deltaP=None):
     r_ij = r_j - r_i
     r_ij_mag_sqrd = dot(r_ij, r_ij)
@@ -78,7 +81,7 @@ def collide_balls(r_i, v_i, w_i,
     u_ijC_xz_mag = sqrt(u_ijC_x**2 + u_ijC_z**2)
     v_ijy = v_jy - v_iy
     if deltaP is None:
-        deltaP = 0.5 * (1 + e) * M * abs(v_ijy) / 1000
+        deltaP = 0.5 * (1 + e_b) * M * abs(v_ijy) / 1000
     C = 5 / (2 * M * R)
     W_f = INF
     W_c = None
@@ -101,15 +104,15 @@ def collide_balls(r_i, v_i, w_i,
                     if u_jR_xy_mag == 0:
                         deltaP_jx = deltaP_jy = 0
                     else:
-                        deltaP_jx = -u_s * (u_jR_x / u_jR_xy_mag) * deltaP_2
-                        deltaP_jy = -u_s * (u_jR_y / u_jR_xy_mag) * deltaP_2
+                        deltaP_jx = -u_s2 * (u_jR_x / u_jR_xy_mag) * deltaP_2
+                        deltaP_jy = -u_s2 * (u_jR_y / u_jR_xy_mag) * deltaP_2
                 else:
                     deltaP_jx = deltaP_jy = 0
                     if u_iR_xy_mag == 0:
                         deltaP_ix = deltaP_iy = 0
                     else:
-                        deltaP_ix = u_s * (u_iR_x / u_iR_xy_mag) * deltaP_2
-                        deltaP_iy = u_s * (u_iR_y / u_iR_xy_mag) * deltaP_2
+                        deltaP_ix = u_s1 * (u_iR_x / u_iR_xy_mag) * deltaP_2
+                        deltaP_iy = u_s1 * (u_iR_y / u_iR_xy_mag) * deltaP_2
         # calc velocity changes:
         deltaV_ix = ( deltaP_1 + deltaP_ix) / M
         deltaV_iy = (-deltaP   + deltaP_iy) / M
@@ -150,7 +153,7 @@ def collide_balls(r_i, v_i, w_i,
         niters += 1
         if W_c is None and v_ijy > 0:
             W_c = W
-            W_f = (1 + e**2) * W_c
+            W_f = (1 + e_b**2) * W_c
             # niters_c = niters
             # _logger.debug('''
             # END OF COMPRESSION PHASE

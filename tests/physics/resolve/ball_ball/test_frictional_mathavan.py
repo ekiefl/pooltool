@@ -44,7 +44,7 @@ def test_collide_balls(initial_conditions, expected):
     t0 = perf_counter()
     v_i1, omega_i1, v_j1, omega_j1 = collide_balls(r_i, v_i, omega_i,
                                                    r_j, v_j, omega_j,
-                                                   R=R, M=M, u_s=mu_s, u_b=mu_b,
+                                                   R=R, M=M, u_s1=mu_s, u_s2=mu_s, u_b=mu_b,
                                                    deltaP=deltaP)
     t1 = perf_counter()
     _logger.info('evaluation time: %s', t1-t0)
