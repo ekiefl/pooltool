@@ -61,7 +61,13 @@ def collide_balls(r_i, v_i, w_i,
                   u_s2=0.21,
                   u_b=0.05,
                   e_b=0.89,
-                  deltaP=None):
+                  deltaP=None,
+                  N=1000):
+    """
+    Args:
+        deltaP: normal impulse step size (optional, automatically selected according to eqn 14 in the reference)
+        N: if deltaP not specified, it is calculated such that approx this number of iterations are performed (see eqn 14)
+    """
     r_ij = r_j - r_i
     r_ij_mag_sqrd = dot(r_ij, r_ij)
     r_ij_mag = sqrt(r_ij_mag_sqrd)
@@ -81,7 +87,7 @@ def collide_balls(r_i, v_i, w_i,
     u_ijC_xz_mag = sqrt(u_ijC_x**2 + u_ijC_z**2)
     v_ijy = v_jy - v_iy
     if deltaP is None:
-        deltaP = 0.5 * (1 + e_b) * M * abs(v_ijy) / 1000
+        deltaP = 0.5 * (1 + e_b) * M * abs(v_ijy) / N
     C = 5 / (2 * M * R)
     W_f = INF
     W_c = None
