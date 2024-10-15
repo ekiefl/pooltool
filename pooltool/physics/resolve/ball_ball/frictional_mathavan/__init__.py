@@ -229,6 +229,9 @@ class FrictionalMathavan(CoreBallBallCollision):
         https://billiards.colostate.edu/physics_articles/Mathavan_Sports_2014.pdf
     """
 
+    def __init__(self, num_iterations: int = 1000):
+        self.num_iterations = num_iterations
+
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
         """Resolve ball-ball collision via Mathavan et al. (2014).
 
@@ -256,6 +259,7 @@ class FrictionalMathavan(CoreBallBallCollision):
             # Assume the interaction coefficients are the average of the two balls
             u_b=(ball1.params.u_b + ball2.params.u_b) / 2,
             e_b=(ball1.params.e_b + ball2.params.e_b) / 2,
+            N=self.num_iterations,
         )
 
         ball1.state = BallState(rvw1, const.sliding)
