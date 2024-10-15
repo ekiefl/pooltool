@@ -1,4 +1,24 @@
+"""An implementation of the Mathavan et al. (2014) ball-ball collision model.
+
+The model "uses general theories of dynamics of spheres rolling on a flat surface and
+general frictional impact dynamics under the assumption of point contacts between the
+balls under collision and that of the table."
+
+The authors compare the model predictions to experimental exit velocities and angles
+measured with a high speed camera system and illustrate marked improvement over previous
+theories, which unlike this model, fail to account for spin.
+
+References:
+    Mathavan, S., Jackson, M.R. & Parkin, R.M. Numerical simulations of the frictional
+    collisions of solid balls on a rough surface. Sports Eng 17, 227–237 (2014).
+    https://doi.org/10.1007/s12283-014-0158-y
+
+    Available at
+    https://billiards.colostate.edu/physics_articles/Mathavan_Sports_2014.pdf
+"""
+
 from typing import Tuple
+from numpy.typing import NDArray
 
 from numba import jit
 import numpy as np
@@ -22,15 +42,6 @@ def _resolve_ball_ball(rvw1, rvw2, *args, **kwargs):
 
 
 class FrictionalMathavan(CoreBallBallCollision):
-    """
-    Implements the ball-ball collision model described in: ::
-      NUMERICAL SIMULATIONS OF THE FRICTIONAL COLLISIONS
-      OF SOLID BALLS ON A ROUGH SURFACE
-      S. Mathavan,  M. R. Jackson,  R. M. Parkin
-      DOI: 10.1007/s12283-014-0158-y
-      International Sports Engineering Association
-      2014
-    """
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
         rvw1, rvw2 = _resolve_ball_ball(
             ball1.state.rvw.copy(),
@@ -63,10 +74,65 @@ def collide_balls(r_i, v_i, w_i,
                   e_b=0.89,
                   deltaP=None,
                   N=1000):
-    """
+    """Simulates the frictional collision between two balls.
+
+    This function computes the post-collision linear and angular velocities of two balls
+    colliding on a rough surface, taking into account both ball-to-ball friction and
+    ball-to-surface friction. The collision model is based on the method described by
+    Mathavan et al. (2014), which considers point contacts and frictional impact
+    dynamics between the balls.
+
+    The function transforms the velocities and angular velocities into a local
+    coordinate frame defined by the line connecting the centers of the two balls at the
+    point of collision. It then iteratively calculates the collision dynamics, including
+    the effects of friction and restitution during the compression and restitution
+    phases of the collision. Once the collision dynamics criteria are met, the updated
+    velocities and angular velocities are transformed back into the global coordinate
+    frame and returned.
+
     Args:
-        deltaP: normal impulse step size (optional, automatically selected according to eqn 14 in the reference)
-        N: if deltaP not specified, it is calculated such that approx this number of iterations are performed (see eqn 14)
+        r_i: Position vector of ball 1 in global coordinates. Shape: (3,).
+        v_i: Velocity vector of ball 1 in global coordinates. Shape: (3,).
+        w_i: Angular velocity vector of ball 1 in global coordinates. Shape: (3,).
+        r_j: Position vector of ball 2 in global coordinates. Shape: (3,).
+        v_j: Velocity vector of ball 2 in global coordinates. Shape: (3,).
+        w_j: Angular velocity vector of ball 2 in global coordinates. Shape: (3,).
+        R: Radius of the balls.
+        M: Mass of the balls.
+        u_s1: Coefficient of sliding friction between ball 1 and the surface.
+        u_s2: Coefficient of sliding friction between ball 2 and the surface.
+        u_b: Coefficient of friction between the balls during collision.
+        e_b: Coefficient of restitution between the balls.
+        deltaP:
+            Normal impulse step size. If not passed, automatically selected according to
+            equation 14 in the reference.
+        N:
+            If deltaP is not specified, it is calculated such that approximately this
+            number of iterations are performed (see equation 14).
+
+    Returns:
+        Tuple[
+            NDArray[np.float64],
+            NDArray[np.float64],
+            NDArray[np.float64],
+            NDArray[np.float64]
+        ]:
+            A tuple containing:
+
+            - Updated velocity vector of ball 1 after collision in global coordinates.
+            - Updated angular velocity vector of ball 1 after collision in global
+              coordinates.
+            - Updated velocity vector of ball 2 after collision in global coordinates.
+            - Updated angular velocity vector of ball 2 after collision in global
+              coordinates.
+
+    References:
+        Mathavan, S., Jackson, M.R. & Parkin, R.M. (2014). Numerical simulations of the
+        frictional collisions of solid balls on a rough surface. Sports Engineering, 17,
+        227–237. https://doi.org/10.1007/s12283-014-0158-y
+
+        Available at
+        https://billiards.colostate.edu/physics_articles/Mathavan_Sports_2014.pdf
     """
     r_ij = r_j - r_i
     r_ij_mag_sqrd = dot(r_ij, r_ij)
