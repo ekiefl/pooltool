@@ -1,8 +1,10 @@
+"""Models for ball-ball collisions."""
+
 from typing import Dict, Optional, Type
 
 from pooltool.physics.resolve.ball_ball.core import BallBallCollisionStrategy
-from pooltool.physics.resolve.ball_ball.frictionless_elastic import FrictionlessElastic
 from pooltool.physics.resolve.ball_ball.frictional_mathavan import FrictionalMathavan
+from pooltool.physics.resolve.ball_ball.frictionless_elastic import FrictionlessElastic
 from pooltool.physics.resolve.types import ModelArgs
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -34,7 +36,7 @@ def get_ball_ball_model(
     Args:
         model:
             An Enum specifying the desired model. If not passed,
-            :class:`FrictionlessElastic` is passed with empty params.
+            :class:`FrictionalMathavan` is passed with empty params.
         params:
             A mapping of parameters accepted by the model.
 
@@ -47,3 +49,11 @@ def get_ball_ball_model(
         return FrictionlessElastic()
 
     return _ball_ball_models[model](**params)
+
+
+__all__ = [
+    "BallBallModel",
+    "get_ball_ball_model",
+    "FrictionalMathavan",
+    "FrictionlessElastic",
+]

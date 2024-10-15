@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import pooltool as pt
-from pooltool.physics.resolve.ball_ball.frictional_mathavan import collide_balls
+from pooltool.physics.resolve.ball_ball.frictional_mathavan import _collide_balls
 
 DEG2RAD = np.pi / 180
 RAD2DEG = 180 / np.pi
@@ -47,7 +47,7 @@ def test_collide_balls(initial_conditions, expected):
     v_j = np.zeros(3, dtype=np.float64)
     w_j = np.zeros(3, dtype=np.float64)
     # calc immediate post-collision state
-    v_i1, w_i1, v_j1, w_j1 = collide_balls(
+    v_i1, w_i1, v_j1, w_j1 = _collide_balls(
         r_i, v_i, w_i, r_j, v_j, w_j, R=R, M=M, u_s1=mu_s, u_s2=mu_s, u_b=mu_b, e_b=e_b
     )
 
