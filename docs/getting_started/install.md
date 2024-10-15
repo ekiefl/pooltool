@@ -88,7 +88,7 @@ Poetry (version 1.8.3)
 **4.** Install pooltool.
 
 ```bash
-poetry install
+poetry install --with=dev,docs
 pip install -e .
 
 # Intend to contribute? Install the pre-commit hooks.
