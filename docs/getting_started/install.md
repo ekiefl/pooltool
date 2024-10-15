@@ -88,19 +88,16 @@ Poetry (version 1.8.3)
 **4.** Install pooltool.
 
 ```bash
-poetry install
+poetry install --with=dev,docs
 pip install -e .
-```
 
-**5.** Install the pre-commit hooks:
-
-If you plan on contributing to pooltool, install the pre-commit hooks. They will automatically format your code according to the pooltool standard whenever you commit.
-
-```
+# Intend to contribute? Install the pre-commit hooks.
+# This ensures your code is automatically formatted
+# to pooltool's code standards before each commit.
 pre-commit install
 ```
 
-**6.** Test out your installation:
+**5.** Test out your installation:
 
 ```bash
 run-pooltool

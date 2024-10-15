@@ -9,8 +9,6 @@ from pooltool.physics.resolve.ball_ball.core import CoreBallBallCollision
 
 
 def _resolve_ball_ball(rvw1, rvw2, R):
-    """Frictionless, instantaneous, elastic, equal mass collision"""
-
     r1, r2 = rvw1[0], rvw2[0]
     v1, v2 = rvw1[1], rvw2[1]
 
@@ -29,7 +27,17 @@ def _resolve_ball_ball(rvw1, rvw2, R):
 
 
 class FrictionlessElastic(CoreBallBallCollision):
+    """A frictionless, instantaneous, elastic, equal mass collision resolver.
+
+    This is as simple as it gets.
+
+    See Also:
+        - This physics of this model is blogged about at
+          https://ekiefl.github.io/2020/04/24/pooltool-theory/#1-elastic-instantaneous-frictionless
+    """
+
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
+        """Resolves the collision."""
         rvw1, rvw2 = _resolve_ball_ball(
             ball1.state.rvw.copy(),
             ball2.state.rvw.copy(),

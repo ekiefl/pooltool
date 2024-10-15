@@ -43,9 +43,9 @@ from pooltool.system.datatypes import System
 from pooltool.terminal import Run
 
 RESOLVER_CONFIG_PATH = pooltool.user_config.PHYSICS_DIR / "resolver.yaml"
-"""The location of the resolver config path YAML"""
+"""The location of the resolver config path YAML."""
 
-VERSION: int = 2
+VERSION: int = 4
 
 
 run = Run()
@@ -100,8 +100,8 @@ class ResolverConfig:
                 )
 
         config = cls(
-            ball_ball=BallBallModel.FRICTIONLESS_ELASTIC,
-            ball_ball_params={},
+            ball_ball=BallBallModel.FRICTIONAL_MATHAVAN,
+            ball_ball_params={"num_iterations": 1000},
             ball_linear_cushion=BallLCushionModel.HAN_2005,
             ball_linear_cushion_params={},
             ball_circular_cushion=BallCCushionModel.HAN_2005,
