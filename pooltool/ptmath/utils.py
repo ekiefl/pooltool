@@ -258,13 +258,21 @@ def norm2d(vec: NDArray[np.float64]) -> float:
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def surface_velocity(
+    rvw: NDArray[np.float64], d: NDArray[np.float64], R: float
+) -> NDArray[np.float64]:
+    """Compute velocity of a point on ball's surface (specified by unit direction vector)"""
+    _, v, w = rvw
+    return v + cross(w, R * d)
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def rel_velocity(rvw: NDArray[np.float64], R: float) -> NDArray[np.float64]:
-    """Compute velocity of cloth with respect to ball's point of contact
+    """Compute velocity of ball's point of contact with the cloth relative to the cloth
 
     This vector is non-zero whenever the ball is sliding
     """
-    _, v, w = rvw
-    return v + R * cross(np.array([0.0, 0.0, 1.0], dtype=np.float64), w)
+    return surface_velocity(rvw, np.array([0.0, 0.0, -1.0], dtype=np.float64), R)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
