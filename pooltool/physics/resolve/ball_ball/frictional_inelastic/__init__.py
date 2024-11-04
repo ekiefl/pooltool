@@ -111,9 +111,6 @@ class FrictionalInelastic(CoreBallBallCollision):
     and a more complete analysis of velocity and angular velocity in their vector forms.
     """
 
-    def __init__(self, *args, **kwargs):
-        pass
-
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
         """Resolves the collision."""
         rvw1, rvw2 = _resolve_ball_ball(
