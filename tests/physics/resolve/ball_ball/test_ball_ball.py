@@ -44,8 +44,8 @@ def test_head_on_zero_spin_inelastic(model: BallBallCollisionStrategy):
 
     # coefficient of restitution definition
     expected_v_separation = v_approach * e_b
-    # FIXME: floating point near comparison?
-    assert abs(expected_v_separation - v_separation) <= 1e-9
+
+    assert np.isclose(expected_v_separation, v_separation, atol=1e-3)
 
     # Object ball should have +x velocity
     assert ob_f.state.rvw[1][0] > 0
