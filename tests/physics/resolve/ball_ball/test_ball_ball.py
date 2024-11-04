@@ -32,7 +32,9 @@ def test_head_on_zero_spin(model: BallBallCollisionStrategy):
     assert cb_f.state.rvw[1][0] <= 0
 
 
-@pytest.mark.parametrize("model", [FrictionalInelastic()])
+@pytest.mark.parametrize(
+    "model", [FrictionalInelastic(), FrictionalMathavan(num_iterations=100_000)]
+)
 def test_head_on_zero_spin_inelastic(model: BallBallCollisionStrategy):
     cb_i, ob_i = head_on()
     cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
