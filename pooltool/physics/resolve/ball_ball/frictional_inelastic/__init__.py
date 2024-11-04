@@ -69,7 +69,7 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
 
     # if there was no relative velocity to begin with, or if slip changed directions,
     # slip condition is invalid so we need to calculate no-slip condition
-    if not has_relative_velocity or np.dot(v12_c, v12_c_slip) <= 0:
+    if not has_relative_velocity or np.dot(v12_c, v12_c_slip) <= 0:  # type: ignore
         # velocity tangent component for no-slip condition
         D_v1_t = (
             2.0 * rvw2[1] - R * ptmath.cross(2.0 * rvw1[2] + 7.0 * rvw2[2], unit_x)
