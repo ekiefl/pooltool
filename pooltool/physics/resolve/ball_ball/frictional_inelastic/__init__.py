@@ -25,7 +25,7 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     rvw1_f = rvw1.copy()
     rvw2_f = rvw2.copy()
 
-    # velocity normal component, same for both slip and rolling after collison cases
+    # velocity normal component, same for both slip and no-slip after collison cases
     v1_n_f = 0.5 * ((1.0 - e_b) * rvw1[1][0] + (1.0 + e_b) * rvw2[1][0])
     v2_n_f = 0.5 * ((1.0 + e_b) * rvw1[1][0] + (1.0 - e_b) * rvw2[1][0])
     D_v_n_magnitude = abs(v2_n_f - v1_n_f)
@@ -68,7 +68,7 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
         v12_c_slip = v1_c_slip - v2_c_slip
 
     # if there was no relative velocity to begin with, or if slip changed directions,
-    # slip condition is invalid so we need to calculate no-slip condition
+    # then slip condition is invalid so we need to calculate no-slip condition
     if not has_relative_velocity or np.dot(v12_c, v12_c_slip) <= 0:  # type: ignore
         # velocity tangent component for no-slip condition
         D_v1_t = (
@@ -96,7 +96,8 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     rvw2_f[1] = ptmath.coordinate_rotation(rvw2_f[1], theta)
     rvw2_f[2] = ptmath.coordinate_rotation(rvw2_f[2], theta)
 
-    # FIXME3D: remove any z velocity components from spin-induced throw
+    # FIXME3D: include z velocity components
+    # remove any z velocity components from spin-induced throw
     rvw1_f[1][2] = 0.0
     rvw2_f[1][2] = 0.0
 
