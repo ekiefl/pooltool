@@ -1,10 +1,13 @@
 from typing import Tuple
 
+import attrs
 import numpy as np
 import pytest
 
+from pooltool import ptmath
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.physics.resolve.ball_ball.core import BallBallCollisionStrategy
+from pooltool.physics.resolve.ball_ball.frictional_inelastic import FrictionalInelastic
 from pooltool.physics.resolve.ball_ball.frictional_mathavan import FrictionalMathavan
 from pooltool.physics.resolve.ball_ball.frictionless_elastic import FrictionlessElastic
 
@@ -29,11 +32,43 @@ def test_head_on_zero_spin(model: BallBallCollisionStrategy):
     assert cb_f.state.rvw[1][0] <= 0
 
 
-@pytest.mark.parametrize("model", [FrictionalMathavan()])
-def test_head_on_z_spin(model: BallBallCollisionStrategy):
+@pytest.mark.parametrize(
+    "model", [FrictionalInelastic(), FrictionalMathavan(num_iterations=int(1e6))]
+)
+@pytest.mark.parametrize("e_b", [0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
+def test_head_on_zero_spin_inelastic(model: BallBallCollisionStrategy, e_b: float):
+    cb_i, ob_i = head_on()
+
+    # Update coefficient of restitutions
+    cb_i.params = attrs.evolve(cb_i.params, e_b=e_b)
+    ob_i.params = attrs.evolve(ob_i.params, e_b=e_b)
+
+    cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
+
+    v_approach = ptmath.norm3d(cb_i.vel - ob_i.vel)
+    v_separation = ptmath.norm3d(cb_f.vel - ob_f.vel)
+
+    # coefficient of restitution definition
+    expected_v_separation = v_approach * e_b
+
+    assert np.isclose(expected_v_separation, v_separation, atol=1e-10)
+
+    # Object ball should have +x velocity
+    assert ob_f.state.rvw[1][0] > 0
+
+    if e_b == 1.0:
+        assert np.isclose(cb_f.state.rvw[1][0], 0, atol=1e-10)
+    else:
+        # Cue ball should have +x velocity, too (because of inelasticity)
+        assert cb_f.state.rvw[1][0] > 0
+
+
+@pytest.mark.parametrize("model", [FrictionalInelastic(), FrictionalMathavan()])
+@pytest.mark.parametrize("cb_wz_i", [0.1, 1, 10, 100])
+def test_head_on_z_spin(model: BallBallCollisionStrategy, cb_wz_i: float):
     """Cue ball has positive z-spin (e.g. hitting right-hand-side of cue ball)"""
     cb_i, ob_i = head_on()
-    cb_i.state.rvw[2][2] = (cb_wz_i := 0.1)
+    cb_i.state.rvw[2][2] = cb_wz_i
 
     cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
 

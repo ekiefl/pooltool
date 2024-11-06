@@ -45,7 +45,7 @@ class BallParams:
         u_b:
             The ball-ball coefficient of sliding friction (*default* = 0.05).
         e_b:
-            The ball-ball coefficient of restitution (*default* = FIXME).
+            The ball-ball coefficient of restitution (*default* = 0.95).
         e_c:
             The cushion coefficient of restitution (*default* = 0.85).
 
