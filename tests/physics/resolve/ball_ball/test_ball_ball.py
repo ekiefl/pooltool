@@ -23,6 +23,19 @@ def head_on() -> Tuple[Ball, Ball]:
     return cb, ob
 
 
+def translating_head_on() -> Tuple[Ball, Ball]:
+    cb = Ball.create("cue", xy=(0, 0))
+    ob = Ball.create("cue", xy=(2 * cb.params.R, 0))
+
+    # Cue ball makes head-on collision with object ball at 1 m/s in +x direction
+    # while both balls move together at 1 m/s in +y direction
+    cb.state.rvw[1] = np.array([1, 1, 0])
+    ob.state.rvw[1] = np.array([0, 1, 0])
+
+    assert cb.params.m == ob.params.m, "Balls expected to be equal mass"
+    return cb, ob
+
+
 @pytest.mark.parametrize("model", [FrictionlessElastic()])
 def test_head_on_zero_spin(model: BallBallCollisionStrategy):
     cb_i, ob_i = head_on()
@@ -61,6 +74,23 @@ def test_head_on_zero_spin_inelastic(model: BallBallCollisionStrategy, e_b: floa
     else:
         # Cue ball should have +x velocity, too (because of inelasticity)
         assert cb_f.state.rvw[1][0] > 0
+
+
+@pytest.mark.parametrize("model", [FrictionalInelastic(), FrictionalMathavan()])
+@pytest.mark.parametrize("e_b", [0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
+def test_translating_head_on_zero_spin_inelastic(
+    model: BallBallCollisionStrategy, e_b: float
+):
+    cb_i, ob_i = translating_head_on()
+
+    # Update coefficient of restitutions
+    cb_i.params = attrs.evolve(cb_i.params, e_b=e_b)
+    ob_i.params = attrs.evolve(ob_i.params, e_b=e_b)
+
+    cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
+
+    # Balls should still be moving together in +y direction
+    assert np.isclose(cb_f.vel[1], ob_f.vel[1], atol=1e-10)
 
 
 @pytest.mark.parametrize("model", [FrictionalInelastic(), FrictionalMathavan()])
