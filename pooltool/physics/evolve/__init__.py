@@ -82,6 +82,9 @@ def evolve_slide_state(
     if t == 0:
         return rvw
 
+    v0z = rvw[1, 2]
+    assert v0z == 0, f"Rolling ball can't have non-zero z-component velocity: {v0z}"
+
     # Angle of initial velocity in table frame
     phi = ptmath.angle(rvw[1])
 
@@ -123,7 +126,10 @@ def evolve_roll_state(
     if t == 0:
         return rvw
 
-    r_0, v_0, w_0 = rvw
+    r_0, v_0, _ = rvw
+
+    v0z = v_0[2]
+    assert v0z == 0, f"Rolling ball can't have non-zero z-component velocity: {v_0[2]}"
 
     v_0_hat = ptmath.unit_vector(v_0)
 
@@ -171,6 +177,9 @@ def evolve_perpendicular_spin_component(
 def evolve_perpendicular_spin_state(
     rvw: NDArray[np.float64], R: float, u_sp: float, g: float, t: float
 ) -> NDArray[np.float64]:
+    v0z = rvw[1, 2]
+    assert v0z == 0, f"Spinning ball can't have non-zero z-component velocity: {v0z}"
+
     # Otherwise ball.state.rvw will be modified and corresponding entry in self.history
     # FIXME framework has changed, this may not be true. EDIT This is still true.
     rvw = rvw.copy()
