@@ -191,7 +191,7 @@ def evolve_perpendicular_spin_state(
     return rvw
 
 
-# FIXME @jit(nopython=True, cache=const.use_numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def evolve_airborne_state(
     rvw: NDArray[np.float64], R: float, u_r: float, u_sp: float, g: float, t: float
 ) -> NDArray[np.float64]:
