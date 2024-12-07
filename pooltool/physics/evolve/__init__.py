@@ -66,6 +66,9 @@ def evolve_ball_motion(
         else:
             return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), const.spinning
 
+    if state == const.airborne:
+        raise NotImplementedError("FIXME")
+
     raise ValueError
 
 
@@ -186,3 +189,31 @@ def evolve_perpendicular_spin_state(
 
     rvw[2, 2] = evolve_perpendicular_spin_component(rvw[2, 2], R, u_sp, g, t)
     return rvw
+
+
+# FIXME @jit(nopython=True, cache=const.use_numba_cache)
+def evolve_airborne_state(
+    rvw: NDArray[np.float64], R: float, u_r: float, u_sp: float, g: float, t: float
+) -> NDArray[np.float64]:
+    if t == 0:
+        return rvw
+
+    r_0, v_0, w_0 = rvw
+
+    # First update the displacement. This equation is only correct for the x- and
+    # y-components.
+    r = r_0 + v_0 * t
+
+    # Overwrite the incorrect z-component displacement with the correct one.
+    r[2] = r_0[2] + v_0[2] * t - 0.5 * g * t**2
+
+    # Note: v and v_0 share the same memory--i.e. altering v alters v_0.
+    v = v_0
+    v[2] = v_0[2] - g * t
+
+    new_rvw = np.empty((3, 3), dtype=np.float64)
+    new_rvw[0, :] = r
+    new_rvw[1, :] = v
+    new_rvw[2, :] = w_0
+
+    return new_rvw
