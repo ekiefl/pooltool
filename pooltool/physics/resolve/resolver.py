@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import shutil
+import traceback
 from pathlib import Path
 from typing import Optional
 
 import attrs
+from cattrs.errors import ClassValidationError
 
 import pooltool.user_config
 from pooltool.events.datatypes import AgentType, Event, EventType
@@ -27,6 +30,8 @@ from pooltool.physics.resolve.ball_pocket import (
     BallPocketStrategy,
     get_ball_pocket_model,
 )
+from pooltool.physics.resolve.ball_table import BallTableModel, get_ball_table_model
+from pooltool.physics.resolve.ball_table.core import BallTableCollisionStrategy
 from pooltool.physics.resolve.stick_ball import (
     StickBallCollisionStrategy,
     StickBallModel,
@@ -45,7 +50,7 @@ from pooltool.terminal import Run
 RESOLVER_CONFIG_PATH = pooltool.user_config.PHYSICS_DIR / "resolver.yaml"
 """The location of the resolver config path YAML."""
 
-VERSION: int = 4
+VERSION: int = 5
 
 
 run = Run()
@@ -70,6 +75,8 @@ class ResolverConfig:
     ball_pocket_params: ModelArgs
     stick_ball: StickBallModel
     stick_ball_params: ModelArgs
+    ball_table: BallTableModel
+    ball_table_params: ModelArgs
     transition: BallTransitionModel
     transition_params: ModelArgs
 
@@ -87,36 +94,58 @@ class ResolverConfig:
     @classmethod
     def default(cls) -> ResolverConfig:
         """Load ~/.config/pooltool/physics/resolver.yaml if exists, create otherwise"""
-        if RESOLVER_CONFIG_PATH.exists():
+
+        def _default_config():
+            return cls(
+                ball_ball=BallBallModel.FRICTIONAL_MATHAVAN,
+                ball_ball_params={"num_iterations": 1000},
+                ball_linear_cushion=BallLCushionModel.HAN_2005,
+                ball_linear_cushion_params={},
+                ball_circular_cushion=BallCCushionModel.HAN_2005,
+                ball_circular_cushion_params={},
+                ball_pocket=BallPocketModel.CANONICAL,
+                ball_pocket_params={},
+                stick_ball=StickBallModel.INSTANTANEOUS_POINT,
+                stick_ball_params={"english_throttle": 0.5, "squirt_throttle": 1.0},
+                ball_table=BallTableModel.FRICTIONLESS_INELASTIC,
+                ball_table_params={"min_bounce_height": 0.005},
+                transition=BallTransitionModel.CANONICAL,
+                transition_params={},
+                version=VERSION,
+            )
+
+        if not RESOLVER_CONFIG_PATH.exists():
+            config = _default_config()
+            config.save(RESOLVER_CONFIG_PATH)
+            return config
+
+        try:
             config = cls.load(RESOLVER_CONFIG_PATH)
+        except ClassValidationError:
+            full_traceback = traceback.format_exc()
+            dump_path = RESOLVER_CONFIG_PATH.parent / f".{RESOLVER_CONFIG_PATH.name}"
+            run.info_single(
+                f"{RESOLVER_CONFIG_PATH} is malformed and can't be loaded. It is being "
+                f"replaced with a default working version. Your version has been moved to "
+                f"{dump_path} if you want to diagnose it. Here is the error:\n{full_traceback}"
+            )
+            shutil.move(RESOLVER_CONFIG_PATH, dump_path)
+            config = _default_config()
+            config.save(RESOLVER_CONFIG_PATH)
 
-            if config.version == VERSION:
-                return config
-            else:
-                run.info_single(
-                    f"{RESOLVER_CONFIG_PATH} is has version {config.version}, which is not up to "
-                    f"date with the most current version: {VERSION}. It will be replaced with the "
-                    f"default."
-                )
-
-        config = cls(
-            ball_ball=BallBallModel.FRICTIONAL_MATHAVAN,
-            ball_ball_params={"num_iterations": 1000},
-            ball_linear_cushion=BallLCushionModel.HAN_2005,
-            ball_linear_cushion_params={},
-            ball_circular_cushion=BallCCushionModel.HAN_2005,
-            ball_circular_cushion_params={},
-            ball_pocket=BallPocketModel.CANONICAL,
-            ball_pocket_params={},
-            stick_ball=StickBallModel.INSTANTANEOUS_POINT,
-            stick_ball_params={"english_throttle": 0.5, "squirt_throttle": 1.0},
-            transition=BallTransitionModel.CANONICAL,
-            transition_params={},
-            version=VERSION,
-        )
-
-        config.save(RESOLVER_CONFIG_PATH)
-        return config
+        if config.version == VERSION:
+            return config
+        else:
+            dump_path = RESOLVER_CONFIG_PATH.parent / f".{RESOLVER_CONFIG_PATH.name}"
+            run.info_single(
+                f"{RESOLVER_CONFIG_PATH} is has version {config.version}, which is not up to "
+                f"date with the most current version: {VERSION}. It will be replaced with the "
+                f"default. Your version has been moved to {dump_path}."
+            )
+            shutil.move(RESOLVER_CONFIG_PATH, dump_path)
+            config = _default_config()
+            config.save(RESOLVER_CONFIG_PATH)
+            return config
 
 
 @attrs.define
@@ -133,6 +162,7 @@ class Resolver:
     ball_circular_cushion: BallCCushionCollisionStrategy
     ball_pocket: BallPocketStrategy
     stick_ball: StickBallCollisionStrategy
+    ball_table: BallTableCollisionStrategy
     transition: BallTransitionStrategy
 
     def resolve(self, shot: System, event: Event) -> None:
@@ -172,6 +202,11 @@ class Resolver:
             ball = shot.balls[ids[1]]
             self.stick_ball.resolve(cue, ball, inplace=True)
             ball.state.t = event.time
+        elif event.event_type == EventType.BALL_TABLE:
+            ball = shot.balls[ids[0]]
+            table = shot.table
+            self.ball_table.resolve(ball, table, inplace=True)
+            ball.state.t = event.time
 
         _snapshot_final(shot, event)
 
@@ -201,6 +236,10 @@ class Resolver:
             model=config.stick_ball,
             params=config.stick_ball_params,
         )
+        ball_table = get_ball_table_model(
+            model=config.ball_table,
+            params=config.ball_table_params,
+        )
         transition = get_transition_model(
             model=config.transition,
             params=config.transition_params,
@@ -211,6 +250,7 @@ class Resolver:
             ball_circular_cushion,
             ball_pocket,
             stick_ball,
+            ball_table,
             transition,
         )
 
