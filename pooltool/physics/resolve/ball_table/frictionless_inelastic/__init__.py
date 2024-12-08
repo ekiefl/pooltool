@@ -6,7 +6,7 @@ from pooltool.physics.resolve.ball_table.core import CoreBallTableCollision
 def _resolve_ball_table(vz0: float, e_t: float) -> float:
     if vz0 >= 0:
         raise ValueError(
-            "Ball with positive z-velocity can't collide with table surface."
+            "Ball with non-negative z-velocity can't collide with table surface."
         )
 
     return -vz0 * e_t
