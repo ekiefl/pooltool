@@ -73,3 +73,4 @@ def test_non_airborne_outgoing_state(model: BallTableCollisionStrategy):
 
     # Final state should not be airborne
     assert ball.state.s != constants.airborne
+    assert ball.state.rvw[1, 2] == 0.0
