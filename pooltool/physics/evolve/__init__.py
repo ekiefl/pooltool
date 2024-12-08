@@ -48,7 +48,7 @@ def evolve_ball_motion(
     elif state == const.spinning:
         return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)
     elif state == const.airborne:
-        raise NotImplementedError("FIXME")
+        return evolve_airborne_state(rvw, g, t)
 
     raise NotImplementedError()
 
@@ -174,7 +174,7 @@ def evolve_perpendicular_spin_state(
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def evolve_airborne_state(
-    rvw: NDArray[np.float64], R: float, u_r: float, u_sp: float, g: float, t: float
+    rvw: NDArray[np.float64], g: float, t: float
 ) -> NDArray[np.float64]:
     if t == 0:
         return rvw
