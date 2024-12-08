@@ -99,6 +99,23 @@ def stick_ball_collision(
     )
 
 
+def ball_table_collision(ball: Ball, time: float, set_initial: bool = False) -> Event:
+    """Create a ball-table collision.
+
+    Note:
+        - Since information about the ball-table interaction is stored exclusively in
+          the ball (not the table), and since the table is a large composite of
+          individual objects which is costly to serialize, the table is not stored as an
+          agent of the returned event and is therefore not accepted as an argument of
+          this function.
+    """
+    return Event(
+        event_type=EventType.BALL_TABLE,
+        agents=(Agent.from_object(ball, set_initial=set_initial),),
+        time=time,
+    )
+
+
 def spinning_stationary_transition(
     ball: Ball, time: float, set_initial: bool = False
 ) -> Event:

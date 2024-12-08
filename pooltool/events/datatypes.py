@@ -35,6 +35,8 @@ class EventType(strenum.StrEnum):
             the *point of no return*.
         STICK_BALL:
             A cue-stick ball collision.
+        BALL_TABLE:
+            A ball collision into the table surface.
         SPINNING_STATIONARY:
             A ball transition from spinning to stationary.
         ROLLING_STATIONARY:
@@ -51,6 +53,7 @@ class EventType(strenum.StrEnum):
     BALL_CIRCULAR_CUSHION = strenum.auto()
     BALL_POCKET = strenum.auto()
     STICK_BALL = strenum.auto()
+    BALL_TABLE = strenum.auto()
     SPINNING_STATIONARY = strenum.auto()
     ROLLING_STATIONARY = strenum.auto()
     ROLLING_SPINNING = strenum.auto()
@@ -64,6 +67,7 @@ class EventType(strenum.StrEnum):
             EventType.BALL_LINEAR_CUSHION,
             EventType.BALL_POCKET,
             EventType.STICK_BALL,
+            EventType.BALL_TABLE,
         }
 
     def is_transition(self) -> bool:
