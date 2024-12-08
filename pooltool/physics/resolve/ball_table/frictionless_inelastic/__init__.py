@@ -1,8 +1,5 @@
-from typing import Tuple
-
 import pooltool.constants as const
 from pooltool.objects.ball.datatypes import Ball, BallState
-from pooltool.objects.table.datatypes import Table
 from pooltool.physics.resolve.ball_table.core import CoreBallTableCollision
 
 
@@ -38,7 +35,7 @@ class FrictionlessInelastic(CoreBallTableCollision):
     def __init__(self, min_bounce_height: float = 0.005):
         self.min_bounce_height = min_bounce_height
 
-    def solve(self, ball: Ball, table: Table) -> Tuple[Ball, Table]:
+    def solve(self, ball: Ball) -> Ball:
         """Resolves the collision."""
         vz = _resolve_ball_table(ball.state.rvw[1, 2], ball.params.e_t)
 
@@ -51,4 +48,4 @@ class FrictionlessInelastic(CoreBallTableCollision):
         ball.state.rvw[1, 2] = vz
         ball.state = BallState(ball.state.rvw, state)
 
-        return ball, table
+        return ball

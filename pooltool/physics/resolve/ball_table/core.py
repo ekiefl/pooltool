@@ -1,20 +1,17 @@
 from abc import ABC, abstractmethod
-from typing import Protocol, Tuple
+from typing import Protocol
 
 from pooltool.objects.ball.datatypes import Ball
-from pooltool.objects.table.datatypes import Table
 
 
 class _BaseStrategy(Protocol):
-    def resolve(
-        self, ball: Ball, table: Table, inplace: bool = False
-    ) -> Tuple[Ball, Table]: ...
+    def resolve(self, ball: Ball, inplace: bool = False) -> Ball: ...
 
 
 class BallTableCollisionStrategy(_BaseStrategy, Protocol):
     """Ball-table collision models must satisfy this protocol"""
 
-    def solve(self, ball: Ball, table: Table) -> Tuple[Ball, Table]:
+    def solve(self, ball: Ball) -> Ball:
         """This method resolves a ball-table cushion collision"""
         ...
 
@@ -22,15 +19,12 @@ class BallTableCollisionStrategy(_BaseStrategy, Protocol):
 class CoreBallTableCollision(ABC):
     """Operations used by every ball-table collision resolver"""
 
-    def resolve(
-        self, ball: Ball, table: Table, inplace: bool = False
-    ) -> Tuple[Ball, Table]:
+    def resolve(self, ball: Ball, inplace: bool = False) -> Ball:
         if not inplace:
-            # The table state is invariant so doesn't need to be copied.
             ball = ball.copy()
 
-        return self.solve(ball, table)
+        return self.solve(ball)
 
     @abstractmethod
-    def solve(self, ball: Ball, table: Table) -> Tuple[Ball, Table]:
+    def solve(self, ball: Ball) -> Ball:
         pass
