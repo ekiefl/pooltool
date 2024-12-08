@@ -165,7 +165,7 @@ def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> Syste
 
             # Whether it was the hard path or the easy path, the ball state is
             # properly defined and we know how much we need to simulate.
-            rvw, s = evolve.evolve_ball_motion(
+            rvw = evolve.evolve_ball_motion(
                 state=s,
                 rvw=rvw,
                 R=ball.params.R,

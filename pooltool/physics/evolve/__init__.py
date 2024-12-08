@@ -10,8 +10,6 @@ The code should be configurable and passed to `PhysicsEngine` in `physics/engine
 just like the `Resolver` class in `physics/resolve/resolver.py`
 """
 
-from typing import Tuple
-
 import numpy as np
 from numba import jit
 from numpy.typing import NDArray
@@ -31,45 +29,28 @@ def evolve_ball_motion(
     u_r: float,
     g: float,
     t: float,
-) -> Tuple[NDArray[np.float64], int]:
+) -> NDArray[np.float64]:
+    """Evolve ball motion.
+
+    This function delegates to different equations of motion depening on the state passed.
+
+    Important:
+        This function does not evolve through event transitions. For example, if a
+        sliding ball is destined to start rolling after 1 second, but you evolve the
+        ball with this function for 2 seconds, an unrealistic trajectory will occur.
+    """
     if state == const.stationary or state == const.pocketed:
-        return rvw, state
-
-    if state == const.sliding:
-        dtau_E_slide = ptmath.get_slide_time(rvw, R, u_s, g)
-
-        if t >= dtau_E_slide:
-            rvw = evolve_slide_state(rvw, R, m, u_s, u_sp, g, dtau_E_slide)
-            state = const.rolling
-            t -= dtau_E_slide
-        else:
-            return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), const.sliding
-
-    if state == const.rolling:
-        dtau_E_roll = ptmath.get_roll_time(rvw, u_r, g)
-
-        if t >= dtau_E_roll:
-            rvw = evolve_roll_state(rvw, R, u_r, u_sp, g, dtau_E_roll)
-            state = const.spinning
-            t -= dtau_E_roll
-        else:
-            return evolve_roll_state(rvw, R, u_r, u_sp, g, t), const.rolling
-
-    if state == const.spinning:
-        dtau_E_spin = ptmath.get_spin_time(rvw, R, u_sp, g)
-
-        if t >= dtau_E_spin:
-            return (
-                evolve_perpendicular_spin_state(rvw, R, u_sp, g, dtau_E_spin),
-                const.stationary,
-            )
-        else:
-            return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), const.spinning
-
-    if state == const.airborne:
+        return rvw
+    elif state == const.sliding:
+        return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t)
+    elif state == const.rolling:
+        return evolve_roll_state(rvw, R, u_r, u_sp, g, t)
+    elif state == const.spinning:
+        return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)
+    elif state == const.airborne:
         raise NotImplementedError("FIXME")
 
-    raise ValueError
+    raise NotImplementedError()
 
 
 @jit(nopython=True, cache=const.use_numba_cache)

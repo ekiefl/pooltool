@@ -41,7 +41,7 @@ def _evolve(shot: System, dt: float):
     """
 
     for ball in shot.balls.values():
-        rvw, _ = evolve.evolve_ball_motion(
+        rvw = evolve.evolve_ball_motion(
             state=ball.state.s,
             rvw=ball.state.rvw,
             R=ball.params.R,
