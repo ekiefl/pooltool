@@ -2,7 +2,6 @@
 
 import pooltool.ptmath.roots as roots
 from pooltool.ptmath.utils import (
-    angle,
     angle_between_vectors,
     are_points_on_same_side,
     convert_2D_to_3D,
@@ -18,6 +17,7 @@ from pooltool.ptmath.utils import (
     norm2d,
     norm3d,
     point_on_line_closest_to_point,
+    projected_angle,
     rel_velocity,
     solve_transcendental,
     surface_velocity,
@@ -28,7 +28,7 @@ from pooltool.ptmath.utils import (
 
 __all__ = [
     "roots",
-    "angle",
+    "projected_angle",
     "angle_between_vectors",
     "coordinate_rotation",
     "cross",

@@ -49,7 +49,7 @@ def _solve(
     # Rotate frame of reference to the cushion frame. The cushion frame is defined
     # by the cushion's normal vector (convention: points away from table) being
     # parallel with <1,0,0>.
-    psi = ptmath.angle(normal)
+    psi = ptmath.projected_angle(normal)
     rvw_R = ptmath.coordinate_rotation(rvw.T, -psi).T
 
     # Reverse velocity component lying in normal direction

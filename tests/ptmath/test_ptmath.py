@@ -5,6 +5,7 @@ from numpy.typing import NDArray
 from pooltool.ptmath.utils import (
     are_points_on_same_side,
     get_airborne_time,
+    projected_angle,
     solve_transcendental,
 )
 
@@ -57,6 +58,29 @@ def test_transcendental_no_root_error():
     f = lambda x: x**2 + 1  # noqa E731
     with pytest.raises(ValueError):
         solve_transcendental(f, 0, 10)
+
+
+def test_angle():
+    # 0 starts at <1, 0, 0>
+    assert projected_angle(np.array([1, 0, 0])) == 0.0
+    assert projected_angle(np.array([0, 1, 0])) == np.pi / 2
+    assert projected_angle(np.array([-1, 0, 0])) == np.pi
+    assert projected_angle(np.array([0, -1, 0])) == 3 * np.pi / 2
+    assert projected_angle(np.array([1, -1, 0])) == 2 * np.pi * (7 / 8)
+
+    # Non-default reference vector
+    ref = np.array([0, 1, 0])
+    assert projected_angle(np.array([1, 0, 0]), ref) == 3 / 2 * np.pi
+    assert projected_angle(np.array([0, 1, 0]), ref) == 0
+    assert projected_angle(np.array([-1, 0, 0]), ref) == np.pi / 2
+
+    # Zero returns 0.
+    assert projected_angle(np.array([0, 0, 0])) == 0.0
+
+    # Adding z-component doesn't change angle
+    assert projected_angle(np.array([1, 0, 1])) == 0.0
+    assert projected_angle(np.array([1, 0, 1]), np.array([1, 0, 1])) == 0.0
+    assert projected_angle(np.array([0, 1, 1]), np.array([1, 0, 1])) == np.pi / 2
 
 
 @pytest.mark.parametrize(

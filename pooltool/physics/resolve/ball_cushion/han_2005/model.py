@@ -26,11 +26,11 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
 
     # Change from the table frame to the cushion frame. The cushion frame is defined by
     # the normal vector is parallel with <1,0,0>.
-    psi = ptmath.angle(normal)
+    psi = ptmath.projected_angle(normal)
     rvw_R = ptmath.coordinate_rotation(rvw.T, -psi).T
 
     # The incidence angle--called theta_0 in paper
-    phi = ptmath.angle(rvw_R[1]) % (2 * np.pi)
+    phi = ptmath.projected_angle(rvw_R[1]) % (2 * np.pi)
 
     # Get mu and e
     e = get_ball_cushion_restitution(rvw_R, e_c)

@@ -118,7 +118,7 @@ def ball_ball_collision_coeffs(
     if s1 == const.spinning or s1 == const.pocketed or s1 == const.stationary:
         a1x, a1y, b1x, b1y = 0, 0, 0, 0
     else:
-        phi1 = ptmath.angle(rvw1[1])
+        phi1 = ptmath.projected_angle(rvw1[1])
         v1 = ptmath.norm3d(rvw1[1])
 
         u1 = get_u(rvw1, R, phi1, s1)
@@ -135,7 +135,7 @@ def ball_ball_collision_coeffs(
     if s2 == const.spinning or s2 == const.pocketed or s2 == const.stationary:
         a2x, a2y, b2x, b2y = 0.0, 0.0, 0.0, 0.0
     else:
-        phi2 = ptmath.angle(rvw2[1])
+        phi2 = ptmath.projected_angle(rvw2[1])
         v2 = ptmath.norm3d(rvw2[1])
 
         u2 = get_u(rvw2, R, phi2, s2)
@@ -259,8 +259,8 @@ def ball_linear_cushion_collision_time(
     if s == const.spinning or s == const.pocketed or s == const.stationary:
         return np.inf
 
-    phi = ptmath.angle(rvw[1])
-    v = ptmath.norm3d(rvw[1])
+    phi = ptmath.projected_angle(rvw[1])
+    v = ptmath.norm2d(rvw[1])
 
     u = get_u(rvw, R, phi, s)
 
@@ -333,7 +333,7 @@ def ball_circular_cushion_collision_coeffs(
     if s == const.spinning or s == const.pocketed or s == const.stationary:
         return np.inf, np.inf, np.inf, np.inf, np.inf
 
-    phi = ptmath.angle(rvw[1])
+    phi = ptmath.projected_angle(rvw[1])
     v = ptmath.norm3d(rvw[1])
 
     u = get_u(rvw, R, phi, s)
@@ -376,7 +376,7 @@ def ball_pocket_collision_coeffs(
     if s == const.spinning or s == const.pocketed or s == const.stationary:
         return np.inf, np.inf, np.inf, np.inf, np.inf
 
-    phi = ptmath.angle(rvw[1])
+    phi = ptmath.projected_angle(rvw[1])
     v = ptmath.norm3d(rvw[1])
 
     u = get_u(rvw, R, phi, s)

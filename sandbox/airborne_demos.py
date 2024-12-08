@@ -6,6 +6,7 @@ import pooltool as pt
 def drop():
     ball = pt.Ball.create("cue", xy=(0.5, 0.5))
     ball.state.rvw[0, 2] = 0.3
+    ball.state.rvw[1, 0] = 0.3
     ball.state.s = pt.constants.airborne
 
     shot = pt.System(
@@ -69,6 +70,6 @@ if __name__ == "__main__":
     import argparse
 
     ap = argparse.ArgumentParser("Series of airborne test demos.")
-    ap.add_argument("--name")
+    ap.add_argument("--name", choices=_map.keys())
     args = ap.parse_args()
     main(args)
