@@ -189,7 +189,7 @@ def evolve_airborne_state(
     r[2] = r_0[2] + v_0[2] * t - 0.5 * g * t**2
 
     # Note: v and v_0 share the same memory--i.e. altering v alters v_0.
-    v = v_0
+    v = v_0.copy()
     v[2] = v_0[2] - g * t
 
     new_rvw = np.empty((3, 3), dtype=np.float64)

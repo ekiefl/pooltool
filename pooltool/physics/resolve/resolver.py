@@ -204,8 +204,7 @@ class Resolver:
             ball.state.t = event.time
         elif event.event_type == EventType.BALL_TABLE:
             ball = shot.balls[ids[0]]
-            table = shot.table
-            self.ball_table.resolve(ball, table, inplace=True)
+            self.ball_table.resolve(ball, inplace=True)
             ball.state.t = event.time
 
         _snapshot_final(shot, event)

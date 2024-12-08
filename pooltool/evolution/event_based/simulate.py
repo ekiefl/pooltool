@@ -17,6 +17,7 @@ from pooltool.events import (
     ball_circular_cushion_collision,
     ball_linear_cushion_collision,
     ball_pocket_collision,
+    ball_table_collision,
     null_event,
     stick_ball_collision,
 )
@@ -232,6 +233,12 @@ def get_next_event(
     if ball_ball_event.time < event.time:
         event = ball_ball_event
 
+    ball_table_event = get_next_ball_table_collision(
+        shot, collision_cache=collision_cache
+    )
+    if ball_table_event.time < event.time:
+        event = ball_table_event
+
     ball_circular_cushion_event = get_next_ball_circular_cushion_event(
         shot, collision_cache=collision_cache, solver=quartic_solver
     )
@@ -259,6 +266,12 @@ def get_next_ball_ball_collision(
     solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
     """Returns next ball-ball collision"""
+
+    # FIXME-3D no ball ball collisions
+    return null_event(np.inf)
+
+    if len(shot.balls) < 2:
+        return null_event(time=np.inf)
 
     ball_pairs: List[Tuple[str, str]] = []
     collision_coeffs: List[Tuple[float, ...]] = []
@@ -331,12 +344,52 @@ def get_next_ball_ball_collision(
     )
 
 
+def get_next_ball_table_collision(
+    shot: System, collision_cache: CollisionCache
+) -> Event:
+    """Returns next ball-table collision"""
+
+    cache = collision_cache.times.setdefault(EventType.BALL_TABLE, {})
+
+    for ball in shot.balls.values():
+        obj_ids = (ball.id,)
+
+        if obj_ids in cache:
+            continue
+
+        vz = ball.state.rvw[1, 2]
+
+        if not (ball.state.s == const.airborne or vz != 0.0):
+            # Ball isn't airborne and has no z-velocity.
+            cache[obj_ids] = np.inf
+            continue
+
+        dtau_E = solve.ball_table_collision_time(
+            rvw=ball.state.rvw,
+            s=ball.state.s,
+            g=ball.params.g,
+            R=ball.params.R,
+        )
+
+        cache[obj_ids] = shot.t + dtau_E
+
+    obj_ids = min(cache, key=lambda k: cache[k])
+
+    return ball_table_collision(
+        ball=shot.balls[obj_ids[0]],
+        time=cache[obj_ids],
+    )
+
+
 def get_next_ball_circular_cushion_event(
     shot: System,
     collision_cache: CollisionCache,
     solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
     """Returns next ball-cushion collision (circular cushion segment)"""
+
+    # FIXME-3D no circular cushion collisions
+    return null_event(np.inf)
 
     if not shot.table.has_circular_cushions:
         return null_event(np.inf)
@@ -396,6 +449,9 @@ def get_next_ball_linear_cushion_collision(
 ) -> Event:
     """Returns next ball-cushion collision (linear cushion segment)"""
 
+    # FIXME-3D no linear cushion collisions
+    return null_event(np.inf)
+
     if not shot.table.has_linear_cushions:
         return null_event(np.inf)
 
@@ -447,6 +503,9 @@ def get_next_ball_pocket_collision(
     solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
     """Returns next ball-pocket collision"""
+
+    # FIXME-3D no ball-pocket collisions
+    return null_event(np.inf)
 
     if not shot.table.has_pockets:
         return null_event(np.inf)

@@ -305,7 +305,7 @@ class System:
         energy = 0
         for ball in self.balls.values():
             energy += ptmath.get_ball_energy(
-                ball.state.rvw, ball.params.R, ball.params.m
+                ball.state.rvw, ball.params.R, ball.params.m, ball.params.g
             )
 
         return energy

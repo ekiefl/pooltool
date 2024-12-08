@@ -335,7 +335,7 @@ def get_spin_time(rvw: NDArray[np.float64], R: float, u_sp: float, g: float) -> 
     return np.abs(w[2]) * 2 / 5 * R / u_sp / g
 
 
-def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float) -> float:
+def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float, g: float) -> float:
     """Get the energy of a ball
 
     Currently calculating linear and rotational kinetic energy. Need to add potential
@@ -347,7 +347,10 @@ def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float) -> float:
     # Rotational
     RKE = (2 / 5 * m * R**2) * norm3d(rvw[2]) ** 2 / 2
 
-    return LKE + RKE
+    # Potential
+    MGH = m * g * (rvw[0, 2] - R)
+
+    return LKE + RKE + MGH
 
 
 def is_overlapping(
