@@ -45,15 +45,21 @@ def test_decaying_velocity(model: BallTableCollisionStrategy, vz0: float):
 
 
 @pytest.mark.parametrize("model", models)
-def test_non_negative_incoming_velocity_fails(model: BallTableCollisionStrategy):
+def test_positive_incoming_velocity_fails(model: BallTableCollisionStrategy):
     ball, table = example()
     ball.state.rvw[1, 2] = +1
 
     with pytest.raises(ValueError):
         model.resolve(ball, table, inplace=True)
 
-    # Final velocity should never be negative
-    assert ball.state.rvw[1, 2] >= 0
+
+@pytest.mark.parametrize("model", models)
+def test_zero_incoming_velocity_fails(model: BallTableCollisionStrategy):
+    ball, table = example()
+    ball.state.rvw[1, 2] = 0.0
+
+    with pytest.raises(ValueError):
+        model.resolve(ball, table, inplace=True)
 
 
 @pytest.mark.parametrize("model", models)
