@@ -247,7 +247,9 @@ def ball_linear_cushion_collision_time(
 
     min_time = np.inf
     for root in roots:
-        if np.abs(root.imag) > const.EPS:
+        if np.isnan(root):
+            # This is an indirect test for whether the root is complex or not. This is
+            # because ptmath.roots.quadratic.solve returns nan if the root is complex.
             continue
 
         if root.real <= const.EPS:
