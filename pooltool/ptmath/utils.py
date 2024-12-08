@@ -6,6 +6,7 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
+import pooltool.ptmath.roots.quadratic as quadratic
 
 
 def solve_transcendental(
@@ -287,6 +288,25 @@ def get_u_vec(
         return np.array([1.0, 0.0, 0.0])
 
     return coordinate_rotation(unit_vector(rel_vel), -phi)
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def get_airborne_time(rvw: NDArray[np.float64], R: float, g: float) -> float:
+    if g == 0.0:
+        return np.inf
+
+    A = 0.5 * g
+    B = -rvw[1, 2]  # v_0z
+    C = R - rvw[0, 2]  # R - r_0z
+
+    roots = quadratic.solve(A, B, C)
+
+    t_f = np.inf
+    for root in roots:
+        if root >= 0.0 and root < t_f:
+            t_f = root
+
+    return t_f
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
