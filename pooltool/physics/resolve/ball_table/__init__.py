@@ -33,12 +33,12 @@ def get_ball_table_model(
     Args:
         model:
             An Enum specifying the desired model. If not passed,
-            :class:`InstantaneousPoint` is passed with empty params.
+            :class:`FrictionlessInelastic` is passed with empty params.
         params:
             A mapping of parameters accepted by the model.
 
     Returns:
-        An instantiated model that satisfies the :class:`StickBallCollisionStrategy`
+        An instantiated model that satisfies the :class:`BallTableCollisionStrategy`
         protocol.
     """
     if model is None:
