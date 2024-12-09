@@ -338,8 +338,7 @@ def get_spin_time(rvw: NDArray[np.float64], R: float, u_sp: float, g: float) -> 
 def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float, g: float) -> float:
     """Get the energy of a ball
 
-    Currently calculating linear and rotational kinetic energy. Need to add potential
-    energy if z-axis is freed
+    Accounts for linear and rotational kinetic energy and potential energy due to gravity relative to a ball in contact with the table
     """
     # Linear
     LKE = m * norm3d(rvw[1]) ** 2 / 2
