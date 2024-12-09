@@ -32,7 +32,7 @@ def evolve_ball_motion(
 ) -> NDArray[np.float64]:
     """Evolve ball motion.
 
-    This function delegates to different equations of motion depening on the state passed.
+    This function delegates to different equations of motion depending on the state passed.
 
     Important:
         This function does not evolve through event transitions. For example, if a
