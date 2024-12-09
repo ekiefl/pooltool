@@ -1,6 +1,9 @@
 from typing import Dict, Optional, Type
 
 from pooltool.physics.resolve.ball_table.core import BallTableCollisionStrategy
+from pooltool.physics.resolve.ball_table.frictional_inelastic import (
+    FrictionalInelastic,
+)
 from pooltool.physics.resolve.ball_table.frictionless_inelastic import (
     FrictionlessInelastic,
 )
@@ -15,13 +18,20 @@ class BallTableModel(StrEnum):
         FRICTIONLESS_INELASTIC:
             The ball impacts the table with a coefficient of restitution. Spin is
             unaffected.
+        FRICTIONAL_ELASTIC:
+            Accounts for coefficient of restitution in the normal direction and
+            friction forces at the contact point. The collision can end in a state
+            where the ball is slipping or not slipping with the table surface, with
+            different equations governing the two cases.
     """
 
     FRICTIONLESS_INELASTIC = auto()
+    FRICTIONAL_INELASTIC = auto()
 
 
 _ball_table_models: Dict[BallTableModel, Type[BallTableCollisionStrategy]] = {
     BallTableModel.FRICTIONLESS_INELASTIC: FrictionlessInelastic,
+    BallTableModel.FRICTIONAL_INELASTIC: FrictionalInelastic,
 }
 
 

@@ -4,13 +4,12 @@ import pytest
 from pooltool import constants
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.physics.resolve.ball_table.core import BallTableCollisionStrategy
+from pooltool.physics.resolve.ball_table.frictional_inelastic import FrictionalInelastic
 from pooltool.physics.resolve.ball_table.frictionless_inelastic import (
     FrictionlessInelastic,
 )
 
-models = [
-    FrictionlessInelastic(),
-]
+models = [FrictionlessInelastic(), FrictionalInelastic()]
 
 
 def example() -> Ball:
