@@ -248,6 +248,12 @@ def norm3d(vec: NDArray[np.float64]) -> float:
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def norm3d_squared(vec: NDArray[np.float64]) -> float:
+    """Calculate the norm squared of a 3D vector"""
+    return vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def norm2d(vec: NDArray[np.float64]) -> float:
     """Calculate the norm of a 2D vector
 
