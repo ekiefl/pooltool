@@ -4,6 +4,14 @@ from typing import Protocol
 from pooltool.objects.ball.datatypes import Ball
 
 
+def bounce_height(vz: float, g: float) -> float:
+    """Return how high a ball with outgoing positive z-velocity will bounce.
+
+    Measured as distance from table to bottom of ball.
+    """
+    return 0.5 * vz**2 / g
+
+
 class _BaseStrategy(Protocol):
     def resolve(self, ball: Ball, inplace: bool = False) -> Ball: ...
 

@@ -2,8 +2,8 @@ from math import isclose
 
 import pytest
 
+from pooltool.physics.resolve.ball_table.core import bounce_height
 from pooltool.physics.resolve.ball_table.frictionless_inelastic import (
-    _bounce_height,
     _resolve_ball_table,
 )
 
@@ -38,7 +38,7 @@ def test_resolve_ball_table_invalid(vz0, e_t):
     ],
 )
 def test_bounce_height(vz, g, expected):
-    result = _bounce_height(vz, g)
+    result = bounce_height(vz, g)
     assert isclose(result, expected, rel_tol=1e-7), f"Expected {expected}, got {result}"
 
 
@@ -48,5 +48,5 @@ def test_bounce_height_negative_vz():
     vz = -3.0
     g = 9.8
     expected = 0.5 * (vz**2) / g
-    result = _bounce_height(vz, g)
+    result = bounce_height(vz, g)
     assert isclose(result, expected, rel_tol=1e-7), f"Expected {expected}, got {result}"
