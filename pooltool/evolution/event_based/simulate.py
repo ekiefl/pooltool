@@ -366,7 +366,7 @@ def get_next_ball_table_collision(
 
         vz = ball.state.rvw[1, 2]
 
-        if ball.state.s == const.on_table and vz < 0:
+        if ball.state.s in const.on_table and vz < 0:
             # If a ball is on the surface of the table has a downward impulse, it will
             # undergo an ball-table collision at a time t=0 later. So we immediately
             # return it. For posterity, the event is added to the collision cache,
