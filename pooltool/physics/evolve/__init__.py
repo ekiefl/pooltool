@@ -67,7 +67,7 @@ def evolve_slide_state(
         return rvw
 
     v0z = rvw[1, 2]
-    assert v0z == 0, f"Rolling ball can't have non-zero z-component velocity: {v0z}"
+    assert v0z == 0, f"Sliding ball can't have non-zero z-component velocity: {v0z}"
 
     # Angle of initial velocity in table frame
     phi = ptmath.projected_angle(rvw[1])
