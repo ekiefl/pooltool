@@ -6,7 +6,7 @@ import pooltool as pt
 def drop():
     ball = pt.Ball.create("cue", xy=(0.5, 0.5))
     ball.state.rvw[0, 2] = 0.3
-    ball.state.rvw[1, 0] = 0.3
+    ball.state.rvw[1, 0] = 0.5
     ball.state.s = pt.constants.airborne
 
     shot = pt.System(
@@ -53,10 +53,30 @@ def simul():
     return shot
 
 
+def bounce_over():
+    ball = pt.Ball.create("cue", xy=(0.7, 0.5))
+    ball.state.rvw[1, 2] = -5.0
+    ball.state.rvw[1, 0] = 2
+    ball.state.s = pt.constants.sliding
+
+    other = pt.Ball.create("other", xy=(0.7, 0.42))
+    other.state.rvw[1, 0] = 1.8
+    other.state.s = pt.constants.sliding
+
+    shot = pt.System(
+        cue=pt.Cue(cue_ball_id="cue"),
+        table=pt.Table.default(),
+        balls=(ball, other),
+    )
+
+    return shot
+
+
 _map = {
     "drop": drop,
     "simul": simul,
     "impulse_into": impulse_into,
+    "bounce_over": bounce_over,
 }
 
 
