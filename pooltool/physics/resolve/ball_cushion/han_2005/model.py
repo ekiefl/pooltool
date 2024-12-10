@@ -75,7 +75,7 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
     # Update velocity
     rvw_R[1, 0] += PX / m
     rvw_R[1, 1] += PY / m
-    # rvw_R[1,2] += PZ/m
+    rvw_R[1, 2] += PZ / m
 
     # Update angular velocity
     rvw_R[2, 0] += -R / II * PY * np.sin(theta_a)
