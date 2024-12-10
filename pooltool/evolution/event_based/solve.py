@@ -8,6 +8,7 @@ from numpy.typing import NDArray
 import pooltool.constants as const
 import pooltool.physics.evolve as evolve
 import pooltool.ptmath as ptmath
+from pooltool.ptmath.utils import get_airborne_time
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -214,22 +215,7 @@ def ball_table_collision_time(
         # collision time.
         return np.inf
 
-    # rz(t) = R = -g/2*t^2 + vz0*t + rz0
-    a = -0.5 * g
-    b = v_z0
-    c = r_z0 - R
-
-    D = b**2 - 4 * a * c
-
-    if D < 0:
-        # Only consider real roots.
-        return np.inf
-
-    # This is the only possible root assuming the ball starts above the table and
-    # acceleration due to gravity is towards table.
-    root = -(b + np.sqrt(D)) / (2 * a)
-
-    return root
+    return get_airborne_time(rvw=rvw, R=R, g=g)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
