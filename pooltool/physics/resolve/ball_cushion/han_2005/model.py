@@ -1,3 +1,5 @@
+"""FIXME-3D Needs tests for when ball center is above cushion tip."""
+
 from typing import Tuple, TypeVar
 
 import numpy as np

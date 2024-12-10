@@ -1,4 +1,7 @@
-"""An unrealistic ball-cushion model"""
+"""An unrealistic ball-cushion model
+
+FIXME-3D Check math
+"""
 
 from typing import Tuple, TypeVar
 
