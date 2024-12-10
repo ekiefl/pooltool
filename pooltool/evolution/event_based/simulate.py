@@ -467,9 +467,6 @@ def get_next_ball_linear_cushion_collision(
 ) -> Event:
     """Returns next ball-cushion collision (linear cushion segment)"""
 
-    # FIXME-3D no linear cushion collisions
-    return null_event(np.inf)
-
     if not shot.table.has_linear_cushions:
         return null_event(np.inf)
 
