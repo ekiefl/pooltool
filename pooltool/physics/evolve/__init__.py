@@ -32,7 +32,7 @@ def evolve_ball_motion(
 ) -> NDArray[np.float64]:
     """Evolve ball motion.
 
-    This function delegates to different equations of motion depening on the state passed.
+    This function delegates to different equations of motion depending on the state passed.
 
     Important:
         This function does not evolve through event transitions. For example, if a
@@ -181,15 +181,10 @@ def evolve_airborne_state(
 
     r_0, v_0, w_0 = rvw
 
-    # First update the displacement. This equation is only correct for the x- and
-    # y-components.
-    r = r_0 + v_0 * t
+    g_vec = np.array([0.0, 0.0, g], dtype=np.float64)
 
-    # Overwrite the incorrect z-component displacement with the correct one.
-    r[2] = r_0[2] + v_0[2] * t - 0.5 * g * t**2
-
-    v = v_0.copy()
-    v[2] = v_0[2] - g * t
+    r = r_0 + v_0 * t - 0.5 * g_vec * t**2
+    v = v_0 - g_vec * t
 
     new_rvw = np.empty((3, 3), dtype=np.float64)
     new_rvw[0, :] = r

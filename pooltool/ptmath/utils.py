@@ -6,7 +6,6 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
-import pooltool.ptmath.roots.quadratic as quadratic
 
 
 def solve_transcendental(
@@ -297,16 +296,19 @@ def get_airborne_time(rvw: NDArray[np.float64], R: float, g: float) -> float:
     if g == 0.0:
         return np.inf
 
-    A = 0.5 * g
-    B = -rvw[1, 2]  # v_0z
-    C = R - rvw[0, 2]  # R - r_0z
+    A = -0.5 * g
+    B = rvw[1, 2]
+    C = rvw[0, 2] - R
 
-    roots = quadratic.solve(A, B, C)
+    D = B**2 - 4 * A * C
 
-    t_f = np.inf
-    for root in roots:
-        if root >= 0.0 and root < t_f:
-            t_f = root
+    if D < 0:
+        # Only consider real roots.
+        return np.inf
+
+    # This is the only possible root assuming the ball starts above the table and
+    # acceleration due to gravity is towards table.
+    t_f = -(B + np.sqrt(D)) / (2 * A)
 
     return t_f
 
@@ -340,8 +342,7 @@ def get_spin_time(rvw: NDArray[np.float64], R: float, u_sp: float, g: float) -> 
 def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float, g: float) -> float:
     """Get the energy of a ball
 
-    Currently calculating linear and rotational kinetic energy. Need to add potential
-    energy if z-axis is freed
+    Accounts for linear and rotational kinetic energy and potential energy due to gravity relative to a ball in contact with the table
     """
     # Linear
     LKE = m * norm3d(rvw[1]) ** 2 / 2

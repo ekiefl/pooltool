@@ -8,6 +8,7 @@ from numpy.typing import NDArray
 import pooltool.constants as const
 import pooltool.physics.evolve as evolve
 import pooltool.ptmath as ptmath
+from pooltool.ptmath.utils import get_airborne_time
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -214,27 +215,7 @@ def ball_table_collision_time(
         # collision time.
         return np.inf
 
-    roots = ptmath.roots.quadratic.solve(
-        a=0.5 * g,
-        b=-v_z0,
-        c=R - r_z0,
-    )
-
-    min_time = np.inf
-    for root in roots:
-        if np.isnan(root):
-            # This is an indirect test for whether the root is complex or not. This is
-            # because ptmath.roots.quadratic.solve returns nan if the root is complex.
-            continue
-
-        if root.real <= const.EPS:
-            # FIXME-3D Is this necessary?
-            continue
-
-        if root.real < min_time:
-            min_time = root.real
-
-    return min_time
+    return get_airborne_time(rvw=rvw, R=R, g=g)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
