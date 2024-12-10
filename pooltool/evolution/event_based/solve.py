@@ -214,27 +214,22 @@ def ball_table_collision_time(
         # collision time.
         return np.inf
 
-    roots = ptmath.roots.quadratic.solve(
-        a=0.5 * g,
-        b=-v_z0,
-        c=R - r_z0,
-    )
+    # rz(t) = R = -g/2*t^2 + vz0*t + rz0
+    a = -0.5 * g
+    b = v_z0
+    c = r_z0 - R
 
-    min_time = np.inf
-    for root in roots:
-        if np.isnan(root):
-            # This is an indirect test for whether the root is complex or not. This is
-            # because ptmath.roots.quadratic.solve returns nan if the root is complex.
-            continue
+    D = b**2 - 4 * a * c
 
-        if root.real <= const.EPS:
-            # FIXME-3D Is this necessary?
-            continue
+    if D < 0:
+        # Only consider real roots.
+        return np.inf
 
-        if root.real < min_time:
-            min_time = root.real
+    # This is the only possible root assuming the ball starts above the table and
+    # acceleration due to gravity is towards table.
+    root = -(b + np.sqrt(D)) / (2 * a)
 
-    return min_time
+    return root
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
