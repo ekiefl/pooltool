@@ -73,8 +73,8 @@ def bounce_over():
 
 
 def cushion_lift():
-    ball = pt.Ball.create("cue", xy=(0.7, 0.5))
-    ball.state.rvw[1, 0] = 4
+    ball = pt.Ball.create("cue", xy=(0.2, 0.5))
+    ball.state.rvw[1, 0] = 3.5
     ball.state.s = pt.constants.sliding
 
     shot = pt.System(
