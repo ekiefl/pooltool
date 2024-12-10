@@ -276,6 +276,10 @@ def ball_linear_cushion_collision_time(
     A = lx * ax + ly * ay
     B = lx * bx + ly * by
 
+    if A == 0 and B == 0:
+        # C must be 0, but whether or not it is, time is a free parameter.
+        return np.inf
+
     if direction == 0:
         C = l0 + lx * cx + ly * cy + R * np.sqrt(lx**2 + ly**2)
         root1, root2 = ptmath.roots.quadratic.solve(A, B, C)
