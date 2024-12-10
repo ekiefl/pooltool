@@ -72,11 +72,26 @@ def bounce_over():
     return shot
 
 
+def cushion_lift():
+    ball = pt.Ball.create("cue", xy=(0.7, 0.5))
+    ball.state.rvw[1, 0] = 4
+    ball.state.s = pt.constants.sliding
+
+    shot = pt.System(
+        cue=pt.Cue(cue_ball_id="cue"),
+        table=pt.Table.default(),
+        balls=(ball,),
+    )
+
+    return shot
+
+
 _map = {
     "drop": drop,
     "simul": simul,
     "impulse_into": impulse_into,
     "bounce_over": bounce_over,
+    "cushion_lift": cushion_lift,
 }
 
 
