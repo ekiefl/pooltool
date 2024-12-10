@@ -8,6 +8,7 @@ from numpy.typing import NDArray
 import pooltool.constants as const
 import pooltool.physics.evolve as evolve
 import pooltool.ptmath as ptmath
+from pooltool.ptmath.utils import get_airborne_time
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -192,6 +193,32 @@ def ball_ball_collision_time(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def ball_table_collision_time(
+    rvw: NDArray[np.float64],
+    s: int,
+    g: float,
+    R: float,
+) -> float:
+    """Get time until collision between ball and table surface.
+
+    (just-in-time compiled)
+    """
+    v_z0 = rvw[1, 2]
+    r_z0 = rvw[0, 2]
+
+    if v_z0 < 0 and r_z0 == R:
+        # Ball is on the table with negative velocity.
+        return 0.0
+
+    if s != const.airborne:
+        # The above is the only way a non-airborne ball can have a finite ball-table
+        # collision time.
+        return np.inf
+
+    return get_airborne_time(rvw=rvw, R=R, g=g)
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def ball_linear_cushion_collision_time(
     rvw: NDArray[np.float64],
     s: int,
@@ -247,13 +274,15 @@ def ball_linear_cushion_collision_time(
 
     min_time = np.inf
     for root in roots:
-        if np.abs(root.imag) > const.EPS:
+        if np.isnan(root):
+            # This is an indirect test for whether the root is complex or not. This is
+            # because ptmath.roots.quadratic.solve returns nan if the root is complex.
             continue
 
         if root.real <= const.EPS:
             continue
 
-        rvw_dtau, _ = evolve.evolve_ball_motion(s, rvw, R, m, mu, 1, mu, g, root)
+        rvw_dtau = evolve.evolve_ball_motion(s, rvw, R, m, mu, 1, mu, g, root)
         s_score = -np.dot(p1 - rvw_dtau[0], p2 - p1) / np.dot(p2 - p1, p2 - p1)
 
         if not (0 <= s_score <= 1):

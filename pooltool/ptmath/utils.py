@@ -145,12 +145,13 @@ def unit_vector_slow(
 ) -> NDArray[np.float64]:
     """Returns the unit vector of the vector.
 
-    "Slow", but supports more than just 3D.
+    Args:
+        handle_zero:
+            If True and vector = <0,0,0>, <0,0,0> is returned.
 
-    Parameters
-    ==========
-    handle_zero: bool, False
-        If True and vector = <0,0,0>, <0,0,0> is returned.
+    See Also:
+        - For a faster 3D implementation, see :func:`unit_vector` for fast 3D
+          implementation.
     """
     if len(vector.shape) > 1:
         norm = np.linalg.norm(vector, axis=1, keepdims=True)
@@ -170,14 +171,12 @@ def unit_vector(
 ) -> NDArray[np.float64]:
     """Returns the unit vector of the vector (just-in-time compiled)
 
-    Parameters
-    ==========
-    handle_zero: bool, False
-        If True and vector = <0,0,0>, <0,0,0> is returned.
+    Args:
+        handle_zero:
+            If True and vector = <0,0,0>, <0,0,0> is returned.
 
-    Notes
-    =====
-    - Only supports 3D (for 2D see unit_vector_slow)
+    Notes:
+        - Only supports 3D (for ND see unit_vector_slow)
     """
     norm = norm3d(vector)
     if handle_zero and norm == 0.0:
@@ -291,6 +290,28 @@ def get_u_vec(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def get_airborne_time(rvw: NDArray[np.float64], R: float, g: float) -> float:
+    if g == 0.0:
+        return np.inf
+
+    A = -0.5 * g
+    B = rvw[1, 2]
+    C = rvw[0, 2] - R
+
+    D = B**2 - 4 * A * C
+
+    if D < 0:
+        # Only consider real roots.
+        return np.inf
+
+    # This is the only possible root assuming the ball starts above the table and
+    # acceleration due to gravity is towards table.
+    t_f = -(B + np.sqrt(D)) / (2 * A)
+
+    return t_f
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def get_slide_time(rvw: NDArray[np.float64], R: float, u_s: float, g: float) -> float:
     if u_s == 0.0:
         return np.inf
@@ -316,11 +337,10 @@ def get_spin_time(rvw: NDArray[np.float64], R: float, u_sp: float, g: float) -> 
     return np.abs(w[2]) * 2 / 5 * R / u_sp / g
 
 
-def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float) -> float:
+def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float, g: float) -> float:
     """Get the energy of a ball
 
-    Currently calculating linear and rotational kinetic energy. Need to add potential
-    energy if z-axis is freed
+    Accounts for linear and rotational kinetic energy and potential energy due to gravity relative to a ball in contact with the table
     """
     # Linear
     LKE = m * norm3d(rvw[1]) ** 2 / 2
@@ -328,7 +348,10 @@ def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float) -> float:
     # Rotational
     RKE = (2 / 5 * m * R**2) * norm3d(rvw[2]) ** 2 / 2
 
-    return LKE + RKE
+    # Potential
+    MGH = m * g * (rvw[0, 2] - R)
+
+    return LKE + RKE + MGH
 
 
 def is_overlapping(

@@ -10,8 +10,6 @@ The code should be configurable and passed to `PhysicsEngine` in `physics/engine
 just like the `Resolver` class in `physics/resolve/resolver.py`
 """
 
-from typing import Tuple
-
 import numpy as np
 from numba import jit
 from numpy.typing import NDArray
@@ -31,42 +29,28 @@ def evolve_ball_motion(
     u_r: float,
     g: float,
     t: float,
-) -> Tuple[NDArray[np.float64], int]:
+) -> NDArray[np.float64]:
+    """Evolve ball motion.
+
+    This function delegates to different equations of motion depending on the state passed.
+
+    Important:
+        This function does not evolve through event transitions. For example, if a
+        sliding ball is destined to start rolling after 1 second, but you evolve the
+        ball with this function for 2 seconds, an unrealistic trajectory will occur.
+    """
     if state == const.stationary or state == const.pocketed:
-        return rvw, state
+        return rvw
+    elif state == const.sliding:
+        return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t)
+    elif state == const.rolling:
+        return evolve_roll_state(rvw, R, u_r, u_sp, g, t)
+    elif state == const.spinning:
+        return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)
+    elif state == const.airborne:
+        return evolve_airborne_state(rvw, g, t)
 
-    if state == const.sliding:
-        dtau_E_slide = ptmath.get_slide_time(rvw, R, u_s, g)
-
-        if t >= dtau_E_slide:
-            rvw = evolve_slide_state(rvw, R, m, u_s, u_sp, g, dtau_E_slide)
-            state = const.rolling
-            t -= dtau_E_slide
-        else:
-            return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), const.sliding
-
-    if state == const.rolling:
-        dtau_E_roll = ptmath.get_roll_time(rvw, u_r, g)
-
-        if t >= dtau_E_roll:
-            rvw = evolve_roll_state(rvw, R, u_r, u_sp, g, dtau_E_roll)
-            state = const.spinning
-            t -= dtau_E_roll
-        else:
-            return evolve_roll_state(rvw, R, u_r, u_sp, g, t), const.rolling
-
-    if state == const.spinning:
-        dtau_E_spin = ptmath.get_spin_time(rvw, R, u_sp, g)
-
-        if t >= dtau_E_spin:
-            return (
-                evolve_perpendicular_spin_state(rvw, R, u_sp, g, dtau_E_spin),
-                const.stationary,
-            )
-        else:
-            return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), const.spinning
-
-    raise ValueError
+    raise NotImplementedError()
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -81,6 +65,9 @@ def evolve_slide_state(
 ) -> NDArray[np.float64]:
     if t == 0:
         return rvw
+
+    v0z = rvw[1, 2]
+    assert v0z == 0, f"Rolling ball can't have non-zero z-component velocity: {v0z}"
 
     # Angle of initial velocity in table frame
     phi = ptmath.angle(rvw[1])
@@ -123,7 +110,10 @@ def evolve_roll_state(
     if t == 0:
         return rvw
 
-    r_0, v_0, w_0 = rvw
+    r_0, v_0, _ = rvw
+
+    v0z = v_0[2]
+    assert v0z == 0, f"Rolling ball can't have non-zero z-component velocity: {v_0[2]}"
 
     v_0_hat = ptmath.unit_vector(v_0)
 
@@ -171,9 +161,34 @@ def evolve_perpendicular_spin_component(
 def evolve_perpendicular_spin_state(
     rvw: NDArray[np.float64], R: float, u_sp: float, g: float, t: float
 ) -> NDArray[np.float64]:
+    v0z = rvw[1, 2]
+    assert v0z == 0, f"Spinning ball can't have non-zero z-component velocity: {v0z}"
+
     # Otherwise ball.state.rvw will be modified and corresponding entry in self.history
     # FIXME framework has changed, this may not be true. EDIT This is still true.
     rvw = rvw.copy()
 
     rvw[2, 2] = evolve_perpendicular_spin_component(rvw[2, 2], R, u_sp, g, t)
     return rvw
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def evolve_airborne_state(
+    rvw: NDArray[np.float64], g: float, t: float
+) -> NDArray[np.float64]:
+    if t == 0:
+        return rvw
+
+    r_0, v_0, w_0 = rvw
+
+    g_vec = np.array([0.0, 0.0, g], dtype=np.float64)
+
+    r = r_0 + v_0 * t - 0.5 * g_vec * t**2
+    v = v_0 - g_vec * t
+
+    new_rvw = np.empty((3, 3), dtype=np.float64)
+    new_rvw[0, :] = r
+    new_rvw[1, :] = v
+    new_rvw[2, :] = w_0
+
+    return new_rvw

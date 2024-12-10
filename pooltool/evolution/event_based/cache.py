@@ -67,7 +67,9 @@ class TransitionCache:
 
 
 def _next_transition(ball: Ball) -> Event:
-    if ball.state.s == const.stationary or ball.state.s == const.pocketed:
+    if ball.state.s in {const.stationary, const.pocketed, const.airborne}:
+        # Stationary and airborne states can only be changed via collisions, and
+        # pocketed states can never be changed.
         return null_event(time=np.inf)
 
     elif ball.state.s == const.spinning:
@@ -129,7 +131,7 @@ class CollisionCache:
           event caching, see :class:`TransitionCache`.
     """
 
-    times: Dict[EventType, Dict[Tuple[str, str], float]] = attrs.field(factory=dict)
+    times: Dict[EventType, Dict[Tuple[str, ...], float]] = attrs.field(factory=dict)
 
     @property
     def size(self) -> int:

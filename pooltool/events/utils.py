@@ -8,6 +8,7 @@ event_type_to_ball_indices: Dict[EventType, Set[int]] = {
     EventType.BALL_CIRCULAR_CUSHION: {0},
     EventType.BALL_POCKET: {0},
     EventType.STICK_BALL: {1},
+    EventType.BALL_TABLE: {0},
     EventType.SPINNING_STATIONARY: {0},
     EventType.ROLLING_STATIONARY: {0},
     EventType.ROLLING_SPINNING: {0},

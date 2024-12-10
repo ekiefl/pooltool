@@ -46,6 +46,8 @@ class BallParams:
             The ball-ball coefficient of sliding friction (*default* = 0.05).
         e_b:
             The ball-ball coefficient of restitution (*default* = 0.95).
+        e_t:
+            The ball-table coefficient of restitution (*default* = 0.5).
         e_c:
             The cushion coefficient of restitution (*default* = 0.85).
 
@@ -76,6 +78,7 @@ class BallParams:
     u_sp_proportionality: float = attrs.field(default=10 * 2 / 5 / 9)
     u_b: float = attrs.field(default=0.05)
     e_b: float = attrs.field(default=0.95)
+    e_t: float = attrs.field(default=0.5)
     e_c: float = attrs.field(default=0.85)
     f_c: float = attrs.field(default=0.2)
     g: float = attrs.field(default=9.81)
