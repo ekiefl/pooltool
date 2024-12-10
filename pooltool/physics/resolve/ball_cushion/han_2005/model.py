@@ -102,7 +102,9 @@ def _solve(ball: Ball, cushion: Cushion) -> Tuple[Ball, Cushion]:
         f_c=ball.params.f_c,
     )
 
-    ball.state = BallState(rvw, const.sliding)
+    s = const.airborne if ball.state.s == const.airborne else const.sliding
+
+    ball.state = BallState(rvw, s)
 
     return ball, cushion
 

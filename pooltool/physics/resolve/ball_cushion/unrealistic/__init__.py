@@ -64,6 +64,9 @@ def _solve(
     # You'll also want to set the motion state of the ball to sliding
     ball.state.s = const.sliding
 
+    s = const.airborne if ball.state.s == const.airborne else const.sliding
+    ball.state.s = s
+
     return ball, cushion
 
 
