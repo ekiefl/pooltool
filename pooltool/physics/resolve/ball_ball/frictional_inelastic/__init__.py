@@ -15,7 +15,7 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
 
     # rotate the x-axis to be in line with the line of centers
     delta_centers = rvw2[0] - rvw1[0]
-    # FIXME3D: this should use quaternion rotation in 3D
+    # FIXME-3D: this should use quaternion rotation in 3D
     theta = ptmath.projected_angle(delta_centers, unit_x)
     rvw1[1] = ptmath.coordinate_rotation(rvw1[1], -theta)
     rvw1[2] = ptmath.coordinate_rotation(rvw1[2], -theta)

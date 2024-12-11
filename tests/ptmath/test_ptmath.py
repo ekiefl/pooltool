@@ -60,7 +60,7 @@ def test_transcendental_no_root_error():
         solve_transcendental(f, 0, 10)
 
 
-def test_angle():
+def test_projected_angle():
     # 0 starts at <1, 0, 0>
     assert projected_angle(np.array([1, 0, 0])) == 0.0
     assert projected_angle(np.array([0, 1, 0])) == np.pi / 2

@@ -227,14 +227,14 @@ def get_next_event(
         shot, collision_cache=collision_cache
     )
     if ball_table_event.time == shot.t:
-        # Ball-table collisions involving non-airborne balls always happen at shot.t = 0
-        # (i.e. instantaneously) and therefore in such a case we immediately return. Not
-        # only does this speed up the algorithm (by avoiding calculation of any further
-        # possible events), but some of the code for other event predictions assume zero
-        # z-velocity and trigger assertion errors if this condition is not met.
+        # Ball-table collisions involving non-airborne balls always happen at dt=0 from
+        # the current simulation time and therefore in such a case we immediately return
+        # with the next event in hand. Not only does this speed up the algorithm (by
+        # avoiding calculation of any other possible events--none of which occur sooner
+        # than dt=0), but some of the code for other event predictions assume zero
+        # z-velocity and can trigger assertion errors if this condition is not met.
         # Therefore, it is essential that this code block runs before any other event
-        # prediction (or at least any event prediction capable of producing event times
-        # > shot.t)
+        # prediction (or at least any event prediction capable of producing event dt>0).
         return ball_table_event
     elif ball_table_event.time < event.time:
         event = ball_table_event
@@ -367,10 +367,10 @@ def get_next_ball_table_collision(
         vz = ball.state.rvw[1, 2]
 
         if ball.state.s in const.on_table and vz < 0:
-            # If a ball is on the surface of the table has a downward impulse, it will
-            # undergo an ball-table collision at a time t=0 later. So we immediately
-            # return it. For posterity, the event is added to the collision cache,
-            # however it will be invalidated during event resolution.
+            # If a ball is on the surface of the table and has a downward impulse, it
+            # will undergo an ball-table collision at dtau_E=0. So we immediately return
+            # it. For posterity, the event is added to the collision cache, however it
+            # will be invalidated during downstream event resolution.
             cache[obj_ids] = shot.t
             return ball_table_collision(ball=ball, time=shot.t)
 
