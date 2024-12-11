@@ -1,13 +1,43 @@
+from math import isclose
+
 import numpy as np
 import pytest
 
 from pooltool import constants
 from pooltool.objects.ball.datatypes import Ball
-from pooltool.physics.resolve.ball_table.core import BallTableCollisionStrategy
+from pooltool.physics.resolve.ball_table.core import (
+    BallTableCollisionStrategy,
+    bounce_height,
+)
 from pooltool.physics.resolve.ball_table.frictional_inelastic import FrictionalInelastic
 from pooltool.physics.resolve.ball_table.frictionless_inelastic import (
     FrictionlessInelastic,
 )
+
+
+@pytest.mark.parametrize(
+    "vz,g,expected",
+    [
+        (4.0, 9.8, 0.5 * 16 / 9.8),  # Typical scenario
+        (0.0, 9.8, 0.0),  # No velocity, no bounce height
+        (10.0, 9.8, 0.5 * 100 / 9.8),
+        (2.5, 10.0, 0.5 * 6.25 / 10.0),
+    ],
+)
+def test_bounce_height(vz, g, expected):
+    result = bounce_height(vz, g)
+    assert isclose(result, expected, rel_tol=1e-7), f"Expected {expected}, got {result}"
+
+
+def test_bounce_height_negative_vz():
+    # The function doesn't specify behavior for negative vz, but it still returns
+    # a mathematically valid height based on vz^2. Let's just check correctness.
+    vz = -3.0
+    g = 9.8
+    expected = 0.5 * (vz**2) / g
+    result = bounce_height(vz, g)
+    assert isclose(result, expected, rel_tol=1e-7), f"Expected {expected}, got {result}"
+
 
 models = [FrictionlessInelastic(), FrictionalInelastic()]
 
