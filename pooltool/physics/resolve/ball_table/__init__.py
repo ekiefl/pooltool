@@ -43,7 +43,7 @@ def get_ball_table_model(
     Args:
         model:
             An Enum specifying the desired model. If not passed,
-            :class:`FrictionlessInelastic` is passed with empty params.
+            :class:`FrictionalInelastic` is passed with empty params.
         params:
             A mapping of parameters accepted by the model.
 
@@ -52,6 +52,6 @@ def get_ball_table_model(
         protocol.
     """
     if model is None:
-        return FrictionlessInelastic()
+        return FrictionalInelastic()
 
     return _ball_table_models[model](**params)
