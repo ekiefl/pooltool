@@ -14,7 +14,7 @@ from pooltool.physics.resolve.ball_table.core import (
 @jit(nopython=True, cache=const.use_numba_cache)
 def _resolve_ball_table(
     rvw: NDArray[np.float64], R: float, u: float, e: float
-) -> float:
+) -> NDArray[np.float64]:
     rvw_i = rvw.copy()
     v_i = rvw_i[1]
     w_i = rvw_i[2]
