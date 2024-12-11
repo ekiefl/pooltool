@@ -1,4 +1,4 @@
-"""FIXME-3D Needs tests for when ball center is above cushion tip."""
+"""FIXME-3D This implementation currently assumes the ball is on the surface of the table. A 3D treatment must consider z-position of ball"""
 
 from typing import Tuple, TypeVar
 
