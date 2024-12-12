@@ -56,6 +56,7 @@ def simul():
 def bounce_over():
     ball = pt.Ball.create("cue", xy=(0.7, 0.5))
     ball.state.rvw[1, 2] = -5.0
+    ball.state.rvw[1, 1] = -0.4
     ball.state.rvw[1, 0] = 2
     ball.state.s = pt.constants.sliding
 
@@ -95,8 +96,8 @@ _map = {
 }
 
 
-def main(args):
-    shot = _map[args.name]()
+def main(name: str):
+    shot = _map[name]()
     pt.simulate(shot, inplace=True)
     pt.show(shot)
 
@@ -105,6 +106,12 @@ if __name__ == "__main__":
     import argparse
 
     ap = argparse.ArgumentParser("Series of airborne test demos.")
-    ap.add_argument("--name", choices=_map.keys())
+    ap.add_argument("--name", choices=list(_map.keys()) + ["all"])
     args = ap.parse_args()
-    main(args)
+
+    if args.name == "all":
+        for name in _map:
+            print(f"Running {name}...")
+            main(name)
+    else:
+        main(args.name)
