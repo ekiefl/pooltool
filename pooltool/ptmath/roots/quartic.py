@@ -35,10 +35,20 @@ def solve_quartics(
             An array of shape m. Each value is the smallest root that is real and
             positive. If no such root exists (e.g. all roots have complex), then
             `np.inf` is returned.
+
+    Notes:
+        - This solver fails for cubic (a=0) and quadratic (a=b=0) formulations with
+          NotImplementedError.
     """
-    # Get the roots for the polynomials
     assert QuarticSolver(solver)
 
+    if (ps[0] == 0).any():
+        raise NotImplementedError(
+            "This quartic solver has not implemented cubic (a=0), and quadratic (a=b=0) "
+            "formulations, but at least one of the equations passed is cubic/quadractic."
+        )
+
+    # Get the roots for the polynomials
     roots = _quartic_routine[solver](ps)  # Shape m x 4, dtype complex128
     best_roots = get_real_positive_smallest_roots(roots)  # Shape m, dtype float64
 
