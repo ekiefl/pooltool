@@ -244,7 +244,13 @@ def norm3d(vec: NDArray[np.float64]) -> float:
     2.65 µs ± 63 ns per loop (mean ± std. dev. of 7 runs, 100,000 loops each)
     241 ns ± 2.57 ns per loop (mean ± std. dev. of 7 runs, 1,000,000 loops each)
     """
-    return sqrt(vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2)
+    return sqrt(norm3d_squared(vec))
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def norm3d_squared(vec: NDArray[np.float64]) -> float:
+    """Calculate the norm squared of a 3D vector"""
+    return vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
