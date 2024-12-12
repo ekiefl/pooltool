@@ -44,8 +44,8 @@ def solve_quartics(
 
     if (ps[0] == 0).any():
         raise NotImplementedError(
-            "This quartic solver has not implemented cubic (a=0), and quadratic (a=b=0) "
-            "formulations, but at least one of the equations passed is cubic/quadractic."
+            "This quartic solver has not implemented cubic (a=0) and quadratic (a=b=0) "
+            "formulations, but at least one of the equations passed is cubic/quadratic."
         )
 
     # Get the roots for the polynomials
