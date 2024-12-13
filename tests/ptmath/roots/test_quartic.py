@@ -26,21 +26,31 @@ def test_case1(solver: quartic.QuarticSolver):
 @pytest.mark.parametrize(
     "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
 )
-def test_quadratic_not_implemented(solver: quartic.QuarticSolver):
+def test_quadratic(solver: quartic.QuarticSolver):
     """This test surfaces the fact that quartic solver can't handle quadratic equations :("""
-    coeffs_array = np.array((0, 0, 1, 1, 1))[np.newaxis, :]
+    coeffs_array = np.array((0, 0, 1, 1, 1), dtype=np.float64)[np.newaxis, :]
+
     with pytest.raises(NotImplementedError):
-        quartic.solve_quartics(coeffs_array, solver)
+        quartic.solve_quartics(coeffs_array, solver, bypass_non_quartics=False)
+
+    assert np.isinf(
+        quartic.solve_quartics(coeffs_array, solver, bypass_non_quartics=True)[0]
+    )
 
 
 @pytest.mark.parametrize(
     "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
 )
-def test_cubic_not_implemented(solver: quartic.QuarticSolver):
+def test_cubic(solver: quartic.QuarticSolver):
     """This test surfaces the fact that quartic solver can't handle cubic equations :("""
-    coeffs_array = np.array((0, 0, 1, 1, 1))[np.newaxis, :]
+    coeffs_array = np.array((0, 1, 1, 1, 1), dtype=np.float64)[np.newaxis, :]
+
     with pytest.raises(NotImplementedError):
-        quartic.solve_quartics(coeffs_array, solver)
+        quartic.solve_quartics(coeffs_array, solver, bypass_non_quartics=False)
+
+    assert np.isinf(
+        quartic.solve_quartics(coeffs_array, solver, bypass_non_quartics=True)[0]
+    )
 
 
 def test_e_equals_0():

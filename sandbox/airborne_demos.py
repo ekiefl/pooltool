@@ -87,12 +87,29 @@ def cushion_lift():
     return shot
 
 
+def friction_test():
+    ball = pt.Ball.create("cue")
+    ball.state.rvw[0, :] = [0.8, 0.125, 0.20955 + ball.params.R]
+    ball.state.rvw[1, :] = [0, 0.0637, 0]
+    ball.state.rvw[2, :] = [58.11, 0, 0]
+    ball.state.s = pt.constants.airborne
+
+    shot = pt.System(
+        cue=pt.Cue(cue_ball_id="cue"),
+        table=pt.Table.default(),
+        balls=(ball,),
+    )
+
+    return shot
+
+
 _map = {
     "drop": drop,
     "simul": simul,
     "impulse_into": impulse_into,
     "bounce_over": bounce_over,
     "cushion_lift": cushion_lift,
+    "friction_test": friction_test,
 }
 
 

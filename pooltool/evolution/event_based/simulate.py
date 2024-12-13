@@ -406,9 +406,6 @@ def get_next_ball_circular_cushion_event(
 ) -> Event:
     """Returns next ball-cushion collision (circular cushion segment)"""
 
-    # FIXME-3D no circular cushion collisions
-    return null_event(np.inf)
-
     if not shot.table.has_circular_cushions:
         return null_event(np.inf)
 
@@ -447,7 +444,10 @@ def get_next_ball_circular_cushion_event(
             )
 
     if len(collision_coeffs):
-        roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        roots = solve_quartics(
+            ps=np.array(collision_coeffs), solver=solver, bypass_non_quartics=True
+        )
+
         for root, ball_cushion_pair in zip(roots, ball_cushion_pairs):
             cache[ball_cushion_pair] = shot.t + root
 

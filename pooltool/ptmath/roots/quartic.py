@@ -17,7 +17,9 @@ class QuarticSolver(StrEnum):
 
 
 def solve_quartics(
-    ps: NDArray[np.float64], solver: QuarticSolver = QuarticSolver.HYBRID
+    ps: NDArray[np.float64],
+    solver: QuarticSolver = QuarticSolver.HYBRID,
+    bypass_non_quartics: bool = False,
 ) -> NDArray[np.float64]:
     """Returns the smallest positive and real root for each quartic polynomial.
 
@@ -29,6 +31,13 @@ def solve_quartics(
         solver:
             The method used to calculate the roots. See
             pooltool.ptmath.roots.quartic.QuarticSolver.
+        bypass_non_quartics:
+            If True, any polynomial whose leading coefficient `a` is zero (i.e., not a
+            true quartic) will be replaced with `NaN` coefficients instead of triggering
+            a NotImplementedError. This allows you to skip over polynomials that are not
+            quartic, returning `np.inf` for those cases. If False, encountering a
+            polynomial with `a=0` will raise a NotImplementedError, since the solvers
+            currently break when trying to solve lesser order polynomials.
 
     Returns:
         roots:
@@ -42,15 +51,26 @@ def solve_quartics(
     """
     assert QuarticSolver(solver)
 
-    if (ps[0] == 0).any():
-        raise NotImplementedError(
-            "This quartic solver has not implemented cubic (a=0) and quadratic (a=b=0) "
-            "formulations, but at least one of the equations passed is cubic/quadratic."
-        )
+    # FIXME-3D Find better solution?
+    if (ps[:, 0] == 0).any():
+        problematic = ps[:, 0] == 0
+        if bypass_non_quartics:
+            # Set coefficients to 1 so no error is raised
+            ps[ps[:, 0] == 0, :] = 1
+        else:
+            raise NotImplementedError(
+                "This quartic solver has not implemented cubic (a=0) and quadratic (a=b=0) "
+                "formulations, but at least one of the equations passed is cubic/quadratic. "
+                "Consider setting bypass_non_quartics to True."
+            )
+    else:
+        problematic = np.array([], dtype=np.bool)
 
     # Get the roots for the polynomials
     roots = _quartic_routine[solver](ps)  # Shape m x 4, dtype complex128
     best_roots = get_real_positive_smallest_roots(roots)  # Shape m, dtype float64
+
+    best_roots[problematic] = np.inf
 
     return best_roots
 

@@ -319,7 +319,7 @@ def ball_circular_cushion_collision_coeffs(
         return np.inf, np.inf, np.inf, np.inf, np.inf
 
     phi = ptmath.projected_angle(rvw[1])
-    v = ptmath.norm3d(rvw[1])
+    v = ptmath.norm2d(rvw[1])
 
     u = get_u(rvw, R, phi, s)
 
