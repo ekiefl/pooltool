@@ -77,6 +77,14 @@ def cushion_lift():
     ball.state.rvw[1, 0] = 3.5
     ball.state.s = pt.constants.sliding
 
+
+def slip():
+    ball = pt.Ball.create("cue", xy=(0.5, 0.5))
+    ball.state.rvw[0, 2] = 0.3
+    ball.state.rvw[1, 1] = 1.0
+    ball.state.rvw[2, 0] = 100.0
+    ball.state.s = pt.constants.airborne
+
     shot = pt.System(
         cue=pt.Cue(cue_ball_id="cue"),
         table=pt.Table.default(),
@@ -92,6 +100,7 @@ _map = {
     "impulse_into": impulse_into,
     "bounce_over": bounce_over,
     "cushion_lift": cushion_lift,
+    "slip": slip,
 }
 
 
