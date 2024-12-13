@@ -1,3 +1,5 @@
+"""FIXME-3D This implementation currently assumes the ball is on the surface of the table. A 3D treatment must consider z-position of ball"""
+
 from typing import Tuple, TypeVar
 
 import numpy as np
@@ -26,11 +28,11 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
 
     # Change from the table frame to the cushion frame. The cushion frame is defined by
     # the normal vector is parallel with <1,0,0>.
-    psi = ptmath.angle(normal)
+    psi = ptmath.projected_angle(normal)
     rvw_R = ptmath.coordinate_rotation(rvw.T, -psi).T
 
     # The incidence angle--called theta_0 in paper
-    phi = ptmath.angle(rvw_R[1]) % (2 * np.pi)
+    phi = ptmath.projected_angle(rvw_R[1]) % (2 * np.pi)
 
     # Get mu and e
     e = get_ball_cushion_restitution(rvw_R, e_c)
@@ -75,7 +77,7 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
     # Update velocity
     rvw_R[1, 0] += PX / m
     rvw_R[1, 1] += PY / m
-    # rvw_R[1,2] += PZ/m
+    rvw_R[1, 2] += PZ / m
 
     # Update angular velocity
     rvw_R[2, 0] += -R / II * PY * np.sin(theta_a)
@@ -102,7 +104,9 @@ def _solve(ball: Ball, cushion: Cushion) -> Tuple[Ball, Cushion]:
         f_c=ball.params.f_c,
     )
 
-    ball.state = BallState(rvw, const.sliding)
+    s = const.airborne if ball.state.s == const.airborne else const.sliding
+
+    ball.state = BallState(rvw, s)
 
     return ball, cushion
 

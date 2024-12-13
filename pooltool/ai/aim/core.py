@@ -30,7 +30,7 @@ def at_pos(*args) -> float:  # type: ignore
 
 def _at_pos(cue_ball: Ball, pos: NDArray[np.float64]) -> float:
     vector = ptmath.unit_vector(np.array(pos) - cue_ball.state.rvw[0])
-    direction = ptmath.angle(vector)
+    direction = ptmath.projected_angle(vector)
 
     return direction * 180 / np.pi
 

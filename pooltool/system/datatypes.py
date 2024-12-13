@@ -22,6 +22,10 @@ def _convert_balls(balls: Any) -> Dict[str, Ball]:
     if isinstance(balls, dict):
         return balls
 
+    ids = [ball.id for ball in balls]
+    if len(set(ids)) < len(balls):
+        raise ValueError(f"All balls must have unique IDs: {ids}")
+
     return {ball.id: ball for ball in balls}
 
 

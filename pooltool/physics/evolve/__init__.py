@@ -66,11 +66,15 @@ def evolve_slide_state(
     if t == 0:
         return rvw
 
+    if ptmath.norm2d(rvw[1]) == ptmath.norm2d(rvw[2]) == 0.0:
+        # If there is no xy-velocity or xy-angular velocity, rvw is unchanged.
+        return rvw
+
     v0z = rvw[1, 2]
-    assert v0z == 0, f"Rolling ball can't have non-zero z-component velocity: {v0z}"
+    assert v0z == 0, f"Sliding ball can't have non-zero z-component velocity: {v0z}"
 
     # Angle of initial velocity in table frame
-    phi = ptmath.angle(rvw[1])
+    phi = ptmath.projected_angle(rvw[1])
 
     rvw_B0 = ptmath.coordinate_rotation(rvw.T, -phi).T
 

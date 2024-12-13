@@ -1,4 +1,7 @@
-"""An unrealistic ball-cushion model"""
+"""An unrealistic ball-cushion model
+
+FIXME-3D Check math
+"""
 
 from typing import Tuple, TypeVar
 
@@ -49,7 +52,7 @@ def _solve(
     # Rotate frame of reference to the cushion frame. The cushion frame is defined
     # by the cushion's normal vector (convention: points away from table) being
     # parallel with <1,0,0>.
-    psi = ptmath.angle(normal)
+    psi = ptmath.projected_angle(normal)
     rvw_R = ptmath.coordinate_rotation(rvw.T, -psi).T
 
     # Reverse velocity component lying in normal direction
@@ -63,6 +66,9 @@ def _solve(
 
     # You'll also want to set the motion state of the ball to sliding
     ball.state.s = const.sliding
+
+    s = const.airborne if ball.state.s == const.airborne else const.sliding
+    ball.state.s = s
 
     return ball, cushion
 

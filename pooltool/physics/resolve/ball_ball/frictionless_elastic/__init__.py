@@ -18,7 +18,7 @@ def _resolve_ball_ball(rvw1, rvw2, R):
     v_rel = v1 - v2
     v_mag = ptmath.norm3d(v_rel)
 
-    beta = ptmath.angle(v_rel, n)
+    beta = ptmath.projected_angle(v_rel, n)
 
     rvw1[1] = t * v_mag * np.sin(beta) + v2
     rvw2[1] = n * v_mag * np.cos(beta) + v2

@@ -32,7 +32,7 @@ def get_ball_cushion_friction(rvw, f_c):
         perpendicular to the cushion, and in the direction away from the table
     """
 
-    ang = ptmath.angle(rvw[1])
+    ang = ptmath.projected_angle(rvw[1])
 
     if ang > np.pi:
         ang = np.abs(2 * np.pi - ang)
