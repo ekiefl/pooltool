@@ -240,7 +240,12 @@ def get_next_event(
         event = ball_table_event
 
     transition_event = transition_cache.get_next()
-    if transition_event.time < event.time:
+    if transition_event.time == shot.t:
+        # FIXME-3D Add note similar to above as to why this is necessary (transition ->
+        # transitions can happen instantaneously (i.e. sliding -> airborne or airborne
+        # -> sliding -> rolling)
+        return transition_event
+    elif transition_event.time < event.time:
         event = transition_event
 
     ball_ball_event = get_next_ball_ball_collision(
