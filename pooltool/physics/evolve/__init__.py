@@ -15,6 +15,7 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
+import pooltool.physics as physics
 import pooltool.ptmath as ptmath
 
 
@@ -80,7 +81,7 @@ def evolve_slide_state(
 
     # Relative velocity unit vector in ball frame
     u_0 = ptmath.coordinate_rotation(
-        ptmath.unit_vector(ptmath.rel_velocity(rvw, R)), -phi
+        ptmath.unit_vector(physics.rel_velocity(rvw, R)), -phi
     )
 
     # Calculate quantities according to the ball frame. NOTE w_B in this code block

@@ -8,6 +8,7 @@ from typing import List, Optional, Set, Tuple
 import numpy as np
 
 import pooltool.constants as const
+import pooltool.physics as physics
 import pooltool.physics.evolve as evolve
 import pooltool.ptmath as ptmath
 from pooltool.events import (
@@ -31,6 +32,19 @@ from pooltool.ptmath.roots.quartic import QuarticSolver, solve_quartics
 from pooltool.system.datatypes import System
 
 DEFAULT_ENGINE = PhysicsEngine()
+
+
+def _get_system_energy(system: System) -> float:
+    """Calculate the energy of the system in Joules."""
+    return sum(
+        physics.get_ball_energy(
+            ball.state.rvw,
+            ball.params.R,
+            ball.params.m,
+            ball.params.g,
+        )
+        for ball in system.balls.values()
+    )
 
 
 def _evolve(shot: System, dt: float):
@@ -154,7 +168,7 @@ def simulate(
     shot.reset_history()
     shot._update_history(null_event(time=0))
 
-    if shot.get_system_energy() == 0 and shot.cue.V0 > 0:
+    if _get_system_energy(shot) == 0 and shot.cue.V0 > 0:
         # System has no energy, but the cue stick has an impact velocity. So create and
         # resolve a stick-ball collision to start things off
         event = stick_ball_collision(

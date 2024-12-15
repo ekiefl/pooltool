@@ -56,9 +56,9 @@ def test_collide_balls(initial_conditions, expected):
     def calc_rolling_velocity(v, w):
         rvw = np.zeros((3, 3), dtype=np.float64)
         rvw[1], rvw[2] = v, w
-        u = pt.ptmath.rel_velocity(rvw, R)
+        u = pt.physics.rel_velocity(rvw, R)
         a = -mu_s * g * u / np.linalg.norm(u)
-        return v + a * pt.ptmath.get_slide_time(rvw, R, mu_s, g)
+        return v + a * pt.physics.get_slide_time(rvw, R, mu_s, g)
 
     v_iS = calc_rolling_velocity(v_i1, w_i1)
     v_jS = calc_rolling_velocity(v_j1, w_j1)

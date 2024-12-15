@@ -6,9 +6,9 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
+import pooltool.physics as physics
 import pooltool.physics.evolve as evolve
 import pooltool.ptmath as ptmath
-from pooltool.ptmath.utils import get_airborne_time
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -87,7 +87,7 @@ def get_u(
     if s == const.rolling:
         return np.array([1, 0, 0], dtype=np.float64)
 
-    rel_vel = ptmath.rel_velocity(rvw, R)
+    rel_vel = physics.rel_velocity(rvw, R)
     if (rel_vel == 0).all():
         return np.array([1, 0, 0], dtype=np.float64)
 
@@ -215,7 +215,7 @@ def ball_table_collision_time(
         # collision time.
         return np.inf
 
-    return get_airborne_time(rvw=rvw, R=R, g=g)
+    return physics.get_airborne_time(rvw=rvw, R=R, g=g)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)

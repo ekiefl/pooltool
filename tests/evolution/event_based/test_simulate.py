@@ -3,6 +3,7 @@ import pytest
 from numpy.typing import NDArray
 
 import pooltool.constants as const
+import pooltool.physics as physics
 import pooltool.ptmath as ptmath
 from pooltool.events import EventType
 from pooltool.evolution.event_based.cache import CollisionCache
@@ -230,7 +231,7 @@ def test_case4(solver: quartic.QuarticSolver):
 
 
 def _assert_rolling(rvw: NDArray[np.float64], R: float) -> None:
-    assert np.isclose(ptmath.rel_velocity(rvw, R), 0).all()
+    assert np.isclose(physics.rel_velocity(rvw, R), 0).all()
 
 
 @pytest.mark.parametrize(

@@ -36,6 +36,16 @@ from pooltool.physics.resolve.transition import (
     get_transition_model,
 )
 from pooltool.physics.resolve.types import ArgType, ModelArgs
+from pooltool.physics.utils import (
+    get_airborne_time,
+    get_ball_energy,
+    get_roll_time,
+    get_slide_time,
+    get_spin_time,
+    get_u_vec,
+    rel_velocity,
+    surface_velocity,
+)
 
 __all__ = [
     "BallBallCollisionStrategy",
@@ -64,4 +74,12 @@ __all__ = [
     "get_transition_model",
     "ArgType",
     "ModelArgs",
+    "rel_velocity",
+    "surface_velocity",
+    "get_u_vec",
+    "get_slide_time",
+    "get_roll_time",
+    "get_spin_time",
+    "get_airborne_time",
+    "get_ball_energy",
 ]
