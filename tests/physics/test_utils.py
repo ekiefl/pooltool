@@ -50,6 +50,20 @@ from pooltool.physics.utils import get_airborne_time
             10.0,
             0.4472135955,
         ),
+        # Case 4: Ball touching table with negative velocity
+        (
+            np.array(
+                [
+                    [0.0, 0.0, 0.1],
+                    [0.0, -1.0, 0.0],
+                    [0.0, 0.0, 0.0],
+                ],
+                dtype=np.float64,
+            ),
+            0.1,
+            10.0,
+            0.0,
+        ),
     ],
 )
 def test_get_airborne_time(
