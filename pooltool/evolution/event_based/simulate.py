@@ -382,22 +382,11 @@ def get_next_ball_table_collision(
 
     for ball in shot.balls.values():
         obj_ids = (ball.id,)
-
-        vz = ball.state.rvw[1, 2]
-
-        if ball.state.s in const.on_table and vz < 0:
-            # If a ball is on the surface of the table and has a downward impulse, it
-            # will undergo an ball-table collision at dtau_E=0. So we immediately return
-            # it. For posterity, the event is added to the collision cache, however it
-            # will be invalidated during downstream event resolution.
-            cache[obj_ids] = shot.t
-            return ball_table_collision(ball=ball, time=shot.t)
-
         if obj_ids in cache:
             continue
 
-        if not (ball.state.s == const.airborne or vz != 0.0):
-            # Ball isn't airborne and has no z-velocity.
+        if ball.state.s != const.airborne:
+            assert ball.state.rvw[1, 2] == 0, "Non-airborne ball must have 0 z-velocity"
             cache[obj_ids] = np.inf
             continue
 
@@ -485,6 +474,8 @@ def get_next_ball_linear_cushion_collision(
     shot: System, collision_cache: CollisionCache
 ) -> Event:
     """Returns next ball-cushion collision (linear cushion segment)"""
+
+    return null_event(np.inf)
 
     if not shot.table.has_linear_cushions:
         return null_event(np.inf)

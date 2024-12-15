@@ -203,16 +203,8 @@ def ball_table_collision_time(
 
     (just-in-time compiled)
     """
-    v_z0 = rvw[1, 2]
-    r_z0 = rvw[0, 2]
-
-    if v_z0 < 0 and r_z0 == R:
-        # Ball is on the table with negative velocity.
-        return 0.0
-
     if s != const.airborne:
-        # The above is the only way a non-airborne ball can have a finite ball-table
-        # collision time.
+        # Non-airborne ball cannot have a ball-table collision
         return np.inf
 
     return physics.get_airborne_time(rvw=rvw, R=R, g=g)
