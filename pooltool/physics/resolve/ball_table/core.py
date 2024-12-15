@@ -15,6 +15,8 @@ def bounce_height(vz: float, g: float) -> float:
 class _BaseStrategy(Protocol):
     def resolve(self, ball: Ball, inplace: bool = False) -> Ball: ...
 
+    def make_kiss(self, ball: Ball) -> Ball: ...
+
 
 class BallTableCollisionStrategy(_BaseStrategy, Protocol):
     """Ball-table collision models must satisfy this protocol"""
@@ -27,10 +29,20 @@ class BallTableCollisionStrategy(_BaseStrategy, Protocol):
 class CoreBallTableCollision(ABC):
     """Operations used by every ball-table collision resolver"""
 
+    def make_kiss(self, ball: Ball) -> Ball:
+        """Translate the ball so its height is exactly its radius.
+
+        This makes a correction such that if the ball is not at a height R, it is moved
+        vertical such that it is.
+        """
+        ball.state.rvw[0, 2] = ball.params.R
+        return ball
+
     def resolve(self, ball: Ball, inplace: bool = False) -> Ball:
         if not inplace:
             ball = ball.copy()
 
+        ball = self.make_kiss(ball)
         return self.solve(ball)
 
     @abstractmethod
