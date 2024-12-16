@@ -104,7 +104,7 @@ def _solve(ball: Ball, cushion: Cushion) -> Tuple[Ball, Cushion]:
         f_c=ball.params.f_c,
     )
 
-    s = final_ball_motion_state(rvw, ball.state.s)
+    s = final_ball_motion_state(rvw, ball.params.R)
 
     ball.state = BallState(rvw, s)
 

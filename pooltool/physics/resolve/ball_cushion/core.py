@@ -11,9 +11,10 @@ from pooltool.objects.table.components import (
     CircularCushionSegment,
     LinearCushionSegment,
 )
+from pooltool.physics.utils import on_table
 
 
-def final_ball_motion_state(final_rvw: NDArray[np.float64], initial_s: int) -> int:
+def final_ball_motion_state(rvw: NDArray[np.float64], R: float) -> int:
     """Return the final (post-collision) motion state label.
 
     If the initial ball motion state label is airborne, or if the final velocity has a
@@ -21,14 +22,16 @@ def final_ball_motion_state(final_rvw: NDArray[np.float64], initial_s: int) -> i
     sliding.
 
     Args:
-        final_rvw: The outgoing state vector of the ball.
-        initial_s: The incoming motion state label of the ball.
+        rvw: The outgoing state vector of the ball.
+        R: The radius of the ball.
     """
-    return (
-        const.airborne
-        if (initial_s == const.airborne or final_rvw[1, 2] != 0.0)
-        else const.sliding
-    )
+    if not on_table(rvw, R):
+        return const.airborne
+
+    if rvw[1, 2] != 0.0:
+        return const.airborne
+
+    return const.sliding
 
 
 class _BaseLinearStrategy(Protocol):

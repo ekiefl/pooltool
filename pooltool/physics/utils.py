@@ -87,6 +87,10 @@ def get_spin_time(rvw: NDArray[np.float64], R: float, u_sp: float, g: float) -> 
     return np.abs(w[2]) * 2 / 5 * R / u_sp / g
 
 
+def on_table(rvw: NDArray[np.float64], R: float) -> float:
+    return rvw[0, 2] == R
+
+
 def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float, g: float) -> float:
     """Get the energy of a ball
 
