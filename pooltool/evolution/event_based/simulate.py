@@ -240,17 +240,7 @@ def get_next_event(
     ball_table_event = get_next_ball_table_collision(
         shot, collision_cache=collision_cache
     )
-    if ball_table_event.time == shot.t:
-        # Ball-table collisions involving non-airborne balls always happen at dt=0 from
-        # the current simulation time and therefore in such a case we immediately return
-        # with the next event in hand. Not only does this speed up the algorithm (by
-        # avoiding calculation of any other possible events--none of which occur sooner
-        # than dt=0), but some of the code for other event predictions assume zero
-        # z-velocity and can trigger assertion errors if this condition is not met.
-        # Therefore, it is essential that this code block runs before any other event
-        # prediction (or at least any event prediction capable of producing event dt>0).
-        return ball_table_event
-    elif ball_table_event.time < event.time:
+    if ball_table_event.time < event.time:
         event = ball_table_event
 
     transition_event = transition_cache.get_next()
