@@ -119,6 +119,23 @@ def friction_test():
     return shot
 
 
+def airborne_circular_cushion():
+    ball = pt.Ball.create("cue", xy=(0.2, 0.5))
+    scale = 1.3
+    ball.state.rvw[0, 2] = 0.5
+    ball.state.rvw[1, 0] = 2.5 * scale
+    ball.state.rvw[1, 1] = 1.8 * scale
+    ball.state.s = pt.constants.airborne
+
+    shot = pt.System(
+        cue=pt.Cue(cue_ball_id="cue"),
+        table=pt.Table.default(),
+        balls=(ball,),
+    )
+
+    return shot
+
+
 _map = {
     "drop": drop,
     "simul": simul,
@@ -127,6 +144,7 @@ _map = {
     "cushion_lift": cushion_lift,
     "friction_test": friction_test,
     "slip": slip,
+    "airborne_circular_cushion": airborne_circular_cushion,
 }
 
 
