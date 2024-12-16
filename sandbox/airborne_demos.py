@@ -78,6 +78,14 @@ def cushion_lift():
     ball.state.rvw[1, 0] = 3.5
     ball.state.s = pt.constants.sliding
 
+    shot = pt.System(
+        cue=pt.Cue(cue_ball_id="cue"),
+        table=pt.Table.default(),
+        balls=(ball,),
+    )
+
+    return shot
+
 
 def slip():
     ball = pt.Ball.create("cue", xy=(0.5, 0.5))

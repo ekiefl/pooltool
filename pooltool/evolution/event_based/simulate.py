@@ -237,12 +237,6 @@ def get_next_event(
     if collision_cache is None:
         collision_cache = CollisionCache.create()
 
-    ball_table_event = get_next_ball_table_collision(
-        shot, collision_cache=collision_cache
-    )
-    if ball_table_event.time < event.time:
-        event = ball_table_event
-
     transition_event = transition_cache.get_next()
     if transition_event.time == shot.t:
         # FIXME-3D Add note similar to above as to why this is necessary (transition ->
@@ -251,6 +245,12 @@ def get_next_event(
         return transition_event
     elif transition_event.time < event.time:
         event = transition_event
+
+    ball_table_event = get_next_ball_table_collision(
+        shot, collision_cache=collision_cache
+    )
+    if ball_table_event.time < event.time:
+        event = ball_table_event
 
     ball_ball_event = get_next_ball_ball_collision(
         shot, collision_cache=collision_cache, solver=quartic_solver
