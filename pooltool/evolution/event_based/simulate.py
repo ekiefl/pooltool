@@ -414,6 +414,8 @@ def get_next_ball_circular_cushion_event(
 ) -> Event:
     """Returns next ball-cushion collision (circular cushion segment)"""
 
+    return null_event(np.inf)
+
     if not shot.table.has_circular_cushions:
         return null_event(np.inf)
 
