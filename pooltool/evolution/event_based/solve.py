@@ -1,4 +1,3 @@
-from math import acos
 from typing import Tuple
 
 import numpy as np
@@ -9,75 +8,6 @@ import pooltool.constants as const
 import pooltool.physics as physics
 import pooltool.physics.evolve as evolve
 import pooltool.ptmath as ptmath
-
-
-@jit(nopython=True, cache=const.use_numba_cache)
-def skip_ball_ball_collision(
-    rvw1: NDArray[np.float64],
-    rvw2: NDArray[np.float64],
-    s1: int,
-    s2: int,
-    R1: float,
-    R2: float,
-) -> bool:
-    if (s1 == const.spinning or s1 == const.pocketed or s1 == const.stationary) and (
-        s2 == const.spinning or s2 == const.pocketed or s2 == const.stationary
-    ):
-        # Neither balls are moving. No collision.
-        return True
-
-    if s1 == const.pocketed or s2 == const.pocketed:
-        # One of the balls is pocketed
-        return True
-
-    if s1 == const.rolling and s2 == const.rolling:
-        # Both balls are rolling (straight line trajectories). Here I am checking
-        # whether both dot products face away from the line connecting the two balls. If
-        # so, they are guaranteed not to collide
-        r12 = rvw2[0] - rvw1[0]
-        dot1 = r12[0] * rvw1[1, 0] + r12[1] * rvw1[1, 1] + r12[2] * rvw1[1, 2]
-        if dot1 <= 0:
-            dot2 = r12[0] * rvw2[1, 0] + r12[1] * rvw2[1, 1] + r12[2] * rvw2[1, 2]
-            if dot2 >= 0:
-                return True
-
-    if s1 == const.rolling and (s2 == const.spinning or s2 == const.stationary):
-        # ball1 is rolling, which guarantees a straight-line trajectory. Some
-        # assumptions can be made based on this fact
-        r12 = rvw2[0] - rvw1[0]
-
-        # ball2 is not moving, so we can pinpoint the range of angles ball1 must be
-        # headed in for a collision
-        d = ptmath.norm3d(r12)
-        unit_d = r12 / d
-        unit_v = ptmath.unit_vector(rvw1[1])
-
-        # Angles are in radians
-        # Calculate forwards and backwards angles, e.g. 10 and 350, take the min
-        angle = np.arccos(np.dot(unit_d, unit_v))
-        max_hit_angle = 0.5 * np.pi - acos((R1 + R2) / d)
-        if angle > max_hit_angle:
-            return True
-
-    if s2 == const.rolling and (s1 == const.spinning or s1 == const.stationary):
-        # ball2 is rolling, which guarantees a straight-line trajectory. Some
-        # assumptions can be made based on this fact
-        r21 = rvw1[0] - rvw2[0]
-
-        # ball1 is not moving, so we can pinpoint the range of angles ball2 must be
-        # headed in for a collision
-        d = ptmath.norm3d(r21)
-        unit_d = r21 / d
-        unit_v = ptmath.unit_vector(rvw2[1])
-
-        # Angles are in radians
-        # Calculate forwards and backwards angles, e.g. 10 and 350, take the min
-        angle = np.arccos(np.dot(unit_d, unit_v))
-        max_hit_angle = 0.5 * np.pi - acos((R1 + R2) / d)
-        if angle > max_hit_angle:
-            return True
-
-    return False
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -161,35 +91,6 @@ def ball_ball_collision_coeffs(
     e = Cx**2 + Cy**2 - 4 * R**2
 
     return a, b, c, d, e
-
-
-def ball_ball_collision_time(
-    rvw1: NDArray[np.float64],
-    rvw2: NDArray[np.float64],
-    s1: int,
-    s2: int,
-    mu1: float,
-    mu2: float,
-    m1: float,
-    m2: float,
-    g1: float,
-    g2: float,
-    R: float,
-) -> float:
-    """Get the time until collision between 2 balls
-
-    NOTE This is deprecated. Rather than solve the roots of a single polynomial
-    equation, as is done in this function, all roots of a given collision class are
-    solved simultaneously via ptmath.roots
-    """
-    a, b, c, d, e = ball_ball_collision_coeffs(
-        rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
-    )
-    roots = np.roots([a, b, c, d, e])
-
-    roots = roots[(abs(roots.imag) <= const.EPS) & (roots.real > const.EPS)].real
-
-    return roots.min() if len(roots) else np.inf
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
