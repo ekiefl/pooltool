@@ -22,7 +22,7 @@ def impulse_into():
     ball = pt.Ball.create("cue", xy=(0.5, 0.5))
     ball.state.rvw[1, 2] = -5.0
     ball.state.rvw[1, 1] = 0.5
-    ball.state.s = pt.constants.sliding
+    ball.state.s = pt.constants.airborne
 
     shot = pt.System(
         cue=pt.Cue(cue_ball_id="cue"),
@@ -56,12 +56,12 @@ def simul():
 def bounce_over():
     ball = pt.Ball.create("cue", xy=(0.7, 0.5))
     ball.state.rvw[1, 2] = -5.0
-    ball.state.rvw[1, 1] = -0.4
+    ball.state.rvw[1, 1] = 0
     ball.state.rvw[1, 0] = 2
-    ball.state.s = pt.constants.sliding
+    ball.state.s = pt.constants.airborne
 
     other = pt.Ball.create("other", xy=(0.7, 0.42))
-    other.state.rvw[1, 0] = 1.8
+    other.state.rvw[1, 0] = 3.2
     other.state.s = pt.constants.sliding
 
     shot = pt.System(
