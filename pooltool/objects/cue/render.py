@@ -11,6 +11,7 @@ from pooltool.error import ConfigError, StrokeError
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.datatypes import Render
+from pooltool.ptmath.utils import tip_center_offset, tip_contact_offset
 
 
 class CueRender(Render):
@@ -47,8 +48,14 @@ class CueRender(Render):
 
         cue_stick_focus.setH(self._cue.phi + 180)  # phi
         cue_stick_focus.setR(-self._cue.theta)  # theta
-        cue_stick.setY(-self._cue.a * self.follow._ball.params.R)  # a
-        cue_stick.setZ(self._cue.b * self.follow._ball.params.R)  # b
+
+        tip_offset_a, tip_offset_b = tip_center_offset(
+            np.array([self._cue.a, self._cue.b]),
+            self._cue.specs.tip_radius,
+            self.follow._ball.params.R,
+        )
+        cue_stick.setY(-tip_offset_a * self.follow._ball.params.R)  # a
+        cue_stick.setZ(tip_offset_b * self.follow._ball.params.R)  # b
 
     def init_model(self):
         path = utils.panda_path(ani.model_dir / "cue" / "cue.glb")
@@ -241,8 +248,12 @@ class CueRender(Render):
         assert V0 is not None
 
         theta = -cue_stick_focus.getR()
-        a = -cue_stick.getY() / self.follow._ball.params.R
-        b = cue_stick.getZ() / self.follow._ball.params.R
+        a, b = tip_contact_offset(
+            np.array([-cue_stick.getY(), cue_stick.getZ()])
+            / self.follow._ball.params.R,
+            self._cue.specs.shaft_tip_radius,
+            self.follow._ball.params.R,
+        )
         ball_id = self.follow._ball.id
 
         return V0, phi, theta, a, b, ball_id

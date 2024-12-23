@@ -34,7 +34,8 @@ class CueSpecs:
     brand: str = field(default="Predator")
     M: float = field(default=0.567)
     length: float = field(default=1.4732)
-    tip_radius: float = field(default=0.007)
+    tip_radius: float = field(default=0.0106045)  # nickel radius
+    shaft_tip_radius: float = field(default=0.0065)  # 13 mm shaft diameter at the tip
     butt_radius: float = field(default=0.02)
     end_mass: float = field(default=0.170097 / 30)
 

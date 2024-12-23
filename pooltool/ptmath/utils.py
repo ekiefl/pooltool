@@ -335,3 +335,17 @@ def is_overlapping(
     rvw1: NDArray[np.float64], rvw2: NDArray[np.float64], R1: float, R2: float
 ) -> bool:
     return norm3d(rvw1[0] - rvw2[0]) < (R1 + R2)
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def tip_contact_offset(
+    cue_center_offset: NDArray[np.float64], tip_radius: float, ball_radius: float
+) -> NDArray[np.float64]:
+    return cue_center_offset / (1 + tip_radius / ball_radius)
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def tip_center_offset(
+    tip_center_offset: NDArray[np.float64], tip_radius: float, ball_radius: float
+) -> NDArray[np.float64]:
+    return tip_center_offset * (1 + tip_radius / ball_radius)
