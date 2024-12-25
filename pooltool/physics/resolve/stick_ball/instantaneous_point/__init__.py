@@ -75,14 +75,11 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, english_throttle: float):
     phi *= np.pi / 180
     theta *= np.pi / 180
 
-    II = 2 / 5 * m * R**2
+    I_m = 2 / 5 * R**2
 
     c = np.sqrt(R**2 - a**2 - b**2)
 
-    # Calculate impact force F.  In Leckie & Greenspan, the mass term in numerator is
-    # ball mass, which seems wrong.  See
-    # https://billiards.colostate.edu/faq/cue-tip/force/
-    numerator = 2 * M * V0
+    numerator = 2 * V0
     temp = (
         a**2
         + (b * np.cos(theta)) ** 2
@@ -90,18 +87,18 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, english_throttle: float):
         - 2 * b * c * np.cos(theta) * np.sin(theta)
     )
     denominator = 1 + m / M + 5 / 2 / R**2 * temp
-    F = numerator / denominator
+    v = numerator / denominator
 
     # 3D FIXME
-    # v_B = -F/m * np.array([0, np.cos(theta), np.sin(theta)])
-    v_B = -F / m * np.array([0, np.cos(theta), 0])
+    # v_B = -v * np.array([0, np.cos(theta), np.sin(theta)])
+    v_B = -v * np.array([0, np.cos(theta), 0])
 
     vec_x = -c * np.sin(theta) + b * np.cos(theta)
     vec_y = a * np.sin(theta)
     vec_z = -a * np.cos(theta)
 
     vec = np.array([vec_x, vec_y, vec_z])
-    w_B = F / II * vec
+    w_B = v / I_m * vec
 
     # Rotate to table reference
     rot_angle = phi + np.pi / 2
