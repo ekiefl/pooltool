@@ -84,7 +84,7 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, english_throttle: float):
         a**2
         + (b * np.cos(theta)) ** 2
         + (c * np.sin(theta)) ** 2
-        - 2 * b * c * np.cos(theta) * np.sin(theta)
+        + 2 * b * c * np.cos(theta) * np.sin(theta)
     )
     denominator = 1 + m / M + 5 / 2 / R**2 * temp
     v = numerator / denominator
