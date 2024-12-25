@@ -109,7 +109,7 @@ class ResolverConfig:
             ball_pocket=BallPocketModel.CANONICAL,
             ball_pocket_params={},
             stick_ball=StickBallModel.INSTANTANEOUS_POINT,
-            stick_ball_params={"english_throttle": 0.5, "squirt_throttle": 1.0},
+            stick_ball_params={"english_throttle": 1.0, "squirt_throttle": 1.0},
             transition=BallTransitionModel.CANONICAL,
             transition_params={},
             version=VERSION,
