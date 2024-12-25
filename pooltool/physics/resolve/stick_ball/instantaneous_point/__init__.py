@@ -62,8 +62,7 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, english_throttle: float):
     english_throttle:
         This modulates the amount of spin that is generated from a cue strike, where
         english_throttle < 1 produces less spin than the model's default, and
-        english_throttle > 1 produces more. In the interactive interface,
-        english_throttle of 0.5 produces somewhat realistic seeming spin.
+        english_throttle > 1 produces more.
     """
 
     a *= R
