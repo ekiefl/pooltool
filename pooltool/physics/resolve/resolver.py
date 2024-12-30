@@ -45,7 +45,7 @@ from pooltool.terminal import Run
 RESOLVER_CONFIG_PATH = pooltool.user_config.PHYSICS_DIR / "resolver.yaml"
 """The location of the resolver config path YAML."""
 
-VERSION: int = 4
+VERSION: int = 5
 
 
 run = Run()
