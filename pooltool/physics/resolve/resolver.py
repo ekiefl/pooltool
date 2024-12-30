@@ -45,7 +45,7 @@ from pooltool.terminal import Run
 RESOLVER_CONFIG_PATH = pooltool.user_config.PHYSICS_DIR / "resolver.yaml"
 """The location of the resolver config path YAML."""
 
-VERSION: int = 4
+VERSION: int = 5
 
 
 run = Run()
@@ -109,7 +109,7 @@ class ResolverConfig:
             ball_pocket=BallPocketModel.CANONICAL,
             ball_pocket_params={},
             stick_ball=StickBallModel.INSTANTANEOUS_POINT,
-            stick_ball_params={"english_throttle": 0.5, "squirt_throttle": 1.0},
+            stick_ball_params={"english_throttle": 1.0, "squirt_throttle": 1.0},
             transition=BallTransitionModel.CANONICAL,
             transition_params={},
             version=VERSION,
