@@ -28,10 +28,10 @@ def final_ball_motion_state(rvw: NDArray[np.float64], R: float) -> int:
 
     # On table with zero z-velocity
 
-    if norm3d(rel_velocity(rvw, R)) > 0:
+    if norm3d(rel_velocity(rvw, R)) > const.EPS:
         return const.sliding
 
-    if norm2d(rvw[1]) > 0:
+    if norm2d(rvw[1]) > const.EPS:
         return const.rolling
 
     # Ball is non-translating
