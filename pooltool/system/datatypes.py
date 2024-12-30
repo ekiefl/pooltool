@@ -134,6 +134,14 @@ class System:
                     ball.params.R == first_ball_R
                 ), f"Ball with id {ball.id} has a different radius"
 
+    def __attrs_post_init__(self):
+        if self.cue.cue_ball_id not in self.balls:
+            raise ValueError(
+                f"Mismatch in cue ball ID: '{self.cue.cue_ball_id}' not found in the "
+                f"set of balls: {list(self.balls.keys())}. Perhaps you should set "
+                f"`cue.cue_ball_id` before instancing a system?"
+            )
+
     @property
     def continuized(self):
         """Checks if all balls have a non-empty continuous history.
