@@ -112,11 +112,10 @@ class InstantaneousPoint(CoreStickBallCollision):
     """Instantaneous and point-like stick-ball interaction
 
     This collision assumes the stick-ball interaction is instantaneous and point-like.
-    The equation comes from Leckie and Greenspan's 2006 "An Event-Based Pool Physics
-    Simulator" (https://link.springer.com/chapter/10.1007/11922155_19). Since they
-    provide no citations in it's brief derivation (which is missing in the [free
-    preprint](https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.89.4627&rep=rep1&type=pdf)),
-    we can in good faith assume this is their own equation.
+
+    Note:
+        - A derivation of this model can be found in Dr. Dave Billiard's technical proof
+          A-30 (https://billiards.colostate.edu/technical_proofs/new/TP_A-30.pdf)
 
     Additionally, a deflection (squirt) angle is calculated via
     :mod:`pooltool.physics.resolve.stick_ball.squirt`).
