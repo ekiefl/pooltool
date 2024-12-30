@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 from numba import jit
@@ -7,6 +7,11 @@ import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.physics.resolve.ball_ball.core import CoreBallBallCollision
+from pooltool.physics.resolve.ball_ball.frictional_inelastic.friction import (
+    BallBallFrictionModel,
+    get_ball_ball_friction_model,
+)
+from pooltool.physics.resolve.types import ModelArgs
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -111,14 +116,23 @@ class FrictionalInelastic(CoreBallBallCollision):
     and a more complete analysis of velocity and angular velocity in their vector forms.
     """
 
+    def __init__(
+        self,
+        friction_model: Optional[BallBallFrictionModel] = None,
+        friction_model_params: ModelArgs = {},
+    ):
+        self.friction_strategy = get_ball_ball_friction_model(
+            friction_model, friction_model_params
+        )
+
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
         """Resolves the collision."""
         rvw1, rvw2 = _resolve_ball_ball(
             ball1.state.rvw.copy(),
             ball2.state.rvw.copy(),
             ball1.params.R,
-            # Assume the interaction coefficients are the average of the two balls
-            u_b=(ball1.params.u_b + ball2.params.u_b) / 2,
+            u_b=self.friction_strategy.calculate_friction(ball1, ball2),
+            # Average the coefficient of restitution parameters for the two balls
             e_b=(ball1.params.e_b + ball2.params.e_b) / 2,
         )
 
