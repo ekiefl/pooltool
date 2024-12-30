@@ -74,6 +74,7 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, english_throttle: float):
     phi *= np.pi / 180
     theta *= np.pi / 180
 
+    # Moment of inertia over mass
     I_m = 2 / 5 * R**2
 
     c = np.sqrt(R**2 - a**2 - b**2)
