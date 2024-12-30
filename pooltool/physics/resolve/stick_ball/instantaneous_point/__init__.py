@@ -62,8 +62,7 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, english_throttle: float):
     english_throttle:
         This modulates the amount of spin that is generated from a cue strike, where
         english_throttle < 1 produces less spin than the model's default, and
-        english_throttle > 1 produces more. In the interactive interface,
-        english_throttle of 0.5 produces somewhat realistic seeming spin.
+        english_throttle > 1 produces more.
     """
 
     a *= R
@@ -75,33 +74,31 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, english_throttle: float):
     phi *= np.pi / 180
     theta *= np.pi / 180
 
-    II = 2 / 5 * m * R**2
+    # Moment of inertia over mass
+    I_m = 2 / 5 * R**2
 
     c = np.sqrt(R**2 - a**2 - b**2)
 
-    # Calculate impact force F.  In Leckie & Greenspan, the mass term in numerator is
-    # ball mass, which seems wrong.  See
-    # https://billiards.colostate.edu/faq/cue-tip/force/
-    numerator = 2 * M * V0
+    numerator = 2 * V0
     temp = (
         a**2
         + (b * np.cos(theta)) ** 2
-        + (c * np.cos(theta)) ** 2
+        + (c * np.sin(theta)) ** 2
         - 2 * b * c * np.cos(theta) * np.sin(theta)
     )
     denominator = 1 + m / M + 5 / 2 / R**2 * temp
-    F = numerator / denominator
+    v = numerator / denominator
 
     # 3D FIXME
-    # v_B = -F/m * np.array([0, np.cos(theta), np.sin(theta)])
-    v_B = -F / m * np.array([0, np.cos(theta), 0])
+    # v_B = -v * np.array([0, np.cos(theta), np.sin(theta)])
+    v_B = -v * np.array([0, np.cos(theta), 0])
 
     vec_x = -c * np.sin(theta) + b * np.cos(theta)
     vec_y = a * np.sin(theta)
     vec_z = -a * np.cos(theta)
 
     vec = np.array([vec_x, vec_y, vec_z])
-    w_B = F / II * vec
+    w_B = v / I_m * vec
 
     # Rotate to table reference
     rot_angle = phi + np.pi / 2
@@ -116,11 +113,10 @@ class InstantaneousPoint(CoreStickBallCollision):
     """Instantaneous and point-like stick-ball interaction
 
     This collision assumes the stick-ball interaction is instantaneous and point-like.
-    The equation comes from Leckie and Greenspan's 2006 "An Event-Based Pool Physics
-    Simulator" (https://link.springer.com/chapter/10.1007/11922155_19). Since they
-    provide no citations in it's brief derivation (which is missing in the [free
-    preprint](https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.89.4627&rep=rep1&type=pdf)),
-    we can in good faith assume this is their own equation.
+
+    Note:
+        - A derivation of this model can be found in Dr. Dave Billiard's technical proof
+          A-30 (https://billiards.colostate.edu/technical_proofs/new/TP_A-30.pdf)
 
     Additionally, a deflection (squirt) angle is calculated via
     :mod:`pooltool.physics.resolve.stick_ball.squirt`).
