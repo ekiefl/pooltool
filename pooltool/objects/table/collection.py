@@ -59,10 +59,10 @@ TABLE_SPECS: Dict[TableName, TableSpecs] = {
         model_descr=TableModelDescr(name="snooker_generic"),
     ),
     TableName.BILLIARD_WIP: BilliardTableSpecs(
-        l=2.84,     # adapted to match billiard table size
+        l=2.84,
         w=2.84 / 2,
         cushion_width=2 * 2.54 / 100,
-        cushion_height=0.037,  # cushion nose to be at 37mm height
+        cushion_height=0.037,
         height=0.708,
         lights_height=1.99,
         model_descr=TableModelDescr.null(),
