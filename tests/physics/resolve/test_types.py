@@ -9,6 +9,7 @@ def test_model_args_flat(tmp_path):
         "a": 42,
         "b": True,
         "c": "string",
+        "d": None,
     }
     conversion.unstructure_to(d, tmp_path / "test.yaml")
     assert d == conversion.structure_from(tmp_path / "test.yaml", ModelArgs)

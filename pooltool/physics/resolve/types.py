@@ -3,7 +3,7 @@ from typing import ForwardRef, Mapping, Union
 from pooltool.serialize import conversion
 from pooltool.serialize.serializers import SerializeFormat
 
-ArgType = Union[float, int, str, bool]
+ArgType = Union[float, int, str, bool, None]
 """Allowable types model arguments"""
 
 # Recursive type definition is not fixed with PEP 563, so ForwardRef type is required.
