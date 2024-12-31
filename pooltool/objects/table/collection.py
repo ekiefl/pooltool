@@ -91,6 +91,7 @@ _default_game_type_map: Dict[GameType, TableName] = {
     GameType.SNOOKER: TableName.SNOOKER_GENERIC,
     GameType.THREECUSHION: TableName.BILLIARD_WIP,
     GameType.SUMTOTHREE: TableName.SUMTOTHREE_WIP,
+    GameType.SANDBOX: TableName.SEVEN_FOOT_SHOWOOD,
 }
 
 
