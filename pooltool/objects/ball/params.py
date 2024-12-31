@@ -170,7 +170,7 @@ BALL_PARAMS: Dict[PrebuiltBallParams, BallParams] = {
         u_r=0.01,
         u_sp_proportionality=10 * 2 / 5 / 9,
         e_c=0.85,
-        f_c=0.2,
+        f_c=0.15,
         g=9.81,
     ),
 }
