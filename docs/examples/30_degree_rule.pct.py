@@ -35,7 +35,7 @@
 #
 # ## Assumptions
 #
-# We will use the default pooltool physics engine, which assume perfectly elastic and frictionless ball-ball collisions. Read more [here](https://ekiefl.github.io/2020/04/24/pooltool-theory/#section-ii-ball-ball-interactions).
+# We'll use one of pooltool's simpler ball-ball models which assumes perfectly elastic and frictionless ball-ball collisions. Read more [here](https://ekiefl.github.io/2020/04/24/pooltool-theory/#section-ii-ball-ball-interactions).
 #
 # Importantly, the cue ball must be rolling (without slippage) when it contacts the object ball. Otherwise, the 30-degree rule will not hold. As an extreme example of this, a cue ball with no spin will deflect off the object ball along the [tangent line](https://billiards.colostate.edu/faq/stun/90-degree-rule/).
 #
@@ -117,13 +117,17 @@ system_template = pt.System(
 system = system_template.copy()
 
 phi = pt.aim.at_ball(system, "obj", cut=30)
-system.cue.set_state(V0=3, phi=phi, b=0.8)
+system.cue.set_state(V0=3, phi=phi, b=0.4)
 
 # %% [markdown]
 # Now, we [simulate](../autoapi/pooltool/index.rst#pooltool.simulate) the shot and then [continuize](../autoapi/pooltool/evolution/continuize/index.html#pooltool.evolution.continuize.continuize) it to store ball state data (like coordinates) in $10\text{ms}$ timestep intervals.
 
 # %% trusted=true
-pt.simulate(system, inplace=True)
+# Create a default physics engine and overwrite ball-ball model with frictionless, elastic model.
+engine = pt.physics.PhysicsEngine()
+engine.resolver.ball_ball = pt.physics.get_ball_ball_model(pt.physics.BallBallModel.FRICTIONLESS_ELASTIC)
+
+pt.simulate(system, engine=engine, inplace=True)
 pt.continuize(system, dt=0.01, inplace=True)
 
 print(f"System simulated: {system.simulated}")
@@ -283,8 +287,8 @@ def get_carom_angle(system: pt.System) -> float:
 def simulate_experiment(V0: float, cut_angle: float) -> pt.System:
     system = system_template.copy()
     phi = pt.aim.at_ball(system, "obj", cut=cut_angle)
-    system.cue.set_state(V0=V0, phi=phi, b=0.8)
-    pt.simulate(system, inplace=True)
+    system.cue.set_state(V0=V0, phi=phi, b=0.4)
+    pt.simulate(system, engine=engine, inplace=True)
     return system
 
 
