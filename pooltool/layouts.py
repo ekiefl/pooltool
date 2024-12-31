@@ -17,7 +17,7 @@ from pooltool.utils.strenum import StrEnum, auto
 
 DEFAULT_STANDARD_BALLSET = get_ballset("pooltool_pocket")
 DEFAULT_SNOOKER_BALLSET = get_ballset("generic_snooker")
-DEFAULT_THREECUSH_BALLSET = None
+DEFAULT_THREECUSH_BALLSET = get_ballset("carambol")
 DEFAULT_SUMTOTHREE_BALLSET = None
 
 
