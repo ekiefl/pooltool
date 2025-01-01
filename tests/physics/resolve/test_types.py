@@ -4,7 +4,7 @@ from pooltool.physics.resolve.types import ModelArgs
 from pooltool.serialize import conversion
 
 
-def test_model_args_flat(tmp_path):
+def test_model_args_serialize_flat(tmp_path):
     d = {
         "a": 42,
         "b": True,
@@ -15,7 +15,7 @@ def test_model_args_flat(tmp_path):
     assert d == conversion.structure_from(tmp_path / "test.yaml", ModelArgs)
 
 
-def test_model_args_recursive(tmp_path):
+def test_model_args_serialize_recursive(tmp_path):
     d = {
         "a": 42,
         "b": True,
@@ -33,7 +33,7 @@ def test_model_args_recursive(tmp_path):
     assert d == conversion.structure_from(tmp_path / "test.yaml", ModelArgs)
 
 
-def test_model_args_bad_keys(tmp_path):
+def test_model_args_serialize_bad_keys(tmp_path):
     # Only string keys  allowed
     d = {("a", "b"): 1}
     with pytest.raises(Exception):
