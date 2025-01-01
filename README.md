@@ -46,8 +46,6 @@ Quick links:
 
 If you want to ask questions, get help, or contribute to the codebase, please join the Discord and introduce yourself.
 
-(If the Discord link is expired, please make an issue in this repo).
-
 # Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
