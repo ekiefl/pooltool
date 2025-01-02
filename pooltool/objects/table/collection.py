@@ -58,20 +58,21 @@ TABLE_SPECS: Dict[TableName, TableSpecs] = {
         lights_height=1.99,
         model_descr=TableModelDescr(name="snooker_generic"),
     ),
+    # https://web.archive.org/web/20130801042614/http://www.umb.org/Rules/Carom_Rules.pdf
     TableName.BILLIARD_WIP: BilliardTableSpecs(
-        l=2.84,     # adapted to match billiard table size
+        l=2.84,
         w=2.84 / 2,
         cushion_width=2 * 2.54 / 100,
-        cushion_height=0.037,  # cushion nose to be at 37mm height
+        cushion_height=0.037,
         height=0.708,
         lights_height=1.99,
         model_descr=TableModelDescr.null(),
     ),
     TableName.SUMTOTHREE_WIP: BilliardTableSpecs(
-        l=3.05 / 2.5,
-        w=3.05 / 2 / 2.5,
+        l=2.84,
+        w=2.84 / 2,
         cushion_width=2 * 2.54 / 100,
-        cushion_height=0.64 * 2 * 0.028575,
+        cushion_height=0.037,
         height=0.708,
         lights_height=1.99,
         model_descr=TableModelDescr.null(),
@@ -91,6 +92,7 @@ _default_game_type_map: Dict[GameType, TableName] = {
     GameType.SNOOKER: TableName.SNOOKER_GENERIC,
     GameType.THREECUSHION: TableName.BILLIARD_WIP,
     GameType.SUMTOTHREE: TableName.SUMTOTHREE_WIP,
+    GameType.SANDBOX: TableName.SEVEN_FOOT_SHOWOOD,
 }
 
 
