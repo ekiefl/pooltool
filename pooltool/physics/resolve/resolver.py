@@ -6,13 +6,14 @@ from pathlib import Path
 from typing import Optional
 
 import attrs
+import cattrs
 
 import pooltool.user_config
 from pooltool.events.datatypes import AgentType, Event, EventType
 from pooltool.physics.resolve.ball_ball import (
     BallBallCollisionStrategy,
     BallBallModel,
-    get_ball_ball_model,
+    ball_ball_models,
 )
 from pooltool.physics.resolve.ball_cushion import (
     BallCCushionCollisionStrategy,
@@ -181,9 +182,8 @@ class Resolver:
 
     @classmethod
     def from_config(cls, config: ResolverConfig) -> Resolver:
-        ball_ball = get_ball_ball_model(
-            model=config.ball_ball,
-            params=config.ball_ball_params,
+        ball_ball = cattrs.structure(
+            config.ball_ball_params, ball_ball_models[config.ball_ball]
         )
         ball_linear_cushion = get_ball_lin_cushion_model(
             model=config.ball_linear_cushion,

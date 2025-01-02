@@ -1,5 +1,6 @@
 from typing import Optional, Tuple
 
+import attrs
 import numpy as np
 from numba import jit
 
@@ -11,6 +12,7 @@ from pooltool.physics.resolve.ball_ball.frictional_inelastic.friction import (
     BallBallFrictionModel,
     get_ball_ball_friction_model,
 )
+from pooltool.physics.resolve.models import BallBallModel
 from pooltool.physics.resolve.types import ModelArgs
 
 
@@ -108,6 +110,7 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     return rvw1_f, rvw2_f
 
 
+@attrs.define
 class FrictionalInelastic(CoreBallBallCollision):
     """A simple ball-ball collision model including ball-ball friction, and coefficient of restitution for equal-mass balls
 
@@ -116,13 +119,15 @@ class FrictionalInelastic(CoreBallBallCollision):
     and a more complete analysis of velocity and angular velocity in their vector forms.
     """
 
-    def __init__(
-        self,
-        friction_model: Optional[BallBallFrictionModel] = None,
-        friction_model_params: ModelArgs = {},
-    ):
+    name: BallBallModel = BallBallModel.FRICTIONAL_INELASTIC
+    friction_model: Optional[BallBallFrictionModel] = None
+    friction_model_params: ModelArgs = {}
+
+    friction_strategy = attrs.field(init=False)
+
+    def __attrs_post_init__(self):
         self.friction_strategy = get_ball_ball_friction_model(
-            friction_model, friction_model_params
+            self.friction_model, self.friction_model_params
         )
 
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:

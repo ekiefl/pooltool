@@ -1,11 +1,13 @@
 from typing import Tuple
 
+import attrs
 import numpy as np
 
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.physics.resolve.ball_ball.core import CoreBallBallCollision
+from pooltool.physics.resolve.models import BallBallModel
 
 
 def _resolve_ball_ball(rvw1, rvw2, R):
@@ -26,6 +28,7 @@ def _resolve_ball_ball(rvw1, rvw2, R):
     return rvw1, rvw2
 
 
+@attrs.define
 class FrictionlessElastic(CoreBallBallCollision):
     """A frictionless, instantaneous, elastic, equal mass collision resolver.
 
@@ -35,6 +38,8 @@ class FrictionlessElastic(CoreBallBallCollision):
         - This physics of this model is blogged about at
           https://ekiefl.github.io/2020/04/24/pooltool-theory/#1-elastic-instantaneous-frictionless
     """
+
+    name: BallBallModel = BallBallModel.FRICTIONLESS_ELASTIC
 
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
         """Resolves the collision."""

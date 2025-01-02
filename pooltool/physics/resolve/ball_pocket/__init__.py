@@ -8,6 +8,7 @@ Note:
 
 from typing import Dict, Optional, Protocol, Tuple, Type
 
+import attrs
 import numpy as np
 
 import pooltool.constants as const
@@ -20,6 +21,8 @@ from pooltool.physics.resolve.types import ModelArgs
 class BallPocketStrategy(Protocol):
     """Ball-pocket collision models must satisfy this protocol"""
 
+    name: BallPocketModel = BallPocketModel.CANONICAL
+
     def resolve(
         self, ball: Ball, pocket: Pocket, inplace: bool = False
     ) -> Tuple[Ball, Pocket]:
@@ -27,6 +30,7 @@ class BallPocketStrategy(Protocol):
         ...
 
 
+@attrs.define
 class CanonicalBallPocket:
     def resolve(
         self, ball: Ball, pocket: Pocket, inplace: bool = False

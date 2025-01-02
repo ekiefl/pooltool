@@ -8,6 +8,7 @@ Note:
 
 from typing import Dict, Optional, Protocol, Tuple, Type
 
+import attrs
 import numpy as np
 
 import pooltool.constants as const
@@ -25,6 +26,7 @@ class BallTransitionStrategy(Protocol):
         ...
 
 
+@attrs.define
 class CanonicalTransition:
     def resolve(self, ball: Ball, transition: EventType, inplace: bool = False) -> Ball:
         if not inplace:

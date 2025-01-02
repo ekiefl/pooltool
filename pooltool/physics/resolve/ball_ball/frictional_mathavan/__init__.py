@@ -1,5 +1,6 @@
 from typing import Optional, Tuple
 
+import attrs
 import numpy as np
 from numba import jit
 from numpy import array, dot, sqrt
@@ -210,6 +211,7 @@ def _collide_balls(
     return dot(G_T, v_i), dot(G_T, w_i), dot(G_T, v_j), dot(G_T, w_j)
 
 
+@attrs.define
 class FrictionalMathavan(CoreBallBallCollision):
     """Ball-ball collision resolver for the Mathavan et al. (2014) collision model.
 
@@ -230,8 +232,8 @@ class FrictionalMathavan(CoreBallBallCollision):
         https://billiards.colostate.edu/physics_articles/Mathavan_Sports_2014.pdf
     """
 
-    def __init__(self, num_iterations: int = 1000):
-        self.num_iterations = num_iterations
+    name: BallBallModel = BallBallModel.FRICTIONAL_MATHAVAN
+    num_iterations: int = 1000
 
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
         """Resolve ball-ball collision via Mathavan et al. (2014).
