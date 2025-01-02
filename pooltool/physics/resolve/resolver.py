@@ -13,6 +13,11 @@ from pooltool.physics.resolve.ball_ball import (
     BallBallCollisionStrategy,
     ball_ball_models,
 )
+from pooltool.physics.resolve.ball_ball.friction import (
+    AlciatoreBallBallFriction,
+    BallBallFrictionStrategy,
+    ball_ball_friction_models,
+)
 from pooltool.physics.resolve.ball_ball.frictional_mathavan import FrictionalMathavan
 from pooltool.physics.resolve.ball_cushion import (
     BallCCushionCollisionStrategy,
@@ -136,7 +141,10 @@ class Resolver:
                 )
 
         resolver = cls(
-            ball_ball=FrictionalMathavan(num_iterations=1000),
+            ball_ball=FrictionalMathavan(
+                friction=AlciatoreBallBallFriction(),
+                num_iterations=1000,
+            ),
             ball_linear_cushion=Han2005Linear(),
             ball_circular_cushion=Han2005Circular(),
             ball_pocket=CanonicalBallPocket(),
@@ -183,6 +191,7 @@ _model_map: Mapping[Any, Mapping[Any, Type]] = {
     BallPocketStrategy: ball_pocket_models,
     StickBallCollisionStrategy: stick_ball_models,
     BallTransitionStrategy: ball_transition_models,
+    BallBallFrictionStrategy: ball_ball_friction_models,
 }
 
 

@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Tuple
 
 import attrs
 import numpy as np
@@ -8,9 +8,9 @@ import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.physics.resolve.ball_ball.core import CoreBallBallCollision
-from pooltool.physics.resolve.ball_ball.frictional_inelastic.friction import (
-    BallBallFrictionModel,
-    get_ball_ball_friction_model,
+from pooltool.physics.resolve.ball_ball.friction import (
+    AlciatoreBallBallFriction,
+    BallBallFrictionStrategy,
 )
 from pooltool.physics.resolve.models import BallBallModel
 
@@ -119,15 +119,7 @@ class FrictionalInelastic(CoreBallBallCollision):
     """
 
     name: BallBallModel = attrs.field(default=BallBallModel.FRICTIONAL_INELASTIC)
-    friction_model: Optional[BallBallFrictionModel] = None
-    friction_model_params: ModelArgs = {}
-
-    friction_strategy = attrs.field(init=False)
-
-    def __attrs_post_init__(self):
-        self.friction_strategy = get_ball_ball_friction_model(
-            self.friction_model, self.friction_model_params
-        )
+    friction: BallBallFrictionStrategy = AlciatoreBallBallFriction()
 
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
         """Resolves the collision."""
@@ -135,7 +127,7 @@ class FrictionalInelastic(CoreBallBallCollision):
             ball1.state.rvw.copy(),
             ball2.state.rvw.copy(),
             ball1.params.R,
-            u_b=self.friction_strategy.calculate_friction(ball1, ball2),
+            u_b=self.friction.calculate_friction(ball1, ball2),
             # Average the coefficient of restitution parameters for the two balls
             e_b=(ball1.params.e_b + ball2.params.e_b) / 2,
         )
