@@ -12,41 +12,8 @@ from pooltool.physics.resolve.ball_cushion.unrealistic import (
     UnrealisticCircular,
     UnrealisticLinear,
 )
+from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
 from pooltool.physics.resolve.types import ModelArgs
-from pooltool.utils.strenum import StrEnum, auto
-
-
-class BallLCushionModel(StrEnum):
-    """An Enum for different ball-linear cushion collision models
-
-    Attributes:
-        HAN_2005:
-            https://ekiefl.github.io/2020/04/24/pooltool-theory/#3-han-2005
-            (:class:`Han2005Linear`).
-        UNREALISTIC:
-            An unrealistic model in which balls are perfectly reflected. Spin is left
-            untouched by the interaction (:class:`UnrealisticLinear`).
-    """
-
-    HAN_2005 = auto()
-    UNREALISTIC = auto()
-
-
-class BallCCushionModel(StrEnum):
-    """An Enum for different ball-circular cushion collision models
-
-    Attributes:
-        HAN_2005:
-            https://ekiefl.github.io/2020/04/24/pooltool-theory/#3-han-2005
-            (:class:`Han2005Linear`).
-        UNREALISTIC:
-            An unrealistic model in which balls are perfectly reflected. Spin is left
-            untouched by the interaction (:class:`UnrealisticCircular`).
-    """
-
-    HAN_2005 = auto()
-    UNREALISTIC = auto()
-
 
 _ball_lcushion_models: Dict[BallLCushionModel, Type[BallLCushionCollisionStrategy]] = {
     BallLCushionModel.HAN_2005: Han2005Linear,

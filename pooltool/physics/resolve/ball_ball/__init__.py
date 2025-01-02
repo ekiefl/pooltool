@@ -3,26 +3,11 @@
 from typing import Dict, Optional, Type
 
 from pooltool.physics.resolve.ball_ball.core import BallBallCollisionStrategy
+from pooltool.physics.resolve.models import BallBallModel
 from pooltool.physics.resolve.ball_ball.frictional_inelastic import FrictionalInelastic
 from pooltool.physics.resolve.ball_ball.frictional_mathavan import FrictionalMathavan
 from pooltool.physics.resolve.ball_ball.frictionless_elastic import FrictionlessElastic
 from pooltool.physics.resolve.types import ModelArgs
-from pooltool.utils.strenum import StrEnum, auto
-
-
-class BallBallModel(StrEnum):
-    """An Enum for different ball-ball collision models
-
-    Attributes:
-        FRICTIONLESS_ELASTIC:
-            Frictionless, instantaneous, elastic, equal mass collision
-            (:class:`FrictionlessElastic`).
-    """
-
-    FRICTIONLESS_ELASTIC = auto()
-    FRICTIONAL_INELASTIC = auto()
-    FRICTIONAL_MATHAVAN = auto()
-
 
 _ball_ball_models: Dict[BallBallModel, Type[BallBallCollisionStrategy]] = {
     BallBallModel.FRICTIONLESS_ELASTIC: FrictionlessElastic,

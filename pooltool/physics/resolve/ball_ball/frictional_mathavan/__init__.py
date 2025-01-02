@@ -8,6 +8,7 @@ from numpy.typing import NDArray
 import pooltool.constants as const
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.physics.resolve.ball_ball.core import CoreBallBallCollision
+from pooltool.physics.resolve.models import BallBallModel
 
 INF = float("inf")
 Z_LOC = array([0, 0, 1], dtype=np.float64)

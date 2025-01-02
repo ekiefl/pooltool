@@ -13,8 +13,8 @@ import numpy as np
 import pooltool.constants as const
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.table.components import Pocket
+from pooltool.physics.resolve.models import BallPocketModel
 from pooltool.physics.resolve.types import ModelArgs
-from pooltool.utils.strenum import StrEnum, auto
 
 
 class BallPocketStrategy(Protocol):
@@ -48,18 +48,6 @@ class CanonicalBallPocket:
         pocket.add(ball.id)
 
         return ball, pocket
-
-
-class BallPocketModel(StrEnum):
-    """An Enum for different ball-pocket collision models
-
-    Attributes:
-        CANONICAL:
-            Sets the ball into the bottom of pocket and sets the state to pocketed
-            (:class:`CanonicalBallPocket`).
-    """
-
-    CANONICAL = auto()
 
 
 _ball_pocket_models: Dict[BallPocketModel, Type[BallPocketStrategy]] = {

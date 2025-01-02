@@ -13,8 +13,8 @@ import numpy as np
 import pooltool.constants as const
 from pooltool.events.datatypes import EventType
 from pooltool.objects.ball.datatypes import Ball
+from pooltool.physics.resolve.models import BallTransitionModel
 from pooltool.physics.resolve.types import ModelArgs
-from pooltool.utils.strenum import StrEnum, auto
 
 
 class BallTransitionStrategy(Protocol):
@@ -77,18 +77,6 @@ def _ball_transition_motion_states(event_type: EventType) -> Tuple[int, int]:
         return const.sliding, const.rolling
 
     raise NotImplementedError()
-
-
-class BallTransitionModel(StrEnum):
-    """An Enum for different transition models
-
-    Attributes:
-        CANONICAL:
-            Sets the ball to appropriate state. Sets any residual quantities to 0 when
-            appropriate (:class:`CanonicalTransition`).
-    """
-
-    CANONICAL = auto()
 
 
 _ball_transition_models: Dict[BallTransitionModel, Type[BallTransitionStrategy]] = {

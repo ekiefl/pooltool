@@ -7,6 +7,7 @@ import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.cue.datatypes import Cue
+from pooltool.physics.resolve.models import StickBallModel
 from pooltool.physics.resolve.stick_ball.core import CoreStickBallCollision
 from pooltool.physics.resolve.stick_ball.squirt import get_squirt_angle
 from pooltool.ptmath.utils import coordinate_rotation
@@ -122,6 +123,7 @@ class InstantaneousPoint(CoreStickBallCollision):
     :mod:`pooltool.physics.resolve.stick_ball.squirt`).
     """
 
+    name: StickBallModel = StickBallModel.INSTANTANEOUS_POINT
     english_throttle: float = 1.0
     squirt_throttle: float = 1.0
 
