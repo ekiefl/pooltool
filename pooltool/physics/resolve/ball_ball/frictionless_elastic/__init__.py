@@ -39,7 +39,9 @@ class FrictionlessElastic(CoreBallBallCollision):
           https://ekiefl.github.io/2020/04/24/pooltool-theory/#1-elastic-instantaneous-frictionless
     """
 
-    name: BallBallModel = BallBallModel.FRICTIONLESS_ELASTIC
+    name: BallBallModel = attrs.field(
+        default=BallBallModel.FRICTIONLESS_ELASTIC, init=False
+    )
 
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
         """Resolves the collision."""

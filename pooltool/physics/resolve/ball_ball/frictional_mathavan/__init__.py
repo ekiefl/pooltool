@@ -232,8 +232,11 @@ class FrictionalMathavan(CoreBallBallCollision):
         https://billiards.colostate.edu/physics_articles/Mathavan_Sports_2014.pdf
     """
 
-    name: BallBallModel = BallBallModel.FRICTIONAL_MATHAVAN
     num_iterations: int = 1000
+
+    name: BallBallModel = attrs.field(
+        default=BallBallModel.FRICTIONAL_MATHAVAN, init=False
+    )
 
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
         """Resolve ball-ball collision via Mathavan et al. (2014).

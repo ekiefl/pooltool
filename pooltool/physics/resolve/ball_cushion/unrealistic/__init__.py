@@ -71,8 +71,11 @@ def _solve(
 
 @attrs.define
 class UnrealisticLinear(CoreBallLCushionCollision):
-    name: BallLCushionModel = BallLCushionModel.HAN_2005
     restitution: bool = True
+
+    name: BallLCushionModel = attrs.field(
+        default=BallLCushionModel.HAN_2005, init=False
+    )
 
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
@@ -82,8 +85,11 @@ class UnrealisticLinear(CoreBallLCushionCollision):
 
 @attrs.define
 class UnrealisticCircular(CoreBallCCushionCollision):
-    name: BallCCushionModel = BallCCushionModel.HAN_2005
     restitution: bool = True
+
+    name: BallCCushionModel = attrs.field(
+        default=BallCCushionModel.HAN_2005, init=False
+    )
 
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment

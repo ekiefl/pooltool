@@ -21,7 +21,7 @@ from pooltool.physics.resolve.types import ModelArgs
 class BallPocketStrategy(Protocol):
     """Ball-pocket collision models must satisfy this protocol"""
 
-    name: BallPocketModel = BallPocketModel.CANONICAL
+    name: BallPocketModel = attrs.field(default=BallPocketModel.CANONICAL, init=False)
 
     def resolve(
         self, ball: Ball, pocket: Pocket, inplace: bool = False

@@ -18,7 +18,7 @@ from pooltool.physics.resolve.ball_cushion.han_2005.properties import (
     get_ball_cushion_friction,
     get_ball_cushion_restitution,
 )
-from pooltool.physics.resolve.models import BallLCushionModel
+from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
 
 
 def han2005(rvw, normal, R, m, h, e_c, f_c):
@@ -111,7 +111,9 @@ def _solve(ball: Ball, cushion: Cushion) -> Tuple[Ball, Cushion]:
 
 @attrs.define
 class Han2005Linear(CoreBallLCushionCollision):
-    name: BallLCushionModel = BallLCushionModel.HAN_2005
+    name: BallLCushionModel = attrs.field(
+        default=BallLCushionModel.HAN_2005, init=False
+    )
 
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
@@ -121,6 +123,10 @@ class Han2005Linear(CoreBallLCushionCollision):
 
 @attrs.define
 class Han2005Circular(CoreBallCCushionCollision):
+    name: BallCCushionModel = attrs.field(
+        default=BallCCushionModel.HAN_2005, init=False
+    )
+
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment
     ) -> Tuple[Ball, CircularCushionSegment]:

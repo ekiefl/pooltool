@@ -123,9 +123,12 @@ class InstantaneousPoint(CoreStickBallCollision):
     :mod:`pooltool.physics.resolve.stick_ball.squirt`).
     """
 
-    name: StickBallModel = StickBallModel.INSTANTANEOUS_POINT
     english_throttle: float = 1.0
     squirt_throttle: float = 1.0
+
+    name: StickBallModel = attrs.field(
+        default=StickBallModel.INSTANTANEOUS_POINT, init=False
+    )
 
     def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]:
         v, w = cue_strike(

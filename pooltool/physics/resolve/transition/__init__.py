@@ -28,6 +28,10 @@ class BallTransitionStrategy(Protocol):
 
 @attrs.define
 class CanonicalTransition:
+    name: BallTransitionModel = attrs.field(
+        default=BallTransitionModel.CANONICAL, init=False
+    )
+
     def resolve(self, ball: Ball, transition: EventType, inplace: bool = False) -> Ball:
         if not inplace:
             ball = ball.copy()
