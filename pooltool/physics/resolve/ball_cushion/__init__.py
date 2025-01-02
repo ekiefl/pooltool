@@ -15,12 +15,12 @@ from pooltool.physics.resolve.ball_cushion.unrealistic import (
 from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
 from pooltool.physics.resolve.types import ModelArgs
 
-_ball_lcushion_models: Dict[BallLCushionModel, Type[BallLCushionCollisionStrategy]] = {
+ball_lcushion_models: Dict[BallLCushionModel, Type[BallLCushionCollisionStrategy]] = {
     BallLCushionModel.HAN_2005: Han2005Linear,
     BallLCushionModel.UNREALISTIC: UnrealisticLinear,
 }
 
-_ball_ccushion_models: Dict[BallCCushionModel, Type[BallCCushionCollisionStrategy]] = {
+ball_ccushion_models: Dict[BallCCushionModel, Type[BallCCushionCollisionStrategy]] = {
     BallCCushionModel.HAN_2005: Han2005Circular,
     BallCCushionModel.UNREALISTIC: UnrealisticCircular,
 }
@@ -45,7 +45,7 @@ def get_ball_lin_cushion_model(
     if model is None:
         return Han2005Linear()
 
-    return _ball_lcushion_models[model](**params)
+    return ball_lcushion_models[model](**params)
 
 
 def get_ball_circ_cushion_model(
@@ -67,4 +67,4 @@ def get_ball_circ_cushion_model(
     if model is None:
         return Han2005Circular()
 
-    return _ball_ccushion_models[model](**params)
+    return ball_ccushion_models[model](**params)

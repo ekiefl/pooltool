@@ -3,13 +3,13 @@
 from typing import Dict, Optional, Type
 
 from pooltool.physics.resolve.ball_ball.core import BallBallCollisionStrategy
-from pooltool.physics.resolve.models import BallBallModel
 from pooltool.physics.resolve.ball_ball.frictional_inelastic import FrictionalInelastic
 from pooltool.physics.resolve.ball_ball.frictional_mathavan import FrictionalMathavan
 from pooltool.physics.resolve.ball_ball.frictionless_elastic import FrictionlessElastic
+from pooltool.physics.resolve.models import BallBallModel
 from pooltool.physics.resolve.types import ModelArgs
 
-_ball_ball_models: Dict[BallBallModel, Type[BallBallCollisionStrategy]] = {
+ball_ball_models: Dict[BallBallModel, Type[BallBallCollisionStrategy]] = {
     BallBallModel.FRICTIONLESS_ELASTIC: FrictionlessElastic,
     BallBallModel.FRICTIONAL_INELASTIC: FrictionalInelastic,
     BallBallModel.FRICTIONAL_MATHAVAN: FrictionalMathavan,
@@ -36,7 +36,7 @@ def get_ball_ball_model(
     if model is None:
         return FrictionlessElastic()
 
-    return _ball_ball_models[model](**params)
+    return ball_ball_models[model](**params)
 
 
 __all__ = [

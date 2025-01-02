@@ -79,7 +79,7 @@ def _ball_transition_motion_states(event_type: EventType) -> Tuple[int, int]:
     raise NotImplementedError()
 
 
-_ball_transition_models: Dict[BallTransitionModel, Type[BallTransitionStrategy]] = {
+ball_transition_models: Dict[BallTransitionModel, Type[BallTransitionStrategy]] = {
     BallTransitionModel.CANONICAL: CanonicalTransition,
 }
 
@@ -104,4 +104,4 @@ def get_transition_model(
     if model is None:
         return CanonicalTransition()
 
-    return _ball_transition_models[model](**params)
+    return ball_transition_models[model](**params)
