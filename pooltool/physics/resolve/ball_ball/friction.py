@@ -28,10 +28,13 @@ class BallBallFrictionStrategy(Protocol):
 class AlciatoreBallBallFriction:
     """Friction fit curve u_b = a + b * exp(-c * v_rel) used in David Alciatore's TP A-14"""
 
-    model: BallBallFrictionModel = BallBallFrictionModel.ALCIATORE
     a: float = 9.951e-3
     b: float = 0.108
     c: float = 1.088
+
+    model: BallBallFrictionModel = attrs.field(
+        default=BallBallFrictionModel.ALCIATORE, init=False
+    )
 
     def calculate_friction(self, ball1: Ball, ball2: Ball) -> float:
         unit_x = np.array([1.0, 0.0, 0.0])
@@ -43,7 +46,9 @@ class AlciatoreBallBallFriction:
 
 @attrs.define
 class AverageBallBallFriction:
-    model: BallBallFrictionModel = BallBallFrictionModel.AVERAGE
+    model: BallBallFrictionModel = attrs.field(
+        default=BallBallFrictionModel.AVERAGE, init=False
+    )
 
     def calculate_friction(self, ball1: Ball, ball2: Ball) -> float:
         return (ball1.params.u_b + ball2.params.u_b) / 2

@@ -236,9 +236,12 @@ class FrictionalMathavan(CoreBallBallCollision):
         https://billiards.colostate.edu/physics_articles/Mathavan_Sports_2014.pdf
     """
 
-    model: BallBallModel = attrs.field(default=BallBallModel.FRICTIONAL_MATHAVAN)
     friction: BallBallFrictionStrategy = AlciatoreBallBallFriction()
     num_iterations: int = 1000
+
+    model: BallBallModel = attrs.field(
+        default=BallBallModel.FRICTIONAL_MATHAVAN, init=False
+    )
 
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
         """Resolve ball-ball collision via Mathavan et al. (2014).

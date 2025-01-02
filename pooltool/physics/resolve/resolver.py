@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional, Type
+from typing import Optional
 
 import attrs
 
@@ -11,19 +11,14 @@ import pooltool.user_config
 from pooltool.events.datatypes import AgentType, Event, EventType
 from pooltool.physics.resolve.ball_ball import (
     BallBallCollisionStrategy,
-    ball_ball_models,
 )
 from pooltool.physics.resolve.ball_ball.friction import (
     AlciatoreBallBallFriction,
-    BallBallFrictionStrategy,
-    ball_ball_friction_models,
 )
 from pooltool.physics.resolve.ball_ball.frictional_mathavan import FrictionalMathavan
 from pooltool.physics.resolve.ball_cushion import (
     BallCCushionCollisionStrategy,
     BallLCushionCollisionStrategy,
-    ball_ccushion_models,
-    ball_lcushion_models,
 )
 from pooltool.physics.resolve.ball_cushion.han_2005.model import (
     Han2005Circular,
@@ -32,20 +27,17 @@ from pooltool.physics.resolve.ball_cushion.han_2005.model import (
 from pooltool.physics.resolve.ball_pocket import (
     BallPocketStrategy,
     CanonicalBallPocket,
-    ball_pocket_models,
 )
+from pooltool.physics.resolve.serialize import register_serialize_hooks
 from pooltool.physics.resolve.stick_ball import (
     StickBallCollisionStrategy,
-    stick_ball_models,
 )
 from pooltool.physics.resolve.stick_ball.instantaneous_point import InstantaneousPoint
 from pooltool.physics.resolve.transition import (
     BallTransitionStrategy,
     CanonicalTransition,
-    ball_transition_models,
 )
 from pooltool.serialize import Pathish, conversion
-from pooltool.serialize.serializers import SerializeFormat
 from pooltool.system.datatypes import System
 from pooltool.terminal import Run
 
@@ -142,7 +134,11 @@ class Resolver:
 
         resolver = cls(
             ball_ball=FrictionalMathavan(
-                friction=AlciatoreBallBallFriction(),
+                friction=AlciatoreBallBallFriction(
+                    a=0.009951,
+                    b=0.108,
+                    c=1.088,
+                ),
                 num_iterations=1000,
             ),
             ball_linear_cushion=Han2005Linear(),
@@ -184,21 +180,4 @@ def _snapshot_final(shot: System, event: Event) -> None:
             agent.set_final(shot.table.pockets[agent.id])
 
 
-_model_map: Mapping[Any, Mapping[Any, Type]] = {
-    BallBallCollisionStrategy: ball_ball_models,
-    BallLCushionCollisionStrategy: ball_lcushion_models,
-    BallCCushionCollisionStrategy: ball_ccushion_models,
-    BallPocketStrategy: ball_pocket_models,
-    StickBallCollisionStrategy: stick_ball_models,
-    BallTransitionStrategy: ball_transition_models,
-    BallBallFrictionStrategy: ball_ball_friction_models,
-}
-
-
-def _disambiguate_model_structuring(v: Dict[str, Any], t: Type) -> Any:
-    return conversion[SerializeFormat.YAML].structure(v, _model_map[t][v["model"]])
-
-
-conversion.register_structure_hook_func(
-    check_func=lambda t: t in _model_map, func=_disambiguate_model_structuring
-)
+register_serialize_hooks()

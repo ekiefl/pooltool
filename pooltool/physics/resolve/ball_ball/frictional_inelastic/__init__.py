@@ -118,8 +118,11 @@ class FrictionalInelastic(CoreBallBallCollision):
     and a more complete analysis of velocity and angular velocity in their vector forms.
     """
 
-    model: BallBallModel = attrs.field(default=BallBallModel.FRICTIONAL_INELASTIC)
     friction: BallBallFrictionStrategy = AlciatoreBallBallFriction()
+
+    model: BallBallModel = attrs.field(
+        default=BallBallModel.FRICTIONAL_INELASTIC, init=False
+    )
 
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
         """Resolves the collision."""
