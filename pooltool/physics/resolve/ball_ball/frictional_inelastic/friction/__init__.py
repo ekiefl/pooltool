@@ -7,7 +7,6 @@ from pooltool.physics.resolve.ball_ball.frictional_inelastic.friction.alciatore 
 from pooltool.physics.resolve.ball_ball.frictional_inelastic.friction.average import (
     AverageBallBallFriction,
 )
-from pooltool.physics.resolve.types import ModelArgs
 from pooltool.utils.strenum import StrEnum, auto
 
 

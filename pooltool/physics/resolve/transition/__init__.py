@@ -6,7 +6,7 @@ Note:
     ../ball_cushion
 """
 
-from typing import Dict, Optional, Protocol, Tuple, Type
+from typing import Dict, Protocol, Tuple, Type
 
 import attrs
 import numpy as np
@@ -15,7 +15,6 @@ import pooltool.constants as const
 from pooltool.events.datatypes import EventType
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.physics.resolve.models import BallTransitionModel
-from pooltool.physics.resolve.types import ModelArgs
 
 
 class BallTransitionStrategy(Protocol):
@@ -28,9 +27,7 @@ class BallTransitionStrategy(Protocol):
 
 @attrs.define
 class CanonicalTransition:
-    name: BallTransitionModel = attrs.field(
-        default=BallTransitionModel.CANONICAL, init=False
-    )
+    model: BallTransitionModel = attrs.field(default=BallTransitionModel.CANONICAL)
 
     def resolve(self, ball: Ball, transition: EventType, inplace: bool = False) -> Ball:
         if not inplace:
@@ -88,26 +85,3 @@ def _ball_transition_motion_states(event_type: EventType) -> Tuple[int, int]:
 ball_transition_models: Dict[BallTransitionModel, Type[BallTransitionStrategy]] = {
     BallTransitionModel.CANONICAL: CanonicalTransition,
 }
-
-
-def get_transition_model(
-    model: Optional[BallTransitionModel] = None,
-    params: ModelArgs = {},
-) -> BallTransitionStrategy:
-    """Returns a transition model
-
-    Args:
-        model:
-            An Enum specifying the desired model. If not passed,
-            :class:`CanonicalTransition` is passed with empty params.
-        params:
-            A mapping of parameters accepted by the model.
-
-    Returns:
-        An instantiated model that satisfies the :class:`BallTransitionStrategy`
-        protocol.
-    """
-    if model is None:
-        return CanonicalTransition()
-
-    return ball_transition_models[model](**params)

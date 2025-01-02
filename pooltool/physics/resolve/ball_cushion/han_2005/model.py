@@ -111,9 +111,7 @@ def _solve(ball: Ball, cushion: Cushion) -> Tuple[Ball, Cushion]:
 
 @attrs.define
 class Han2005Linear(CoreBallLCushionCollision):
-    name: BallLCushionModel = attrs.field(
-        default=BallLCushionModel.HAN_2005, init=False
-    )
+    model: BallLCushionModel = attrs.field(default=BallLCushionModel.HAN_2005)
 
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
@@ -123,9 +121,7 @@ class Han2005Linear(CoreBallLCushionCollision):
 
 @attrs.define
 class Han2005Circular(CoreBallCCushionCollision):
-    name: BallCCushionModel = attrs.field(
-        default=BallCCushionModel.HAN_2005, init=False
-    )
+    model: BallCCushionModel = attrs.field(default=BallCCushionModel.HAN_2005)
 
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment

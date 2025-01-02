@@ -13,7 +13,6 @@ from pooltool.physics.resolve.ball_ball.frictional_inelastic.friction import (
     get_ball_ball_friction_model,
 )
 from pooltool.physics.resolve.models import BallBallModel
-from pooltool.physics.resolve.types import ModelArgs
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -119,13 +118,11 @@ class FrictionalInelastic(CoreBallBallCollision):
     and a more complete analysis of velocity and angular velocity in their vector forms.
     """
 
+    name: BallBallModel = attrs.field(default=BallBallModel.FRICTIONAL_INELASTIC)
     friction_model: Optional[BallBallFrictionModel] = None
     friction_model_params: ModelArgs = {}
 
     friction_strategy = attrs.field(init=False)
-    name: BallBallModel = attrs.field(
-        default=BallBallModel.FRICTIONAL_INELASTIC, init=False
-    )
 
     def __attrs_post_init__(self):
         self.friction_strategy = get_ball_ball_friction_model(
