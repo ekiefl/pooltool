@@ -3,6 +3,8 @@ from typing import Any, Callable, Dict, Iterable, Optional, Type, TypeVar
 
 from attrs import define
 from cattrs.converters import Converter
+from cattrs.dispatch import HookFactory, StructureHook, UnstructureHook
+from cattrs.fns import Predicate
 
 from pooltool.serialize.serializers import (
     Pathish,
@@ -39,6 +41,15 @@ class Convert:
         for fmt in which:
             self.converters[fmt].register_structure_hook_func(check_func, func)
 
+    def register_structure_hook_factory(
+        self,
+        check_func: Predicate,
+        factory: HookFactory[StructureHook],
+        which: Iterable[SerializeFormat] = SerializeFormat,
+    ) -> None:
+        for fmt in which:
+            self.converters[fmt].register_structure_hook_factory(check_func, factory)
+
     def register_unstructure_hook(
         self,
         cls: Any,
@@ -56,6 +67,15 @@ class Convert:
     ) -> None:
         for fmt in which:
             self.converters[fmt].register_unstructure_hook_func(check_func, func)
+
+    def register_unstructure_hook_factory(
+        self,
+        check_func: Predicate,
+        factory: HookFactory[UnstructureHook],
+        which: Iterable[SerializeFormat] = SerializeFormat,
+    ) -> None:
+        for fmt in which:
+            self.converters[fmt].register_unstructure_hook_factory(check_func, factory)
 
     def unstructure_to(
         self, obj: Any, path: Pathish, fmt: Optional[str] = None

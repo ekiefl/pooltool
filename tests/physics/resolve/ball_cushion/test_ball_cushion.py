@@ -5,7 +5,7 @@ from pooltool.constants import sliding
 from pooltool.objects import Ball, BallParams, LinearCushionSegment, PocketTableSpecs
 from pooltool.physics.resolve.ball_cushion import (
     BallLCushionModel,
-    get_ball_lin_cushion_model,
+    ball_lcushion_models,
 )
 
 
@@ -55,7 +55,7 @@ def test_symmetry(
         assert ball.state.rvw[1, 1] == -other.state.rvw[1, 1]
 
         # Resolve physics
-        model = get_ball_lin_cushion_model(model_name)
+        model = ball_lcushion_models[model_name]()
         ball_after, _ = model.resolve(ball=ball, cushion=cushion_yaxis, inplace=False)
         other_after, _ = model.resolve(ball=other, cushion=cushion_yaxis, inplace=False)
 

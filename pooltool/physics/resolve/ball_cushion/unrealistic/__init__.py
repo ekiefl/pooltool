@@ -2,6 +2,7 @@
 
 from typing import Tuple, TypeVar
 
+import attrs
 import numpy as np
 
 import pooltool.constants as const
@@ -15,6 +16,7 @@ from pooltool.physics.resolve.ball_cushion.core import (
     CoreBallCCushionCollision,
     CoreBallLCushionCollision,
 )
+from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
 
 Cushion = TypeVar("Cushion", LinearCushionSegment, CircularCushionSegment)
 
@@ -67,9 +69,13 @@ def _solve(
     return ball, cushion
 
 
+@attrs.define
 class UnrealisticLinear(CoreBallLCushionCollision):
-    def __init__(self, restitution: bool = True) -> None:
-        self.restitution = restitution
+    restitution: bool = True
+
+    model: BallLCushionModel = attrs.field(
+        default=BallLCushionModel.HAN_2005, init=False
+    )
 
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
@@ -77,9 +83,13 @@ class UnrealisticLinear(CoreBallLCushionCollision):
         return _solve(ball, cushion, self.restitution)
 
 
+@attrs.define
 class UnrealisticCircular(CoreBallCCushionCollision):
-    def __init__(self, restitution: bool = True) -> None:
-        self.restitution = restitution
+    restitution: bool = True
+
+    model: BallCCushionModel = attrs.field(
+        default=BallCCushionModel.HAN_2005, init=False
+    )
 
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment

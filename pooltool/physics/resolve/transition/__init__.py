@@ -6,15 +6,15 @@ Note:
     ../ball_cushion
 """
 
-from typing import Dict, Optional, Protocol, Tuple, Type
+from typing import Dict, Protocol, Tuple, Type
 
+import attrs
 import numpy as np
 
 import pooltool.constants as const
 from pooltool.events.datatypes import EventType
 from pooltool.objects.ball.datatypes import Ball
-from pooltool.physics.resolve.types import ModelArgs
-from pooltool.utils.strenum import StrEnum, auto
+from pooltool.physics.resolve.models import BallTransitionModel
 
 
 class BallTransitionStrategy(Protocol):
@@ -25,7 +25,12 @@ class BallTransitionStrategy(Protocol):
         ...
 
 
+@attrs.define
 class CanonicalTransition:
+    model: BallTransitionModel = attrs.field(
+        default=BallTransitionModel.CANONICAL, init=False
+    )
+
     def resolve(self, ball: Ball, transition: EventType, inplace: bool = False) -> Ball:
         if not inplace:
             ball = ball.copy()
@@ -79,41 +84,6 @@ def _ball_transition_motion_states(event_type: EventType) -> Tuple[int, int]:
     raise NotImplementedError()
 
 
-class BallTransitionModel(StrEnum):
-    """An Enum for different transition models
-
-    Attributes:
-        CANONICAL:
-            Sets the ball to appropriate state. Sets any residual quantities to 0 when
-            appropriate (:class:`CanonicalTransition`).
-    """
-
-    CANONICAL = auto()
-
-
-_ball_transition_models: Dict[BallTransitionModel, Type[BallTransitionStrategy]] = {
+ball_transition_models: Dict[BallTransitionModel, Type[BallTransitionStrategy]] = {
     BallTransitionModel.CANONICAL: CanonicalTransition,
 }
-
-
-def get_transition_model(
-    model: Optional[BallTransitionModel] = None,
-    params: ModelArgs = {},
-) -> BallTransitionStrategy:
-    """Returns a transition model
-
-    Args:
-        model:
-            An Enum specifying the desired model. If not passed,
-            :class:`CanonicalTransition` is passed with empty params.
-        params:
-            A mapping of parameters accepted by the model.
-
-    Returns:
-        An instantiated model that satisfies the :class:`BallTransitionStrategy`
-        protocol.
-    """
-    if model is None:
-        return CanonicalTransition()
-
-    return _ball_transition_models[model](**params)
