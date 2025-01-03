@@ -24,36 +24,45 @@ def _other(cue: str, event: Event) -> str:
     raise Exception()
 
 
-def is_turn_over(shot: System, constraints: ShotConstraints) -> bool:
-    assert constraints.cueable is not None
-    cue = constraints.cueable[0]
+def is_point(shot: System) -> bool:
+    cue_id = shot.cue.cue_ball_id
 
-    # Find when the second ball is first hit by the cue-ball
-
-    ball_hits = filter_events(
+    # Get collisions of the cue ball with the object balls.
+    cb_ob_collisions = filter_events(
         shot.events,
         by_type(EventType.BALL_BALL),
-        by_ball(cue),
+        by_ball(cue_id),
     )
 
-    hits = set()
-    for event in ball_hits:
-        hits.add(_other(cue, event))
-        if len(hits) == 2:
+    hit_ob_ids = set()
+    for event in cb_ob_collisions:
+        hit_ob_ids.add(_other(cue_id, event))
+        if len(hit_ob_ids) == 2:
+            # This is the first (and perhaps only) instance of the cue ball hitting the
+            # second object ball.
+            second_ob_collision = event
             break
     else:
+        # Both object balls were not contacted by the cue ball. No point.
         return True
 
-    # Now calculate all cue-ball cushion hits before that event
+    # Both balls have been hit by the object ball. But were at least 3 cushions
+    # contacted before the second object ball was first hit? If yes, point, otherwise
+    # no.
 
     cushion_hits = filter_events(
         shot.events,
         by_type(EventType.BALL_LINEAR_CUSHION),
-        by_ball(cue),
-        by_time(event.time, after=False),
+        by_ball(cue_id),
+        by_time(second_ob_collision.time, after=False),
     )
 
-    return len(cushion_hits) < 3
+    return len(cushion_hits) >= 3
+
+
+def is_turn_over(shot: System, constraints: ShotConstraints) -> bool:
+    assert constraints.cueable is not None
+    return not is_point(shot)
 
 
 def is_game_over(
