@@ -5,6 +5,7 @@ from pooltool.system.datatypes import System
 
 root = Path(__file__).parent
 
+
 def test_three_cushion():
     shot = System.load(root / "test_shots/01_test_shot_no_point.msgpack")
     assert not is_point(shot)
