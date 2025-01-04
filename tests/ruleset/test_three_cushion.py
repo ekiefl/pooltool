@@ -1,4 +1,5 @@
 from pooltool.system.datatypes import System
+from pooltool.ruleset.three_cushion import is_point
 
 def test_three_cushion():
 
