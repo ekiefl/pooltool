@@ -1,36 +1,36 @@
+# from pooltool.ruleset.three_cushion import is_point
+# from pooltool.system.datatypes import load
+
 def test_three_cushion():
-# 03.01.2024: Continue working here
-#    def load(cls, path: Pathish) -> System:
-        """Load a System from a file in a serialized format.
+    # testing function ispoint() with predefined shots
+    shot = load("01_test_shot_no_point.msgpack")
+    assert is_point(shot) == False
 
-        Supported file extensions:
+    shot = load("01a_test_shot_no_point.msgpack")
+    assert is_point(shot) == False
 
-        (1) ``.json``
-        (2) ``.msgpack``
+    shot = load("02_test_shot_ispoint.msgpack")
+    assert is_point(shot) == False
 
-        Args:
-            path:
-                Either a ``pathlib.Path`` object or a string representing the file path. The
-                extension should match the supported filetypes mentioned above.
+    shot = load("02a_test_shot_ispoint.msgpack")
+    assert is_point(shot) == False
 
-        Returns:
-            System: The deserialized System object loaded from the file.
+    shot = load("03_test_shot_ispoint.msgpack")
+    assert is_point(shot) == False
 
-        Raises:
-            AssertionError: If the file specified by `path` does not exist.
-            ValueError: If the file extension is not supported.
+    shot = load("03a_test_shot_ispoint.msgpack")
+    assert is_point(shot) == False
 
-        Examples:
+    shot = load("04_test_shot_no_point.msgpack")
+    assert is_point(shot) == False
 
-        Please refer to the examples in :meth:`save`.
+    shot = load("04a_test_shot_no_point.msgpack")
+    assert is_point(shot) == False
 
-        See Also:
-            Save systems with :meth:`save`.
-        """
+    shot = load("05_test_shot_ispoint.msgpack")
+    assert is_point(shot) == False
 
-
-    assert 1 == 0
-
-    return
+    shot = load("05a_test_shot_ispoint.msgpack")
+    assert is_point(shot) == False
 
 
