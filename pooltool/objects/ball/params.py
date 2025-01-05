@@ -168,12 +168,12 @@ BALL_PARAMS: Dict[PrebuiltBallParams, BallParams] = {
     ),
     PrebuiltBallParams.BILLIARD_GENERIC: BallParams(
         m=0.210,
-        R=0.03048,
-        u_s=0.5,
+        R=0.0615 / 2,
+        u_s=0.2,
         u_r=0.01,
         u_sp_proportionality=10 * 2 / 5 / 9,
         e_c=0.85,
-        f_c=0.5,
+        f_c=0.15,
         g=9.81,
     ),
 }
