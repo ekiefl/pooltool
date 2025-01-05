@@ -506,7 +506,8 @@ class Game(Interface):
 
         game = get_ruleset(game_type)()
         game.players = [
-            Player("Player"),
+            Player("Player 1"),
+            Player("Player 2"),
         ]
 
         table = Table.from_game_type(game_type)
