@@ -27,76 +27,86 @@ Below details how you can either **(a)** plug in models that already exist in th
 
 This section guides you on how to switch between existing models within the codebase.
 
-The handling of events is determined by the resolver configuration file, which is located at `~/.config/pooltool/physics/resolver.yaml`. Here's an example of what that looks like:
+By default, events are resolved according to the default resolver file, which is located at `~/.config/pooltool/physics/resolver.yaml`. Here's an example of what that looks like:
 
 ```yaml
-ball_ball: frictionless_elastic
-ball_ball_params: {}
-ball_circular_cushion: han_2005
-ball_circular_cushion_params: {}
-ball_linear_cushion: han_2005
-ball_linear_cushion_params: {}
-ball_pocket: canonical
-ball_pocket_params: {}
-stick_ball: instantaneous_point
-stick_ball_params:
-  throttle_english: true
-transition: canonical
-transition_params: {}
+ball_ball:
+  friction:
+    a: 0.009951
+    b: 0.108
+    c: 1.088
+    model: alciatore
+  num_iterations: 1000
+  model: frictional_mathavan
+ball_linear_cushion:
+  model: han_2005
+ball_circular_cushion:
+  model: han_2005
+ball_pocket:
+  model: canonical
+stick_ball:
+  english_throttle: 1.0
+  squirt_throttle: 1.0
+  model: instantaneous_point
+transition:
+  model: canonical
+version: 6
 ```
 
+:::{note}
 The resolver configuration file is automatically generated during the initial execution. If you don't have one yet, execute pooltool with the command `run-pooltool`, start a new game, and take a shot--one will be generated.
+:::
 
-Models are identified by their names. You can view the names of all available models by executing the following command:
+You can modify this file to change the physics. You can view available model names and their associated parameter values by executing the following command:
 
 ```python
-from pooltool.physics.resolve.ball_ball import BallBallModel
-from pooltool.physics.resolve.ball_cushion import BallCCushionModel, BallLCushionModel
-from pooltool.physics.resolve.ball_pocket import BallPocketModel
-from pooltool.physics.resolve.stick_ball import StickBallModel
-from pooltool.physics.resolve.transition import BallTransitionModel
-
-print("ball-ball models:")
-for model in BallBallModel: print(f"\t{model}")
-print("ball-linear cushion models:")
-for model in BallLCushionModel: print(f"\t{model}")
-print("ball-circular cushion models:")
-for model in BallCCushionModel: print(f"\t{model}")
-print("stick-ball models:")
-for model in StickBallModel: print(f"\t{model}")
-print("ball-pocket models:")
-for model in BallPocketModel: print(f"\t{model}")
-print("ball-transition models:")
-for model in BallTransitionModel: print(f"\t{model}")
+python -c 'from pooltool.physics.resolve import display_models; display_models()'
 ```
 
-Each model lives in its own directory. For example, the `frictionless_elastic` **ball-ball** collision model is found in `pooltool/physics/resolve/ball_ball/frictionless_elastic/__init__.py` with the class name `FrictionlessElastic`. `FrictionlessElastic` doesn't take any parameters, so in the resolver config the parameter field is empty:
+Here is the output (January 5th, 2025):
 
 ```
-ball_ball: frictionless_elastic
-ball_ball_params: {}
+ball_ball models:
+  frictionless_elastic (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/ball_ball/frictionless_elastic/__init__.py)
+  frictional_inelastic (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/ball_ball/frictional_inelastic/__init__.py)
+      - friction: type=<class 'pooltool.physics.resolve.ball_ball.friction.BallBallFrictionStrategy'>, default=AlciatoreBallBallFriction(a=0.009951, b=0.108, c=1.088)
+  frictional_mathavan (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/ball_ball/frictional_mathavan/__init__.py)
+      - friction: type=<class 'pooltool.physics.resolve.ball_ball.friction.BallBallFrictionStrategy'>, default=AlciatoreBallBallFriction(a=0.009951, b=0.108, c=1.088)
+      - num_iterations: type=<class 'int'>, default=1000
+
+ball_linear_cushion models:
+  han_2005 (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/ball_cushion/han_2005/model.py)
+  unrealistic (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/ball_cushion/unrealistic/__init__.py)
+      - restitution: type=<class 'bool'>, default=True
+
+ball_circular_cushion models:
+  han_2005 (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/ball_cushion/han_2005/model.py)
+  unrealistic (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/ball_cushion/unrealistic/__init__.py)
+      - restitution: type=<class 'bool'>, default=True
+
+stick_ball models:
+  instantaneous_point (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/stick_ball/instantaneous_point/__init__.py)
+      - english_throttle: type=<class 'float'>, default=1.0
+      - squirt_throttle: type=<class 'float'>, default=1.0
+
+ball_pocket models:
+  canonical (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/ball_pocket/__init__.py)
+
+ball_transition models:
+  canonical (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/transition/__init__.py)
 ```
 
-But some models do take parameters: The **stick-ball** collision model `instantaneous_point` has a parameter `throttle_english`, which you can see is an initialization parameter of the class `InstantaneousPoint` housed in `pooltool/physics/resolve/stick_ball/instantaneous_point/__init__.py`:
+Next to each model name is the filepath where the model is defined. For example, the **stick-ball** collision model `instantaneous_point` is defined at `pooltool/physics/resolve/stick_ball/instantaneous_point/__init__.py`. As you can see in the output above, it has two parameters, `english_throttle` and `squirt_throttle`. If you look at the corresponding class `InstantaneousPoint` housed in that file, you can see that these are initialization parameters of the model:
 
 ```python
 @attrs.define
 class InstantaneousPoint(CoreStickBallCollision):
-    throttle_english: bool
+    english_throttle: bool
+    squirt_throttle: bool
 
     def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]:
         (...)
 ```
-
-To set this parameter to `False`, modify `stick_ball_params`:
-
-```
-stick_ball: instantaneous_point
-stick_ball_params:
-  throttle_english: false
-```
-
-Currently, the easiest way to see which parameters are available for a model is to dig through the source code, specifically in `pooltool/physics/resolve/*`.
 
 ### What happens at runtime?
 
@@ -120,34 +130,7 @@ class Resolver:
 
 Each attribute is a _physics strategy_ (or model) for each event class: [ball-ball collisions](https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-ball-collision), [ball-linear cushion collisions](https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision), [ball-circular cushion collisions](https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision), [ball-pocket "collisions"](https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-pocket-collision), and [ball motion transitions](https://ekiefl.github.io/2020/12/20/pooltool-alg/#transition-events).
 
-While it's possible to create a `Resolver` object by instantiating physics strategies for each event class, this programmatic interface is complex to replicate. A more user-friendly approach would be to serialize the desired physics strategies into a configuration file. This is the function of `ResolverConfig`. As a dataclass, it supports seamless serialization and deserialization, allowing all information needed to create a `Resolver` object to be conveniently stored in a YAML file.
-
-The structure of `ResolverConfig` is as follows:
-
-```python
-class ResolverConfig:
-    ball_ball: BallBallModel
-    ball_ball_params: ModelArgs
-    ball_linear_cushion: BallLCushionModel
-    ball_linear_cushion_params: ModelArgs
-    ball_circular_cushion: BallCCushionModel
-    ball_circular_cushion_params: ModelArgs
-    ball_pocket: BallPocketModel
-    ball_pocket_params: ModelArgs
-    stick_ball: StickBallModel
-    stick_ball_params: ModelArgs
-    transition: BallTransitionModel
-    transition_params: ModelArgs
-
-    def save(self, path: Pathish) -> Path:
-        # Code to serialize the object to YAML and save it to a file...
-
-    @classmethod
-    def load(cls, path: Pathish) -> ResolverConfig:
-        # Code to load a YAML file and deserialize it into a ResolverConfig object...
-```
-
-You might observe that this closely resembles the YAML configuration file. That's because the `resolver.yaml` file is simply a serialization of this class. When you modify `resolver.yaml`, a `ResolverConfig` is created from the `resolver.yaml` file using `ResolverConfig.load(...)` during runtime. This configuration is then used to build the `Resolver` object employed by the shot evolution algorithm, using `Resolver.from_config(resolver_config)`.
+You might observe that this closely resembles the YAML configuration file. That's because the `resolver.yaml` file is simply a serialization of this class. During runtime, a `Resolver` class is created from the `resolver.yaml`.
 
 ### Creating new physics models
 
