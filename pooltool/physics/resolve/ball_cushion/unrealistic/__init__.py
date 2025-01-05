@@ -13,9 +13,15 @@ from pooltool.physics.resolve.ball_cushion.core import CoreBallLCushionCollision
 
 
 def _solve(
-    ball: Ball, cushion: LinearCushionSegment
+    ball: Ball, cushion: LinearCushionSegment, restitution: bool = True
 ) -> Tuple[Ball, LinearCushionSegment]:
-    """Given ball and cushion, unrealistically reflect the ball's momentum"""
+    """Given ball and cushion, unrealistically reflect the ball's momentum
+
+    Args:
+        restitution:
+            By default, the ball's momentum is reflected without loss. Set this to true
+            if the ball's restitution coefficient should dampen the outgoing velocity.
+    """
     rvw = ball.state.rvw
 
     # Two things about the normal:
@@ -40,9 +46,9 @@ def _solve(
     rvw_R = ptmath.coordinate_rotation(rvw.T, -psi).T
 
     # Reverse velocity component lying in normal direction
-    rvw_R[1, 0] *= -1
+    rvw_R[1, 0] *= -1 * (1 if not restitution else ball.params.e_c)
 
-    # Rotate frame of refernce back to the table frame
+    # Rotate frame of reference back to the table frame
     rvw = ptmath.coordinate_rotation(rvw_R.T, psi).T
 
     # Set the ball's rvw
@@ -56,7 +62,9 @@ def _solve(
 
 @attrs.define
 class UnrealisticLinear(CoreBallLCushionCollision):
+    restitution: bool = True
+
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
     ) -> Tuple[Ball, LinearCushionSegment]:
-        return _solve(ball, cushion)
+        return _solve(ball, cushion, self.restitution)
