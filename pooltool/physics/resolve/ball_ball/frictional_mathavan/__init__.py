@@ -240,7 +240,7 @@ class FrictionalMathavan(CoreBallBallCollision):
     num_iterations: int = 1000
 
     model: BallBallModel = attrs.field(
-        default=BallBallModel.FRICTIONAL_MATHAVAN, init=False
+        default=BallBallModel.FRICTIONAL_MATHAVAN, init=False, repr=False
     )
 
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:

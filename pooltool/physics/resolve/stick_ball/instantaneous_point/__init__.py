@@ -127,7 +127,7 @@ class InstantaneousPoint(CoreStickBallCollision):
     squirt_throttle: float = 1.0
 
     model: StickBallModel = attrs.field(
-        default=StickBallModel.INSTANTANEOUS_POINT, init=False
+        default=StickBallModel.INSTANTANEOUS_POINT, init=False, repr=False
     )
 
     def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]:

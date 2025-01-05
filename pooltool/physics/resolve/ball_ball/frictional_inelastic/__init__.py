@@ -121,7 +121,7 @@ class FrictionalInelastic(CoreBallBallCollision):
     friction: BallBallFrictionStrategy = AlciatoreBallBallFriction()
 
     model: BallBallModel = attrs.field(
-        default=BallBallModel.FRICTIONAL_INELASTIC, init=False
+        default=BallBallModel.FRICTIONAL_INELASTIC, init=False, repr=False
     )
 
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:

@@ -33,7 +33,7 @@ class AlciatoreBallBallFriction:
     c: float = 1.088
 
     model: BallBallFrictionModel = attrs.field(
-        default=BallBallFrictionModel.ALCIATORE, init=False
+        default=BallBallFrictionModel.ALCIATORE, init=False, repr=False
     )
 
     def calculate_friction(self, ball1: Ball, ball2: Ball) -> float:
@@ -51,7 +51,7 @@ class AlciatoreBallBallFriction:
 @attrs.define
 class AverageBallBallFriction:
     model: BallBallFrictionModel = attrs.field(
-        default=BallBallFrictionModel.AVERAGE, init=False
+        default=BallBallFrictionModel.AVERAGE, init=False, repr=False
     )
 
     def calculate_friction(self, ball1: Ball, ball2: Ball) -> float:

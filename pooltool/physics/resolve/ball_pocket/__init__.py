@@ -29,7 +29,9 @@ class BallPocketStrategy(Protocol):
 
 @attrs.define
 class CanonicalBallPocket:
-    model: BallPocketModel = attrs.field(default=BallPocketModel.CANONICAL, init=False)
+    model: BallPocketModel = attrs.field(
+        default=BallPocketModel.CANONICAL, init=False, repr=False
+    )
 
     def resolve(
         self, ball: Ball, pocket: Pocket, inplace: bool = False

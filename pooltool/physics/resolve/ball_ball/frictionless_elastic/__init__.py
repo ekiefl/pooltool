@@ -40,7 +40,7 @@ class FrictionlessElastic(CoreBallBallCollision):
     """
 
     model: BallBallModel = attrs.field(
-        default=BallBallModel.FRICTIONLESS_ELASTIC, init=False
+        default=BallBallModel.FRICTIONLESS_ELASTIC, init=False, repr=False
     )
 
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:

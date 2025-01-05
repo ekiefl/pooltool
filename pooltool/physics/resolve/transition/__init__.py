@@ -28,7 +28,7 @@ class BallTransitionStrategy(Protocol):
 @attrs.define
 class CanonicalTransition:
     model: BallTransitionModel = attrs.field(
-        default=BallTransitionModel.CANONICAL, init=False
+        default=BallTransitionModel.CANONICAL, init=False, repr=False
     )
 
     def resolve(self, ball: Ball, transition: EventType, inplace: bool = False) -> Ball:
