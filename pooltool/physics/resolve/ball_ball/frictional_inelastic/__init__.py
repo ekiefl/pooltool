@@ -22,28 +22,17 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     rvw2[1] = ptmath.coordinate_rotation(rvw2[1], -theta)
     rvw2[2] = ptmath.coordinate_rotation(rvw2[2], -theta)
 
-    rvw1_f = rvw1.copy()
-    rvw2_f = rvw2.copy()
-
     # velocity normal component, same for both slip and no-slip after collison cases
     v1_n_f = 0.5 * ((1.0 - e_b) * rvw1[1][0] + (1.0 + e_b) * rvw2[1][0])
     v2_n_f = 0.5 * ((1.0 + e_b) * rvw1[1][0] + (1.0 - e_b) * rvw2[1][0])
     D_v_n_magnitude = abs(v2_n_f - v1_n_f)
 
-    # angular velocity normal component, unchanged
-    w1_n_f = rvw1[2][0]
-    w2_n_f = rvw2[2][0]
-
-    # discard normal components for now
+    # discard velocity normal components for now
     # so that surface velocities are tangent
     rvw1[1][0] = 0.0
-    rvw1[2][0] = 0.0
     rvw2[1][0] = 0.0
-    rvw2[2][0] = 0.0
-    rvw1_f[1][0] = 0.0
-    rvw1_f[2][0] = 0.0
-    rvw2_f[1][0] = 0.0
-    rvw2_f[2][0] = 0.0
+    rvw1_f = rvw1.copy()
+    rvw2_f = rvw2.copy()
 
     v1_c = ptmath.surface_velocity(rvw1, unit_x, R)
     v2_c = ptmath.surface_velocity(rvw2, -unit_x, R)
@@ -86,8 +75,6 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     # reintroduce the final normal components
     rvw1_f[1][0] = v1_n_f
     rvw2_f[1][0] = v2_n_f
-    rvw1_f[2][0] = w1_n_f
-    rvw2_f[2][0] = w2_n_f
 
     # rotate everything back to the original frame
     rvw1_f[1] = ptmath.coordinate_rotation(rvw1_f[1], theta)
