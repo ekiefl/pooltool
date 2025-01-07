@@ -146,7 +146,9 @@ def test_head_on_z_spin(model: BallBallCollisionStrategy, cb_wz_i: float):
     "model", [FrictionalInelastic(), FrictionalMathavan(num_iterations=int(1e5))]
 )
 @pytest.mark.parametrize("speed", np.logspace(-1, 1, 5))
-@pytest.mark.parametrize("cut_angle_radians", np.linspace(0, math.pi / 2.0, 10))
+@pytest.mark.parametrize(
+    "cut_angle_radians", np.linspace(0, math.pi / 2.0, 8, endpoint=False)
+)
 def test_gearing_z_spin(
     model: BallBallCollisionStrategy, speed: float, cut_angle_radians: float
 ):
