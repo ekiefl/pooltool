@@ -27,9 +27,13 @@ class BallLCushionModel(StrEnum):
     Attributes:
         HAN_2005:
             https://ekiefl.github.io/2020/04/24/pooltool-theory/#3-han-2005.
+        UNREALISTIC:
+            An unrealistic model in which balls are perfectly reflected. Spin is left
+            untouched by the interaction.
     """
 
     HAN_2005 = auto()
+    UNREALISTIC = auto()
 
 
 class BallCCushionModel(StrEnum):
@@ -38,9 +42,13 @@ class BallCCushionModel(StrEnum):
     Attributes:
         HAN_2005:
             https://ekiefl.github.io/2020/04/24/pooltool-theory/#3-han-2005
+        UNREALISTIC:
+            An unrealistic model in which balls are perfectly reflected. Spin is left
+            untouched by the interaction.
     """
 
     HAN_2005 = auto()
+    UNREALISTIC = auto()
 
 
 class BallPocketModel(StrEnum):
