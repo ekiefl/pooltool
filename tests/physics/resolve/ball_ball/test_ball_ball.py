@@ -121,7 +121,13 @@ def test_head_on_z_spin(model: BallBallCollisionStrategy, cb_wz_i: float):
 def test_gearing_z_spin(
     model: BallBallCollisionStrategy, speed: float, cut_angle_radians: float
 ):
-    """Cue ball has positive z-spin (e.g. hitting right-hand-side of cue ball)"""
+    """Ensure that a gearing collision causes no throw or induced spin.
+
+    A gearing collision is one where the relative surface speed between the balls is 0.
+    In other words, the velocity of each ball at the contact point is identical, and there is no
+    slip at the contact point.
+    """
+
     cb_i, ob_i = ball_collision()
 
     # velocity
@@ -156,7 +162,12 @@ def test_low_relative_surface_velocity(
     cut_angle_radians: float,
     relative_surface_speed: float,
 ):
-    """Cue ball has positive z-spin (e.g. hitting right-hand-side of cue ball)"""
+    """Ensure that collisions with a "small" relative surface velocity end with 0 relative surface velocity.
+    In other words, that the balls are gearing after the collision.
+
+    Note that how small the initial relative surface velocity needs to be for this condition to be met is dependent
+    on model parameters and initial conditions such as ball-ball friction and the collision speed along the line of centers.
+    """
 
     unit_x = np.array([1.0, 0.0, 0.0])
     cb_i, ob_i = ball_collision()
