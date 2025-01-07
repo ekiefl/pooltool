@@ -138,6 +138,10 @@ To demonstrate how you can integrate your own physics model into pooltool, I'll 
 
 Ok let's get started.
 
+#### Create a name for your model
+
+
+
 #### Create a directory
 
 First, we need to establish a model within its own dedicated directory. This directory should be named after the model. As I'm using a simple toy example, I'll name mine `unrealistic`. The directory should be located in one of the `pooltool/physics/resolve/*` folders, depending on the event class your model manages. Since I'm constructing a ball-cushion model, I'll create the `unrealistic` folder in `pooltool/physics/resolve/ball_cushion/`.

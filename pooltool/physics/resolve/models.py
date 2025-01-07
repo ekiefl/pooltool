@@ -6,8 +6,14 @@ class BallBallModel(StrEnum):
 
     Attributes:
         FRICTIONLESS_ELASTIC:
-            Frictionless, instantaneous, elastic, equal mass collision
-            (:class:`FrictionlessElastic`).
+            Frictionless, instantaneous, elastic, equal mass collision.
+        FRICTIONAL_INELASTIC:
+            Frictional, inelastic, equal mass collision.
+            (https://billiards.colostate.edu/technical_proofs/new/TP_A-14.pdf).
+        FRICTIONAL_MATHAVAN:
+            Mathavan, S., Jackson, M.R. & Parkin, R.M. Numerical simulations of the
+            frictional collisions of solid balls on a rough surface. Sports Eng 17,
+            227–237 (2014). https://doi.org/10.1007/s12283-014-0158-y
     """
 
     FRICTIONLESS_ELASTIC = auto()
@@ -20,15 +26,10 @@ class BallLCushionModel(StrEnum):
 
     Attributes:
         HAN_2005:
-            https://ekiefl.github.io/2020/04/24/pooltool-theory/#3-han-2005
-            (:class:`Han2005Linear`).
-        UNREALISTIC:
-            An unrealistic model in which balls are perfectly reflected. Spin is left
-            untouched by the interaction (:class:`UnrealisticLinear`).
+            https://ekiefl.github.io/2020/04/24/pooltool-theory/#3-han-2005.
     """
 
     HAN_2005 = auto()
-    UNREALISTIC = auto()
 
 
 class BallCCushionModel(StrEnum):
@@ -37,14 +38,9 @@ class BallCCushionModel(StrEnum):
     Attributes:
         HAN_2005:
             https://ekiefl.github.io/2020/04/24/pooltool-theory/#3-han-2005
-            (:class:`Han2005Linear`).
-        UNREALISTIC:
-            An unrealistic model in which balls are perfectly reflected. Spin is left
-            untouched by the interaction (:class:`UnrealisticCircular`).
     """
 
     HAN_2005 = auto()
-    UNREALISTIC = auto()
 
 
 class BallPocketModel(StrEnum):
@@ -52,8 +48,7 @@ class BallPocketModel(StrEnum):
 
     Attributes:
         CANONICAL:
-            Sets the ball into the bottom of pocket and sets the state to pocketed
-            (:class:`CanonicalBallPocket`).
+            Sets the ball into the bottom of pocket and sets the state to pocketed.
     """
 
     CANONICAL = auto()
@@ -64,8 +59,7 @@ class StickBallModel(StrEnum):
 
     Attributes:
         INSTANTANEOUS_POINT:
-            Instantaneous and point-like stick-ball interaction
-            (:class:`InstantaneousPoint`).
+            Instantaneous and point-like stick-ball interaction.
     """
 
     INSTANTANEOUS_POINT = auto()
@@ -77,7 +71,7 @@ class BallTransitionModel(StrEnum):
     Attributes:
         CANONICAL:
             Sets the ball to appropriate state. Sets any residual quantities to 0 when
-            appropriate (:class:`CanonicalTransition`).
+            appropriate.
     """
 
     CANONICAL = auto()
