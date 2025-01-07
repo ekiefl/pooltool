@@ -1,3 +1,4 @@
+import math
 from typing import Tuple
 
 import attrs
@@ -12,27 +13,26 @@ from pooltool.physics.resolve.ball_ball.frictional_mathavan import FrictionalMat
 from pooltool.physics.resolve.ball_ball.frictionless_elastic import FrictionlessElastic
 
 
-def head_on() -> Tuple[Ball, Ball]:
+def ball_collision() -> Tuple[Ball, Ball]:
     cb = Ball.create("cue", xy=(0, 0))
-
-    # Cue ball makes head-on collision with object ball at 1 m/s in +x direction
-    cb.state.rvw[1] = np.array([1, 0, 0])
-
     ob = Ball.create("cue", xy=(2 * cb.params.R, 0))
     assert cb.params.m == ob.params.m, "Balls expected to be equal mass"
     return cb, ob
 
 
-def translating_head_on() -> Tuple[Ball, Ball]:
-    cb = Ball.create("cue", xy=(0, 0))
-    ob = Ball.create("cue", xy=(2 * cb.params.R, 0))
+def head_on() -> Tuple[Ball, Ball]:
+    cb, ob = ball_collision()
+    # Cue ball makes head-on collision with object ball at 1 m/s in +x direction
+    cb.state.rvw[1] = np.array([1, 0, 0])
+    return cb, ob
 
+
+def translating_head_on() -> Tuple[Ball, Ball]:
+    cb, ob = ball_collision()
     # Cue ball makes head-on collision with object ball at 1 m/s in +x direction
     # while both balls move together at 1 m/s in +y direction
     cb.state.rvw[1] = np.array([1, 1, 0])
     ob.state.rvw[1] = np.array([0, 1, 0])
-
-    assert cb.params.m == ob.params.m, "Balls expected to be equal mass"
     return cb, ob
 
 
@@ -90,7 +90,7 @@ def test_translating_head_on_zero_spin_inelastic(
     cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
 
     # Balls should still be moving together in +y direction
-    assert np.isclose(cb_f.vel[1], ob_f.vel[1], atol=1e-10)
+    assert abs(cb_f.vel[1] - ob_f.vel[1]) < 1e-10
 
 
 @pytest.mark.parametrize("model", [FrictionalInelastic(), FrictionalMathavan()])
@@ -111,3 +111,82 @@ def test_head_on_z_spin(model: BallBallCollisionStrategy, cb_wz_i: float):
     cb_wz_f = cb_f.state.rvw[2][2]
     assert cb_wz_f > 0, "Spin direction shouldn't reverse"
     assert cb_wz_f < cb_wz_i, "Spin should be decay"
+
+
+@pytest.mark.parametrize(
+    "model", [FrictionalInelastic(), FrictionalMathavan(num_iterations=int(1e5))]
+)
+@pytest.mark.parametrize("speed", np.logspace(-1, 1, 5))
+@pytest.mark.parametrize("cut_angle_radians", np.linspace(0, math.pi / 2.0, 10))
+def test_gearing_z_spin(
+    model: BallBallCollisionStrategy, speed: float, cut_angle_radians: float
+):
+    """Cue ball has positive z-spin (e.g. hitting right-hand-side of cue ball)"""
+    cb_i, ob_i = ball_collision()
+
+    # velocity
+    cb_i.state.rvw[1] = speed * np.array(
+        [math.cos(cut_angle_radians), math.sin(cut_angle_radians), 0.0]
+    )
+    # angular velocity
+    cb_i.state.rvw[2] = np.array(
+        [0.0, 0.0, -cb_i.vel[1] / cb_i.params.R]
+    )  # Gearing side-spin
+
+    v_c = ptmath.surface_velocity(
+        cb_i.state.rvw, np.array([1.0, 0.0, 0.0]), cb_i.params.R
+    ) - np.array([cb_i.vel[0], 0.0, 0.0])
+    assert ptmath.norm3d(v_c) < 1e-10, "Relative surface contact speed should be zero"
+
+    cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
+
+    assert abs(ob_f.vel[1]) < 1e-3, "Gearing english shouldn't cause throw"
+    assert abs(ob_f.avel[2]) < 1e-3, "Gearing english shouldn't cause induced side-spin"
+
+
+@pytest.mark.parametrize("model", [FrictionalInelastic()])
+@pytest.mark.parametrize("speed", np.logspace(0, 1, 5))
+@pytest.mark.parametrize(
+    "cut_angle_radians", np.linspace(0, math.pi / 2.0, 8, endpoint=False)
+)
+@pytest.mark.parametrize("relative_surface_speed", np.linspace(0, 0.05, 5))
+def test_low_relative_surface_velocity(
+    model: BallBallCollisionStrategy,
+    speed: float,
+    cut_angle_radians: float,
+    relative_surface_speed: float,
+):
+    """Cue ball has positive z-spin (e.g. hitting right-hand-side of cue ball)"""
+
+    unit_x = np.array([1.0, 0.0, 0.0])
+    cb_i, ob_i = ball_collision()
+
+    # velocity
+    cb_i.state.rvw[1] = speed * np.array(
+        [math.cos(cut_angle_radians), math.sin(cut_angle_radians), 0.0]
+    )
+    # angular velocity
+    cb_i.state.rvw[2] = np.array(
+        [0.0, 0.0, -cb_i.vel[1] / cb_i.params.R]
+    )  # Gearing side-spin
+
+    cb_i.state.rvw[1][1] += relative_surface_speed
+
+    v_c = ptmath.surface_velocity(cb_i.state.rvw, unit_x, cb_i.params.R) - np.array(
+        [cb_i.vel[0], 0.0, 0.0]
+    )
+    assert (
+        abs(relative_surface_speed - ptmath.norm3d(v_c)) < 1e-10
+    ), f"Relative surface contact speed should be {relative_surface_speed}"
+
+    cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
+
+    cb_v_c_f = ptmath.surface_velocity(
+        cb_f.state.rvw, unit_x, cb_f.params.R
+    ) - np.array([cb_f.vel[0], 0.0, 0.0])
+    ob_v_c_f = ptmath.surface_velocity(
+        ob_f.state.rvw, -unit_x, ob_f.params.R
+    ) - np.array([ob_f.vel[0], 0.0, 0.0])
+    assert (
+        ptmath.norm3d(cb_v_c_f - ob_v_c_f) < 1e-3
+    ), "Final relative contact velocity should be zero"
