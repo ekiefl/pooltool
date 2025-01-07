@@ -167,10 +167,8 @@ def test_low_relative_surface_velocity(
     )
     # angular velocity
     cb_i.state.rvw[2] = np.array(
-        [0.0, 0.0, -cb_i.vel[1] / cb_i.params.R]
-    )  # Gearing side-spin
-
-    cb_i.state.rvw[1][1] += relative_surface_speed
+        [0.0, 0.0, (-cb_i.vel[1] + relative_surface_speed) / cb_i.params.R]
+    )  # Gearing side-spin adjusted to have some relative surface speed
 
     v_c = ptmath.surface_velocity(cb_i.state.rvw, unit_x, cb_i.params.R) - np.array(
         [cb_i.vel[0], 0.0, 0.0]
