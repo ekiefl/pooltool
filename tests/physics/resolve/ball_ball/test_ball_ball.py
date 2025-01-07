@@ -176,7 +176,9 @@ def test_gearing_z_spin(
 
     cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
 
-    assert abs(ob_f.vel[1]) < 1e-3, "Gearing english shouldn't cause throw"
+    assert (
+        abs(math.atan2(ob_f.vel[1], ob_f.vel[0])) < 1e-3
+    ), "Gearing english shouldn't cause throw"
     assert abs(ob_f.avel[2]) < 1e-3, "Gearing english shouldn't cause induced side-spin"
 
 
