@@ -153,7 +153,11 @@ Regardless of how you choose to structure your code, it must eventually lead to 
 1. Contains a method named `solve`.
 1. Inherits from the core model.
 
-The call signature of your `solve` method and the core model from which you inherit will depend on the event class for which you're developing a model.
+Additionally, it must be an attrs class[^attrs] and it must have
+
+[^attrs]: Pooltool requires that all the resolver models are [attrs](https://www.attrs.org/en/stable/) classes. If you've never used attrs before, stick close to the example and you'll have no problems.
+
+The call signature of your `solve` method and the core model from which you inherit will depend on the event class you're developing a model for.
 
 Since I'm developing a ball-cushion model, I'll refer to `pooltool/physics/resolve/ball_cushion/core.py` for this information. Below is the required call signature for my `solve` method:
 
@@ -182,11 +186,14 @@ With these, we can create our template:
 
 from typing import Tuple
 
+import attrs
+
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import LinearCushionSegment
 from pooltool.physics.resolve.ball_cushion.core import CoreBallLCushionCollision
 
 
+@attrs.define
 class UnrealisticLinear(CoreBallLCushionCollision):
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
@@ -195,6 +202,8 @@ class UnrealisticLinear(CoreBallLCushionCollision):
 ```
 
 Here's the example code: [af507032217914629e53954965c982d21fdc8094](https://github.com/ekiefl/pooltool/commit/af507032217914629e53954965c982d21fdc8094)
+
+**Note** that the class is turned into an *attrs* class by decorating it with `attrs.define`. You must do the same with your class.
 
 As you can see, `resolve` currently does *nothing*, it just returns what is handed to it.
 
@@ -210,29 +219,37 @@ Second, since you'll be working with the core pooltool objects `Cue`, `Ball`, `L
 
 Anyways, here's my preliminary implementation: [17510e7d014c8aa5e60d6556db2e5b0dea36f2f0](https://github.com/ekiefl/pooltool/commit/17510e7d014c8aa5e60d6556db2e5b0dea36f2f0)
 
-Then I added a parameter to the model to add some flavor and complexity. Note that the model parameters should not be things like mass or friction coefficients. Those are properties of the passed objects. If you think a property is missing for an object, we can add it to the object. Model parameters are more meta/behavioral (see the below example).
+Then I added a parameter to the model to add some complexity. Specifically, here's how I added a model parameter that dictates whether or not the outgoing speed should be dampened with the ball's restitution coefficient: [ec42752f381edf3d576a66a9178a27d6054ff437](https://github.com/ekiefl/pooltool/commit/ec42752f381edf3d576a66a9178a27d6054ff437)
 
-Please note that the resolver config can only handle strings, booleans, floats, and integers for model parameters due to serialization requirements. If you have more complex model types like functions, try and simplify the passed argument to a string by string-lookup dictionary.
+:::{note}
+Model parameters should not be things like mass or friction coefficients. Those are properties of the passed objects. If you think a property is missing for an object, we can add it to the object. Model parameters are more meta/behavioral (see the above commit, where `restitution` is added).
+:::
 
-Here's me adding a model parameter that dictates whether or not the outgoing speed should be dampened with the ball's restitution coefficient: [ec42752f381edf3d576a66a9178a27d6054ff437](https://github.com/ekiefl/pooltool/commit/ec42752f381edf3d576a66a9178a27d6054ff437)
+:::{note}
+Attributes are defined differently for attrs classes than they are for standard Python classes. For example, if you had a standard class, you could add a restitution boolean like this:
+
+```python
+class UnrealisticLinear(CoreBallLCushionCollision):
+    def __init__(self, restitution: bool = True):
+        self.restitution = restitution
+```
+
+But since pooltool uses attrs classes for model definitions, you must define the equivalent like this:
+
+```python
+@attrs.define
+class UnrealisticLinear(CoreBallLCushionCollision):
+    restitution: bool = True
+```
+
+Keep this in mind if you are adding parameters to your model.
+:::
 
 #### Register the model
 
 Your model is in the codebase, but no other part of the codebase knows about it yet. Changing that is simple.
 
-Open the `__init__.py` file corresponding to your event class:
-
-```
-pooltool/physics/resolve/ball_ball/__init__.py
-pooltool/physics/resolve/ball_cushion/__init__.py
-pooltool/physics/resolve/ball_pocket/__init__.py
-pooltool/physics/resolve/stick_ball/__init__.py
-pooltool/physics/resolve/transition/__init__.py
-```
-
-You'll need to modify two objects.
-
-First, is an [Enum](https://docs.python.org/3/library/enum.html) that holds the collection of all model names for a given event-class. You can find it by searching for a class that inherits from `StrEnum`. Here is the ball linear cushion Enum:
+First, open `pooltool/physics/resolve/models.py`. Locate the class (an [Enum](https://docs.python.org/3/library/enum.html)) that holds the collection of all model names for your given event-class. Here is the ball linear cushion Enum:
 
 ```python
 class BallLCushionModel(StrEnum):
@@ -248,6 +265,18 @@ class BallLCushionModel(StrEnum):
 ```
 
 Technically the name here is arbitrary, but it makes good sense to have it match your model name.
+
+Then, open the `__init__.py` file corresponding to your event class:
+
+```
+pooltool/physics/resolve/ball_ball/__init__.py
+pooltool/physics/resolve/ball_cushion/__init__.py
+pooltool/physics/resolve/ball_pocket/__init__.py
+pooltool/physics/resolve/stick_ball/__init__.py
+pooltool/physics/resolve/transition/__init__.py
+```
+
+You'll need to modify two objects.
 
 Second, you'll have to modify a dictionary that associates model names to model classes. It's in the same file. Mine was this:
 
