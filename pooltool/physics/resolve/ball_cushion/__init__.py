@@ -1,4 +1,6 @@
-from typing import Dict, Optional, Type
+from typing import Dict, Tuple, Type, cast
+
+import attrs
 
 from pooltool.physics.resolve.ball_cushion.core import (
     BallCCushionCollisionStrategy,
@@ -12,92 +14,30 @@ from pooltool.physics.resolve.ball_cushion.unrealistic import (
     UnrealisticCircular,
     UnrealisticLinear,
 )
-from pooltool.physics.resolve.types import ModelArgs
-from pooltool.utils.strenum import StrEnum, auto
+from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
 
+_ball_lcushion_model_registry: Tuple[Type[BallLCushionCollisionStrategy], ...] = (
+    Han2005Linear,
+    UnrealisticLinear,
+)
 
-class BallLCushionModel(StrEnum):
-    """An Enum for different ball-linear cushion collision models
+_ball_ccushion_model_registry: Tuple[Type[BallCCushionCollisionStrategy], ...] = (
+    Han2005Circular,
+    UnrealisticCircular,
+)
 
-    Attributes:
-        HAN_2005:
-            https://ekiefl.github.io/2020/04/24/pooltool-theory/#3-han-2005
-            (:class:`Han2005Linear`).
-        UNREALISTIC:
-            An unrealistic model in which balls are perfectly reflected. Spin is left
-            untouched by the interaction (:class:`UnrealisticLinear`).
-    """
-
-    HAN_2005 = auto()
-    UNREALISTIC = auto()
-
-
-class BallCCushionModel(StrEnum):
-    """An Enum for different ball-circular cushion collision models
-
-    Attributes:
-        HAN_2005:
-            https://ekiefl.github.io/2020/04/24/pooltool-theory/#3-han-2005
-            (:class:`Han2005Linear`).
-        UNREALISTIC:
-            An unrealistic model in which balls are perfectly reflected. Spin is left
-            untouched by the interaction (:class:`UnrealisticCircular`).
-    """
-
-    HAN_2005 = auto()
-    UNREALISTIC = auto()
-
-
-_ball_lcushion_models: Dict[BallLCushionModel, Type[BallLCushionCollisionStrategy]] = {
-    BallLCushionModel.HAN_2005: Han2005Linear,
-    BallLCushionModel.UNREALISTIC: UnrealisticLinear,
+ball_lcushion_models: Dict[BallLCushionModel, Type[BallLCushionCollisionStrategy]] = {
+    cast(BallLCushionModel, attrs.fields_dict(cls)["model"].default): cls
+    for cls in _ball_lcushion_model_registry
 }
 
-_ball_ccushion_models: Dict[BallCCushionModel, Type[BallCCushionCollisionStrategy]] = {
-    BallCCushionModel.HAN_2005: Han2005Circular,
-    BallCCushionModel.UNREALISTIC: UnrealisticCircular,
+ball_ccushion_models: Dict[BallCCushionModel, Type[BallCCushionCollisionStrategy]] = {
+    cast(BallCCushionModel, attrs.fields_dict(cls)["model"].default): cls
+    for cls in _ball_ccushion_model_registry
 }
 
 
-def get_ball_lin_cushion_model(
-    model: Optional[BallLCushionModel] = None, params: ModelArgs = {}
-) -> BallLCushionCollisionStrategy:
-    """Returns a ball-linear cushion collision model
-
-    Args:
-        model:
-            An Enum specifying the desired model. If not passed,
-            :class:`Han2005Linear` is passed with empty params.
-        params:
-            A mapping of parameters accepted by the model.
-
-    Returns:
-        An instantiated model that satisfies the :class:`BallLCushionCollisionStrategy`
-        protocol.
-    """
-    if model is None:
-        return Han2005Linear()
-
-    return _ball_lcushion_models[model](**params)
-
-
-def get_ball_circ_cushion_model(
-    model: Optional[BallCCushionModel] = None, params: ModelArgs = {}
-) -> BallCCushionCollisionStrategy:
-    """Returns a ball-circular cushion collision model
-
-    Args:
-        model:
-            An Enum specifying the desired model. If not passed,
-            :class:`Han2005Circular` is passed with empty params.
-        params:
-            A mapping of parameters accepted by the model.
-
-    Returns:
-        An instantiated model that satisfies the :class:`BallCCushionCollisionStrategy`
-        protocol.
-    """
-    if model is None:
-        return Han2005Circular()
-
-    return _ball_ccushion_models[model](**params)
+__all__ = [
+    "ball_lcushion_models",
+    "ball_ccushion_models",
+]

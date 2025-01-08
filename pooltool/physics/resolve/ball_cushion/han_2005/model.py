@@ -1,5 +1,6 @@
 from typing import Tuple, TypeVar
 
+import attrs
 import numpy as np
 
 import pooltool.constants as const
@@ -17,6 +18,7 @@ from pooltool.physics.resolve.ball_cushion.han_2005.properties import (
     get_ball_cushion_friction,
     get_ball_cushion_restitution,
 )
+from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
 
 
 def han2005(rvw, normal, R, m, h, e_c, f_c):
@@ -107,14 +109,24 @@ def _solve(ball: Ball, cushion: Cushion) -> Tuple[Ball, Cushion]:
     return ball, cushion
 
 
+@attrs.define
 class Han2005Linear(CoreBallLCushionCollision):
+    model: BallLCushionModel = attrs.field(
+        default=BallLCushionModel.HAN_2005, init=False, repr=False
+    )
+
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
     ) -> Tuple[Ball, LinearCushionSegment]:
         return _solve(ball, cushion)
 
 
+@attrs.define
 class Han2005Circular(CoreBallCCushionCollision):
+    model: BallCCushionModel = attrs.field(
+        default=BallCCushionModel.HAN_2005, init=False, repr=False
+    )
+
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment
     ) -> Tuple[Ball, CircularCushionSegment]:

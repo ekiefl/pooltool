@@ -1,59 +1,101 @@
 """Resolve events"""
 
+import inspect
+
+import attrs
+
 from pooltool.physics.resolve.ball_ball import (
     BallBallCollisionStrategy,
     BallBallModel,
-    get_ball_ball_model,
+    ball_ball_models,
 )
 from pooltool.physics.resolve.ball_cushion import (
     BallCCushionCollisionStrategy,
     BallCCushionModel,
     BallLCushionCollisionStrategy,
     BallLCushionModel,
-    get_ball_circ_cushion_model,
-    get_ball_lin_cushion_model,
+    ball_ccushion_models,
+    ball_lcushion_models,
 )
 from pooltool.physics.resolve.ball_pocket import (
     BallPocketModel,
     BallPocketStrategy,
-    get_ball_pocket_model,
+    ball_pocket_models,
 )
 from pooltool.physics.resolve.resolver import (
-    RESOLVER_CONFIG_PATH,
+    RESOLVER_PATH,
     Resolver,
-    ResolverConfig,
 )
 from pooltool.physics.resolve.stick_ball import (
     StickBallCollisionStrategy,
     StickBallModel,
-    get_stick_ball_model,
+    stick_ball_models,
 )
 from pooltool.physics.resolve.transition import (
     BallTransitionModel,
     BallTransitionStrategy,
-    get_transition_model,
+    ball_transition_models,
 )
+
+
+def _display_model(cls, model):
+    fp = inspect.getfile(cls)
+    print(f"  {model.value} ({fp})")
+
+    if not attrs.has(cls):
+        raise TypeError(f"{cls.__name__} is not an attrs class.")
+
+    indent = 4
+    indent_str = " " * indent
+
+    for field in attrs.fields(cls):
+        if field.name == "model":
+            continue
+
+        default_val = field.default
+        if default_val is attrs.NOTHING:
+            default_val = None
+
+        print(
+            f"{indent_str}  - {field.name}: "
+            f"type={field.type}, default={default_val}"
+        )
+
+
+def display_models():
+    print("\nball_ball models:")
+    for model in BallBallModel:
+        _display_model(ball_ball_models[model], model)
+    print("\nball_linear_cushion models:")
+    for model in BallLCushionModel:
+        _display_model(ball_lcushion_models[model], model)
+    print("\nball_circular_cushion models:")
+    for model in BallCCushionModel:
+        _display_model(ball_ccushion_models[model], model)
+    print("\nstick_ball models:")
+    for model in StickBallModel:
+        _display_model(stick_ball_models[model], model)
+    print("\nball_pocket models:")
+    for model in BallPocketModel:
+        _display_model(ball_pocket_models[model], model)
+    print("\nball_transition models:")
+    for model in BallTransitionModel:
+        _display_model(ball_transition_models[model], model)
+
 
 __all__ = [
     "Resolver",
-    "RESOLVER_CONFIG_PATH",
-    "ResolverConfig",
+    "RESOLVER_PATH",
     "BallBallCollisionStrategy",
     "BallBallModel",
-    "get_ball_ball_model",
     "BallCCushionCollisionStrategy",
     "BallCCushionModel",
     "BallLCushionCollisionStrategy",
     "BallLCushionModel",
-    "get_ball_circ_cushion_model",
-    "get_ball_lin_cushion_model",
     "BallPocketModel",
     "BallPocketStrategy",
-    "get_ball_pocket_model",
     "StickBallCollisionStrategy",
     "StickBallModel",
-    "get_stick_ball_model",
     "BallTransitionModel",
     "BallTransitionStrategy",
-    "get_transition_model",
 ]

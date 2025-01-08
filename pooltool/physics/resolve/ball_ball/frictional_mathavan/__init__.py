@@ -1,5 +1,6 @@
 from typing import Optional, Tuple
 
+import attrs
 import numpy as np
 from numba import jit
 from numpy import array, dot, sqrt
@@ -8,6 +9,11 @@ from numpy.typing import NDArray
 import pooltool.constants as const
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.physics.resolve.ball_ball.core import CoreBallBallCollision
+from pooltool.physics.resolve.ball_ball.friction import (
+    AlciatoreBallBallFriction,
+    BallBallFrictionStrategy,
+)
+from pooltool.physics.resolve.models import BallBallModel
 
 INF = float("inf")
 Z_LOC = array([0, 0, 1], dtype=np.float64)
@@ -209,6 +215,7 @@ def _collide_balls(
     return dot(G_T, v_i), dot(G_T, w_i), dot(G_T, v_j), dot(G_T, w_j)
 
 
+@attrs.define
 class FrictionalMathavan(CoreBallBallCollision):
     """Ball-ball collision resolver for the Mathavan et al. (2014) collision model.
 
@@ -229,8 +236,12 @@ class FrictionalMathavan(CoreBallBallCollision):
         https://billiards.colostate.edu/physics_articles/Mathavan_Sports_2014.pdf
     """
 
-    def __init__(self, num_iterations: int = 1000):
-        self.num_iterations = num_iterations
+    friction: BallBallFrictionStrategy = AlciatoreBallBallFriction()
+    num_iterations: int = 1000
+
+    model: BallBallModel = attrs.field(
+        default=BallBallModel.FRICTIONAL_MATHAVAN, init=False, repr=False
+    )
 
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
         """Resolve ball-ball collision via Mathavan et al. (2014).
@@ -257,7 +268,7 @@ class FrictionalMathavan(CoreBallBallCollision):
             u_s1=ball1.params.u_s,
             u_s2=ball2.params.u_s,
             # Assume the interaction coefficients are the average of the two balls
-            u_b=(ball1.params.u_b + ball2.params.u_b) / 2,
+            u_b=self.friction.calculate_friction(ball1, ball2),
             e_b=(ball1.params.e_b + ball2.params.e_b) / 2,
             N=self.num_iterations,
         )

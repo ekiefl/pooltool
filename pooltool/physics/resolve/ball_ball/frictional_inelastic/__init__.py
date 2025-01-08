@@ -1,5 +1,6 @@
 from typing import Tuple
 
+import attrs
 import numpy as np
 from numba import jit
 
@@ -7,6 +8,11 @@ import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.physics.resolve.ball_ball.core import CoreBallBallCollision
+from pooltool.physics.resolve.ball_ball.friction import (
+    AlciatoreBallBallFriction,
+    BallBallFrictionStrategy,
+)
+from pooltool.physics.resolve.models import BallBallModel
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -89,6 +95,7 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     return rvw1_f, rvw2_f
 
 
+@attrs.define
 class FrictionalInelastic(CoreBallBallCollision):
     """A simple ball-ball collision model including ball-ball friction, and coefficient of restitution for equal-mass balls
 
@@ -97,14 +104,20 @@ class FrictionalInelastic(CoreBallBallCollision):
     and a more complete analysis of velocity and angular velocity in their vector forms.
     """
 
+    friction: BallBallFrictionStrategy = AlciatoreBallBallFriction()
+
+    model: BallBallModel = attrs.field(
+        default=BallBallModel.FRICTIONAL_INELASTIC, init=False, repr=False
+    )
+
     def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
         """Resolves the collision."""
         rvw1, rvw2 = _resolve_ball_ball(
             ball1.state.rvw.copy(),
             ball2.state.rvw.copy(),
             ball1.params.R,
-            # Assume the interaction coefficients are the average of the two balls
-            u_b=(ball1.params.u_b + ball2.params.u_b) / 2,
+            u_b=self.friction.calculate_friction(ball1, ball2),
+            # Average the coefficient of restitution parameters for the two balls
             e_b=(ball1.params.e_b + ball2.params.e_b) / 2,
         )
 
