@@ -6,7 +6,7 @@ Note:
     ../ball_cushion
 """
 
-from typing import Dict, Protocol, Tuple, Type
+from typing import Dict, Protocol, Tuple, Type, cast
 
 import attrs
 import numpy as np
@@ -55,6 +55,11 @@ class CanonicalBallPocket:
         return ball, pocket
 
 
+_ball_pocket_model_registry: Tuple[Type[BallPocketStrategy], ...] = (
+    CanonicalBallPocket,
+)
+
 ball_pocket_models: Dict[BallPocketModel, Type[BallPocketStrategy]] = {
-    BallPocketModel.CANONICAL: CanonicalBallPocket,
+    cast(BallPocketModel, attrs.fields_dict(cls)["model"].default): cls
+    for cls in _ball_pocket_model_registry
 }

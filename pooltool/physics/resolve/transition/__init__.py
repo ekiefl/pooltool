@@ -6,7 +6,7 @@ Note:
     ../ball_cushion
 """
 
-from typing import Dict, Protocol, Tuple, Type
+from typing import Dict, Protocol, Tuple, Type, cast
 
 import attrs
 import numpy as np
@@ -84,6 +84,11 @@ def _ball_transition_motion_states(event_type: EventType) -> Tuple[int, int]:
     raise NotImplementedError()
 
 
+_ball_transition_model_registry: Tuple[Type[BallTransitionStrategy], ...] = (
+    CanonicalTransition,
+)
+
 ball_transition_models: Dict[BallTransitionModel, Type[BallTransitionStrategy]] = {
-    BallTransitionModel.CANONICAL: CanonicalTransition,
+    cast(BallTransitionModel, attrs.fields_dict(cls)["model"].default): cls
+    for cls in _ball_transition_model_registry
 }
