@@ -185,9 +185,7 @@ class CoreBallLCushionCollision(ABC):
 
 With these, we can draft our template by following the example code: [5ecddb2c0c010e3f058e666fd5a7fc1f10117638](https://github.com/ekiefl/pooltool/commit/5ecddb2c0c010e3f058e666fd5a7fc1f10117638)
 
-It's just missing two things. First, the class must be an attrs class[^attrs]. Second, the class must have an attribute called `model`, and this attribute should be the Enum member that you had previously added to `pooltool/physics/resolve/models.py`.
-
-[^attrs]: Pooltool requires that all the resolver models are [attrs](https://www.attrs.org/en/stable/) classes. If you've never used attrs before, stick close to the example and you'll have no problems.
+It's just missing two things. First, the class must be an attrs class. Pooltool requires that all the resolver models are [attrs](https://www.attrs.org/en/stable/) classes. If you've never used attrs before, stick close to the example and you'll have no problems. Second, the class must have an attribute called `model`, and this attribute should be the Enum member that you had previously added to `pooltool/physics/resolve/models.py`.
 
 To apply these changes, follow the example code: [9c12a6efa2b9d201d8cedfc75b1a83b8134dd7ec](https://github.com/ekiefl/pooltool/commit/9c12a6efa2b9d201d8cedfc75b1a83b8134dd7ec). Since I added `UNREALISTIC` to the `BallLCushionModel` model, I added the following attribute to my class:
 
@@ -200,7 +198,7 @@ Great, now we are done with the boilerplate code. But `resolve` currently does *
 #### Implement the logic
 
 :::{note}
-You may prefer **registering** and **activating** your model before you start implementing the logic. Even though your model doesn't do anything at this point, you may prefer registering and activating it now, so that you can make changes, and immediately see how your implementation affects a test case.
+You may prefer **registering** and **activating** your model before you start implementing the logic (below). Even though your model doesn't do anything at this point, you may prefer registering and activating it now, so that you can make changes, and immediately see how your implementation affects a test case.
 :::
 
 This is where you come in, but there are a few points to make. First, I really like type hints, but I remember a time when I didn't. If that's you, don't worry about them--or any other conventions I follow, for that matter. This is your code, just do your thing and don't get overwhelmed in my conventions.
