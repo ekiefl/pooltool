@@ -115,7 +115,7 @@ def create_system(d, D):
     obj_ball = create_object_ball(cue_ball, d)
 
     return pt.System(
-        cue=pt.Cue.default(),
+        cue=pt.Cue(cue_ball_id="CB"),
         balls=(cue_ball, obj_ball),
         table=table,
     )

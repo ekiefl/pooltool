@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Dict, Optional, Tuple, Type, Union
+from typing import Any, Dict, Optional, Tuple, Type, Union, cast
 
 from attrs import define, evolve, field
 from cattrs.converters import Converter
@@ -74,6 +74,35 @@ class EventType(strenum.StrEnum):
             EventType.ROLLING_SPINNING,
             EventType.SLIDING_ROLLING,
         }
+
+    def has_ball(self) -> bool:
+        """Returns True if this event type can involve a Ball."""
+        return (
+            self
+            in {
+                EventType.BALL_BALL,
+                EventType.BALL_LINEAR_CUSHION,
+                EventType.BALL_CIRCULAR_CUSHION,
+                EventType.BALL_POCKET,
+                EventType.STICK_BALL,
+            }
+            or self.is_transition()
+        )
+
+    def has_cushion(self) -> bool:
+        """Returns True if this event type can involve a cushion (linear or circular)."""
+        return self in {
+            EventType.BALL_LINEAR_CUSHION,
+            EventType.BALL_CIRCULAR_CUSHION,
+        }
+
+    def has_pocket(self) -> bool:
+        """Returns True if this event type can involve a Pocket."""
+        return self == EventType.BALL_POCKET
+
+    def has_stick(self) -> bool:
+        """Returns True if this event type can involve a CueStick."""
+        return self == EventType.STICK_BALL
 
 
 Object = Union[
@@ -185,22 +214,6 @@ class Agent:
         else:
             self.final = obj.copy()
 
-    def matches(self, obj: Object) -> bool:
-        """Determines if the given object matches the agent.
-
-        It checks if the object is of the correct class type and if the IDs match.
-
-        Args:
-            obj: The object to compare with the agent.
-
-        Returns:
-            bool:
-                True if the object's class type and ID match the agent's type and ID,
-                False otherwise.
-        """
-        correct_class = _class_to_type[type(obj)] == self.agent_type
-        return correct_class and obj.id == self.id
-
     @staticmethod
     def from_object(obj: Object, set_initial: bool = False) -> Agent:
         """Creates an agent instance from an object.
@@ -227,6 +240,17 @@ class Agent:
     def copy(self) -> Agent:
         """Create a copy."""
         return evolve(self)
+
+    def _get_state(self, initial: bool) -> Object:
+        """Return either the initial or final state of the given agent.
+
+        Raises ValueError if that state is None.
+        """
+        obj = self.initial if initial else self.final
+        if obj is None:
+            which = "initial" if initial else "final"
+            raise ValueError(f"Agent '{self.id}' has no {which} state in this event.")
+        return obj
 
 
 def _disambiguate_agent_structuring(
@@ -329,3 +353,81 @@ class Event:
         """Create a copy."""
         # NOTE is this deep-ish copy?
         return evolve(self)
+
+    def _find_agent(self, agent_type: AgentType, agent_id: str) -> Agent:
+        """Return the Agent with the specified agent_type and ID.
+
+        Raises:
+            ValueError if not found.
+        """
+        for agent in self.agents:
+            if agent.agent_type == agent_type and agent.id == agent_id:
+                return agent
+        raise ValueError(
+            f"No agent of type {agent_type} with ID '{agent_id}' found in this event."
+        )
+
+    def get_ball(self, ball_id: str, initial: bool = True) -> Ball:
+        """Return the Ball object with the given ID, either final or initial.
+
+        Args:
+            ball_id: The ID of the ball to retrieve.
+            initial: If True, return the ball's initial state; otherwise final state.
+
+        Raises:
+            ValueError: If the event does not involve a ball or if no matching ball is found.
+        """
+        if not self.event_type.has_ball():
+            raise ValueError(
+                f"Event of type {self.event_type} does not involve a Ball."
+            )
+
+        agent = self._find_agent(AgentType.BALL, ball_id)
+        obj = agent._get_state(initial)
+        return cast(Ball, obj)
+
+    def get_pocket(self, pocket_id: str, initial: bool = True) -> Pocket:
+        """Return the Pocket object with the given ID, either final or initial."""
+        if not self.event_type.has_pocket():
+            raise ValueError(
+                f"Event of type {self.event_type} does not involve a Pocket."
+            )
+
+        agent = self._find_agent(AgentType.POCKET, pocket_id)
+        obj = agent._get_state(initial)
+        return cast(Pocket, obj)
+
+    def get_cushion(
+        self, cushion_id: str
+    ) -> Union[LinearCushionSegment, CircularCushionSegment]:
+        """Return the cushion segment with the given ID."""
+        if not self.event_type.has_cushion():
+            raise ValueError(
+                f"Event of type {self.event_type} does not involve a cushion."
+            )
+
+        try:
+            agent = self._find_agent(AgentType.LINEAR_CUSHION_SEGMENT, cushion_id)
+            return cast(LinearCushionSegment, agent.initial)
+        except ValueError:
+            pass
+
+        try:
+            agent = self._find_agent(AgentType.CIRCULAR_CUSHION_SEGMENT, cushion_id)
+            return cast(CircularCushionSegment, agent.initial)
+        except ValueError:
+            pass
+
+        raise ValueError(
+            f"No agent of linear/circular cushion with ID '{cushion_id}' found in this event."
+        )
+
+    def get_stick(self, stick_id: str) -> Pocket:
+        """Return the cue stick with the given ID."""
+        if not self.event_type.has_pocket():
+            raise ValueError(
+                f"Event of type {self.event_type} does not involve a Pocket."
+            )
+
+        agent = self._find_agent(AgentType.POCKET, stick_id)
+        return cast(Pocket, agent.initial)

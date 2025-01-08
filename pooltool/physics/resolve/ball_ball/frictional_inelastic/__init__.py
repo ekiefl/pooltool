@@ -28,28 +28,17 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     rvw2[1] = ptmath.coordinate_rotation(rvw2[1], -theta)
     rvw2[2] = ptmath.coordinate_rotation(rvw2[2], -theta)
 
-    rvw1_f = rvw1.copy()
-    rvw2_f = rvw2.copy()
-
     # velocity normal component, same for both slip and no-slip after collison cases
     v1_n_f = 0.5 * ((1.0 - e_b) * rvw1[1][0] + (1.0 + e_b) * rvw2[1][0])
     v2_n_f = 0.5 * ((1.0 + e_b) * rvw1[1][0] + (1.0 - e_b) * rvw2[1][0])
     D_v_n_magnitude = abs(v2_n_f - v1_n_f)
 
-    # angular velocity normal component, unchanged
-    w1_n_f = rvw1[2][0]
-    w2_n_f = rvw2[2][0]
-
-    # discard normal components for now
+    # discard velocity normal components for now
     # so that surface velocities are tangent
     rvw1[1][0] = 0.0
-    rvw1[2][0] = 0.0
     rvw2[1][0] = 0.0
-    rvw2[2][0] = 0.0
-    rvw1_f[1][0] = 0.0
-    rvw1_f[2][0] = 0.0
-    rvw2_f[1][0] = 0.0
-    rvw2_f[2][0] = 0.0
+    rvw1_f = rvw1.copy()
+    rvw2_f = rvw2.copy()
 
     v1_c = ptmath.surface_velocity(rvw1, unit_x, R)
     v2_c = ptmath.surface_velocity(rvw2, -unit_x, R)
@@ -77,12 +66,11 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     # then slip condition is invalid so we need to calculate no-slip condition
     if not has_relative_velocity or np.dot(v12_c, v12_c_slip) <= 0:  # type: ignore
         # velocity tangent component for no-slip condition
-        D_v1_t = -(1.0 / 9.0) * (
-            2.0 * (rvw1[1] - rvw2[1])
-            + R * ptmath.cross(2.0 * rvw1[2] + 7.0 * rvw2[2], unit_x)
+        D_v1_t = -(1.0 / 7.0) * (
+            rvw1[1] - rvw2[1] + R * ptmath.cross(rvw1[2] + rvw2[2], unit_x)
         )
-        D_w1 = (5.0 / 9.0) * (
-            rvw2[2] - rvw1[2] + ptmath.cross(unit_x, rvw2[1] - rvw1[1]) / R
+        D_w1 = -(5.0 / 14.0) * (
+            ptmath.cross(unit_x, rvw1[1] - rvw2[1]) / R + rvw1[2] + rvw2[2]
         )
         rvw1_f[1] = rvw1[1] + D_v1_t
         rvw1_f[2] = rvw1[2] + D_w1
@@ -92,8 +80,6 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     # reintroduce the final normal components
     rvw1_f[1][0] = v1_n_f
     rvw2_f[1][0] = v2_n_f
-    rvw1_f[2][0] = w1_n_f
-    rvw2_f[2][0] = w2_n_f
 
     # rotate everything back to the original frame
     rvw1_f[1] = ptmath.coordinate_rotation(rvw1_f[1], theta)
