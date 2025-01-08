@@ -268,10 +268,8 @@ def get_carom_angle(system: pt.System) -> float:
         pt.events.by_type(pt.EventType.SLIDING_ROLLING),
     )[0]
 
-    velocity_final = transition.agents[0].final.state.rvw[1, :2]
-    for agent in collision.agents:
-        if agent.id == "cue":
-            velocity_initial = agent.initial.state.rvw[1, :2]
+    velocity_final = transition.get_ball("cue", initial=False).state.rvw[1, :2]
+    velocity_initial = transition.get_ball("cue", initial=True).state.rvw[1, :2]
 
     return pt.ptmath.utils.angle_between_vectors(velocity_final, velocity_initial)
 
