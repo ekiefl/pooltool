@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.16.4
+#       jupytext_version: 1.16.6
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -123,9 +123,9 @@ system.cue.set_state(V0=3, phi=phi, b=0.4)
 # Now, we [simulate](../autoapi/pooltool/index.rst#pooltool.simulate) the shot and then [continuize](../autoapi/pooltool/evolution/continuize/index.html#pooltool.evolution.continuize.continuize) it to store ball state data (like coordinates) in $10\text{ms}$ timestep intervals.
 
 # %% trusted=true
-# Create a default physics engine and overwrite ball-ball model with frictionless, elastic model.
+# Create a default physics engine, then overwrite ball-ball model with frictionless, elastic model.
 engine = pt.physics.PhysicsEngine()
-engine.resolver.ball_ball = pt.physics.get_ball_ball_model(pt.physics.BallBallModel.FRICTIONLESS_ELASTIC)
+engine.resolver.ball_ball = pt.physics.ball_ball_models[pt.physics.BallBallModel.FRICTIONLESS_ELASTIC]()
 
 pt.simulate(system, engine=engine, inplace=True)
 pt.continuize(system, dt=0.01, inplace=True)
