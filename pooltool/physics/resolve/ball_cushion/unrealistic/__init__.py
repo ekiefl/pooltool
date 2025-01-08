@@ -1,6 +1,6 @@
 """An unrealistic ball-cushion model"""
 
-from typing import Tuple
+from typing import Tuple, TypeVar
 
 import attrs
 import numpy as np
@@ -8,14 +8,22 @@ import numpy as np
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
-from pooltool.objects.table.components import LinearCushionSegment
-from pooltool.physics.resolve.ball_cushion.core import CoreBallLCushionCollision
-from pooltool.physics.resolve.models import BallLCushionModel
+from pooltool.objects.table.components import (
+    CircularCushionSegment,
+    LinearCushionSegment,
+)
+from pooltool.physics.resolve.ball_cushion.core import (
+    CoreBallCCushionCollision,
+    CoreBallLCushionCollision,
+)
+from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
+
+Cushion = TypeVar("Cushion", LinearCushionSegment, CircularCushionSegment)
 
 
 def _solve(
-    ball: Ball, cushion: LinearCushionSegment, restitution: bool = True
-) -> Tuple[Ball, LinearCushionSegment]:
+    ball: Ball, cushion: Cushion, restitution: bool = True
+) -> Tuple[Ball, Cushion]:
     """Given ball and cushion, unrealistically reflect the ball's momentum
 
     Args:
@@ -71,4 +79,17 @@ class UnrealisticLinear(CoreBallLCushionCollision):
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
     ) -> Tuple[Ball, LinearCushionSegment]:
+        return _solve(ball, cushion, self.restitution)
+
+
+@attrs.define
+class UnrealisticCircular(CoreBallCCushionCollision):
+    restitution: bool = False
+    model: BallCCushionModel = attrs.field(
+        default=BallCCushionModel.UNREALISTIC, init=False, repr=False
+    )
+
+    def solve(
+        self, ball: Ball, cushion: CircularCushionSegment
+    ) -> Tuple[Ball, CircularCushionSegment]:
         return _solve(ball, cushion, self.restitution)

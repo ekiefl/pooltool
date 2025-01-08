@@ -10,7 +10,10 @@ from pooltool.physics.resolve.ball_cushion.han_2005 import (
     Han2005Circular,
     Han2005Linear,
 )
-from pooltool.physics.resolve.ball_cushion.unrealistic import UnrealisticLinear
+from pooltool.physics.resolve.ball_cushion.unrealistic import (
+    UnrealisticCircular,
+    UnrealisticLinear,
+)
 from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
 
 _ball_lcushion_model_registry: Tuple[Type[BallLCushionCollisionStrategy], ...] = (
@@ -20,6 +23,7 @@ _ball_lcushion_model_registry: Tuple[Type[BallLCushionCollisionStrategy], ...] =
 
 _ball_ccushion_model_registry: Tuple[Type[BallCCushionCollisionStrategy], ...] = (
     Han2005Circular,
+    UnrealisticCircular,
 )
 
 ball_lcushion_models: Dict[BallLCushionModel, Type[BallLCushionCollisionStrategy]] = {
