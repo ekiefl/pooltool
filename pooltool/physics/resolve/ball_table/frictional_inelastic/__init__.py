@@ -1,3 +1,4 @@
+import attrs
 import numpy as np
 from numba import jit
 from numpy.typing import NDArray
@@ -11,6 +12,7 @@ from pooltool.physics.resolve.ball_table.core import (
     bounce_height,
     final_ball_motion_state,
 )
+from pooltool.physics.resolve.models import BallTableModel
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -61,11 +63,15 @@ def _resolve_ball_table(
     return rvw
 
 
+@attrs.define
 class FrictionalInelastic(CoreBallTableCollision):
     """A frictional, inelastic collision."""
 
-    def __init__(self, min_bounce_height: float = 0.005):
-        self.min_bounce_height = min_bounce_height
+    min_bounce_height: float = 0.005
+
+    model: BallTableModel = attrs.field(
+        default=BallTableModel.FRICTIONAL_INELASTIC, init=False, repr=False
+    )
 
     def solve(self, ball: Ball) -> Ball:
         """Resolves the collision."""

@@ -5,37 +5,35 @@ from pooltool.physics.engine import PhysicsEngine
 from pooltool.physics.resolve.ball_ball import (
     BallBallCollisionStrategy,
     BallBallModel,
-    get_ball_ball_model,
+    ball_ball_models,
 )
 from pooltool.physics.resolve.ball_cushion import (
     BallCCushionCollisionStrategy,
     BallCCushionModel,
     BallLCushionCollisionStrategy,
     BallLCushionModel,
-    get_ball_circ_cushion_model,
-    get_ball_lin_cushion_model,
+    ball_ccushion_models,
+    ball_lcushion_models,
 )
 from pooltool.physics.resolve.ball_pocket import (
     BallPocketModel,
     BallPocketStrategy,
-    get_ball_pocket_model,
+    ball_pocket_models,
 )
 from pooltool.physics.resolve.resolver import (
-    RESOLVER_CONFIG_PATH,
+    RESOLVER_PATH,
     Resolver,
-    ResolverConfig,
 )
 from pooltool.physics.resolve.stick_ball import (
     StickBallCollisionStrategy,
     StickBallModel,
-    get_stick_ball_model,
+    stick_ball_models,
 )
 from pooltool.physics.resolve.transition import (
     BallTransitionModel,
     BallTransitionStrategy,
-    get_transition_model,
+    ball_transition_models,
 )
-from pooltool.physics.resolve.types import ArgType, ModelArgs
 from pooltool.physics.utils import (
     get_airborne_time,
     get_ball_energy,
@@ -58,22 +56,13 @@ __all__ = [
     "evolve",
     "resolve",
     "Resolver",
-    "RESOLVER_CONFIG_PATH",
-    "ResolverConfig",
+    "RESOLVER_PATH",
     "BallBallModel",
-    "get_ball_ball_model",
     "BallCCushionModel",
     "BallLCushionModel",
-    "get_ball_circ_cushion_model",
-    "get_ball_lin_cushion_model",
     "BallPocketModel",
-    "get_ball_pocket_model",
     "StickBallModel",
-    "get_stick_ball_model",
     "BallTransitionModel",
-    "get_transition_model",
-    "ArgType",
-    "ModelArgs",
     "rel_velocity",
     "surface_velocity",
     "get_u_vec",
@@ -82,4 +71,10 @@ __all__ = [
     "get_spin_time",
     "get_airborne_time",
     "get_ball_energy",
+    "ball_ball_models",
+    "ball_lcushion_models",
+    "ball_ccushion_models",
+    "ball_pocket_models",
+    "stick_ball_models",
+    "ball_transition_models",
 ]

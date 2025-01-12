@@ -33,7 +33,7 @@ def from_json(path: Pathish) -> Any:
 
 def to_yaml(o: Any, path: Pathish) -> None:
     with open(path, "w") as fp:
-        yaml.dump(o, fp)
+        yaml.dump(o, fp, sort_keys=False)
 
 
 def from_yaml(path: Pathish) -> Any:

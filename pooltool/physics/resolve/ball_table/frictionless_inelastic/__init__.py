@@ -1,9 +1,12 @@
+import attrs
+
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.physics.resolve.ball_table.core import (
     CoreBallTableCollision,
     bounce_height,
     final_ball_motion_state,
 )
+from pooltool.physics.resolve.models import BallTableModel
 
 
 def _resolve_ball_table(vz0: float, e_t: float) -> float:
@@ -15,6 +18,7 @@ def _resolve_ball_table(vz0: float, e_t: float) -> float:
     return -vz0 * e_t
 
 
+@attrs.define
 class FrictionlessInelastic(CoreBallTableCollision):
     """A frictionless, inelastic collision.
 
@@ -27,8 +31,11 @@ class FrictionlessInelastic(CoreBallTableCollision):
     velocity is zeroed and the outgoing ball state is set to sliding.
     """
 
-    def __init__(self, min_bounce_height: float = 0.005):
-        self.min_bounce_height = min_bounce_height
+    min_bounce_height: float = 0.005
+
+    model: BallTableModel = attrs.field(
+        default=BallTableModel.FRICTIONAL_ELASTIC, init=False, repr=False
+    )
 
     def solve(self, ball: Ball) -> Ball:
         """Resolves the collision."""

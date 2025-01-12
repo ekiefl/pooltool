@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.16.4
+#       jupytext_version: 1.16.6
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -122,10 +122,10 @@ system.cue.set_state(V0=3, phi=phi, b=0.4)
 # %% [markdown]
 # Now, we [simulate](../autoapi/pooltool/index.rst#pooltool.simulate) the shot and then [continuize](../autoapi/pooltool/evolution/continuize/index.html#pooltool.evolution.continuize.continuize) it to store ball state data (like coordinates) in $10\text{ms}$ timestep intervals.
 
-# %%
-# Create a default physics engine and overwrite ball-ball model with frictionless, elastic model.
+# %% trusted=true
+# Create a default physics engine, then overwrite ball-ball model with frictionless, elastic model.
 engine = pt.physics.PhysicsEngine()
-engine.resolver.ball_ball = pt.physics.get_ball_ball_model(pt.physics.BallBallModel.FRICTIONLESS_ELASTIC)
+engine.resolver.ball_ball = pt.physics.ball_ball_models[pt.physics.BallBallModel.FRICTIONLESS_ELASTIC]()
 
 pt.simulate(system, engine=engine, inplace=True)
 pt.continuize(system, dt=0.01, inplace=True)
@@ -268,10 +268,8 @@ def get_carom_angle(system: pt.System) -> float:
         pt.events.by_type(pt.EventType.SLIDING_ROLLING),
     )[0]
 
-    velocity_final = transition.agents[0].final.state.rvw[1, :2]
-    for agent in collision.agents:
-        if agent.id == "cue":
-            velocity_initial = agent.initial.state.rvw[1, :2]
+    velocity_final = transition.get_ball("cue", initial=False).state.rvw[1, :2]
+    velocity_initial = transition.get_ball("cue", initial=True).state.rvw[1, :2]
 
     return pt.ptmath.utils.angle_between_vectors(velocity_final, velocity_initial)
 
