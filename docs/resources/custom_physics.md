@@ -27,76 +27,86 @@ Below details how you can either **(a)** plug in models that already exist in th
 
 This section guides you on how to switch between existing models within the codebase.
 
-The handling of events is determined by the resolver configuration file, which is located at `~/.config/pooltool/physics/resolver.yaml`. Here's an example of what that looks like:
+By default, events are resolved according to the default resolver file, which is located at `~/.config/pooltool/physics/resolver.yaml`. Here's an example of what that looks like:
 
 ```yaml
-ball_ball: frictionless_elastic
-ball_ball_params: {}
-ball_circular_cushion: han_2005
-ball_circular_cushion_params: {}
-ball_linear_cushion: han_2005
-ball_linear_cushion_params: {}
-ball_pocket: canonical
-ball_pocket_params: {}
-stick_ball: instantaneous_point
-stick_ball_params:
-  throttle_english: true
-transition: canonical
-transition_params: {}
+ball_ball:
+  friction:
+    a: 0.009951
+    b: 0.108
+    c: 1.088
+    model: alciatore
+  num_iterations: 1000
+  model: frictional_mathavan
+ball_linear_cushion:
+  model: han_2005
+ball_circular_cushion:
+  model: han_2005
+ball_pocket:
+  model: canonical
+stick_ball:
+  english_throttle: 1.0
+  squirt_throttle: 1.0
+  model: instantaneous_point
+transition:
+  model: canonical
+version: 6
 ```
 
+:::{note}
 The resolver configuration file is automatically generated during the initial execution. If you don't have one yet, execute pooltool with the command `run-pooltool`, start a new game, and take a shot--one will be generated.
+:::
 
-Models are identified by their names. You can view the names of all available models by executing the following command:
+You can modify this file to change the physics. You can view available model names and their associated parameter values by executing the following command:
 
 ```python
-from pooltool.physics.resolve.ball_ball import BallBallModel
-from pooltool.physics.resolve.ball_cushion import BallCCushionModel, BallLCushionModel
-from pooltool.physics.resolve.ball_pocket import BallPocketModel
-from pooltool.physics.resolve.stick_ball import StickBallModel
-from pooltool.physics.resolve.transition import BallTransitionModel
-
-print("ball-ball models:")
-for model in BallBallModel: print(f"\t{model}")
-print("ball-linear cushion models:")
-for model in BallLCushionModel: print(f"\t{model}")
-print("ball-circular cushion models:")
-for model in BallCCushionModel: print(f"\t{model}")
-print("stick-ball models:")
-for model in StickBallModel: print(f"\t{model}")
-print("ball-pocket models:")
-for model in BallPocketModel: print(f"\t{model}")
-print("ball-transition models:")
-for model in BallTransitionModel: print(f"\t{model}")
+python -c 'from pooltool.physics.resolve import display_models; display_models()'
 ```
 
-Each model lives in its own directory. For example, the `frictionless_elastic` **ball-ball** collision model is found in `pooltool/physics/resolve/ball_ball/frictionless_elastic/__init__.py` with the class name `FrictionlessElastic`. `FrictionlessElastic` doesn't take any parameters, so in the resolver config the parameter field is empty:
+Here is the output (January 5th, 2025):
 
 ```
-ball_ball: frictionless_elastic
-ball_ball_params: {}
+ball_ball models:
+  frictionless_elastic (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/ball_ball/frictionless_elastic/__init__.py)
+  frictional_inelastic (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/ball_ball/frictional_inelastic/__init__.py)
+      - friction: type=<class 'pooltool.physics.resolve.ball_ball.friction.BallBallFrictionStrategy'>, default=AlciatoreBallBallFriction(a=0.009951, b=0.108, c=1.088)
+  frictional_mathavan (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/ball_ball/frictional_mathavan/__init__.py)
+      - friction: type=<class 'pooltool.physics.resolve.ball_ball.friction.BallBallFrictionStrategy'>, default=AlciatoreBallBallFriction(a=0.009951, b=0.108, c=1.088)
+      - num_iterations: type=<class 'int'>, default=1000
+
+ball_linear_cushion models:
+  han_2005 (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/ball_cushion/han_2005/model.py)
+  unrealistic (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/ball_cushion/unrealistic/__init__.py)
+      - restitution: type=<class 'bool'>, default=True
+
+ball_circular_cushion models:
+  han_2005 (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/ball_cushion/han_2005/model.py)
+  unrealistic (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/ball_cushion/unrealistic/__init__.py)
+      - restitution: type=<class 'bool'>, default=True
+
+stick_ball models:
+  instantaneous_point (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/stick_ball/instantaneous_point/__init__.py)
+      - english_throttle: type=<class 'float'>, default=1.0
+      - squirt_throttle: type=<class 'float'>, default=1.0
+
+ball_pocket models:
+  canonical (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/ball_pocket/__init__.py)
+
+ball_transition models:
+  canonical (/Users/evan/Software/pooltool_ml/pooltool/pooltool/physics/resolve/transition/__init__.py)
 ```
 
-But some models do take parameters: The **stick-ball** collision model `instantaneous_point` has a parameter `throttle_english`, which you can see is an initialization parameter of the class `InstantaneousPoint` housed in `pooltool/physics/resolve/stick_ball/instantaneous_point/__init__.py`:
+Next to each model name is the filepath where the model is defined. For example, the **stick-ball** collision model `instantaneous_point` is defined at `pooltool/physics/resolve/stick_ball/instantaneous_point/__init__.py`. As you can see in the output above, it has two parameters, `english_throttle` and `squirt_throttle`. If you look at the corresponding class `InstantaneousPoint` housed in that file, you can see that these are initialization parameters of the model:
 
 ```python
 @attrs.define
 class InstantaneousPoint(CoreStickBallCollision):
-    throttle_english: bool
+    english_throttle: bool
+    squirt_throttle: bool
 
     def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]:
         (...)
 ```
-
-To set this parameter to `False`, modify `stick_ball_params`:
-
-```
-stick_ball: instantaneous_point
-stick_ball_params:
-  throttle_english: false
-```
-
-Currently, the easiest way to see which parameters are available for a model is to dig through the source code, specifically in `pooltool/physics/resolve/*`.
 
 ### What happens at runtime?
 
@@ -120,34 +130,7 @@ class Resolver:
 
 Each attribute is a _physics strategy_ (or model) for each event class: [ball-ball collisions](https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-ball-collision), [ball-linear cushion collisions](https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision), [ball-circular cushion collisions](https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision), [ball-pocket "collisions"](https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-pocket-collision), and [ball motion transitions](https://ekiefl.github.io/2020/12/20/pooltool-alg/#transition-events).
 
-While it's possible to create a `Resolver` object by instantiating physics strategies for each event class, this programmatic interface is complex to replicate. A more user-friendly approach would be to serialize the desired physics strategies into a configuration file. This is the function of `ResolverConfig`. As a dataclass, it supports seamless serialization and deserialization, allowing all information needed to create a `Resolver` object to be conveniently stored in a YAML file.
-
-The structure of `ResolverConfig` is as follows:
-
-```python
-class ResolverConfig:
-    ball_ball: BallBallModel
-    ball_ball_params: ModelArgs
-    ball_linear_cushion: BallLCushionModel
-    ball_linear_cushion_params: ModelArgs
-    ball_circular_cushion: BallCCushionModel
-    ball_circular_cushion_params: ModelArgs
-    ball_pocket: BallPocketModel
-    ball_pocket_params: ModelArgs
-    stick_ball: StickBallModel
-    stick_ball_params: ModelArgs
-    transition: BallTransitionModel
-    transition_params: ModelArgs
-
-    def save(self, path: Pathish) -> Path:
-        # Code to serialize the object to YAML and save it to a file...
-
-    @classmethod
-    def load(cls, path: Pathish) -> ResolverConfig:
-        # Code to load a YAML file and deserialize it into a ResolverConfig object...
-```
-
-You might observe that this closely resembles the YAML configuration file. That's because the `resolver.yaml` file is simply a serialization of this class. When you modify `resolver.yaml`, a `ResolverConfig` is created from the `resolver.yaml` file using `ResolverConfig.load(...)` during runtime. This configuration is then used to build the `Resolver` object employed by the shot evolution algorithm, using `Resolver.from_config(resolver_config)`.
+You might observe that this closely resembles the YAML configuration file. That's because the `resolver.yaml` file is simply a serialization of this class. During runtime, a `Resolver` class is created from the `resolver.yaml`.
 
 ### Creating new physics models
 
@@ -155,9 +138,15 @@ To demonstrate how you can integrate your own physics model into pooltool, I'll 
 
 Ok let's get started.
 
+#### Create a name for your model
+
+Figure out a name for your model, then open up `pooltool/physics/resolve/models.py`. You'll see a bunch of [Enum](https://docs.python.org/3/howto/enum.html) classes. Find the one corresponding to your event class and add your model as an attribute of the class.
+
+Here's the example code: [d7ab8531424b62e1786506245b46715a607305ee](https://github.com/ekiefl/pooltool/commit/d7ab8531424b62e1786506245b46715a607305ee)
+
 #### Create a directory
 
-First, we need to establish a model within its own dedicated directory. This directory should be named after the model. As I'm using a simple toy example, I'll name mine `unrealistic`. The directory should be located in one of the `pooltool/physics/resolve/*` folders, depending on the event class your model manages. Since I'm constructing a ball-cushion model, I'll create the `unrealistic` folder in `pooltool/physics/resolve/ball_cushion/`.
+Now, we need to establish the model within its own dedicated directory. This directory should be named after the model. The directory should be located in one of the `pooltool/physics/resolve/*` folders, depending on the event class your model manages. Since I'm constructing a ball-cushion model, I'll create the `unrealistic` folder in `pooltool/physics/resolve/ball_cushion/`.
 
 Within your model directory, create an `__init__.py` file. If your model is simple, all your model logic can be contained within this single file. However, if your model grows complex, feel free to expand it across multiple files, provided they're kept within your model directory.
 
@@ -170,7 +159,9 @@ Regardless of how you choose to structure your code, it must eventually lead to 
 1. Contains a method named `solve`.
 1. Inherits from the core model.
 
-The call signature of your `solve` method and the core model from which you inherit will depend on the event class for which you're developing a model.
+There's two other requirements but let's deal with these two first.
+
+The call signature of your `solve` method and the core model from which you inherit will depend on the event class you're developing a model for.
 
 Since I'm developing a ball-cushion model, I'll refer to `pooltool/physics/resolve/ball_cushion/core.py` for this information. Below is the required call signature for my `solve` method:
 
@@ -192,50 +183,59 @@ class CoreBallLCushionCollision(ABC):
     (...)
 ```
 
-With these, we can create our template:
+With these, we can draft our template by following the example code: [5ecddb2c0c010e3f058e666fd5a7fc1f10117638](https://github.com/ekiefl/pooltool/commit/5ecddb2c0c010e3f058e666fd5a7fc1f10117638)
+
+It's just missing two things. First, the class must be an attrs class. Pooltool requires that all the resolver models are [attrs](https://www.attrs.org/en/stable/) classes. If you've never used attrs before, stick close to the example and you'll have no problems. Second, the class must have an attribute called `model`, and this attribute should be the Enum member that you had previously added to `pooltool/physics/resolve/models.py`.
+
+To apply these changes, follow the example code: [9c12a6efa2b9d201d8cedfc75b1a83b8134dd7ec](https://github.com/ekiefl/pooltool/commit/9c12a6efa2b9d201d8cedfc75b1a83b8134dd7ec). Since I added `UNREALISTIC` to the `BallLCushionModel` model, I added the following attribute to my class:
 
 ```python
-"""An unrealistic ball-cushion model"""
-
-from typing import Tuple
-
-from pooltool.objects.ball.datatypes import Ball
-from pooltool.objects.table.components import LinearCushionSegment
-from pooltool.physics.resolve.ball_cushion.core import CoreBallLCushionCollision
-
-
-class UnrealisticLinear(CoreBallLCushionCollision):
-    def solve(
-        self, ball: Ball, cushion: LinearCushionSegment
-    ) -> Tuple[Ball, LinearCushionSegment]:
-        return ball, cushion
+model: BallLCushionModel = attrs.field(default=BallLCushionModel.UNREALISTIC, init=False, repr=False)
 ```
 
-Here's the example code: [af507032217914629e53954965c982d21fdc8094](https://github.com/ekiefl/pooltool/commit/af507032217914629e53954965c982d21fdc8094)
-
-As you can see, `resolve` currently does *nothing*, it just returns what is handed to it.
+Great, now we are done with the boilerplate code. But `resolve` currently does *nothing*, it just returns what is handed to it. Let's change that.
 
 #### Implement the logic
 
 :::{note}
-You may prefer **registering** and **activating** your model before you start implementing the logic. Even though your model doesn't do anything at this point, you may prefer registering and activating it now, so that you can make changes, and immediately see how your implementation affects a test case.
+You may prefer **registering** and **activating** your model before you start implementing the logic (below). Even though your model doesn't do anything at this point, you may prefer registering and activating it now, so that you can make changes, and immediately see how your implementation affects a test case.
 :::
 
 This is where you come in, but there are a few points to make. First, I really like type hints, but I remember a time when I didn't. If that's you, don't worry about them--or any other conventions I follow, for that matter. This is your code, just do your thing and don't get overwhelmed in my conventions.
 
 Second, since you'll be working with the core pooltool objects `Cue`, `Ball`, `LinearCushionSegment`, `CircularCushionSegment`, and `Pocket`, it is worth scanning their source code to determine what parameters they have, and therefore what tools you have at your disposal.
 
-Anyways, here's my preliminary implementation: [17510e7d014c8aa5e60d6556db2e5b0dea36f2f0](https://github.com/ekiefl/pooltool/commit/17510e7d014c8aa5e60d6556db2e5b0dea36f2f0)
+Anyways, here's my preliminary implementation: [f5cf3734a026508c8767e8937b5dccb4e3a87682](https://github.com/ekiefl/pooltool/commit/f5cf3734a026508c8767e8937b5dccb4e3a87682)
 
-Then I added a parameter to the model to add some flavor and complexity. Note that the model parameters should not be things like mass or friction coefficients. Those are properties of the passed objects. If you think a property is missing for an object, we can add it to the object. Model parameters are more meta/behavioral (see the below example).
+Then I added a parameter to the model to add some complexity. Specifically, here's how I added a model parameter that dictates whether or not the outgoing speed should be dampened with the ball's restitution coefficient: [3c898c72832421aa6226cd40574a1b9b38550737](https://github.com/ekiefl/pooltool/commit/3c898c72832421aa6226cd40574a1b9b38550737).
 
-Please note that the resolver config can only handle strings, booleans, floats, and integers for model parameters due to serialization requirements. If you have more complex model types like functions, try and simplify the passed argument to a string by string-lookup dictionary.
+:::{note}
+Model parameters should not be things like mass or friction coefficients. Those are properties of the passed objects. If you think a property is missing for an object, we can add it to the object. Model parameters are more meta/behavioral (see the above commit, where `restitution` is added).
+:::
 
-Here's me adding a model parameter that dictates whether or not the outgoing speed should be dampened with the ball's restitution coefficient: [ec42752f381edf3d576a66a9178a27d6054ff437](https://github.com/ekiefl/pooltool/commit/ec42752f381edf3d576a66a9178a27d6054ff437)
+:::{note}
+Attributes are defined differently for attrs classes than they are for standard Python classes. For example, if you had a standard class, you could add a restitution boolean like this:
+
+```python
+class UnrealisticLinear(CoreBallLCushionCollision):
+    def __init__(self, restitution: bool = True):
+        self.restitution = restitution
+```
+
+But since pooltool uses attrs classes for model definitions, you must define the equivalent like this:
+
+```python
+@attrs.define
+class UnrealisticLinear(CoreBallLCushionCollision):
+    restitution: bool = True
+```
+
+Keep this in mind if you are adding parameters to your model.
+:::
 
 #### Register the model
 
-Your model is in the codebase, but no other part of the codebase knows about it yet. Changing that is simple.
+Your model is in the codebase, but it needs to be added to collection of *available* models. Changing that is simple.
 
 Open the `__init__.py` file corresponding to your event class:
 
@@ -247,40 +247,21 @@ pooltool/physics/resolve/stick_ball/__init__.py
 pooltool/physics/resolve/transition/__init__.py
 ```
 
-You'll need to modify two objects.
-
-First, is an [Enum](https://docs.python.org/3/library/enum.html) that holds the collection of all model names for a given event-class. You can find it by searching for a class that inherits from `StrEnum`. Here is the ball linear cushion Enum:
+In it you'll find a variable that defines the model registry for your event class. Since I'm adding a ball linear cushion model, I opened up `pooltool/physics/resolve/ball_cushion/__init__.py` where I found the model registry `_ball_lcushion_model_registry` that looked like this:
 
 ```python
-class BallLCushionModel(StrEnum):
-    HAN_2005 = auto()
+_ball_lcushion_model_registry: Tuple[Type[BallLCushionCollisionStrategy], ...] = (
+    Han2005Linear,
+)
 ```
 
-Add a new element to this Enum that will correspond to your model, like I've done here:
+Now add your model. My model is called `UnrealisticLinear`, so I added it to the registry:
 
 ```python
-class BallLCushionModel(StrEnum):
-    HAN_2005 = auto()
-    UNREALISTIC = auto()
-```
-
-Technically the name here is arbitrary, but it makes good sense to have it match your model name.
-
-Second, you'll have to modify a dictionary that associates model names to model classes. It's in the same file. Mine was this:
-
-```python
-_ball_lcushion_models: Dict[BallLCushionModel, Type[BallLCushionCollisionStrategy]] = {
-    BallLCushionModel.HAN_2005: Han2005Linear,
-}
-```
-
-And I made it this:
-
-```python
-_ball_lcushion_models: Dict[BallLCushionModel, Type[BallLCushionCollisionStrategy]] = {
-    BallLCushionModel.HAN_2005: Han2005Linear,
-    BallLCushionModel.UNREALISTIC: UnrealisticLinear,
-}
+_ball_lcushion_model_registry: Tuple[Type[BallLCushionCollisionStrategy], ...] = (
+    Han2005Linear,
+    UnrealisticLinear,
+)
 ```
 
 I needed to import my new model, so I put this at the top of the file:
@@ -289,21 +270,28 @@ I needed to import my new model, so I put this at the top of the file:
 from pooltool.physics.resolve.ball_cushion.unrealistic import UnrealisticLinear
 ```
 
-Here are the full changes: [9c4d9ad2dc6bae3848bfc9973f150b864e07db06](https://github.com/ekiefl/pooltool/commit/9c4d9ad2dc6bae3848bfc9973f150b864e07db06)
+Here are the full changes: [bb787a43d276d1b4f887c52e7bc5b5b1d079efd7](https://github.com/ekiefl/pooltool/commit/bb787a43d276d1b4f887c52e7bc5b5b1d079efd7)
 
 #### Activate the model
 
-In order to apply your new model using pooltool, you'll need to modify the resolver configuration file, which is found at `~/.config/pooltool/physics/resolver.yaml`. This file is automatically generated **upon the first run-time**. Therefore, if it's missing, simply execute the command `python sandbox/break.py` from the pooltool root directory to generate it.
+In order to apply your new model using pooltool, you'll need to modify the default resolver file (`~/.config/pooltool/physics/resolver.yaml`). This file is automatically generated **upon the first run-time**. Therefore, if it's missing, simply execute the command `python sandbox/break.py` from the pooltool root directory to generate it.
 
-Next, you need to replace the existing model name with the name of your new model. It's important to note that the model name should be the **lower case version of the Enum attribute**. For instance, if my Enum attribute is `UNREALISTIC`, I would input `unrealistic` for `ball_linear_cushion`.
-
-If your model doesn't require parameters, you should set the `_params` key to `{}`. However, if your model does have parameters, you should list them, along with their corresponding values. For example, if my model includes a parameter, I would specify its value as follows:
+Next, you need to replace the existing model name with the name of your new model. My default entry for the linear cushion model looked like this:
 
 ```
-ball_linear_cushion: unrealistic
-ball_linear_cushion_params:
+ball_linear_cushion:
+  model: han_2005
+```
+
+So I replaced it with my model:
+
+```
+ball_linear_cushion:
   restitution: true
+  model: unrealistic
 ```
+
+It's important to note that the model value should be the **lower case version of the Enum attribute**. For instance, my Enum attribute is `UNREALISTIC`, so I put `unrealistic`. Since my model accepts the parameter `restitution`, I also supply a value for that parameter.
 
 That's it. If everything runs without error, your model is active.
 
@@ -311,11 +299,10 @@ Note, there is no git commit to show you here, because `~/.config/pooltool/physi
 
 #### Addendum: ball-cushion models
 
-This is instructions for taking your ball-linear cushion model and creating a corresponding ball-circular cushion model.
+These are instructions for taking your ball-linear cushion model and creating a corresponding ball-circular cushion model.
 
-The ball-cushion collision has two event classes: collision of the ball with (1) linear cushion segments and (2) circular cushion segments. I developed circular cushion segments to smoothly join two linear cushion segments, _e.g._ to create the jaws of a pocket.
+The ball-cushion collision has two event classes: collision of the ball with (1) linear cushion segments and (2) circular cushion segments. Circular cushion segments exist to smoothly join two linear cushion segments, _e.g._ to create the jaws of a pocket.
 
+You could have separate models for circular and linear cushion segment collisions, or if you're lazy they could mimic each other. In this git commit, I illustrate how you can use the same model for both collision types, assuming you've already implemented the linear cushion segment: [e99b77d73ddbd6979bfa24797f8dfca25dd1cbe8](https://github.com/ekiefl/pooltool/commit/e99b77d73ddbd6979bfa24797f8dfca25dd1cbe8)
 
-You could have separate models for circular and linear cushion segment collisions, or if you're lazy they could mimic each other. In this git commit, I illustrate how you can use the same model for both collision types, assuming you've already implemented the linear cushion segment: [f4b91e436976fb857bf7681fcb6458c3ae1e6377](https://github.com/ekiefl/pooltool/commit/f4b91e436976fb857bf7681fcb6458c3ae1e6377)
-
-If you want to activate the model, don't forget to modify the resolver config.
+If you want to activate the model, don't forget to activate it in `~/.config/pooltool/physics/resolver.yaml`.

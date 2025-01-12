@@ -6,15 +6,15 @@ Note:
     ../ball_cushion
 """
 
-from typing import Dict, Optional, Protocol, Tuple, Type
+from typing import Dict, Protocol, Tuple, Type, cast
 
+import attrs
 import numpy as np
 
 import pooltool.constants as const
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.table.components import Pocket
-from pooltool.physics.resolve.types import ModelArgs
-from pooltool.utils.strenum import StrEnum, auto
+from pooltool.physics.resolve.models import BallPocketModel
 
 
 class BallPocketStrategy(Protocol):
@@ -27,7 +27,12 @@ class BallPocketStrategy(Protocol):
         ...
 
 
+@attrs.define
 class CanonicalBallPocket:
+    model: BallPocketModel = attrs.field(
+        default=BallPocketModel.CANONICAL, init=False, repr=False
+    )
+
     def resolve(
         self, ball: Ball, pocket: Pocket, inplace: bool = False
     ) -> Tuple[Ball, Pocket]:
@@ -50,39 +55,11 @@ class CanonicalBallPocket:
         return ball, pocket
 
 
-class BallPocketModel(StrEnum):
-    """An Enum for different ball-pocket collision models
+_ball_pocket_model_registry: Tuple[Type[BallPocketStrategy], ...] = (
+    CanonicalBallPocket,
+)
 
-    Attributes:
-        CANONICAL:
-            Sets the ball into the bottom of pocket and sets the state to pocketed
-            (:class:`CanonicalBallPocket`).
-    """
-
-    CANONICAL = auto()
-
-
-_ball_pocket_models: Dict[BallPocketModel, Type[BallPocketStrategy]] = {
-    BallPocketModel.CANONICAL: CanonicalBallPocket,
+ball_pocket_models: Dict[BallPocketModel, Type[BallPocketStrategy]] = {
+    cast(BallPocketModel, attrs.fields_dict(cls)["model"].default): cls
+    for cls in _ball_pocket_model_registry
 }
-
-
-def get_ball_pocket_model(
-    model: Optional[BallPocketModel] = None, params: ModelArgs = {}
-) -> BallPocketStrategy:
-    """Returns a ball-pocket collision model
-
-    Args:
-        model:
-            An Enum specifying the desired model. If not passed,
-            :class:`CanonicalBallPocket` is passed with empty params.
-        params:
-            A mapping of parameters accepted by the model.
-
-    Returns:
-        An instantiated model that satisfies the :class:`BallPocketStrategy` protocol.
-    """
-    if model is None:
-        return CanonicalBallPocket()
-
-    return _ball_pocket_models[model](**params)
