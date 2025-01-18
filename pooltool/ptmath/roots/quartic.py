@@ -66,8 +66,8 @@ def solve_quartics(
             `np.inf` is returned.
 
     Notes:
-        - This solver fails for cubic (a=0) and quadratic (a=b=0) formulations with
-          NotImplementedError.
+        - This solver fails for cubic (a=0) formulations with NotImplementedError, and
+          has a subroutine for solving quadratics (a=b=0).
     """
     assert QuarticSolver(solver)
 
