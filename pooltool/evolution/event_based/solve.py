@@ -14,6 +14,11 @@ import pooltool.ptmath as ptmath
 def get_u(
     rvw: NDArray[np.float64], R: float, phi: float, s: int
 ) -> NDArray[np.float64]:
+    if s == const.pocketed or s == const.airborne:
+        raise ValueError(
+            f"State {s} is not on table, so relative velocity u is not defined."
+        )
+
     if s == const.rolling:
         return np.array([1, 0, 0], dtype=np.float64)
 
@@ -135,15 +140,18 @@ def ball_linear_cushion_collision_time(
 
     phi = ptmath.projected_angle(rvw[1])
     v = ptmath.norm2d(rvw[1])
-
-    u = get_u(rvw, R, phi, s)
-
-    K = -0.5 * mu * g
     cos_phi = np.cos(phi)
     sin_phi = np.sin(phi)
 
-    ax = K * (u[0] * cos_phi - u[1] * sin_phi)
-    ay = K * (u[0] * sin_phi + u[1] * cos_phi)
+    if s == const.airborne:
+        ax = 0.0
+        ay = 0.0
+    else:
+        u = get_u(rvw, R, phi, s)
+        K = -0.5 * mu * g
+        ax = K * (u[0] * cos_phi - u[1] * sin_phi)
+        ay = K * (u[0] * sin_phi + u[1] * cos_phi)
+
     bx, by = v * cos_phi, v * sin_phi
     cx, cy = rvw[0, 0], rvw[0, 1]
 
@@ -213,15 +221,18 @@ def ball_circular_cushion_collision_coeffs(
 
     phi = ptmath.projected_angle(rvw[1])
     v = ptmath.norm2d(rvw[1])
-
-    u = get_u(rvw, R, phi, s)
-
-    K = -0.5 * mu * g
     cos_phi = np.cos(phi)
     sin_phi = np.sin(phi)
 
-    ax = K * (u[0] * cos_phi - u[1] * sin_phi)
-    ay = K * (u[0] * sin_phi + u[1] * cos_phi)
+    if s == const.airborne:
+        ax = 0.0
+        ay = 0.0
+    else:
+        u = get_u(rvw, R, phi, s)
+        K = -0.5 * mu * g
+        ax = K * (u[0] * cos_phi - u[1] * sin_phi)
+        ay = K * (u[0] * sin_phi + u[1] * cos_phi)
+
     bx, by = v * cos_phi, v * sin_phi
     cx, cy = rvw[0, 0], rvw[0, 1]
 
