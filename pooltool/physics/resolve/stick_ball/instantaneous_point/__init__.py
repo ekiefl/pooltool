@@ -3,12 +3,14 @@ from typing import Tuple
 import attrs
 import numpy as np
 
-import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.physics.resolve.models import StickBallModel
-from pooltool.physics.resolve.stick_ball.core import CoreStickBallCollision
+from pooltool.physics.resolve.stick_ball.core import (
+    CoreStickBallCollision,
+    final_ball_motion_state,
+)
 from pooltool.physics.resolve.stick_ball.squirt import get_squirt_angle
 from pooltool.ptmath.utils import coordinate_rotation
 
@@ -91,8 +93,7 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, english_throttle: float):
     v = numerator / denominator
 
     # 3D FIXME
-    # v_B = -v * np.array([0, np.cos(theta), np.sin(theta)])
-    v_B = -v * np.array([0, np.cos(theta), 0])
+    v_B = -v * np.array([0, np.cos(theta), np.sin(theta)])
 
     vec_x = -c * np.sin(theta) + b * np.cos(theta)
     vec_y = a * np.sin(theta)
@@ -152,7 +153,8 @@ class InstantaneousPoint(CoreStickBallCollision):
         v = coordinate_rotation(v, alpha)
 
         rvw = np.array([ball.state.rvw[0], v, w])
-        s = const.sliding
+
+        s = final_ball_motion_state(rvw, ball.params.R)
 
         ball.state = BallState(rvw, s)
 
