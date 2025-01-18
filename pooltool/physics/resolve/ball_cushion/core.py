@@ -24,6 +24,9 @@ def final_ball_motion_state(rvw: NDArray[np.float64], R: float) -> int:
     Args:
         rvw: The outgoing state vector of the ball.
         R: The radius of the ball.
+
+    Notes:
+        - A universal final_ball_motion_state fn could be a good idea.
     """
     if not on_table(rvw, R):
         return const.airborne

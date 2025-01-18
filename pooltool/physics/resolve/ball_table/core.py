@@ -19,7 +19,11 @@ def bounce_height(vz: float, g: float) -> float:
 
 
 def final_ball_motion_state(rvw: NDArray[np.float64], R: float) -> int:
-    """Return the final (post-collision) motion state label."""
+    """Return the final (post-collision) motion state label.
+
+    Notes:
+        - A universal final_ball_motion_state fn could be a good idea.
+    """
     if rvw[0, 2] < 0:
         return const.pocketed
 
