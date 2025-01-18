@@ -437,9 +437,7 @@ def get_next_ball_circular_cushion_event(
             )
 
     if len(collision_coeffs):
-        roots = solve_quartics(
-            ps=np.array(collision_coeffs), solver=solver, bypass_non_quartics=True
-        )
+        roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
 
         for root, ball_cushion_pair in zip(roots, ball_cushion_pairs):
             cache[ball_cushion_pair] = shot.t + root

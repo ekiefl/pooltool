@@ -31,11 +31,7 @@ def test_quadratic(solver: quartic.QuarticSolver):
     coeffs_array = np.array((0, 0, 1, 1, 1), dtype=np.float64)[np.newaxis, :]
 
     with pytest.raises(NotImplementedError):
-        quartic.solve_quartics(coeffs_array, solver, bypass_non_quartics=False)
-
-    assert np.isinf(
-        quartic.solve_quartics(coeffs_array, solver, bypass_non_quartics=True)[0]
-    )
+        quartic.solve_quartics(coeffs_array, solver)
 
 
 @pytest.mark.parametrize(
@@ -46,11 +42,7 @@ def test_cubic(solver: quartic.QuarticSolver):
     coeffs_array = np.array((0, 1, 1, 1, 1), dtype=np.float64)[np.newaxis, :]
 
     with pytest.raises(NotImplementedError):
-        quartic.solve_quartics(coeffs_array, solver, bypass_non_quartics=False)
-
-    assert np.isinf(
-        quartic.solve_quartics(coeffs_array, solver, bypass_non_quartics=True)[0]
-    )
+        quartic.solve_quartics(coeffs_array, solver)
 
 
 def test_e_equals_0():
