@@ -166,7 +166,7 @@ def simulate(
         engine = DEFAULT_ENGINE
 
     shot.reset_history()
-    shot._update_history(null_event(time=0))
+    shot._update_history(null_event(time=0.0))
 
     if _get_system_energy(shot) == 0 and shot.cue.V0 > 0:
         # System has no energy, but the cue stick has an impact velocity. So create and
@@ -174,7 +174,7 @@ def simulate(
         event = stick_ball_collision(
             stick=shot.cue,
             ball=shot.balls[shot.cue.cue_ball_id],
-            time=0,
+            time=0.0,
             set_initial=True,
         )
         engine.resolver.resolve(shot, event)
