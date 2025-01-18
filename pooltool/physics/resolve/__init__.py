@@ -22,6 +22,10 @@ from pooltool.physics.resolve.ball_pocket import (
     BallPocketStrategy,
     ball_pocket_models,
 )
+from pooltool.physics.resolve.ball_table import (
+    BallTableModel,
+    ball_table_models,
+)
 from pooltool.physics.resolve.resolver import (
     RESOLVER_PATH,
     Resolver,
@@ -78,6 +82,9 @@ def display_models():
     print("\nball_pocket models:")
     for model in BallPocketModel:
         _display_model(ball_pocket_models[model], model)
+    print("\nball_transition models:")
+    for model in BallTableModel:
+        _display_model(ball_table_models[model], model)
     print("\nball_transition models:")
     for model in BallTransitionModel:
         _display_model(ball_transition_models[model], model)
