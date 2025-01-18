@@ -4,11 +4,13 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
+import pooltool.physics as physics
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.physics.resolve.ball_table.core import (
     CoreBallTableCollision,
     bounce_height,
+    final_ball_motion_state,
 )
 from pooltool.physics.resolve.models import BallTableModel
 
@@ -33,7 +35,7 @@ def _resolve_ball_table(
     # discard normal velocity
     v_i[2] = 0
 
-    v_c_i = ptmath.surface_velocity(rvw_i, -unit_z, R)
+    v_c_i = physics.surface_velocity(rvw_i, -unit_z, R)
     has_relative_velocity = ptmath.norm3d_squared(v_c_i) > const.EPS**2
 
     # if there is no relative surface velocity to begin with,
@@ -79,9 +81,8 @@ class FrictionalInelastic(CoreBallTableCollision):
 
         if bounce_height(rvw[1, 2], ball.params.g) < self.min_bounce_height:
             rvw[1, 2] = 0
-            state = const.sliding
-        else:
-            state = const.airborne
+
+        state = final_ball_motion_state(rvw, ball.params.R)
 
         ball.state = BallState(rvw, state)
 

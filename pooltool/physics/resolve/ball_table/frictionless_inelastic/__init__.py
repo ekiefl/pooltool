@@ -1,10 +1,10 @@
 import attrs
 
-import pooltool.constants as const
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.physics.resolve.ball_table.core import (
     CoreBallTableCollision,
     bounce_height,
+    final_ball_motion_state,
 )
 from pooltool.physics.resolve.models import BallTableModel
 
@@ -43,11 +43,11 @@ class FrictionlessInelastic(CoreBallTableCollision):
 
         if bounce_height(vz, ball.params.g) < self.min_bounce_height:
             vz = 0.0
-            state = const.sliding
-        else:
-            state = const.airborne
 
         ball.state.rvw[1, 2] = vz
+
+        state = final_ball_motion_state(ball.state.rvw, ball.params.R)
+
         ball.state = BallState(ball.state.rvw, state)
 
         return ball

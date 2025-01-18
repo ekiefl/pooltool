@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Protocol, Tuple
 
 import numpy as np
+from numpy.typing import NDArray
 
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
@@ -10,6 +11,30 @@ from pooltool.objects.table.components import (
     CircularCushionSegment,
     LinearCushionSegment,
 )
+from pooltool.physics.utils import on_table
+
+
+def final_ball_motion_state(rvw: NDArray[np.float64], R: float) -> int:
+    """Return the final (post-collision) motion state label.
+
+    If the initial ball motion state label is airborne, or if the final velocity has a
+    non-zero z-velocity, the final ball motion state label is airborne. Otherwise it is
+    sliding.
+
+    Args:
+        rvw: The outgoing state vector of the ball.
+        R: The radius of the ball.
+
+    Notes:
+        - A universal final_ball_motion_state fn could be a good idea.
+    """
+    if not on_table(rvw, R):
+        return const.airborne
+
+    if rvw[1, 2] != 0.0:
+        return const.airborne
+
+    return const.sliding
 
 
 class _BaseLinearStrategy(Protocol):
@@ -76,6 +101,7 @@ class CoreBallLCushionCollision(ABC):
         correction = (
             ball.params.R - ptmath.norm3d(ball.state.rvw[0] - c) + const.EPS_SPACE
         )
+
         ball.state.rvw[0] -= correction * normal
 
         return ball

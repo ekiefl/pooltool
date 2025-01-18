@@ -11,6 +11,7 @@ from pooltool.physics.resolve.ball_ball.core import BallBallCollisionStrategy
 from pooltool.physics.resolve.ball_ball.frictional_inelastic import FrictionalInelastic
 from pooltool.physics.resolve.ball_ball.frictional_mathavan import FrictionalMathavan
 from pooltool.physics.resolve.ball_ball.frictionless_elastic import FrictionlessElastic
+from pooltool.physics.utils import surface_velocity
 
 
 def velocity_from_speed_and_xy_direction(speed: float, angle_radians: float):
@@ -167,9 +168,7 @@ def test_gearing_z_spin(
 
     # sanity check the initial conditions
     v_c = (
-        ptmath.surface_velocity(
-            cb_i.state.rvw, np.array([1.0, 0.0, 0.0]), cb_i.params.R
-        )
+        surface_velocity(cb_i.state.rvw, np.array([1.0, 0.0, 0.0]), cb_i.params.R)
         - cb_i.vel[0] * unit_x
     )
     assert ptmath.norm3d(v_c) < 1e-10, "Relative surface contact speed should be zero"
@@ -211,22 +210,19 @@ def test_low_relative_surface_velocity(
     )  # from v = w * R -> w = v / R
 
     # sanity check the initial conditions
-    v_c = (
-        ptmath.surface_velocity(cb_i.state.rvw, unit_x, cb_i.params.R)
-        - cb_i.vel[0] * unit_x
-    )
+    v_c = surface_velocity(cb_i.state.rvw, unit_x, cb_i.params.R) - cb_i.vel[0] * unit_x
     assert (
         abs(relative_surface_speed - ptmath.norm3d(v_c)) < 1e-10
     ), f"Relative surface contact speed should be {relative_surface_speed}"
 
     cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
 
-    cb_v_c_f = ptmath.surface_velocity(
-        cb_f.state.rvw, unit_x, cb_f.params.R
-    ) - np.array([cb_f.vel[0], 0.0, 0.0])
-    ob_v_c_f = ptmath.surface_velocity(
-        ob_f.state.rvw, -unit_x, ob_f.params.R
-    ) - np.array([ob_f.vel[0], 0.0, 0.0])
+    cb_v_c_f = surface_velocity(cb_f.state.rvw, unit_x, cb_f.params.R) - np.array(
+        [cb_f.vel[0], 0.0, 0.0]
+    )
+    ob_v_c_f = surface_velocity(ob_f.state.rvw, -unit_x, ob_f.params.R) - np.array(
+        [ob_f.vel[0], 0.0, 0.0]
+    )
     assert (
         ptmath.norm3d(cb_v_c_f - ob_v_c_f) < 1e-3
     ), "Final relative contact velocity should be zero"

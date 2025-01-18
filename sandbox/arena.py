@@ -20,7 +20,7 @@ def place_ball(i, balls, table):
 
         for other in balls.values():
             if pt.ptmath.is_overlapping(
-                ball.state.rvw, other.state.rvw, ball.params.R, other.params.R
+                ball.xyz, other.xyz, ball.params.R, other.params.R
             ):
                 break
         else:

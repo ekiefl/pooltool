@@ -8,6 +8,7 @@ from typing import List, Optional, Set, Tuple
 import numpy as np
 
 import pooltool.constants as const
+import pooltool.physics as physics
 import pooltool.physics.evolve as evolve
 import pooltool.ptmath as ptmath
 from pooltool.events import (
@@ -31,6 +32,19 @@ from pooltool.ptmath.roots.quartic import QuarticSolver, solve_quartics
 from pooltool.system.datatypes import System
 
 DEFAULT_ENGINE = PhysicsEngine()
+
+
+def _get_system_energy(system: System) -> float:
+    """Calculate the energy of the system in Joules."""
+    return sum(
+        physics.get_ball_energy(
+            ball.state.rvw,
+            ball.params.R,
+            ball.params.m,
+            ball.params.g,
+        )
+        for ball in system.balls.values()
+    )
 
 
 def _evolve(shot: System, dt: float):
@@ -154,7 +168,7 @@ def simulate(
     shot.reset_history()
     shot._update_history(null_event(time=0))
 
-    if shot.get_system_energy() == 0 and shot.cue.V0 > 0:
+    if _get_system_energy(shot) == 0 and shot.cue.V0 > 0:
         # System has no energy, but the cue stick has an impact velocity. So create and
         # resolve a stick-ball collision to start things off
         event = stick_ball_collision(
@@ -223,25 +237,15 @@ def get_next_event(
     if collision_cache is None:
         collision_cache = CollisionCache.create()
 
-    ball_table_event = get_next_ball_table_collision(
-        shot, collision_cache=collision_cache
-    )
-    if ball_table_event.time == shot.t:
-        # Ball-table collisions involving non-airborne balls always happen at dt=0 from
-        # the current simulation time and therefore in such a case we immediately return
-        # with the next event in hand. Not only does this speed up the algorithm (by
-        # avoiding calculation of any other possible events--none of which occur sooner
-        # than dt=0), but some of the code for other event predictions assume zero
-        # z-velocity and can trigger assertion errors if this condition is not met.
-        # Therefore, it is essential that this code block runs before any other event
-        # prediction (or at least any event prediction capable of producing event dt>0).
-        return ball_table_event
-    elif ball_table_event.time < event.time:
-        event = ball_table_event
-
     transition_event = transition_cache.get_next()
     if transition_event.time < event.time:
         event = transition_event
+
+    ball_table_event = get_next_ball_table_collision(
+        shot, collision_cache=collision_cache
+    )
+    if ball_table_event.time < event.time:
+        event = ball_table_event
 
     ball_ball_event = get_next_ball_ball_collision(
         shot, collision_cache=collision_cache, solver=quartic_solver
@@ -363,22 +367,11 @@ def get_next_ball_table_collision(
 
     for ball in shot.balls.values():
         obj_ids = (ball.id,)
-
-        vz = ball.state.rvw[1, 2]
-
-        if ball.state.s in const.on_table and vz < 0:
-            # If a ball is on the surface of the table and has a downward impulse, it
-            # will undergo an ball-table collision at dtau_E=0. So we immediately return
-            # it. For posterity, the event is added to the collision cache, however it
-            # will be invalidated during downstream event resolution.
-            cache[obj_ids] = shot.t
-            return ball_table_collision(ball=ball, time=shot.t)
-
         if obj_ids in cache:
             continue
 
-        if not (ball.state.s == const.airborne or vz != 0.0):
-            # Ball isn't airborne and has no z-velocity.
+        if ball.state.s != const.airborne:
+            assert ball.state.rvw[1, 2] == 0, "Non-airborne ball must have 0 z-velocity"
             cache[obj_ids] = np.inf
             continue
 
@@ -405,9 +398,6 @@ def get_next_ball_circular_cushion_event(
     solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
     """Returns next ball-cushion collision (circular cushion segment)"""
-
-    # FIXME-3D no circular cushion collisions
-    return null_event(np.inf)
 
     if not shot.table.has_circular_cushions:
         return null_event(np.inf)
@@ -448,6 +438,7 @@ def get_next_ball_circular_cushion_event(
 
     if len(collision_coeffs):
         roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+
         for root, ball_cushion_pair in zip(roots, ball_cushion_pairs):
             cache[ball_cushion_pair] = shot.t + root
 

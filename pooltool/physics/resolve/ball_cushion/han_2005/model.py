@@ -5,7 +5,6 @@ from typing import Tuple, TypeVar
 import attrs
 import numpy as np
 
-import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.table.components import (
@@ -15,6 +14,7 @@ from pooltool.objects.table.components import (
 from pooltool.physics.resolve.ball_cushion.core import (
     CoreBallCCushionCollision,
     CoreBallLCushionCollision,
+    final_ball_motion_state,
 )
 from pooltool.physics.resolve.ball_cushion.han_2005.properties import (
     get_ball_cushion_friction,
@@ -106,7 +106,7 @@ def _solve(ball: Ball, cushion: Cushion) -> Tuple[Ball, Cushion]:
         f_c=ball.params.f_c,
     )
 
-    s = const.airborne if ball.state.s == const.airborne else const.sliding
+    s = final_ball_motion_state(rvw, ball.params.R)
 
     ball.state = BallState(rvw, s)
 

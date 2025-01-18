@@ -8,6 +8,7 @@ import pooltool.constants as const
 from pooltool.ptmath.roots.core import (
     get_real_positive_smallest_roots,
 )
+from pooltool.ptmath.roots.quadratic import solve as solve_quadratic
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -16,8 +17,36 @@ class QuarticSolver(StrEnum):
     NUMERIC = auto()
 
 
+@jit(nopython=True, cache=const.use_numba_cache)
+def _solve_quadratics(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
+    """Solves an array of quadratics.
+
+    This is used internally by the quartic solver when it is passed coefficients where
+    a=b=0, which make the polynomial quadratic, not quartic.
+
+    Args:
+        ps:
+            A mx3 array of polynomial coefficients, where m is the number of equations.
+            The columns are in the order a, b, c where these coefficients make up
+            the quadratic polynomial equation at^2 + bt + c = 0.
+
+    Notes:
+        - Output shape is mx4 to match quartic root solutions.
+    """
+    m = ps.shape[0]
+    roots = np.full((m, 4), np.inf, dtype=np.complex128)
+
+    for i in range(m):
+        r1, r2 = solve_quadratic(ps[i, 0], ps[i, 1], ps[i, 2])
+        roots[i, 0] = r1
+        roots[i, 1] = r2
+
+    return roots
+
+
 def solve_quartics(
-    ps: NDArray[np.float64], solver: QuarticSolver = QuarticSolver.HYBRID
+    ps: NDArray[np.float64],
+    solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> NDArray[np.float64]:
     """Returns the smallest positive and real root for each quartic polynomial.
 
@@ -35,13 +64,37 @@ def solve_quartics(
             An array of shape m. Each value is the smallest root that is real and
             positive. If no such root exists (e.g. all roots have complex), then
             `np.inf` is returned.
+
+    Notes:
+        - This solver fails for cubic (a=0) formulations with NotImplementedError, and
+          has a subroutine for solving quadratics (a=b=0).
     """
-    # Get the roots for the polynomials
     assert QuarticSolver(solver)
 
-    roots = _quartic_routine[solver](ps)  # Shape m x 4, dtype complex128
-    best_roots = get_real_positive_smallest_roots(roots)  # Shape m, dtype float64
+    m = ps.shape[0]
 
+    # Allocate a placeholder for all roots, shape (m,4)
+    all_roots = np.full((m, 4), np.inf, dtype=np.complex128)
+
+    a = ps[:, 0]
+    b = ps[:, 1]
+
+    quartic_mask = a != 0
+    quadratic_mask = (a == 0) & (b == 0)
+    mask_cubic = (a == 0) & (b != 0)
+
+    if np.any(mask_cubic):
+        raise NotImplementedError("Cubic polynomials are not supported.")
+
+    if np.any(quartic_mask):
+        quartic_roots = _quartic_routine[solver](ps[quartic_mask])
+        all_roots[quartic_mask] = quartic_roots
+
+    if np.any(quadratic_mask):
+        quadratic_roots = _solve_quadratics(ps[quadratic_mask, 2:])
+        all_roots[quadratic_mask] = quadratic_roots
+
+    best_roots = get_real_positive_smallest_roots(all_roots)  # shape (m,)
     return best_roots
 
 
@@ -82,7 +135,7 @@ def solve_many_numerical(p: NDArray[np.float64]) -> NDArray[np.complex128]:
     return np.linalg.eigvals(A)  # type: ignore
 
 
-def solve_many(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
+def solve_many_hybrid(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
     """Solve multiple quartic equations using analytical solutions when possible
 
     Closed-form analytical solutions exist for the quartic polynomial equation, but can
@@ -336,5 +389,5 @@ def _truth(a_val, b_val, c_val, d_val, e_val, digits=50):
 
 _quartic_routine: Dict[QuarticSolver, Callable] = {
     QuarticSolver.NUMERIC: solve_many_numerical,
-    QuarticSolver.HYBRID: solve_many,
+    QuarticSolver.HYBRID: solve_many_hybrid,
 }

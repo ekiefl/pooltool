@@ -312,16 +312,6 @@ class System:
         self.cue.set_state(**kwargs)
         assert self.cue.cue_ball_id in self.balls
 
-    def get_system_energy(self) -> float:
-        """Calculate the energy of the system in Joules"""
-        energy = 0
-        for ball in self.balls.values():
-            energy += ptmath.get_ball_energy(
-                ball.state.rvw, ball.params.R, ball.params.m, ball.params.g
-            )
-
-        return energy
-
     def randomize_positions(
         self, ball_ids: Optional[List[str]] = None, niter=100
     ) -> bool:
@@ -375,7 +365,7 @@ class System:
                 ), "Balls are assumed to be equal radii"
 
                 if ptmath.is_overlapping(
-                    ball1.state.rvw, ball2.state.rvw, ball1.params.R, ball2.params.R
+                    ball1.xyz, ball2.xyz, ball1.params.R, ball2.params.R
                 ):
                     return True
 

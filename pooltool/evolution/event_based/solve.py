@@ -1,4 +1,3 @@
-from math import acos
 from typing import Tuple
 
 import numpy as np
@@ -6,88 +5,24 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
+import pooltool.physics as physics
 import pooltool.physics.evolve as evolve
 import pooltool.ptmath as ptmath
-from pooltool.ptmath.utils import get_airborne_time
-
-
-@jit(nopython=True, cache=const.use_numba_cache)
-def skip_ball_ball_collision(
-    rvw1: NDArray[np.float64],
-    rvw2: NDArray[np.float64],
-    s1: int,
-    s2: int,
-    R1: float,
-    R2: float,
-) -> bool:
-    if (s1 == const.spinning or s1 == const.pocketed or s1 == const.stationary) and (
-        s2 == const.spinning or s2 == const.pocketed or s2 == const.stationary
-    ):
-        # Neither balls are moving. No collision.
-        return True
-
-    if s1 == const.pocketed or s2 == const.pocketed:
-        # One of the balls is pocketed
-        return True
-
-    if s1 == const.rolling and s2 == const.rolling:
-        # Both balls are rolling (straight line trajectories). Here I am checking
-        # whether both dot products face away from the line connecting the two balls. If
-        # so, they are guaranteed not to collide
-        r12 = rvw2[0] - rvw1[0]
-        dot1 = r12[0] * rvw1[1, 0] + r12[1] * rvw1[1, 1] + r12[2] * rvw1[1, 2]
-        if dot1 <= 0:
-            dot2 = r12[0] * rvw2[1, 0] + r12[1] * rvw2[1, 1] + r12[2] * rvw2[1, 2]
-            if dot2 >= 0:
-                return True
-
-    if s1 == const.rolling and (s2 == const.spinning or s2 == const.stationary):
-        # ball1 is rolling, which guarantees a straight-line trajectory. Some
-        # assumptions can be made based on this fact
-        r12 = rvw2[0] - rvw1[0]
-
-        # ball2 is not moving, so we can pinpoint the range of angles ball1 must be
-        # headed in for a collision
-        d = ptmath.norm3d(r12)
-        unit_d = r12 / d
-        unit_v = ptmath.unit_vector(rvw1[1])
-
-        # Angles are in radians
-        # Calculate forwards and backwards angles, e.g. 10 and 350, take the min
-        angle = np.arccos(np.dot(unit_d, unit_v))
-        max_hit_angle = 0.5 * np.pi - acos((R1 + R2) / d)
-        if angle > max_hit_angle:
-            return True
-
-    if s2 == const.rolling and (s1 == const.spinning or s1 == const.stationary):
-        # ball2 is rolling, which guarantees a straight-line trajectory. Some
-        # assumptions can be made based on this fact
-        r21 = rvw1[0] - rvw2[0]
-
-        # ball1 is not moving, so we can pinpoint the range of angles ball2 must be
-        # headed in for a collision
-        d = ptmath.norm3d(r21)
-        unit_d = r21 / d
-        unit_v = ptmath.unit_vector(rvw2[1])
-
-        # Angles are in radians
-        # Calculate forwards and backwards angles, e.g. 10 and 350, take the min
-        angle = np.arccos(np.dot(unit_d, unit_v))
-        max_hit_angle = 0.5 * np.pi - acos((R1 + R2) / d)
-        if angle > max_hit_angle:
-            return True
-
-    return False
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def get_u(
     rvw: NDArray[np.float64], R: float, phi: float, s: int
 ) -> NDArray[np.float64]:
+    if s == const.pocketed or s == const.airborne:
+        raise ValueError(
+            f"State {s} is not on table, so relative velocity u is not defined."
+        )
+
     if s == const.rolling:
         return np.array([1, 0, 0], dtype=np.float64)
 
-    rel_vel = ptmath.rel_velocity(rvw, R)
+    rel_vel = physics.rel_velocity(rvw, R)
     if (rel_vel == 0).all():
         return np.array([1, 0, 0], dtype=np.float64)
 
@@ -163,35 +98,6 @@ def ball_ball_collision_coeffs(
     return a, b, c, d, e
 
 
-def ball_ball_collision_time(
-    rvw1: NDArray[np.float64],
-    rvw2: NDArray[np.float64],
-    s1: int,
-    s2: int,
-    mu1: float,
-    mu2: float,
-    m1: float,
-    m2: float,
-    g1: float,
-    g2: float,
-    R: float,
-) -> float:
-    """Get the time until collision between 2 balls
-
-    NOTE This is deprecated. Rather than solve the roots of a single polynomial
-    equation, as is done in this function, all roots of a given collision class are
-    solved simultaneously via ptmath.roots
-    """
-    a, b, c, d, e = ball_ball_collision_coeffs(
-        rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
-    )
-    roots = np.roots([a, b, c, d, e])
-
-    roots = roots[(abs(roots.imag) <= const.EPS) & (roots.real > const.EPS)].real
-
-    return roots.min() if len(roots) else np.inf
-
-
 @jit(nopython=True, cache=const.use_numba_cache)
 def ball_table_collision_time(
     rvw: NDArray[np.float64],
@@ -203,19 +109,11 @@ def ball_table_collision_time(
 
     (just-in-time compiled)
     """
-    v_z0 = rvw[1, 2]
-    r_z0 = rvw[0, 2]
-
-    if v_z0 < 0 and r_z0 == R:
-        # Ball is on the table with negative velocity.
-        return 0.0
-
     if s != const.airborne:
-        # The above is the only way a non-airborne ball can have a finite ball-table
-        # collision time.
+        # Non-airborne ball cannot have a ball-table collision
         return np.inf
 
-    return get_airborne_time(rvw=rvw, R=R, g=g)
+    return physics.get_airborne_time(rvw=rvw, R=R, g=g)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -242,15 +140,18 @@ def ball_linear_cushion_collision_time(
 
     phi = ptmath.projected_angle(rvw[1])
     v = ptmath.norm2d(rvw[1])
-
-    u = get_u(rvw, R, phi, s)
-
-    K = -0.5 * mu * g
     cos_phi = np.cos(phi)
     sin_phi = np.sin(phi)
 
-    ax = K * (u[0] * cos_phi - u[1] * sin_phi)
-    ay = K * (u[0] * sin_phi + u[1] * cos_phi)
+    if s == const.airborne:
+        ax = 0.0
+        ay = 0.0
+    else:
+        u = get_u(rvw, R, phi, s)
+        K = -0.5 * mu * g
+        ax = K * (u[0] * cos_phi - u[1] * sin_phi)
+        ay = K * (u[0] * sin_phi + u[1] * cos_phi)
+
     bx, by = v * cos_phi, v * sin_phi
     cx, cy = rvw[0, 0], rvw[0, 1]
 
@@ -319,16 +220,19 @@ def ball_circular_cushion_collision_coeffs(
         return np.inf, np.inf, np.inf, np.inf, np.inf
 
     phi = ptmath.projected_angle(rvw[1])
-    v = ptmath.norm3d(rvw[1])
-
-    u = get_u(rvw, R, phi, s)
-
-    K = -0.5 * mu * g
+    v = ptmath.norm2d(rvw[1])
     cos_phi = np.cos(phi)
     sin_phi = np.sin(phi)
 
-    ax = K * (u[0] * cos_phi - u[1] * sin_phi)
-    ay = K * (u[0] * sin_phi + u[1] * cos_phi)
+    if s == const.airborne:
+        ax = 0.0
+        ay = 0.0
+    else:
+        u = get_u(rvw, R, phi, s)
+        K = -0.5 * mu * g
+        ax = K * (u[0] * cos_phi - u[1] * sin_phi)
+        ay = K * (u[0] * sin_phi + u[1] * cos_phi)
+
     bx, by = v * cos_phi, v * sin_phi
     cx, cy = rvw[0, 0], rvw[0, 1]
 
