@@ -57,3 +57,27 @@ def test_solve_large_values():
     # required relative tolerance required to pass this test is pretty large (1e-2).
     assert pytest.approx(solutions[0], rel=1e-2) == 1e-7
     assert pytest.approx(solutions[1], rel=1e-2) == 1e7
+
+
+def test_solve_linear_equation():
+    # a=0, b≠0 => linear equation b*t + c = 0 => t=-c/b
+    # e.g. 2t + 4 = 0 => t=-2
+    r1, r2 = solve(0.0, 2.0, 4.0)
+    assert r1 == -2.0
+    assert math.isnan(r2)  # The second "root" should be NaN for a linear equation
+
+
+def test_solve_degenerate_no_solution():
+    # a=0, b=0, c≠0 => no solutions
+    # e.g. 0*t^2 + 0*t + 5 = 0 => no real solution
+    r1, r2 = solve(0.0, 0.0, 5.0)
+    assert math.isnan(r1)
+    assert math.isnan(r2)
+
+
+def test_solve_degenerate_infinite_solutions():
+    # a=0, b=0, c=0 => infinite solutions
+    # e.g. 0*t^2 + 0*t + 0 = 0 => t can be anything
+    r1, r2 = solve(0.0, 0.0, 0.0)
+    assert math.isnan(r1)
+    assert math.isnan(r2)
