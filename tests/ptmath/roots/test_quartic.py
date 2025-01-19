@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from pooltool.ptmath.roots import quadratic, quartic
-from pooltool.ptmath.roots.core import get_real_positive_smallest_roots
+from pooltool.ptmath.roots.core import get_smallest_physical_roots
 
 
 @pytest.mark.parametrize(
@@ -19,9 +19,9 @@ def test_case1(solver: quartic.QuarticSolver):
 
     expected = 0.048943195217641386
     coeffs_array = np.array(coeffs)[np.newaxis, :]
-    assert get_real_positive_smallest_roots(
-        quartic.solve_quartics(coeffs_array, solver)
-    )[0] == pytest.approx(expected, rel=1e-4)
+    assert get_smallest_physical_roots(quartic.solve_quartics(coeffs_array, solver))[
+        0
+    ] == pytest.approx(expected, rel=1e-4)
 
 
 @pytest.mark.parametrize(
@@ -30,15 +30,13 @@ def test_case1(solver: quartic.QuarticSolver):
 def test_quadratic(solver: quartic.QuarticSolver):
     coeffs_array = np.array((0, 0, 1, 1, 1), dtype=np.float64)[np.newaxis, :]
 
-    expected = get_real_positive_smallest_roots(
+    expected = get_smallest_physical_roots(
         np.array(quadratic.solve(*coeffs_array[0, 2:]), dtype=np.complex128)[
             np.newaxis, :
         ]
     )
 
-    result = get_real_positive_smallest_roots(
-        quartic.solve_quartics(coeffs_array, solver)
-    )
+    result = get_smallest_physical_roots(quartic.solve_quartics(coeffs_array, solver))
 
     assert expected == result
 

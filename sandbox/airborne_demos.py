@@ -1,4 +1,5 @@
 import attrs
+import numpy as np
 
 import pooltool as pt
 
@@ -136,6 +137,27 @@ def airborne_circular_cushion():
     return shot
 
 
+def airborne_pocket_collision():
+    ball = pt.Ball.create("cue")
+    scale = 0.18
+    ball.state.rvw = np.array(
+        [
+            [0.8, 0.2, 1.228575],
+            [1.8 * scale, -1.8 * scale, 1.5],
+            [0, 0, 0],
+        ]
+    )
+    ball.state.s = pt.constants.airborne
+
+    shot = pt.System(
+        cue=pt.Cue(cue_ball_id="cue"),
+        table=pt.Table.default(),
+        balls=(ball,),
+    )
+
+    return shot
+
+
 _map = {
     "drop": drop,
     "simul": simul,
@@ -145,6 +167,7 @@ _map = {
     "friction_test": friction_test,
     "slip": slip,
     "airborne_circular_cushion": airborne_circular_cushion,
+    "airborne_pocket_collision": airborne_pocket_collision,
 }
 
 
