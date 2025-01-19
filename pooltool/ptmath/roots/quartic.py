@@ -5,9 +5,6 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
-from pooltool.ptmath.roots.core import (
-    get_real_positive_smallest_roots,
-)
 from pooltool.ptmath.roots.quadratic import solve as solve_quadratic
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -47,7 +44,7 @@ def _solve_quadratics(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
 def solve_quartics(
     ps: NDArray[np.float64],
     solver: QuarticSolver = QuarticSolver.HYBRID,
-) -> NDArray[np.float64]:
+) -> NDArray[np.complex128]:
     """Returns the smallest positive and real root for each quartic polynomial.
 
     Args:
@@ -94,8 +91,7 @@ def solve_quartics(
         quadratic_roots = _solve_quadratics(ps[quadratic_mask, 2:])
         all_roots[quadratic_mask] = quadratic_roots
 
-    best_roots = get_real_positive_smallest_roots(all_roots)  # shape (m,)
-    return best_roots
+    return all_roots
 
 
 def solve_many_numerical(p: NDArray[np.float64]) -> NDArray[np.complex128]:

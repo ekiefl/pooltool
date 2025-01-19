@@ -28,7 +28,11 @@ from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
 from pooltool.objects.ball.datatypes import BallState
 from pooltool.physics.engine import PhysicsEngine
-from pooltool.ptmath.roots.quartic import QuarticSolver, solve_quartics
+from pooltool.ptmath.roots.core import get_real_positive_smallest_roots
+from pooltool.ptmath.roots.quartic import (
+    QuarticSolver,
+    solve_quartics,
+)
 from pooltool.system.datatypes import System
 
 DEFAULT_ENGINE = PhysicsEngine()
@@ -343,7 +347,9 @@ def get_next_ball_ball_collision(
             )
 
     if len(collision_coeffs):
-        roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        roots = get_real_positive_smallest_roots(
+            solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        )
         for root, ball_pair in zip(roots, ball_pairs):
             cache[ball_pair] = shot.t + root
 
@@ -437,7 +443,9 @@ def get_next_ball_circular_cushion_event(
             )
 
     if len(collision_coeffs):
-        roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        roots = get_real_positive_smallest_roots(
+            solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        )
 
         for root, ball_cushion_pair in zip(roots, ball_cushion_pairs):
             cache[ball_cushion_pair] = shot.t + root
@@ -548,7 +556,9 @@ def get_next_ball_pocket_collision(
             )
 
     if len(collision_coeffs):
-        roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        roots = get_real_positive_smallest_roots(
+            solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        )
         for root, ball_pocket_pair in zip(roots, ball_pocket_pairs):
             cache[ball_pocket_pair] = shot.t + root
 
