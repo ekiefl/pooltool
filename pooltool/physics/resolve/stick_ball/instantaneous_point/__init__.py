@@ -92,7 +92,6 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, english_throttle: float):
     denominator = 1 + m / M + 5 / 2 / R**2 * temp
     v = numerator / denominator
 
-    # 3D FIXME
     v_B = -v * np.array([0, np.cos(theta), np.sin(theta)])
 
     vec_x = -c * np.sin(theta) + b * np.cos(theta)

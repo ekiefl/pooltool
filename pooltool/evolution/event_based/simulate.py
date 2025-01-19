@@ -510,9 +510,6 @@ def get_next_ball_pocket_collision(
 ) -> Event:
     """Returns next ball-pocket collision"""
 
-    # FIXME-3D no ball-pocket collisions
-    return null_event(np.inf)
-
     if not shot.table.has_pockets:
         return null_event(np.inf)
 
