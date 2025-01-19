@@ -15,7 +15,7 @@ class QuarticSolver(StrEnum):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def _solve_quadratics(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
+def _solve_quadratics(ps: NDArray[np.complex128]) -> NDArray[np.complex128]:
     """Solves an array of quadratics.
 
     This is used internally by the quartic solver when it is passed coefficients where
@@ -34,7 +34,7 @@ def _solve_quadratics(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
     roots = np.full((m, 4), np.inf, dtype=np.complex128)
 
     for i in range(m):
-        r1, r2 = solve_quadratic(ps[i, 0], ps[i, 1], ps[i, 2])
+        r1, r2 = solve_quadratic(ps[i, 0].real, ps[i, 1].real, ps[i, 2].real)
         roots[i, 0] = r1
         roots[i, 1] = r2
 
@@ -88,7 +88,8 @@ def solve_quartics(
         all_roots[quartic_mask] = quartic_roots
 
     if np.any(quadratic_mask):
-        quadratic_roots = _solve_quadratics(ps[quadratic_mask, 2:])
+        quadratic_ps = ps[quadratic_mask, 2:].astype(np.complex128)
+        quadratic_roots = _solve_quadratics(quadratic_ps)
         all_roots[quadratic_mask] = quadratic_roots
 
     return all_roots
@@ -192,6 +193,8 @@ def _solve(
     """
 
     e = p[-1].real
+    a = p[0].real
+    b = p[1].real
 
     # This means t=0 is a root. No point solving the other roots, just return all 0s
     if e == 0.0:
@@ -201,6 +204,10 @@ def _solve(
     # is small
     if abs(e) < 1e-7:
         return numeric(p), 3
+
+    if a == 0 and b == 0:
+        # Quadratic!
+        return _solve_quadratics(p[np.newaxis, 2:])[0, :], 4
 
     # The analytic solutions don't like 0s
     if (p == 0).any():
