@@ -68,8 +68,8 @@ def filter_non_physical_roots(
             elif real_mag == 0 and imag_mag == 0:
                 processed_roots[i] = root
 
-    order = np.argsort(roots.real)
-    return roots[order]
+    order = np.argsort(processed_roots.real)
+    return processed_roots[order]
 
 
 def filter_non_physical_roots_many(

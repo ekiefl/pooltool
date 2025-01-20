@@ -585,7 +585,12 @@ def get_next_ball_pocket_collision(
     collision_cache: CollisionCache,
     solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
-    """Returns next ball-pocket collision"""
+    """Returns next ball-pocket collision
+
+    Notes:
+        - FIXME-3D Passing solver does nothing, as the underlying solve method uses the
+          HYBRID approach (quartic.solve). Not sure what the solution should be.
+    """
 
     if not shot.table.has_pockets:
         return null_event(np.inf)

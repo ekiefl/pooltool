@@ -149,10 +149,54 @@ def airborne_pocket_collision():
     )
     ball.state.s = pt.constants.airborne
 
+    other = pt.Ball.create("other")
+    scale = 0.27
+    other.state.rvw = np.array(
+        [
+            [0.8, 0.2, 1],
+            [1.8 * scale, -1.8 * scale, 1.5],
+            [0, 0, 0],
+        ]
+    )
+    other.state.s = pt.constants.airborne
+
+    another = pt.Ball.create("another")
+    scale = 0.11
+    another.state.rvw = np.array(
+        [
+            [0.8, 0.2, 0.8],
+            [1.8 * scale, -1.8 * scale, 1.5],
+            [0, 0, 0],
+        ]
+    )
+    another.state.s = pt.constants.airborne
+
+    fast1 = pt.Ball.create("fast1")
+    scale = 2
+    fast1.state.rvw = np.array(
+        [
+            [0.3, 0.7, fast1.params.R * 7 / 5],
+            [1.8 * scale, -1.8 * scale, 0.6],
+            [0, 0, 0],
+        ]
+    )
+    fast1.state.s = pt.constants.airborne
+
+    fast2 = pt.Ball.create("fast2")
+    scale = 2
+    fast2.state.rvw = np.array(
+        [
+            [0.8, 0.2, fast2.params.R * 7 / 5],
+            [1.8 * scale, -1.8 * scale, -2.0],
+            [0, 0, 0],
+        ]
+    )
+    fast2.state.s = pt.constants.airborne
+
     shot = pt.System(
         cue=pt.Cue(cue_ball_id="cue"),
         table=pt.Table.default(),
-        balls=(ball,),
+        balls=(ball, other, another, fast1, fast2),
     )
 
     return shot
