@@ -14,9 +14,12 @@ def filter_non_physical_roots(
 ) -> NDArray[np.complex128]:
     """Filters out non-physical roots from a 1D array of roots for a polynomial.
 
-    Filters a 1D array of complex roots, allowing only those with a non-negative real part
-    and an acceptably small imaginary part (by absolute or relative tolerance).
-    All other roots are replaced with np.inf (of dtype complex128).
+    Performs the following:
+
+        - Retains roots with non-negative real part and an acceptably small imaginary
+          part
+        - Replaces all other roots with infinity.
+        - Sorts roots based on real part
 
     Args:
         roots:
@@ -65,7 +68,8 @@ def filter_non_physical_roots(
             elif real_mag == 0 and imag_mag == 0:
                 processed_roots[i] = root
 
-    return processed_roots
+    order = np.argsort(roots.real)
+    return roots[order]
 
 
 def filter_non_physical_roots_many(
@@ -76,11 +80,7 @@ def filter_non_physical_roots_many(
 ) -> NDArray[np.complex128]:
     """Filters out non-physical roots from a 2D array of roots for many polynomials.
 
-    Vectorized version of filtering complex roots, preserving only those whose real part
-    is non-negative and whose imaginary part is sufficiently small by either absolute or
-    relative criteria. All other roots are replaced with np.inf.
-
-    Similar logic to `filter_non_physical_roots` but applied element-wise to a
+    Vectorized version of :func:`filter_non_physical_roots` but applied element-wise to a
     multi-dimensional array of roots.
 
     Args:
@@ -106,6 +106,9 @@ def filter_non_physical_roots_many(
         An array (dtype np.complex128) of the same shape as `roots` (e.g. (m, n)) where
         the non-physical (negative-real or too-imaginary) entries are replaced by
         `np.inf`.
+
+    See Also:
+        - :func:`filter_non_physical_roots`
     """
     positive = roots.real >= 0.0
 
@@ -123,7 +126,8 @@ def filter_non_physical_roots_many(
     is_real = (small & small_keep) | (big & big_keep)
     processed_roots = np.where(is_real, roots, np.complex128(np.inf))
 
-    return processed_roots
+    order = np.argsort(processed_roots.real, axis=1)
+    return np.take_along_axis(processed_roots, order, axis=1)
 
 
 def get_smallest_physical_root_many(
@@ -162,49 +166,4 @@ def get_smallest_physical_root_many(
         roots, abs_or_rel_cutoff, rtol, atol
     )
 
-    # Find the minimum real positive root in each row
-    min_real_positive_roots = np.min(processed_roots.real, axis=-1)
-
-    return min_real_positive_roots
-
-
-def get_sorted_physical_roots(
-    roots: NDArray[np.complex128],
-    abs_or_rel_cutoff: float = 1e-3,
-    rtol: float = 1e-3,
-    atol: float = 1e-9,
-) -> NDArray[np.float64]:
-    """Returns roots sorted by smallest, postive, and real.
-
-    Args:
-        roots:
-            An array of shape (m, n) of polynomial root solutions, where m is the number
-            of equations and n is the order of the polynomial.
-        abs_or_rel_cutoff:
-            The criteria for a root being real depends on the magnitude of its real
-            component. If it's large, we require the imaginary component to be less than
-            atol in absolute terms. But when the real component is small, we require the
-            imaginary component be less than a fraction, rtol, of the real component.
-            abs_or_rel_cutoff defines a threshold for the magnitude of the real
-            component, above which atol is used and below which rtol is used.
-        atol:
-            A root r (with abs(r.real) >= abs_or_rel_cutoff) is considered real if
-            abs(r.imag) < atol.
-        rtol:
-            A root r (with abs(r.real) < abs_or_rel_cutoff) is considered real if
-            abs(r.imag) / abs(r.real) < rtol. And in the special case when r.real == 0,
-            the root is considered real if r.imag == 0, too.
-
-    Returns:
-        An array of shape (m,). Values are the smallest root that is real and positive.
-        Columns are sorted by smallest real positive root. Negative and imaginary roots
-        are converted to infinity.
-    """
-
-    processed_roots = filter_non_physical_roots_many(
-        roots, abs_or_rel_cutoff, rtol, atol
-    )
-
-    sorted_real_positive_roots = np.sort(processed_roots.real, axis=-1)
-
-    return sorted_real_positive_roots
+    return processed_roots[:, 0].real

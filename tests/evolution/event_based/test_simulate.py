@@ -15,7 +15,7 @@ from pooltool.evolution.event_based.simulate import (
 from pooltool.evolution.event_based.solve import ball_ball_collision_coeffs
 from pooltool.objects import Ball, BilliardTableSpecs, Cue, Table
 from pooltool.ptmath.roots import quadratic, quartic
-from pooltool.ptmath.roots.core import get_smallest_physical_roots
+from pooltool.ptmath.roots.core import get_smallest_physical_root_many
 from pooltool.system import System
 from tests.evolution.event_based.test_data import TEST_DIR
 
@@ -323,7 +323,7 @@ def test_grazing_ball_ball_collision(solver: quartic.QuarticSolver):
 
         coeffs_array = np.array([coeffs], dtype=np.float64)
 
-        root = get_smallest_physical_roots(quartic.solve_quartics(coeffs_array))[0]
+        root = get_smallest_physical_root_many(quartic.solve_quartics(coeffs_array))[0]
 
         if phi < 90:
             assert root == np.inf
@@ -427,7 +427,7 @@ def test_almost_touching_ball_ball_collision(solver: quartic.QuarticSolver):
         coeffs_array = np.array([coeffs], dtype=np.float64)
 
         truth = true_time_to_collision(eps, V0, ball1.params.u_r, ball1.params.g)
-        calculated = get_smallest_physical_roots(
+        calculated = get_smallest_physical_root_many(
             quartic.solve_quartics(coeffs_array, solver=solver)
         )[0]
         diff = abs(calculated - truth)
