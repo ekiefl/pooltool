@@ -38,8 +38,8 @@ def filter_non_physical_roots(
 
     Returns:
         A 1D array of the same shape as `roots`, where non-physical (negative or
-        “too imaginary”) roots are replaced by `np.inf + 0j`, and valid roots are
-        retained unchanged.
+        “too imaginary”) roots are replaced by `np.inf + 0j`, and valid roots
+        remain unchanged.
     """
     processed_roots = np.full(len(roots), np.inf, dtype=np.complex128)
 
@@ -126,7 +126,7 @@ def filter_non_physical_roots_many(
     return processed_roots
 
 
-def get_smallest_physical_roots(
+def get_smallest_physical_root_many(
     roots: NDArray[np.complex128],
     abs_or_rel_cutoff: float = 1e-3,
     rtol: float = 1e-3,
@@ -136,8 +136,8 @@ def get_smallest_physical_roots(
 
     Args:
         roots:
-            A mxn array of polynomial root solutions, where m is the number of equations
-            and n is the order of the polynomial.
+            An array of shape (m, n) of polynomial root solutions, where m is the number
+            of equations and n is the order of the polynomial.
         abs_or_rel_cutoff:
             The criteria for a root being real depends on the magnitude of its real
             component. If it's large, we require the imaginary component to be less than
@@ -154,9 +154,8 @@ def get_smallest_physical_roots(
             the root is considered real if r.imag == 0, too.
 
     Returns:
-        An array of shape m. Each value is the smallest root that is real and
-        positive. If no such root exists (e.g. all roots are complex), then
-        `np.inf` is used.
+        An array of shape (m,). Values are the smallest root that is real and positive.
+        If no such root exists (e.g. all roots are complex), then `np.inf` is used.
     """
 
     processed_roots = filter_non_physical_roots_many(
@@ -164,7 +163,7 @@ def get_smallest_physical_roots(
     )
 
     # Find the minimum real positive root in each row
-    min_real_positive_roots = np.min(processed_roots.real, axis=1)
+    min_real_positive_roots = np.min(processed_roots.real, axis=-1)
 
     return min_real_positive_roots
 
@@ -179,8 +178,8 @@ def get_sorted_physical_roots(
 
     Args:
         roots:
-            A mxn array of polynomial root solutions, where m is the number of equations
-            and n is the order of the polynomial.
+            An array of shape (m, n) of polynomial root solutions, where m is the number
+            of equations and n is the order of the polynomial.
         abs_or_rel_cutoff:
             The criteria for a root being real depends on the magnitude of its real
             component. If it's large, we require the imaginary component to be less than
@@ -197,14 +196,15 @@ def get_sorted_physical_roots(
             the root is considered real if r.imag == 0, too.
 
     Returns:
-        An array of shape mx4. Columns are sorted by smallest real positive root.
-        Negative and imaginary roots are converted to infinity.
+        An array of shape (m,). Values are the smallest root that is real and positive.
+        Columns are sorted by smallest real positive root. Negative and imaginary roots
+        are converted to infinity.
     """
 
     processed_roots = filter_non_physical_roots_many(
         roots, abs_or_rel_cutoff, rtol, atol
     )
 
-    sorted_real_positive_roots = np.sort(processed_roots.real, axis=1)
+    sorted_real_positive_roots = np.sort(processed_roots.real, axis=-1)
 
     return sorted_real_positive_roots

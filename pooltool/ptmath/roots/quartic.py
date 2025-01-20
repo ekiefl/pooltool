@@ -5,7 +5,7 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
-from pooltool.ptmath.roots.quadratic import solve as solve_quadratic
+from pooltool.ptmath.roots import quadratic
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -15,11 +15,12 @@ class QuarticSolver(StrEnum):
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def _solve_quadratics(ps: NDArray[np.complex128]) -> NDArray[np.complex128]:
+def _solve_quadratics(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
     """Solves an array of quadratics.
 
     This is used internally by the quartic solver when it is passed coefficients where
-    a=b=0, which make the polynomial quadratic, not quartic.
+    a=b=0, which make the polynomial quadratic, not quartic. It delegates to
+    `quadratic.solve`.
 
     Args:
         ps:
@@ -34,9 +35,7 @@ def _solve_quadratics(ps: NDArray[np.complex128]) -> NDArray[np.complex128]:
     roots = np.full((m, 4), np.inf, dtype=np.complex128)
 
     for i in range(m):
-        r1, r2 = solve_quadratic(ps[i, 0].real, ps[i, 1].real, ps[i, 2].real)
-        roots[i, 0] = r1
-        roots[i, 1] = r2
+        roots[i, :2] = quadratic.solve(ps[i, 0], ps[i, 1], ps[i, 2])
 
     return roots
 
@@ -88,8 +87,7 @@ def solve_quartics(
         all_roots[quartic_mask] = quartic_roots
 
     if np.any(quadratic_mask):
-        quadratic_ps = ps[quadratic_mask, 2:].astype(np.complex128)
-        quadratic_roots = _solve_quadratics(quadratic_ps)
+        quadratic_roots = _solve_quadratics(ps[quadratic_mask, 2:])
         all_roots[quadratic_mask] = quadratic_roots
 
     return all_roots
@@ -207,7 +205,7 @@ def _solve(
 
     if a == 0 and b == 0:
         # Quadratic!
-        return _solve_quadratics(p[np.newaxis, 2:])[0, :], 4
+        return quadratic.solve(p[2], p[3], p[4]), 4
 
     # The analytic solutions don't like 0s
     if (p == 0).any():
