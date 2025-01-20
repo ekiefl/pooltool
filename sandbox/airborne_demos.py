@@ -1,4 +1,5 @@
 import attrs
+import numpy as np
 
 import pooltool as pt
 
@@ -136,6 +137,82 @@ def airborne_circular_cushion():
     return shot
 
 
+def airborne_pocket_collision():
+    ball = pt.Ball.create("cue")
+    scale = 0.18
+    ball.state.rvw = np.array(
+        [
+            [0.8, 0.2, 1.228575],
+            [1.8 * scale, -1.8 * scale, 1.5],
+            [0, 0, 0],
+        ]
+    )
+    ball.state.s = pt.constants.airborne
+
+    other = pt.Ball.create("1")
+    scale = 0.27
+    other.state.rvw = np.array(
+        [
+            [0.8, 0.2, 1],
+            [1.8 * scale, -1.8 * scale, 1.5],
+            [0, 0, 0],
+        ]
+    )
+    other.state.s = pt.constants.airborne
+
+    another = pt.Ball.create("2")
+    scale = 0.11
+    another.state.rvw = np.array(
+        [
+            [0.8, 0.2, 0.8],
+            [1.8 * scale, -1.8 * scale, 1.5],
+            [0, 0, 0],
+        ]
+    )
+    another.state.s = pt.constants.airborne
+
+    fast1 = pt.Ball.create("3")
+    scale = 2
+    fast1.state.rvw = np.array(
+        [
+            [0.3, 0.7, fast1.params.R * 7 / 5],
+            [1.8 * scale, -1.8 * scale, 0.6],
+            [0, 0, 0],
+        ]
+    )
+    fast1.state.s = pt.constants.airborne
+
+    fast2 = pt.Ball.create("4")
+    scale = 2
+    fast2.state.rvw = np.array(
+        [
+            [0.8, 0.2, fast2.params.R * 7 / 5],
+            [1.8 * scale, -1.8 * scale, -2.0],
+            [0, 0, 0],
+        ]
+    )
+    fast2.state.s = pt.constants.airborne
+
+    vertical = pt.Ball.create("5")
+    vertical.state.rvw = np.array(
+        [
+            [1, -0.05, 0.75],
+            [0, 0, 0],
+            [0, 0, 0],
+        ]
+    )
+    vertical.state.s = pt.constants.airborne
+
+    shot = pt.System(
+        cue=pt.Cue(cue_ball_id="cue"),
+        table=pt.Table.default(),
+        balls=(ball, other, another, fast1, fast2, vertical),
+    )
+    shot.set_ballset(pt.objects.BallSet("pooltool_pocket"))
+
+    return shot
+
+
 _map = {
     "drop": drop,
     "simul": simul,
@@ -145,6 +222,7 @@ _map = {
     "friction_test": friction_test,
     "slip": slip,
     "airborne_circular_cushion": airborne_circular_cushion,
+    "airborne_pocket_collision": airborne_pocket_collision,
 }
 
 

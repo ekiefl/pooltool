@@ -28,7 +28,13 @@ from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
 from pooltool.objects.ball.datatypes import BallState
 from pooltool.physics.engine import PhysicsEngine
-from pooltool.ptmath.roots.quartic import QuarticSolver, solve_quartics
+from pooltool.ptmath.roots.core import (
+    get_smallest_physical_root_many,
+)
+from pooltool.ptmath.roots.quartic import (
+    QuarticSolver,
+    solve_quartics,
+)
 from pooltool.system.datatypes import System
 
 DEFAULT_ENGINE = PhysicsEngine()
@@ -343,7 +349,9 @@ def get_next_ball_ball_collision(
             )
 
     if len(collision_coeffs):
-        roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        roots = get_smallest_physical_root_many(
+            solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        )
         for root, ball_pair in zip(roots, ball_pairs):
             cache[ball_pair] = shot.t + root
 
@@ -437,7 +445,9 @@ def get_next_ball_circular_cushion_event(
             )
 
     if len(collision_coeffs):
-        roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        roots = get_smallest_physical_root_many(
+            solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        )
 
         for root, ball_cushion_pair in zip(roots, ball_cushion_pairs):
             cache[ball_cushion_pair] = shot.t + root
@@ -508,16 +518,15 @@ def get_next_ball_pocket_collision(
     collision_cache: CollisionCache,
     solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
-    """Returns next ball-pocket collision"""
+    """Returns next ball-pocket collision
 
-    # FIXME-3D no ball-pocket collisions
-    return null_event(np.inf)
+    Notes:
+        - FIXME-3D Passing solver does nothing, as the underlying solve method uses the
+          HYBRID approach (quartic.solve). Not sure what the solution should be.
+    """
 
     if not shot.table.has_pockets:
         return null_event(np.inf)
-
-    ball_pocket_pairs: List[Tuple[str, str]] = []
-    collision_coeffs: List[Tuple[float, ...]] = []
 
     cache = collision_cache.times.setdefault(EventType.BALL_POCKET, {})
 
@@ -535,25 +544,19 @@ def get_next_ball_pocket_collision(
                 cache[obj_ids] = np.inf
                 continue
 
-            ball_pocket_pairs.append(obj_ids)
-            collision_coeffs.append(
-                solve.ball_pocket_collision_coeffs(
-                    rvw=state.rvw,
-                    s=state.s,
-                    a=pocket.a,
-                    b=pocket.b,
-                    r=pocket.radius,
-                    mu=(params.u_s if state.s == const.sliding else params.u_r),
-                    m=params.m,
-                    g=params.g,
-                    R=params.R,
-                )
+            dtau_E = solve.ball_pocket_collision_time(
+                rvw=state.rvw,
+                s=state.s,
+                a=pocket.a,
+                b=pocket.b,
+                r=pocket.radius,
+                mu=(params.u_s if state.s == const.sliding else params.u_r),
+                m=params.m,
+                g=params.g,
+                R=params.R,
             )
 
-    if len(collision_coeffs):
-        roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
-        for root, ball_pocket_pair in zip(roots, ball_pocket_pairs):
-            cache[ball_pocket_pair] = shot.t + root
+            cache[obj_ids] = shot.t + dtau_E
 
     # The cache is now populated and up-to-date
 
