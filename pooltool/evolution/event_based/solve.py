@@ -236,49 +236,6 @@ def ball_circular_cushion_collision_coeffs(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def ball_pocket_collision_coeffs(
-    rvw: NDArray[np.float64],
-    s: int,
-    a: float,
-    b: float,
-    r: float,
-    mu: float,
-    m: float,
-    g: float,
-    R: float,
-) -> Tuple[float, float, float, float, float]:
-    """Get quartic coeffs required to determine the ball-pocket collision time."""
-
-    if s == const.spinning or s == const.pocketed or s == const.stationary:
-        return np.inf, np.inf, np.inf, np.inf, np.inf
-
-    phi = ptmath.projected_angle(rvw[1])
-    v = ptmath.norm2d(rvw[1])
-    cos_phi = np.cos(phi)
-    sin_phi = np.sin(phi)
-
-    if s == const.airborne:
-        ax = 0.0
-        ay = 0.0
-    else:
-        u = get_u(rvw, R, phi, s)
-        K = -0.5 * mu * g
-        ax = K * (u[0] * cos_phi - u[1] * sin_phi)
-        ay = K * (u[0] * sin_phi + u[1] * cos_phi)
-
-    bx, by = v * cos_phi, v * sin_phi
-    cx, cy = rvw[0, 0], rvw[0, 1]
-
-    A = 0.5 * (ax**2 + ay**2)
-    B = ax * bx + ay * by
-    C = ax * (cx - a) + ay * (cy - b) + 0.5 * (bx**2 + by**2)
-    D = bx * (cx - a) + by * (cy - b)
-    E = 0.5 * (a**2 + b**2 + cx**2 + cy**2 - r**2) - (cx * a + cy * b)
-
-    return A, B, C, D, E
-
-
-@jit(nopython=True, cache=const.use_numba_cache)
 def ball_pocket_collision_time(
     rvw: NDArray[np.float64],
     s: int,
