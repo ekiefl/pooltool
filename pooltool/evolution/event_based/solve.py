@@ -310,8 +310,8 @@ def ball_pocket_collision_time_airborne(
     (This is only violated if the ball starts inside the cylinder, which results in at
     most an outflux collision). The strategy is to see what the ball height is at the
     time of the influx collision (h0) and the outflux collision (hf), because from these
-    we can determine what time the ball enters the pocket, if at all. The following
-    logic is used:
+    we can determine whether or not the ball is considered to enter the pocket. The
+    following logic is used:
 
         - h0 < R: The ball passes through the playing surface plane before intersecting
           the pocket cylinder, guaranteeing that a ball-table collision occurs. Infinity
@@ -319,7 +319,8 @@ def ball_pocket_collision_time_airborne(
         - hf <= (7/5)*R: If the outflux height is less than (7/5)*R, the ball is
           considered to be pocketed. This threshold height implicitly models the fact
           that high velocity balls that are slightly airborne collide with table
-          geometry at the back of the pocket, ricocheting the ball into the pocket.
+          geometry at the back of the pocket, ricocheting the ball into the pocket. The
+          average of the influx and outflux collision times is returned.
         - hf > (7/5)*R: The ball is considered to fly over the pocket. Infinity is
           returned.
     """
@@ -328,12 +329,13 @@ def ball_pocket_collision_time_airborne(
     v = ptmath.norm2d(rvw[1])
     cos_phi = np.cos(phi)
     sin_phi = np.sin(phi)
+    bx, by = v * cos_phi, v * sin_phi
 
     # Strategy 1
 
     airborne_time = get_airborne_time(rvw, R, g)
-    x = rvw[0, 0] + v * cos_phi * airborne_time
-    y = rvw[0, 1] + v * sin_phi * airborne_time
+    x = rvw[0, 0] + bx * airborne_time
+    y = rvw[0, 1] + by * airborne_time
 
     if (x - a) ** 2 + (y - b) ** 2 < r**2:
         # The ball falls directly into the pocket
@@ -341,9 +343,9 @@ def ball_pocket_collision_time_airborne(
 
     # Strategy 2
 
-    bx, by = v * cos_phi, v * sin_phi
     cx, cy = rvw[0, 0], rvw[0, 1]
 
+    # These match the non-airborne quartic coefficients, after setting ax=ay=0.
     C = 0.5 * (bx**2 + by**2)
     D = bx * (cx - a) + by * (cy - b)
     E = 0.5 * (a**2 + b**2 + cx**2 + cy**2 - r**2) - (cx * a + cy * b)
