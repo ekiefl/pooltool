@@ -382,7 +382,7 @@ class BallRender(Render):
             f = bottom_height / max_bottom_height
 
             alpha = np.exp(-5 * f)
-            scale = 1 + 2.5 * f
+            scale = 1 + 2.0 * f
 
             shadow_node.setScale(scale)
             shadow_node.setAlphaScale(alpha)
