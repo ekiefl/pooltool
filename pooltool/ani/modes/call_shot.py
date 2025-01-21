@@ -171,10 +171,20 @@ class CallShotMode(BaseMode):
             self.closest_ball.set_render_state_as_object_state()
             tasks.remove("call_shot_ball_highlight_animation")
 
+            # Add back standard shadow task
+            tasks.add(
+                self.closest_ball._shadow_update_task,
+                f"update_shadow_{self.closest_ball._ball.id}",
+            )
+
     def add_ball_highlight(self):
         if self.closest_ball is not None:
             self.add_transparent_ball()
             self.trans_ball.hide()
+
+            # Remove standard shadow task
+            tasks.remove(f"update_shadow_{self.closest_ball._ball.id}")
+
             tasks.add(
                 self.call_shot_ball_highlight_animation,
                 "call_shot_ball_highlight_animation",
