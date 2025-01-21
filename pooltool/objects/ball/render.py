@@ -126,18 +126,6 @@ class BallRender(Render):
         self.nodes[f"ball_csphere_{self._ball.id}"] = collision_node
 
     def init_shadow(self):
-        # Instead of linear spread, concentration more shadow directly under ball
-        N = 20
-        sigma = 0.5
-        coverages = []
-        for k in range(1, N):
-            coverage = 1.0 - (k / N)  # from ~0.95 down to ~0.05 if N=20
-            if coverage <= 0.0:
-                continue
-            radius = np.sqrt(-2.0 * sigma**2 * np.log(coverage))
-            coverages.append(radius)
-        scales = np.array(coverages)
-
         N = 20
         start, stop = 0.4, 0.9  # fraction of ball radius
         scales = np.linspace(start, stop, N)
