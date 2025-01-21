@@ -9,6 +9,7 @@ from direct.interval.IntervalGlobal import (
     Parallel,
     Sequence,
 )
+from direct.task.Task import Task
 from panda3d.core import (
     CollisionCapsule,
     CollisionNode,
@@ -125,9 +126,20 @@ class BallRender(Render):
         self.nodes[f"ball_csphere_{self._ball.id}"] = collision_node
 
     def init_shadow(self):
+        # Instead of linear spread, concentration more shadow directly under ball
         N = 20
-        start, stop = 0.5, 0.9  # fraction of ball radius
-        z_offset = 0.0005
+        sigma = 0.5
+        coverages = []
+        for k in range(1, N):
+            coverage = 1.0 - (k / N)  # from ~0.95 down to ~0.05 if N=20
+            if coverage <= 0.0:
+                continue
+            radius = np.sqrt(-2.0 * sigma**2 * np.log(coverage))
+            coverages.append(radius)
+        scales = np.array(coverages)
+
+        N = 20
+        start, stop = 0.4, 0.9  # fraction of ball radius
         scales = np.linspace(start, stop, N)
 
         if (ballset := self._ball.ballset) is not None:
@@ -147,7 +159,8 @@ class BallRender(Render):
             shadow_layer = Global.loader.loadModel(panda_path(shadow_path))
             shadow_layer.reparentTo(shadow_node)
             shadow_layer.setScale(self.get_scale_factor(shadow_layer) * scale)
-            shadow_layer.setZ(z_offset * (1 - i / N))
+            shadow_layer.setZ(0.0005 * (1 - i / N))
+            shadow_layer.setAlphaScale(np.exp(-i / N))
 
         return shadow_node
 
@@ -341,6 +354,40 @@ class BallRender(Render):
         sphere.setQuat(sphere.getQuat() * ball.getQuat())
 
         ball.setHpr(0, 0, 0)
+
+    def _shadow_update_task(self, task: Task) -> Task:
+        """Updates the shadow scale/visibility each frame based on the current ball height.
+
+        The shadow position is controlled by the playback sequence. If the shadow
+        position is updated within this task, it (1) lags behind the actual ball
+        position and (2) leads to crashes I didn't want to deal with.
+        """
+        shadow_node = self.nodes["shadow"]
+
+        # We read the ball's current position in the scene
+        z = self.nodes["pos"].getZ()
+        R = self._ball.params.R
+
+        max_bottom_height = 0.13
+
+        # Ball bottom is z - R above the table plane
+        bottom_height = max(z - R, 0)
+        if bottom_height >= max_bottom_height:
+            shadow_node.hide()
+        else:
+            # Otherwise, show the shadow
+            if shadow_node.is_hidden():
+                shadow_node.show()
+
+            f = bottom_height / max_bottom_height
+
+            alpha = np.exp(-5 * f)
+            scale = 1 + 2.5 * f
+
+            shadow_node.setScale(scale)
+            shadow_node.setAlphaScale(alpha)
+
+        return task.cont
 
     def render(self):
         super().render()

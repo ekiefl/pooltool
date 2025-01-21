@@ -6,6 +6,7 @@ from attrs import define
 from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
 
+from pooltool.ani import tasks
 from pooltool.ani.globals import Global
 from pooltool.evolution.continuize import continuize
 from pooltool.objects.ball.render import BallRender
@@ -105,6 +106,8 @@ class SystemController:
         for ball in self.system.balls.values():
             ball.render()
             ball.reset_angular_integration()
+            tasks.add(ball._shadow_update_task, f"update_shadow_{ball._ball.id}")
+
         self.system.cue.render()
 
     def teardown(self) -> None:
@@ -112,6 +115,7 @@ class SystemController:
         self.reset_animation()
 
         for ball in self.system.balls.values():
+            tasks.remove(f"update_shadow_{ball._ball.id}")
             ball.remove_nodes()
 
         self.system.cue.remove_nodes()
