@@ -116,7 +116,7 @@ def ball_table_collision_time(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def ball_linear_cushion_collision_time(
+def ball_linear_cushion_collision_time_old(
     rvw: NDArray[np.float64],
     s: int,
     lx: float,
@@ -172,6 +172,255 @@ def ball_linear_cushion_collision_time(
         roots[:2] = quadratic.solve(A, B, C1)
         roots[2:] = quadratic.solve(A, B, C2)
 
+    physical_roots = filter_non_physical_roots(roots)
+
+    for root in physical_roots:
+        if root.real == np.inf:
+            continue
+
+        # FIXME-3D, ideally any sort of determination of real versus not is determined
+        # in filter_non_physical_roots. Remove this and observe behavior closely.
+        if root.real <= const.EPS:
+            continue
+
+        rvw_dtau = evolve.evolve_ball_motion(s, rvw, R, m, mu, 1, mu, g, root.real)
+        s_score = -np.dot(p1 - rvw_dtau[0], p2 - p1) / np.dot(p2 - p1, p2 - p1)
+
+        if 0 <= s_score <= 1:
+            return root.real
+
+    return np.inf
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def ball_linear_cushion_collision_time(
+    rvw: NDArray[np.float64],
+    s: int,
+    lx: float,
+    ly: float,
+    l0: float,
+    p1: NDArray[np.float64],
+    p2: NDArray[np.float64],
+    direction: int,
+    mu: float,
+    m: float,
+    g: float,
+    R: float,
+) -> float:
+    """Get time until collision between ball and linear cushion segment."""
+    if s == const.spinning or s == const.pocketed or s == const.stationary:
+        return np.inf
+
+    phi = ptmath.projected_angle(rvw[1])
+    v = ptmath.norm2d(rvw[1])
+    cos_phi = np.cos(phi)
+    sin_phi = np.sin(phi)
+
+    # --- Gather all a, b, c, p1x, p2x, p1y, p2y, and h terms
+
+    if s == const.airborne:
+        ax = 0.0
+        ay = 0.0
+        az = -0.5 * g
+    else:
+        u = get_u(rvw, R, phi, s)
+        K = -0.5 * mu * g
+        ax = K * (u[0] * cos_phi - u[1] * sin_phi)
+        ay = K * (u[0] * sin_phi + u[1] * cos_phi)
+        az = 0.0
+
+    bx, by, bz = v * cos_phi, v * sin_phi, rvw[1, 2]
+    cx, cy, cz = rvw[0, :]
+    p1x, p1y = p1[0], p1[1]
+    p2x, p2y = p2[0], p2[1]
+    h = p1[2]
+
+    # --- A
+
+    A = (
+        az**2 * p2x**2
+        + p1x**2 * ay**2
+        - 2 * p1y * az**2 * p2y
+        - 2 * az**2 * p2x * p1x
+        + ay**2 * p2x**2
+        - 2 * p1x * ay**2 * p2x
+        + p1x**2 * az**2
+        - 2 * p1x * ay * p1y * ax
+        + 2 * ay * p2x * p1y * ax
+        - 2 * ax**2 * p2y * p1y
+        + ax**2 * p2y**2
+        + az**2 * p2y**2
+        + 2 * ax * p2y * p1x * ay
+        + p1y**2 * az**2
+        - 2 * ax * p2y * ay * p2x
+        + p1y**2 * ax**2
+    )
+
+    # --- B
+
+    B = (
+        -2 * bx * p2y * ay * p2x
+        + 2 * p1x**2 * ay * by
+        + 2 * bx * p2y * p1x * ay
+        - 4 * ax * p2y * p1y * bx
+        + 2 * p1y**2 * az * bz
+        - 4 * p1x * ay * by * p2x
+        + 2 * ay * p2x**2 * by
+        + 2 * az * p2y**2 * bz
+        + 2 * p1x**2 * az * bz
+        + 2 * az * p2x**2 * bz
+        + 2 * by * p2x * p1y * ax
+        - 2 * ax * p2y * by * p2x
+        - 2 * p1x * by * p1y * ax
+        - 4 * p1y * az * bz * p2y
+        + 2 * p1y**2 * ax * bx
+        + 2 * ax * p2y**2 * bx
+        + 2 * ay * p2x * p1y * bx
+        - 4 * az * p2x * p1x * bz
+        - 2 * p1x * ay * p1y * bx
+        + 2 * ax * p2y * p1x * by
+    )
+
+    # --- C
+
+    C = (
+        2 * p1y**2 * cx * ax
+        - 2 * p1y * p2x**2 * ay
+        - 2 * p1y * bz**2 * p2y
+        + 2 * p1y**2 * cz * az
+        - 2 * p1y**2 * h * az
+        + 2 * cz * p2y**2 * az
+        - 2 * h * p2y**2 * az
+        - 2 * bz**2 * p2x * p1x
+        + 2 * cz * p2x**2 * az
+        - 2 * h * p2x**2 * az
+        + 2 * p1x**2 * cz * az
+        - 2 * p1x**2 * h * az
+        - 2 * p1y**2 * p2x * ax
+        + 2 * cx * p2y**2 * ax
+        + 2 * p1x**2 * cy * ay
+        - 2 * p1x * p2y**2 * ax
+        - 2 * p1x**2 * p2y * ay
+        + 2 * cy * p2x**2 * ay
+        - 2 * bx**2 * p2y * p1y
+        - 2 * p1x * by**2 * p2x
+        + bx**2 * p2y**2
+        + p1x**2 * by**2
+        + by**2 * p2x**2
+        + p1y**2 * bx**2
+        + p1y**2 * bz**2
+        + bz**2 * p2y**2
+        + bz**2 * p2x**2
+        + p1x**2 * bz**2
+        + 2 * bx * p2y * p1x * by
+        - 2 * bx * p2y * by * p2x
+        - 2 * p1x * by * p1y * bx
+        - 4 * p1y * cx * ax * p2y
+        - 2 * p1y * cx * p1x * ay
+        + 2 * p1y * cx * ay * p2x
+        + 2 * p1y * p2x * ax * p2y
+        + 2 * p1y * p2x * p1x * ay
+        + 2 * cx * p2y * p1x * ay
+        - 2 * cx * p2y * ay * p2x
+        + 2 * p1x * cy * ax * p2y
+        - 4 * p1x * cy * ay * p2x
+        - 2 * p1x * cy * p1y * ax
+        + 2 * p1x * p2y * ay * p2x
+        + 2 * p1x * p2y * p1y * ax
+        - 4 * p1y * cz * az * p2y
+        + 4 * p1y * h * az * p2y
+        - 4 * cz * p2x * p1x * az
+        + 4 * h * p2x * p1x * az
+        + 2 * by * p2x * p1y * bx
+        - 2 * cy * p2x * ax * p2y
+        + 2 * cy * p2x * p1y * ax
+    )
+
+    # --- D
+
+    D = (
+        2 * p1y**2 * cx * bx
+        - 2 * p1y * p2x**2 * by
+        + 2 * p1y**2 * cz * bz
+        - 2 * p1y**2 * h * bz
+        + 2 * cz * p2y**2 * bz
+        - 2 * h * p2y**2 * bz
+        + 2 * cz * p2x**2 * bz
+        - 2 * h * p2x**2 * bz
+        + 2 * p1x**2 * cz * bz
+        - 2 * p1x**2 * h * bz
+        - 2 * p1y**2 * p2x * bx
+        + 2 * cx * p2y**2 * bx
+        + 2 * p1x**2 * cy * by
+        - 2 * p1x * p2y**2 * bx
+        - 2 * p1x**2 * p2y * by
+        + 2 * cy * p2x**2 * by
+        - 4 * p1y * cx * bx * p2y
+        - 2 * p1y * cx * p1x * by
+        + 2 * p1y * cx * by * p2x
+        + 2 * p1y * p2x * bx * p2y
+        + 2 * p1y * p2x * p1x * by
+        + 2 * cx * p2y * p1x * by
+        - 2 * cx * p2y * by * p2x
+        + 2 * p1x * cy * bx * p2y
+        - 4 * p1x * cy * by * p2x
+        - 2 * p1x * cy * p1y * bx
+        + 2 * p1x * p2y * by * p2x
+        + 2 * p1x * p2y * p1y * bx
+        - 4 * p1y * cz * bz * p2y
+        + 4 * p1y * h * bz * p2y
+        - 4 * cz * p2x * p1x * bz
+        + 4 * h * p2x * p1x * bz
+        - 2 * cy * p2x * bx * p2y
+        + 2 * cy * p2x * p1y * bx
+    )
+
+    # --- E
+
+    E = (
+        4 * p1y * cz * h * p2y
+        + 4 * cz * p2x * p1x * h
+        + 2 * cx * p2y * p1x * cy
+        - 2 * cx * p2y * cy * p2x
+        + 2 * p1x * p2y * cy * p2x
+        - 2 * p1y * cx * p1x * cy
+        + 2 * p1y * cx * p1x * p2y
+        + 2 * p1y * cx * cy * p2x
+        + 2 * p1y * p2x * cx * p2y
+        + 2 * p1y * p2x * p1x * cy
+        - 2 * p1y * p2x * p1x * p2y
+        - 2 * p1y**2 * cx * p2x
+        - 2 * p1y * cx**2 * p2y
+        - 2 * p1y * p2x**2 * cy
+        - 2 * cx * p2y**2 * p1x
+        - 2 * p1x**2 * cy * p2y
+        - 2 * p1x * cy**2 * p2x
+        - 2 * p1y**2 * cz * h
+        - 2 * p1y * cz**2 * p2y
+        - 2 * p1y * h**2 * p2y
+        - 2 * cz * p2y**2 * h
+        + p1y**2 * cx**2
+        + p1y**2 * p2x**2
+        + cx**2 * p2y**2
+        + p1x**2 * cy**2
+        + p1x**2 * p2y**2
+        + cy**2 * p2x**2
+        + p1y**2 * cz**2
+        + p1y**2 * h**2
+        + cz**2 * p2y**2
+        + h**2 * p2y**2
+        + cz**2 * p2x**2
+        + h**2 * p2x**2
+        + p1x**2 * cz**2
+        + p1x**2 * h**2
+        - 2 * cz * p2x**2 * h
+        - 2 * cz**2 * p2x * p1x
+        - 2 * h**2 * p2x * p1x
+        - 2 * p1x**2 * cz * h
+        - R**2 * (-2 * p1y * p2y + p2y**2 + p1y**2 - 2 * p1x * p2x + p1x**2 + p2x**2)
+    )
+
+    roots = quartic.solve(A, B, C, D, E)
     physical_roots = filter_non_physical_roots(roots)
 
     for root in physical_roots:
