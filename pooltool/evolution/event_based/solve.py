@@ -13,6 +13,7 @@ from pooltool.ptmath.roots import quadratic, quartic
 from pooltool.ptmath.roots.core import (
     filter_non_physical_roots,
 )
+from pooltool.ptmath.utils import cross
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -192,7 +193,7 @@ def ball_linear_cushion_collision_time_old(
     return np.inf
 
 
-@jit(nopython=True, cache=const.use_numba_cache)
+# @jit(nopython=True, cache=const.use_numba_cache)
 def ball_linear_cushion_collision_time(
     rvw: NDArray[np.float64],
     s: int,
@@ -435,7 +436,17 @@ def ball_linear_cushion_collision_time(
         rvw_dtau = evolve.evolve_ball_motion(s, rvw, R, m, mu, 1, mu, g, root.real)
         s_score = -np.dot(p1 - rvw_dtau[0], p2 - p1) / np.dot(p2 - p1, p2 - p1)
 
+        # Apply Eqn 8 and print out d compared to R. Difference should be nearly 0.
+        # https://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
+        # Drop ball from directly above rail
+        # FIXME-3D Delete
+        dist = np.sqrt(
+            np.dot(cross(p2 - p1, p1 - rvw_dtau[0]), cross(p2 - p1, p1 - rvw_dtau[0]))
+            / np.dot(p2 - p1, p2 - p1)
+        )
+
         if 0 <= s_score <= 1:
+            # print(np.abs(dist - R))
             return root.real
 
     return np.inf

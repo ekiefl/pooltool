@@ -213,6 +213,28 @@ def airborne_pocket_collision():
     return shot
 
 
+def drop_on_cushion():
+    table = pt.Table.default()
+
+    # ball = pt.Ball.create("cue", xy=(table.w-0.01, table.l/4))
+    # ball.state.rvw[0, 2] = 0.2
+    # ball.state.rvw[1, 2] = 0.5
+    # ball.state.s = pt.constants.airborne
+
+    other = pt.Ball.create("other", xy=(table.w - 0.1, table.l / 4 + 0.1))
+    other.state.rvw[0, 2] = 0.3
+    other.state.rvw[1, 0] = 0.4
+    other.state.s = pt.constants.airborne
+
+    shot = pt.System(
+        cue=pt.Cue(cue_ball_id="other"),
+        table=table,
+        balls=(other,),
+    )
+
+    return shot
+
+
 _map = {
     "drop": drop,
     "simul": simul,
@@ -223,6 +245,7 @@ _map = {
     "slip": slip,
     "airborne_circular_cushion": airborne_circular_cushion,
     "airborne_pocket_collision": airborne_pocket_collision,
+    "drop_on_cushion": drop_on_cushion,
 }
 
 
