@@ -71,7 +71,7 @@ def cue_strike(m, M, R, V0, phi, theta, Q):
         + (c * np.sin(theta)) ** 2
         - 2 * b * c * np.cos(theta) * np.sin(theta)
     )
-    denominator = 1 + m / M + 5 / 2 / R**2 * temp
+    denominator = 1 + m / M + temp / I_m
     v = numerator / denominator
 
     # 3D FIXME
