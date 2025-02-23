@@ -32,6 +32,7 @@ class BallLCushionModel(StrEnum):
             untouched by the interaction.
     """
 
+    MATHAVAN_2010 = auto()
     HAN_2005 = auto()
     UNREALISTIC = auto()
 
@@ -47,6 +48,7 @@ class BallCCushionModel(StrEnum):
             untouched by the interaction.
     """
 
+    MATHAVAN_2010 = auto()
     HAN_2005 = auto()
     UNREALISTIC = auto()
 
