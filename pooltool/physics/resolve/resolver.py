@@ -23,9 +23,9 @@ from pooltool.physics.resolve.ball_cushion import (
     BallCCushionCollisionStrategy,
     BallLCushionCollisionStrategy,
 )
-from pooltool.physics.resolve.ball_cushion.mathavan_2010 import (
-    Mathavan2010Circular,
-    Mathavan2010Linear,
+from pooltool.physics.resolve.ball_cushion.han_2005 import (
+    Han2005Circular,
+    Han2005Linear,
 )
 from pooltool.physics.resolve.ball_pocket import (
     BallPocketStrategy,
@@ -47,7 +47,7 @@ from pooltool.terminal import Run
 RESOLVER_PATH = pooltool.user_config.PHYSICS_DIR / "resolver.yaml"
 """The location of the resolver path YAML."""
 
-VERSION: int = 8
+VERSION: int = 6
 
 
 run = Run()
@@ -134,8 +134,8 @@ class Resolver:
                     ),
                     num_iterations=1000,
                 ),
-                ball_linear_cushion=Mathavan2010Linear(),
-                ball_circular_cushion=Mathavan2010Circular(),
+                ball_linear_cushion=Han2005Linear(),
+                ball_circular_cushion=Han2005Circular(),
                 ball_pocket=CanonicalBallPocket(),
                 stick_ball=InstantaneousPoint(
                     english_throttle=1.0,
