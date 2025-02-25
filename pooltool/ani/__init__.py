@@ -34,7 +34,7 @@ max_stroke_speed = 7  # m/s
 # max backstroke length, as fraction of cue stick length
 backstroke_fraction = 0.5
 # max masse angle
-max_elevate = 80
+max_elevate = 89.9
 # number of seconds that camera rotation is disabled when shot is being calculated
 rotate_downtime = 0.3
 
