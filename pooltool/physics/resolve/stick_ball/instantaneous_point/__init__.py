@@ -32,28 +32,40 @@ def cue_strike(m, M, R, V0, phi, theta, Q):
                          ______________________________
                                   playing surface
 
+
+    In legacy versions of the model, the contact point was described by two normalized
+    parameters, (a, b), where:
+
+        - a: Horizontal (side) offset from the ball’s center (with -1 corresponding to
+          the rightmost contact and +1 to the leftmost).
+        - b: Vertical (top/bottom) offset from the ball’s center (with -1 corresponding
+          to the bottom- most contact and +1 to the topmost).
+
+    However, when the cue tip is modeled with a nonzero radius, the cue’s tip center
+    does not coincide with the actual contact point on the ball’s surface. To account
+    for the finite cue tip radius, the effective contact point Q is derived from (a, b)
+    by scaling:
+
+        Q = (a, b) / (1 + tip_radius/R)
+
     Args:
-
-    m:
-        ball mass
-
-    M:
-        cue mass
-
-    R:
-        ball radius
-
-    V0:
-        What initial velocity does the cue strike the ball?
-
-    phi:
-        The direction you strike the ball in relation to the bottom cushion
-
-    theta:
-        How elevated is the cue from the playing surface, in degrees?
-
-    Q:
-        contact point
+        m:
+            ball mass
+        M:
+            cue mass
+        R:
+            ball radius
+        V0:
+            What initial velocity does the cue strike the ball?
+        phi:
+            The direction you strike the ball in relation to the bottom cushion
+        theta:
+            How elevated is the cue from the playing surface, in degrees?
+        Q:
+            A 2-element vector representing the contact point on the ball's surface
+            where the cue makes contact. This point is computed from the legacy (a, b)
+            values via the tip offset conversion, ensuring that the finite radius of the
+            cue tip is properly accounted for.
     """
 
     phi *= np.pi / 180
