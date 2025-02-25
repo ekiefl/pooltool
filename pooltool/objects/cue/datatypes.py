@@ -22,10 +22,10 @@ class CueSpecs:
             The cue length.
         tip_radius:
             The cue tip radius.
-        shaft_tip_radius:
+        shaft_radius_at_tip:
             The cue shaft radius near the tip of the cue.
-        butt_radius:
-            The butt radius.
+        shaft_radius_at_butt:
+            The cue shaft radius near the butt of the cue.
         end_mass:
             The mass of the of the cue's end. This controls the amount of deflection
             (squirt) that occurs when using sidespin. Lower means less deflection. It is
@@ -37,8 +37,10 @@ class CueSpecs:
     M: float = field(default=0.567)
     length: float = field(default=1.4732)
     tip_radius: float = field(default=0.0106045)  # nickel radius
-    shaft_tip_radius: float = field(default=0.0065)  # 13 mm shaft diameter at the tip
-    butt_radius: float = field(default=0.02)
+    shaft_radius_at_tip: float = field(
+        default=0.0065
+    )  # 13 mm shaft diameter at the tip
+    shaft_radius_at_butt: float = field(default=0.02)
     end_mass: float = field(default=0.170097 / 30)
 
     @staticmethod

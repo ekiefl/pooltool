@@ -147,14 +147,14 @@ class CueAvoid:
         phi = ((self.avoid_nodes["cue_stick_focus"].getH() + 180) % 360) * np.pi / 180
         c = np.array([np.cos(phi), np.sin(phi), 0])
         gamma = np.arccos(np.dot(n, c))
-        AB = (ball.params.R + multisystem.active.cue.specs.shaft_tip_radius) * np.cos(
-            gamma
-        )
+        AB = (
+            ball.params.R + multisystem.active.cue.specs.shaft_radius_at_tip
+        ) * np.cos(gamma)
 
         # Center of blocking ball transect
         Ax, Ay, _ = entry.getSurfacePoint(scene)
-        Ax -= (AB + multisystem.active.cue.specs.shaft_tip_radius) * np.cos(phi)
-        Ay -= (AB + multisystem.active.cue.specs.shaft_tip_radius) * np.sin(phi)
+        Ax -= (AB + multisystem.active.cue.specs.shaft_radius_at_tip) * np.cos(phi)
+        Ay -= (AB + multisystem.active.cue.specs.shaft_radius_at_tip) * np.sin(phi)
         Az = ball.params.R
 
         # Center of aim, leveled to ball height
@@ -193,8 +193,8 @@ class CueAvoid:
         bounds = visual.cue.get_node("cue_stick").get_tight_bounds()
         L = bounds[1][0] - bounds[0][0]  # cue length
 
-        r = multisystem.active.cue.specs.shaft_tip_radius
-        R = multisystem.active.cue.specs.butt_radius
+        r = multisystem.active.cue.specs.shaft_radius_at_tip
+        R = multisystem.active.cue.specs.shaft_radius_at_butt
 
         m = (R - r) / L  # rise/run
         b = r  # intercept

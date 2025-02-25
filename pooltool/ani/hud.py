@@ -87,7 +87,7 @@ class HUD:
             )
             self.elements[HUDElement.english].set_tip_center(tip_offset_a, tip_offset_b)
             self.elements[HUDElement.english].set_shaft_to_ball_diameter_ratio(
-                cue.specs.shaft_tip_radius / cue_ball.params.R
+                cue.specs.shaft_radius_at_tip / cue_ball.params.R
             )
 
         self.elements[HUDElement.english].set(cue.a, cue.b)
@@ -361,7 +361,7 @@ class English(BaseHUDElement):
         self.tip_circle = OnscreenImage(
             image=panda_path(self.dir / "tip-outline.png"),
             parent=self.circle,
-            scale=CueSpecs.default().shaft_tip_radius / BallParams.default().R,
+            scale=CueSpecs.default().shaft_radius_at_tip / BallParams.default().R,
         )
         self.tip_circle.setTransparency(TransparencyAttrib.MAlpha)
 
