@@ -12,6 +12,7 @@ from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.modes.shot import ShotMode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.ptmath.utils import norm2d, tip_contact_offset
 from pooltool.system.datatypes import multisystem
 from pooltool.system.render import visual
 
@@ -172,9 +173,11 @@ class AimMode(BaseMode):
 
         if (theta < cue_avoid.min_theta) or self.magnet_theta:
             theta = cue_avoid.min_theta
-            multisystem.active.cue.set_state(theta=theta)
+            system_cue = multisystem.active.cue
+            system_cue.set_state(theta=theta)
+            system_cue_ball = multisystem.active.balls[system_cue.cue_ball_id]
             visual.cue.set_render_state_as_object_state()
-            hud.update_cue(multisystem.active.cue)
+            hud.update_cue(system_cue, system_cue_ball)
 
         if cam.theta < theta + ani.min_camera:
             cam.rotate(theta=theta + ani.min_camera)
@@ -194,8 +197,9 @@ class AimMode(BaseMode):
         if V0 > ani.max_stroke_speed:
             V0 = ani.max_stroke_speed
 
-        multisystem.active.cue.set_state(V0=V0)
-        hud.update_cue(multisystem.active.cue)
+        system_cue = multisystem.active.cue
+        system_cue.set_state(V0=V0)
+        hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
 
     def aim_elevate_cue(self):
         cue = visual.cue.get_node("cue_stick_focus")
@@ -219,8 +223,9 @@ class AimMode(BaseMode):
         if cam.theta < (new_elevation + ani.min_camera):
             cam.rotate(theta=new_elevation + ani.min_camera)
 
-        multisystem.active.cue.set_state(theta=new_elevation)
-        hud.update_cue(multisystem.active.cue)
+        system_cue = multisystem.active.cue
+        system_cue.set_state(theta=new_elevation)
+        hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
 
     def apply_english(self):
         with mouse:
@@ -237,10 +242,20 @@ class AimMode(BaseMode):
         new_y = cue.getY() + delta_y
         new_z = cue.getZ() + delta_z
 
-        norm = np.sqrt(new_y**2 + new_z**2)
-        if norm > ani.max_english * R:
-            new_y *= ani.max_english * R / norm
-            new_z *= ani.max_english * R / norm
+        cue_axis_offset = (
+            np.array([-new_y, new_z]) / R
+        )  # components normalized to ball radius
+        contact_point_offset = tip_contact_offset(
+            cue_axis_offset, multisystem.active.cue.specs.tip_radius, R
+        )
+
+        norm = norm2d(contact_point_offset)
+        if norm > ani.max_english:
+            limit_scaling_factor = ani.max_english / norm
+            new_y *= limit_scaling_factor
+            new_z *= limit_scaling_factor
+            cue_axis_offset *= limit_scaling_factor
+            contact_point_offset *= limit_scaling_factor
 
         cue.setY(new_y)
         cue.setZ(new_z)
@@ -257,9 +272,10 @@ class AimMode(BaseMode):
             cam.rotate(theta=new_theta)
 
         multisystem.active.cue.set_state(
-            a=-new_y / R,
-            b=new_z / R,
+            a=contact_point_offset[0],
+            b=contact_point_offset[1],
             theta=-cue_focus.getR(),
         )
 
-        hud.update_cue(multisystem.active.cue)
+        system_cue = multisystem.active.cue
+        hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])

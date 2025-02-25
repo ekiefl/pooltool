@@ -13,7 +13,7 @@ from pooltool.physics.resolve.stick_ball.squirt import get_squirt_angle
 from pooltool.ptmath.utils import coordinate_rotation
 
 
-def cue_strike(m, M, R, V0, phi, theta, a, b, english_throttle: float):
+def cue_strike(m, M, R, V0, phi, theta, Q):
     """Strike a ball
 
     .. code::
@@ -32,45 +32,41 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, english_throttle: float):
                          ______________________________
                                   playing surface
 
+
+    In legacy versions of the model, the contact point was described by two normalized
+    parameters, (a, b), where:
+
+        - a: Horizontal (side) offset from the ball’s center (with -1 corresponding to
+          the rightmost contact and +1 to the leftmost).
+        - b: Vertical (top/bottom) offset from the ball’s center (with -1 corresponding
+          to the bottom- most contact and +1 to the topmost).
+
+    However, when the cue tip is modeled with a nonzero radius, the cue’s tip center
+    does not coincide with the actual contact point on the ball’s surface. To account
+    for the finite cue tip radius, the effective contact point Q is derived from (a, b)
+    by scaling:
+
+        Q = (a, b) / (1 + tip_radius/R)
+
     Args:
-
-    m:
-        ball mass
-
-    M:
-        cue mass
-
-    R:
-        ball radius
-
-    V0:
-        What initial velocity does the cue strike the ball?
-
-    phi:
-        The direction you strike the ball in relation to the bottom cushion
-
-    theta:
-        How elevated is the cue from the playing surface, in degrees?
-
-    a:
-        How much side english should be put on? -1 being rightmost side of ball, +1
-        being leftmost side of ball
-
-    b:
-        How much vertical english should be put on? -1 being bottom-most side of ball,
-        +1 being topmost side of ball
-
-    english_throttle:
-        This modulates the amount of spin that is generated from a cue strike, where
-        english_throttle < 1 produces less spin than the model's default, and
-        english_throttle > 1 produces more.
+        m:
+            ball mass
+        M:
+            cue mass
+        R:
+            ball radius
+        V0:
+            What initial velocity does the cue strike the ball?
+        phi:
+            The direction you strike the ball in relation to the bottom cushion
+        theta:
+            How elevated is the cue from the playing surface, in degrees?
+        Q:
+            A 2-element vector representing the contact point on the ball's surface
+            where the cue makes contact. This point is computed from the legacy (a, b)
+            values via the tip offset conversion, ensuring that the finite radius of the
+            cue tip is properly accounted for.
     """
-
-    a *= R
-    b *= R
-
-    a *= english_throttle
-    b *= english_throttle
 
     phi *= np.pi / 180
     theta *= np.pi / 180
@@ -78,7 +74,7 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, english_throttle: float):
     # Moment of inertia over mass
     I_m = 2 / 5 * R**2
 
-    c = np.sqrt(R**2 - a**2 - b**2)
+    a, c, b = Q[:]
 
     numerator = 2 * V0
     temp = (
@@ -87,7 +83,7 @@ def cue_strike(m, M, R, V0, phi, theta, a, b, english_throttle: float):
         + (c * np.sin(theta)) ** 2
         - 2 * b * c * np.cos(theta) * np.sin(theta)
     )
-    denominator = 1 + m / M + 5 / 2 / R**2 * temp
+    denominator = 1 + m / M + temp / I_m
     v = numerator / denominator
 
     # 3D FIXME
@@ -121,6 +117,12 @@ class InstantaneousPoint(CoreStickBallCollision):
 
     Additionally, a deflection (squirt) angle is calculated via
     :mod:`pooltool.physics.resolve.stick_ball.squirt`).
+
+    Attributes:
+        english_throttle:
+            This modulates the amount of spin that is generated from a cue strike, where
+            english_throttle < 1 produces less spin than the model's default, and
+            english_throttle > 1 produces more.
     """
 
     english_throttle: float = 1.0
@@ -131,6 +133,17 @@ class InstantaneousPoint(CoreStickBallCollision):
     )
 
     def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]:
+        # Transform contact point Q from cue frame to ball frame
+        # ball_Q represents the point Q_cue after a passive coordinate frame rotation by theta around the x-axis
+        # cue_Q = [cue_a, cue_c, cue_b]
+        # ball_Q = [ball_a, ball_c, ball_b]
+        # FIXME: use a common rotation function
+        theta_rad = cue.theta * np.pi / 180
+        cue_c = np.sqrt(1.0 - cue.a**2 - cue.b**2)
+        ball_a = cue.a
+        ball_c = np.cos(theta_rad) * cue_c - np.sin(theta_rad) * cue.b
+        ball_b = np.sin(theta_rad) * cue_c + np.cos(theta_rad) * cue.b
+
         v, w = cue_strike(
             ball.params.m,
             cue.specs.M,
@@ -138,20 +151,18 @@ class InstantaneousPoint(CoreStickBallCollision):
             cue.V0,
             cue.phi,
             cue.theta,
-            cue.a,
-            cue.b,
-            english_throttle=self.english_throttle,
+            ball.params.R * np.array([ball_a, ball_c, ball_b]),
         )
 
         alpha = get_squirt_angle(
             ball.params.m,
             cue.specs.end_mass,
-            cue.a,
+            ball_a,
             self.squirt_throttle,
         )
         v = coordinate_rotation(v, alpha)
 
-        rvw = np.array([ball.state.rvw[0], v, w])
+        rvw = np.array([ball.state.rvw[0], v, w * self.english_throttle])
         s = const.sliding
 
         ball.state = BallState(rvw, s)
