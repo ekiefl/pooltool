@@ -2,8 +2,9 @@
 
 from abc import ABC, abstractmethod
 from collections import deque
-from typing import List
+from typing import List, Optional
 
+import numpy as np
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.interval.LerpInterval import LerpFunc
 from panda3d.core import CardMaker, NodePath, TextNode, TransparencyAttrib
@@ -12,7 +13,9 @@ import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 from pooltool.ani.globals import Global
-from pooltool.objects.cue.datatypes import Cue
+from pooltool.objects.ball.datatypes import Ball, BallParams
+from pooltool.objects.cue.datatypes import Cue, CueSpecs
+from pooltool.ptmath.utils import tip_center_offset
 from pooltool.utils import panda_path
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -69,7 +72,7 @@ class HUD:
             return
         self.elements[HUDElement.help_text].toggle()
 
-    def update_cue(self, cue: Cue):
+    def update_cue(self, cue: Cue, cue_ball: Optional[Ball] = None):
         """Update HUD to reflect english, jack, and power of cue
 
         Returns silently if HUD is not initialized.
@@ -77,6 +80,15 @@ class HUD:
 
         if not self.initialized:
             return
+
+        if cue_ball is not None:
+            tip_offset_a, tip_offset_b = tip_center_offset(
+                np.array([cue.a, cue.b]), cue.specs.tip_radius, cue_ball.params.R
+            )
+            self.elements[HUDElement.english].set_tip_center(tip_offset_a, tip_offset_b)
+            self.elements[HUDElement.english].set_shaft_to_ball_diameter_ratio(
+                cue.specs.shaft_radius_at_tip / cue_ball.params.R
+            )
 
         self.elements[HUDElement.english].set(cue.a, cue.b)
         self.elements[HUDElement.jack].set(cue.theta)
@@ -334,16 +346,24 @@ class English(BaseHUDElement):
         BaseHUDElement.__init__(self)
         self.dir = ani.model_dir / "hud" / "english"
         self.text_scale = 0.2
+        self.ball_scale = 0.15
         self.text_color = (1, 1, 1, 1)
 
         self.circle = OnscreenImage(
             image=panda_path(self.dir / "circle.png"),
             parent=self.dummy_right,
-            scale=0.15,
+            scale=self.ball_scale,
         )
         self.circle.setTransparency(TransparencyAttrib.MAlpha)
         autils.alignTo(self.circle, self.dummy_right, autils.CL, autils.C)
         self.circle.setZ(-0.65)
+
+        self.tip_circle = OnscreenImage(
+            image=panda_path(self.dir / "tip-outline.png"),
+            parent=self.circle,
+            scale=CueSpecs.default().shaft_radius_at_tip / BallParams.default().R,
+        )
+        self.tip_circle.setTransparency(TransparencyAttrib.MAlpha)
 
         self.crosshairs = OnscreenImage(
             image=panda_path(self.dir / "crosshairs.png"),
@@ -366,6 +386,12 @@ class English(BaseHUDElement):
     def set(self, a, b):
         self.crosshairs.setPos(-a, 0, b)
         self.text.setText(f"({a:.3f},{b:.3f})")
+
+    def set_shaft_to_ball_diameter_ratio(self, ratio):
+        self.tip_circle.setScale(ratio)
+
+    def set_tip_center(self, a, b):
+        self.tip_circle.setPos(-a, 0, b)
 
     def init(self):
         self.show()
