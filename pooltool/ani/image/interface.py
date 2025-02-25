@@ -58,7 +58,7 @@ def image_stack(
     if show_hud:
         hud.init()
         hud.elements[HUDElement.help_text].help_hint.hide()
-        hud.update_cue(system.cue)
+        hud.update_cue(system.cue, system.balls[system.cue.cue_ball_id])
     else:
         hud.destroy()
 

@@ -63,7 +63,8 @@ class ShotMode(BaseMode):
         if playback_mode is not None:
             visual.animate(playback_mode)
 
-        hud.update_cue(multisystem.active.cue)
+        system_cue = multisystem.active.cue
+        hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
 
         tasks.register_event("space", visual.toggle_pause)
         tasks.register_event("arrow_up", visual.speed_up)
@@ -166,7 +167,8 @@ class ShotMode(BaseMode):
             visual.cue.set_render_state_as_object_state()
 
             # Set the HUD
-            hud.update_cue(multisystem.active.cue)
+            system_cue = multisystem.active.cue
+            hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
 
         elif key == "reset":
             if multisystem.active_index != len(multisystem) - 1:
@@ -298,4 +300,5 @@ class ShotMode(BaseMode):
         cue_avoid.init_collisions()
 
         # Set the HUD
-        hud.update_cue(multisystem.active.cue)
+        system_cue = multisystem.active.cue
+        hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
