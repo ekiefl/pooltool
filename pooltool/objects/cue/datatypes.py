@@ -22,6 +22,8 @@ class CueSpecs:
             The cue length.
         tip_radius:
             The cue tip radius.
+        shaft_tip_radius:
+            The cue shaft radius near the tip of the cue.
         butt_radius:
             The butt radius.
         end_mass:
