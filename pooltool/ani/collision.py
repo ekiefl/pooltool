@@ -43,7 +43,7 @@ class CueAvoid:
           unrelated to this.
         """
 
-        if not ani.settings["gameplay"]["cue_collision"]:
+        if not ani.settings.gameplay.cue_collision:
             return
 
         Global.base.cTrav = CollisionTraverser()

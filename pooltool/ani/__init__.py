@@ -1,14 +1,21 @@
 #! /usr/bin/env python
 
-import ast
-import configparser
-from pathlib import Path
-from typing import Dict
+from __future__ import annotations
 
+import shutil
+import traceback
+from pathlib import Path
+
+import attrs
 from panda3d.core import loadPrcFile
 
 import pooltool as pt
+from pooltool.serialize import conversion
+from pooltool.terminal import Run
+from pooltool.user_config import CONFIG_DIR
 from pooltool.utils import panda_path
+
+run = Run()
 
 loadPrcFile(panda_path(Path(pt.__file__).parent / "config" / "config_panda3d.prc"))
 
@@ -61,37 +68,77 @@ logo_paths = {
 }
 
 
-def load_config(name):
-    config_path = Path(__file__).parent.parent / "config" / name
-    config_obj = configparser.ConfigParser()
-    config_obj.read(config_path)
-    config = {}
-    for section in config_obj.sections():
-        config[section] = {}
-        for k, v in config_obj[section].items():
-            try:
-                config[section][k] = ast.literal_eval(v)
-            except Exception:
-                config[section][k] = v
-    return config
+@attrs.define
+class GraphicsConfig:
+    room: bool
+    floor: bool
+    table: bool
+    shadows: bool
+    shader: bool
+    lights: bool
+    max_lights: int
+    physical_based_rendering: bool
+    debug: bool
+    fps: int
+    fps_inactive: int
+    hud: bool
 
 
-def save_config(name, config: Dict, overwrite=False):
-    config_path = Path(__file__).parent.parent / "config" / name
+@attrs.define
+class GameplayConfig:
+    cue_collision: int
 
-    if config_path.exists() and not overwrite:
-        raise ValueError(
-            f"pass overwrite=True to overwrite existing config: '{config_path}'"
+
+@attrs.define
+class Config:
+    graphics: GraphicsConfig
+    gameplay: GameplayConfig
+
+    @classmethod
+    def default(cls) -> Config:
+        return cls(
+            GraphicsConfig(
+                room=False,
+                floor=False,
+                table=False,
+                shadows=False,
+                shader=False,
+                lights=False,
+                max_lights=13,
+                physical_based_rendering=False,
+                debug=False,
+                fps=45,
+                fps_inactive=5,
+                hud=False,
+            ),
+            GameplayConfig(
+                cue_collision=True,
+            ),
         )
 
-    config_obj = configparser.ConfigParser()
-    config_obj.read_dict(config)
+    @classmethod
+    def load(cls, path: Path) -> Config:
+        return conversion.structure_from(path, Config)
 
-    with open(config_path, "w") as configfile:
-        config_obj.write(configfile)
+    def save(self, path: Path) -> None:
+        conversion.unstructure_to(settings, path)
 
 
-if (Path(__file__).parent.parent / "config/settings.local").exists():
-    settings = load_config("settings.local")
+GENERAL_CONFIG = CONFIG_DIR / "general.yaml"
+if GENERAL_CONFIG.exists():
+    try:
+        settings = Config.load(GENERAL_CONFIG)
+    except Exception:
+        full_traceback = traceback.format_exc()
+        dump_path = GENERAL_CONFIG.parent / f".{GENERAL_CONFIG.name}"
+        run.info_single(
+            f"{GENERAL_CONFIG} is malformed and can't be loaded. It is being "
+            f"replaced with a default working version. Your version has been moved to "
+            f"{dump_path} if you want to diagnose it. Here is the error:\n{full_traceback}"
+        )
+        shutil.move(GENERAL_CONFIG, dump_path)
+        settings = Config.default()
+        settings.save(GENERAL_CONFIG)
 else:
-    settings = load_config("settings")
+    settings = Config.default()
+    settings.save(GENERAL_CONFIG)

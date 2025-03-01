@@ -19,7 +19,7 @@ class TableRender(Render):
         if (
             not self._table.model_descr
             or self._table.model_descr == TableModelDescr.null()
-            or not ani.settings["graphics"]["table"]
+            or not ani.settings.graphics.table
         ):
             # Rectangular playing surface (not a real table)
             model = Global.loader.loadModel(TableModelDescr.null().path)
@@ -36,7 +36,7 @@ class TableRender(Render):
         self.collision_nodes = {}
 
     def init_collisions(self):
-        if not ani.settings["gameplay"]["cue_collision"]:
+        if not ani.settings.gameplay.cue_collision:
             return
 
         if self._table.table_type not in (
@@ -69,7 +69,7 @@ class TableRender(Render):
 
             self.collision_nodes[f"cushion_ccapsule_{cushion_id}"] = collision_node
 
-            if ani.settings["graphics"]["debug"]:
+            if ani.settings.graphics.debug:
                 collision_node.show()
 
         return collision_node
@@ -129,7 +129,7 @@ class TableRender(Render):
         if (
             not self._table.model_descr
             or self._table.model_descr == TableModelDescr.null()
-            or not ani.settings["graphics"]["table"]
+            or not ani.settings.graphics.table
             or self._table.model_descr.name == TableName.SNOOKER_GENERIC  # dim are WIP
         ):
             # draw cushion_segments as edges

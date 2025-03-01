@@ -119,7 +119,7 @@ class BallRender(Render):
         collision_node.node().addSolid(
             CollisionCapsule(0, 0, -R, 0, 0, R, cue.specs.shaft_radius_at_tip + R)
         )
-        if ani.settings["graphics"]["debug"]:
+        if ani.settings.graphics.debug:
             collision_node.show()
 
         self.nodes[f"ball_csphere_{self._ball.id}"] = collision_node

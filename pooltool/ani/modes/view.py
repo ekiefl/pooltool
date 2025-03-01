@@ -89,14 +89,14 @@ class ViewMode(BaseMode):
 
         tasks.add(self.view_task, "view_task")
         tasks.add(self.shared_task, "shared_task")
-        if ani.settings["gameplay"]["cue_collision"]:
+        if ani.settings.gameplay.cue_collision:
             tasks.add(cue_avoid.collision_task, "collision_task")
 
     def exit(self):
         tasks.remove("view_task")
         tasks.remove("shared_task")
 
-        if ani.settings["gameplay"]["cue_collision"]:
+        if ani.settings.gameplay.cue_collision:
             tasks.remove("collision_task")
         cam.store_state(Mode.view, overwrite=True)
 

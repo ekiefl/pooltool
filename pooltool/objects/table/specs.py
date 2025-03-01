@@ -40,7 +40,7 @@ class TableModelDescr:
                 https://docs.panda3d.org/1.10/python/programming/advanced-loading/filename-syntax).
         """
 
-        if ani.settings["graphics"]["physical_based_rendering"]:
+        if ani.settings.graphics.physical_based_rendering:
             path = ani.model_dir / "table" / self.name / (self.name + "_pbr.glb")
         else:
             path = ani.model_dir / "table" / self.name / (self.name + ".glb")

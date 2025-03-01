@@ -1030,49 +1030,6 @@ class Menus:
     def func_quit_pooltool(self):
         sys.exit()
 
-    def func_save_table(self):
-        new_table = {}
-
-        # Add all dropdowns
-        for dropdown in self.xml.roots["new_table"].findall(".//dropdown"):
-            new_table[dropdown.attrib["name"]] = dropdown.attrib["selection"]
-
-        has_pockets = True if new_table["type"] == "pocket" else False
-
-        # Add the entries
-        for entry in self.xml.roots["new_table"].findall(".//entry"):
-            pocket_param = (
-                False
-                if "pocket_param" not in entry.attrib.keys()
-                or entry.attrib["pocket_param"] == "false"
-                else True
-            )
-            if not has_pockets and pocket_param:
-                continue
-
-            name = entry.attrib["name"]
-            value = entry.attrib["value"]
-            validator = getattr(self.current, entry.attrib["validator"])
-
-            is_valid, reason = validator(value)
-            if not is_valid:
-                print(f"{name}: invalid value. {reason}")
-                return
-
-            new_table[name] = value
-
-        table_name = new_table.pop("table_name")
-        table_config = ani.load_config("tables")
-        table_config[table_name] = new_table
-        ani.save_config("tables", table_config, overwrite=True)
-
-        # Add new table as option to table
-        for element in self.menus["game_setup"].elements:
-            if element["type"] == "dropdown" and element["name"] == "table_type":
-                tmp_options = element["object"]["items"]
-                tmp_options.insert(-1, table_name)
-                element["object"]["items"] = tmp_options
-
     def func_go_about(self):
         self.show("about")
 
@@ -1084,23 +1041,6 @@ class Menus:
 
     def func_play_now(self):
         Global.base.messenger.send("enter-game")
-
-    def func_go_view_table(self):
-        for element in self.menus["view_table"].elements:
-            if element.get("name") == "table_params_name":
-                xml = self.menus["game_setup"].xml.roots["game_setup"]
-                table_name = xml.find(".//*[@name='table_type']").attrib["selection"]
-                element["content"].setText(f"Parameters for '{table_name}'")
-            if element.get("name") == "table_params":
-                table_dict = ani.load_config("tables")[table_name]
-                longest_key = max([len(key) for key in table_dict])
-                string = []
-                for key, val in table_dict.items():
-                    buffer = longest_key - len(key)
-                    string.append(key + " " * (buffer + 4) + str(val))
-                element["content"].setText("\n".join(string))
-
-        self.show("view_table")
 
     def func_go_settings(self):
         self.show("settings")
