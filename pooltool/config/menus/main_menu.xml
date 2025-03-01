@@ -11,11 +11,6 @@
         <description>View and edit available settings.</description>
     </button>
     <button>
-        <name>About</name>
-        <func>func_go_about</func>
-        <description>Learn more about the project.</description>
-    </button>
-    <button>
         <name>Quit</name>
         <func>func_quit_pooltool</func>
         <description>Closes pooltool. Shortcut: esc</description>
