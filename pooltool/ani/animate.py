@@ -25,7 +25,7 @@ from pooltool.ani.collision import cue_avoid
 from pooltool.ani.environment import environment
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.hud import HUDElement, hud
-from pooltool.ani.menu import GenericMenu, menus
+from pooltool.ani.menu import TextOverlay, menus
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
 from pooltool.evolution import simulate
@@ -482,7 +482,7 @@ class Game(Interface):
         if ani.settings["graphics"]["hud"]:
             hud.init()
 
-        code_comp_menu = GenericMenu(
+        code_comp_menu = TextOverlay(
             title="Compiling simulation code...",
             frame_color=(0, 0, 0, 0.4),
             title_pos=(0, 0, 0),

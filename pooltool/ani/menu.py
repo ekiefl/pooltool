@@ -1138,25 +1138,8 @@ def loadImageAsPlane(filepath, yresolution=600):
 
 menus = Menus()
 
-# -----------------------------------------------------------------------------------
 
-# FIXME The plan is to remove GenericMenu. It's legacy. GenericMenu should be removed
-# and those using GenericMenu should be refactored:
-#
-# ▶ grep -r "GenericMenu" pooltool/ --exclude="*models*"
-#     pooltool//ani/animate.py:from pooltool.ani.menu import GenericMenu
-#     pooltool//ani/animate.py:        self.standby_screen = GenericMenu(frame_color=(0.3,0.3,0.3,1))
-#     pooltool//ani/modes/cam_save.py:from pooltool.ani.menu import GenericMenu
-#     pooltool//ani/modes/cam_save.py:        self.cam_save_slots = GenericMenu(
-#     pooltool//ani/modes/calculate.py:from pooltool.ani.menu import GenericMenu
-#     pooltool//ani/modes/calculate.py:        self.shot_sim_overlay = GenericMenu(
-#     pooltool//ani/modes/game_over.py:from pooltool.ani.menu import GenericMenu
-#     pooltool//ani/modes/game_over.py:        self.game_over_menu = GenericMenu(
-#     pooltool//ani/modes/cam_load.py:from pooltool.ani.menu import GenericMenu
-#     pooltool//ani/modes/cam_load.py:        self.cam_load_slots = GenericMenu(
-
-
-class GenericMenu:
+class TextOverlay:
     def __init__(self, title="", frame_color=(1, 1, 1, 1), title_pos=(0, 0, 0.8)):
         self.titleMenuBackdrop = DirectFrame(
             frameColor=frame_color,
@@ -1164,133 +1147,45 @@ class GenericMenu:
             parent=Global.render2d,
         )
 
-        self.text_scale = 0.07
-        self.move = 0.12
+        self._text_scale = 0.07
+        self._move = 0.12
 
         self.titleMenu = DirectFrame(frameColor=(1, 1, 1, 0))
 
         self.title = DirectLabel(
             text=title,
-            scale=self.text_scale * 1.5,
+            scale=self._text_scale * 1.5,
             pos=title_pos,
             parent=self.titleMenu,
             relief=None,
             text_fg=(0, 0, 0, 1),
         )
 
-        self.next_x, self.next_y = -0.5, 0.6
-        self.num_elements = 0
-        self.elements = []
+        self._next_x, self._next_y = -0.5, 0.6
+        self._num_elements = 0
 
         self.hide()
 
-    def get(self, name):
-        for element in self.elements:
-            if element["name"] == name:
-                return element["content"]
-
-    def names(self):
-        return set([x["name"] for x in self.elements])
-
     def add_button(self, text, command=None, **kwargs):
         """Add a button at a location based on self.next_x and self.next_y"""
-
-        button = make_button(text, command, **kwargs)
-        button.reparentTo(self.titleMenu)
-        button.setPos((self.next_x, 0, self.next_y))
-
-        self.elements.append(
-            {
-                "type": "button",
-                "name": text,
-                "content": button,
-                "convert_factor": None,
-            }
+        button = DirectButton(
+            text=text,
+            command=command,
+            text_align=TextNode.ACenter,
+            **kwargs,
         )
-
-        self.get_next_pos()
+        button.reparentTo(self.titleMenu)
+        button.setPos((self._next_x, 0, self._next_y))
+        self._get_next_pos()
 
         return button
 
-    def add_image(self, path, pos, scale):
-        """Add an image to the menu
-
-        Notes
-        =====
-        - images are parented to self.titleMenuBackdrop (as opposed self.titleMenu) in
-          order to preserve their aspect ratios.
-        """
-
-        img = OnscreenImage(
-            image=panda_path(path), pos=pos, parent=self.titleMenuBackdrop, scale=scale
-        )
-        img.setTransparency(TransparencyAttrib.MAlpha)
-
-        self.elements.append(
-            {
-                "type": "image",
-                "name": panda_path(path),
-                "content": img,
-                "convert_factor": None,
-            }
-        )
-
-    def add_dropdown(
-        self,
-        text,
-        options=["None"],
-        command=None,
-        convert_factor=None,
-        scale=ani.menu_text_scale,
-    ):
-        self.get_next_pos(move=self.move / 2)
-
-        dropdown = make_dropdown(text, options, command, scale)
-        dropdown.reparentTo(self.titleMenu)
-        dropdown.setPos((self.next_x, 0, self.next_y))
-
-        self.elements.append(
-            {
-                "type": "dropdown",
-                "name": text,
-                "content": dropdown,
-                "convert_factor": convert_factor,
-            }
-        )
-
-        self.get_next_pos()
-
-    def add_direct_entry(
-        self, text, command=None, initial="None", convert_factor=None, scale=None
-    ):
-        self.get_next_pos(move=self.move / 2)
-
-        direct_entry = make_direct_entry(text, command, scale, initial)
-        direct_entry.reparentTo(self.titleMenu)
-        direct_entry.setPos((self.next_x, 0, self.next_y))
-
-        self.elements.append(
-            {
-                "type": "direct_entry",
-                "name": text,
-                "content": direct_entry,
-                "convert_factor": convert_factor,
-            }
-        )
-
-        self.get_next_pos()
-
-    def get_next_pos(self, move=None):
-        if move is None:
-            move = self.move
-
-        self.next_y -= move
-
-        if self.next_y <= -1:
-            self.next_y = 0.6
-            self.next_x += 0.5
-
-        self.num_elements += 1
+    def _get_next_pos(self):
+        self._next_y -= self._move
+        if self._next_y <= -1:
+            self._next_y = 0.6
+            self._next_x += 0.5
+        self._num_elements += 1
 
     def hide(self):
         self.titleMenuBackdrop.hide()
@@ -1299,55 +1194,3 @@ class GenericMenu:
     def show(self):
         self.titleMenuBackdrop.show()
         self.titleMenu.show()
-
-
-def make_button(text, command=None, **kwargs):
-    return DirectButton(
-        text=text, command=command, text_align=TextNode.ACenter, **kwargs
-    )
-
-
-def make_dropdown(text, options=["None"], command=None, scale=ani.menu_text_scale):
-    dropdown = DirectOptionMenu(
-        scale=scale,
-        items=options,
-        highlightColor=(0.65, 0.65, 0.65, 1),
-        command=command,
-        textMayChange=1,
-        text_align=TextNode.ALeft,
-    )
-
-    DirectLabel(
-        text=text + ":",
-        relief=None,
-        text_fg=(0, 0, 0, 1),
-        text_align=TextNode.ALeft,
-        parent=dropdown,
-        pos=(0, 0, 1),
-    )
-
-    return dropdown
-
-
-def make_direct_entry(text, command=None, scale=ani.menu_text_scale, initial="None"):
-    entry = DirectEntry(
-        text="",
-        scale=scale,
-        command=command,
-        initialText=initial,
-        numLines=1,
-        width=4,
-        focus=0,
-        focusInCommand=lambda: entry.enterText(""),
-    )
-
-    DirectLabel(
-        text=text + ":",
-        relief=None,
-        text_fg=(0, 0, 0, 1),
-        text_align=TextNode.ALeft,
-        parent=entry,
-        pos=(0, 0, 1.2),
-    )
-
-    return entry

@@ -3,7 +3,7 @@
 import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.globals import Global
-from pooltool.ani.menu import GenericMenu
+from pooltool.ani.menu import TextOverlay
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 
@@ -39,7 +39,7 @@ class GameOverMode(BaseMode):
         else:
             title = "Game over! Tie game!"
 
-        self.game_over_menu = GenericMenu(
+        self.game_over_menu = TextOverlay(
             title=title,
             frame_color=(0, 0, 0, 0.5),
             title_pos=(0, 0, 0.55),
