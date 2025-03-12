@@ -7,17 +7,15 @@ import traceback
 from pathlib import Path
 
 import attrs
-from panda3d.core import loadPrcFile
+from panda3d.core import loadPrcFileData
 
 import pooltool as pt
+from pooltool.config.user import CONFIG_DIR
 from pooltool.serialize import conversion
 from pooltool.terminal import Run
-from pooltool.user_config import CONFIG_DIR
 from pooltool.utils import panda_path
 
 run = Run()
-
-loadPrcFile(panda_path(Path(pt.__file__).parent / "config" / "config_panda3d.prc"))
 
 # This is hard-coded. Change it and everything looks bad
 aspect_ratio = 1.6
@@ -69,51 +67,65 @@ logo_paths = {
 
 
 @attrs.define
+class PandaConfig:
+    show_frame_rate: bool = True
+    window_width: int = 1400
+    sync_video: bool = False
+    gl_check_errors: bool = False
+    gl_version_major: int = 3
+    gl_version_minor: int = 2
+
+    @property
+    def window_height(self) -> int:
+        return int(self.window_width / aspect_ratio)
+
+    def apply_settings(self) -> None:
+        """Apply Panda3D configuration settings at runtime."""
+        loadPrcFileData(
+            "", f"show-frame-rate-meter {'#t' if self.show_frame_rate else '#f'}"
+        )
+        loadPrcFileData("", f"win-size {self.window_width} {self.window_height}")
+        loadPrcFileData("", "fullscreen #f")  # hard-coded, fullscreen broken
+        loadPrcFileData("", f"sync-video {'#t' if self.sync_video else '#f'}")
+        loadPrcFileData("", f"gl-check-errors {'#t' if self.gl_check_errors else '#f'}")
+        loadPrcFileData(
+            "", f"gl-version {self.gl_version_major} {self.gl_version_minor}"
+        )
+
+
+@attrs.define
 class GraphicsConfig:
-    room: bool
-    floor: bool
-    table: bool
-    shadows: bool
-    shader: bool
-    lights: bool
-    max_lights: int
-    physical_based_rendering: bool
-    debug: bool
-    fps: int
-    fps_inactive: int
-    hud: bool
+    room: bool = True
+    floor: bool = True
+    table: bool = True
+    shadows: bool = False
+    shader: bool = True
+    lights: bool = True
+    max_lights: int = 13
+    physical_based_rendering: bool = False
+    debug: bool = False
+    fps: int = 45
+    fps_inactive: int = 5
+    hud: bool = True
 
 
 @attrs.define
 class GameplayConfig:
-    cue_collision: int
+    cue_collision: int = True
 
 
 @attrs.define
 class Config:
     graphics: GraphicsConfig
     gameplay: GameplayConfig
+    panda: PandaConfig
 
     @classmethod
     def default(cls) -> Config:
         return cls(
-            GraphicsConfig(
-                room=False,
-                floor=False,
-                table=False,
-                shadows=False,
-                shader=False,
-                lights=False,
-                max_lights=13,
-                physical_based_rendering=False,
-                debug=False,
-                fps=45,
-                fps_inactive=5,
-                hud=False,
-            ),
-            GameplayConfig(
-                cue_collision=True,
-            ),
+            GraphicsConfig(),
+            GameplayConfig(),
+            PandaConfig(),
         )
 
     @classmethod
@@ -122,6 +134,10 @@ class Config:
 
     def save(self, path: Path) -> None:
         conversion.unstructure_to(settings, path)
+
+    def apply_panda_settings(self) -> None:
+        """Apply Panda3D configuration settings."""
+        self.panda.apply_settings()
 
 
 GENERAL_CONFIG = CONFIG_DIR / "general.yaml"
@@ -142,3 +158,6 @@ if GENERAL_CONFIG.exists():
 else:
     settings = Config.default()
     settings.save(GENERAL_CONFIG)
+
+# Apply Panda3D settings from the config
+settings.apply_panda_settings()
