@@ -133,7 +133,7 @@ class Config:
         return conversion.structure_from(path, Config)
 
     def save(self, path: Path) -> None:
-        conversion.unstructure_to(settings, path)
+        conversion.unstructure_to(self, path)
 
     def apply_panda_settings(self) -> None:
         """Apply Panda3D configuration settings."""
