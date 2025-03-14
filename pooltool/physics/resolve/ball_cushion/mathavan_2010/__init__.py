@@ -45,7 +45,7 @@ class Mathavan:
         self.P = 0.0
         self.WzI = 0.0
         self.i = 0
-        self.N = 100
+        self.N = 2000
 
         # Centroid velocity components
         self.vx = 0.0
@@ -182,7 +182,7 @@ class Mathavan:
         """
         Run the compression phase until the y-velocity is no longer positive.
         """
-        delta_P = max((self.M * self.vy) / self.N, 0.001)
+        delta_P = max((self.M * self.vy) / self.N, 0.0002)
         while self.vy > 0:
             self._update_single_step(delta_P)
 
@@ -190,7 +190,7 @@ class Mathavan:
         """
         Run the restitution phase until the work at the cushion (WzI) reaches the target rebound work.
         """
-        delta_P = max(target_work_rebound / self.N, 0.001)
+        delta_P = max(target_work_rebound / self.N, 0.0002)
         self.WzI = 0
         while self.WzI < target_work_rebound:
             self._update_single_step(delta_P)
@@ -307,38 +307,138 @@ class Mathavan2010Circular(CoreBallCCushionCollision):
         return _solve_mathaven(ball, cushion)
 
 
-# Test script for debugging purposes.
+# Plotting script for Mathavan model demonstration
 if __name__ == "__main__":
-    # For this test, assume PocketTableSpecs and BallParams are available
-    # and provide the appropriate cushion height and ball parameters.
-    from pooltool.objects.ball.datatypes import BallParams
-    from pooltool.objects.table.specs import PocketTableSpecs
-
-    h = PocketTableSpecs().cushion_height
-
-    cushion = LinearCushionSegment(
-        "cushion",
-        p1=np.array([0, -1, h], dtype=np.float64),
-        p2=np.array([0, +1, h], dtype=np.float64),
-    )
-
-    R = BallParams.default().R
-    pos = [-R, 0, R]
-
-    # Ball hitting the left-side cushion.
-    ball = Ball("cue")
-    ball.state.rvw[0] = pos
-    # Note: the ball's translational velocity is set to (1, 0, 0) in the table frame.
-    # Given that cushion.get_normal will likely return (1,0,0) for a left cushion,
-    # the coordinate transform rotates the state so that (1,0) becomes (0,1) in the cushion frame.
-    ball.state.rvw[1] = (1, 0, 0)
-    ball.state.s = 2
-
-    print("Before collision:")
-    print(ball.state.rvw)
-    mathavan = Mathavan2010Linear()
-    ball_after, _ = mathavan.resolve(ball, cushion, inplace=False)
-    print("After collision (original state unchanged):")
-    print(ball.state.rvw)
-    print("After collision (returned state):")
-    print(ball_after.state.rvw)
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import MultipleLocator
+    import numpy as np
+    
+    # Physical parameters
+    M = 0.1406  # kg, mass of ball
+    R = 0.02625  # m, radius of ball
+    ee = 0.98  # coefficient of restitution
+    mu_s = 0.212  # sliding friction between ball and table
+    mu_w = 0.14  # sliding friction between ball and cushion
+    
+    # Initial speed
+    V_0 = 1.0  # m/s
+    
+    # Range of incident angles (in radians)
+    # Start at 0.1 degree to avoid exact 0 which causes issues
+    incident_angles = np.radians(np.linspace(0.1, 89.9, 50))
+    
+    # k values determining initial topspin
+    k_values = [-1, 0, 1, 2]
+    k_labels = ['k = -1', 'k = 0', 'k = 1', 'k = 2']
+    colors = ['blue', 'green', 'red', 'purple']
+    
+    # Values for sidespin simulation
+    k_sidespin_values = [-2, -1, 0, 1, 2]
+    k_sidespin_labels = ['k = -2', 'k = -1', 'k = 0', 'k = 1', 'k = 2']
+    sidespin_colors = ['brown', 'blue', 'green', 'red', 'purple']
+    
+    # Arrays to store results for topspin variation
+    rebound_speeds = np.zeros((len(k_values), len(incident_angles)))
+    rebound_angles = np.zeros((len(k_values), len(incident_angles)))
+    
+    # Arrays to store results for sidespin variation with rolling topspin
+    sidespin_rebound_speeds = np.zeros((len(k_sidespin_values), len(incident_angles)))
+    sidespin_rebound_angles = np.zeros((len(k_sidespin_values), len(incident_angles)))
+    
+    # Calculate results for each k value and incident angle (topspin variation)
+    for k_idx, k in enumerate(k_values):
+        for angle_idx, alpha in enumerate(incident_angles):
+            # Calculate topspin parameter
+            omega0T = k * V_0 / R  # Topspin parameter
+            omega0S = 0.0  # No sidespin initially
+            
+            # Run simulation using solve_paper which takes polar components
+            sim = Mathavan(M, R, ee, mu_s, mu_w)
+            sim.solve_paper(V_0, alpha, omega0S, omega0T)
+            
+            # Calculate rebound speed and angle
+            v_rebound = np.sqrt(sim.vx**2 + sim.vy**2)
+            rebound_speeds[k_idx, angle_idx] = v_rebound
+            
+            rebound_angle = np.degrees(np.arctan2(abs(sim.vy), abs(sim.vx)))
+            rebound_angles[k_idx, angle_idx] = rebound_angle
+    
+    # Calculate results for each sidespin k value and incident angle
+    for k_idx, k in enumerate(k_sidespin_values):
+        for angle_idx, alpha in enumerate(incident_angles):
+            # For sidespin tests, use rolling topspin (omega0T = V_0/R)
+            # and vary sidespin as omega0S = k * V_0 / R
+            omega0T = V_0 / R  # Rolling topspin
+            omega0S = k * V_0 / R  # Variable sidespin
+            
+            # Run simulation using solve_paper which takes polar components
+            sim = Mathavan(M, R, ee, mu_s, mu_w)
+            sim.solve_paper(V_0, alpha, omega0S, omega0T)
+            
+            # Calculate rebound speed and angle
+            v_rebound = np.sqrt(sim.vx**2 + sim.vy**2)
+            sidespin_rebound_speeds[k_idx, angle_idx] = v_rebound
+            
+            rebound_angle = np.degrees(np.arctan2(abs(sim.vy), abs(sim.vx)))
+            sidespin_rebound_angles[k_idx, angle_idx] = rebound_angle
+    
+    # Convert incident angles to degrees for plotting
+    incident_angles_deg = np.degrees(incident_angles)
+    
+    # Create figure with 2x2 subplots
+    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+    
+    # (a) Incident angle vs. Rebound speed - Topspin variation
+    for k_idx, k in enumerate(k_values):
+        axes[0, 0].plot(incident_angles_deg, rebound_speeds[k_idx], 
+                    color=colors[k_idx], label=k_labels[k_idx])
+    
+    axes[0, 0].set_title('(a) Topspin: Incident Angle vs. Rebound Speed')
+    axes[0, 0].set_xlabel('Incident Angle (degrees)')
+    axes[0, 0].set_ylabel('Rebound Speed (m/s)')
+    axes[0, 0].grid(True)
+    axes[0, 0].legend()
+    axes[0, 0].set_xlim(0, 90)
+    axes[0, 0].xaxis.set_major_locator(MultipleLocator(10))
+    
+    # (b) Incident angle vs. Rebound angle - Topspin variation
+    for k_idx, k in enumerate(k_values):
+        axes[0, 1].plot(incident_angles_deg, rebound_angles[k_idx], 
+                    color=colors[k_idx], label=k_labels[k_idx])
+    
+    axes[0, 1].set_title('(b) Topspin: Incident Angle vs. Rebound Angle')
+    axes[0, 1].set_xlabel('Incident Angle (degrees)')
+    axes[0, 1].set_ylabel('Rebound Angle (degrees)')
+    axes[0, 1].grid(True)
+    axes[0, 1].legend()
+    axes[0, 1].set_xlim(0, 90)
+    axes[0, 1].xaxis.set_major_locator(MultipleLocator(10))
+    
+    # (c) Incident angle vs. Rebound speed - Sidespin variation (with rolling topspin)
+    for k_idx, k in enumerate(k_sidespin_values):
+        axes[1, 0].plot(incident_angles_deg, sidespin_rebound_speeds[k_idx], 
+                    color=sidespin_colors[k_idx], label=k_sidespin_labels[k_idx])
+    
+    axes[1, 0].set_title('(c) Sidespin: Incident Angle vs. Rebound Speed')
+    axes[1, 0].set_xlabel('Incident Angle (degrees)')
+    axes[1, 0].set_ylabel('Rebound Speed (m/s)')
+    axes[1, 0].grid(True)
+    axes[1, 0].legend()
+    axes[1, 0].set_xlim(0, 90)
+    axes[1, 0].xaxis.set_major_locator(MultipleLocator(10))
+    
+    # (d) Incident angle vs. Rebound angle - Sidespin variation (with rolling topspin)
+    for k_idx, k in enumerate(k_sidespin_values):
+        axes[1, 1].plot(incident_angles_deg, sidespin_rebound_angles[k_idx], 
+                    color=sidespin_colors[k_idx], label=k_sidespin_labels[k_idx])
+    
+    axes[1, 1].set_title('(d) Sidespin: Incident Angle vs. Rebound Angle')
+    axes[1, 1].set_xlabel('Incident Angle (degrees)')
+    axes[1, 1].set_ylabel('Rebound Angle (degrees)')
+    axes[1, 1].grid(True)
+    axes[1, 1].legend()
+    axes[1, 1].set_xlim(0, 90)
+    axes[1, 1].xaxis.set_major_locator(MultipleLocator(10))
+    
+    plt.tight_layout()
+    plt.show()
