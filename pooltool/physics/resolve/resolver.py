@@ -10,7 +10,7 @@ from typing import Optional
 import attrs
 from cattrs.errors import ClassValidationError
 
-import pooltool.user_config
+import pooltool.config.user
 from pooltool.events.datatypes import AgentType, Event, EventType
 from pooltool.physics.resolve.ball_ball import (
     BallBallCollisionStrategy,
@@ -44,7 +44,7 @@ from pooltool.serialize import Pathish, conversion
 from pooltool.system.datatypes import System
 from pooltool.terminal import Run
 
-RESOLVER_PATH = pooltool.user_config.PHYSICS_DIR / "resolver.yaml"
+RESOLVER_PATH = pooltool.config.user.PHYSICS_DIR / "resolver.yaml"
 """The location of the resolver path YAML."""
 
 VERSION: int = 6
