@@ -106,7 +106,18 @@ def _run_simulations(
 
             # Run simulation and get final velocities
             vx, vy, _, _, _ = solve_paper(
-                M, R, h, ee, mu_s, mu_w, V_0, alpha, omega0S, omega0T
+                M,
+                R,
+                h,
+                ee,
+                mu_s,
+                mu_w,
+                V_0,
+                alpha,
+                omega0S,
+                omega0T,
+                max_steps=100,
+                min_delta_p=0.001,
             )
 
             v_rebound, rebound_angle = _calculate_rebound_values(vx, vy, with_sidespin)

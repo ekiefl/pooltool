@@ -193,9 +193,25 @@ def compression_phase(
     omega_y: float,
     omega_z: float,
     max_steps: int = 5000,
+    min_delta_p: float = 0.0001,
 ) -> Tuple[float, float, float, float, float, float]:
     """
     Run the compression phase until the y-velocity is no longer positive.
+
+    Args:
+        M: Mass of the ball
+        R: Radius of the ball
+        mu_s: Sliding friction coefficient between ball and table
+        mu_w: Sliding friction coefficient between ball and cushion
+        sin_theta: Sine of contact angle
+        cos_theta: Cosine of contact angle
+        vx: Initial x-velocity
+        vy: Initial y-velocity
+        omega_x: Initial x-angular velocity
+        omega_y: Initial y-angular velocity
+        omega_z: Initial z-angular velocity
+        max_steps: Maximum number of steps for numerical integration
+        min_delta_p: Minimum impulse step size
 
     Returns:
         Tuple of (vx, vy, omega_x, omega_y, omega_z, total_work)
@@ -204,7 +220,7 @@ def compression_phase(
     step_count = 0
 
     # Calculate initial step size based on initial velocity
-    delta_P = max((M * vy) / max_steps, 0.0001)
+    delta_P = max((M * vy) / max_steps, min_delta_p)
 
     while vy > 0:
         # Calculate slip states
@@ -267,9 +283,26 @@ def restitution_phase(
     omega_z: float,
     target_work_rebound: float,
     max_steps: int = 5000,
+    min_delta_p: float = 0.0001,
 ) -> Tuple[float, float, float, float, float]:
     """
     Run the restitution phase until the work at the cushion (WzI) reaches the target rebound work.
+
+    Args:
+        M: Mass of the ball
+        R: Radius of the ball
+        mu_s: Sliding friction coefficient between ball and table
+        mu_w: Sliding friction coefficient between ball and cushion
+        sin_theta: Sine of contact angle
+        cos_theta: Cosine of contact angle
+        vx: Initial x-velocity
+        vy: Initial y-velocity
+        omega_x: Initial x-angular velocity
+        omega_y: Initial y-angular velocity
+        omega_z: Initial z-angular velocity
+        target_work_rebound: Target work for rebound
+        max_steps: Maximum number of steps for numerical integration
+        min_delta_p: Minimum impulse step size
 
     Returns:
         Tuple of (vx, vy, omega_x, omega_y, omega_z)
@@ -278,7 +311,7 @@ def restitution_phase(
     step_count = 0
 
     # Calculate step size based on target work
-    delta_P = max(target_work_rebound / max_steps, 0.0001)
+    delta_P = max(target_work_rebound / max_steps, min_delta_p)
 
     while WzI < target_work_rebound:
         # Calculate slip states
@@ -338,9 +371,11 @@ def solve_paper(
     alpha: float,
     omega0S: float,
     omega0T: float,
+    max_steps: int = 5000,
+    min_delta_p: float = 0.0001,
 ) -> Tuple[float, float, float, float, float]:
     """
-    Convenience method that solves using parameters common in research papers.
+    Convenience method that solves using parameters described in the paper.
 
     Args:
         M: Mass of the ball
@@ -353,6 +388,8 @@ def solve_paper(
         alpha: Incident angle in radians
         omega0S: Initial sidespin angular velocity
         omega0T: Initial topspin angular velocity
+        max_steps: Maximum number of steps for numerical integration
+        min_delta_p: Minimum impulse step size
 
     Returns:
         Tuple of (vx, vy, omega_x, omega_y, omega_z) after collision
@@ -369,6 +406,8 @@ def solve_paper(
         -omega0T * math.sin(alpha),
         omega0T * math.cos(alpha),
         omega0S,
+        max_steps,
+        min_delta_p,
     )
 
 
@@ -384,6 +423,8 @@ def solve(
     omega_x: float,
     omega_y: float,
     omega_z: float,
+    max_steps: int = 5000,
+    min_delta_p: float = 0.0001,
 ) -> Tuple[float, float, float, float, float]:
     """
     Initialize the state and run both the compression and restitution phases.
@@ -400,6 +441,8 @@ def solve(
         omega_x: Initial x-angular velocity
         omega_y: Initial y-angular velocity
         omega_z: Initial z-angular velocity
+        max_steps: Maximum number of steps for numerical integration
+        min_delta_p: Minimum impulse step size
 
     Returns:
         Tuple of (vx, vy, omega_x, omega_y, omega_z) after collision
@@ -408,7 +451,19 @@ def solve(
 
     # Run the compression phase
     vx, vy, omega_x, omega_y, omega_z, WzI = compression_phase(
-        M, R, mu_s, mu_w, sin_theta, cos_theta, vx, vy, omega_x, omega_y, omega_z
+        M,
+        R,
+        mu_s,
+        mu_w,
+        sin_theta,
+        cos_theta,
+        vx,
+        vy,
+        omega_x,
+        omega_y,
+        omega_z,
+        max_steps,
+        min_delta_p,
     )
 
     # Calculate target work for rebound
@@ -428,12 +483,16 @@ def solve(
         omega_y,
         omega_z,
         target_work_rebound,
+        max_steps,
+        min_delta_p,
     )
 
     return vx, vy, omega_x, omega_y, omega_z
 
 
-def solve_mathavan(ball: Ball, cushion: Cushion) -> Tuple[Ball, Cushion]:
+def solve_mathavan(
+    ball: Ball, cushion: Cushion, max_steps: int = 5000, min_delta_p: float = 0.0001
+) -> Tuple[Ball, Cushion]:
     """
     Run the Mathavan model to simulate the ball-cushion collision.
 
@@ -441,6 +500,12 @@ def solve_mathavan(ball: Ball, cushion: Cushion) -> Tuple[Ball, Cushion]:
     transformation functions as Han2005. However, because the Mathavan simulation expects
     the collision approach to be along the positive y-axis, we rotate the state so that the
     cushion's normal (obtained via cushion.get_normal) maps to (0,1).
+
+    Args:
+        ball: The ball involved in the collision
+        cushion: The cushion segment involved in the collision
+        max_steps: Maximum number of steps for numerical integration
+        min_delta_p: Minimum impulse step size
     """
     M = ball.params.m
     R = ball.params.R
@@ -477,7 +542,19 @@ def solve_mathavan(ball: Ball, cushion: Cushion) -> Tuple[Ball, Cushion]:
 
     # Run the Mathavan simulation in the cushion frame.
     vx_final, vy_final, omega_x_final, omega_y_final, omega_z_final = solve(
-        M, R, h, ee, u_s, mu, vx_rot, vy_rot, omega_x_rot, omega_y_rot, omega_z_rot
+        M,
+        R,
+        h,
+        ee,
+        u_s,
+        mu,
+        vx_rot,
+        vy_rot,
+        omega_x_rot,
+        omega_y_rot,
+        omega_z_rot,
+        max_steps,
+        min_delta_p,
     )
 
     # Update the rotated state with the simulation's output.
@@ -496,6 +573,8 @@ def solve_mathavan(ball: Ball, cushion: Cushion) -> Tuple[Ball, Cushion]:
 
 @attrs.define
 class Mathavan2010Linear(CoreBallLCushionCollision):
+    max_steps: int = attrs.field(default=5000)
+    min_delta_p: float = attrs.field(default=0.0001)
     model: BallLCushionModel = attrs.field(
         default=BallLCushionModel.MATHAVAN_2010, init=False, repr=False
     )
@@ -503,11 +582,13 @@ class Mathavan2010Linear(CoreBallLCushionCollision):
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
     ) -> Tuple[Ball, LinearCushionSegment]:
-        return solve_mathavan(ball, cushion)
+        return solve_mathavan(ball, cushion, self.max_steps, self.min_delta_p)
 
 
 @attrs.define
 class Mathavan2010Circular(CoreBallCCushionCollision):
+    max_steps: int = attrs.field(default=5000)
+    min_delta_p: float = attrs.field(default=0.0001)
     model: BallCCushionModel = attrs.field(
         default=BallCCushionModel.MATHAVAN_2010, init=False, repr=False
     )
@@ -515,4 +596,4 @@ class Mathavan2010Circular(CoreBallCCushionCollision):
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment
     ) -> Tuple[Ball, CircularCushionSegment]:
-        return solve_mathavan(ball, cushion)
+        return solve_mathavan(ball, cushion, self.max_steps, self.min_delta_p)
