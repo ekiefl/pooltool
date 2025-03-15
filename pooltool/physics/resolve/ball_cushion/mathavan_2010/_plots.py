@@ -5,7 +5,7 @@ to the figures in the Mathavan paper.
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,10 +13,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.ticker import MultipleLocator
 
-from pooltool.physics.resolve.ball_cushion.mathavan_2010.model import (
-    create_mathavan_state,
-    solve_paper,
-)
+from pooltool.physics.resolve.ball_cushion.mathavan_2010.model import solve_paper
 
 
 @dataclass
@@ -50,10 +47,9 @@ class _SubplotConfig:
 
 
 def _calculate_rebound_values(
-    state: Dict[str, Any], with_sidespin: bool = False
+    vx: float, vy: float, with_sidespin: bool = False
 ) -> Tuple[float, float]:
-    vx = state["vx"]
-    vy = state["vy"]
+    """Calculate rebound speed and angle from velocity components"""
     v_rebound = np.sqrt(vx**2 + vy**2)
 
     if with_sidespin and vx < 0:
@@ -108,11 +104,12 @@ def _run_simulations(
                 omega0T = k * V_0 / R  # Variable topspin
                 omega0S = 0.0  # No sidespin
 
-            # Create and initialize state
-            state = create_mathavan_state(M, R, h, ee, mu_s, mu_w)
-            solve_paper(state, V_0, alpha, omega0S, omega0T)
+            # Run simulation and get final velocities
+            vx, vy, _, _, _ = solve_paper(
+                M, R, h, ee, mu_s, mu_w, V_0, alpha, omega0S, omega0T
+            )
 
-            v_rebound, rebound_angle = _calculate_rebound_values(state, with_sidespin)
+            v_rebound, rebound_angle = _calculate_rebound_values(vx, vy, with_sidespin)
             rebound_speeds[k_idx, angle_idx] = v_rebound
             rebound_angles[k_idx, angle_idx] = rebound_angle
 
