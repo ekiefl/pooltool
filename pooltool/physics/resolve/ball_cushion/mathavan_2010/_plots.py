@@ -117,7 +117,7 @@ def _run_simulations(
                 omega0S,
                 omega0T,
                 max_steps=100,
-                min_delta_p=0.001,
+                delta_p=0.001,
             )
 
             v_rebound, rebound_angle = _calculate_rebound_values(vx, vy, with_sidespin)

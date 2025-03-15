@@ -225,11 +225,18 @@ def compression_phase(
     while vy > 0:
         # Calculate slip states
         slip = calculate_slip_speeds_and_angles(
-            R, sin_theta, cos_theta, vx, vy, omega_x, omega_y, omega_z
+            R,
+            sin_theta,
+            cos_theta,
+            vx,
+            vy,
+            omega_x,
+            omega_y,
+            omega_z,
         )
 
         # Update velocities
-        vx, vy = update_velocity(
+        vx_next, vy_next = update_velocity(
             M,
             mu_s,
             mu_w,
@@ -242,6 +249,80 @@ def compression_phase(
             delta_p,
         )
 
+        if vy > 0 and vy_next <= 0:
+            # Threshold has crossed.
+            vx_refine, vy_refine = vx, vy
+            omega_x_refine, omega_y_refine, omega_z_refine = omega_x, omega_y, omega_z
+            WzI_refine = WzI
+
+            # Use binary search to find the precise crossing point
+            refine_delta_p = delta_p
+            for _ in range(8):
+                refine_delta_p /= 2
+
+                slip_refine = calculate_slip_speeds_and_angles(
+                    R,
+                    sin_theta,
+                    cos_theta,
+                    vx_refine,
+                    vy_refine,
+                    omega_x_refine,
+                    omega_y_refine,
+                    omega_z_refine,
+                )
+
+                vx_test, vy_test = update_velocity(
+                    M,
+                    mu_s,
+                    mu_w,
+                    sin_theta,
+                    cos_theta,
+                    vx_refine,
+                    vy_refine,
+                    slip_refine.slip_angle,
+                    slip_refine.slip_angle_prime,
+                    refine_delta_p,
+                )
+
+                if vy_test <= 0:
+                    # This step is too large.
+                    continue
+
+                # This step doesn't cross threshold, so we can safely update the state.
+                vx_refine, vy_refine = vx_test, vy_test
+
+                omega_x_refine, omega_y_refine, omega_z_refine = (
+                    update_angular_velocity(
+                        M,
+                        R,
+                        mu_s,
+                        mu_w,
+                        sin_theta,
+                        cos_theta,
+                        omega_x_refine,
+                        omega_y_refine,
+                        omega_z_refine,
+                        slip_refine.slip_angle,
+                        slip_refine.slip_angle_prime,
+                        refine_delta_p,
+                    )
+                )
+
+                delta_WzI = calculate_work_done(vy_refine, cos_theta, refine_delta_p)
+                WzI_refine += delta_WzI
+
+            # Return the refined state that's as close as possible to threshold
+            return (
+                vx_refine,
+                vy_refine,
+                omega_x_refine,
+                omega_y_refine,
+                omega_z_refine,
+                WzI_refine,
+            )
+
+        # Continue with normal update if no refinement needed.
+        vx, vy = vx_next, vy_next
         omega_x, omega_y, omega_z = update_angular_velocity(
             M,
             R,
@@ -302,7 +383,7 @@ def restitution_phase(
         omega_z: Initial z-angular velocity
         target_work_rebound: Target work for rebound
         max_steps: Maximum number of steps for numerical integration
-        delta_p: impulse step size
+        delta_p: Impulse step size
 
     Returns:
         Tuple of (vx, vy, omega_x, omega_y, omega_z)
@@ -310,16 +391,80 @@ def restitution_phase(
     WzI = 0.0
     step_count = 0
 
-    # Calculate step size based on target work
     delta_p = max(target_work_rebound / max_steps, delta_p)
 
     while WzI < target_work_rebound:
-        # Calculate slip states
         slip = calculate_slip_speeds_and_angles(
             R, sin_theta, cos_theta, vx, vy, omega_x, omega_y, omega_z
         )
 
-        # Update velocities
+        next_delta_WzI = calculate_work_done(vy, cos_theta, delta_p)
+
+        if WzI + next_delta_WzI > target_work_rebound:
+            # The next step would pass the threshold, so we refine the step size.
+            remaining_work = target_work_rebound - WzI
+
+            # Start a binary search.
+            refine_vx, refine_vy = vx, vy
+            refine_omega_x, refine_omega_y, refine_omega_z = omega_x, omega_y, omega_z
+            refine_WzI = WzI
+
+            # Calculate a smaller delta_p that should be just right.
+            refine_delta_p = remaining_work / (abs(vy) * cos_theta)
+
+            # Apply this refined step
+            slip_refine = calculate_slip_speeds_and_angles(
+                R,
+                sin_theta,
+                cos_theta,
+                refine_vx,
+                refine_vy,
+                refine_omega_x,
+                refine_omega_y,
+                refine_omega_z,
+            )
+
+            refine_vx, refine_vy = update_velocity(
+                M,
+                mu_s,
+                mu_w,
+                sin_theta,
+                cos_theta,
+                refine_vx,
+                refine_vy,
+                slip_refine.slip_angle,
+                slip_refine.slip_angle_prime,
+                refine_delta_p,
+            )
+
+            refine_omega_x, refine_omega_y, refine_omega_z = update_angular_velocity(
+                M,
+                R,
+                mu_s,
+                mu_w,
+                sin_theta,
+                cos_theta,
+                refine_omega_x,
+                refine_omega_y,
+                refine_omega_z,
+                slip_refine.slip_angle,
+                slip_refine.slip_angle_prime,
+                refine_delta_p,
+            )
+
+            # Calculate actual work done
+            actual_work = calculate_work_done(refine_vy, cos_theta, refine_delta_p)
+            refine_WzI += actual_work
+
+            return (
+                refine_vx,
+                refine_vy,
+                refine_omega_x,
+                refine_omega_y,
+                refine_omega_z,
+            )
+
+        # Continue with normal update if no refinement needed or if refinement failed
         vx, vy = update_velocity(
             M,
             mu_s,
