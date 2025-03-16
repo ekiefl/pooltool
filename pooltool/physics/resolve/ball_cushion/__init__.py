@@ -1,3 +1,5 @@
+"""Models for ball-cushion collisions."""
+
 from typing import Dict, Tuple, Type, cast
 
 import attrs
