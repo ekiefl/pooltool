@@ -99,9 +99,10 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
 class FrictionalInelastic(CoreBallBallCollision):
     """A simple ball-ball collision model including ball-ball friction, and coefficient of restitution for equal-mass balls
 
-    Largely inspired by Dr. David Alciatore's technical proofs (https://billiards.colostate.edu/technical_proofs),
-    in particular, TP_A-5, TP_A-6, and TP_A-14. These ideas have been extended to include motion of both balls,
-    and a more complete analysis of velocity and angular velocity in their vector forms.
+    Largely inspired by Dr. David Alciatore's technical proofs
+    (https://billiards.colostate.edu/technical_proofs), in particular, TP_A-5, TP_A-6,
+    and TP_A-14. These ideas have been extended to include motion of both balls, and a
+    more complete analysis of velocity and angular velocity in their vector forms.
     """
 
     friction: BallBallFrictionStrategy = AlciatoreBallBallFriction()
