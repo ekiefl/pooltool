@@ -313,6 +313,7 @@ data = {
 V0 = 2.5
 
 for cut_angle in np.linspace(0, 88, 50):
+    print(f"{cut_angle=}")
     system = simulate_experiment(V0, cut_angle)
     data["theta"].append(get_carom_angle(system))
     data["f"].append(get_ball_hit_fraction(cut_angle))
