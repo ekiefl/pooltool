@@ -18,7 +18,7 @@ from pooltool.physics.resolve.ball_ball import (
 from pooltool.physics.resolve.ball_ball.friction import (
     AlciatoreBallBallFriction,
 )
-from pooltool.physics.resolve.ball_ball.frictional_mathavan import FrictionalMathavan
+from pooltool.physics.resolve.ball_ball.frictional_inelastic import FrictionalInelastic
 from pooltool.physics.resolve.ball_cushion import (
     BallCCushionCollisionStrategy,
     BallLCushionCollisionStrategy,
@@ -47,7 +47,7 @@ from pooltool.terminal import Run
 RESOLVER_PATH = pooltool.config.user.PHYSICS_DIR / "resolver.yaml"
 """The location of the resolver path YAML."""
 
-VERSION: int = 7
+VERSION: int = 8
 
 
 run = Run()
@@ -65,13 +65,12 @@ def default_resolver() -> Resolver:
     The resolver YAML is found at `RESOLVER_PATH`.
     """
     return Resolver(
-        ball_ball=FrictionalMathavan(
+        ball_ball=FrictionalInelastic(
             friction=AlciatoreBallBallFriction(
                 a=0.009951,
                 b=0.108,
                 c=1.088,
             ),
-            num_iterations=1000,
         ),
         ball_linear_cushion=Mathavan2010Linear(
             max_steps=1000,
