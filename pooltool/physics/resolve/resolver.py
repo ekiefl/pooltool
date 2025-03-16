@@ -23,9 +23,9 @@ from pooltool.physics.resolve.ball_cushion import (
     BallCCushionCollisionStrategy,
     BallLCushionCollisionStrategy,
 )
-from pooltool.physics.resolve.ball_cushion.han_2005.model import (
-    Han2005Circular,
-    Han2005Linear,
+from pooltool.physics.resolve.ball_cushion.mathavan_2010.model import (
+    Mathavan2010Circular,
+    Mathavan2010Linear,
 )
 from pooltool.physics.resolve.ball_pocket import (
     BallPocketStrategy,
@@ -47,10 +47,48 @@ from pooltool.terminal import Run
 RESOLVER_PATH = pooltool.config.user.PHYSICS_DIR / "resolver.yaml"
 """The location of the resolver path YAML."""
 
-VERSION: int = 6
+VERSION: int = 7
 
 
 run = Run()
+
+
+def default_resolver() -> Resolver:
+    """The default resolver.
+
+    This default resolver will be used and written to the resolver YAML if:
+
+        1. There is no resolver YAML
+        2. The resolver YAML is corrupt
+        3. The resolver YAML version doesn't match `VERSION`
+
+    The resolver YAML is found at `RESOLVER_PATH`.
+    """
+    return Resolver(
+        ball_ball=FrictionalMathavan(
+            friction=AlciatoreBallBallFriction(
+                a=0.009951,
+                b=0.108,
+                c=1.088,
+            ),
+            num_iterations=1000,
+        ),
+        ball_linear_cushion=Mathavan2010Linear(
+            max_steps=1000,
+            delta_p=0.001,
+        ),
+        ball_circular_cushion=Mathavan2010Circular(
+            max_steps=1000,
+            delta_p=0.001,
+        ),
+        ball_pocket=CanonicalBallPocket(),
+        stick_ball=InstantaneousPoint(
+            english_throttle=1.0,
+            squirt_throttle=1.0,
+        ),
+        transition=CanonicalTransition(),
+        version=VERSION,
+    )
 
 
 @attrs.define
@@ -124,29 +162,8 @@ class Resolver:
     def default(cls) -> Resolver:
         """Load ~/.config/pooltool/physics/resolver.yaml if exists, create otherwise"""
 
-        def _default_config():
-            return cls(
-                ball_ball=FrictionalMathavan(
-                    friction=AlciatoreBallBallFriction(
-                        a=0.009951,
-                        b=0.108,
-                        c=1.088,
-                    ),
-                    num_iterations=1000,
-                ),
-                ball_linear_cushion=Han2005Linear(),
-                ball_circular_cushion=Han2005Circular(),
-                ball_pocket=CanonicalBallPocket(),
-                stick_ball=InstantaneousPoint(
-                    english_throttle=1.0,
-                    squirt_throttle=1.0,
-                ),
-                transition=CanonicalTransition(),
-                version=VERSION,
-            )
-
         if not RESOLVER_PATH.exists():
-            resolver = _default_config()
+            resolver = default_resolver()
             resolver.save(RESOLVER_PATH)
             return resolver
 
@@ -161,7 +178,7 @@ class Resolver:
                 f"{dump_path} if you want to diagnose it. Here is the error:\n{full_traceback}"
             )
             shutil.move(RESOLVER_PATH, dump_path)
-            resolver = _default_config()
+            resolver = default_resolver()
             resolver.save(RESOLVER_PATH)
 
         if resolver.version == VERSION:
@@ -174,7 +191,7 @@ class Resolver:
                 f"default. Your version has been moved to {dump_path}."
             )
             shutil.move(RESOLVER_PATH, dump_path)
-            resolver = _default_config()
+            resolver = default_resolver()
             resolver.save(RESOLVER_PATH)
             return resolver
 
