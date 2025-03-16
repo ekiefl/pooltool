@@ -30,7 +30,6 @@ from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
 from pooltool.evolution import simulate
 from pooltool.evolution.continuize import continuize
-from pooltool.game.datatypes import GameType
 from pooltool.layouts import get_rack
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
@@ -447,6 +446,7 @@ class ShotViewer(Interface):
         mouse.init()
 
     def _stop(self):
+        self.title_node.destroy()
         self.closeWindow(self.win)
         Global.task_mgr.stop()
 
@@ -500,9 +500,10 @@ class Game(Interface):
         FIXME This is where menu options for game type and further specifications should
         plug into.
         """
-        # Change this line to change the game played.
-        # Pick from {NINEBALL, EIGHTBALL, THREECUSHION, SNOOKER, SANDBOX}
-        game_type = GameType.NINEBALL
+        # Change the gametype by editing ~/.config/pooltool/general.yaml
+        # Available options:
+        #   {eightball, nineball, threecushion, snooker, sandbox, sumtothree}
+        game_type = ani.settings.gameplay.game_type
 
         game = get_ruleset(game_type)()
         game.players = [

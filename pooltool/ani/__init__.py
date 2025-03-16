@@ -11,6 +11,7 @@ from panda3d.core import loadPrcFileData
 
 import pooltool as pt
 from pooltool.config.user import CONFIG_DIR
+from pooltool.game.datatypes import GameType
 from pooltool.serialize import conversion
 from pooltool.terminal import Run
 from pooltool.utils import panda_path
@@ -112,6 +113,7 @@ class GraphicsConfig:
 @attrs.define
 class GameplayConfig:
     cue_collision: int = True
+    game_type: GameType = GameType.NINEBALL
 
 
 @attrs.define
