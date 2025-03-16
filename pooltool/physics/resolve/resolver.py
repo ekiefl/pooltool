@@ -47,7 +47,7 @@ from pooltool.terminal import Run
 RESOLVER_PATH = pooltool.config.user.PHYSICS_DIR / "resolver.yaml"
 """The location of the resolver path YAML."""
 
-VERSION: int = 6
+VERSION: int = 7
 
 
 run = Run()
@@ -74,12 +74,12 @@ def default_resolver() -> Resolver:
             num_iterations=1000,
         ),
         ball_linear_cushion=Mathavan2010Linear(
-            max_steps=5000,
-            min_delta_p=0.0001,
+            max_steps=1000,
+            delta_p=0.001,
         ),
         ball_circular_cushion=Mathavan2010Circular(
-            max_steps=5000,
-            min_delta_p=0.0001,
+            max_steps=1000,
+            delta_p=0.001,
         ),
         ball_pocket=CanonicalBallPocket(),
         stick_ball=InstantaneousPoint(

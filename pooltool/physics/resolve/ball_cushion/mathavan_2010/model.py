@@ -1,10 +1,11 @@
 """This is a WIP"""
 
 import math
-from typing import NamedTuple, Tuple, TypeVar
+from typing import Tuple, TypeVar
 
 import attrs
 import numpy as np
+from numba import jit
 
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
@@ -19,21 +20,10 @@ from pooltool.physics.resolve.ball_cushion.core import (
 )
 from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
 
-# Type variable for cushion segments.
 Cushion = TypeVar("Cushion", LinearCushionSegment, CircularCushionSegment)
 
 
-class SlipState(NamedTuple):
-    """
-    Slip speeds and angles at cushion (I) and table (C).
-    """
-
-    slip_speed: float
-    slip_angle: float
-    slip_speed_prime: float
-    slip_angle_prime: float
-
-
+@jit(nopython=True, cache=const.use_numba_cache)
 def get_sin_and_cos_theta(h: float, R: float) -> Tuple[float, float]:
     """Returns sin(theta), cos(theta)"""
     sin_theta = (h - R) / R
@@ -41,6 +31,7 @@ def get_sin_and_cos_theta(h: float, R: float) -> Tuple[float, float]:
     return sin_theta, cos_theta
 
 
+@jit(nopython=True, cache=const.use_numba_cache)
 def calculate_slip_speeds_and_angles(
     R: float,
     sin_theta: float,
@@ -50,9 +41,10 @@ def calculate_slip_speeds_and_angles(
     omega_x: float,
     omega_y: float,
     omega_z: float,
-) -> SlipState:
+) -> Tuple[float, float, float, float]:
     """
     Calculate the slip speeds and angles at the cushion (I) and table (C).
+    Numba compatible version.
     """
     # Velocities at the cushion (I)
     v_xI = vx + omega_y * R * sin_theta - omega_z * R * cos_theta
@@ -74,14 +66,10 @@ def calculate_slip_speeds_and_angles(
     if slip_angle_prime < 0:
         slip_angle_prime += 2 * math.pi
 
-    return SlipState(
-        slip_speed=slip_speed,
-        slip_angle=slip_angle,
-        slip_speed_prime=slip_speed_prime,
-        slip_angle_prime=slip_angle_prime,
-    )
+    return slip_speed, slip_angle, slip_speed_prime, slip_angle_prime
 
 
+@jit(nopython=True, cache=const.use_numba_cache)
 def update_velocity(
     M: float,
     mu_s: float,
@@ -125,6 +113,7 @@ def update_velocity(
     return vx_new, vy_new
 
 
+@jit(nopython=True, cache=const.use_numba_cache)
 def update_angular_velocity(
     M: float,
     R: float,
@@ -173,6 +162,7 @@ def update_angular_velocity(
     return omega_x_new, omega_y_new, omega_z_new
 
 
+@jit(nopython=True, cache=const.use_numba_cache)
 def calculate_work_done(vy: float, cos_theta: float, delta_p: float) -> float:
     """
     Calculate the work done for a single step.
@@ -180,6 +170,7 @@ def calculate_work_done(vy: float, cos_theta: float, delta_p: float) -> float:
     return delta_p * abs(vy) * cos_theta
 
 
+@jit(nopython=True, cache=const.use_numba_cache)
 def compression_phase(
     M: float,
     R: float,
@@ -195,8 +186,7 @@ def compression_phase(
     max_steps: int = 5000,
     delta_p: float = 0.0001,
 ) -> Tuple[float, float, float, float, float, float]:
-    """
-    Run the compression phase until the y-velocity is no longer positive.
+    """Run the compression phase until the y-velocity is no longer positive.
 
     Args:
         M: Mass of the ball
@@ -224,7 +214,7 @@ def compression_phase(
 
     while vy > 0:
         # Calculate slip states
-        slip = calculate_slip_speeds_and_angles(
+        _, slip_angle, _, slip_angle_prime = calculate_slip_speeds_and_angles(
             R,
             sin_theta,
             cos_theta,
@@ -244,8 +234,8 @@ def compression_phase(
             cos_theta,
             vx,
             vy,
-            slip.slip_angle,
-            slip.slip_angle_prime,
+            slip_angle,
+            slip_angle_prime,
             delta_p,
         )
 
@@ -260,15 +250,17 @@ def compression_phase(
             for _ in range(8):
                 refine_delta_p /= 2
 
-                slip_refine = calculate_slip_speeds_and_angles(
-                    R,
-                    sin_theta,
-                    cos_theta,
-                    vx_refine,
-                    vy_refine,
-                    omega_x_refine,
-                    omega_y_refine,
-                    omega_z_refine,
+                _, slip_angle_refine, _, slip_angle_prime_refine = (
+                    calculate_slip_speeds_and_angles(
+                        R,
+                        sin_theta,
+                        cos_theta,
+                        vx_refine,
+                        vy_refine,
+                        omega_x_refine,
+                        omega_y_refine,
+                        omega_z_refine,
+                    )
                 )
 
                 vx_test, vy_test = update_velocity(
@@ -279,8 +271,8 @@ def compression_phase(
                     cos_theta,
                     vx_refine,
                     vy_refine,
-                    slip_refine.slip_angle,
-                    slip_refine.slip_angle_prime,
+                    slip_angle_refine,
+                    slip_angle_prime_refine,
                     refine_delta_p,
                 )
 
@@ -302,8 +294,8 @@ def compression_phase(
                         omega_x_refine,
                         omega_y_refine,
                         omega_z_refine,
-                        slip_refine.slip_angle,
-                        slip_refine.slip_angle_prime,
+                        slip_angle_refine,
+                        slip_angle_prime_refine,
                         refine_delta_p,
                     )
                 )
@@ -333,8 +325,8 @@ def compression_phase(
             omega_x,
             omega_y,
             omega_z,
-            slip.slip_angle,
-            slip.slip_angle_prime,
+            slip_angle,
+            slip_angle_prime,
             delta_p,
         )
 
@@ -345,11 +337,12 @@ def compression_phase(
         # Update step count
         step_count += 1
         if step_count > 10 * max_steps:
-            raise Exception("Solution not found in compression phase")
+            raise RuntimeError("Solution not found in compression phase")
 
     return vx, vy, omega_x, omega_y, omega_z, WzI
 
 
+@jit(nopython=True, cache=const.use_numba_cache)
 def restitution_phase(
     M: float,
     R: float,
@@ -368,25 +361,7 @@ def restitution_phase(
 ) -> Tuple[float, float, float, float, float]:
     """
     Run the restitution phase until the work at the cushion (WzI) reaches the target rebound work.
-
-    Args:
-        M: Mass of the ball
-        R: Radius of the ball
-        mu_s: Sliding friction coefficient between ball and table
-        mu_w: Sliding friction coefficient between ball and cushion
-        sin_theta: Sine of contact angle
-        cos_theta: Cosine of contact angle
-        vx: Initial x-velocity
-        vy: Initial y-velocity
-        omega_x: Initial x-angular velocity
-        omega_y: Initial y-angular velocity
-        omega_z: Initial z-angular velocity
-        target_work_rebound: Target work for rebound
-        max_steps: Maximum number of steps for numerical integration
-        delta_p: Impulse step size
-
-    Returns:
-        Tuple of (vx, vy, omega_x, omega_y, omega_z)
+    Numba-compatible implementation.
     """
     WzI = 0.0
     step_count = 0
@@ -394,7 +369,7 @@ def restitution_phase(
     delta_p = max(target_work_rebound / max_steps, delta_p)
 
     while WzI < target_work_rebound:
-        slip = calculate_slip_speeds_and_angles(
+        _, slip_angle, _, slip_angle_prime = calculate_slip_speeds_and_angles(
             R, sin_theta, cos_theta, vx, vy, omega_x, omega_y, omega_z
         )
 
@@ -413,15 +388,17 @@ def restitution_phase(
             refine_delta_p = remaining_work / (abs(vy) * cos_theta)
 
             # Apply this refined step
-            slip_refine = calculate_slip_speeds_and_angles(
-                R,
-                sin_theta,
-                cos_theta,
-                refine_vx,
-                refine_vy,
-                refine_omega_x,
-                refine_omega_y,
-                refine_omega_z,
+            _, slip_angle_refine, _, slip_angle_prime_refine = (
+                calculate_slip_speeds_and_angles(
+                    R,
+                    sin_theta,
+                    cos_theta,
+                    refine_vx,
+                    refine_vy,
+                    refine_omega_x,
+                    refine_omega_y,
+                    refine_omega_z,
+                )
             )
 
             refine_vx, refine_vy = update_velocity(
@@ -432,8 +409,8 @@ def restitution_phase(
                 cos_theta,
                 refine_vx,
                 refine_vy,
-                slip_refine.slip_angle,
-                slip_refine.slip_angle_prime,
+                slip_angle_refine,
+                slip_angle_prime_refine,
                 refine_delta_p,
             )
 
@@ -447,8 +424,8 @@ def restitution_phase(
                 refine_omega_x,
                 refine_omega_y,
                 refine_omega_z,
-                slip_refine.slip_angle,
-                slip_refine.slip_angle_prime,
+                slip_angle_refine,
+                slip_angle_prime_refine,
                 refine_delta_p,
             )
 
@@ -473,8 +450,8 @@ def restitution_phase(
             cos_theta,
             vx,
             vy,
-            slip.slip_angle,
-            slip.slip_angle_prime,
+            slip_angle,
+            slip_angle_prime,
             delta_p,
         )
 
@@ -488,8 +465,8 @@ def restitution_phase(
             omega_x,
             omega_y,
             omega_z,
-            slip.slip_angle,
-            slip.slip_angle_prime,
+            slip_angle,
+            slip_angle_prime,
             delta_p,
         )
 
@@ -500,62 +477,12 @@ def restitution_phase(
         # Update step count
         step_count += 1
         if step_count > 10 * max_steps:
-            raise Exception("Solution not found in restitution phase")
+            raise RuntimeError("Solution not found in restitution phase")
 
     return vx, vy, omega_x, omega_y, omega_z
 
 
-def solve_paper(
-    M: float,
-    R: float,
-    h: float,
-    ee: float,
-    mu_s: float,
-    mu_w: float,
-    v0: float,
-    alpha: float,
-    omega0S: float,
-    omega0T: float,
-    max_steps: int = 5000,
-    delta_p: float = 0.0001,
-) -> Tuple[float, float, float, float, float]:
-    """
-    Convenience method that solves using parameters described in the paper.
-
-    Args:
-        M: Mass of the ball
-        R: Radius of the ball
-        h: Height of the cushion
-        ee: Coefficient of restitution
-        mu_s: Sliding friction coefficient between ball and table
-        mu_w: Sliding friction coefficient between ball and cushion
-        v0: Initial speed
-        alpha: Incident angle in radians
-        omega0S: Initial sidespin angular velocity
-        omega0T: Initial topspin angular velocity
-        max_steps: Maximum number of steps for numerical integration
-        delta_p: Impulse step size
-
-    Returns:
-        Tuple of (vx, vy, omega_x, omega_y, omega_z) after collision
-    """
-    return solve(
-        M,
-        R,
-        h,
-        ee,
-        mu_s,
-        mu_w,
-        v0 * math.cos(alpha),
-        v0 * math.sin(alpha),
-        -omega0T * math.sin(alpha),
-        omega0T * math.cos(alpha),
-        omega0S,
-        max_steps,
-        delta_p,
-    )
-
-
+@jit(nopython=True, cache=const.use_numba_cache)
 def solve(
     M: float,
     R: float,
@@ -571,8 +498,7 @@ def solve(
     max_steps: int = 5000,
     delta_p: float = 0.0001,
 ) -> Tuple[float, float, float, float, float]:
-    """
-    Initialize the state and run both the compression and restitution phases.
+    """Initialize the state and run both the compression and restitution phases.
 
     Args:
         M: Mass of the ball
@@ -635,6 +561,57 @@ def solve(
     return vx, vy, omega_x, omega_y, omega_z
 
 
+def solve_paper(
+    M: float,
+    R: float,
+    h: float,
+    ee: float,
+    mu_s: float,
+    mu_w: float,
+    v0: float,
+    alpha: float,
+    omega0S: float,
+    omega0T: float,
+    max_steps: int = 5000,
+    delta_p: float = 0.0001,
+) -> Tuple[float, float, float, float, float]:
+    """
+    Convenience method that solves using parameters described in the paper.
+
+    Args:
+        M: Mass of the ball
+        R: Radius of the ball
+        h: Height of the cushion
+        ee: Coefficient of restitution
+        mu_s: Sliding friction coefficient between ball and table
+        mu_w: Sliding friction coefficient between ball and cushion
+        v0: Initial speed
+        alpha: Incident angle in radians
+        omega0S: Initial sidespin angular velocity
+        omega0T: Initial topspin angular velocity
+        max_steps: Maximum number of steps for numerical integration
+        delta_p: Impulse step size
+
+    Returns:
+        Tuple of (vx, vy, omega_x, omega_y, omega_z) after collision
+    """
+    return solve(
+        M,
+        R,
+        h,
+        ee,
+        mu_s,
+        mu_w,
+        v0 * math.cos(alpha),
+        v0 * math.sin(alpha),
+        -omega0T * math.sin(alpha),
+        omega0T * math.cos(alpha),
+        omega0S,
+        max_steps,
+        delta_p,
+    )
+
+
 def solve_mathavan(
     ball: Ball, cushion: Cushion, max_steps: int = 5000, delta_p: float = 0.0001
 ) -> Tuple[Ball, Cushion]:
@@ -654,38 +631,29 @@ def solve_mathavan(
     """
     M = ball.params.m
     R = ball.params.R
-    ee = ball.params.e_c  # cushion restitution coefficient
-    mu = ball.params.f_c  # friction coefficient for both sliding modes
-    u_s = ball.params.u_s  # sliding friction between ball and table
-
+    ee = ball.params.e_c
+    mu = ball.params.f_c
+    u_s = ball.params.u_s
     h = cushion.height
 
-    # Extract the ball state (assumed to be a NumPy array with rows:
-    #  0: position, 1: translational velocity, 2: rotational velocity)
     rvw = ball.state.rvw
 
-    # Get the cushion's normal vector (assumed to lie in the table plane).
-    normal = cushion.get_normal(rvw)
     # Ensure the normal is pointing in the same direction as the ball's velocity.
+    normal = cushion.get_normal(rvw)
     if np.dot(normal, rvw[1]) <= 0:
         normal = -normal
 
-    # Compute the angle (psi) of the cushion normal in the table frame.
-    psi = ptmath.angle(normal)
-    # Determine the rotation angle that maps the cushion normal to (0,1).
-    angle_to_rotate = (math.pi / 2) - psi
-
     # Rotate the ball's state into the cushion frame.
+    psi = ptmath.angle(normal)
+    angle_to_rotate = (math.pi / 2) - psi
     rvw_R = ptmath.coordinate_rotation(rvw.T, angle_to_rotate).T
 
-    # Extract rotated velocity components.
     vx_rot = rvw_R[1, 0]
     vy_rot = rvw_R[1, 1]
     omega_x_rot = rvw_R[2, 0]
     omega_y_rot = rvw_R[2, 1]
     omega_z_rot = rvw_R[2, 2]
 
-    # Run the Mathavan simulation in the cushion frame.
     vx_final, vy_final, omega_x_final, omega_y_final, omega_z_final = solve(
         M,
         R,
@@ -702,14 +670,12 @@ def solve_mathavan(
         delta_p,
     )
 
-    # Update the rotated state with the simulation's output.
     rvw_R[1, 0] = vx_final
     rvw_R[1, 1] = vy_final
     rvw_R[2, 0] = omega_x_final
     rvw_R[2, 1] = omega_y_final
     rvw_R[2, 2] = omega_z_final
 
-    # Rotate the state back to the table frame.
     rvw_final = ptmath.coordinate_rotation(rvw_R.T, -angle_to_rotate).T
 
     ball.state = BallState(rvw_final, const.sliding)
@@ -718,8 +684,8 @@ def solve_mathavan(
 
 @attrs.define
 class Mathavan2010Linear(CoreBallLCushionCollision):
-    max_steps: int = attrs.field(default=5000)
-    delta_p: float = attrs.field(default=0.0001)
+    max_steps: int = attrs.field(default=1000)
+    delta_p: float = attrs.field(default=0.001)
     model: BallLCushionModel = attrs.field(
         default=BallLCushionModel.MATHAVAN_2010, init=False, repr=False
     )
@@ -732,8 +698,8 @@ class Mathavan2010Linear(CoreBallLCushionCollision):
 
 @attrs.define
 class Mathavan2010Circular(CoreBallCCushionCollision):
-    max_steps: int = attrs.field(default=5000)
-    delta_p: float = attrs.field(default=0.0001)
+    max_steps: int = attrs.field(default=1000)
+    delta_p: float = attrs.field(default=0.001)
     model: BallCCushionModel = attrs.field(
         default=BallCCushionModel.MATHAVAN_2010, init=False, repr=False
     )
