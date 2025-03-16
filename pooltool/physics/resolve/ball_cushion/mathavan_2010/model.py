@@ -44,7 +44,6 @@ def calculate_slip_speeds_and_angles(
 ) -> Tuple[float, float, float, float]:
     """
     Calculate the slip speeds and angles at the cushion (I) and table (C).
-    Numba compatible version.
     """
     # Velocities at the cushion (I)
     v_xI = vx + omega_y * R * sin_theta - omega_z * R * cos_theta
@@ -361,7 +360,6 @@ def restitution_phase(
 ) -> Tuple[float, float, float, float, float]:
     """
     Run the restitution phase until the work at the cushion (WzI) reaches the target rebound work.
-    Numba-compatible implementation.
     """
     WzI = 0.0
     step_count = 0
