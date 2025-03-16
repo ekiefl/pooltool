@@ -1,5 +1,3 @@
-"""This is a WIP"""
-
 import math
 from typing import Tuple, TypeVar
 
@@ -682,6 +680,23 @@ def solve_mathavan(
 
 @attrs.define
 class Mathavan2010Linear(CoreBallLCushionCollision):
+    """Ball-cushion collision resolver for the Mathavan et al. (2010) collision model.
+
+    This work predicts ball bounce angles and bounce speeds for the ball’s collisions
+    with a cushion, under the assumption of insignificant cushion deformation.
+    Differential equations are derived for the ball dynamics during the impact and these
+    these equations are solved numerically.
+
+    References:
+        Mathavan S, Jackson MR, Parkin RM. A theoretical analysis of billiard
+        ball-cushion dynamics under cushion impacts. Proceedings of the Institution of
+        Mechanical Engineers, Part C. 2010;224(9):1863-1873.
+        doi:10.1243/09544062JMES1964
+
+        Available at
+        https://drdavepoolinfo.com//physics_articles/Mathavan_IMechE_2010.pdf
+    """
+
     max_steps: int = attrs.field(default=1000)
     delta_p: float = attrs.field(default=0.001)
     model: BallLCushionModel = attrs.field(
@@ -691,11 +706,49 @@ class Mathavan2010Linear(CoreBallLCushionCollision):
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
     ) -> Tuple[Ball, LinearCushionSegment]:
+        """Resolve ball-cushion collision via Mathavan et al. (2010).
+
+        This method computes the post-collision linear and angular velocities of a ball
+        colliding with a cushion, taking into account both ball spin and frictional
+        effects. The collision model is based on the theoretical analysis described by
+        Mathavan et al., which considers 3D impact dynamics and the effects of topspin
+        and sidespin on the rebound trajectory.
+
+        The function analyzes the ball's incident velocity and spin components relative
+        to the cushion's normal and tangential planes. It then applies the derived
+        differential equations to calculate the collision dynamics through numerical
+        integration, accounting for both the compression and restitution phases of
+        impact. The model incorporates the sliding coefficient of friction between ball
+        and cushion as well as between ball and table, along with the coefficient of
+        restitution. Once the complete impulse exchange is calculated, the updated
+        linear and angular velocities are determined and returned.
+
+        The model assumes insignificant cushion deformation, which is reported to be
+        valid for normal velocities up to 2.5 m/s, and accounts for transitions between
+        sliding and rolling states during collision.
+        """
         return solve_mathavan(ball, cushion, self.max_steps, self.delta_p)
 
 
 @attrs.define
 class Mathavan2010Circular(CoreBallCCushionCollision):
+    """Ball-cushion collision resolver for the Mathavan et al. (2010) collision model.
+
+    This work predicts ball bounce angles and bounce speeds for the ball’s collisions
+    with a cushion, under the assumption of insignificant cushion deformation.
+    Differential equations are derived for the ball dynamics during the impact and these
+    these equations are solved numerically.
+
+    References:
+        Mathavan S, Jackson MR, Parkin RM. A theoretical analysis of billiard
+        ball-cushion dynamics under cushion impacts. Proceedings of the Institution of
+        Mechanical Engineers, Part C. 2010;224(9):1863-1873.
+        doi:10.1243/09544062JMES1964
+
+        Available at
+        https://drdavepoolinfo.com//physics_articles/Mathavan_IMechE_2010.pdf
+    """
+
     max_steps: int = attrs.field(default=1000)
     delta_p: float = attrs.field(default=0.001)
     model: BallCCushionModel = attrs.field(
@@ -705,4 +758,25 @@ class Mathavan2010Circular(CoreBallCCushionCollision):
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment
     ) -> Tuple[Ball, CircularCushionSegment]:
+        """Resolve ball-cushion collision via Mathavan et al. (2010).
+
+        This method computes the post-collision linear and angular velocities of a ball
+        colliding with a cushion, taking into account both ball spin and frictional
+        effects. The collision model is based on the theoretical analysis described by
+        Mathavan et al., which considers 3D impact dynamics and the effects of topspin
+        and sidespin on the rebound trajectory.
+
+        The function analyzes the ball's incident velocity and spin components relative
+        to the cushion's normal and tangential planes. It then applies the derived
+        differential equations to calculate the collision dynamics through numerical
+        integration, accounting for both the compression and restitution phases of
+        impact. The model incorporates the sliding coefficient of friction between ball
+        and cushion as well as between ball and table, along with the coefficient of
+        restitution. Once the complete impulse exchange is calculated, the updated
+        linear and angular velocities are determined and returned.
+
+        The model assumes insignificant cushion deformation, which is reported to be
+        valid for normal velocities up to 2.5 m/s, and accounts for transitions between
+        sliding and rolling states during collision.
+        """
         return solve_mathavan(ball, cushion, self.max_steps, self.delta_p)
