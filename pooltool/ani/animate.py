@@ -25,12 +25,11 @@ from pooltool.ani.collision import cue_avoid
 from pooltool.ani.environment import environment
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.hud import HUDElement, hud
-from pooltool.ani.menu import GenericMenu, menus
+from pooltool.ani.menu import TextOverlay, menus
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
 from pooltool.evolution import simulate
 from pooltool.evolution.continuize import continuize
-from pooltool.game.datatypes import GameType
 from pooltool.layouts import get_rack
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
@@ -114,8 +113,8 @@ def _resize_offscreen_window(size: Tuple[int, int]):
 
 def _init_simplepbr():
     simplepbr.init(
-        enable_shadows=ani.settings["graphics"]["shadows"],
-        max_lights=ani.settings["graphics"]["max_lights"],
+        enable_shadows=ani.settings.graphics.shadows,
+        max_lights=ani.settings.graphics.max_lights,
     )
 
 
@@ -139,11 +138,11 @@ class Interface(ShowBase):
 
         cam.init()
 
-        if not ani.settings["graphics"]["shader"]:
+        if not ani.settings.graphics.shader:
             Global.render.set_shader_off()
 
         Global.clock.setMode(ClockObject.MLimited)
-        Global.clock.setFrameRate(ani.settings["graphics"]["fps"])
+        Global.clock.setFrameRate(ani.settings.graphics.fps)
 
         Global.register_mode_mgr(ModeManager(all_modes))
         assert Global.mode_mgr is not None
@@ -414,7 +413,7 @@ class ShotViewer(Interface):
         self._create_title(title)
         self.title_node.show()
 
-        if ani.settings["graphics"]["hud"]:
+        if ani.settings.graphics.hud:
             hud.init(hide=[HUDElement.help_text])
 
         params = dict(
@@ -447,6 +446,7 @@ class ShotViewer(Interface):
         mouse.init()
 
     def _stop(self):
+        self.title_node.destroy()
         self.closeWindow(self.win)
         Global.task_mgr.stop()
 
@@ -479,10 +479,10 @@ class Game(Interface):
         visual.cue.hide_nodes()
         cue_avoid.init_collisions()
 
-        if ani.settings["graphics"]["hud"]:
+        if ani.settings.graphics.hud:
             hud.init()
 
-        code_comp_menu = GenericMenu(
+        code_comp_menu = TextOverlay(
             title="Compiling simulation code...",
             frame_color=(0, 0, 0, 0.4),
             title_pos=(0, 0, 0),
@@ -500,9 +500,10 @@ class Game(Interface):
         FIXME This is where menu options for game type and further specifications should
         plug into.
         """
-        # Change this line to change the game played.
-        # Pick from {NINEBALL, EIGHTBALL, THREECUSHION, SNOOKER, SANDBOX}
-        game_type = GameType.NINEBALL
+        # Change the gametype by editing ~/.config/pooltool/general.yaml
+        # Available options:
+        #   {eightball, nineball, threecushion, snooker, sandbox, sumtothree}
+        game_type = ani.settings.gameplay.game_type
 
         game = get_ruleset(game_type)()
         game.players = [

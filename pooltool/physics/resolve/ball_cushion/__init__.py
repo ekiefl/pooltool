@@ -1,3 +1,5 @@
+"""Models for ball-cushion collisions."""
+
 from typing import Dict, Tuple, Type, cast
 
 import attrs
@@ -46,4 +48,12 @@ ball_ccushion_models: Dict[BallCCushionModel, Type[BallCCushionCollisionStrategy
 __all__ = [
     "ball_lcushion_models",
     "ball_ccushion_models",
+    "Mathavan2010Linear",
+    "Han2005Linear",
+    "UnrealisticLinear",
+    "Mathavan2010Circular",
+    "Han2005Circular",
+    "UnrealisticCircular",
+    "BallCCushionModel",
+    "BallLCushionModel",
 ]

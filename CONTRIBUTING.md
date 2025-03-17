@@ -46,4 +46,4 @@ Pooltool has adopted a Code of Conduct that we expect project participants to ad
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under [this license](LICENSE.md).
+By contributing, you agree that your contributions will be licensed under [this license](LICENSE.txt).

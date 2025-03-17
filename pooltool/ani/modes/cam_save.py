@@ -6,7 +6,7 @@ import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
-from pooltool.ani.menu import GenericMenu
+from pooltool.ani.menu import TextOverlay
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 
@@ -42,7 +42,7 @@ class CamSaveMode(BaseMode):
         del self.selection
 
     def render_camera_save_buttons(self):
-        self.cam_save_slots = GenericMenu(
+        self.cam_save_slots = TextOverlay(
             title="Release key with moused hovered over desired save slot",
             frame_color=(0, 0, 0, 0.2),
             title_pos=(0, 0, 0.45),

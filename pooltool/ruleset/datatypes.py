@@ -147,7 +147,8 @@ class ShotConstraints:
         elif not self.call_shot:
             return True
         else:
-            return False
+            # return False
+            return True  # For now, relax requirement to call shot
 
 
 @attrs.define(frozen=True)

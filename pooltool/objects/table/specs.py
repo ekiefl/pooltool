@@ -40,7 +40,7 @@ class TableModelDescr:
                 https://docs.panda3d.org/1.10/python/programming/advanced-loading/filename-syntax).
         """
 
-        if ani.settings["graphics"]["physical_based_rendering"]:
+        if ani.settings.graphics.physical_based_rendering:
             path = ani.model_dir / "table" / self.name / (self.name + "_pbr.glb")
         else:
             path = ani.model_dir / "table" / self.name / (self.name + ".glb")
@@ -129,9 +129,10 @@ class BilliardTableSpecs:
     l: float = field(default=3.05)  # noqa  E741
     w: float = field(default=3.05 / 2)
 
-    # FIXME height should be adjusted for 3-cushion sized balls
     cushion_width: float = field(default=2 * 2.54 / 100)
-    cushion_height: float = field(default=0.64 * 2 * 0.028575)
+
+    # https://web.archive.org/web/20130801042614/http://www.umb.org/Rules/Carom_Rules.pdf
+    cushion_height: float = field(default=0.037)
 
     # For visualization
     height: float = field(default=0.708)

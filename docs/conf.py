@@ -130,7 +130,7 @@ autoapi_ignore = [
     "*/test_*.py",
     "*/render.py",
     "*/ai/*",
-    "*/user_config.py",
+    "*/config/user.py",
 ]
 # Everything in ani/ except animate.py
 autoapi_ignore.extend(
