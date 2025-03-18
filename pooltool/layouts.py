@@ -373,7 +373,7 @@ def _get_three_cushion_rack(
     if ballset is None:
         ballset = DEFAULT_THREECUSH_BALLSET
 
-    white = BallPos([], (0.5+0.1825/1.42, 0.25), {"white"})
+    white = BallPos([], (0.5 + 0.1825 / 1.42, 0.25), {"white"})
     yellow = BallPos([], (0.5, 0.25), {"yellow"})
     red = BallPos([], (0.5, 0.75), {"red"})
 
