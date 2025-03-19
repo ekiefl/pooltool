@@ -7,7 +7,7 @@ import attrs
 import numpy as np
 import optuna
 from numpy.typing import NDArray
-from optuna.samplers import RandomSampler, TPESampler
+from optuna.samplers import RandomSampler
 from trajectory import ShotTrajectoryData
 
 import pooltool as pt
@@ -214,7 +214,7 @@ def optimize_shot_for_physics(
         return min(int(np.ceil(0.05 * x)), 10)
 
     sampler = RandomSampler()
-    #sampler = TPESampler(n_startup_trials=500, gamma=exploit_gamma, n_ei_candidates=24)
+    # sampler = TPESampler(n_startup_trials=500, gamma=exploit_gamma, n_ei_candidates=24)
 
     study_inner = optuna.create_study(sampler=sampler, direction="minimize")
     study_inner.optimize(inner_objective, n_trials=n_trials, n_jobs=n_jobs)
@@ -315,6 +315,7 @@ if __name__ == "__main__":
     # Use argparse to allow a choice between hyperparameter tuning (outer study)
     # and fixed physics parameters with inner shot optimization.
     import argparse
+
     from viewer import BilliardDataViewer
 
     parser = argparse.ArgumentParser(
@@ -331,7 +332,9 @@ if __name__ == "__main__":
 
     dt = 0.01
     path = Path("./20221225_2_Match_Ersin_Cemal.msgpack")
-    real_shots_all = pt.serialize.conversion.structure_from(path, list[ShotTrajectoryData])
+    real_shots_all = pt.serialize.conversion.structure_from(
+        path, list[ShotTrajectoryData]
+    )
     # Use the first 10 shots for the study.
 
     if args.mode == "hyper":
@@ -356,7 +359,7 @@ if __name__ == "__main__":
                 real_shot, physics_params, n_trials=200, n_jobs=1, time_weight=1.0
             )
             pt.continuize(best_simulation, inplace=True)
-            sim_traj_data = ShotTrajectoryData.from_simulated(best_simulation, dt=dt)
+            sim_traj_data = ShotTrajectoryData.from_simulated(best_simulation)
             simulated_shots.append(sim_traj_data)
 
         viewer = BilliardDataViewer(real_shots, simulated_shots)

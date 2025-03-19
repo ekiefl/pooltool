@@ -1,5 +1,4 @@
 import tkinter as tk
-from pathlib import Path
 from typing import List
 
 import matplotlib.pyplot as plt
@@ -7,8 +6,6 @@ import mplcursors
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from trajectory import ShotTrajectoryData
-
-import pooltool as pt
 
 
 class BilliardDataViewer:

@@ -7,6 +7,8 @@ from typing import Literal
 import numpy as np
 from trajectory import BallTrajectory, ShotTrajectoryData
 
+import pooltool as pt
+
 _ball_lookup: dict[str, int] = {
     "white": 1,
     "yellow": 2,
@@ -61,3 +63,6 @@ def load_real_trajectories(
 
 if __name__ == "__main__":
     shots = load_real_trajectories(Path("./20221225_2_Match_Ersin_Cemal.pkl"), dt=0.01)
+    pt.serialize.conversion.unstructure_to(
+        shots, "./20221225_2_Match_Ersin_Cemal.msgpack"
+    )
