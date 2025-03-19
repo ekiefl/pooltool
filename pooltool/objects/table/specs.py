@@ -125,13 +125,10 @@ class BilliardTableSpecs:
         - See :class:`SnookerTableSpecs` for pocket table specs.
     """
 
-    # 10-foot table (imprecise)
-    l: float = field(default=3.05)  # noqa  E741
-    w: float = field(default=3.05 / 2)
-
-    cushion_width: float = field(default=2 * 2.54 / 100)
-
     # https://web.archive.org/web/20130801042614/http://www.umb.org/Rules/Carom_Rules.pdf
+    l: float = field(default=2.84)
+    w: float = field(default=1.42)
+    cushion_width: float = field(default=2 * 2.54 / 100)
     cushion_height: float = field(default=0.037)
 
     # For visualization
