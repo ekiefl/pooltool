@@ -205,9 +205,10 @@ class BallRender(Render):
 
     def get_playback_sequence(self, playback_speed=1) -> MetaInterval:
         """Creates the motion sequences of the ball for a given playback speed"""
-        vectors = self._ball.history_cts.vectorize()
-        if vectors is None:
+        if self._ball.history_cts.empty:
             return Sequence()
+
+        vectors = self._ball.history_cts.vectorize()
 
         rvws, motion_states, ts = vectors
 

@@ -195,7 +195,7 @@ class BallHistory:
 
     def vectorize(
         self,
-    ) -> Optional[Tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]]:
+    ) -> Tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
         """Compile the attribute from each ball state into arrays
 
         This method unzips each :class:`BallState` in :attr:`states`, resulting in an
@@ -215,8 +215,11 @@ class BallHistory:
         True
 
         Returns:
-            A length 3 tuple (``rvws``, ``ss`` and ``ts``). Returns None if ``self`` has
-            no length.
+            A length 3 tuple (``rvws``, ``ss`` and ``ts``).
+
+        Raises:
+            ValueError:
+                If the history is empty.
 
         Example:
 
@@ -240,7 +243,10 @@ class BallHistory:
             - :meth:`from_vectorization`
         """
         if self.empty:
-            return None
+            raise ValueError(
+                "History is empty. If calling `history_cts.vectorize()`, you may have "
+                "forgotten to continuize your shot (`pt.continuize(shot, inplace=True)`."
+            )
 
         num_states = len(self.states)
 
