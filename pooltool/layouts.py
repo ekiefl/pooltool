@@ -286,7 +286,7 @@ def _get_nine_ball_rack(
     others = {"2", "3", "4", "5", "6", "7", "8"}
 
     blueprint = ball_cluster_blueprint(
-        seed=BallPos([], (0.5, 0.77), {"1"}),
+        seed=BallPos([], (0.5, 0.75), {"1"}),
         jump_sequence=[
             # row 2
             (Jump.UPLEFT(), others),
@@ -327,7 +327,7 @@ def _get_eight_ball_rack(
     solids = {"1", "2", "3", "4", "5", "6", "7"}
 
     blueprint = ball_cluster_blueprint(
-        seed=BallPos([], (0.5, 0.77), solids),
+        seed=BallPos([], (0.5, 0.75), solids),
         jump_sequence=[
             # row 2
             (Jump.UPLEFT(), stripes),

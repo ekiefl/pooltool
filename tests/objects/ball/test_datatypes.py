@@ -88,8 +88,9 @@ def test_ball_history_equality():
 def test_ball_history_vectorize():
     history = BallHistory()
 
-    # Empty history returns None
-    assert history.vectorize() is None
+    # Empty history raises ValueError
+    with pytest.raises(ValueError, match="History is empty"):
+        history.vectorize()
 
     # Append same state 10 times
     state = BallState.default()
@@ -97,7 +98,7 @@ def test_ball_history_vectorize():
     for _ in range(10):
         history.add(state)
 
-    assert (vectorize := history.vectorize()) is not None
+    vectorize = history.vectorize()
     rvws, motion_states, t = vectorize
 
     assert np.array_equal(rvws, np.array([state.rvw] * 10))
