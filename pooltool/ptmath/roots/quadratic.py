@@ -1,3 +1,4 @@
+import math
 from typing import Tuple
 
 import numpy as np
@@ -10,6 +11,8 @@ import pooltool.constants as const
 def solve(a: float, b: float, c: float) -> Tuple[float, float]:
     """Solve a quadratic equation At^2 + Bt + C = 0 (just-in-time compiled)"""
     if np.abs(a) < const.EPS:
+        if np.abs(b) < const.EPS:
+            return math.nan, math.nan
         u = -c / b
         return u, u
     bp = b / 2
