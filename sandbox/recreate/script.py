@@ -15,7 +15,7 @@ from numpy.typing import NDArray
 from scipy import stats
 
 import pooltool as pt
-from sandbox.recreate.plotting import plot_linear_fits, plot_trajectories
+from sandbox.recreate.plotting import plot_linear_fits
 from sandbox.recreate.trajectory import BallTrajectory, ShotTrajectoryData
 
 
@@ -23,23 +23,14 @@ from sandbox.recreate.trajectory import BallTrajectory, ShotTrajectoryData
 class LinearFit:
     """Linear fit of ball trajectory segment."""
 
-    # Time bounds
     t_start: float  # Start time of window
     t_end: float  # End time of window
     window_size: float  # Actual window size (t_end - t_start)
-
-    # Indices in original trajectory
     start_idx: int  # Start index in trajectory
     end_idx: int  # End index in trajectory
-
-    # Position bounds
     start_pos: NDArray[np.float64]  # [x, y] of starting point
     end_pos: NDArray[np.float64]  # [x, y] of ending point
-
-    # Fit quality
     r_squared: float  # R² value of the fit
-
-    # Velocity vector
     velocity: NDArray[np.float64]  # 2D velocity vector [vx, vy]
 
 
@@ -64,10 +55,9 @@ def fit_linear_segments(
 
     segments = []
 
-    # Start with the first index
     current_idx = 0
 
-    while current_idx < len(t) - 1:  # Need at least 2 points for linear regression
+    while current_idx < len(t) - 1:
         t_start = t[current_idx]
         start_pos = np.array([x[current_idx], y[current_idx]])
 
@@ -109,14 +99,8 @@ def fit_linear_segments(
         y_segment = y[indices]
 
         # Calculate direction vector using linear regression
-        slope_x, intercept_x, r_value_x, _, _ = stats.linregress(t_segment, x_segment)
-        slope_y, intercept_y, r_value_y, _, _ = stats.linregress(t_segment, y_segment)
-
-        # Calculate R² as the average of x and y R² values
-        r_squared = (r_value_x**2 + r_value_y**2) / 2
-
-        # Create velocity vector
-        velocity = np.array([slope_x, slope_y])
+        slope_x, _, r_value_x, _, _ = stats.linregress(t_segment, x_segment)
+        slope_y, _, r_value_y, _, _ = stats.linregress(t_segment, y_segment)
 
         segments.append(
             LinearFit(
@@ -127,8 +111,8 @@ def fit_linear_segments(
                 end_idx=end_idx,
                 start_pos=start_pos,
                 end_pos=end_pos,
-                r_squared=r_squared,
-                velocity=velocity,
+                r_squared=(r_value_x**2 + r_value_y**2) / 2,
+                velocity=np.array([slope_x, slope_y]),
             )
         )
 
@@ -161,6 +145,15 @@ def fit_all_trajectories(
     return results
 
 
+@dataclass
+class BallBallCollision:
+    ball1: str
+    ball2: str
+    time: float
+    position1: tuple[float, float]
+    position2: tuple[float, float]
+
+
 def main():
     """Main function to load, analyze and visualize ball collisions."""
     # Load systems
@@ -182,19 +175,13 @@ def main():
     #    list[ShotTrajectoryData],
     # )
 
-    # pt.show(systems[-1])
-    fits = fit_all_trajectories(trajs_noisy[-2], segment_length=0.05)
-    import matplotlib.pyplot as plt
-
-    plot_trajectories(trajs_noisy[-1])
-    plt.plot([fit.velocity[0] for fit in fits["yellow"]])
-    plt.show()
-    plot_linear_fits(trajs_noisy[-1], fits)
-
     print("\n=== Analysis with experimental data ===")
-    # for traj in trajs_noisy[-2:]:
-    #    fits = fit_all_trajectories(traj, segment_length=0.05)
-    #    plot_linear_fits(traj, fits)
+    for traj in trajs_noisy[-5:]:
+        fits = fit_all_trajectories(traj, segment_length=0.05)
+        import ipdb
+
+        ipdb.set_trace()
+        plot_linear_fits(traj, fits)
 
 
 if __name__ == "__main__":
