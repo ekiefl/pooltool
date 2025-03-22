@@ -3,6 +3,11 @@
 This module provides functionality to detect ball-ball collisions from trajectory
 data without relying on the physics engine. It's designed to work with both
 simulated and experimental trajectories.
+
+For billiard collisions between equal-mass balls, the magnitude of the relative velocity
+is conserved (assuming elastic collisions), but the direction changes. This detector
+uses this physical principle by looking for significant changes in the direction of
+relative velocity, rather than changes in its magnitude.
 """
 
 from typing import Dict, List, Tuple
@@ -34,16 +39,18 @@ class CollisionDetector:
     """Detects ball-ball collisions from trajectory data.
 
     This detector analyzes ball trajectories to identify potential collisions
-    based on relative distances and velocity changes, without requiring
-    access to the underlying physics engine.
+    based on relative distances and changes in direction of relative velocity.
+    For equal-mass balls, collisions are characterized by significant angular changes
+    in relative velocity direction while the magnitude remains approximately constant,
+    making this approach more reliable than magnitude-based detection.
     """
 
     def __init__(
         self,
         shot_data: ShotTrajectoryData,
         distance_threshold: float = 0.001,  # 1mm tolerance
-        velocity_change_threshold: float = 0.05,
-    ):  # 5% change
+        angle_threshold: float = 30.0,  # 30 degrees change in direction
+    ):
         """Initialize the collision detector.
 
         Parameters
@@ -52,14 +59,14 @@ class CollisionDetector:
             The trajectory data to analyze
         distance_threshold : float, optional
             Tolerance for ball-ball distance compared to expected 2*radius
-        velocity_change_threshold : float, optional
-            Minimum relative velocity change to consider a collision
+        angle_threshold : float, optional
+            Minimum angle change (degrees) in relative velocity direction to consider a collision
         """
         self.shot_data = shot_data
         self.ball_radius = shot_data.radius
         self.expected_collision_distance = 2 * self.ball_radius
         self.distance_threshold = distance_threshold
-        self.velocity_change_threshold = velocity_change_threshold
+        self.angle_threshold = angle_threshold
         self.ball_ids = list(shot_data.balls.keys())
 
     def _calculate_relative_distances(self) -> Dict[Tuple[str, str], NDArray]:
@@ -97,13 +104,19 @@ class CollisionDetector:
 
         return distances
 
-    def _calculate_relative_velocities(self) -> Dict[Tuple[str, str], NDArray]:
-        """Calculate pairwise relative velocities between balls over time.
+    def _calculate_relative_velocities(
+        self,
+    ) -> Dict[Tuple[str, str], Dict[str, NDArray]]:
+        """Calculate pairwise relative velocity information between balls over time.
 
         Returns
         -------
-        Dict[Tuple[str, str], NDArray]
-            Dictionary mapping ball ID pairs to arrays of relative velocities over time
+        Dict[Tuple[str, str], Dict[str, NDArray]]
+            Dictionary mapping ball ID pairs to dictionaries containing:
+            - 'magnitude': relative velocity magnitude
+            - 'vx': x-component of relative velocity
+            - 'vy': y-component of relative velocity
+            - 'direction': unit vectors of relative velocity
         """
         velocities = {}
 
@@ -121,20 +134,36 @@ class CollisionDetector:
                 vx2 = np.gradient(ball2.x, ball2.t)
                 vy2 = np.gradient(ball2.y, ball2.t)
 
-                # Calculate relative velocity magnitude
-                # v_rel = |v2 - v1|
+                # Calculate relative velocity vector components
+                # v_rel = v2 - v1
                 dvx = vx2 - vx1
                 dvy = vy2 - vy1
-                rel_velocity = np.sqrt(dvx**2 + dvy**2)
 
-                velocities[(ball1_id, ball2_id)] = rel_velocity
+                # Calculate magnitude
+                rel_velocity_mag = np.sqrt(dvx**2 + dvy**2)
+
+                # Create unit vectors for direction (avoiding division by zero)
+                # Replace zeros with small value to avoid division by zero
+                safe_magnitude = np.where(
+                    rel_velocity_mag > 1e-10, rel_velocity_mag, 1e-10
+                )
+                dir_x = dvx / safe_magnitude
+                dir_y = dvy / safe_magnitude
+
+                velocities[(ball1_id, ball2_id)] = {
+                    "magnitude": rel_velocity_mag,
+                    "vx": dvx,
+                    "vy": dvy,
+                    "direction_x": dir_x,
+                    "direction_y": dir_y,
+                }
 
         return velocities
 
     def _detect_potential_collisions(
         self,
         distances: Dict[Tuple[str, str], NDArray],
-        velocities: Dict[Tuple[str, str], NDArray],
+        velocities: Dict[Tuple[str, str], Dict[str, NDArray]],
     ) -> List[Tuple[str, str, int]]:
         """Identify time indices where potential collisions occur.
 
@@ -142,8 +171,8 @@ class CollisionDetector:
         ----------
         distances : Dict[Tuple[str, str], NDArray]
             Dictionary of distances between ball pairs
-        velocities : Dict[Tuple[str, str], NDArray]
-            Dictionary of relative velocities between ball pairs
+        velocities : Dict[Tuple[str, str], Dict[str, NDArray]]
+            Dictionary of relative velocity data between ball pairs
 
         Returns
         -------
@@ -166,19 +195,30 @@ class CollisionDetector:
             if not np.any(distance_close):
                 continue
 
-            # Get relative velocity for this pair
-            rel_velocity = velocities[(ball1_id, ball2_id)]
+            # Get relative velocity data for this pair
+            rel_vel_data = velocities[(ball1_id, ball2_id)]
 
-            # Check velocity changes (which could indicate a collision)
-            # Calculate percentage change in velocity
-            vel_change_percent = np.abs(np.diff(rel_velocity) / rel_velocity[:-1])
+            # Calculate dot product between consecutive direction vectors
+            # This detects angular changes in direction rather than magnitude changes
+            dir_x = rel_vel_data["direction_x"]
+            dir_y = rel_vel_data["direction_y"]
+
+            # Calculate dot product between consecutive normalized directions
+            # dot_product[i] = direction[i] · direction[i+1]
+            dot_products = dir_x[:-1] * dir_x[1:] + dir_y[:-1] * dir_y[1:]
+
+            # Convert to angle change in degrees
+            # angle = arccos(dot_product)
+            angle_changes = np.arccos(np.clip(dot_products, -1.0, 1.0)) * (
+                180.0 / np.pi
+            )
 
             # Add padding to make same size as other arrays
-            vel_change_percent = np.append(vel_change_percent, 0)
+            angle_changes = np.append(angle_changes, 0)
 
-            # Find where both distance is close to 2R and velocity changes significantly
+            # Find where both distance is close to 2R and direction changes significantly
             potential_indices = np.where(
-                distance_close & (vel_change_percent > self.velocity_change_threshold)
+                distance_close & (angle_changes > self.angle_threshold)
             )[0]
 
             # Group by time proximity to avoid detecting the same collision multiple times
@@ -337,11 +377,17 @@ if __name__ == "__main__":
         )
         for i, system in enumerate(systems)
     ]
+    # trajs_exp = pt.serialize.conversion.structure_from(
+    #   "./20221225_2_Match_Ersin_Cemal.msgpack",
+    #   list[ShotTrajectoryData],
+    # )
 
-    for traj in trajs_clean[4:]:
+    for traj in trajs_noisy:
         # Create collision detector
         detector = CollisionDetector(
-            shot_data=traj, distance_threshold=0.02, velocity_change_threshold=0.1
+            shot_data=traj,
+            distance_threshold=0.02,
+            angle_threshold=10.0,
         )
 
         # Detect collisions
