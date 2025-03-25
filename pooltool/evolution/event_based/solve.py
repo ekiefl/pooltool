@@ -1,4 +1,4 @@
-from math import acos
+from math import acos, isnan
 from typing import Tuple
 
 import numpy as np
@@ -247,6 +247,9 @@ def ball_linear_cushion_collision_time(
 
     min_time = np.inf
     for root in roots:
+        if isnan(root):
+            continue
+
         if np.abs(root.imag) > const.EPS:
             continue
 
