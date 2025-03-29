@@ -124,3 +124,135 @@ class BallTrajectory:
         dt = t[1] - t[0]
         t[-1] = t[-2] + dt  # last value is not dt after second last. fix that
         return cls(rvw[:, 0, 0], rvw[:, 0, 1], t)
+
+
+@attrs.define
+class Anchor:
+    id: str
+    t: float
+    x: float
+    y: float
+
+
+@attrs.define
+class TrajectoryDatum:
+    id: str
+    time: float
+    pos: NDArray[np.float64]
+    vec: NDArray[np.float64]
+
+    @property
+    def unit(self) -> NDArray[np.float64]:
+        return self.vec / self.norm
+
+    @property
+    def norm(self) -> float:
+        return pt.ptmath.norm2d(self.vec)
+
+    @classmethod
+    def from_anchors(cls, start_anchor: Anchor, end_anchor: Anchor) -> TrajectoryDatum:
+        assert start_anchor.id == end_anchor.id
+        return cls(
+            end_anchor.id,
+            end_anchor.t,
+            np.array([end_anchor.x, end_anchor.y]),
+            np.array([end_anchor.x - start_anchor.x, end_anchor.y - start_anchor.y]),
+        )
+
+
+def build_anchors_from_simulation(
+    system: pt.System,
+) -> dict[str, list[Anchor]]:
+    anchors: dict[str, list[Anchor]] = {}
+    for ball in system.balls.values():
+        ball_anchors: list[Anchor] = []
+
+        ball_events = pt.events.filter_events(
+            system.events,
+            pt.events.by_ball(ball.id, keep_nonevent=True),
+            pt.events.by_type(
+                [
+                    pt.EventType.BALL_BALL,
+                    pt.EventType.BALL_LINEAR_CUSHION,
+                    pt.EventType.BALL_CIRCULAR_CUSHION,
+                    pt.EventType.NONE,
+                ]
+            ),
+        )
+
+        event_indices = [
+            idx for idx, event in enumerate(system.events) if event in ball_events
+        ]
+
+        for i in range(len(event_indices) - 1):
+            state = ball.history[event_indices[i]]
+            next_state = ball.history[event_indices[i + 1]]
+
+            mid_point = (next_state.t + state.t) / 2
+            mid_state = pt.interpolate_ball_states(ball, [mid_point])[0]
+
+            point = Anchor(ball.id, state.t, state.rvw[0, 0], state.rvw[0, 1])
+            mid_point = Anchor(
+                ball.id, mid_state.t, mid_state.rvw[0, 0], mid_state.rvw[0, 1]
+            )
+
+            ball_anchors.append(point)
+            ball_anchors.append(mid_point)
+
+        # Add final state
+        final_state = ball.history[-1]
+        ball_anchors.append(
+            Anchor(
+                ball.id,
+                final_state.t,
+                final_state.rvw[0, 0],
+                final_state.rvw[0, 1],
+            )
+        )
+
+        anchors[ball.id] = ball_anchors
+
+    return anchors
+
+
+def build_traj_data_from_anchors(
+    anchors: dict[str, list[Anchor]],
+) -> list[TrajectoryDatum]:
+    traj_data: list[TrajectoryDatum] = []
+
+    for ball_anchors in anchors.values():
+        for i in range(1, len(ball_anchors)):
+            traj_datum = TrajectoryDatum.from_anchors(
+                ball_anchors[i - 1],
+                ball_anchors[i],
+            )
+            traj_data.append(traj_datum)
+
+    return sorted(traj_data, key=lambda v: (v.time, v.id))
+
+
+def get_corresponding_anchors(
+    system: pt.System,
+    template_anchors: dict[str, list[Anchor]],
+) -> dict[str, list[Anchor]]:
+    anchors: dict[str, list[Anchor]] = {}
+
+    for ball_id, template_ball_anchors in template_anchors.items():
+        ball_anchors: list[Anchor] = []
+
+        times = np.array([anchor.t for anchor in template_ball_anchors])
+        states = pt.interpolate_ball_states(
+            system.balls[ball_id], times, extrapolate=True
+        )
+
+        for state in states:
+            anchor = Anchor(ball_id, state.t, state.rvw[0, 0], state.rvw[0, 1])
+            ball_anchors.append(anchor)
+
+        anchors[ball_id] = ball_anchors
+
+    return anchors
+
+
+if __name__ == "__main__":
+    pass

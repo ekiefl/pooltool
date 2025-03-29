@@ -161,7 +161,7 @@ def main():
 
     noise_level: float = 0.002
 
-    trajs_clean = [ShotTrajectoryData.from_simulated(system) for system in systems]
+    # trajs_clean = [ShotTrajectoryData.from_simulated(system) for system in systems]
     trajs_noisy = [
         ShotTrajectoryData.from_simulated(
             system,
