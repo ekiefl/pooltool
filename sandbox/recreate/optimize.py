@@ -38,36 +38,6 @@ class ShotParameters:
         return (self.phi_raw) % 360
 
 
-def compensate_V0_for_offset(base_V0: float, a: float, b: float) -> float:
-    """
-    Compensate the cue velocity (V0) for off-center hits to maintain consistent ball speed.
-
-    When striking a ball off-center (a,b ≠ 0,0), the outgoing ball velocity decreases.
-    This function calculates the adjusted V0 needed to maintain the same outgoing
-    ball velocity as a center hit.
-
-    The compensation formula is:
-    V0_compensated = base_V0 * (1 + [5/(2(1 + m/M))] * (a² + b²))
-
-    Args:
-        base_V0: The cue velocity for center hit (a=0, b=0)
-        a: Horizontal offset from ball center (-1 to 1)
-        b: Vertical offset from ball center (-1 to 1)
-
-    Returns:
-        The compensated V0 value to use for the off-center hit
-    """
-    system = template()
-    ball_mass = system.balls[system.cue.cue_ball_id].params.m
-    cue_mass = system.cue.specs.M
-
-    distance_squared = a**2 + b**2
-    coefficient = 5 / (2 * (1 + ball_mass / cue_mass))
-    compensation_factor = 1 + coefficient * distance_squared
-
-    return base_V0 * compensation_factor
-
-
 @attrs.define
 class InitializationParameters:
     white_pos: NDArray[np.float64]
@@ -124,6 +94,90 @@ def initialize_system_from_trajectory(trajectory: ShotTrajectoryData) -> pt.Syst
     return build_system(params)
 
 
+def parameter_sweep(
+    ref_traj: ShotTrajectoryData,
+    ref_anchors: dict[str, list[Anchor]],
+    ref_data: list[TrajectoryDatum],
+    param_name: str,
+    param_values: NDArray[np.float64],
+    fixed_params: dict[str, float],
+    time_cutoff: float,
+    alpha: float = 1.0,
+    plot: bool = True,
+) -> tuple[float, list[float]]:
+    """
+    Perform a parameter sweep to find the optimal value for a given parameter.
+
+    Parameters
+    ----------
+    ref_traj : ShotTrajectoryData
+        Reference trajectory data
+    ref_anchors : dict[str, list[Anchor]]
+        Reference anchor points
+    ref_data : list[TrajectoryDatum]
+        Reference trajectory data points
+    param_name : str
+        Name of the parameter to sweep
+    param_values : NDArray[np.float64]
+        Array of parameter values to try
+    fixed_params : dict[str, float]
+        Dictionary of parameters to keep fixed during the sweep
+    time_cutoff : float
+        Time cutoff for the simulation
+    alpha : float, default=1.0
+        Weight for direction vs magnitude in loss calculation
+    plot : bool, default=True
+        Whether to plot the loss curve
+
+    Returns
+    -------
+    tuple[float, list[float]]
+        Optimal parameter value and list of losses for all parameter values
+    """
+    num_datapoints = sum(1 for datum in ref_data if datum.time <= time_cutoff)
+    losses = []
+
+    for param_value in param_values:
+        trial = initialize_system_from_trajectory(ref_traj)
+
+        # Set all parameters
+        params = {**fixed_params, param_name: param_value}
+        trial.cue.set_state(**params)
+
+        pt.simulate(trial, inplace=True, t_final=time_cutoff)
+        trial_anchors = get_corresponding_anchors(trial, ref_anchors)
+        trial_data = build_traj_data_from_anchors(trial_anchors)
+
+        loss = calculate_vector_loss(
+            ref_data[:num_datapoints],
+            trial_data[:num_datapoints],
+            alpha=alpha,
+        )
+        losses.append(loss)
+
+    optimal_value = param_values[np.argmin(losses)]
+
+    if plot:
+        import matplotlib.pyplot as plt
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(param_values, losses)
+        plt.xlabel(param_name)
+        plt.ylabel("Loss")
+        plt.title(f"Parameter sweep for {param_name}")
+        plt.axvline(
+            x=optimal_value,
+            color="r",
+            linestyle="--",
+            label=f"Optimal {param_name} = {optimal_value:.4f}",
+        )
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+    return optimal_value, losses
+
+
 def estimate_phi_and_V0(
     ref_traj: ShotTrajectoryData,
     ref_anchors: dict[str, list[Anchor]],
@@ -134,57 +188,36 @@ def estimate_phi_and_V0(
 ) -> tuple[float, float]:
     times = sorted(set([datum.time for datum in ref_data]))
     time_cutoff = times[events - 1]
-    num_datapoints = sum(1 for datum in ref_data if datum.time <= time_cutoff)
 
-    phi_losses = []
+    # First sweep for phi
     phi_low, phi_high = PARAMETER_BOUNDS["phi"]
     phis = np.linspace(phi_low, phi_high, num_phi)
+    phi_estimate, _ = parameter_sweep(
+        ref_traj=ref_traj,
+        ref_anchors=ref_anchors,
+        ref_data=ref_data,
+        param_name="phi",
+        param_values=phis,
+        fixed_params={"V0": 1.0},
+        time_cutoff=time_cutoff,
+        alpha=1.0,
+        plot=True,
+    )
 
-    for phi in phis:
-        trial = initialize_system_from_trajectory(ref_traj)
-        trial.cue.set_state(phi=phi, V0=1.0)
-        pt.simulate(trial, inplace=True)
-        trial_anchors = get_corresponding_anchors(trial, ref_anchors)
-        trial_data = build_traj_data_from_anchors(trial_anchors)
-
-        loss = calculate_vector_loss(
-            ref_data[:num_datapoints],
-            trial_data[:num_datapoints],
-            alpha=1,
-        )
-        phi_losses.append(loss)
-
-    phi_estimate = phis[np.argmin(phi_losses)]
-
-    import matplotlib.pyplot as plt
-
-    plt.plot(phis, phi_losses)
-    plt.show()
-
-    V0_losses = []
+    # Then sweep for V0 using the estimated phi
     V0_low, V0_high = PARAMETER_BOUNDS["V0"]
     V0s = np.linspace(V0_low, V0_high, num_V0)
-
-    for V0 in V0s:
-        trial = initialize_system_from_trajectory(ref_traj)
-        trial.cue.set_state(V0=V0, phi=phi_estimate)
-        pt.simulate(trial, inplace=True, t_final=time_cutoff)
-        trial_anchors = get_corresponding_anchors(trial, ref_anchors)
-        trial_data = build_traj_data_from_anchors(trial_anchors)
-
-        loss = calculate_vector_loss(
-            ref_data[:num_datapoints],
-            trial_data[:num_datapoints],
-            alpha=0.0,
-        )
-        V0_losses.append(loss)
-
-    V0_estimate = V0s[np.argmin(V0_losses)]
-
-    import matplotlib.pyplot as plt
-
-    plt.plot(V0s, V0_losses)
-    plt.show()
+    V0_estimate, _ = parameter_sweep(
+        ref_traj=ref_traj,
+        ref_anchors=ref_anchors,
+        ref_data=ref_data,
+        param_name="V0",
+        param_values=V0s,
+        fixed_params={"phi": phi_estimate},
+        time_cutoff=time_cutoff,
+        alpha=0.0,
+        plot=True,
+    )
 
     return phi_estimate, V0_estimate
 
@@ -200,7 +233,7 @@ if __name__ == "__main__":
     test.reset_history()
     pt.simulate(test, inplace=True)
 
-    phi, V0 = estimate_phi_and_V0(
+    phi_init, V0_init = estimate_phi_and_V0(
         reference_traj,
         reference_anchors,
         reference_data,
@@ -208,7 +241,8 @@ if __name__ == "__main__":
         num_phi=360,
         num_V0=100,
     )
+
     trial = initialize_system_from_trajectory(reference_traj)
-    trial.cue.set_state(phi=phi, V0=V0)
+    trial.cue.set_state(phi=phi_init, V0=V0_init)
     pt.simulate(trial, inplace=True)
     pt.show(trial)
