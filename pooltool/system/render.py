@@ -91,8 +91,12 @@ class SystemController:
         """Returns whether or not the animation is finished
 
         Returns true if the animation has stopped and it's not because the game has been
-        paused. The animation is never finished if it's playing in a loop.
+        paused. The animation is never finished if it's playing in a loop or in parallel mode.
         """
+        # Never consider animation finished in LOOP mode or in parallel mode
+        if self.playback_mode == PlaybackMode.LOOP or self.is_parallel_mode:
+            return False
+
         return not self.shot_animation.isPlaying() and not self.paused
 
     def buildup(self) -> None:
@@ -138,7 +142,8 @@ class SystemController:
         if mode is not None:
             self.playback(mode)
 
-        if self.playback_mode == PlaybackMode.LOOP:
+        # In parallel mode, always use LOOP behavior
+        if self.playback_mode == PlaybackMode.LOOP or self.is_parallel_mode:
             self.shot_animation.loop()
         elif self.playback_mode == PlaybackMode.SINGLE:
             self.shot_animation.start()
