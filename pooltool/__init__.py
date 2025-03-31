@@ -39,7 +39,7 @@ import pooltool.system as system
 import pooltool.terminal as terminal
 import pooltool.utils as utils
 from pooltool.events import EventType
-from pooltool.evolution import continuize, simulate
+from pooltool.evolution import continuize, interpolate_ball_states, simulate
 from pooltool.game.datatypes import GameType
 from pooltool.interact import Game, show
 from pooltool.layouts import generate_layout, get_rack
@@ -91,5 +91,6 @@ __all__ = [
     "get_ruleset",
     "simulate",
     "continuize",
+    "interpolate_ball_states",
     "generate_layout",
 ]

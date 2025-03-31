@@ -203,7 +203,7 @@ class BallRender(Render):
         ws = rvws[:, 2, :]
         self.quats = autils.as_quaternion(ws, ts)
 
-    def get_playback_sequence(self, playback_speed=1) -> MetaInterval:
+    def get_playback_sequence(self, playback_speed: float = 1.0) -> MetaInterval:
         """Creates the motion sequences of the ball for a given playback speed"""
         if self._ball.history_cts.empty:
             return Sequence()

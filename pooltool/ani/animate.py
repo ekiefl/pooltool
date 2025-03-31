@@ -164,6 +164,10 @@ class Interface(ShowBase):
         tasks.register_event("toggle-help", hud.toggle_help)
 
     def close_scene(self):
+        # Ensure parallel mode is exited
+        if visual.is_parallel_mode:
+            visual.exit_parallel_mode()
+
         visual.teardown()
 
         environment.unload_room()
@@ -366,7 +370,12 @@ class ShotViewer(Interface):
 
                 Note:
                     If a multisystem is passed, the systems can be scrolled through by
-                    pressing *n* (next) and *p* (previous).
+                    pressing *n* (next) and *p* (previous). When using ``pt.show()``,
+                    press *Enter* to toggle parallel visualization mode where all systems
+                    play simultaneously with reduced opacity except the active one. In
+                    parallel mode, use *n* and *p* to change which system has full opacity.
+                    Note that parallel visualization is only available in ``pt.show()``
+                    and not when playing the game through ``run-pooltool``.
             title:
                 The title to display in the visualization. Defaults to an empty string.
             camera_state:
