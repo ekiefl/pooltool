@@ -38,6 +38,7 @@ class SystemRender:
 class PlaybackMode(StrEnum):
     LOOP = auto()
     SINGLE = auto()
+    PARALLEL = auto()
 
 
 class SystemController:
@@ -49,6 +50,8 @@ class SystemController:
         self.paused: bool = True
         self.playback_speed: float = 1
         self.playback_mode: PlaybackMode = PlaybackMode.SINGLE
+        self.parallel_systems: Dict[int, SystemRender] = {}
+        self.is_parallel_mode: bool = False
 
     @property
     def table(self):
@@ -204,6 +207,176 @@ class SystemController:
 
         self.shot_animation.set_t(self.stroke_animation.get_duration())
 
+    def setup_parallel_mode(self) -> None:
+        """Setup all systems for parallel visualization with synchronized animations"""
+        if self.is_parallel_mode:
+            return
+
+        # First, clear any existing animations
+        self.reset_animation(reset_pause=True)
+
+        self.is_parallel_mode = True
+        self.parallel_systems = {}
+
+        # Store current system
+        current_index = multisystem.active_index
+
+        # Create SystemRender for each system in multisystem
+        for idx, system in enumerate(multisystem):
+            # Skip if system doesn't have events (unsimulated)
+            if len(system.events) == 0 and idx != len(multisystem) - 1:
+                continue
+
+            # If this is the active system, we already have it
+            if idx == current_index:
+                self.parallel_systems[idx] = self.system
+                continue
+
+            # Create SystemRender for this system
+            if system.simulated and not system.continuized:
+                continuize(system, inplace=True)
+
+            sys_render = SystemRender.from_system(system)
+            self.parallel_systems[idx] = sys_render
+
+        # Build animations for all systems
+        self._build_parallel_animations(current_index)
+
+    def _build_parallel_animations(self, active_index: int) -> None:
+        """Build synchronized animations for parallel visualization"""
+        if not self.is_parallel_mode:
+            return
+
+        # First, render all systems with appropriate opacity
+        for idx, sys_render in self.parallel_systems.items():
+            if idx == active_index:
+                # Set active system to full opacity
+                for ball in sys_render.balls.values():
+                    if not ball.rendered:
+                        ball.render()
+                    ball.set_alpha(1.0)
+            else:
+                # Render with reduced opacity
+                for ball_id, ball in sys_render.balls.items():
+                    if not ball.rendered:
+                        ball.render()
+                    ball.set_alpha(0.3)
+
+                # Hide cue for non-active systems
+                sys_render.cue.hide_nodes()
+
+        # Now build animations for all systems and combine them
+        all_ball_animations = Parallel()
+        longest_duration = 0
+
+        # First, build all ball animations and find the longest duration
+        for idx, sys_render in self.parallel_systems.items():
+            # For each ball in this system
+            for ball_id, ball in sys_render.balls.items():
+                # Set quaternions for animation
+                ball.set_quats(ball._ball.history_cts)
+
+                # Get ball animation
+                ball_animation = ball.get_playback_sequence(
+                    playback_speed=self.playback_speed
+                )
+                if len(ball_animation) > 0:
+                    all_ball_animations.append(ball_animation)
+
+                    # Check if this animation is longer than current max
+                    if ball_animation.getDuration() > longest_duration:
+                        longest_duration = ball_animation.getDuration()
+
+        # Now, build stroke animation only for active system
+        active_sys = self.parallel_systems[active_index]
+        stroke_animation = Sequence(
+            ShowInterval(active_sys.cue.get_node("cue_stick")),
+            active_sys.cue.get_stroke_sequence(),
+            HideInterval(active_sys.cue.get_node("cue_stick")),
+        )
+
+        # Combine stroke animation with all ball animations
+        self.stroke_animation = stroke_animation
+        self.ball_animations = all_ball_animations
+        self.shot_animation = Sequence(
+            Func(self.restart_ball_animations),
+            stroke_animation,
+            all_ball_animations,
+            Wait(0.5),  # Add a small buffer at the end
+        )
+
+    def _render_parallel_systems(self, active_index: int) -> None:
+        """Update opacity for all rendered systems"""
+        if not self.is_parallel_mode:
+            return
+
+        # Update opacity for all systems
+        for idx, sys_render in self.parallel_systems.items():
+            if idx == active_index:
+                # Set active system to full opacity
+                for ball in sys_render.balls.values():
+                    ball.set_alpha(1.0)
+                sys_render.cue.show_nodes()
+            else:
+                # Set non-active systems to reduced opacity
+                for ball in sys_render.balls.values():
+                    ball.set_alpha(0.3)
+                sys_render.cue.hide_nodes()
+
+    def exit_parallel_mode(self) -> None:
+        """Exit parallel visualization mode"""
+        if not self.is_parallel_mode:
+            return
+
+        # Store animation state
+        was_playing = not self.paused
+        current_time = 0
+        if len(self.shot_animation) > 0:
+            current_time = self.shot_animation.get_t()
+
+        # Pause the animation to prevent errors during transition
+        self.pause_animation()
+
+        # Clear the animation before removing nodes
+        self.reset_animation(reset_pause=True)
+
+        # Remove all non-active systems
+        active_idx = multisystem.active_index
+        for idx, sys_render in self.parallel_systems.items():
+            if idx != active_idx:
+                for ball in sys_render.balls.values():
+                    ball.remove_nodes()
+                sys_render.cue.remove_nodes()
+
+        # Keep reference to active system
+        active_system = self.parallel_systems.get(active_idx)
+        self.system = active_system  # Ensure system is still set properly
+
+        # Reset state
+        self.parallel_systems = {}
+        self.is_parallel_mode = False
+
+        # Rebuild animation for the active system only
+        self.build_shot_animation()
+
+        # Restore animation state
+        if was_playing:
+            self.animate(PlaybackMode.LOOP)
+            # Try to restore animation time position if possible
+            if current_time > 0 and current_time <= self.shot_animation.getDuration():
+                self.shot_animation.set_t(current_time)
+
+    def update_parallel_active(self, new_index: int) -> None:
+        """Update which system is active in parallel mode"""
+        if not self.is_parallel_mode:
+            return
+
+        # Update system opacities
+        self._render_parallel_systems(new_index)
+
+        # We don't need to rebuild animations since we're just changing opacities
+        # The animations should continue playing from where they were
+
     def build_shot_animation(
         self,
         animate_stroke: bool = True,
@@ -232,6 +405,9 @@ class SystemController:
                 Wait(trailing_buffer),
             )
             return
+
+        if not self.system.cue.rendered:
+            self.system.cue.render()
 
         self.stroke_animation = Sequence(
             ShowInterval(self.system.cue.get_node("cue_stick")),

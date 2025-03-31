@@ -98,7 +98,10 @@ class ShotMode(BaseMode):
         self.register_keymap_event("i-up", Action.introspect, False)
         self.register_keymap_event("n-up", Action.next_shot, True)
         self.register_keymap_event("p-up", Action.prev_shot, True)
-        self.register_keymap_event("enter-up", Action.parallel, True)
+
+        # Only register the parallel visualization mode if in ShotViewer mode (not in game)
+        if self.view_only:
+            self.register_keymap_event("enter-up", Action.parallel, True)
 
         tasks.add(self.shot_view_task, "shot_view_task")
         tasks.add(self.shot_animation_task, "shot_animation_task")
@@ -117,6 +120,11 @@ class ShotMode(BaseMode):
             start state of the shot.
         """
         assert key in {"advance", "reset", "soft"}
+
+        # Always ensure parallel mode is exited, regardless of view_only status
+        # This ensures clean exit even if view_only state changed
+        if visual.is_parallel_mode:
+            visual.exit_parallel_mode()
 
         if key == "advance":
             # New shot means new system. Depending how ShotMode was entered, it may
@@ -247,10 +255,29 @@ class ShotMode(BaseMode):
                 enter_kwargs=dict(load_prev_cam=True),
             )
 
-        elif self.keymap[Action.parallel]:
-            # FIXME Implementing parallel would involve code here and throughout shot.py
-            # and view.py
-            raise NotImplementedError("This will one day be re-implemented")
+        elif (
+            self.keymap[Action.parallel] and self.view_only
+        ):  # Only process in ShotViewer mode
+            self.keymap[Action.parallel] = False
+            if visual.is_parallel_mode:
+                # Exit parallel mode
+                visual.exit_parallel_mode()
+                self.change_animation(multisystem.active_index)
+            else:
+                # First pause and reset any current animation
+                was_playing = not visual.paused
+                visual.pause_animation()
+                visual.reset_animation()
+
+                # Enter parallel mode
+                visual.setup_parallel_mode()
+
+                # Start the animation if it was previously playing
+                if was_playing:
+                    visual.animate(PlaybackMode.LOOP)
+                else:
+                    # Just build the animation but don't play it
+                    visual.paused = True
 
         elif self.keymap[Action.prev_shot]:
             self.keymap[Action.prev_shot] = False
@@ -285,8 +312,33 @@ class ShotMode(BaseMode):
     @staticmethod
     def change_animation(shot_index):
         """Switch to a different system in the system collection"""
+        # Was the animation playing before?
+        was_playing = not visual.paused
+
+        # Pause animation during transition to prevent visual glitches
+        visual.pause_animation()
+
         # Switch shots
         multisystem.set_active(shot_index)
+
+        if visual.is_parallel_mode:
+            # In parallel mode, just update which system is active
+            visual.update_parallel_active(shot_index)
+
+            # Set the HUD
+            system_cue = multisystem.active.cue
+            hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
+
+            # Resume animation if it was playing
+            if was_playing:
+                visual.resume_animation()
+
+            return
+
+        # Standard mode - clear any existing animation
+        visual.reset_animation()
+
+        # Setup new system
         visual.attach_system(multisystem.active)
         visual.buildup()
 
@@ -294,8 +346,12 @@ class ShotMode(BaseMode):
         visual.build_shot_animation()
 
         # Changing to a different shot is considered advanced maneuvering, so we enter
-        # loop mode.
-        visual.animate(PlaybackMode.LOOP)
+        # loop mode if it was previously playing
+        if was_playing:
+            visual.animate(PlaybackMode.LOOP)
+        else:
+            # Ready to play but maintain paused state
+            visual.playback(PlaybackMode.LOOP)
 
         cue_avoid.init_collisions()
 
