@@ -213,6 +213,7 @@ class ShotMode(BaseMode):
         elif self.keymap[Action.aim] or visual.animation_finished:
             # Either the user has requested to start the next shot, or the animation has
             # finished
+
             Global.mode_mgr.change_mode(Mode.aim, exit_kwargs=dict(key="advance"))
 
         elif self.keymap[Action.zoom]:

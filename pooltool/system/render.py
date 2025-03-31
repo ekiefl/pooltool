@@ -149,9 +149,21 @@ class SystemController:
 
     def restart_animation(self) -> None:
         """Set the animation to t=0"""
+        # If animation is completed (in final state), clear it before setting time. This
+        # avoids stdout warnings from Panda3D like:
+        # :interval(warning): CLerpNodePathInterval::priv_step() called for LerpPosQuatInterval-1 in state final.
+        if not self.shot_animation.isPlaying() and not self.paused:
+            self.shot_animation.clearToInitial()
+
         self.shot_animation.set_t(0)
 
     def restart_ball_animations(self) -> None:
+        # If animation is completed (in final state), clear it before setting time. This
+        # avoids stdout warnings from Panda3D like:
+        # :interval(warning): CLerpNodePathInterval::priv_step() called for LerpPosQuatInterval-1 in state final.
+        if not self.ball_animations.isPlaying() and not self.paused:
+            self.ball_animations.clearToInitial()
+
         self.ball_animations.set_t(0)
 
     def toggle_pause(self) -> None:
