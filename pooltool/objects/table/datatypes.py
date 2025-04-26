@@ -184,11 +184,12 @@ class Table:
             assert isinstance(specs, BilliardTableSpecs)
             segments = create_billiard_table_cushion_segments(specs)
             pockets = {}
-        elif (
-            specs.table_type == TableType.POCKET
-            or specs.table_type == TableType.SNOOKER
-        ):
+        elif specs.table_type == TableType.POCKET:
             assert isinstance(specs, PocketTableSpecs)
+            segments = create_pocket_table_cushion_segments(specs)
+            pockets = create_pocket_table_pockets(specs)
+        elif specs.table_type == TableType.SNOOKER:
+            assert isinstance(specs, SnookerTableSpecs)
             segments = create_pocket_table_cushion_segments(specs)
             pockets = create_pocket_table_pockets(specs)
         else:
