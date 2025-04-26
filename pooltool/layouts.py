@@ -422,6 +422,7 @@ def _get_snooker_rack(
     table: Table,
     ballset: Optional[BallSet] = None,
     ball_params: Optional[BallParams] = None,
+    spacing_factor: float = 1e-3,
     **kwargs,
 ) -> Dict[str, Ball]:
     if ball_params is None:
@@ -432,8 +433,10 @@ def _get_snooker_rack(
 
     red_ids = set([f"red_{i:02d}" for i in range(1, 16)])
 
+    first_red_y = 0.75 + (2 * (spacing_factor + 1) * ball_params.R / table.l)
+
     blueprint = ball_cluster_blueprint(
-        seed=BallPos([], (0.5, 0.77), red_ids),
+        seed=BallPos([], (0.5, first_red_y), red_ids),
         jump_sequence=[
             # row 2
             (Jump.UPLEFT(), red_ids),
@@ -460,7 +463,12 @@ def _get_snooker_rack(
     blueprint += colors
 
     return generate_layout(
-        blueprint, table, ballset=ballset, ball_params=ball_params, **kwargs
+        blueprint,
+        table,
+        ballset=ballset,
+        ball_params=ball_params,
+        spacing_factor=spacing_factor,
+        **kwargs,
     )
 
 

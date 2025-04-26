@@ -9,6 +9,7 @@ import pytest
 from numpy.typing import NDArray
 
 import pooltool.ptmath as ptmath
+from pooltool.game.datatypes import GameType
 from pooltool.layouts import (
     BallPos,
     Dir,
@@ -17,6 +18,7 @@ from pooltool.layouts import (
     _get_anchor_translation,
     _get_ball_ids,
     generate_layout,
+    get_rack,
 )
 from pooltool.objects import BallParams, Table
 from pooltool.objects.ball.datatypes import Ball
@@ -198,3 +200,35 @@ def test_seed():
     for result1, result2 in combinations(results_fixed_seed, 2):
         assert np.array_equal(result1.ball1_pos, result2.ball1_pos)
         assert np.array_equal(result1.ball2_pos, result2.ball2_pos)
+
+
+@pytest.mark.parametrize(
+    "game_type",
+    [
+        GameType.EIGHTBALL,
+        GameType.NINEBALL,
+        GameType.SNOOKER,
+    ],
+)
+def test_rack_no_overlapping_balls(game_type: GameType):
+    """Test that the rack generation does not create overlapping balls.
+
+    Generate 200 racks for each game type and verify no balls are overlapping.
+    """
+    for _ in range(200):
+        ball_params = BallParams.default(game_type=game_type)
+        rack = get_rack(
+            game_type=game_type,
+            table=Table.default(),
+            ball_params=ball_params,
+            spacing_factor=1e-5,  # Small spacing factor to more likely expose issues
+        )
+
+        for i, ball1 in enumerate(rack.values()):
+            for j, ball2 in enumerate(rack.values()):
+                if i >= j:
+                    continue
+
+                assert not ptmath.is_overlapping(
+                    ball1.state.rvw, ball2.state.rvw, ball_params.R, ball_params.R
+                ), f"Balls {ball1.id} and {ball2.id} are overlapping in {game_type} rack"
