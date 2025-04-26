@@ -215,7 +215,7 @@ def test_rack_no_overlapping_balls(game_type: GameType):
 
     Generate 200 racks for each game type and verify no balls are overlapping.
     """
-    for i in range(200):
+    for _ in range(200):
         ball_params = BallParams.default(game_type=game_type)
         rack = get_rack(
             game_type=game_type,
