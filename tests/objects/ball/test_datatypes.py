@@ -12,6 +12,7 @@ from pooltool.objects.ball.datatypes import (
     _null_rvw,
 )
 from pooltool.objects.ball.sets import get_ballset
+from pooltool.serialize import SerializeFormat, conversion
 
 
 def test__null_rvw():
@@ -63,6 +64,23 @@ def test_ball_history_empty():
     empty_history = BallHistory()
     assert not len(empty_history)
     assert empty_history.empty
+
+
+def test_ball_history_empty_serialization():
+    """Test that an empty BallHistory can be serialized and deserialized."""
+    empty_history = BallHistory()
+
+    # Test both JSON and MSGPACK formats
+    for fmt in [SerializeFormat.JSON, SerializeFormat.MSGPACK]:
+        c = conversion[fmt]
+        # Serialize
+        serialized = c.unstructure(empty_history)
+        # Deserialize
+        deserialized = c.structure(serialized, BallHistory)
+
+        # Verify both are empty
+        assert deserialized.empty
+        assert empty_history == deserialized
 
 
 def test_ball_history_equality():
