@@ -308,7 +308,9 @@ class BallHistory:
 
 
 conversion.register_unstructure_hook(
-    BallHistory, lambda v: v.vectorize(), which=(SerializeFormat.MSGPACK,)
+    BallHistory,
+    lambda v: v.vectorize() if not v.empty else None,
+    which=(SerializeFormat.MSGPACK,),
 )
 conversion.register_structure_hook(
     BallHistory,
