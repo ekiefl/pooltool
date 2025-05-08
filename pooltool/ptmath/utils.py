@@ -267,6 +267,16 @@ def surface_velocity(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def tangent_surface_velocity(
+    rvw: NDArray[np.float64], d: NDArray[np.float64], R: float
+) -> NDArray[np.float64]:
+    """Compute velocity tangent to surface at a point on ball's surface (specified by unit direction vector)"""
+    _, v, w = rvw
+    v_t = v - np.dot(v, d) * d
+    return v_t + cross(w, R * d)
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def rel_velocity(rvw: NDArray[np.float64], R: float) -> NDArray[np.float64]:
     """Compute velocity of ball's point of contact with the cloth relative to the cloth
 
