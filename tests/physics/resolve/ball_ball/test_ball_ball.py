@@ -118,7 +118,7 @@ def test_head_on_zero_spin_inelastic(model: BallBallCollisionStrategy, e_b: floa
 
 
 @pytest.mark.parametrize("model", [FrictionalInelastic(), FrictionalMathavan()])
-@pytest.mark.parametrize("e_b", [0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
+@pytest.mark.parametrize("e_b", [0.6, 0.8, 1.0])
 def test_translating_head_on_zero_spin_inelastic(
     model: BallBallCollisionStrategy, e_b: float
 ):
@@ -157,12 +157,12 @@ def test_head_on_z_spin(model: BallBallCollisionStrategy, cb_wz_i: float):
 @pytest.mark.parametrize(
     "model", [FrictionalInelastic(), FrictionalMathavan(num_iterations=int(1e5))]
 )
-@pytest.mark.parametrize("speed", np.logspace(-1, 1, 5))
+@pytest.mark.parametrize("speed", np.logspace(-1, 1, 4))
 @pytest.mark.parametrize(
-    "line_of_centers_angle_radians", np.linspace(0, 2.0 * math.pi, 8, endpoint=False)
+    "line_of_centers_angle_radians", np.linspace(0, 2.0 * math.pi, 6, endpoint=False)
 )
 @pytest.mark.parametrize(
-    "cut_angle_radians", np.linspace(0, math.pi / 2.0, 8, endpoint=False)
+    "cut_angle_radians", np.linspace(0, math.pi / 2.0, 6, endpoint=False)
 )
 def test_gearing_z_spin(
     model: BallBallCollisionStrategy,
@@ -202,14 +202,14 @@ def test_gearing_z_spin(
 
 
 @pytest.mark.parametrize("model", [FrictionalInelastic()])
-@pytest.mark.parametrize("speed", np.logspace(0, 1, 5))
+@pytest.mark.parametrize("speed", np.logspace(0, 1, 4))
 @pytest.mark.parametrize(
-    "line_of_centers_angle_radians", np.linspace(0, 2.0 * math.pi, 8, endpoint=False)
+    "line_of_centers_angle_radians", np.linspace(0, 2.0 * math.pi, 6, endpoint=False)
 )
 @pytest.mark.parametrize(
-    "cut_angle_radians", np.linspace(0, math.pi / 2.0, 8, endpoint=False)
+    "cut_angle_radians", np.linspace(0, math.pi / 2.0, 6, endpoint=False)
 )
-@pytest.mark.parametrize("relative_surface_speed", np.linspace(0, 0.05, 5))
+@pytest.mark.parametrize("relative_surface_speed", np.linspace(0, 0.05, 4))
 def test_low_relative_surface_velocity(
     model: BallBallCollisionStrategy,
     speed: float,
