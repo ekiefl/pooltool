@@ -85,9 +85,9 @@ def is_turn_over(shot: System, constraints: ShotConstraints, legal: bool) -> boo
     assert "white" not in pocketed_on_balls, "Legal shot has cue in pocket?"
 
     # Assert no off-balls are pocketed
-    assert not is_off_ball_pocketed(
-        shot, constraints
-    ), "Legal shot w/ off-ball pocketed?"
+    assert not is_off_ball_pocketed(shot, constraints), (
+        "Legal shot w/ off-ball pocketed?"
+    )
 
     # Assert only one ball pocketed if on COLORS
     if BallGroup.get(constraints.hittable) is BallGroup.COLORS:

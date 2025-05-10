@@ -241,9 +241,9 @@ def test_low_relative_surface_velocity(
 
     # sanity check the initial conditions
     v_c = ptmath.tangent_surface_velocity(cb_i.state.rvw, unit_normal, cb_i.params.R)
-    assert (
-        abs(relative_surface_speed - ptmath.norm3d(v_c)) < 1e-10
-    ), f"Relative surface contact speed should be {relative_surface_speed}"
+    assert abs(relative_surface_speed - ptmath.norm3d(v_c)) < 1e-10, (
+        f"Relative surface contact speed should be {relative_surface_speed}"
+    )
 
     cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
 
@@ -253,6 +253,6 @@ def test_low_relative_surface_velocity(
     ob_v_c_f = ptmath.tangent_surface_velocity(
         ob_f.state.rvw, -unit_normal, ob_f.params.R
     )
-    assert (
-        ptmath.norm3d(cb_v_c_f - ob_v_c_f) < 1e-3
-    ), "Final relative contact velocity should be zero"
+    assert ptmath.norm3d(cb_v_c_f - ob_v_c_f) < 1e-3, (
+        "Final relative contact velocity should be zero"
+    )

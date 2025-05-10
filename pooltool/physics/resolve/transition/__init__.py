@@ -38,9 +38,9 @@ class CanonicalTransition:
         assert transition.is_transition()
         start, end = _ball_transition_motion_states(transition)
 
-        assert (
-            ball.state.s == start
-        ), f"Start state was {ball.state.s}, expected {start}"
+        assert ball.state.s == start, (
+            f"Start state was {ball.state.s}, expected {start}"
+        )
         ball.state.s = end
 
         if end == const.spinning:

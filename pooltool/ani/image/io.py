@@ -45,9 +45,9 @@ class ImageZip(ImageStorageMethod):
 
     def __attrs_post_init__(self):
         if self.compress:
-            assert (
-                self.path.suffix == ".zip"
-            ), f"{self.path} must end with .zip if compress is True"
+            assert self.path.suffix == ".zip", (
+                f"{self.path} must end with .zip if compress is True"
+            )
 
     def save(self, imgs: NDArray[np.uint8]) -> None:
         self.image_count = 0

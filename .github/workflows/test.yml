@@ -37,13 +37,13 @@ jobs:
           # Don't give up too soon
           POETRY_REQUESTS_TIMEOUT: '120'
       - name: Run tests
-        run: poetry run pytest
+        run: poetry run make test
 
       # Calculate the test coverage
       - name: Generate coverage report
         if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
         run: |
-          poetry run pytest --cov=pooltool --cov-report=xml
+          poetry run make test-coverage
 
       # Upload coverage to Codecov
       - name: Upload coverage to Codecov
