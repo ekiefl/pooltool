@@ -13,6 +13,7 @@ import pooltool.ptmath as ptmath
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
+from pooltool.ani.menu import TextOverlay
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.objects.ball.render import BallRender
@@ -38,6 +39,7 @@ class CallShotMode(BaseMode):
         self.trans_ball = None
         self.ball_highlight = None
         self.picking = None
+        self.instruction_message = None
 
     def enter(self):
         self.ball_highlight_sequence = Parallel()
@@ -56,6 +58,16 @@ class CallShotMode(BaseMode):
 
         self.picking = "ball"
 
+        # Show instruction message for ball selection
+        self.instruction_message = TextOverlay(
+            title='Select a ball to call. Click to confirm while holding "c".',
+            frame_color=(0, 0, 0, 0.0),
+            title_pos=(0, 0, 0.6),
+            text_fg=(1, 1, 1, 0.8),
+            text_scale=0.05,
+        )
+        self.instruction_message.show()
+
         tasks.add(self.call_shot_task, "call_shot_task")
         tasks.add(self.shared_task, "shared_task")
 
@@ -67,6 +79,12 @@ class CallShotMode(BaseMode):
             self.remove_ball_highlight()
         self.remove_transparent_ball()
         self.ball_highlight_sequence.pause()
+
+        # Clean up instruction message if it exists
+        if self.instruction_message is not None:
+            self.instruction_message.hide()
+            self.instruction_message = None
+
         cam.rotate(theta=cam.theta - self.head_raise)
 
     def call_shot_task(self, task):
@@ -96,6 +114,19 @@ class CallShotMode(BaseMode):
                 self.picking = "pocket"
                 self.trans_ball.show()
 
+                # Update instruction message for pocket selection
+                if self.instruction_message is not None:
+                    self.instruction_message.hide()
+
+                self.instruction_message = TextOverlay(
+                    title='Now select a pocket. Click to confirm while holding "c".',
+                    frame_color=(0, 0, 0, 0.0),
+                    title_pos=(0, 0, 0.6),
+                    text_fg=(1, 1, 1, 0.8),
+                    text_scale=0.05,
+                )
+                self.instruction_message.show()
+
         elif self.picking == "pocket":
             closest = self.find_closest_pocket()
             if closest != self.closest_pocket:
@@ -111,6 +142,13 @@ class CallShotMode(BaseMode):
                 msg = f"{player} called the {ball_id} in the '{pock_id}' pocket"
                 Global.game.log.add_msg(msg, sentiment="neutral")
                 Global.game.shot_constraints.pocket_call = self.closest_pocket.id
+
+                # Clean up instruction message before exiting
+                if self.instruction_message is not None:
+                    self.instruction_message.hide()
+                    self.instruction_message = None
+
+                # Return to previous mode immediately
                 Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
                 return task.done
 
