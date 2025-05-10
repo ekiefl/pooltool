@@ -11,11 +11,14 @@ import pooltool.ptmath as ptmath
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
+from pooltool.ani.menu import TextOverlay
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.ruleset.datatypes import BallInHandOptions
 from pooltool.system.render import visual
 from pooltool.utils import panda_path
+
+FONT_OPACITY = 0.95
 
 
 class BallInHandMode(BaseMode):
@@ -33,6 +36,7 @@ class BallInHandMode(BaseMode):
         self.grab_ball_node = None
         self.grab_ball_shadow_node = None
         self.picking = None
+        self.instruction_message = None
 
     def enter(self):
         self.grab_selection_highlight_sequence = Parallel()
@@ -48,17 +52,51 @@ class BallInHandMode(BaseMode):
 
         if Global.game.shot_constraints.movable is None:
             self.picking = "ball"
+            # Show instruction for selecting any ball
+            self.instruction_message = TextOverlay(
+                title='Select a ball to move. Click to confirm while holding "g".',
+                frame_color=(0, 0, 0, 0.0),
+                title_pos=(0, 0, 0.6),
+                text_fg=(1, 1, 1, FONT_OPACITY),
+                text_scale=0.05,
+            )
+            self.instruction_message.show()
         elif len(Global.game.shot_constraints.movable) == 0:
-            # FIXME: Add message to indicate that no balls are movable
-            pass
+            # Message indicating no balls are movable
+            self.instruction_message = TextOverlay(
+                title="No balls are available to move.",
+                frame_color=(0, 0, 0, 0.0),
+                title_pos=(0, 0, 0.6),
+                text_fg=(1, 1, 1, FONT_OPACITY),
+                text_scale=0.05,
+            )
+            self.instruction_message.show()
         elif len(Global.game.shot_constraints.movable) == 1:
             self.grabbed_ball = visual.balls[Global.game.shot_constraints.movable[0]]
             self.grab_ball_node = self.grabbed_ball.get_node("pos")
             self.grab_ball_shadow_node = self.grabbed_ball.get_node("shadow")
             self.picking = "placement"
+            # Show instruction for placement since we're already in that phase
+            self.instruction_message = TextOverlay(
+                title='Move the ball to a valid position. Click to place while holding "g".',
+                frame_color=(0, 0, 0, 0.0),
+                title_pos=(0, 0, 0.6),
+                text_fg=(1, 1, 1, FONT_OPACITY),
+                text_scale=0.05,
+            )
+            self.instruction_message.show()
         else:
             # If there are specific movable balls, set picking to "ball" to allow selection
             self.picking = "ball"
+            # Show instruction for selecting from available balls
+            self.instruction_message = TextOverlay(
+                title='Select a ball to move. Click to confirm while holding "g".',
+                frame_color=(0, 0, 0, 0.0),
+                title_pos=(0, 0, 0.6),
+                text_fg=(1, 1, 1, FONT_OPACITY),
+                text_scale=0.05,
+            )
+            self.instruction_message.show()
 
         tasks.add(self.ball_in_hand_task, "ball_in_hand_task")
         tasks.add(self.shared_task, "shared_task")
@@ -66,6 +104,9 @@ class BallInHandMode(BaseMode):
     def exit(self, success=False):
         tasks.remove("ball_in_hand_task")
         tasks.remove("shared_task")
+
+        if tasks.has("reset_instruction"):
+            tasks.remove("reset_instruction")
 
         self.remove_transparent_ball()
 
@@ -75,6 +116,12 @@ class BallInHandMode(BaseMode):
         if self.picking == "placement" and not success:
             if self.grabbed_ball is not None:
                 self.grabbed_ball.set_render_state_as_object_state()
+
+        # Clean up instruction message if it exists
+        if self.instruction_message is not None:
+            self.instruction_message.hide()
+            self.instruction_message.title.destroy()
+            self.instruction_message = None
 
         self.grab_selection_highlight_sequence.pause()
 
@@ -108,17 +155,86 @@ class BallInHandMode(BaseMode):
                     self.remove_grab_selection_highlight()
                     self.add_transparent_ball()
 
+                    # Update instruction message for placement phase
+                    if self.instruction_message is not None:
+                        self.instruction_message.hide()
+
+                    self.instruction_message = TextOverlay(
+                        title='Move the ball to a valid position. Click to place while holding "g".',
+                        frame_color=(0, 0, 0, 0.0),
+                        title_pos=(0, 0, 0.6),
+                        text_fg=(1, 1, 1, FONT_OPACITY),
+                        text_scale=0.05,
+                    )
+                    self.instruction_message.show()
+
         elif self.picking == "placement":
             self.move_grabbed_ball()
 
             if self.keymap["next"]:
                 self.keymap["next"] = False
                 if self.try_placement():
-                    Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
-                    return task.done
+                    # Check if we should allow multiple ball placements
+                    movable_count = 0
+                    if Global.game.shot_constraints.movable is None:
+                        # All balls are movable
+                        movable_count = len(
+                            [
+                                b
+                                for b in visual.balls.values()
+                                if b._ball.state.s != c.pocketed
+                            ]
+                        )
+                    else:
+                        movable_count = len(Global.game.shot_constraints.movable)
+
+                    if movable_count > 1:
+                        # Remove the transparent ghost ball before going back to selection mode
+                        self.remove_transparent_ball()
+
+                        # Go back to ball selection mode (stay in ball_in_hand mode)
+                        self.picking = "ball"
+                        self.grabbed_ball = None
+                        self.grab_ball_node = None
+                        self.grab_ball_shadow_node = None
+
+                        # Update instruction to show we've returned to selection
+                        if self.instruction_message is not None:
+                            self.instruction_message.hide()
+
+                        self.instruction_message = TextOverlay(
+                            title='Select a ball to move. Click to confirm while holding "g".',
+                            frame_color=(0, 0, 0, 0.0),
+                            title_pos=(0, 0, 0.6),
+                            text_fg=(1, 1, 1, FONT_OPACITY),
+                            text_scale=0.05,
+                        )
+                        self.instruction_message.show()
+                    else:
+                        # If only one ball is movable, exit to previous mode as before
+                        Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
+                        return task.done
                 else:
-                    # FIXME add error sound and message
-                    pass
+                    # Show error message for invalid placement
+                    if self.instruction_message is not None:
+                        self.instruction_message.hide()
+
+                    self.instruction_message = TextOverlay(
+                        title="Invalid position! Balls cannot overlap.",
+                        frame_color=(0, 0, 0, 0.0),
+                        title_pos=(0, 0, 0.6),
+                        text_fg=(1, 0.5, 0.5, 0.9),  # Reddish color for error
+                        text_scale=0.05,
+                    )
+                    self.instruction_message.show()
+
+                    # Add a task to clear the error message after 1.5 seconds
+                    def reset_instruction(task):
+                        if self.instruction_message is not None:
+                            self.instruction_message.hide()
+                        return task.done
+
+                    tasks.add(reset_instruction, "reset_instruction", delay=1.5)
 
         return task.cont
 

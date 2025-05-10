@@ -5,6 +5,7 @@ import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
+from pooltool.ani.menu import TextOverlay
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.system.datatypes import multisystem
@@ -17,6 +18,10 @@ class StrokeMode(BaseMode):
         Action.fine_control: False,
         Action.stroke: True,
     }
+
+    def __init__(self):
+        super().__init__()
+        self.call_shot_message = None
 
     def enter(self):
         mouse.mode(MouseMode.RELATIVE)
@@ -37,14 +42,32 @@ class StrokeMode(BaseMode):
         tasks.remove("stroke_task")
         tasks.remove("shared_task")
 
+        # Clean up shot call message if it exists
+        if self.call_shot_message is not None:
+            self.call_shot_message.hide()
+            self.call_shot_message = None
+
         cam.store_state(Mode.stroke, overwrite=True)
 
     def stroke_task(self, task):
         if self.keymap[Action.stroke]:
             if not Global.game.shot_constraints.can_shoot():
-                # Shot constraints not satisfied
-                # FIXME add GUI message
+                # Shot constraints not satisfied - show message
+                if self.call_shot_message is None:
+                    # Create message that appears when shot calling is required
+                    self.call_shot_message = TextOverlay(
+                        title='Shot must be called. Hold "c" to call your shot.',
+                        frame_color=(0, 0, 0, 0.3),
+                        title_pos=(0, 0, 0.6),
+                        text_fg=(1, 1, 1, 0.8),
+                        text_scale=0.05,
+                    )
+                    self.call_shot_message.show()
                 return task.cont
+            elif self.call_shot_message is not None:
+                # Hide message if constraints are now satisfied
+                self.call_shot_message.hide()
+                self.call_shot_message = None
 
             if self.stroke_cue_stick():
                 # The cue stick has contacted the cue ball
@@ -53,6 +76,11 @@ class StrokeMode(BaseMode):
                 Global.mode_mgr.change_mode(Mode.calculate)
                 return
         else:
+            # Clean up when exiting stroke mode
+            if self.call_shot_message is not None:
+                self.call_shot_message.hide()
+                self.call_shot_message = None
+
             visual.cue.get_node("cue_stick").setX(0)
             visual.cue.hide_nodes(ignore=("cue_cseg",))
             Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)

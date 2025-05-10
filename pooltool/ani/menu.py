@@ -353,7 +353,7 @@ class Menu:
 
         dropdown_np = NodePath(dropdown)
         # functional_dropdown-<menu_name>-<dropdown_text>
-        dropdown_id = f"functional_dropdown-{self.name}-{name.replace(' ','_')}"
+        dropdown_id = f"functional_dropdown-{self.name}-{name.replace(' ', '_')}"
         dropdown_np.setName(dropdown_id)
         dropdown_np.reparentTo(self.area.getCanvas())
 
@@ -451,7 +451,7 @@ class Menu:
 
         checkbox_np = NodePath(checkbox)
         # functional_checkbox-<menu_name>-<checkbox_text>
-        checkbox_id = f"functional_checkbox-{self.name}-{name.replace(' ','_')}"
+        checkbox_id = f"functional_checkbox-{self.name}-{name.replace(' ', '_')}"
         checkbox_np.setName(checkbox_id)
         checkbox_np.reparentTo(self.area.getCanvas())
 
@@ -577,7 +577,7 @@ class Menu:
 
         entry_np = NodePath(entry)
         # functional_entry-<menu_name>-<entry_text>
-        entry_id = f"functional_entry-{self.name}-{name.replace(' ','_')}"
+        entry_id = f"functional_entry-{self.name}-{name.replace(' ', '_')}"
         entry_np.setName(entry_id)
         entry_np.reparentTo(self.area.getCanvas())
 
@@ -762,7 +762,7 @@ class Menu:
 
         button_np = NodePath(button)
         # functional_button-<menu_name>-<button_text>
-        button_id = f"functional_button-{self.name}-{name.replace(' ','_')}"
+        button_id = f"functional_button-{self.name}-{name.replace(' ', '_')}"
         button_np.setName(button_id)
         button_np.reparentTo(self.area.getCanvas())
 
@@ -1080,25 +1080,36 @@ menus = Menus()
 
 
 class TextOverlay:
-    def __init__(self, title="", frame_color=(1, 1, 1, 1), title_pos=(0, 0, 0.8)):
+    def __init__(
+        self,
+        title="",
+        frame_color=(1, 1, 1, 1),
+        title_pos=(0, 0, 0.8),
+        text_fg=(0, 0, 0, 1),
+        text_scale=0.07,
+        font_name="LABTSECS",
+    ):
         self.titleMenuBackdrop = DirectFrame(
             frameColor=frame_color,
             frameSize=(-1, 1, -1, 1),
             parent=Global.render2d,
         )
 
-        self._text_scale = 0.07
+        self._text_scale = text_scale
         self._move = 0.12
 
         self.titleMenu = DirectFrame(frameColor=(1, 1, 1, 0))
 
+        font = load_font(font_name)
+
         self.title = DirectLabel(
             text=title,
+            text_font=font,
             scale=self._text_scale * 1.5,
             pos=title_pos,
             parent=self.titleMenu,
             relief=None,
-            text_fg=(0, 0, 0, 1),
+            text_fg=text_fg,
         )
 
         self._next_x, self._next_y = -0.5, 0.6
