@@ -58,14 +58,26 @@ class CallShotMode(BaseMode):
 
         self.picking = "ball"
 
-        # Show instruction message for ball selection
-        self.instruction_message = TextOverlay(
-            title='Select a ball to call. Click to confirm while holding "c".',
-            frame_color=(0, 0, 0, 0.0),
-            title_pos=(0, 0, 0.6),
-            text_fg=(1, 1, 1, 0.8),
-            text_scale=0.05,
-        )
+        # Check if calling shot is required for this shot
+        if not Global.game.shot_constraints.call_shot:
+            # Show message that calling shot is not required
+            self.instruction_message = TextOverlay(
+                title="Calling shot not required for this shot.",
+                frame_color=(0, 0, 0, 0.0),
+                title_pos=(0, 0, 0.6),
+                text_fg=(1, 1, 1, 0.8),
+                text_scale=0.05,
+            )
+        else:
+            # Show instruction message for ball selection
+            self.instruction_message = TextOverlay(
+                title='Select a ball to call. Click to confirm while holding "c".',
+                frame_color=(0, 0, 0, 0.0),
+                title_pos=(0, 0, 0.6),
+                text_fg=(1, 1, 1, 0.8),
+                text_scale=0.05,
+            )
+
         self.instruction_message.show()
 
         tasks.add(self.call_shot_task, "call_shot_task")
@@ -94,7 +106,18 @@ class CallShotMode(BaseMode):
 
         if not Global.game.shot_constraints.call_shot:
             # This shot doesn't require calling shot
-            # FIXME add GUI message
+            # Show message that calling shot is not required
+            if self.instruction_message is not None:
+                self.instruction_message.hide()
+
+            self.instruction_message = TextOverlay(
+                title="Calling shot not required for this shot.",
+                frame_color=(0, 0, 0, 0.0),
+                title_pos=(0, 0, 0.6),
+                text_fg=(1, 1, 1, 0.8),
+                text_scale=0.05,
+            )
+            self.instruction_message.show()
             return task.cont
 
         cam.move_fixation_via_mouse()

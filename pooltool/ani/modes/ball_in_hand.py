@@ -157,8 +157,6 @@ class BallInHandMode(BaseMode):
                     if self.instruction_message is not None:
                         self.instruction_message.hide()
 
-                    from pooltool.ani.menu import TextOverlay
-
                     self.instruction_message = TextOverlay(
                         title='Move the ball to a valid position. Click to place while holding "g".',
                         frame_color=(0, 0, 0, 0.0),
@@ -174,14 +172,50 @@ class BallInHandMode(BaseMode):
             if self.keymap["next"]:
                 self.keymap["next"] = False
                 if self.try_placement():
-                    Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
-                    return task.done
+                    # Check if we should allow multiple ball placements
+                    movable_count = 0
+                    if Global.game.shot_constraints.movable is None:
+                        # All balls are movable
+                        movable_count = len(
+                            [
+                                b
+                                for b in visual.balls.values()
+                                if b._ball.state.s != c.pocketed
+                            ]
+                        )
+                    else:
+                        movable_count = len(Global.game.shot_constraints.movable)
+
+                    if movable_count > 1:
+                        # Remove the transparent ghost ball before going back to selection mode
+                        self.remove_transparent_ball()
+
+                        # Go back to ball selection mode (stay in ball_in_hand mode)
+                        self.picking = "ball"
+                        self.grabbed_ball = None
+                        self.grab_ball_node = None
+                        self.grab_ball_shadow_node = None
+
+                        # Update instruction to show we've returned to selection
+                        if self.instruction_message is not None:
+                            self.instruction_message.hide()
+
+                        self.instruction_message = TextOverlay(
+                            title='Select a ball to move. Click to confirm while holding "g".',
+                            frame_color=(0, 0, 0, 0.0),
+                            title_pos=(0, 0, 0.6),
+                            text_fg=(1, 1, 1, 0.8),
+                            text_scale=0.05,
+                        )
+                        self.instruction_message.show()
+                    else:
+                        # If only one ball is movable, exit to previous mode as before
+                        Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
+                        return task.done
                 else:
                     # Show error message for invalid placement
                     if self.instruction_message is not None:
                         self.instruction_message.hide()
-
-                    from pooltool.ani.menu import TextOverlay
 
                     self.instruction_message = TextOverlay(
                         title="Invalid position! Balls cannot overlap.",
