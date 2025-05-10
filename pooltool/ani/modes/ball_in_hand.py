@@ -105,8 +105,8 @@ class BallInHandMode(BaseMode):
         tasks.remove("ball_in_hand_task")
         tasks.remove("shared_task")
 
-        if tasks.has("reset_instructions"):
-            tasks.remove("reset_instructions")
+        if tasks.has("reset_instruction"):
+            tasks.remove("reset_instruction")
 
         self.remove_transparent_ball()
 

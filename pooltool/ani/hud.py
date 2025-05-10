@@ -16,6 +16,7 @@ from pooltool.ani.globals import Global
 from pooltool.objects.ball.datatypes import Ball, BallParams
 from pooltool.objects.cue.datatypes import Cue, CueSpecs
 from pooltool.ptmath.utils import tip_center_offset
+from pooltool.ruleset.datatypes import BallInHandOptions
 from pooltool.utils import panda_path
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -665,8 +666,6 @@ class BallInHand(BaseHUDElement):
 
     def update(self, ball_in_hand_option):
         """Update the ball in hand display based on game state"""
-        from pooltool.ruleset.datatypes import BallInHandOptions
-
         if ball_in_hand_option != BallInHandOptions.NONE:
             self.text.show()
             self.visible = True
