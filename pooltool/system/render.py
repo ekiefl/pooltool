@@ -67,13 +67,25 @@ class SystemController:
 
     def attach_system(self, system: System) -> None:
         """Teardown existing system and attach new system"""
+        # Store parallel mode state before teardown
+        was_in_parallel_mode = self.is_parallel_mode
+
         if hasattr(self, "system"):
+            # Exit parallel mode if active to avoid issues during transition
+            if self.is_parallel_mode:
+                self.exit_parallel_mode()
             self.teardown()
+
         self.system = SystemRender.from_system(system)
+
+        # If we were in parallel mode before, re-enter it
+        if was_in_parallel_mode:
+            self.setup_parallel_mode()
 
     def reset_animation(self, reset_pause: bool = True) -> None:
         """Set objects to initial states, pause, and remove animations"""
-        self.playback_mode = PlaybackMode.SINGLE
+        if not self.is_parallel_mode:
+            self.playback_mode = PlaybackMode.SINGLE
 
         if reset_pause:
             self.paused = True
@@ -189,10 +201,20 @@ class SystemController:
         self.reset_animation(reset_pause=False)
         self.playback_speed *= factor
 
-        # Recontinuize to adjust for change in speed
-        continuize(multisystem.active, dt=0.01 * self.playback_speed, inplace=True)
+        # Handle speed change differently based on mode
+        if self.is_parallel_mode:
+            # Update all systems in parallel mode
+            for idx, sys_render in self.parallel_systems.items():
+                system = multisystem[idx]
+                if system.simulated:
+                    continuize(system, dt=0.01 * self.playback_speed, inplace=True)
 
-        self.build_shot_animation()
+            # Rebuild parallel animations with new speed
+            self._build_parallel_animations(multisystem.active_index)
+        else:
+            # Just update the active system
+            continuize(multisystem.active, dt=0.01 * self.playback_speed, inplace=True)
+            self.build_shot_animation()
 
         self.shot_animation.setPlayRate(factor * self.shot_animation.getPlayRate())
 
