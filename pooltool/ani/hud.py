@@ -28,6 +28,7 @@ class HUDElement(StrEnum):
     jack = auto()
     power = auto()
     player_stats = auto()
+    ball_in_hand = auto()
 
 
 class HUD:
@@ -46,6 +47,7 @@ class HUD:
             HUDElement.jack: Jack(),
             HUDElement.power: Power(),
             HUDElement.player_stats: PlayerStats(),
+            HUDElement.ball_in_hand: BallInHand(),
         }
 
         for element in self.elements.values():
@@ -98,11 +100,19 @@ class HUD:
         if Global.game is not None:
             self.update_log_window()
             self.update_player_stats()
+            self.update_ball_in_hand()
 
         if (help_hint := self.elements[HUDElement.help_text].help_hint).is_hidden():
             help_hint.show()
 
         return task.cont
+
+    def update_ball_in_hand(self):
+        """Update ball in hand status display"""
+        if Global.game is not None:
+            self.elements[HUDElement.ball_in_hand].update(
+                Global.game.shot_constraints.ball_in_hand
+            )
 
     def update_player_stats(self):
         self.elements["player_stats"].update(Global.game)
@@ -619,6 +629,55 @@ class LogWindow(BaseHUDElement):
             duration=0.6,  # Duration of the fade-in animation
         )
         fade_in.start()
+
+
+class BallInHand(BaseHUDElement):
+    def __init__(self):
+        self.vertical_position = -0.09
+        self.text_scale = 0.05
+        self.active_color = (0.5, 1, 0.5, 1)  # Green when active
+        self.inactive_color = (0.5, 0.5, 0.5, 0.6)  # Gray when inactive
+        self.text = None
+        self.visible = False
+
+    def init(self):
+        self.destroy()
+
+        # Create text display for ball in hand status
+        self.text = autils.CustomOnscreenText(
+            text="BALL IN HAND",
+            pos=(1.55, self.vertical_position),
+            scale=self.text_scale,
+            fg=self.inactive_color,
+            align=TextNode.ARight,
+            mayChange=True,
+        )
+        self.text.hide()  # Initially hidden
+
+    def update(self, ball_in_hand_option):
+        """Update the ball in hand display based on game state"""
+        from pooltool.ruleset.datatypes import BallInHandOptions
+
+        if ball_in_hand_option != BallInHandOptions.NONE:
+            self.text.setFg(self.active_color)
+            self.text.show()
+            self.visible = True
+        else:
+            # When ball in hand is not active, hide the text
+            self.text.hide()
+            self.visible = False
+
+    def show(self):
+        if self.visible:
+            self.text.show()
+
+    def hide(self):
+        self.text.hide()
+
+    def destroy(self):
+        if hasattr(self, "text") and self.text is not None:
+            self.text.hide()
+            del self.text
 
 
 hud = HUD()
