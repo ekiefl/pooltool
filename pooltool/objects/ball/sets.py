@@ -162,9 +162,9 @@ def get_ballset(name: str) -> BallSet:
     Returns:
         BallSet: A ballset.
     """
-    assert (
-        name in ballsets
-    ), f"Unknown ballset name: {name}, available: {get_ballset_names()}"
+    assert name in ballsets, (
+        f"Unknown ballset name: {name}, available: {get_ballset_names()}"
+    )
     return ballsets[name]
 
 

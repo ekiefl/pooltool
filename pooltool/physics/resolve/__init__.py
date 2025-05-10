@@ -56,10 +56,7 @@ def _display_model(cls, model):
         if default_val is attrs.NOTHING:
             default_val = None
 
-        print(
-            f"{indent_str}  - {field.name}: "
-            f"type={field.type}, default={default_val}"
-        )
+        print(f"{indent_str}  - {field.name}: type={field.type}, default={default_val}")
 
 
 def display_models():

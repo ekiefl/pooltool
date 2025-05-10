@@ -1,11 +1,11 @@
-name: format
+name: Lint and Check
 
 on:
   pull_request:
     branches: [main]
 
 jobs:
-  format:
+  lint-and-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,36 +28,33 @@ jobs:
       - name: Install project dependencies
         run: poetry install
 
-      # --- Ruff
-
-      - name: ruff (lint)
+      # --- Ruff linting and formatting
+      - name: Run linting check
         id: ruff_lint
         continue-on-error: true
         run: |
           poetry run ruff --version
-          poetry run ruff check . --verbose --diff
+          poetry run make lint-check
           echo "ruff_lint_failed=$?" >> $GITHUB_ENV
 
-      - name: ruff (format)
+      - name: Check formatting
         id: ruff_format
         continue-on-error: true
         run: |
           poetry run ruff --version
-          poetry run ruff format . --check --verbose --diff
+          poetry run make format-check
           echo "ruff_format_failed=$?" >> $GITHUB_ENV
 
-      # --- Pyright
-
-      - name: pyright
-        id: pyright
+      # --- Type checking
+      - name: Run type checking
+        id: typecheck
         continue-on-error: true
         run: |
           poetry run pyright --version
-          poetry run pyright --project ./pyrightconfig.ci.json
-          echo "pyright_failed=$?" >> $GITHUB_ENV
+          poetry run make typecheck
+          echo "typecheck_failed=$?" >> $GITHUB_ENV
 
-      # --- Main
-
+      # --- Display results
       - name: Results
         if: always()
         run: |
@@ -77,10 +74,10 @@ jobs:
             passed+=("ruff_format")
           fi
 
-          if [[ "${{ env.pyright_failed }}" != "0" ]]; then
-            failed+=("pyright")
+          if [[ "${{ env.typecheck_failed }}" != "0" ]]; then
+            failed+=("typecheck")
           else
-            passed+=("pyright")
+            passed+=("typecheck")
           fi
 
           if [ ${#passed[@]} -ne 0 ]; then

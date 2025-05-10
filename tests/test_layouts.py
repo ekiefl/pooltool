@@ -230,5 +230,10 @@ def test_rack_no_overlapping_balls(game_type: GameType):
                     continue
 
                 assert not ptmath.is_overlapping(
-                    ball1.state.rvw, ball2.state.rvw, ball_params.R, ball_params.R
-                ), f"Balls {ball1.id} and {ball2.id} are overlapping in {game_type} rack"
+                    ball1.state.rvw,
+                    ball2.state.rvw,
+                    ball_params.R,
+                    ball_params.R,
+                ), (
+                    f"Balls {ball1.id} and {ball2.id} are overlapping in {game_type} rack"
+                )

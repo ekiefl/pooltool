@@ -11,9 +11,9 @@ def test_surface_velocity_no_angular_velocity():
     unit_direction = np.array([1.0, 0.0, 0.0])
 
     v_surface = surface_velocity(rvw, unit_direction, R)
-    assert np.allclose(
-        v_surface, v, atol=1e-6
-    ), "with no angular velocity, v_surface should equal v"
+    assert np.allclose(v_surface, v, atol=1e-6), (
+        "with no angular velocity, v_surface should equal v"
+    )
 
 
 def test_surface_velocity_no_linear_velocity():
@@ -26,9 +26,10 @@ def test_surface_velocity_no_linear_velocity():
     v_surface = surface_velocity(rvw, unit_direction, R)
     s_surface = np.linalg.vector_norm(v_surface)
     s_surface_expected = np.linalg.vector_norm(w_tangent) * R
-    assert np.isclose(
-        s_surface, s_surface_expected, atol=1e-6
-    ), "with no linear velocity, surface speed should equal magnitude of tangential angular velocity times radius"
+    assert np.isclose(s_surface, s_surface_expected, atol=1e-6), (
+        "with no linear velocity, surface speed should equal magnitude "
+        "of tangential angular velocity times radius"
+    )
 
 
 def test_tangent_surface_velocity_no_angular_velocity():
@@ -39,9 +40,9 @@ def test_tangent_surface_velocity_no_angular_velocity():
     v_tangent = v - np.linalg.vecdot(v, unit_direction) * unit_direction
 
     v_surface_tangent = tangent_surface_velocity(rvw, unit_direction, R)
-    assert np.allclose(
-        v_surface_tangent, v_tangent, atol=1e-6
-    ), "with no angular velocity, tangent surface velocity should equal velocity tangent to unit"
+    assert np.allclose(v_surface_tangent, v_tangent, atol=1e-6), (
+        "with no angular velocity, tangent surface velocity should equal velocity tangent to unit"
+    )
 
 
 def test_tangent_surface_velocity_no_linear_velocity():
@@ -54,9 +55,9 @@ def test_tangent_surface_velocity_no_linear_velocity():
     v_surface = tangent_surface_velocity(rvw, unit_direction, R)
     s_surface = np.linalg.vector_norm(v_surface)
     s_surface_expected = np.linalg.vector_norm(w_tangent) * R
-    assert np.isclose(
-        s_surface, s_surface_expected, atol=1e-6
-    ), "with no linear velocity, tangent surface speed should equal magnitude of tangential angular velocity times radius"
+    assert np.isclose(s_surface, s_surface_expected, atol=1e-6), (
+        "with no linear velocity, tangent surface speed should equal magnitude of tangential angular velocity times radius"
+    )
 
 
 @pytest.mark.parametrize(
