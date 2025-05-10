@@ -272,7 +272,7 @@ def tangent_surface_velocity(
 ) -> NDArray[np.float64]:
     """Compute velocity tangent to surface at a point on ball's surface (specified by unit direction vector)"""
     _, v, w = rvw
-    v_t = v - np.dot(v, d) * d
+    v_t = v - np.sum(v * d) * d
     return v_t + cross(w, R * d)
 
 
