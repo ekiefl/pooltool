@@ -1087,6 +1087,7 @@ class TextOverlay:
         title_pos=(0, 0, 0.8),
         text_fg=(0, 0, 0, 1),
         text_scale=0.07,
+        font_name="LABTSECS",
     ):
         self.titleMenuBackdrop = DirectFrame(
             frameColor=frame_color,
@@ -1099,8 +1100,11 @@ class TextOverlay:
 
         self.titleMenu = DirectFrame(frameColor=(1, 1, 1, 0))
 
+        font = load_font(font_name)
+
         self.title = DirectLabel(
             text=title,
+            text_font=font,
             scale=self._text_scale * 1.5,
             pos=title_pos,
             parent=self.titleMenu,

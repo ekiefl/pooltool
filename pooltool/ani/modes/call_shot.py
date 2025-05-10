@@ -22,6 +22,8 @@ from pooltool.system.datatypes import multisystem
 from pooltool.system.render import visual
 from pooltool.utils import panda_path
 
+FONT_OPACITY = 0.95
+
 
 class CallShotMode(BaseMode):
     name = Mode.call_shot
@@ -65,7 +67,7 @@ class CallShotMode(BaseMode):
                 title="Calling shot not required for this shot.",
                 frame_color=(0, 0, 0, 0.0),
                 title_pos=(0, 0, 0.6),
-                text_fg=(1, 1, 1, 0.8),
+                text_fg=(1, 1, 1, FONT_OPACITY),
                 text_scale=0.05,
             )
         else:
@@ -74,7 +76,7 @@ class CallShotMode(BaseMode):
                 title='Select a ball to call. Click to confirm while holding "c".',
                 frame_color=(0, 0, 0, 0.0),
                 title_pos=(0, 0, 0.6),
-                text_fg=(1, 1, 1, 0.8),
+                text_fg=(1, 1, 1, FONT_OPACITY),
                 text_scale=0.05,
             )
 
@@ -114,7 +116,7 @@ class CallShotMode(BaseMode):
                 title="Calling shot not required for this shot.",
                 frame_color=(0, 0, 0, 0.0),
                 title_pos=(0, 0, 0.6),
-                text_fg=(1, 1, 1, 0.8),
+                text_fg=(1, 1, 1, FONT_OPACITY),
                 text_scale=0.05,
             )
             self.instruction_message.show()
@@ -145,7 +147,7 @@ class CallShotMode(BaseMode):
                     title='Now select a pocket. Click to confirm while holding "c".',
                     frame_color=(0, 0, 0, 0.0),
                     title_pos=(0, 0, 0.6),
-                    text_fg=(1, 1, 1, 0.8),
+                    text_fg=(1, 1, 1, FONT_OPACITY),
                     text_scale=0.05,
                 )
                 self.instruction_message.show()
