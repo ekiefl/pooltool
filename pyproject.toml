@@ -16,7 +16,7 @@ dirty = true
 ignore-untracked = true
 
 [tool.poetry]
-# The package name is "Pooltool". The PyPI project name is "pooltool-billiards"
+# The package name is "pooltool". The PyPI project name is "pooltool-billiards"
 name = "pooltool-billiards"
 # This version is a placeholder. It will be updated at build time by
 # poetry-dynamic-versioning from the latest git tag. See PYPI.md.
