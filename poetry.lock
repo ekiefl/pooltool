@@ -2878,23 +2878,33 @@ files = [
 
 [[package]]
 name = "panda3d"
-version = "1.11.0.dev3444"
+version = "1.11.0.dev3702"
 description = "Panda3D is a framework for 3D rendering and game development for Python and C++ programs."
 optional = false
 python-versions = "*"
 groups = ["main"]
 markers = "sys_platform == \"linux\" or sys_platform == \"win32\""
 files = [
-    {file = "panda3d-1.11.0.dev3444-cp310-cp310-manylinux2014_x86_64.whl", hash = "sha256:aec1a4d3728f7f0129b43584aeb37fe09f7811ef43cbee24f25742d5cb2d5f6b"},
-    {file = "panda3d-1.11.0.dev3444-cp310-cp310-win_amd64.whl", hash = "sha256:18692374823096e4f2058ace5833567f1f7da93d215a8ceb8c1ceacee3a87928"},
-    {file = "panda3d-1.11.0.dev3444-cp311-cp311-manylinux2014_x86_64.whl", hash = "sha256:6391ddb1e296d801cb852f0bcc2152c9ac9a4ce5719c20c20640fc85fa73dde0"},
-    {file = "panda3d-1.11.0.dev3444-cp311-cp311-win_amd64.whl", hash = "sha256:2fd110a91c6bbdf6b0a5424d3e32becb8b4a2710db5d23a954a9800281d56991"},
-    {file = "panda3d-1.11.0.dev3444-cp312-cp312-manylinux2014_x86_64.whl", hash = "sha256:6f91a291adc702af643de4d7786b9b624da00ecfc57a989389a67576b316685d"},
-    {file = "panda3d-1.11.0.dev3444-cp312-cp312-win_amd64.whl", hash = "sha256:75b1b5b645d4fa308b22a90fc68edb53c8e067b879cc1f08f1a239e693e84c47"},
-    {file = "panda3d-1.11.0.dev3444-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:c3a92f4f69caa29fed48e931490ecc66493ad791a288bc3af4daae73dc24eef1"},
-    {file = "panda3d-1.11.0.dev3444-cp38-cp38-win_amd64.whl", hash = "sha256:d7a9e6b2e61233e42eeb3a686f1845c0caa4de8aa4bdc9afc402194f7212d58e"},
-    {file = "panda3d-1.11.0.dev3444-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:774727725c664706f879295745ab4d9b8df687780c1d7482fcfbc60b6fcf0b6b"},
-    {file = "panda3d-1.11.0.dev3444-cp39-cp39-win_amd64.whl", hash = "sha256:37d0f0c25f847223b4cecf2e625ead2d1cc152cffa415ac8a3b227c629e4a4d4"},
+    {file = "panda3d-1.11.0.dev3702-cp310-cp310-macosx_11_0_universal2.whl", hash = "sha256:16cc62b3f7df644d80787ae2066523809b631dc7b42a0b259efb24e39d7434c4"},
+    {file = "panda3d-1.11.0.dev3702-cp310-cp310-manylinux2014_x86_64.whl", hash = "sha256:b3f6db4852ab9253a1d87025fd6c04375fa236d0644e95238deabf76f661f4fe"},
+    {file = "panda3d-1.11.0.dev3702-cp310-cp310-win_amd64.whl", hash = "sha256:0a1fdf243b427f921798603d641aaa67e193f0241642fec8c8b399a6f3a53e94"},
+    {file = "panda3d-1.11.0.dev3702-cp311-cp311-macosx_11_0_universal2.whl", hash = "sha256:d0ede33f71c292e1a05971fc7a56ccd1c5d5896b643d06a6a84b78b9363324dc"},
+    {file = "panda3d-1.11.0.dev3702-cp311-cp311-manylinux2014_x86_64.whl", hash = "sha256:50638cb582ca2d0eaa20300a800c74f29ae80d27c207f99478585a3f014ea33a"},
+    {file = "panda3d-1.11.0.dev3702-cp311-cp311-win_amd64.whl", hash = "sha256:8034122be3ddd1bb4f800d51d63bdc56e8b15217d199108dc7901e61b6c126cb"},
+    {file = "panda3d-1.11.0.dev3702-cp312-cp312-macosx_11_0_universal2.whl", hash = "sha256:fde8bc22f2dcad5d0d3da05d8f1f2c29cc144a397a0bcbcb7099b72a48782552"},
+    {file = "panda3d-1.11.0.dev3702-cp312-cp312-manylinux2014_x86_64.whl", hash = "sha256:165e556e56e157e2c9aa63289d33362c2a1edadcaf6c5ccc647d852cc6e470e9"},
+    {file = "panda3d-1.11.0.dev3702-cp312-cp312-win_amd64.whl", hash = "sha256:eb0a1d2ae6441f2c54ae0e55f54766e8acb639c69885a3c893a3216ffed045e0"},
+    {file = "panda3d-1.11.0.dev3702-cp313-cp313-macosx_11_0_universal2.whl", hash = "sha256:edb9dd37e71e945ef46301d371669c35e8926da3e6b1a8be61dc60b5d24c9467"},
+    {file = "panda3d-1.11.0.dev3702-cp313-cp313-manylinux2014_x86_64.whl", hash = "sha256:3f953f707840240e6dec0b95782efa5312bc980c06e82f9a67db553e08128adf"},
+    {file = "panda3d-1.11.0.dev3702-cp313-cp313-win_amd64.whl", hash = "sha256:aa60b7aaee3cbec01d2635c0749a9cd9f2c45488ab97f6aa5fecfffb025ef42d"},
+    {file = "panda3d-1.11.0.dev3702-cp313-cp313t-macosx_11_0_universal2.whl", hash = "sha256:dd5253af1fb25e158127de5c7097a7c4eb28a3c5102e93c38c1efddd95ab40dd"},
+    {file = "panda3d-1.11.0.dev3702-cp313-cp313t-manylinux2014_x86_64.whl", hash = "sha256:f76dc88289dd0c8ba292383a3e9de032b920a5478a9aaabb60eeec9a9e145076"},
+    {file = "panda3d-1.11.0.dev3702-cp38-cp38-macosx_11_0_universal2.whl", hash = "sha256:287906a3e028d0986eb59553a1293a0cc07c08878fc6c22ca38cbc4cf18027f7"},
+    {file = "panda3d-1.11.0.dev3702-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:95c4b8d5eefb0e2ae32a5b3c82f0738a77d58c2db39bf45751d4913121a7f720"},
+    {file = "panda3d-1.11.0.dev3702-cp38-cp38-win_amd64.whl", hash = "sha256:0deca4c71dadfc48201f2c93b686b0f9c09fd1c3cd350225cc019b0dafd392e8"},
+    {file = "panda3d-1.11.0.dev3702-cp39-cp39-macosx_11_0_universal2.whl", hash = "sha256:30244ed6286f6f13f4e0ccc056c4fdbd13d5ac06df7d433746f7a007c758fe21"},
+    {file = "panda3d-1.11.0.dev3702-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:14d3396eb8086aa307a3af2dca2b9ae36bea4313ba4279bd792ee3f8b9fcd6ea"},
+    {file = "panda3d-1.11.0.dev3702-cp39-cp39-win_amd64.whl", hash = "sha256:58facfca3d83ab33cf0578d9478c400b295d987b17d8a7f16bbc186614f34c6f"},
 ]
 
 [package.source]
@@ -5079,4 +5089,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.14"
-content-hash = "16613a792d2efa323ff8b35811aa3a1262e6893845ebe780cc72b1a03712c14d"
+content-hash = "c38d981e13465d6a974ad2b1103a88fb3dbb31455caecd3d396f6e92c3fd0139"
