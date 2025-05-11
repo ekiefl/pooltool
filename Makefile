@@ -7,10 +7,17 @@ endif
 # Documentation
 # ========================================
 
+.PHONY: notebooks
+run-notebooks:
+	poetry run jupyter nbconvert --to notebook --execute --inplace docs/examples/*.ipynb
+
 .PHONY: docs
 docs:
 	$(MAKE) -C docs/ clean-and-build-html
 	$(MAKE) -C docs/ view-html
+
+.PHONY: docs-with-notebooks
+docs-with-notebooks: notebooks docs
 
 # ========================================
 # Linting, Formatting, and Type Checking
