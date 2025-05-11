@@ -84,9 +84,9 @@ __all__ = [
     "Table",
     "TableType",
     "Game",
-    "show",
     "EventType",
     # functions
+    "show",
     "get_rack",
     "get_ruleset",
     "simulate",

@@ -1,7 +1,8 @@
 # Summary
 
-All the examples are jupyter notebooks represented in percent format: https://jupytext.readthedocs.io/en/latest/formats-scripts.html#the-percent-format
+All the examples are jupyter notebooks.
 
-They can be opened as notebooks by running `jupyter lab`, right clicking the file, and selecting "Open as notebook"
+## Considerations
 
-If you have a notebook, and would like to add it to the documentation, convert it to the percent format `jupytext --sync <yours.ipynb>`. It must be suffixed with `.pct.py`. Then open `index.md` and add it.
+* During calls to `make docs`, a notebook is only executed if all its output cells are empty.
+* If you have a notebook and would like to add it to the documentation, run it to generate the output cells and add it to `index.md`.

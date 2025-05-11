@@ -117,7 +117,6 @@ colored = ">=2.2.4"  # TODO switch to something ubiquitous (like rich)
 ipython = ">=8.18.1"
 ipdb = "^0.13.13"
 # Vignettes
-jupytext = ">=1.15.0"  # First release compatible with JupyterLab 4.X
 jupyterlab = ">=4.0.0"
 pandas = ">=2"
 plotly = ">=5"

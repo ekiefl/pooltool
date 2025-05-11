@@ -54,7 +54,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 # Blog
 
-I have blogged about many aspects of this project. Read the detailed account [here](https://ekiefl.github.io/projects/pooltool/).
+Many aspects of this project have been blogged about. Read the detailed account [here](https://ekiefl.github.io/projects/pooltool/).
 
 # Citation
 
