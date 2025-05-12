@@ -373,7 +373,7 @@ class Ball:
             :math:`t_{final}` densely sampled with respect to time.
 
             See Also:
-                - See :func:`pooltool.evolution.continuize.continuize` for a
+                - See :func:`pooltool.evolution.continuize` for a
                   details about continuizing a simulated system.
                 - See the *Important* section in :class:`Ball` for a description of the
                   role of ``history_cts`` during simulation.
@@ -399,7 +399,7 @@ class Ball:
         state of the ball. So too does ``history[-1]``.
 
         Finally, if the system is continuized (see
-        :func:`pooltool.evolution.continuize.continuize`), :attr:`history_cts` is
+        :func:`pooltool.evolution.continuize`), :attr:`history_cts` is
         populated. Otherwise it remains empty.
     """
 

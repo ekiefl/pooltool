@@ -473,7 +473,7 @@ class System:
         Example:
 
             If the system has been continuized (see
-            :func:`pooltool.evolution.continuize.continuize`), disk space and save/load
+            :func:`pooltool.evolution.continuize`), disk space and save/load
             times can be decreased by using ``drop_continuized_history``:
 
             >>> import pooltool as pt
@@ -498,7 +498,7 @@ class System:
                 584K	no_drop.json
 
             However, the loaded system is no longer continuized. If you need it to
-            be, call :func:`pooltool.evolution.continuize.continuize`:
+            be, call :func:`pooltool.evolution.continuize`:
 
             >>> loaded_system = pt.System.load("drop.json")
             >>> assert loaded_system != system

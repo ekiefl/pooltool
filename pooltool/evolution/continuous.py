@@ -1,8 +1,3 @@
-"""Module for building a time-dense system trajectory and interpolating ball states
-
-For an explanation, see :func:`continuize` and :func:`interpolate_ball_states`
-"""
-
 from typing import List, Sequence, Union
 
 import numpy as np

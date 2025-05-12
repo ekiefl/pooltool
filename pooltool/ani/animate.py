@@ -29,7 +29,7 @@ from pooltool.ani.menu import TextOverlay, menus
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
 from pooltool.evolution import simulate
-from pooltool.evolution.continuize import continuize
+from pooltool.evolution.continuous import continuize
 from pooltool.layouts import get_rack
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table

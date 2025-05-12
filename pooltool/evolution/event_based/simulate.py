@@ -20,7 +20,7 @@ from pooltool.events import (
     null_event,
     stick_ball_collision,
 )
-from pooltool.evolution.continuize import continuize
+from pooltool.evolution.continuous import continuize
 from pooltool.evolution.event_based import solve
 from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
@@ -142,7 +142,7 @@ def simulate(
         >>> for ball in system.balls.values(): assert len(ball.history_cts) > 0
 
     See Also:
-        - :func:`pooltool.evolution.continuize.continuize`
+        - :func:`pooltool.evolution.continuize`
     """
     if not inplace:
         shot = shot.copy()

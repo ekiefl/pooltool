@@ -8,7 +8,7 @@ endif
 # ========================================
 
 .PHONY: notebooks
-run-notebooks:
+notebooks:
 	poetry run jupyter nbconvert --to notebook --execute --inplace docs/examples/*.ipynb
 
 .PHONY: docs

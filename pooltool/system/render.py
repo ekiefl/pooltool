@@ -7,7 +7,7 @@ from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
 
 from pooltool.ani.globals import Global
-from pooltool.evolution.continuize import continuize
+from pooltool.evolution.continuous import continuize
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.render import CueRender
 from pooltool.objects.table.render import TableRender

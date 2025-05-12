@@ -16,10 +16,13 @@ import sys
 sys.path.insert(0, os.path.abspath("./"))
 sys.path.insert(0, os.path.abspath("../"))
 
+from include_exclude import ignore_regex
+
+
 # -- Project information -----------------------------------------------------
 
 project = "pooltool"
-copyright = "2024, Evan Kiefl"
+copyright = "2025, Evan Kiefl"
 author = "Evan Kiefl"
 
 # -- General configuration ---------------------------------------------------
@@ -50,7 +53,14 @@ templates_path = ["_templates"]
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 # NOTE: Don't use this for excluding python files, use `autoapi_ignore` below
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**.ipynb_checkpoints", "**README.md"]
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+    "**.ipynb_checkpoints",
+    "**README.md",
+    "publish_instructions.md",
+]
 
 # -- Global options ----------------------------------------------------------
 
@@ -122,37 +132,11 @@ autoapi_options = [
     "show-inheritance",
     "show-module-summary",
     "imported-members",
+    "undoc-members",
 ]
 autoapi_keep_files = True
 
-autoapi_ignore = [
-    "*/test_*.py",
-    "*/render.py",
-    "*/ai/*",
-    "*/config/user.py",
-]
-# Everything in ani/ except animate.py
-autoapi_ignore.extend(
-    [
-        "*/ani/camera/*",
-        "*/ani/fonts/*",
-        "*/ani/image/*",
-        "*/ani/modes/*",
-        "*/ani/__init__.py",
-        "*/ani/action.py",
-        "*/ani/collision.py",
-        "*/ani/environment.py",
-        "*/ani/globals.py",
-        "*/ani/hud.py",
-        "*/ani/menu.py",
-        "*/ani/mouse.py",
-        "*/ani/tasks.py",
-        "*/ani/utils.py",
-        "*/error.py",
-        "*/terminal.py",
-    ]
-)
-
+autoapi_ignore = ignore_regex
 
 # -- custom auto_summary() macro ---------------------------------------------
 
