@@ -9,7 +9,16 @@ from pooltool.utils.strenum import StrEnum, auto
 
 
 class BallBallFrictionModel(StrEnum):
-    """An Enum for different ball-ball friction models"""
+    """An Enum for different ball-ball friction models
+
+    Attributes:
+        AVERAGE:
+            The friction is calculated as the average of ball-ball sliding friction of
+            the two balls.
+
+        ALCIATORE:
+            Friction fit curve u_b = a + b * exp(-c * v_rel) used in David Alciatore's TP A-14.
+    """
 
     AVERAGE = auto()
     ALCIATORE = auto()

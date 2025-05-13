@@ -8,9 +8,14 @@ from pooltool.physics.evolve import (
     evolve_roll_state,
     evolve_slide_state,
 )
+from pooltool.physics.resolve import display_models
 from pooltool.physics.resolve.ball_ball import (
     BallBallModel,
     ball_ball_models,
+)
+from pooltool.physics.resolve.ball_ball.friction import (
+    BallBallFrictionModel,
+    ball_ball_friction_models,
 )
 from pooltool.physics.resolve.ball_cushion import (
     BallCCushionModel,
@@ -38,6 +43,7 @@ from pooltool.physics.resolve.transition import (
 __all__ = [
     "PhysicsEngine",
     # Resolve
+    "display_models",
     "Resolver",
     "RESOLVER_PATH",
     "BallBallModel",
@@ -47,6 +53,8 @@ __all__ = [
     "StickBallModel",
     "BallTransitionModel",
     "ball_ball_models",
+    "BallBallFrictionModel",
+    "ball_ball_friction_models",
     "ball_lcushion_models",
     "ball_ccushion_models",
     "ball_pocket_models",

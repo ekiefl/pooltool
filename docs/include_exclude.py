@@ -24,6 +24,7 @@ skip_dict: Dict[str, List[str]] = {
         "pooltool.ruleset.snooker",
         # API: pooltool.physics
         "pooltool.physics.evolve",
+        "pooltool.physics.resolve",
     ],
     "module": [
         "pooltool.error",

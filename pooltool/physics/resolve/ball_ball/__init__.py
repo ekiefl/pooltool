@@ -20,12 +20,3 @@ ball_ball_models: Dict[BallBallModel, Type[BallBallCollisionStrategy]] = {
     cast(BallBallModel, attrs.fields_dict(cls)["model"].default): cls
     for cls in _ball_ball_model_registry
 }
-
-
-__all__ = [
-    "BallBallModel",
-    "FrictionalMathavan",
-    "FrictionalInelastic",
-    "FrictionlessElastic",
-    "ball_ball_models",
-]
