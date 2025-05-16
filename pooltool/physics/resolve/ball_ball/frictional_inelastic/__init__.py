@@ -33,10 +33,15 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     v2_n_f = 0.5 * ((1.0 + e_b) * rvw1[1][0] + (1.0 - e_b) * rvw2[1][0])
     D_v_n_magnitude = abs(v2_n_f - v1_n_f)
 
+    # angular velocity normal component, unchanged
+    w1_n_f = rvw1[2][0]
+    w2_n_f = rvw2[2][0]
+
     # discard velocity normal components for now
-    # so that surface velocities are tangent
     rvw1[1][0] = 0.0
     rvw2[1][0] = 0.0
+    rvw1[2][0] = 0.0
+    rvw2[2][0] = 0.0
     rvw1_f = rvw1.copy()
     rvw2_f = rvw2.copy()
 
@@ -80,6 +85,8 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     # reintroduce the final normal components
     rvw1_f[1][0] = v1_n_f
     rvw2_f[1][0] = v2_n_f
+    rvw1_f[2][0] = w1_n_f
+    rvw2_f[2][0] = w2_n_f
 
     # rotate everything back to the original frame
     rvw1_f[1] = ptmath.coordinate_rotation(rvw1_f[1], theta)
