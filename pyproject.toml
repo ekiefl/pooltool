@@ -135,6 +135,7 @@ myst-parser = "4.0.1"
 sphinx-autoapi = "3.6.0"
 sphinx-tabs = "3.4.7"
 nbsphinx = "0.9.7"
+sphinx-autobuild = "2024.10.3"
 
 [tool.jupytext]
 formats = "ipynb,py:percent"
