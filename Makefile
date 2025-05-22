@@ -16,6 +16,11 @@ docs:
 	$(MAKE) -C docs/ clean-and-build-html
 	$(MAKE) -C docs/ view-html
 
+.PHONY: docs-live
+docs-live:
+	$(MAKE) -C docs/ clean-and-build-html
+	$(MAKE) -C docs/ live
+
 .PHONY: docs-with-notebooks
 docs-with-notebooks: notebooks docs
 

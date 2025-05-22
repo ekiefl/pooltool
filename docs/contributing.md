@@ -1,43 +1,198 @@
-# Contributing
+# Contributing to pooltool
 
-The community is excited that you're interested in contributing to pooltool! This document provides guidelines for contributing. Following these guidelines helps to communicate that you respect the time of the developers managing and developing this open-source project. In return, they should reciprocate that respect in addressing your issue, assessing changes, and helping you finalize your pull requests.
+The community is excited that you're interested in contributing to pooltool! This document provides comprehensive guidelines for contributing to the project. Following these guidelines helps to communicate that you respect the time of the developers managing and developing this open-source project. In return, they should reciprocate that respect in addressing your issue, assessing changes, and helping you finalize your pull requests.
 
 ## Join the community
 
 [![Discord](https://img.shields.io/badge/Discord-Join%20Server-7289da?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/8Y8qUgzZhz)
 
-If you want to contribute, please join the Discord, introduce yourself, and state what you would like to work on.
+If you want to contribute, please join the Discord, introduce yourself, and state what you would like to work on. This is the best place to:
+- Ask questions about the codebase
+- Discuss ideas for new features
+- Find issues to work on
+- Get help with setting up your development environment
 
 ## What we're looking for
 
 Pooltool needs and welcomes people of all skill levels who are excited about this project, but especially those who have skill or passion in:
 
+1. **Physics realism**
 1. **Game development** (especially for the Panda3D game engine)
 1. **Creating 3D models** (tables, balls, cues, rooms, etc)
 1. **Projector/camera systems**
 1. **Computer vision / machine learning / reinforcement learning**
 
-## Getting started
+## Development environment setup
 
-Contributions to pooltool are made via GitHub. To get started:
+For complete installation instructions, please refer to the [Installation Guide](install.md). Follow the "From source" section.
 
-1. Fork the repo and create your branch from `main`.
-1. Install pooltool using the "install from source" instructions [here](install.md).
-1. If you've added code that should be tested, add tests.
-1. Create a pull request (PR), ensuring you have a clear description of the problem you're solving and the solution.
-1. Ensure your code passes the continuous integration (CI) tests that are automatically ran whenever you update the PR with new commits.
+After installation, make sure to install the pre-commit hooks, which ensure your code adheres to the project's style guidelines:
 
-## Code adherence
+```bash
+pre-commit install
+```
 
-Style and code integrity in pooltool are maintained automatically through a combination of pre-commit hooks and continuous integration (CI) processes. These tools ensure that all contributions adhere to our coding standards and pass necessary tests before they can be integrated into the main branch.
+This will automatically check and format your code when you make commits.
 
-### pre-commit
+## Development workflow
 
-Pooltool utilizes the pre-commit framework to automatically reformat code upon committing, ensuring consistency and adherence to coding standards. If your code is reformatted during the commit process, review the changes made by pre-commit and add any modified files to your commit before proceeding.
+### Common Make commands
 
-### pre-merge
+The project includes a Makefile with common commands to streamline development:
 
-Pooltool utilizes continuous integration (CI) tools through GitHub workflows to ensure every pull request meets the project's quality and testing standards before it can be merged. Upon creating a pull request, automated tests are run to check for any issues. Contributors are expected to resolve any failing checks or tests highlighted by the CI process.
+**Documentation:**
+```bash
+make docs                 # Build and view documentation
+make live                 # Live preview of docs with auto-refresh
+make notebooks            # Execute and update notebooks in docs
+make docs-with-notebooks  # Build docs including notebook execution
+```
+
+**Code quality:**
+```bash
+make lint                 # Run linting and fix issues
+make lint-check           # Check linting without fixing
+make format               # Format code
+make format-check         # Check formatting without fixing
+make typecheck            # Run type checking
+```
+
+**Testing:**
+```bash
+make test                 # Run all tests
+make test-coverage        # Run tests with coverage report
+```
+
+**Building and publishing:**
+```bash
+make clean                # Clean build artifacts
+make build                # Build package distribution
+```
+
+### Pre-commit hooks
+
+Pre-commit hooks ensure that code formatting and linting are checked before each commit. These hooks run automatically when you commit code if you've installed them with `pre-commit install`.
+
+The pre-commit configuration in pooltool includes:
+- Code formatting (using Ruff)
+- Linting checks (using Ruff)
+- Type checking (using Pyright)
+- Running tests (using Pytest)
+
+If a hook fails, the commit will be aborted. You can fix the issues and try committing again. Sometimes the hooks will automatically fix issues (like formatting), in which case you'll need to stage those changes before committing again.
+
+## Code style and formatting
+
+### Python code style
+
+* Linting and formatting is handled by [Ruff](https://github.com/astral-sh/ruff).
+* Type hints are highly appreciated for all functions and methods
+
+### Docstring conventions
+
+Pooltool uses Google-style docstrings. Here's an example of the expected format:
+
+```python
+def function_name(arg1: str, arg2: int) -> list[str]:
+    """Brief description of the function
+    
+    More detailed description that can span multiple lines.
+    
+    Args:
+        arg1: Description of arg1
+        arg2: Description of arg2
+            
+    Returns:
+        Description of the return value
+        
+    Raises:
+        ExceptionType: Description of when this exception is raised
+        
+    Notes:
+        Additional information about implementation details
+        
+    Example:
+        >>> code_example
+        expected_output
+        
+    See Also:
+        - related_function: Description of how it's related
+    """
+```
+
+### Type checking
+
+The project uses Pyright for static type checking. Type annotations should be used for all function parameters, return values, and class attributes. The type checking configuration is in `pyrightconfig.ci.json`.
+
+## Testing
+
+Pooltool uses pytest for testing. Tests should be written for all new features and bug fixes.
+
+### Writing tests
+
+- Tests are located in the `tests/` directory
+- Test files should be named `test_*.py`
+- Test functions should be named `test_*`
+
+### Running tests
+
+```bash
+# Run all tests
+make test
+
+# Run a specific test file
+pytest tests/path/to/test_file.py
+
+# Run a specific test
+pytest -k test_function_name
+```
+
+## Documentation
+
+Documentation is written in Markdown and built using Sphinx with MyST parser. The documentation is hosted on Read the Docs.
+
+### Building documentation
+
+```bash
+# Build documentation
+make docs
+
+# Live preview with auto-reload (recommended for development)
+make docs-live
+
+# Execute notebooks, then build docs
+make docs-with-notebooks
+```
+
+### Documentation structure
+
+- API reference is automatically generated from docstrings
+- Examples are provided as Jupyter notebooks in the `docs/examples/` directory
+
+### Examples gallery
+
+The Examples gallery is a key part of the documentation, consisting of Jupyter notebooks that demonstrate various aspects of pooltool. These notebooks are located in the `docs/examples/` directory.
+
+#### Adding a new example
+
+To add a new example to the gallery:
+
+1. Create a new Jupyter notebook in the `docs/examples/` directory
+2. Follow the naming convention of existing examples (descriptive, with underscores)
+3. Include a clear title and description at the top of the notebook
+5. Add assets (images, etc.) to the `docs/examples/assets/your_example_name/` directory if needed
+6. Update the `docs/examples/index.md` file to include your new example
+7. Run `make docs-with-notebooks` to build the documentation with your new example
+
+## Pull request workflow
+
+1. **Fork the repository** and create a branch from `main`
+2. **Develop your feature or fix** on your branch
+3. **Ensure all tests pass** by running `make test`
+4. **Format your code** with `make format` and `make lint`
+5. **Check types** with `make typecheck`
+6. **Push your changes** to your fork
+7. **Create a pull request** to the main pooltool repository
 
 ## Code of Conduct
 
