@@ -99,6 +99,32 @@ def _next_transition(ball: Ball) -> Event:
         raise NotImplementedError(f"Unknown '{ball.state.s=}'")
 
 
+class _IndexedDict(dict):
+    def __init__(self, cache, event_type):
+        super().__init__()
+        self._cache = cache
+        self._event_type = event_type
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        self._cache._add_to_index(self._event_type, key)
+
+    def __delitem__(self, key):
+        super().__delitem__(key)
+        self._cache._remove_from_index(self._event_type, key)
+
+
+class _IndexedTimesMap(dict):
+    def __init__(self, cache):
+        super().__init__()
+        self._cache = cache
+
+    def setdefault(self, key, default=None):
+        if key not in self:
+            super().__setitem__(key, _IndexedDict(self._cache, key))
+        return super().__getitem__(key)
+
+
 @attrs.define
 class CollisionCache:
     """A cache for storing and managing collision times between objects.
@@ -130,6 +156,7 @@ class CollisionCache:
     """
 
     times: Dict[EventType, Dict[Tuple[str, str], float]] = attrs.field(factory=dict)
+    _keys_by_id: Dict[str, Set[Tuple[EventType, Tuple[str, str]]]] = attrs.field(factory=dict, init=False, repr=False)
 
     @property
     def size(self) -> int:
@@ -141,23 +168,68 @@ class CollisionCache:
             for ball_idx in event_type_to_ball_indices[event.event_type]
         }
 
+    def __attrs_post_init__(self) -> None:
+        self.times = _IndexedTimesMap(self)
+
     def invalidate(self, event: Event) -> None:
-        invalid_ball_ids = self._get_invalid_ball_ids(event)
-
-        for event_type, event_times in self.times.items():
-            keys_to_delete = []
-
-            for key in event_times:
-                # Identify which indices in the key should be checked based on the event type
-                ball_indices = event_type_to_ball_indices.get(event_type, [])
-
-                # Check if any of the relevant ball IDs in the key match the invalid IDs
-                if any(key[idx] in invalid_ball_ids for idx in ball_indices):
-                    keys_to_delete.append(key)
-
-            for key in keys_to_delete:
-                del event_times[key]
+        invalid_ids = self._get_invalid_ball_ids(event)
+        to_delete: Set[Tuple[EventType, Tuple[str, str]]] = set()
+        for obj_id in invalid_ids:
+            for etype, key in self._keys_by_id.get(obj_id, set()):
+                to_delete.add((etype, key))
+        for etype, key in to_delete:
+            cache = self.times.get(etype)
+            if cache is not None and key in cache:
+                del cache[key]
 
     @classmethod
-    def create(cls) -> CollisionCache:
-        return cls()
+    def create(cls, shot: System | None = None) -> CollisionCache:
+        """Create a collision cache, optionally precomputing all possible event keys for a shot."""
+        cache = cls()
+        if shot is not None:
+            cache._init_possible_pairs(shot)
+        return cache
+
+    def _add_to_index(self, event_type: EventType, key: Tuple[str, str]) -> None:
+        for idx in event_type_to_ball_indices.get(event_type, ()):
+            obj_id = key[idx]
+            self._keys_by_id.setdefault(obj_id, set()).add((event_type, key))
+
+    def _remove_from_index(self, event_type: EventType, key: Tuple[str, str]) -> None:
+        for idx in event_type_to_ball_indices.get(event_type, ()):
+            obj_id = key[idx]
+            entries = self._keys_by_id.get(obj_id)
+            if entries:
+                entries.discard((event_type, key))
+                if not entries:
+                    del self._keys_by_id[obj_id]
+
+    def _init_possible_pairs(self, shot: System) -> None:
+        """Precompute all possible collision key tuples for each supported event type."""
+        # Ball-ball pairs
+        from itertools import combinations
+
+        ball_ids = list(shot.balls.keys())
+        self._possible_pairs: dict[EventType, list[tuple[str, str]]] = {}
+        self._possible_pairs[EventType.BALL_BALL] = list(combinations(ball_ids, 2))
+
+        # Ball-circular cushion pairs
+        circ = []
+        for b in ball_ids:
+            for cushion in shot.table.cushion_segments.circular.values():
+                circ.append((b, cushion.id))
+        self._possible_pairs[EventType.BALL_CIRCULAR_CUSHION] = circ
+
+        # Ball-linear cushion pairs
+        lin = []
+        for b in ball_ids:
+            for cushion in shot.table.cushion_segments.linear.values():
+                lin.append((b, cushion.id))
+        self._possible_pairs[EventType.BALL_LINEAR_CUSHION] = lin
+
+        # Ball-pocket pairs
+        pk = []
+        for b in ball_ids:
+            for pocket in shot.table.pockets.values():
+                pk.append((b, pocket.id))
+        self._possible_pairs[EventType.BALL_POCKET] = pk
