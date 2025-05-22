@@ -50,7 +50,7 @@ If the Discord link is expired, please make an issue in this repo.
 
 # Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+See the [Contributing page](https://pooltool.readthedocs.io/en/latest/contributing.html) in the documentation.
 
 # Blog
 

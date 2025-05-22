@@ -1,4 +1,4 @@
-# Code of Conduct for pooltool
+# Code of Conduct
 
 ## Our Pledge
 

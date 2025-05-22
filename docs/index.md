@@ -15,9 +15,12 @@ Pooltool is peer-reviewed and published in the **Journal of Open Source Software
    :maxdepth: 3
 
    self
+   install 
    getting_started/index
    examples/index
    resources/index
    autoapi/index
+   contributing
+   code_of_conduct
    license/index
 ```
