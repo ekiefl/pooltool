@@ -156,8 +156,12 @@ class CollisionCache:
     """
 
     times: Dict[EventType, Dict[Tuple[str, str], float]] = attrs.field(factory=dict)
-    _keys_by_id: Dict[str, Set[Tuple[EventType, Tuple[str, str]]]] = attrs.field(factory=dict, init=False, repr=False)
-    _possible_pairs: dict[EventType, list[tuple[str, str]]] = attrs.field(init=False, repr=False, factory=dict)
+    _keys_by_id: Dict[str, Set[Tuple[EventType, Tuple[str, str]]]] = attrs.field(
+        factory=dict, init=False, repr=False
+    )
+    _possible_pairs: dict[EventType, list[tuple[str, str]]] = attrs.field(
+        init=False, repr=False, factory=dict
+    )
 
     @property
     def size(self) -> int:

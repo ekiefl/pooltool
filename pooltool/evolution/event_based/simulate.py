@@ -265,7 +265,7 @@ def get_next_ball_ball_collision(
     cache = collision_cache.times.setdefault(EventType.BALL_BALL, {})
 
     # Determine which ball pairs to evaluate (use precomputed pairs if available)
-    possible = getattr(collision_cache, '_possible_pairs', None)
+    possible = getattr(collision_cache, "_possible_pairs", None)
     if possible and EventType.BALL_BALL in possible:
         candidates = possible[EventType.BALL_BALL]
     else:
@@ -335,7 +335,7 @@ def get_next_ball_circular_cushion_event(
     cache = collision_cache.times.setdefault(EventType.BALL_CIRCULAR_CUSHION, {})
 
     # Determine which ball-cushion pairs to evaluate (use precomputed pairs if available)
-    possible = getattr(collision_cache, '_possible_pairs', None)
+    possible = getattr(collision_cache, "_possible_pairs", None)
     if possible and EventType.BALL_CIRCULAR_CUSHION in possible:
         candidates = possible[EventType.BALL_CIRCULAR_CUSHION]
     else:
@@ -397,7 +397,7 @@ def get_next_ball_linear_cushion_collision(
     cache = collision_cache.times.setdefault(EventType.BALL_LINEAR_CUSHION, {})
 
     # Determine which ball-linear cushion pairs to evaluate (use precomputed pairs if available)
-    possible = getattr(collision_cache, '_possible_pairs', None)
+    possible = getattr(collision_cache, "_possible_pairs", None)
     if possible and EventType.BALL_LINEAR_CUSHION in possible:
         candidates = possible[EventType.BALL_LINEAR_CUSHION]
     else:
@@ -453,7 +453,7 @@ def get_next_ball_pocket_collision(
     cache = collision_cache.times.setdefault(EventType.BALL_POCKET, {})
 
     # Determine which ball-pocket pairs to evaluate (use precomputed pairs if available)
-    possible = getattr(collision_cache, '_possible_pairs', None)
+    possible = getattr(collision_cache, "_possible_pairs", None)
     if possible and EventType.BALL_POCKET in possible:
         candidates = possible[EventType.BALL_POCKET]
     else:
@@ -503,3 +503,25 @@ def get_next_ball_pocket_collision(
         pocket=shot.table.pockets[pocket_id],
         time=cache[(ball_id, pocket_id)],
     )
+
+
+try:
+    import pyximport
+    import numpy as _np
+
+    pyximport.install(setup_args={"include_dirs": _np.get_include()})
+    from pooltool.evolution.event_based._dispatch import (
+        get_next_event as _get_next_event,
+        get_next_ball_ball_collision as _get_next_ball_ball_collision,
+        get_next_ball_circular_cushion_event as _get_next_ball_circular_cushion_event,
+        get_next_ball_linear_cushion_collision as _get_next_ball_linear_cushion_collision,
+        get_next_ball_pocket_collision as _get_next_ball_pocket_collision,
+    )
+
+    get_next_event = _get_next_event
+    get_next_ball_ball_collision = _get_next_ball_ball_collision
+    get_next_ball_circular_cushion_event = _get_next_ball_circular_cushion_event
+    get_next_ball_linear_cushion_collision = _get_next_ball_linear_cushion_collision
+    get_next_ball_pocket_collision = _get_next_ball_pocket_collision
+except ImportError:
+    pass
