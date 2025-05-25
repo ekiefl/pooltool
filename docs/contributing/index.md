@@ -1,4 +1,5 @@
-# Contributing to pooltool
+
+# Contributing
 
 The community is excited that you're interested in contributing to pooltool! This document provides comprehensive guidelines for contributing to the project. Following these guidelines helps to communicate that you respect the time of the developers managing and developing this open-source project. In return, they should reciprocate that respect in addressing your issue, assessing changes, and helping you finalize your pull requests.
 
@@ -12,17 +13,15 @@ If you want to contribute, please join the Discord, introduce yourself, and stat
 - Find issues to work on
 - Get help with setting up your development environment
 
-## What we're looking for
+## Please report bugs
 
-Pooltool needs and welcomes people of all skill levels who are excited about this project, but especially those who have skill or passion in:
+We can't fix bugs that aren't reported. If you find a bug, please [file an issue](https://github.com/ekiefl/pooltool/issues/new).
 
-1. **Physics realism**
-1. **Game development** (especially for the Panda3D game engine)
-1. **Creating 3D models** (tables, balls, cues, rooms, etc)
-1. **Projector/camera systems**
-1. **Computer vision / machine learning / reinforcement learning**
+## Developer guide
 
-## Development environment setup
+The rest of this document provides resources for current/prospective pooltool developers.
+
+### Development environment setup
 
 For complete installation instructions, please refer to the [Installation Guide](install.md). Follow the "From source" section.
 
@@ -34,9 +33,9 @@ pre-commit install
 
 This will automatically check and format your code when you make commits.
 
-## Development workflow
+### Development workflow
 
-### Common Make commands
+#### Common Make commands
 
 The project includes a Makefile with common commands to streamline development:
 
@@ -69,7 +68,7 @@ make clean                # Clean build artifacts
 make build                # Build package distribution
 ```
 
-### Pre-commit hooks
+#### Pre-commit hooks
 
 Pre-commit hooks ensure that code formatting and linting are checked before each commit. These hooks run automatically when you commit code if you've installed them with `pre-commit install`.
 
@@ -81,14 +80,14 @@ The pre-commit configuration in pooltool includes:
 
 If a hook fails, the commit will be aborted. You can fix the issues and try committing again. Sometimes the hooks will automatically fix issues (like formatting), in which case you'll need to stage those changes before committing again.
 
-## Code style and formatting
+### Code style and formatting
 
-### Python code style
+#### Python code style
 
 * Linting and formatting is handled by [Ruff](https://github.com/astral-sh/ruff).
 * Type hints are highly appreciated for all functions and methods
 
-### Docstring conventions
+#### Docstring conventions
 
 Pooltool uses Google-style docstrings. Here's an example of the expected format:
 
@@ -103,7 +102,8 @@ def function_name(arg1: str, arg2: int) -> list[str]:
         arg2: Description of arg2
             
     Returns:
-        Description of the return value
+        list[str]:
+            Description of the return value
         
     Raises:
         ExceptionType: Description of when this exception is raised
@@ -120,21 +120,21 @@ def function_name(arg1: str, arg2: int) -> list[str]:
     """
 ```
 
-### Type checking
+#### Type checking
 
-The project uses Pyright for static type checking. Type annotations should be used for all function parameters, return values, and class attributes. The type checking configuration is in `pyrightconfig.ci.json`.
+The project uses [pyright](https://github.com/microsoft/pyright) for static type checking. Type annotations should be used for all function parameters, return values, and class attributes. The type checking configuration is in `pyrightconfig.ci.json`.
 
-## Testing
+### Testing
 
-Pooltool uses pytest for testing. Tests should be written for all new features and bug fixes.
+Pooltool uses [pytest](https://docs.pytest.org/en/stable/) for testing. Tests should be written for all new features and bug fixes.
 
-### Writing tests
+#### Writing tests
 
 - Tests are located in the `tests/` directory
 - Test files should be named `test_*.py`
 - Test functions should be named `test_*`
 
-### Running tests
+#### Running tests
 
 ```bash
 # Run all tests
@@ -147,11 +147,13 @@ pytest tests/path/to/test_file.py
 pytest -k test_function_name
 ```
 
-## Documentation
+### Documentation
 
-Documentation is written in Markdown and built using Sphinx with MyST parser. The documentation is hosted on Read the Docs.
+* Documentation is written in Markdown and built using Sphinx with MyST parser. The documentation is hosted on Read the Docs.
+* The API reference is automatically generated from docstrings.
+* Examples are provided as Jupyter notebooks in the `docs/examples/` directory.
 
-### Building documentation
+Commands for building documentation:
 
 ```bash
 # Build documentation
@@ -164,16 +166,64 @@ make docs-live
 make docs-with-notebooks
 ```
 
-### Documentation structure
+#### Cross-referencing examples
 
-- API reference is automatically generated from docstrings
-- Examples are provided as Jupyter notebooks in the `docs/examples/` directory
+##### From markdown
+
+**Referencing Python objects**
+
+* {py:meth}`pooltool.objects.Cue.set_state` (text = hyperlink)
+* {py:mod}`top-level API <pooltool>`
+* {py:class}`System <pooltool.system.System>`
+
+To add an inlaid dropdown signature:
+
+:::{admonition} Admonition Title (e.g. "Physics Engine")
+:class: dropdown
+
+Add optional text here
+
+```{eval-rst}
+.. autoclass:: pooltool.physics.PhysicsEngine
+    :noindex:
+```
+:::
+
+**Referencing other pages**
+
+To cross-reference other pages use relative paths. [This takes you to the 30 Degree Rule example](./examples/30_degree_rule.ipynb). Technically, the extension can be ommitted, but since cross-referencing in Jupyter notebooks requires the extension (see below), for consistency please keep the extension.
+
+##### From docstrings
+
+##### From Jupyter notebooks
+
+**Referencing Python objects**
+
+It's a bit tricky. The working formula is:
+
+```
+[Text](../autoapi/{MODULE_PATH}/index.rst#{FULL_OBJECT_DESCRIPTOR})
+```
+
+For example, to link to the Table object,
+
+```
+[Table](../autoapi/pooltool/objects/index.rst#pooltool.objects.table)
+```
+
+**Referencing other pages**
+
+To cross-reference other pages use relative paths:
+
+```
+[Straight shot example](./straight_shot.ipynb)
+```
+
+Providing the file extension is required.
 
 ### Examples gallery
 
 The Examples gallery is a key part of the documentation, consisting of Jupyter notebooks that demonstrate various aspects of pooltool. These notebooks are located in the `docs/examples/` directory.
-
-#### Adding a new example
 
 To add a new example to the gallery:
 
@@ -196,7 +246,7 @@ To add a new example to the gallery:
 
 ## Code of Conduct
 
-Pooltool has adopted a Code of Conduct that we expect project participants to adhere to. Please read [the full text](code_of_conduct.md) so that you can understand what actions will and will not be tolerated.
+Pooltool has adopted a [Code of Conduct](./code_of_conduct.md) that we expect project participants to adhere to. Please read it to learn what actions will and will not be tolerated.
 
 ## License
 

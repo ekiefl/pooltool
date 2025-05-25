@@ -20,7 +20,6 @@ Pooltool is peer-reviewed and published in the **Journal of Open Source Software
    examples/index
    resources/index
    autoapi/index
-   contributing
-   code_of_conduct
+   contributing/index
    license/index
 ```

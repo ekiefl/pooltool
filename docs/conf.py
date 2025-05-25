@@ -40,6 +40,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "myst_parser",
+    "sphinx_togglebutton",
     "custom_directives",
     "custom_extensions",
     "custom_skip_members",
@@ -115,6 +116,8 @@ copybutton_exclude = ".linenos, .gp, .go"
 
 # -- myst options
 myst_enable_extensions = ["colon_fence"]
+togglebutton_hint = "Click to expand"
+togglebutton_hint_hide = ""
 
 # -- autoapi configuration ---------------------------------------------------
 

@@ -31,17 +31,23 @@ pt.simulate(shot, inplace=True)
 pt.show(shot)
 ```
 
-For those interested in some exposition, below is a line-by-line explanation.
+The rest of this document details a line-by-line explanation.
 
 ## Explanation
 
-First thing first, the pootool package is imported which gives you access to the {py:mod}`top-level API <pooltool>`:
+### Importing
+
+First thing's first, the pootool package is imported which gives you access to the {py:mod}`top-level API <pooltool>`:
 
 ```python
 import pooltool as pt
 ```
 
-Then a table, a cue stick, and a collection of balls are created and wrapped up into a {py:class}`System <pooltool.System>`:
+The most important classes and functions are available directly from this top-level API.
+
+### Creating a `System`
+
+Then a table, a cue stick, and a collection of balls are created and wrapped up into a {py:class}`System <pooltool.system.System>`:
 
 ```python
 # We need a table, some balls, and a cue stick
@@ -53,14 +59,26 @@ cue = pt.Cue(cue_ball_id="cue")
 shot = pt.System(table=table, balls=balls, cue=cue)
 ```
 
-The cue stick parameters are then set with {py:meth}`pooltool.Cue.set_state`. A large impact speed of `V0=8` (m/s) is chosen, and an aiming utility function is used to aim the cue ball directly at the one-ball.
+:::{admonition} The System is a fundamental object of the pooltool API
+:class: dropdown
+
+```{eval-rst}
+.. autoclass:: pooltool.System
+    :noindex:
+```
+:::
+
+### Aiming the cue stick
+
+The cue stick parameters are then set with {py:meth}`Cue.set_state <pooltool.objects.Cue.set_state>`. A large impact speed of `V0=8` (m/s) is chosen, and an aiming utility function is used to aim the cue ball directly at the one-ball.
 
 ```python
 # Aim at the head ball with a strong impact
 shot.cue.set_state(V0=8, phi=pt.aim.at_ball(shot, "1"))
 ```
 
-:::{admonition} Cue Signature
+:::{admonition} The Cue holds all aiming information
+:class: dropdown
 
 A description of the cue's parameters can be found in the API docs:
 
@@ -70,14 +88,27 @@ A description of the cue's parameters can be found in the API docs:
 ```
 :::
 
-The cue parameters have been set, but the system still hasn't been simulated. This is done with a call to {py:func}`pooltool.simulate`.
+### Simulating a system
+
+The cue parameters have been set, but the system still hasn't been simulated. This is done with a call to {py:func}`pooltool.evolution.simulate`.
 
 ```python
 # Evolve the shot.
 pt.simulate(shot, inplace=True)
 ```
 
+:::{admonition} How system simulation works
+:class: dropdown
+
+```{eval-rst}
+.. autoclass:: pooltool.evolution.simulate
+    :noindex:
+```
+:::
+
 The system has now been evolved from its initial to its final state.
+
+### Opening the GUI
 
 To visualize the shot, open the GUI with {py:func}`pooltool.show`:
 
@@ -86,6 +117,15 @@ To visualize the shot, open the GUI with {py:func}`pooltool.show`:
 pt.show(shot)
 ```
 
+:::{admonition} The GUI
+:class: dropdown
+
+```{eval-rst}
+.. autoclass:: pooltool.show
+    :noindex:
+```
+:::
+
 ## Next
 
-Obviously this script is just the beginning. Pooltool offers much more than this, which means you have much more to learn. From here, I suggest you check out the [Examples](../examples/index.md) page and dive into whatever topic interests you.
+Obviously this script is just the beginning. Pooltool offers much more than this, which means you have much more to learn. From here, you should check out the [Examples](../examples/index.md) page and dive into whatever topic interests you.
