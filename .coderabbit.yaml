@@ -31,14 +31,14 @@ reviews:
   disable_cache: false
   auto_review:
     enabled: true
-    auto_incremental_review: true
+    auto_incremental_review: false
     ignore_title_keywords: []
     labels: []
     drafts: false
     base_branches: []
   finishing_touches:
     docstrings:
-      enabled: true
+      enabled: false
   tools:
     ast-grep:
       rule_dirs: []
