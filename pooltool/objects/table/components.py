@@ -142,6 +142,11 @@ class LinearCushionSegment:
         return -p1x if (p2x - p1x) == 0 else (p2y - p1y) / (p2x - p1x) * p1x - p1y
 
     @cached_property
+    def unit_axis(self) -> NDArray[np.float64]:
+        axis = self.p2 - self.p1
+        return axis / ptmath.norm3d(axis)
+
+    @cached_property
     def normal(self) -> NDArray[np.float64]:
         """The line's normal vector, with the z-component set to 0.
 
@@ -180,6 +185,10 @@ class LinearCushionSegment:
               :meth:`normal` instead.
         """
         return self.normal
+
+    def get_normal_3d(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
+        r = xyz - self.p1
+        return ptmath.unit_vector(r - np.dot(r, self.unit_axis) * self.unit_axis)
 
     def copy(self) -> LinearCushionSegment:
         """Create a copy"""
@@ -265,6 +274,9 @@ class CircularCushionSegment:
         normal = rvw[0, :] - self.center
         normal[2] = 0  # remove z-component
         return ptmath.unit_vector(normal)
+
+    def get_normal_3d(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
+        return ptmath.unit_vector(xyz - self.center)
 
     def copy(self) -> CircularCushionSegment:
         """Create a copy"""
