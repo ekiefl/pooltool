@@ -154,7 +154,7 @@ class LinearCushionSegment:
         """
         return ptmath.unit_vector(np.array([self.lx, self.ly, 0]))
 
-    def get_normal(self, rvw: NDArray[np.float64]) -> NDArray[np.float64]:
+    def get_normal_xy(self, rvw: NDArray[np.float64]) -> NDArray[np.float64]:
         """Calculates the normal vector
 
         Warning:
@@ -249,7 +249,7 @@ class CircularCushionSegment:
         """
         return self.center[1]
 
-    def get_normal(self, rvw: NDArray[np.float64]) -> NDArray[np.float64]:
+    def get_normal_xy(self, rvw: NDArray[np.float64]) -> NDArray[np.float64]:
         """Calculates the normal vector for a ball contacting the cushion
 
         Assumes that the ball is in fact in contact with the cushion.

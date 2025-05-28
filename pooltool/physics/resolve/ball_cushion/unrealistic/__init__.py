@@ -45,7 +45,7 @@ def _solve(
     #      we're still living with the consequences of. The burden is that you must
     #      assign a convention. Here I opt to orient the normal so it points away
     #      from the playing surface.
-    normal = cushion.get_normal(rvw)
+    normal = cushion.get_normal_xy(rvw)
     normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
 
     # Rotate frame of reference to the cushion frame. The cushion frame is defined

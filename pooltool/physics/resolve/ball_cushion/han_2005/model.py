@@ -96,7 +96,7 @@ Cushion = TypeVar("Cushion", LinearCushionSegment, CircularCushionSegment)
 def _solve(ball: Ball, cushion: Cushion) -> tuple[Ball, Cushion]:
     rvw = han2005(
         rvw=ball.state.rvw,
-        normal=cushion.get_normal(ball.state.rvw),
+        normal=cushion.get_normal_xy(ball.state.rvw),
         R=ball.params.R,
         m=ball.params.m,
         h=cushion.height,
