@@ -16,26 +16,26 @@ class BallParams:
     Note:
         The presence of an attribute does not guarantee its usage by the physics engine.
         For example, if the frictionless elastic ball-ball collision model is used, then
-        `u_b`, the ball-ball sliding coefficient of friction, will have no affect on the
-        simulation.
+        :math:`u_b`, the ball-ball sliding coefficient of friction, will have no affect
+        on the simulation.
 
     Attributes:
         m:
-            The mass of the ball (*default* = 0.170097
+            The mass of the ball.
         R:
-            The radius of the ball (*default* = 0.028575).
+            The radius of the ball.
         u_s:
-            The sliding coefficient of friction (*default* = 0.2).
+            The sliding coefficient of friction.
 
             References:
                 - https://ekiefl.github.io/2020/04/24/pooltool-theory/#case-4-sliding
         u_r:
-            The rolling coefficient of friction (*default* = 0.01).
+            The rolling coefficient of friction.
 
             References:
                 - https://ekiefl.github.io/2020/04/24/pooltool-theory/#case-3-rolling
         u_sp_proportionality:
-            The spinning coefficient of friction, with R factored out (*default* = 0.01).
+            The spinning coefficient of friction, with :math:`R` factored out.
 
             See Also:
                 - For the coefficient of spinning friction, use the property :meth:`u_sp`.
@@ -43,23 +43,23 @@ class BallParams:
             References:
                 - https://ekiefl.github.io/2020/04/24/pooltool-theory/#case-2-spinning
         u_b:
-            The ball-ball coefficient of sliding friction (*default* = 0.05).
+            The ball-ball coefficient of sliding friction.
         e_b:
-            The ball-ball coefficient of restitution (*default* = 0.95).
+            The ball-ball coefficient of restitution.
         e_c:
-            The cushion coefficient of restitution (*default* = 0.85).
+            The cushion coefficient of restitution.
 
             Note:
                 This is a potentially model-dependent ball-cushion parameter and should be
                 placed elsewhere, either as a model parameter or as a cushion segment parameter.
         f_c:
-            The cushion coefficient of friction (*default* = 0.2).
+            The cushion coefficient of friction.
 
             Note:
                 This is a potentially model-dependent ball-cushion parameter and should be
                 placed elsewhere, either as a model parameter or as a cushion segment parameter.
         g:
-            The gravitational constant (*default* = 9.81).
+            The gravitational constant.
 
     Most of the default values (SI units) are taken from or based off of
     https://billiards.colostate.edu/faq/physics/physical-properties/.
@@ -119,20 +119,26 @@ class BallParams:
 
         Args:
             name:
-                A :class:`PrebuiltBallParams` member.
+                A :class:`pooltool.objects.PrebuiltBallParams` member.
 
-        All prebuilt ball parameters are named with the :class:`PrebuiltBallParams`
-        Enum. This constructor takes a prebuilt name and returns the corresponding ball
-        parameters.
+        All prebuilt ball parameters are are members of the
+        :class:`pooltool.objects.PrebuiltBallParams` Enum. This constructor takes a
+        prebuilt name and returns the corresponding ball parameters.
 
         See Also:
-            - :class:`PrebuiltBallParams`
+            - :class:`pooltool.objects.PrebuiltBallParams`
         """
         return _prebuilt_ball_params(name)
 
 
 class PrebuiltBallParams(StrEnum):
-    """An Enum specifying prebuilt ball parameters"""
+    """An Enum specifying prebuilt ball parameters.
+
+    Attributes:
+        POOL_GENERIC:
+        SNOOKER_GENERIC:
+        BILLIARD_GENERIC:
+    """
 
     POOL_GENERIC = auto()
     SNOOKER_GENERIC = auto()

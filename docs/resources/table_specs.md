@@ -8,14 +8,15 @@ There are many ways to create a table object, each with varying levels of comple
 
 ## The `Table` object
 
-The endpoint for table generation is the [](#pooltool.objects.table.datatypes.Table) [](#pooltool.system.datatypes.System) object.
+The endpoint for table generation is the {py:class}`Table <pooltool.objects.Table>` object.
 
 :::{admonition} The Table Object
+:class: dropdown
 
 From the API docs:
 
 ```{eval-rst}
-.. autoclass:: pooltool.objects.table.datatypes.Table
+.. autoclass:: pooltool.objects.Table
     :noindex:
 ```
 :::
@@ -26,31 +27,16 @@ There are several ways to build a table. This document will describe
 
 For pocket table specifications I have created a parametrization for table dimensions and cushion geometries involving several parameters. The point of this document is to make clear what each of these parameters does.
 
-The class that holds the table specs is `pooltool.objects.table.specs.PocketTableSpecs`:
+The class that holds the table specs is {py:class}`PocketTableSpecs <pooltool.objects.PocketTableSpecs>`:
 
-```python
-@define(frozen=True)
-class PocketTableSpecs(TableSpecs):
-    """Parameters that specify a pocket table"""
+:::{admonition} PocketTableSpecs
+:class: dropdown
 
-    l: float = field(default=1.9812)
-    w: float = field(default=1.9812 / 2)
-
-    cushion_width: float = field(default=2 * 2.54 / 100)
-    cushion_height: float = field(default=0.64 * 2 * 0.028575)
-    corner_pocket_width: float = field(default=0.118)
-    corner_pocket_angle: float = field(default=5.3)  # degrees
-    corner_pocket_depth: float = field(default=0.0398)
-    corner_pocket_radius: float = field(default=0.124 / 2)
-    corner_jaw_radius: float = field(default=0.0419 / 2)
-    side_pocket_width: float = field(default=0.137)
-    side_pocket_angle: float = field(default=7.14)  # degrees
-    side_pocket_depth: float = field(default=0.00437)
-    side_pocket_radius: float = field(default=0.129 / 2)
-    side_jaw_radius: float = field(default=0.0159 / 2)
-
-    (...)
+```{eval-rst}
+.. autoclass:: pooltool.objects.PocketTableSpecs
+    :noindex:
 ```
+:::
 
 What do each of these parameters do? Let's go through it in detail
 

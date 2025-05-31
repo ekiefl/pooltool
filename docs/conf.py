@@ -170,4 +170,5 @@ rst_prolog = """
 # Related custom CSS
 html_css_files = [
     "css/label.css",
+    "css/sphinx-togglebutton.css",
 ]

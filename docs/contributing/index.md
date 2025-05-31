@@ -195,6 +195,34 @@ To cross-reference other pages use relative paths. [This takes you to the 30 Deg
 
 ##### From docstrings
 
+**Referencing Python objects**
+
+When referencing objects in the same module, simply provide their name:
+
+```
+:class:`LinearCushionSegment`
+:attr:`contains`
+:func:`continuize`
+```
+
+When referencing from a different module, use the object reference with the lowest level API. As an example, consider `Ball` and its various references:
+
+```
+pooltool.Ball
+pooltool.objects.Ball
+pooltool.objects.ball.datatypes.Ball
+```
+
+`Ball` is defined as `pooltool.objects.ball.datatypes.Ball`, but `pooltool.objects.ball.datatypes` isn't part of the API. `pooltool.Ball` is in the API but it's also referenced as `pooltool.objects.Ball`. Since that has a lower reference, it is the preferred reference. To see which subpackages are part of the API, see what's imported in `pooltool/__init__.py`.
+
+**Referencing other pages**
+
+You can cross-reference document pages with the `:doc:` directive. For example,
+
+```
+:doc:`Table Specification </resources/table_specs>`
+```
+
 ##### From Jupyter notebooks
 
 **Referencing Python objects**

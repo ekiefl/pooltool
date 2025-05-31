@@ -6,13 +6,13 @@
     >>> import pooltool as pt
     >>> system = pt.System.example()
 
-Alternatively, it can be imported directly from its source location:
+Alternatively, it can be imported directly from its lower-level API location:
 
-    >>> from pooltool.system.datatypes import System
+    >>> from pooltool.system import System
     >>> system = System.example()
 
 If the object you're looking for isn't in this top-level API, **search for it in
-the submodules** listed below. Relatedly, if you believe that an objects deserves to
+the subpackages/submodules** listed below. Relatedly, if you believe that an objects deserves to
 graduate to the top-level API, **your input is valuable** and such changes can be
 considered.
 """

@@ -321,7 +321,7 @@ conversion.register_structure_hook(
 
 @define
 class Ball:
-    """A billiards ball
+    """A billiards ball.
 
     This class represents a billiards ball. It stores its parameters (mass, radius,
     etc.), it's state (coordinates, velocity, spin, etc), its history (a time-resolved
@@ -338,7 +338,7 @@ class Ball:
             This is the current state of the ball.
 
             See Also:
-                - See the *Important* section in :class:`Ball` for a description of the
+                - See the *Important* section below for a description of the
                   role of ``states`` during simulation.
         params:
             The ball's physical parameters.
@@ -364,7 +364,7 @@ class Ball:
             :math:`t_{final}`.
 
             See Also:
-                - See the *Important* section in :class:`Ball` for a description of the
+                - See the *Important* section below for a description of the
                   role of ``history`` during simulation.
         history_cts:
             The ball's continuous state history
@@ -375,7 +375,7 @@ class Ball:
             See Also:
                 - See :func:`pooltool.evolution.continuize` for a
                   details about continuizing a simulated system.
-                - See the *Important* section in :class:`Ball` for a description of the
+                - See the *Important* section below for a description of the
                   role of ``history_cts`` during simulation.
 
     Important:
@@ -385,7 +385,7 @@ class Ball:
 
     Important:
         The following explains how a ``Ball`` object is modified when its parent system
-        is simulated (:func:`pooltool.evolution.event_based.simulate.simulate`).
+        is simulated (:func:`pooltool.evolution.simulate`).
 
         At the start of the simulation process, :attr:`state` represents the ball state
         at :math:`t = 0`. A copy of :attr:`state` is appended to :attr:`history`.
@@ -443,8 +443,8 @@ class Ball:
                 If the ball ID doesn't match to a model name of the ballset.
 
         See Also:
-            - See :mod:`pooltool.objects.ball.sets` for details about ball sets.
-            - See :meth:`pooltool.system.datatypes.System.set_ballset` for setting the
+            - See :class:`pooltool.objects.BallSet` for details about ball sets.
+            - See :meth:`pooltool.system.System.set_ballset` for setting the
               ballset for all the balls in a system.
         """
         self.ballset = ballset

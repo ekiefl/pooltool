@@ -13,6 +13,15 @@ from pooltool.utils.strenum import StrEnum, auto
 
 
 class TableName(StrEnum):
+    """An Enum specifying table names.
+
+    Attributes:
+        SEVEN_FOOT_SHOWOOD:
+        SNOOKER_GENERIC:
+        BILLIARD_WIP:
+        SUMTOTHREE_WIP:
+    """
+
     SEVEN_FOOT_SHOWOOD = auto()
     SNOOKER_GENERIC = auto()
     BILLIARD_WIP = auto()

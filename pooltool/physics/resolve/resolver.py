@@ -96,7 +96,7 @@ class Resolver:
 
     Important:
         For everything you need to know about this class, see :doc:`Modular Physics
-        </resources/custom_physics>`_.
+        </resources/custom_physics>`.
     """
 
     ball_ball: BallBallCollisionStrategy

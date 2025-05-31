@@ -1,8 +1,8 @@
-"""Simulation object classes
+"""Simulation object classes.
 
-The three main simulation objects are :class:`pooltool.objects.ball.datatypes.Ball`,
-:class:`pooltool.objects.cue.datatypes.Cue`, and
-:class:`pooltool.objects.table.datatypes.Table`, however there are many more objects
+The three main simulation objects are :class:`pooltool.objects.Ball`,
+:class:`pooltool.objects.Cue`, and
+:class:`pooltool.objects.Table`, however there are many more objects
 that either help create the primary objects or comprise the primary objects. Those are
 all kept in this module.
 """
@@ -11,11 +11,12 @@ from pooltool.objects.ball.datatypes import (
     Ball,
     BallHistory,
     BallOrientation,
-    BallParams,
     BallState,
 )
+from pooltool.objects.ball.params import BallParams, PrebuiltBallParams
 from pooltool.objects.ball.sets import BallSet, get_ballset
 from pooltool.objects.cue.datatypes import Cue, CueSpecs
+from pooltool.objects.table.collection import TableName
 from pooltool.objects.table.components import (
     CircularCushionSegment,
     CushionDirection,
@@ -37,6 +38,7 @@ __all__ = [
     "Ball",
     "BallState",
     "BallParams",
+    "PrebuiltBallParams",
     "BallHistory",
     "BallOrientation",
     "CueSpecs",
@@ -49,6 +51,7 @@ __all__ = [
     "Table",
     "TableModelDescr",
     "TableType",
+    "TableName",
     "PocketTableSpecs",
     "BilliardTableSpecs",
     "SnookerTableSpecs",

@@ -56,7 +56,14 @@ class TableModelDescr:
 
 
 class TableType(strenum.StrEnum):
-    """An Enum describing the table type"""
+    """An Enum describing the table type.
+
+    Attributes:
+        POCKET:
+        BILLIARD:
+        SNOOKER:
+        OTHER:
+    """
 
     POCKET = strenum.auto()
     BILLIARD = strenum.auto()

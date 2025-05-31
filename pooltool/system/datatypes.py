@@ -31,9 +31,9 @@ class System:
 
     This class holds:
 
-    (1) a collection of balls (:class:`pooltool.objects.ball.datatypes.Ball`)
-    (2) a cue stick (:class:`pooltool.objects.cue.datatypes.Cue`)
-    (3) a table (:class:`pooltool.objects.table.datatypes.Table`)
+    (1) a collection of balls (:class:`pooltool.objects.Ball`)
+    (2) a cue stick (:class:`pooltool.objects.Cue`)
+    (3) a table (:class:`pooltool.objects.Table`)
 
     Together, these objects, referred to as the `system`, fully describe the billiards
     system.
@@ -151,7 +151,7 @@ class System:
 
         See Also:
             For a proper definition of *continuous history*, please see
-            :attr:`pooltool.objects.ball.datatypes.Ball.history_cts`.
+            :attr:`pooltool.objects.Ball.history_cts`.
         """
         return all(not ball.history_cts.empty for ball in self.balls.values())
 
@@ -186,9 +186,9 @@ class System:
                 ball set.
 
         See Also:
-            - See :mod:`pooltool.objects.ball.sets` for details about ball sets.
-            - See :meth:`pooltool.objects.ball.datatypes.Ball.set_ballset` for setting
-              the ballset of an individual ball.
+            - See :class:`pooltool.objects.BallSet` for details about ball sets.
+            - See :meth:`pooltool.objects.Ball.set_ballset` for setting the ballset of an
+              individual ball.
         """
         for ball in self.balls.values():
             ball.set_ballset(ballset)
@@ -212,17 +212,14 @@ class System:
 
         Operations that this method performs:
 
-        (1) :attr:`t` is set to ``0.0``
+        (1) :attr:`t` is set to 0.0
         (2) :attr:`events` is set to ``[]``
 
-        Additionally for each ball in ``self.balls``,
+        Additionally, for each ball in :attr:`balls`,
 
-        (1) :attr:`pooltool.objects.ball.datatypes.Ball.history` is set to
-        ``BallHistory()``
-        (2) :attr:`pooltool.objects.ball.datatypes.Ball.history_cts` is set to
-        ``BallHistory()``
-        (3) The ``t`` attribute of :attr:`pooltool.objects.ball.datatypes.Ball.state`
-        is set to ``0.0``
+        (1) :attr:`pooltool.objects.Ball.history` is set to ``BallHistory()``
+        (2) :attr:`pooltool.objects.Ball.history_cts` is set to ``BallHistory()``
+        (3) The ``t`` attribute of :attr:`pooltool.objects.Ball.state` is set to ``0.0``
 
         Calling this method thus erases any history.
         """
@@ -243,7 +240,7 @@ class System:
         before evolving the system). It doesn't erase the history.
 
         Example:
-            This example shows that calling this method resets the ball's states to
+            This example shows that calling this method resets the balls' states to
             before the system is simulated.
 
             First, create a system and store the cue ball's state
@@ -296,20 +293,20 @@ class System:
     def strike(self, **kwargs) -> None:
         """Set cue stick parameters
 
-        This is merely an alias for :meth:`pooltool.objects.cue.datatypes.Cue.set_state`
+        This is an alias for :meth:`pooltool.objects.Cue.set_state`
 
         Args:
             kwargs: **kwargs
                 Cue stick parameters.
 
         See Also:
-            :meth:`pooltool.objects.cue.datatypes.Cue.set_state`
+            :meth:`pooltool.objects.Cue.set_state`
         """
         self.cue.set_state(**kwargs)
         assert self.cue.cue_ball_id in self.balls
 
     def get_system_energy(self) -> float:
-        """Calculate the energy of the system in Joules"""
+        """Calculate the energy of the system in Joules."""
         energy = 0
         for ball in self.balls.values():
             energy += ptmath.get_ball_energy(
@@ -323,9 +320,12 @@ class System:
     ) -> bool:
         """Randomize ball positions on the table--ensure no overlap
 
-        This "algorithm" initializes a random state, and checks that all the balls are
+        This initializes a random state, and checks that all the balls are
         non-overlapping. If any are, a new state is initialized and the process is
-        repeated. This is an inefficient algorithm, in case that needs to be said.
+        repeated.
+
+        Note:
+            This is a very inefficient algorithm.
 
         Args:
             ball_ids:
@@ -423,10 +423,10 @@ class System:
                 Either a ``pathlib.Path`` object or a string. The extension should match the
                 supported filetypes mentioned above.
             drop_continuized_history:
-                If True, :attr:`pooltool.objects.ball.datatypes.Ball.history_cts` is
+                If True, :attr:`pooltool.objects.Ball.history_cts` is
                 wiped before the save operation, which can save a lot of disk space and
                 increase save/load speed. If loading (deserializing) at a later time,
-                the ``history_cts`` for each ball can be easily regenerated (see
+                the ``history_cts`` will have to be repopulated via simulation (see
                 Examples).
 
         Example:
@@ -444,7 +444,7 @@ class System:
             >>> pt.simulate(system, inplace=True)
             >>> system.save("case2.json")
 
-            Simulated systems contain the events of the shot, so they're larger:
+            Simulated systems contain event and ball trajectory data, so they're larger:
 
                 $ du -sh case1.json case2.json
                  12K	case1.json

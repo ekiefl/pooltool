@@ -1,54 +1,3 @@
-"""Ballset module
-
-**What is a ballset?**
-
-A ballset specifies the set that a ball belongs to.
-
-**Why is it important?**
-
-Ballsets are important for properly rendering balls in a scene. By specifying a ballset
-for a ball, you declare the visual texture / skin that the ball should be wrapped in. If
-a ball's ballset is not declared, it will be rendered with the default skin.
-
-**What ballsets are available?**
-
-See :func:`get_ballset_names`.
-
-**Where are ballsets stored?**
-
-Each ballset is represented as a subdirectory within the following directory:
-
-.. code::
-
-    $ echo $(python -c "import pooltool; print(pooltool.__file__[:-12])")/models/balls
-
-Each ball model is a ``.glb`` file. Its base name represents the model's ID, and
-matching ball IDs will be textured by this model. To associate multiple ball IDs to the
-same model, a ``conversion.json`` file is used. For example, see how the
-``generic_snooker`` ballset matches the red ball IDs to the same model ID:
-
-.. code::
-
-    $ cat $(python -c "import pooltool; print(pooltool.__file__[:-12])")/models/balls/generic_snooker/conversion.json
-    {
-      "red_01": "red",
-      "red_02": "red",
-      "red_03": "red",
-      "red_04": "red",
-      "red_05": "red",
-      "red_06": "red",
-      "red_07": "red",
-      "red_08": "red",
-      "red_09": "red",
-      "red_10": "red",
-      "red_11": "red",
-      "red_12": "red",
-      "red_13": "red",
-      "red_14": "red",
-      "red_15": "red"
-    }
-"""
-
 from __future__ import annotations
 
 from functools import cached_property
@@ -65,7 +14,55 @@ _expected_conversion_name = "conversion.json"
 
 @attrs.define(frozen=True, slots=False)
 class BallSet:
-    """A ballset
+    """A ballset.
+
+    **What is a ballset?**
+
+    A ballset specifies the set that a ball belongs to.
+
+    **Why is it important?**
+
+    Ballsets are important for properly rendering balls in a scene. By specifying a ballset
+    for a ball, you declare the visual texture / skin that the ball should be wrapped in. If
+    a ball's ballset is not declared, it will be rendered with the default skin.
+
+    **What ballsets are available?**
+
+    See :func:`get_ballset_names`.
+
+    **Where are ballsets stored?**
+
+    Each ballset is represented as a subdirectory within the following directory:
+
+    .. code::
+
+        $ echo $(python -c "import pooltool; print(pooltool.__file__[:-12])")/models/balls
+
+    Each ball model is a ``.glb`` file. Its base name represents the model's ID, and
+    matching ball IDs will be textured by this model. To associate multiple ball IDs to the
+    same model, a ``conversion.json`` file is used. For example, see how the
+    ``generic_snooker`` ballset matches the red ball IDs to the same model ID:
+
+    .. code::
+
+        $ cat $(python -c "import pooltool; print(pooltool.__file__[:-12])")/models/balls/generic_snooker/conversion.json
+        {
+          "red_01": "red",
+          "red_02": "red",
+          "red_03": "red",
+          "red_04": "red",
+          "red_05": "red",
+          "red_06": "red",
+          "red_07": "red",
+          "red_08": "red",
+          "red_09": "red",
+          "red_10": "red",
+          "red_11": "red",
+          "red_12": "red",
+          "red_13": "red",
+          "red_14": "red",
+          "red_15": "red"
+        }
 
     Attributes:
         name:
