@@ -103,6 +103,7 @@ click = ">=8.0.0"
 Pillow = ">=6.2.0"
 h5py = ">=3.10"
 h11 = ">=0.16.0"
+pprofile = ">=2.2.0"
 
 [tool.poetry.group.dev.dependencies]
 # Testing and formatting

@@ -3306,6 +3306,17 @@ tomlkit = ">=0.4"
 plugin = ["poetry (>=1.2.0)"]
 
 [[package]]
+name = "pprofile"
+version = "2.2.0"
+description = "Line-granularity, thread-aware deterministic and statistic pure-python profiler"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "pprofile-2.2.0.tar.gz", hash = "sha256:edd57f35f2b3fb84e7d01aa310a44bfabacc66ffc353dce147348ec14de3c7d9"},
+]
+
+[[package]]
 name = "pre-commit"
 version = "4.2.0"
 description = "A framework for managing and maintaining multi-language pre-commit hooks."
@@ -5319,4 +5330,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.14"
-content-hash = "7a5f70961f83477393857504a857facdb9ab7eab44ae79485c70a951d9fa750a"
+content-hash = "09cbc6112ff2061b3eacb00d6b7f3287f59e17542094a1c6fcc678e4a12badb3"
