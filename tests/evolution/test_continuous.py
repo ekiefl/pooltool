@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pooltool.evolution.continuize import continuize, interpolate_ball_states
+from pooltool.evolution.continuous import continuize, interpolate_ball_states
 from pooltool.evolution.event_based.simulate import simulate
 from pooltool.system import System
 

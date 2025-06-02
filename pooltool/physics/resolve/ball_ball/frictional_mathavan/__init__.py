@@ -36,10 +36,10 @@ def collide_balls(
     Args:
         rvw1:
             Kinematic state of ball 1 (see
-            :class:`pooltool.objects.ball.datatypes.BallState`).
+            :class:`pooltool.objects.BallState`).
         rvw2:
             Kinematic state of ball 2 (see
-            :class:`pooltool.objects.ball.datatypes.BallState`).
+            :class:`pooltool.objects.BallState`).
         R: Radius of the balls.
         M: Mass of the balls.
         u_s1: Coefficient of sliding friction between ball 1 and the surface.

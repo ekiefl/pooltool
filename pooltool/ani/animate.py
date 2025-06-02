@@ -29,7 +29,7 @@ from pooltool.ani.menu import TextOverlay, menus
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
 from pooltool.evolution import simulate
-from pooltool.evolution.continuize import continuize
+from pooltool.evolution.continuous import continuize
 from pooltool.layouts import get_rack
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
@@ -364,8 +364,8 @@ class ShotViewer(Interface):
         Args:
             shot_or_shots:
                 The shot or collection of shots to visualize. This can be a single
-                :class:`pooltool.system.datatypes.System` object or a
-                :class:`pooltool.system.datatypes.MultiSystem` object containing
+                :class:`pooltool.system.System` object or a
+                :class:`pooltool.system.MultiSystem` object containing
                 multiple systems.
 
                 Note:

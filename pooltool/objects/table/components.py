@@ -36,8 +36,8 @@ class CushionDirection:
 
     Note:
         This used to inherit from ``Enum``, but accessing the cushion direction in
-        ``get_next_ball_linear_cushion_collision`` somehow took up 20% of the functions
-        runtime so I removed it.
+        ``get_next_ball_linear_cushion_collision`` took up 20% of the function's
+        runtime, so it was removed.
     """
 
     SIDE1 = 0
@@ -63,9 +63,10 @@ class LinearCushionSegment:
             Note:
                 - p1 and p2 must share the same height (``p1[2] == p2[2]``).
         direction:
-            The cushion direction (*default* = :attr:`CushionDirection.BOTH`).
+            The cushion direction (*default* =
+            :attr:`pooltool.objects.CushionDirection.BOTH`).
 
-            See :class:`CushionDirection` for explanation.
+            See :class:`pooltool.objects.CushionDirection` for explanation.
     """
 
     id: str
@@ -168,7 +169,7 @@ class LinearCushionSegment:
             rvw:
                 The kinematic state vectors of the contacting balls.
 
-                See ``rvw`` parameter of :class:`pooltool.objects.ball.datatypes.BallState`.
+                See ``rvw`` parameter of :class:`pooltool.objects.BallState`.
 
         Returns:
             NDArray[np.float64]:
@@ -176,8 +177,8 @@ class LinearCushionSegment:
 
         Note:
             - This method only exists for call signature parity with
-              :meth:`CircularCushionSegment.get_normal`. Consider using :meth:`normal`
-              instead.
+              :meth:`pooltool.objects.CircularCushionSegment.get_normal`. Consider using
+              :meth:`normal` instead.
         """
         return self.normal
 
@@ -256,7 +257,7 @@ class CircularCushionSegment:
 
         Args:
             rvw: The kinematic state vectors of the contacting ball (see
-            :attr:`pooltool.objects.ball.datatypes.BallState.rvw`).
+            :attr:`pooltool.objects.BallState.rvw`).
 
         Returns:
             NDArray[np.float64]:
@@ -287,8 +288,9 @@ CushionSegment = Union[LinearCushionSegment, CircularCushionSegment]
 class CushionSegments:
     """A collection of cushion segments
 
-    Cushion segments can be either linear (see :class:`LinearCushionSegment`) or
-    circular (see :class:`CircularCushionSegment`). This class stores both.
+    Cushion segments can be either linear (see
+    :class:`pooltool.objects.LinearCushionSegment`) or circular (see
+    :class:`pooltool.objects.CircularCushionSegment`). This class stores both.
 
     Attributes:
         linear:

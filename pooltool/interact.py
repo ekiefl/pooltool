@@ -17,8 +17,8 @@ def show(*args, **kwargs):
     Args:
         shot_or_shots:
             The shot or collection of shots to visualize. This can be a single
-            :class:`pooltool.system.datatypes.System` object or a
-            :class:`pooltool.system.datatypes.MultiSystem` object containing
+            :class:`pooltool.system.System` object or a
+            :class:`pooltool.system.MultiSystem` object containing
             multiple systems.
 
             Note:

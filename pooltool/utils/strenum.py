@@ -1,7 +1,7 @@
 from enum import Enum, auto
 from typing import Any, List, Type, TypeVar
 
-__all__ = ["auto"]
+__all__ = ["auto", "StrEnum"]
 
 _S = TypeVar("_S", bound="StrEnum")
 

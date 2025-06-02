@@ -1,4 +1,4 @@
-"""Module that holds :class:`Ball` and all of its constituents"""
+"""Module that holds :class:`pooltool.objects.Ball` and all of its constituents"""
 
 from __future__ import annotations
 
@@ -198,9 +198,10 @@ class BallHistory:
     ) -> Tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
         """Compile the attribute from each ball state into arrays
 
-        This method unzips each :class:`BallState` in :attr:`states`, resulting in an
-        array of :attr:`BallState.rvw` values, an array of :attr:`BallState.s` values,
-        and an array of :attr:`BallState.t` values.
+        This method unzips each :class:`pooltool.objects.BallState` in :attr:`states`,
+        resulting in an array of :attr:`pooltool.objects.BallState.rvw` values, an array
+        of :attr:`pooltool.objects.BallState.s` values, and an array of
+        :attr:`pooltool.objects.BallState.t` values.
 
         The vectors have the following properties:
 
@@ -321,7 +322,7 @@ conversion.register_structure_hook(
 
 @define
 class Ball:
-    """A billiards ball
+    """A billiards ball.
 
     This class represents a billiards ball. It stores its parameters (mass, radius,
     etc.), it's state (coordinates, velocity, spin, etc), its history (a time-resolved
@@ -338,7 +339,7 @@ class Ball:
             This is the current state of the ball.
 
             See Also:
-                - See the *Important* section in :class:`Ball` for a description of the
+                - See the *Important* section below for a description of the
                   role of ``states`` during simulation.
         params:
             The ball's physical parameters.
@@ -350,7 +351,7 @@ class Ball:
             Important if rendering the ball in a scene.
 
             See Also:
-                - See :meth:`Ball.set_ballset` for details
+                - See :meth:`set_ballset` for details
         initial_orientation:
             The initial rendered orientation of the ball.
 
@@ -364,7 +365,7 @@ class Ball:
             :math:`t_{final}`.
 
             See Also:
-                - See the *Important* section in :class:`Ball` for a description of the
+                - See the *Important* section below for a description of the
                   role of ``history`` during simulation.
         history_cts:
             The ball's continuous state history
@@ -373,9 +374,9 @@ class Ball:
             :math:`t_{final}` densely sampled with respect to time.
 
             See Also:
-                - See :func:`pooltool.evolution.continuize.continuize` for a
+                - See :func:`pooltool.evolution.continuize` for a
                   details about continuizing a simulated system.
-                - See the *Important* section in :class:`Ball` for a description of the
+                - See the *Important* section below for a description of the
                   role of ``history_cts`` during simulation.
 
     Important:
@@ -385,7 +386,7 @@ class Ball:
 
     Important:
         The following explains how a ``Ball`` object is modified when its parent system
-        is simulated (:func:`pooltool.evolution.event_based.simulate.simulate`).
+        is simulated (:func:`pooltool.evolution.simulate`).
 
         At the start of the simulation process, :attr:`state` represents the ball state
         at :math:`t = 0`. A copy of :attr:`state` is appended to :attr:`history`.
@@ -399,7 +400,7 @@ class Ball:
         state of the ball. So too does ``history[-1]``.
 
         Finally, if the system is continuized (see
-        :func:`pooltool.evolution.continuize.continuize`), :attr:`history_cts` is
+        :func:`pooltool.evolution.continuize`), :attr:`history_cts` is
         populated. Otherwise it remains empty.
     """
 
@@ -443,8 +444,8 @@ class Ball:
                 If the ball ID doesn't match to a model name of the ballset.
 
         See Also:
-            - See :mod:`pooltool.objects.ball.sets` for details about ball sets.
-            - See :meth:`pooltool.system.datatypes.System.set_ballset` for setting the
+            - See :class:`pooltool.objects.BallSet` for details about ball sets.
+            - See :meth:`pooltool.system.System.set_ballset` for setting the
               ballset for all the balls in a system.
         """
         self.ballset = ballset
@@ -456,7 +457,8 @@ class Ball:
         Args:
             drop_history:
                 If True, the returned copy :attr:`history` and :attr:`history_cts`
-                attributes are both set to empty :class:`BallHistory` objects.
+                attributes are both set to empty :class:`pooltool.objects.BallHistory`
+                objects.
         """
         if drop_history:
             return evolve(
@@ -487,7 +489,7 @@ class Ball:
 
         This constructor flattens the tunable parameter space, allowing one to construct
         a ``Ball`` without directly instancing objects like like
-        :class:`pooltool.objects.balls.params.BallParams` and :class:`BallState`.
+        :class:`pooltool.objects.BallParams` and :class:`pooltool.objects.BallState`.
 
         Args:
             xy:
@@ -495,7 +497,7 @@ class Ball:
             ballset:
                 A ballset.
             **kwargs:
-                Arguments accepted by :class:`pooltool.objects.balls.params.BallParams`
+                Arguments accepted by :class:`pooltool.objects.BallParams`
         """
         params = BallParams(**kwargs)
         ball = Ball(id=id, ballset=ballset, params=params)

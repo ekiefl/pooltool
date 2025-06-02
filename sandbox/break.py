@@ -1,6 +1,9 @@
 #! /usr/bin/env python
 """This is a basic example of the pooltool API"""
 
+import sys
+from pathlib import Path
+
 import numpy as np
 
 import pooltool as pt
@@ -59,6 +62,38 @@ def main(args):
         stdev = np.std(continuize_times)
         run.info_single(f"Continuize: ({mu:.3f} +- {stdev:.3f}) ({N} trials)")
 
+    # Time the shot
+    if args.profile_it:
+        try:
+            import pprofile
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "--profile-it requires pprofile (pip install pprofile)"
+            )
+
+        class PProfile(pprofile.Profile):
+            def __init__(self, path):
+                self.path = path
+                pprofile.Profile.__init__(self)
+
+            def __exit__(self, *args):
+                pprofile.Profile.__exit__(self, *args)
+                self.dump_stats(self.path)
+
+        # Burn a run (numba cache loading)
+        copy = shot.copy()
+        pt.simulate(copy, inplace=True)
+
+        run = pt.terminal.Run()
+        run.info_single("Profiling `simulate` and `continuize` (may take awhile)")
+
+        with PProfile(Path("cachegrind.out.simulate")):
+            pt.simulate(shot, inplace=True)
+        with PProfile(Path("cachegrind.out.continuize")):
+            pt.continuize(shot, inplace=True)
+
+        sys.exit()
+
     # Evolve the shot
     pt.simulate(shot, inplace=True)
 
@@ -107,6 +142,11 @@ if __name__ == "__main__":
         "--time-it",
         action="store_true",
         help="Simulate multiple times, calculating the average calculation time (w/o continuize)",
+    )
+    ap.add_argument(
+        "--profile-it",
+        action="store_true",
+        help="Profile and spit out cachegrind files (cachegrind.out.simulate and cachegrind.out.continuize)",
     )
 
     args = ap.parse_args()

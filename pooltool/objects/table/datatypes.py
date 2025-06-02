@@ -165,20 +165,20 @@ class Table:
                 A valid table specification.
 
                 Accepted objects:
-                    - :class:`pooltool.objects.table.specs.PocketTableSpecs`
-                    - :class:`pooltool.objects.table.specs.BilliardTableSpecs`
-                    - :class:`pooltool.objects.table.specs.SnookerTableSpecs`
+                    - :class:`pooltool.objects.PocketTableSpecs`
+                    - :class:`pooltool.objects.BilliardTableSpecs`
+                    - :class:`pooltool.objects.SnookerTableSpecs`
 
         Returns:
             Table:
                 A table matching the specifications of the input.
 
-                - :class:`pooltool.objects.table.specs.PocketTableSpecs` has
-                  :attr:`table_type` set to `pooltool.objects.table.specs.TableType.POCKET`
-                - :class:`pooltool.objects.table.specs.BilliardTableSpecs` has
-                  :attr:`table_type` set to `pooltool.objects.table.specs.TableType.BILLIARD`
-                - :class:`pooltool.objects.table.specs.SnookerTableSpecs` has
-                  :attr:`table_type` set to `pooltool.objects.table.specs.TableType.SNOOKER`
+                - :class:`pooltool.objects.PocketTableSpecs` has
+                  :attr:`table_type` set to `pooltool.objects.TableType.POCKET`
+                - :class:`pooltool.objects.BilliardTableSpecs` has
+                  :attr:`table_type` set to `pooltool.objects.TableType.BILLIARD`
+                - :class:`pooltool.objects.SnookerTableSpecs` has
+                  :attr:`table_type` set to `pooltool.objects.TableType.SNOOKER`
         """
         if specs.table_type == TableType.BILLIARD:
             assert isinstance(specs, BilliardTableSpecs)

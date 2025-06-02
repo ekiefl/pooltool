@@ -173,8 +173,8 @@ class Agent:
 
         This makes a copy of the passed object and sets it to :attr:`initial`.
 
-        In the case of a :attr:`AgentType.BALL` agent type, it drops history fields
-        before copying to save time and memory.
+        In the case of a :attr:`pooltool.events.AgentType.BALL` agent type, it drops
+        history fields before copying to save time and memory.
 
         Args:
             obj:
@@ -196,8 +196,8 @@ class Agent:
 
         This makes a copy of the passed object and sets it to :attr:`final`.
 
-        In the case of a :attr:`AgentType.BALL` agent type, it drops history fields
-        before copying to save time and memory.
+        In the case of a :attr:`pooltool.events.AgentType.BALL` agent type, it drops
+        history fields before copying to save time and memory.
 
         Args:
             obj:
@@ -305,8 +305,8 @@ class Event:
     time at which the event occurs.
 
     Agent states before and after event resolution are stored in the
-    :attr:`Agent.initial` and :attr:`Agent.final` attributes of agents within
-    :attr:`agents`.
+    :attr:`pooltool.events.Agent.initial` and :attr:`pooltool.events.Agent.final`
+    attributes of agents within :attr:`agents`.
 
     Attributes:
         event_type:
@@ -314,12 +314,13 @@ class Event:
         agents:
             A tuple containing one or two agents involved in the event.
 
-            Events that are collisions (:meth:`EventType.is_collision`) have two agents,
-            while events that are transitions (:meth:`EventType.is_transition`), or
-            events with event type :attr:`EventType.NONE`, have one agent.
+            Events that are collisions (:meth:`pooltool.events.EventType.is_collision`)
+            have two agents, while events that are transitions
+            (:meth:`pooltool.events.EventType.is_transition`), or events with event type
+            :attr:`pooltool.events.EventType.NONE`, have one agent.
 
-            By convention, the order of the agents matches how the :class:`EventType`
-            attributes are named.
+            By convention, the order of the agents matches how the
+            :class:`pooltool.events.EventType` attributes are named.
         time:
             The time at which the event occurs.
     """

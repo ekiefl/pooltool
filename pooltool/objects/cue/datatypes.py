@@ -9,7 +9,7 @@ from attrs import define, evolve, field, fields_dict
 
 @define(frozen=True)
 class CueSpecs:
-    """Cue stick specifications
+    """Cue stick specifications.
 
     All units are SI.
 
@@ -55,7 +55,7 @@ class CueSpecs:
 
 @define
 class Cue:
-    """A cue stick
+    """A cue stick.
 
     Attributes:
         id:
@@ -65,8 +65,9 @@ class Cue:
 
             Units are *m/s*.
 
-            Warning: This is the speed of the cue stick upon impact, not the speed of the
-            ball upon impact.
+            Note:
+                This is the speed of the cue stick upon impact, not the speed of the
+                ball upon impact.
         phi:
             The directional strike angle.
 

@@ -50,11 +50,11 @@ If the Discord link is expired, please make an issue in this repo.
 
 # Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+See the [Contributing page](https://pooltool.readthedocs.io/en/latest/meta/contributing.html) in the documentation.
 
 # Blog
 
-I have blogged about many aspects of this project. Read the detailed account [here](https://ekiefl.github.io/projects/pooltool/).
+Many aspects of this project have been blogged about. Read the detailed account [here](https://ekiefl.github.io/projects/pooltool/).
 
 # Citation
 

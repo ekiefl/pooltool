@@ -2,8 +2,7 @@
 
 Note:
     If this module is ever extended to support multiple treatments for ball transitions,
-    expand this file into a file structure modelled after ../ball_ball or
-    ../ball_cushion
+    it should be expanded into a subpackage to match the other event types.
 """
 
 from typing import Dict, Protocol, Tuple, Type, cast

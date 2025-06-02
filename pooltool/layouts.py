@@ -501,7 +501,7 @@ def get_rack(
 ) -> Dict[str, Ball]:
     """Generate a ball rack.
 
-    This function ultimately delegates to :func:`generate_layout`.
+    This function ultimately delegates to :func:`pooltool.layouts.generate_layout`.
 
     Args:
         game_type:

@@ -20,7 +20,7 @@ from pooltool.events import (
     null_event,
     stick_ball_collision,
 )
-from pooltool.evolution.continuize import continuize
+from pooltool.evolution.continuous import continuize
 from pooltool.evolution.event_based import solve
 from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
@@ -74,7 +74,7 @@ def simulate(
             otherwise there will be nothing to simulate.
         engine:
             The engine holds all of the physics. You can instantiate your very own
-            :class:`pooltool.physics.engine.PhysicsEngine` object, or you can modify
+            :class:`pooltool.physics.PhysicsEngine` object, or you can modify
             ``~/.config/pooltool/physics/resolver.json`` to change the default engine.
         inplace:
             By default, a copy of the passed system is simulated and returned. This
@@ -142,7 +142,7 @@ def simulate(
         >>> for ball in system.balls.values(): assert len(ball.history_cts) > 0
 
     See Also:
-        - :func:`pooltool.evolution.continuize.continuize`
+        - :func:`pooltool.evolution.continuize`
     """
     if not inplace:
         shot = shot.copy()
