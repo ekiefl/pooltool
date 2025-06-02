@@ -351,7 +351,7 @@ class Ball:
             Important if rendering the ball in a scene.
 
             See Also:
-                - See :meth:`Ball.set_ballset` for details
+                - See :meth:`set_ballset` for details
         initial_orientation:
             The initial rendered orientation of the ball.
 

@@ -725,7 +725,8 @@ class MultiSystem:
 
         See Also:
             - To load a multisystem, see :meth:`load`.
-            - To save/load single systems, see :meth:`System.save` and :meth:`System.load`
+            - To save/load single systems, see :meth:`pooltool.system.System.save` and
+              :meth:`pooltool.system.System.load`
         """
         conversion.unstructure_to(self, path)
 
@@ -748,7 +749,8 @@ class MultiSystem:
 
         See Also:
             - To save a multisystem, see :meth:`save`.
-            - To save/load single systems, see :meth:`System.save` and :meth:`System.load`
+            - To save/load single systems, see :meth:`pooltool.system.System.save` and
+              :meth:`pooltool.system.System.load`
         """
         return conversion.structure_from(path, cls)
 

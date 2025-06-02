@@ -314,9 +314,10 @@ class Event:
         agents:
             A tuple containing one or two agents involved in the event.
 
-            Events that are collisions (:meth:`EventType.is_collision`) have two agents,
-            while events that are transitions (:meth:`EventType.is_transition`), or
-            events with event type :attr:`EventType.NONE`, have one agent.
+            Events that are collisions (:meth:`pooltool.events.EventType.is_collision`)
+            have two agents, while events that are transitions
+            (:meth:`pooltool.events.EventType.is_transition`), or events with event type
+            :attr:`pooltool.events.EventType.NONE`, have one agent.
 
             By convention, the order of the agents matches how the
             :class:`pooltool.events.EventType` attributes are named.

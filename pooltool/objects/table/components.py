@@ -176,8 +176,8 @@ class LinearCushionSegment:
 
         Note:
             - This method only exists for call signature parity with
-              :meth:`CircularCushionSegment.get_normal`. Consider using :meth:`normal`
-              instead.
+              :meth:`pooltool.objects.CircularCushionSegment.get_normal`. Consider using
+              :meth:`normal` instead.
         """
         return self.normal
 
