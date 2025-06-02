@@ -92,8 +92,8 @@ class PocketTableSpecs:
     See Also:
         - See the :doc:`Table Specification </resources/table_specs>` resource for
           visualizations and descriptions of each attribute.
-        - See :class:`BilliardTableSpecs` for billiard table specs.
-        - See :class:`SnookerTableSpecs` for pocket table specs.
+        - See :class:`pooltool.objects.BilliardTableSpecs` for billiard table specs.
+        - See :class:`pooltool.objects.SnookerTableSpecs` for pocket table specs.
     """
 
     # 7-foot table (78x39 in^2 playing surface)
@@ -128,8 +128,8 @@ class BilliardTableSpecs:
     See Also:
         - See the :doc:`Table Specification </resources/table_specs>` resource for
           visualizations and descriptions of each attribute.
-        - See :class:`PocketTableSpecs` for billiard table specs.
-        - See :class:`SnookerTableSpecs` for pocket table specs.
+        - See :class:`pooltool.objects.PocketTableSpecs` for billiard table specs.
+        - See :class:`pooltool.objects.SnookerTableSpecs` for pocket table specs.
     """
 
     # https://web.archive.org/web/20130801042614/http://www.umb.org/Rules/Carom_Rules.pdf
@@ -153,14 +153,15 @@ class SnookerTableSpecs:
     See Also:
         - See the :doc:`Table Specification </resources/table_specs>` resource for
           visualizations and descriptions of each attribute.
-        - See :class:`BilliardTableSpecs` for billiard table specs.
-        - See :class:`PocketTableSpecs` for pocket table specs.
+        - See :class:`pooltool.objects.BilliardTableSpecs` for billiard table specs.
+        - See :class:`pooltool.objects.PocketTableSpecs` for pocket table specs.
 
     Note:
-        Currently, this class is an identical clone of :class:`PocketTableSpecs`, but
-        with different defaults. That's not very useful, but it's likely that some time
-        in the future, snooker tables may have some parameters distinct from standard
-        pool tables (*e.g.* directional cloth), causing these classes to diverge.
+        Currently, this class is an identical clone of
+        :class:`pooltool.objects.PocketTableSpecs`, but with different defaults. That's
+        not very useful, but it's likely that some time in the future, snooker tables
+        may have some parameters distinct from standard pool tables (*e.g.* directional
+        cloth), causing these classes to diverge.
     """
 
     # https://wpbsa.com/rules/

@@ -47,7 +47,8 @@ Pooltool is peer-reviewed and published in the **Journal of Open Source Software
    :hidden:
    :maxdepth: 1
 
-   contributing/index
-   license/index
+   meta/contributing
+   meta/code_of_conduct
+   meta/license
    PyPI <https://pypi.org/project/pooltool-billiards/>
 ```

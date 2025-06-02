@@ -1,6 +1,6 @@
 # Hello World
 
-[The Interface](interface) can be accessed not just from the command line, but also programmatically. In this section, you'll create a script that creates a billiards system, simulates it, and then visualizes it with the interface.
+[The Interface](./interface.md) can be accessed not just from the command line, but also programmatically. In this section, you'll create a script that creates a billiards system, simulates it, and then visualizes it with the interface.
 
 Consider this *hello world* for pooltool.
 

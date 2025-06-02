@@ -74,7 +74,7 @@ def simulate(
             otherwise there will be nothing to simulate.
         engine:
             The engine holds all of the physics. You can instantiate your very own
-            :class:`pooltool.physics.engine.PhysicsEngine` object, or you can modify
+            :class:`pooltool.physics.PhysicsEngine` object, or you can modify
             ``~/.config/pooltool/physics/resolver.json`` to change the default engine.
         inplace:
             By default, a copy of the passed system is simulated and returned. This

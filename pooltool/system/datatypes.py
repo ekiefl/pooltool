@@ -40,7 +40,7 @@ class System:
 
     This object is a mutable object that can be evolved over the course of system's
     evolution. When a billiards system is simulated, a list of
-    :class:`pooltool.events.datatypes.Event` objects is stored in this class.
+    :class:`pooltool.events.Event` objects is stored in this class.
 
     This class also stores the duration of simulated time elapsed as ``t``, measured in
     seconds.
@@ -174,7 +174,7 @@ class System:
         :mod:`pooltool.layouts`)
 
         In this case, you need to manually associate a
-        :class:`pooltool.objects.ball.sets.BallSet` to the balls in the system, so that
+        :class:`pooltool.objects.BallSet` to the balls in the system, so that
         the proper `model skin` can be applied to each. That's what this method does.
 
         Args:

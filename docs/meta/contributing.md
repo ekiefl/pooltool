@@ -23,7 +23,7 @@ The rest of this document provides resources for current/prospective pooltool de
 
 ### Development environment setup
 
-For complete installation instructions, please refer to the [Installation Guide](getting_started/install.md). Follow the "From source" section.
+For complete installation instructions, please refer to the [Installation Guide](../getting_started/install.md). Follow the "From source" section.
 
 After installation, make sure to install the pre-commit hooks, which ensure your code adheres to the project's style guidelines:
 
@@ -168,9 +168,9 @@ make docs-with-notebooks
 
 #### Cross-referencing examples
 
-##### From markdown
+The following shows examples and information for cross-referencing from source → target.
 
-**Referencing Python objects**
+##### Markdown → Python
 
 * {py:meth}`pooltool.objects.Cue.set_state` (text = hyperlink)
 * {py:mod}`top-level API <pooltool>`
@@ -189,13 +189,11 @@ Add optional text here
 ```
 :::
 
-**Referencing other pages**
+##### Markdown → Markdown/Jupyter
 
-To cross-reference other pages use relative paths. [This takes you to the 30 Degree Rule example](./examples/30_degree_rule.ipynb). Technically, the extension can be ommitted, but since cross-referencing in Jupyter notebooks requires the extension (see below), for consistency please keep the extension.
+To cross-reference other pages use **relative paths**. [This takes you to the 30 Degree Rule example](../examples/30_degree_rule.ipynb). Technically, the extension can be ommitted, but since cross-referencing in Jupyter notebooks requires the extension (see below), for consistency please keep the extension.
 
-##### From docstrings
-
-**Referencing Python objects**
+##### Docstrings → Python
 
 When referencing objects in the same module, simply provide their name:
 
@@ -215,7 +213,7 @@ pooltool.objects.ball.datatypes.Ball
 
 `Ball` is defined as `pooltool.objects.ball.datatypes.Ball`, but `pooltool.objects.ball.datatypes` isn't part of the API. `pooltool.Ball` is in the API but it's also referenced as `pooltool.objects.Ball`. Since that has a lower reference, it is the preferred reference. To see which subpackages are part of the API, see what's imported in `pooltool/__init__.py`.
 
-**Referencing other pages**
+##### Docstrings → Markdown/Jupyter
 
 You can cross-reference document pages with the `:doc:` directive. For example,
 
@@ -223,9 +221,7 @@ You can cross-reference document pages with the `:doc:` directive. For example,
 :doc:`Table Specification </resources/table_specs>`
 ```
 
-##### From Jupyter notebooks
-
-**Referencing Python objects**
+##### Jupyter → Python
 
 It's a bit tricky. The working formula is:
 
@@ -239,7 +235,7 @@ For example, to link to the Table object,
 [Table](../autoapi/pooltool/objects/index.rst#pooltool.objects.table)
 ```
 
-**Referencing other pages**
+##### Jupyter → Markdown/Jupyter
 
 To cross-reference other pages use relative paths:
 

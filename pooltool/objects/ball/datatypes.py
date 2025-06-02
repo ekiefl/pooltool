@@ -1,4 +1,4 @@
-"""Module that holds :class:`Ball` and all of its constituents"""
+"""Module that holds :class:`pooltool.objects.Ball` and all of its constituents"""
 
 from __future__ import annotations
 
@@ -198,9 +198,10 @@ class BallHistory:
     ) -> Tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
         """Compile the attribute from each ball state into arrays
 
-        This method unzips each :class:`BallState` in :attr:`states`, resulting in an
-        array of :attr:`BallState.rvw` values, an array of :attr:`BallState.s` values,
-        and an array of :attr:`BallState.t` values.
+        This method unzips each :class:`pooltool.objects.BallState` in :attr:`states`,
+        resulting in an array of :attr:`pooltool.objects.BallState.rvw` values, an array
+        of :attr:`pooltool.objects.BallState.s` values, and an array of
+        :attr:`pooltool.objects.BallState.t` values.
 
         The vectors have the following properties:
 
@@ -456,7 +457,8 @@ class Ball:
         Args:
             drop_history:
                 If True, the returned copy :attr:`history` and :attr:`history_cts`
-                attributes are both set to empty :class:`BallHistory` objects.
+                attributes are both set to empty :class:`pooltool.objects.BallHistory`
+                objects.
         """
         if drop_history:
             return evolve(
@@ -487,7 +489,7 @@ class Ball:
 
         This constructor flattens the tunable parameter space, allowing one to construct
         a ``Ball`` without directly instancing objects like like
-        :class:`pooltool.objects.balls.params.BallParams` and :class:`BallState`.
+        :class:`pooltool.objects.BallParams` and :class:`pooltool.objects.BallState`.
 
         Args:
             xy:
@@ -495,7 +497,7 @@ class Ball:
             ballset:
                 A ballset.
             **kwargs:
-                Arguments accepted by :class:`pooltool.objects.balls.params.BallParams`
+                Arguments accepted by :class:`pooltool.objects.BallParams`
         """
         params = BallParams(**kwargs)
         ball = Ball(id=id, ballset=ballset, params=params)

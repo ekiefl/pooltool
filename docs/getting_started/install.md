@@ -117,4 +117,4 @@ python -c "import pooltool; print(pooltool.__version__)"
 
 If installed from source, output should be `0.0.0`.
 
-Next, check out [Getting Started](getting_started/index.md).
+Next, check out [The Interface](./interface.md).

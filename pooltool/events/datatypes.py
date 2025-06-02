@@ -318,8 +318,8 @@ class Event:
             while events that are transitions (:meth:`EventType.is_transition`), or
             events with event type :attr:`EventType.NONE`, have one agent.
 
-            By convention, the order of the agents matches how the :class:`EventType`
-            attributes are named.
+            By convention, the order of the agents matches how the
+            :class:`pooltool.events.EventType` attributes are named.
         time:
             The time at which the event occurs.
     """
