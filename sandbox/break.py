@@ -146,7 +146,7 @@ if __name__ == "__main__":
     ap.add_argument(
         "--profile-it",
         action="store_true",
-        help="Profile and spit out a cachegrind file (cachegrind.out.simulate and cachegrind.out.continuize)",
+        help="Profile and spit out cachegrind files (cachegrind.out.simulate and cachegrind.out.continuize)",
     )
 
     args = ap.parse_args()

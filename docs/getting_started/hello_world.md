@@ -37,7 +37,7 @@ The rest of this document details a line-by-line explanation.
 
 ### Importing
 
-First thing's first, the pootool package is imported which gives you access to the {py:mod}`top-level API <pooltool>`:
+First thing's first, the pooltool package is imported which gives you access to the {py:mod}`top-level API <pooltool>`:
 
 ```python
 import pooltool as pt
@@ -128,4 +128,4 @@ pt.show(shot)
 
 ## Next
 
-Obviously this script is just the beginning. Pooltool offers much more than this, which means you have much more to learn. From here, you should check out the [Examples](../examples/index.md) page and dive into whatever topic interests you.
+Obviously, this script is just the beginning. Pooltool offers much more than this, which means you have much more to learn. From here, you should check out the [Examples](../examples/index.md) page and dive into whatever topic interests you.

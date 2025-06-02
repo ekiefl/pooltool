@@ -93,7 +93,7 @@ Pooltool uses Google-style docstrings. Here's an example of the expected format:
 
 ```python
 def function_name(arg1: str, arg2: int) -> list[str]:
-    """Brief description of the function
+    """Brief description of the function.
     
     More detailed description that can span multiple lines.
     
@@ -197,7 +197,7 @@ To cross-reference other pages use **relative paths**. [This takes you to the 30
 
 When referencing objects in the same module, simply provide their name:
 
-```
+```rst
 :class:`LinearCushionSegment`
 :attr:`contains`
 :func:`continuize`
@@ -205,7 +205,7 @@ When referencing objects in the same module, simply provide their name:
 
 When referencing from a different module, use the object reference with the lowest level API. As an example, consider `Ball` and its various references:
 
-```
+```python
 pooltool.Ball
 pooltool.objects.Ball
 pooltool.objects.ball.datatypes.Ball
@@ -217,7 +217,7 @@ pooltool.objects.ball.datatypes.Ball
 
 You can cross-reference document pages with the `:doc:` directive. For example,
 
-```
+```rst
 :doc:`Table Specification </resources/table_specs>`
 ```
 
@@ -225,13 +225,13 @@ You can cross-reference document pages with the `:doc:` directive. For example,
 
 It's a bit tricky. The working formula is:
 
-```
+```markdown
 [Text](../autoapi/{MODULE_PATH}/index.rst#{FULL_OBJECT_DESCRIPTOR})
 ```
 
 For example, to link to the Table object,
 
-```
+```markdown
 [Table](../autoapi/pooltool/objects/index.rst#pooltool.objects.table)
 ```
 
@@ -239,7 +239,7 @@ For example, to link to the Table object,
 
 To cross-reference other pages use relative paths:
 
-```
+```markdown
 [Straight shot example](./straight_shot.ipynb)
 ```
 

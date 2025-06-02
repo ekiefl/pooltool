@@ -93,7 +93,7 @@ class PocketTableSpecs:
         - See the :doc:`Table Specification </resources/table_specs>` resource for
           visualizations and descriptions of each attribute.
         - See :class:`pooltool.objects.BilliardTableSpecs` for billiard table specs.
-        - See :class:`pooltool.objects.SnookerTableSpecs` for pocket table specs.
+        - See :class:`pooltool.objects.SnookerTableSpecs` for snooker table specs.
     """
 
     # 7-foot table (78x39 in^2 playing surface)
@@ -129,7 +129,7 @@ class BilliardTableSpecs:
         - See the :doc:`Table Specification </resources/table_specs>` resource for
           visualizations and descriptions of each attribute.
         - See :class:`pooltool.objects.PocketTableSpecs` for billiard table specs.
-        - See :class:`pooltool.objects.SnookerTableSpecs` for pocket table specs.
+        - See :class:`pooltool.objects.SnookerTableSpecs` for snooker table specs.
     """
 
     # https://web.archive.org/web/20130801042614/http://www.umb.org/Rules/Carom_Rules.pdf

@@ -1,3 +1,10 @@
+"""Custom skip members logic for Sphinx AutoAPI documentation generation.
+
+This module provides functions to determine which members should be skipped
+or kept during API documentation generation, using centralized rules from
+the include_exclude module.
+"""
+
 from typing import Dict, List
 
 ignore_regex = [
@@ -54,7 +61,7 @@ skip_dict: Dict[str, List[str]] = {
         "pooltool.game.datatypes",
         # API: pooltool.physics
         "pooltool.physics.engine",
-        # API: pooltool.physics.resolve 
+        # API: pooltool.physics.resolve
         "pooltool.physics.resolve.models",
         "pooltool.physics.resolve.resolver",
     ],
