@@ -17,7 +17,7 @@ class BallBallFrictionModel(StrEnum):
             the two balls.
 
         ALCIATORE:
-            Friction fit curve u_b = a + b * exp(-c * v_rel) used in David Alciatore's TP A-14.
+            Friction fit curve :math:`u_b = a + b e^{ -c v_{rel} }` used in David Alciatore's TP A-14.
     """
 
     AVERAGE = auto()
@@ -34,7 +34,7 @@ class BallBallFrictionStrategy(Protocol):
 
 @attrs.define
 class AlciatoreBallBallFriction:
-    """Friction fit curve u_b = a + b * exp(-c * v_rel) used in David Alciatore's TP A-14"""
+    """Friction fit curve :math:`u_b = a + b * e^{ -c * v_{rel} }` used in David Alciatore's TP A-14"""
 
     a: float = 9.951e-3
     b: float = 0.108
