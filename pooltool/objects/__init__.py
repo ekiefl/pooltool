@@ -14,7 +14,7 @@ from pooltool.objects.ball.datatypes import (
     BallState,
 )
 from pooltool.objects.ball.params import BallParams, PrebuiltBallParams
-from pooltool.objects.ball.sets import BallSet, get_ballset
+from pooltool.objects.ball.sets import BallSet, get_ballset, get_ballset_names
 from pooltool.objects.cue.datatypes import Cue, CueSpecs
 from pooltool.objects.table.collection import TableName
 from pooltool.objects.table.components import (
@@ -56,4 +56,5 @@ __all__ = [
     "BilliardTableSpecs",
     "SnookerTableSpecs",
     "get_ballset",
+    "get_ballset_names",
 ]

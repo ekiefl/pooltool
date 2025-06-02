@@ -30,9 +30,8 @@ def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> Syste
     seconds apart. *i.e.* not continuous.
 
     This function calculates the "continous" timestamps for each ball and stores them in
-    :attr:`pooltool.objects.ball.datatypes.Ball.history_cts` (the event-based timestamps
-    are preserved, and are stored in
-    :attr:`pooltool.objects.ball.datatypes.Ball.history`)
+    :attr:`pooltool.objects.Ball.history_cts` (the event-based timestamps are preserved,
+    and are stored in :attr:`pooltool.objects.Ball.history`)
 
     The continous timepoints are shared between all balls and are uniformly spaced
     (except for the last timepoint, which occurs at the final event, which necessarily
@@ -100,8 +99,8 @@ def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> Syste
         >>> assert system.continuized
 
     See Also:
-        - :attr:`pooltool.objects.ball.datatypes.Ball.history_cts`
-        - :func:`pooltool.evolution.event_based.simulate.simulate`
+        - :attr:`pooltool.objects.Ball.history_cts`
+        - :func:`pooltool.evolution.simulate`
     """
     if not inplace:
         system = system.copy()

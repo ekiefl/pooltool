@@ -28,7 +28,7 @@ class BallSet:
 
     **What ballsets are available?**
 
-    See :func:`get_ballset_names`.
+    See :func:`pooltool.objects.get_ballset_names`.
 
     **Where are ballsets stored?**
 
@@ -151,7 +151,7 @@ def get_ballset(name: str) -> BallSet:
     Args:
         name:
             The name of the ballset. To list available ballset names, call
-            :func:`get_ballset_names`.
+            :func:`pooltool.objects.get_ballset_names`.
 
     Raises:
         ValueError: If Ball ID doesn't match to the ballset.

@@ -63,7 +63,8 @@ class LinearCushionSegment:
             Note:
                 - p1 and p2 must share the same height (``p1[2] == p2[2]``).
         direction:
-            The cushion direction (*default* = :attr:`CushionDirection.BOTH`).
+            The cushion direction (*default* =
+            :attr:`pooltool.objects.CushionDirection.BOTH`).
 
             See :class:`pooltool.objects.CushionDirection` for explanation.
     """
@@ -256,7 +257,7 @@ class CircularCushionSegment:
 
         Args:
             rvw: The kinematic state vectors of the contacting ball (see
-            :attr:`pooltool.objects.ball.datatypes.BallState.rvw`).
+            :attr:`pooltool.objects.BallState.rvw`).
 
         Returns:
             NDArray[np.float64]:

@@ -44,7 +44,7 @@ def by_ball(ball_ids: Union[str, List[str]], keep_nonevent: bool = False) -> Fil
         ball_ids:
             A collection of ball IDs.
         keep_nonevent:
-            Retain non-events (:attr:`EventType.NONE`).
+            Retain non-events (:attr:`pooltool.events.EventType.NONE`).
 
     Returns:
         FilterFunc:
@@ -144,8 +144,9 @@ def filter_events(events: List[Event], *funcs: FilterFunc) -> List[Event]:
         >>> events = system.events
 
         In this shot, both the cue-ball and the 1-ball are potted. We are interested in
-        filtering for the cue-ball pocket event. Option 1 is to call :func:`filter_type`
-        and then :func:`filter_ball`:
+        filtering for the cue-ball pocket event. Option 1 is to call
+        :func:`pooltool.events.filter_type` and then
+        :func:`pooltool.events.filter_ball`:
 
         >>> filtered_events = pt.events.filter_type(events, pt.EventType.BALL_POCKET)
         >>> filtered_events = pt.events.filter_ball(filtered_events, "cue")
@@ -156,7 +157,7 @@ def filter_events(events: List[Event], *funcs: FilterFunc) -> List[Event]:
          ├── time   : 3.231130101576186
          └── agents : ('cue', 'rt')
 
-        Option 2, the better option, is to use :func:`filter_events`:
+        Option 2, the better option, is to use :func:`pooltool.events.filter_events`:
 
         >>> filtered_events = pt.events.filter_events(
         >>>     events,
@@ -172,7 +173,8 @@ def filter_events(events: List[Event], *funcs: FilterFunc) -> List[Event]:
 
     See Also:
         - If you're filtering based on a single criterion, you can consider using
-          :func:`filter_type`, :func:`filter_ball`, :func:`filter_time`, etc.
+          :func:`pooltool.events.filter_type`, :func:`pooltool.events.filter_ball`,
+          :func:`pooltool.events.filter_time`, etc.
     """
     return _chain(*funcs)(events)
 
@@ -196,7 +198,7 @@ def filter_type(
 
     See Also:
         - If you're filtering based on multiple criteria, you can (and should!) use
-          :func:`filter_events`.
+          :func:`pooltool.events.filter_events`.
     """
     return by_type(types)(events)
 
@@ -212,7 +214,7 @@ def filter_ball(
         ball_ids:
             A collection of ball IDs.
         keep_nonevent:
-            Retain non-events (:attr:`EventType.NONE`).
+            Retain non-events (:attr:`pooltool.events.EventType.NONE`).
 
     Returns:
         List[Event]:
@@ -221,7 +223,7 @@ def filter_ball(
 
     See Also:
         - If you're filtering based on multiple criteria, you can (and should!) use
-          :func:`filter_events`.
+          :func:`pooltool.events.filter_events`.
     """
     return by_ball(ball_ids, keep_nonevent)(events)
 
@@ -245,6 +247,6 @@ def filter_time(events: List[Event], t: float, after: bool = True) -> List[Event
 
     See Also:
         - If you're filtering based on multiple criteria, you can (and should!) use
-          :func:`filter_events`.
+          :func:`pooltool.events.filter_events`.
     """
     return by_time(t, after)(events)
