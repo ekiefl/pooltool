@@ -9,13 +9,7 @@ repos:
 
       - id: lint
         name: lint
-        entry: make lint-check
-        language: system
-        pass_filenames: false
-
-      - id: format-check
-        name: format-check
-        entry: make format-check
+        entry: make lint
         language: system
         pass_filenames: false
 

@@ -23,7 +23,7 @@ The rest of this document provides resources for current/prospective pooltool de
 
 ### Development environment setup
 
-For complete installation instructions, please refer to the [Installation Guide](install.md). Follow the "From source" section.
+For complete installation instructions, please refer to the [Installation Guide](getting_started/install.md). Follow the "From source" section.
 
 After installation, make sure to install the pre-commit hooks, which ensure your code adheres to the project's style guidelines:
 

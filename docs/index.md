@@ -1,4 +1,4 @@
-# What is *pooltool*?
+# Overview
 
 Pooltool is a general **purpose billiards simulator** crafted specifically for science and engineering.
 
@@ -11,15 +11,43 @@ Pooltool is peer-reviewed and published in the **Journal of Open Source Software
 
 ```{eval-rst}
 .. toctree::
+   :caption: Home
+   :hidden:
+   :maxdepth: 1
+
+   self
+   GitHub <https://github.com/ekiefl/pooltool>
+```
+
+```{eval-rst}
+.. toctree::
+   :caption: Getting Started
+   :hidden:
+   :maxdepth: 1
+
+   getting_started/install 
+   getting_started/interface
+   getting_started/hello_world
+```
+
+```{eval-rst}
+.. toctree::
+   :caption: Contents
    :hidden:
    :maxdepth: 3
 
-   self
-   install 
-   getting_started/index
    examples/index
    resources/index
    autoapi/index
+```
+
+```{eval-rst}
+.. toctree::
+   :caption: Meta
+   :hidden:
+   :maxdepth: 1
+
    contributing/index
    license/index
+   PyPI <https://pypi.org/project/pooltool-billiards/>
 ```
