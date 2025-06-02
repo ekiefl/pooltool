@@ -12,4 +12,4 @@ def autoapi_skip_members(app, what, name, obj, skip, options):
 
 
 def setup(app):
-   app.connect("autoapi-skip-member", autoapi_skip_members)
+    app.connect("autoapi-skip-member", autoapi_skip_members)
