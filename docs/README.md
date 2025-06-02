@@ -1,1 +1,1 @@
-For information please read the "Documentation" section in `contributing/index.md`
+For information please read the "Documentation" section in `meta/contributing.md`
