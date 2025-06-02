@@ -103,7 +103,6 @@ click = ">=8.0.0"
 Pillow = ">=6.2.0"
 h5py = ">=3.10"
 h11 = ">=0.16.0"
-pprofile = ">=2.2.0"
 
 [tool.poetry.group.dev.dependencies]
 # Testing and formatting
@@ -117,6 +116,7 @@ psutil = ">=6.0.0"
 colored = ">=2.2.4"  # TODO switch to something ubiquitous (like rich)
 ipython = ">=8.18.1"
 ipdb = "^0.13.13"
+pprofile = ">=2.2.0"
 # Vignettes
 jupyterlab = ">=4.0.0"
 pandas = ">=2"

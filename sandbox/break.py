@@ -7,7 +7,6 @@ from pathlib import Path
 import numpy as np
 
 import pooltool as pt
-from pooltool.utils import PProfile
 
 
 def main(args):
@@ -65,6 +64,22 @@ def main(args):
 
     # Time the shot
     if args.profile_it:
+        try:
+            import pprofile
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "--profile-it requires pprofile (pip install pprofile)"
+            )
+
+        class PProfile(pprofile.Profile):
+            def __init__(self, path):
+                self.path = path
+                pprofile.Profile.__init__(self)
+
+            def __exit__(self, *args):
+                pprofile.Profile.__exit__(self, *args)
+                self.dump_stats(self.path)
+
         # Burn a run (numba cache loading)
         copy = shot.copy()
         pt.simulate(copy, inplace=True)

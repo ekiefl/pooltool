@@ -3311,7 +3311,7 @@ version = "2.2.0"
 description = "Line-granularity, thread-aware deterministic and statistic pure-python profiler"
 optional = false
 python-versions = "*"
-groups = ["main"]
+groups = ["dev"]
 files = [
     {file = "pprofile-2.2.0.tar.gz", hash = "sha256:edd57f35f2b3fb84e7d01aa310a44bfabacc66ffc353dce147348ec14de3c7d9"},
 ]
@@ -5330,4 +5330,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.14"
-content-hash = "09cbc6112ff2061b3eacb00d6b7f3287f59e17542094a1c6fcc678e4a12badb3"
+content-hash = "24b5bb08b5525611e8e1105e461430ab5e597b6f7031839f99247701800d7689"
