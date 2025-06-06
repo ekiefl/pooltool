@@ -3,7 +3,6 @@
 import gc
 import sys
 from collections.abc import Generator
-from functools import partial
 
 import simplepbr
 from attrs import define
@@ -37,6 +36,8 @@ from pooltool.ruleset.datatypes import Player
 from pooltool.system.datatypes import MultiSystem, System, multisystem
 from pooltool.system.render import PlaybackMode, visual
 from pooltool.utils import Run, get_total_memory_usage
+
+run = Run()
 
 
 @define
@@ -154,7 +155,6 @@ class Interface(ShowBase):
             tasks.add(self.monitor, "monitor")
 
         self._listen_constant_events()
-        self.stdout = Run()
 
     def _listen_constant_events(self):
         """Listen for events that are mode independent"""
@@ -203,16 +203,15 @@ class Interface(ShowBase):
 
         keymap = Global.mode_mgr.get_keymap()
 
-        header = partial(self.stdout.warning, "", lc="green", nl_before=1, nl_after=0)
-        header(header=f"Frame {self.frame}")
+        debug_data = {
+            "Mode": Global.mode_mgr.mode,
+            "Last": Global.mode_mgr.last_mode,
+            "Tasks": [task.name for task in Global.task_mgr.getAllTasks()],
+            "Memory": get_total_memory_usage(),
+            "Actions": [k for k in keymap if keymap[k]],
+        }
 
-        self.stdout.info("Mode", Global.mode_mgr.mode)
-        self.stdout.info("Last", Global.mode_mgr.last_mode)
-        self.stdout.info("Tasks", [task.name for task in Global.task_mgr.getAllTasks()])
-        self.stdout.info("Memory", get_total_memory_usage())
-        self.stdout.info("Actions", [k for k in keymap if keymap[k]])
-        self.stdout.info("Keymap", Global.mode_mgr.get_keymap())
-        self.stdout.info("Frame", self.frame)
+        run.table(debug_data, title=f"Frame {self.frame}")
 
         return task.cont
 

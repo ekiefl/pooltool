@@ -128,7 +128,6 @@ image_stack(
     show_hud=False,
 )
 
-run = pt.utils.Run()
 resolutions = [80, 144, 240, 360, 480, 720, 1080]
 
 for res in resolutions:

@@ -5,195 +5,40 @@ import importlib.util
 import linecache
 import os
 import pickle
-import re
-import sys
-import textwrap
 import time
 import tracemalloc
 from collections import OrderedDict
 
 from panda3d.core import Filename
-
-ansi_escape = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
-non_ascii_escape = re.compile(r"[^\x00-\x7F]+")
-
-
-def CLEAR(line):
-    return ansi_escape.sub("", non_ascii_escape.sub("", line.strip()))
-
-
-tty_colors = {
-    "gray": {"normal": "\033[1;30m%s\033[1m", "bold": "\033[0;30m%s\033[0m"},
-    "red": {"normal": "\033[1;31m%s\033[1m", "bold": "\033[0;31m%s\033[0m"},
-    "green": {"normal": "\033[1;32m%s\033[1m", "bold": "\033[0;32m%s\033[0m"},
-    "yellow": {"normal": "\033[1;33m%s\033[1m", "bold": "\033[0;33m%s\033[0m"},
-    "blue": {"normal": "\033[1;34m%s\033[1m", "bold": "\033[0;34m%s\033[0m"},
-    "magenta": {"normal": "\033[1;35m%s\033[1m", "bold": "\033[0;35m%s\033[0m"},
-    "cyan": {"normal": "\033[1;36m%s\033[1m", "bold": "\033[0;36m%s\033[0m"},
-    "white": {"normal": "\033[1;37m%s\033[1m", "bold": "\033[0;37m%s\033[0m"},
-    "crimson": {"normal": "\033[1;38m%s\033[1m", "bold": "\033[0;38m%s\033[0m"},
-}
-
-
-def color_text(text, color="crimson", weight="bold"):
-    if sys.stdout.isatty():
-        return tty_colors[color][weight] % text
-    else:
-        return text
-
-
-def remove_spaces(text):
-    while True:
-        if text.find("  ") > -1:
-            text = text.replace("  ", " ")
-        else:
-            break
-
-    return text
-
-
-def get_date():
-    return time.strftime("%d %b %y %H:%M:%S", time.localtime())
-
-
-def pretty_print(n):
-    """Pretty print function for very big integers"""
-    if not isinstance(n, int):
-        return n
-
-    ret = []
-    n = str(n)
-    for i in range(len(n) - 1, -1, -1):
-        ret.append(n[i])
-        if (len(n) - i) % 3 == 0:
-            ret.append(",")
-    ret.reverse()
-    return "".join(ret[1:]) if ret[0] == "," else "".join(ret)
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich.text import Text
 
 
 class Run:
-    def __init__(self, verbose=True, width=45):
-        self.info_dict = {}
-        self.verbose = verbose
-        self.width = width
+    def __init__(self):
+        self.console = Console(stderr=True)
 
-        self.single_line_prefixes = {1: "* ", 2: "    - ", 3: "        > "}
+    def info(self, message, style="cyan"):
+        text = Text(f"* {message}", style=style)
+        self.console.print(text)
 
-    def write(self, line, quiet=False, overwrite_verbose=False):
-        if (self.verbose and not quiet) or overwrite_verbose:
-            try:
-                sys.stderr.write(line)
-            except Exception:
-                sys.stderr.write(line.encode("utf-8"))
+    def table(self, data, title="Info", border_style="cyan"):
+        """Display information as a formatted table inside a panel"""
+        table = Table(expand=True)
+        table.add_column("Key", style="cyan")
+        table.add_column("Value", style="white", ratio=1)
 
-    def info(
-        self,
-        key,
-        value,
-        quiet=False,
-        display_only=False,
-        overwrite_verbose=False,
-        nl_before=0,
-        nl_after=0,
-        lc="cyan",
-        mc="yellow",
-        progress=None,
-    ):
-        if not display_only:
-            self.info_dict[key] = value
+        for key, value in data.items():
+            if isinstance(value, int):
+                value = f"{value:,}"
+            table.add_row(key, str(value))
 
-        if isinstance(value, bool):
-            pass
-        elif isinstance(value, str):
-            value = remove_spaces(value)
-        elif isinstance(value, int):
-            value = pretty_print(value)
-
-        label = key
-
-        info_line = "{}{} {}: {}\n{}".format(
-            "\n" * nl_before,
-            color_text(label, lc),
-            "." * (self.width - len(label)),
-            color_text(str(value), mc),
-            "\n" * nl_after,
+        panel = Panel(
+            table, title=title, title_align="left", border_style=border_style, width=80
         )
-
-        if progress:
-            progress.clear()
-            self.write(info_line, overwrite_verbose=False, quiet=quiet)
-            progress.update(progress.msg)
-        else:
-            self.write(info_line, quiet=quiet, overwrite_verbose=overwrite_verbose)
-
-    def info_single(
-        self,
-        message,
-        overwrite_verbose=False,
-        mc="yellow",
-        nl_before=0,
-        nl_after=0,
-        cut_after=80,
-        level=1,
-        progress=None,
-    ):
-        if isinstance(message, str):
-            message = remove_spaces(message)
-
-        if level not in self.single_line_prefixes:
-            raise Exception(
-                f"the `info_single` function does not know how to deal with a level "
-                f"of {level} :/"
-            )
-
-        if cut_after:
-            message_line = color_text(
-                f"{self.single_line_prefixes[level]}{textwrap.fill(str(message), cut_after)}\n",
-                mc,
-            )
-        else:
-            message_line = color_text(
-                f"{self.single_line_prefixes[level]}{str(message)}\n", mc
-            )
-
-        message_line = ("\n" * nl_before) + message_line + ("\n" * nl_after)
-
-        if progress:
-            progress.clear()
-            self.write(message_line, overwrite_verbose=overwrite_verbose)
-            progress.update(progress.msg)
-        else:
-            self.write(message_line, overwrite_verbose=overwrite_verbose)
-
-    def warning(
-        self,
-        message,
-        header="WARNING",
-        lc="red",
-        raw=False,
-        overwrite_verbose=False,
-        nl_before=0,
-        nl_after=0,
-    ):
-        if isinstance(message, str):
-            message = remove_spaces(message)
-
-        message_line = ""
-        header_line = color_text(
-            "{}\n{}\n{}\n".format(("\n" * nl_before), header, "=" * (self.width + 2)),
-            lc,
-        )
-        if raw:
-            message_line = color_text("{}\n\n{}".format((message), "\n" * nl_after), lc)
-        else:
-            message_line = color_text(
-                "{}\n\n{}".format(textwrap.fill(str(message), 80), "\n" * nl_after), lc
-            )
-
-        self.write(
-            (header_line + message_line) if message else header_line,
-            overwrite_verbose=overwrite_verbose,
-        )
+        self.console.print(panel)
 
 
 class Timer:
@@ -502,15 +347,11 @@ class TimeCode:
         suppress_first=0,
     ):
         self.run = run if run is not None else Run()
-        self.run.single_line_prefixes = {0: "✓ ", 1: "✖ "}
 
         self.quiet = quiet
         self.suppress_first = suppress_first
-        self.sc, self.fc = sc, fc
-        self.s_msg, self.f_msg = success_msg, failure_msg
-
-        self.s_msg = self.s_msg if self.s_msg else "Code finished after "
-        self.f_msg = self.f_msg if self.f_msg else "Code encountered error after "
+        self.s_msg = success_msg if success_msg else "Code finished after "
+        self.f_msg = failure_msg if failure_msg else "Code encountered error after "
 
     def __enter__(self):
         self.timer = Timer()
@@ -522,15 +363,12 @@ class TimeCode:
         if self.quiet or self.time <= datetime.timedelta(seconds=self.suppress_first):
             return
 
-        return_code = 0 if exception_type is None else 1
+        message = f"{self.s_msg if exception_type is None else self.f_msg}{self.time}"
 
-        msg, color = (self.s_msg, self.sc) if not return_code else (self.f_msg, self.fc)
-
-        assert msg is not None
-
-        self.run.info_single(
-            msg + str(self.time), nl_before=1, mc=color, level=return_code
-        )
+        if exception_type is None:
+            self.run.info(message)
+        else:
+            self.run.info(message, style="red")
 
 
 class classproperty(property):
