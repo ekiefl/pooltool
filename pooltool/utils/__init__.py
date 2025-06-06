@@ -1,5 +1,7 @@
 """Utilities"""
 
+from __future__ import annotations
+
 import datetime
 import linecache
 import os
@@ -18,11 +20,11 @@ class Run:
     def __init__(self):
         self.console = Console(stderr=True)
 
-    def info(self, message, style="cyan"):
+    def info(self, message: str, style: str = "cyan"):
         text = Text(f"* {message}", style=style)
         self.console.print(text)
 
-    def table(self, data, title="Info", border_style="cyan"):
+    def table(self, data, title: str = "Info", border_style: str = "cyan"):
         """Display information as a formatted table inside a panel"""
         table = Table(expand=True)
         table.add_column("Key", style="cyan")
@@ -55,23 +57,25 @@ class Timer:
     def __init__(self):
         self.timer_start = self.timestamp()
 
-    def timestamp(self):
+    def timestamp(self) -> datetime.datetime:
         return datetime.datetime.fromtimestamp(time.time())
 
-    def timedelta_to_checkpoint(self, timestamp):
+    def timedelta_to_checkpoint(
+        self, timestamp: datetime.datetime
+    ) -> datetime.timedelta:
         return timestamp - self.timer_start
 
-    def time_elapsed(self):
+    def time_elapsed(self) -> str:
         return self.format_time(self.timedelta_to_checkpoint(self.timestamp()))
 
-    def format_time(self, timedelta):
+    def format_time(self, timedelta: datetime.timedelta) -> str:
         total_seconds = int(timedelta.total_seconds())
         hours, remainder = divmod(total_seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
     @classmethod
-    def factory(cls):
+    def factory(cls) -> Timer:
         return cls()
 
 
