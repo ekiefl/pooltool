@@ -79,75 +79,56 @@ class Timer:
 class TimeCode:
     """Time a block of code.
 
-    This context manager times blocks of code, and calls run.info afterwards to report
-    the time (unless quiet = True).
+    This context manager times blocks of code and optionally reports the elapsed time.
 
-    Attributes:
-        success_msg: None
-            If None, it is set to 'Code ran succesfully in'
-        failure_msg: None
-            If None, it is set to 'Code failed within'
-        run: Run()
-            Provide a pre-existing Run instance if you want
-        quiet: False,
-            If True, run.info is not called and datetime object is stored
-            as `time` (see examples)
-        suppress_first: 0,
-            Supress output if code finishes within this many seconds.
+    Args:
+        quiet: If True, no output is printed. Access timing via the `time` attribute.
+        message: Custom message prefix for output. Defaults to "Code finished after".
 
     Examples:
 
         >>> import time
         >>> import pooltool.utils as utils
-        >>> # EXAMPLE 1
+        >>> # Basic usage with automatic reporting
         >>> with utils.TimeCode() as t:
-        >>>     time.sleep(5)
-        ✓ Code finished successfully after 05s
+        >>>     time.sleep(1)
+        Code finished after 0:00:01
 
-        >>> # EXAMPLE 2
-        >>> with utils.TimeCode() as t:
-        >>>     time.sleep(5)
-        >>>     print(asdf) # undefined variable
-        ✖ Code encountered error after 05s
-
-        >>> # EXAMPLE 3
+        >>> # Silent timing for benchmarking
         >>> with utils.TimeCode(quiet=True) as t:
-        >>>     time.sleep(5)
-        >>> print(t.time)
-        0:00:05.000477
+        >>>     time.sleep(1)
+        >>> print(t.time.total_seconds())
+        1.0
+
+        >>> # Custom message
+        >>> with utils.TimeCode(message="Operation completed in") as t:
+        >>>     time.sleep(1)
+        Operation completed in 0:00:01
     """
 
-    def __init__(
-        self,
-        success_msg=None,
-        failure_msg=None,
-        run=None,
-        quiet=False,
-        suppress_first=0,
-    ):
-        self.run = run if run is not None else Run()
+    def __init__(self, quiet: bool = False, message: str | None = None):
+        self.quiet: bool = quiet
+        self.message: str = message or "Code finished after"
 
-        self.quiet = quiet
-        self.suppress_first = suppress_first
-        self.s_msg = success_msg if success_msg else "Code finished after "
-        self.f_msg = failure_msg if failure_msg else "Code encountered error after "
+        self.start_time: float
+        self.time: datetime.timedelta
+
+        self._console = Console(stderr=True)
 
     def __enter__(self):
-        self.timer = Timer()
+        self.start_time = time.time()
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
-        self.time = self.timer.timedelta_to_checkpoint(self.timer.timestamp())
+        self.time = datetime.timedelta(seconds=time.time() - self.start_time)
 
-        if self.quiet or self.time <= datetime.timedelta(seconds=self.suppress_first):
-            return
-
-        message = f"{self.s_msg if exception_type is None else self.f_msg}{self.time}"
-
-        if exception_type is None:
-            self.run.info(message)
-        else:
-            self.run.info(message, style="red")
+        if not self.quiet:
+            style = "red" if exception_type else "green"
+            if exception_type:
+                message = f"Code encountered error after {self.time}"
+            else:
+                message = f"{self.message} {self.time}"
+            self._console.print(message, style=style)
 
 
 class classproperty(property):
