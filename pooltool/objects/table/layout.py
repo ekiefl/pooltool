@@ -1,4 +1,4 @@
-"""A place for horrible stuff to happen"""
+"""Functions that build table geometry from table parameters."""
 
 from typing import Dict, Union
 
