@@ -35,7 +35,7 @@ from pooltool.ruleset import get_ruleset
 from pooltool.ruleset.datatypes import Player
 from pooltool.system.datatypes import MultiSystem, System, multisystem
 from pooltool.system.render import PlaybackMode, visual
-from pooltool.utils import Run, get_total_memory_usage
+from pooltool.utils import Run, get_total_memory_usage, human_readable_file_size
 
 run = Run()
 
@@ -207,7 +207,7 @@ class Interface(ShowBase):
             "Mode": Global.mode_mgr.mode,
             "Last": Global.mode_mgr.last_mode,
             "Tasks": [task.name for task in Global.task_mgr.getAllTasks()],
-            "Memory": get_total_memory_usage(),
+            "Memory": human_readable_file_size(get_total_memory_usage()),
             "Actions": [k for k in keymap if keymap[k]],
         }
 
