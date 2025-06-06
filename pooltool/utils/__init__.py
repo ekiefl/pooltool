@@ -7,7 +7,6 @@ import os
 import pickle
 import time
 import tracemalloc
-from collections import OrderedDict
 
 from panda3d.core import Filename
 from rich.console import Console
@@ -42,247 +41,35 @@ class Run:
 
 
 class Timer:
-    """Manages ordered dictionary, key is checkpoint name and value is a timestamp.
+    """Simple timer for measuring elapsed time.
 
-    Examples
-    ========
+    Examples:
 
-    >>> from pooltool.utils import Timer
-    >>> import time
-    >>> t = Timer(); time.sleep(1)
-    >>> t.make_checkpoint('checkpoint_name'); time.sleep(1)
-    >>> timedelta = t.timedelta_to_checkpoint(timestamp=t.timestamp(), checkpoint_key='checkpoint_name')
-    >>> print(t.format_time(timedelta, fmt = '{days} days, {hours} hours, {seconds} seconds', zero_padding=0))
-    >>> print(t.time_elapsed())
-    0 days, 0 hours, 1 seconds
-    00:00:02
-
-    >>> t = Timer(3) # 3 checkpoints expected until completion
-    >>> for _ in range(3):
-    >>>     time.sleep(1); t.make_checkpoint()
-    >>>     print('complete: %s' % t.complete)
-    >>>     print(t.eta(fmt='ETA: {seconds} seconds'))
-    complete: False
-    ETA: 02 seconds
-    complete: False
-    ETA: 01 seconds
-    complete: True
-    ETA: 00 seconds
+        >>> from pooltool.utils import Timer
+        >>> import time
+        >>> t = Timer()
+        >>> time.sleep(1)
+        >>> print(t.time_elapsed())
+        00:00:01
     """
 
-    def __init__(
-        self, required_completion_score=None, initial_checkpoint_key=0, score=0
-    ):
+    def __init__(self):
         self.timer_start = self.timestamp()
-        self.initial_checkpoint_key = initial_checkpoint_key
-        self.last_checkpoint_key = self.initial_checkpoint_key
-        self.checkpoints = OrderedDict([(initial_checkpoint_key, self.timer_start)])
-        self.num_checkpoints = 0
-
-        self.required_completion_score = required_completion_score
-        self.score = score
-        self.complete = False
-
-        self.last_eta = None
-        self.last_eta_timestamp = self.timer_start
-
-        self.scores = {self.initial_checkpoint_key: self.score}
 
     def timestamp(self):
         return datetime.datetime.fromtimestamp(time.time())
 
-    def timedelta_to_checkpoint(self, timestamp, checkpoint_key=None):
-        if not checkpoint_key:
-            checkpoint_key = self.initial_checkpoint_key
-        timedelta = timestamp - self.checkpoints[checkpoint_key]
-        return timedelta
+    def timedelta_to_checkpoint(self, timestamp):
+        return timestamp - self.timer_start
 
-    def make_checkpoint(self, checkpoint_key=None, increment_to=None):
-        if not checkpoint_key:
-            checkpoint_key = self.num_checkpoints + 1
+    def time_elapsed(self):
+        return self.format_time(self.timedelta_to_checkpoint(self.timestamp()))
 
-        if checkpoint_key in self.checkpoints:
-            raise Exception(
-                f"Timer.make_checkpoint :: {str(checkpoint_key)} already exists as a checkpoint key. "
-                "All keys must be unique"
-            )
-
-        checkpoint = self.timestamp()
-
-        self.checkpoints[checkpoint_key] = checkpoint
-        self.last_checkpoint_key = checkpoint_key
-
-        self.num_checkpoints += 1
-
-        if increment_to:
-            self.score = increment_to
-        else:
-            self.score += 1
-
-        self.scores[checkpoint_key] = self.score
-
-        if (
-            self.required_completion_score
-            and self.score >= self.required_completion_score
-        ):
-            self.complete = True
-
-        return checkpoint
-
-    def calculate_time_remaining(self, infinite_default="∞:∞:∞"):
-        if self.complete:
-            return datetime.timedelta(seconds=0)
-        if not self.required_completion_score:
-            return None
-        if not self.score:
-            return infinite_default
-
-        time_elapsed = self.checkpoints[self.last_checkpoint_key] - self.checkpoints[0]
-        fraction_completed = self.score / self.required_completion_score
-        time_remaining_estimate = time_elapsed / fraction_completed - time_elapsed
-
-        return time_remaining_estimate
-
-    def eta(self, fmt=None, zero_padding=0):
-        # Calling format_time hundreds or thousands of times per second is expensive.
-        # Therefore if eta was called within the last half second, the previous ETA is
-        # returned without further calculation.
-        eta_timestamp = self.timestamp()
-        if (
-            eta_timestamp - self.last_eta_timestamp < datetime.timedelta(seconds=0.5)
-            and self.num_checkpoints > 0
-        ):
-            return self.last_eta
-
-        eta = self.calculate_time_remaining()
-        eta = (
-            self.format_time(eta, fmt, zero_padding)
-            if isinstance(eta, datetime.timedelta)
-            else str(eta)
-        )
-
-        self.last_eta = eta
-        self.last_eta_timestamp = eta_timestamp
-
-        return eta
-
-    def time_elapsed(self, fmt=None):
-        return self.format_time(
-            self.timedelta_to_checkpoint(self.timestamp(), checkpoint_key=0), fmt=fmt
-        )
-
-    def time_elapsed_precise(self):
-        return self.timedelta_to_checkpoint(self.timestamp(), checkpoint_key=0)
-
-    def format_time(
-        self,
-        timedelta,
-        fmt: str | None = "{hours}:{minutes}:{seconds}",
-        zero_padding: int = 2,
-    ):
-        """Formats time
-
-        Examples of `fmt`. Suppose the timedelta is seconds = 1, minutes = 1, hours = 1.
-
-            {hours}h {minutes}m {seconds}s  --> 01h 01m 01s
-            {seconds} seconds               --> 3661 seconds
-            {weeks} weeks {minutes} minutes --> 0 weeks 61 minutes
-            {hours}h {seconds}s             --> 1h 61s
-        """
-
-        unit_hierarchy = ["seconds", "minutes", "hours", "days", "weeks"]
-        unit_denominations = {
-            "weeks": 7,
-            "days": 24,
-            "hours": 60,
-            "minutes": 60,
-            "seconds": 1,
-        }
-
-        if fmt is None:
-            # use the highest two non-zero units, e.g. if it is 7200s, use
-            # {hours}h{minutes}m
-            seconds = int(timedelta.total_seconds())
-            if seconds < 60:
-                fmt = "{seconds}s"
-            else:
-                m = 1
-                for i, unit in enumerate(unit_hierarchy):
-                    if not seconds // (m * unit_denominations[unit]) >= 1:
-                        fmt = f"{{{unit_hierarchy[i - 1]}}}{unit_hierarchy[i - 1][0]}{{{unit_hierarchy[i - 2]}}}{unit_hierarchy[i - 2][0]}"
-                        break
-                    elif unit == unit_hierarchy[-1]:
-                        fmt = f"{{{unit_hierarchy[i]}}}{unit_hierarchy[i][0]}{{{unit_hierarchy[i - 1]}}}{unit_hierarchy[i - 1][0]}"
-                        break
-                    else:
-                        m *= unit_denominations[unit]
-
-        assert isinstance(fmt, str)
-
-        # parse units present in fmt
-        format_order = []
-        for i, x in enumerate(fmt):
-            if x == "{":
-                for j, k in enumerate(fmt[i:]):
-                    if k == "}":
-                        unit = fmt[i + 1 : i + j]
-                        format_order.append(unit)
-                        break
-
-        if not format_order:
-            raise Exception(
-                f"Timer.format_time :: fmt = '{fmt}' contains no time units."
-            )
-
-        for unit in format_order:
-            if unit not in unit_hierarchy:
-                raise Exception(
-                    "Timer.format_time :: '{}' is not a valid unit. Use any of {}.".format(
-                        unit, ", ".join(unit_hierarchy)
-                    )
-                )
-
-        # calculate the value for each unit (e.g. 'seconds', 'days', etc) found in fmt
-        format_values_dict = {}
-        smallest_unit = unit_hierarchy[
-            [unit in format_order for unit in unit_hierarchy].index(True)
-        ]
-        units_less_than_or_equal_to_smallest_unit = unit_hierarchy[::-1][
-            unit_hierarchy[::-1].index(smallest_unit) :
-        ]
-        seconds_in_base_unit = 1
-        for a in [
-            v
-            for k, v in unit_denominations.items()
-            if k in units_less_than_or_equal_to_smallest_unit
-        ]:
-            seconds_in_base_unit *= a
-        r = int(timedelta.total_seconds()) // seconds_in_base_unit
-
-        for i, lower_unit in enumerate(unit_hierarchy):
-            if lower_unit in format_order:
-                m = 1
-                for upper_unit in unit_hierarchy[i + 1 :]:
-                    m *= unit_denominations[upper_unit]
-                    if upper_unit in format_order:
-                        (
-                            format_values_dict[upper_unit],
-                            format_values_dict[lower_unit],
-                        ) = divmod(r, m)
-                        break
-                else:
-                    format_values_dict[lower_unit] = r
-                    break
-                r = format_values_dict[upper_unit]
-
-        format_values = [format_values_dict[unit] for unit in format_order]
-
-        style_str = "0" + str(zero_padding) if zero_padding else ""
-        for unit in format_order:
-            fmt = fmt.replace(f"{{{unit}}}", "%" + f"{style_str}" + "d")
-        formatted_time = fmt % (*[format_value for format_value in format_values],)
-
-        return formatted_time
+    def format_time(self, timedelta):
+        total_seconds = int(timedelta.total_seconds())
+        hours, remainder = divmod(total_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
 
     @classmethod
     def factory(cls):
@@ -295,52 +82,44 @@ class TimeCode:
     This context manager times blocks of code, and calls run.info afterwards to report
     the time (unless quiet = True).
 
-    Parameters
-    ==========
-    sc: 'green'
-        run info color with no runtime error
-    success_msg: None
-        If None, it is set to 'Code ran succesfully in'
-    fc: 'green'
-        run info color with runtime error
-    failure_msg: None
-        If None, it is set to 'Code failed within'
-    run: Run()
-        Provide a pre-existing Run instance if you want
-    quiet: False,
-        If True, run.info is not called and datetime object is stored
-        as `time` (see examples)
-    suppress_first: 0,
-        Supress output if code finishes within this many seconds.
+    Attributes:
+        success_msg: None
+            If None, it is set to 'Code ran succesfully in'
+        failure_msg: None
+            If None, it is set to 'Code failed within'
+        run: Run()
+            Provide a pre-existing Run instance if you want
+        quiet: False,
+            If True, run.info is not called and datetime object is stored
+            as `time` (see examples)
+        suppress_first: 0,
+            Supress output if code finishes within this many seconds.
 
-    Examples
-    ========
+    Examples:
 
-    >>> import time
-    >>> import pooltool.utils as utils
-    >>> # EXAMPLE 1
-    >>> with utils.TimeCode() as t:
-    >>>     time.sleep(5)
-    ✓ Code finished successfully after 05s
+        >>> import time
+        >>> import pooltool.utils as utils
+        >>> # EXAMPLE 1
+        >>> with utils.TimeCode() as t:
+        >>>     time.sleep(5)
+        ✓ Code finished successfully after 05s
 
-    >>> # EXAMPLE 2
-    >>> with utils.TimeCode() as t:
-    >>>     time.sleep(5)
-    >>>     print(asdf) # undefined variable
-    ✖ Code encountered error after 05s
+        >>> # EXAMPLE 2
+        >>> with utils.TimeCode() as t:
+        >>>     time.sleep(5)
+        >>>     print(asdf) # undefined variable
+        ✖ Code encountered error after 05s
 
-    >>> # EXAMPLE 3
-    >>> with utils.TimeCode(quiet=True) as t:
-    >>>     time.sleep(5)
-    >>> print(t.time)
-    0:00:05.000477
+        >>> # EXAMPLE 3
+        >>> with utils.TimeCode(quiet=True) as t:
+        >>>     time.sleep(5)
+        >>> print(t.time)
+        0:00:05.000477
     """
 
     def __init__(
         self,
         success_msg=None,
-        sc="green",
-        fc="red",
         failure_msg=None,
         run=None,
         quiet=False,

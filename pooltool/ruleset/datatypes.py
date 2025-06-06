@@ -58,7 +58,7 @@ class Log:
         self.msgs.append(
             {
                 "time": self.timer.timestamp(),
-                "elapsed": self.timer.time_elapsed(fmt="{minutes}:{seconds}"),
+                "elapsed": self.timer.time_elapsed(),
                 "msg": msg,
                 "quiet": quiet,
                 "sentiment": sentiment,
