@@ -151,8 +151,13 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-extend-select = ["I", "UP"]
-ignore = ["E741"]
+extend-select = [
+    "I", # Import sorting
+    "UP", # Modernize Python syntax for newer versions
+]
+ignore = [
+    "E741",  # Ambiguous variable name
+]
 
 [tool.pytest.ini_options]
 addopts = [

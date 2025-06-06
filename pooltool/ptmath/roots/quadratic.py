@@ -1,5 +1,4 @@
 import math
-from typing import Tuple
 
 import numpy as np
 from numba import jit
@@ -8,7 +7,7 @@ import pooltool.constants as const
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def solve(a: float, b: float, c: float) -> Tuple[float, float]:
+def solve(a: float, b: float, c: float) -> tuple[float, float]:
     """Solve a quadratic equation :math:`A t^2 + B t + C = 0` (just-in-time compiled)"""
     if np.abs(a) < const.EPS:
         if np.abs(b) < const.EPS:

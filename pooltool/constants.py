@@ -6,8 +6,6 @@ Notes:
       sections of code
 """
 
-from typing import Dict
-
 import numpy as np
 
 use_numba_cache = True
@@ -45,7 +43,7 @@ pocketed: int = 4
 A ball with this motion state is in a pocket.
 """
 
-state_dict: Dict[int, str] = {
+state_dict: dict[int, str] = {
     0: "stationary",
     1: "spinning",
     2: "sliding",

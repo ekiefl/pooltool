@@ -1,6 +1,6 @@
 """An unrealistic ball-cushion model"""
 
-from typing import Tuple, TypeVar
+from typing import TypeVar
 
 import attrs
 import numpy as np
@@ -23,7 +23,7 @@ Cushion = TypeVar("Cushion", LinearCushionSegment, CircularCushionSegment)
 
 def _solve(
     ball: Ball, cushion: Cushion, restitution: bool = True
-) -> Tuple[Ball, Cushion]:
+) -> tuple[Ball, Cushion]:
     """Given ball and cushion, unrealistically reflect the ball's momentum
 
     Args:
@@ -78,7 +78,7 @@ class UnrealisticLinear(CoreBallLCushionCollision):
 
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
-    ) -> Tuple[Ball, LinearCushionSegment]:
+    ) -> tuple[Ball, LinearCushionSegment]:
         return _solve(ball, cushion, self.restitution)
 
 
@@ -91,5 +91,5 @@ class UnrealisticCircular(CoreBallCCushionCollision):
 
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment
-    ) -> Tuple[Ball, CircularCushionSegment]:
+    ) -> tuple[Ball, CircularCushionSegment]:
         return _solve(ball, cushion, self.restitution)

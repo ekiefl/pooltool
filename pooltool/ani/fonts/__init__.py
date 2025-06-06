@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from pooltool.ani.globals import Global
 from pooltool.utils import panda_path
@@ -10,7 +9,7 @@ DEFAULT = "HackNerdFontMono-Regular"
 assert DEFAULT in font_paths, f"{DEFAULT=} is missing"
 
 
-def load_font(name: Optional[str] = None):
+def load_font(name: str | None = None):
     if name is None:
         name = DEFAULT
 

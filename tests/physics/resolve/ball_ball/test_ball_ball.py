@@ -1,5 +1,4 @@
 import math
-from typing import Tuple
 
 import attrs
 import numpy as np
@@ -51,7 +50,7 @@ def gearing_z_spin_for_incoming_ball(
     return -s_tangent / incoming_ball.params.R
 
 
-def ball_collision(line_of_centers_angle_radians: float) -> Tuple[Ball, Ball]:
+def ball_collision(line_of_centers_angle_radians: float) -> tuple[Ball, Ball]:
     cb = Ball.create("cue", xy=(0, 0))
     offset_direction = vector_from_magnitude_and_direction(
         2 * cb.params.R, line_of_centers_angle_radians
@@ -61,14 +60,14 @@ def ball_collision(line_of_centers_angle_radians: float) -> Tuple[Ball, Ball]:
     return cb, ob
 
 
-def head_on() -> Tuple[Ball, Ball]:
+def head_on() -> tuple[Ball, Ball]:
     cb, ob = ball_collision(0.0)
     # Cue ball makes head-on collision with object ball at 1 m/s in +x direction
     cb.state.rvw[1] = np.array([1, 0, 0])
     return cb, ob
 
 
-def translating_head_on() -> Tuple[Ball, Ball]:
+def translating_head_on() -> tuple[Ball, Ball]:
     cb, ob = ball_collision(0.0)
     # Cue ball makes head-on collision with object ball at 1 m/s in +x direction
     # while both balls move together at 1 m/s in +y direction

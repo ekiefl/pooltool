@@ -1,5 +1,6 @@
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Optional, Type, TypeVar
+from typing import Any, TypeVar
 
 from attrs import define
 from cattrs.converters import Converter
@@ -18,7 +19,7 @@ T = TypeVar("T")
 
 @define
 class Convert:
-    converters: Dict[SerializeFormat, Converter]
+    converters: dict[SerializeFormat, Converter]
 
     def __getitem__(self, key: SerializeFormat) -> Converter:
         return self.converters[key]
@@ -26,7 +27,7 @@ class Convert:
     def register_structure_hook(
         self,
         cl: Any,
-        func: Callable[[Any, Type[T]], T],
+        func: Callable[[Any, type[T]], T],
         which: Iterable[SerializeFormat] = SerializeFormat,
     ) -> None:
         for fmt in which:
@@ -34,8 +35,8 @@ class Convert:
 
     def register_structure_hook_func(
         self,
-        check_func: Callable[[Type[T]], bool],
-        func: Callable[[Any, Type[T]], T],
+        check_func: Callable[[type[T]], bool],
+        func: Callable[[Any, type[T]], T],
         which: Iterable[SerializeFormat] = SerializeFormat,
     ) -> None:
         for fmt in which:
@@ -77,15 +78,11 @@ class Convert:
         for fmt in which:
             self.converters[fmt].register_unstructure_hook_factory(check_func, factory)
 
-    def unstructure_to(
-        self, obj: Any, path: Pathish, fmt: Optional[str] = None
-    ) -> None:
+    def unstructure_to(self, obj: Any, path: Pathish, fmt: str | None = None) -> None:
         fmt = SerializeFormat(fmt) if fmt is not None else self._infer_ext(path)
         serializers[fmt](self.converters[fmt].unstructure(obj), path)
 
-    def structure_from(
-        self, path: Pathish, cl: Type[T], fmt: Optional[str] = None
-    ) -> T:
+    def structure_from(self, path: Pathish, cl: type[T], fmt: str | None = None) -> T:
         assert Path(path).exists()
         fmt = SerializeFormat(fmt) if fmt is not None else self._infer_ext(path)
         return self.converters[fmt].structure(deserializers[fmt](path), cl)

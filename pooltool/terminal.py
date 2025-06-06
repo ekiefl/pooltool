@@ -14,7 +14,6 @@ import sys
 import textwrap
 import time
 from collections import OrderedDict
-from typing import Optional
 
 
 def get_color_objects():
@@ -35,7 +34,7 @@ def get_color_objects():
         from colored import back, fore, style
     else:
 
-        class NoColored(object):
+        class NoColored:
             def __getattr__(self, _):
                 return ""
 
@@ -167,7 +166,7 @@ class Progress:
         if not self.verbose:
             return
 
-        self.pid = "%s %s" % (get_date(), pid)
+        self.pid = f"{get_date()} {pid}"
         self.get_terminal_width()
         self.current = None
         self.step = None
@@ -176,7 +175,7 @@ class Progress:
         self.t = Timer(self.progress_total_items)
 
     def update_pid(self, pid):
-        self.pid = "%s %s" % (get_date(), pid)
+        self.pid = f"{get_date()} {pid}"
 
     def increment(self, increment_to=None):
         if increment_to:
@@ -187,7 +186,7 @@ class Progress:
         self.t.make_checkpoint(increment_to=increment_to)
 
     def write(self, c, dont_update_current=False):
-        eta_c = " ETA: %s" % str(self.t.eta()) if self.progress_total_items else ""
+        eta_c = f" ETA: {str(self.t.eta())}" if self.progress_total_items else ""
         surpass = self.terminal_width - self.LEN(c) - self.LEN(eta_c)
 
         if surpass < 0:
@@ -270,7 +269,7 @@ class Progress:
     def append(self, msg):
         if not self.verbose:
             return
-        self.write("%s%s" % (self.current, msg))
+        self.write(f"{self.current}{msg}")
 
     def step_start(self, step, symbol="⚙ "):
         if not self.pid:
@@ -281,13 +280,13 @@ class Progress:
 
         if self.step:
             raise Exception(
-                "You already have an unfinished step :( Here it is: '%s'." % self.step
+                f"You already have an unfinished step :( Here it is: '{self.step}'."
             )
 
         if not self.verbose:
             return
 
-        self.step = " / %s " % (step)
+        self.step = f" / {step} "
 
         self.write(self.current + self.step + symbol, dont_update_current=True)
 
@@ -298,6 +297,7 @@ class Progress:
         if not self.verbose:
             return
 
+        assert self.current is not None
         self.write(self.current + self.step + symbol)
 
         self.step = None
@@ -309,13 +309,13 @@ class Progress:
             return
 
         if not self.pid:
-            raise Exception('Progress with null pid will not update for msg "%s"' % msg)
+            raise Exception(f'Progress with null pid will not update for msg "{msg}"')
 
         if increment:
             self.increment()
 
         self.clear()
-        self.write("\r[%s] %s" % (self.pid, msg))
+        self.write(f"\r[{self.pid}] {msg}")
 
     def end(self):
         """End the current progress
@@ -354,7 +354,7 @@ class Run:
             return
 
         with open(self.log_file_path, "a") as log_file:
-            log_file.write("[%s] %s\n" % (get_date(), CLEAR(line)))
+            log_file.write(f"[{get_date()}] {CLEAR(line)}\n")
 
     def write(self, line, quiet=False, overwrite_verbose=False):
         if self.log_file_path:
@@ -391,7 +391,7 @@ class Run:
 
         label = key
 
-        info_line = "%s%s %s: %s\n%s" % (
+        info_line = "{}{} {}: {}\n{}".format(
             "\n" * nl_before,
             color_text(label, lc),
             "." * (self.width - len(label)),
@@ -428,16 +428,12 @@ class Run:
 
         if cut_after:
             message_line = color_text(
-                "%s%s\n"
-                % (
-                    self.single_line_prefixes[level],
-                    textwrap.fill(str(message), cut_after),
-                ),
+                f"{self.single_line_prefixes[level]}{textwrap.fill(str(message), cut_after)}\n",
                 mc,
             )
         else:
             message_line = color_text(
-                "%s%s\n" % (self.single_line_prefixes[level], str(message)), mc
+                f"{self.single_line_prefixes[level]}{str(message)}\n", mc
             )
 
         message_line = ("\n" * nl_before) + message_line + ("\n" * nl_after)
@@ -464,13 +460,14 @@ class Run:
 
         message_line = ""
         header_line = color_text(
-            "%s\n%s\n%s\n" % (("\n" * nl_before), header, "=" * (self.width + 2)), lc
+            "{}\n{}\n{}\n".format(("\n" * nl_before), header, "=" * (self.width + 2)),
+            lc,
         )
         if raw:
-            message_line = color_text("%s\n\n%s" % ((message), "\n" * nl_after), lc)
+            message_line = color_text("{}\n\n{}".format((message), "\n" * nl_after), lc)
         else:
             message_line = color_text(
-                "%s\n\n%s" % (textwrap.fill(str(message), 80), "\n" * nl_after), lc
+                "{}\n\n{}".format(textwrap.fill(str(message), 80), "\n" * nl_after), lc
             )
 
         self.write(
@@ -545,8 +542,8 @@ class Timer:
 
         if checkpoint_key in self.checkpoints:
             raise Exception(
-                "Timer.make_checkpoint :: %s already exists as a checkpoint key. "
-                "All keys must be unique" % (str(checkpoint_key))
+                f"Timer.make_checkpoint :: {str(checkpoint_key)} already exists as a checkpoint key. "
+                "All keys must be unique"
             )
 
         checkpoint = self.timestamp()
@@ -619,7 +616,7 @@ class Timer:
     def format_time(
         self,
         timedelta,
-        fmt: Optional[str] = "{hours}:{minutes}:{seconds}",
+        fmt: str | None = "{hours}:{minutes}:{seconds}",
         zero_padding: int = 2,
     ):
         """Formats time
@@ -651,20 +648,10 @@ class Timer:
                 m = 1
                 for i, unit in enumerate(unit_hierarchy):
                     if not seconds // (m * unit_denominations[unit]) >= 1:
-                        fmt = "{%s}%s{%s}%s" % (
-                            unit_hierarchy[i - 1],
-                            unit_hierarchy[i - 1][0],
-                            unit_hierarchy[i - 2],
-                            unit_hierarchy[i - 2][0],
-                        )
+                        fmt = f"{{{unit_hierarchy[i - 1]}}}{unit_hierarchy[i - 1][0]}{{{unit_hierarchy[i - 2]}}}{unit_hierarchy[i - 2][0]}"
                         break
                     elif unit == unit_hierarchy[-1]:
-                        fmt = "{%s}%s{%s}%s" % (
-                            unit_hierarchy[i],
-                            unit_hierarchy[i][0],
-                            unit_hierarchy[i - 1],
-                            unit_hierarchy[i - 1][0],
-                        )
+                        fmt = f"{{{unit_hierarchy[i]}}}{unit_hierarchy[i][0]}{{{unit_hierarchy[i - 1]}}}{unit_hierarchy[i - 1][0]}"
                         break
                     else:
                         m *= unit_denominations[unit]
@@ -683,14 +670,15 @@ class Timer:
 
         if not format_order:
             raise Exception(
-                "Timer.format_time :: fmt = '%s' contains no time units." % (fmt)
+                f"Timer.format_time :: fmt = '{fmt}' contains no time units."
             )
 
         for unit in format_order:
             if unit not in unit_hierarchy:
                 raise Exception(
-                    "Timer.format_time :: '%s' is not a valid unit. Use any of %s."
-                    % (unit, ", ".join(unit_hierarchy))
+                    "Timer.format_time :: '{}' is not a valid unit. Use any of {}.".format(
+                        unit, ", ".join(unit_hierarchy)
+                    )
                 )
 
         # calculate the value for each unit (e.g. 'seconds', 'days', etc) found in fmt
@@ -730,7 +718,7 @@ class Timer:
 
         style_str = "0" + str(zero_padding) if zero_padding else ""
         for unit in format_order:
-            fmt = fmt.replace("{%s}" % unit, "%" + "%s" % (style_str) + "d")
+            fmt = fmt.replace(f"{{{unit}}}", "%" + f"{style_str}" + "d")
         formatted_time = fmt % (*[format_value for format_value in format_values],)
 
         return formatted_time
@@ -743,7 +731,7 @@ class Timer:
             seconds = 10**exponent
             td = datetime.timedelta(seconds=seconds)
 
-            run.warning("", header="TESTING %s" % td, lc="yellow")
+            run.warning("", header=f"TESTING {td}", lc="yellow")
             fmts = [
                 None,
                 "SECONDS {seconds}",
@@ -771,7 +759,7 @@ class Timer:
         return cls()
 
 
-class TimeCode(object):
+class TimeCode:
     """Time a block of code.
 
     This context manager times blocks of code, and calls run.info afterwards to report

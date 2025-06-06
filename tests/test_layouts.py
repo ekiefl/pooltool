@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from itertools import combinations
-from typing import Dict, List, Optional
 
 import attrs
 import numpy as np
@@ -113,7 +112,7 @@ def test_get_translation(directions, quantities, expected_x, expected_y, radius)
 SPACING_FACTOR = 0.1
 
 
-def get_two_ball_rack(seed: Optional[int] = None):
+def get_two_ball_rack(seed: int | None = None):
     R = 0.03
     ball_params = BallParams(R=R)
 
@@ -130,7 +129,7 @@ def get_two_ball_rack(seed: Optional[int] = None):
 
 
 def test_wiggle():
-    _distance_array: List[float] = []
+    _distance_array: list[float] = []
 
     for _ in range(1000):
         rack = get_two_ball_rack()
@@ -156,7 +155,7 @@ class SeedTestResult:
     ball2_pos: NDArray
 
     @classmethod
-    def from_rack(cls, balls: Dict[str, Ball]) -> SeedTestResult:
+    def from_rack(cls, balls: dict[str, Ball]) -> SeedTestResult:
         ascending_order = balls["1"].state.rvw[0, 0] < balls["2"].state.rvw[0, 0]
 
         return cls(
@@ -168,7 +167,7 @@ class SeedTestResult:
 
 def test_seed():
     # Random seed
-    results_random_seed: List[SeedTestResult] = []
+    results_random_seed: list[SeedTestResult] = []
     for _ in range(20):
         results_random_seed.append(
             SeedTestResult.from_rack(get_two_ball_rack(seed=None))
@@ -186,7 +185,7 @@ def test_seed():
         assert not np.array_equal(result1.ball2_pos, result2.ball2_pos)
 
     # Fixed seed
-    results_fixed_seed: List[SeedTestResult] = []
+    results_fixed_seed: list[SeedTestResult] = []
     for _ in range(20):
         results_fixed_seed.append(SeedTestResult.from_rack(get_two_ball_rack(seed=42)))
 

@@ -2,8 +2,8 @@
 
 import gc
 import sys
+from collections.abc import Generator
 from functools import partial
-from typing import Generator, Optional, Tuple, Union
 
 import simplepbr
 from attrs import define
@@ -42,9 +42,9 @@ from pooltool.utils import get_total_memory_usage
 
 @define
 class ShowBaseConfig:
-    window_type: Optional[str] = None
-    window_size: Optional[Tuple[int, int]] = None
-    fb_prop: Optional[FrameBufferProperties] = None
+    window_type: str | None = None
+    window_size: tuple[int, int] | None = None
+    fb_prop: FrameBufferProperties | None = None
     monitor: bool = False
 
     @classmethod
@@ -106,7 +106,7 @@ def window_task(win=None):
     Global.base.win.requestProperties(properties)
 
 
-def _resize_offscreen_window(size: Tuple[int, int]):
+def _resize_offscreen_window(size: tuple[int, int]):
     """Changes window size when provided the dimensions (x, y) in pixels"""
     Global.base.win.setSize(*[int(dim) for dim in size])
 
@@ -259,7 +259,7 @@ class FrameStepper(Interface):
     def _iterator(
         self,
         system: System,
-        size: Tuple[int, int] = (int(1.6 * 720), 720),
+        size: tuple[int, int] = (int(1.6 * 720), 720),
         fps: float = 30.0,
     ) -> Generator:
         continuize(system, dt=1 / fps, inplace=True)
@@ -295,7 +295,7 @@ class FrameStepper(Interface):
 
             yield frame
 
-    def iterator(self, *args, **kwargs) -> Tuple[Generator, int]:
+    def iterator(self, *args, **kwargs) -> tuple[Generator, int]:
         """Iterate through each frame
 
         Args:
@@ -351,9 +351,9 @@ class ShotViewer(Interface):
 
     def show(
         self,
-        shot_or_shots: Union[System, MultiSystem],
+        shot_or_shots: System | MultiSystem,
         title: str = "Press <esc> to continue program execution",
-        camera_state: Optional[CameraState] = None,
+        camera_state: CameraState | None = None,
     ):
         """Opens the interactive interface for one or more shots.
 

@@ -1,5 +1,3 @@
-from typing import Optional, Tuple
-
 import attrs
 import numpy as np
 from numba import jit
@@ -28,9 +26,9 @@ def collide_balls(
     u_s2: float = 0.21,
     u_b: float = 0.05,
     e_b: float = 0.89,
-    deltaP: Optional[float] = None,
+    deltaP: float | None = None,
     N: int = 1000,
-) -> Tuple[NDArray[np.float64], NDArray[np.float64]]:
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     """Simulates the frictional collision between two balls.
 
     Args:
@@ -86,9 +84,9 @@ def _collide_balls(
     u_s2: float = 0.21,
     u_b: float = 0.05,
     e_b: float = 0.89,
-    deltaP: Optional[float] = None,
+    deltaP: float | None = None,
     N: int = 1000,
-) -> Tuple[
+) -> tuple[
     NDArray[np.float64], NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]
 ]:
     """The numba-compiled delegate for :func:`collide_balls`.
@@ -243,7 +241,7 @@ class FrictionalMathavan(CoreBallBallCollision):
         default=BallBallModel.FRICTIONAL_MATHAVAN, init=False, repr=False
     )
 
-    def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
+    def solve(self, ball1: Ball, ball2: Ball) -> tuple[Ball, Ball]:
         """Resolve ball-ball collision via Mathavan et al. (2014).
 
         This method computes the post-collision linear and angular velocities of two balls

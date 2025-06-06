@@ -5,7 +5,6 @@ to the figures in the Mathavan paper.
 """
 
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -32,9 +31,9 @@ class _BallParameters:
 
 @dataclass
 class _SpinConfig:
-    k_values: List[float]  # Spin multipliers
-    labels: List[str]  # Labels for plot legend
-    colors: List[str]  # Colors for plot lines
+    k_values: list[float]  # Spin multipliers
+    labels: list[str]  # Labels for plot legend
+    colors: list[str]  # Colors for plot lines
 
 
 @dataclass
@@ -48,7 +47,7 @@ class _SubplotConfig:
 
 def _calculate_rebound_values(
     vx: float, vy: float, with_sidespin: bool = False
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """Calculate rebound speed and angle from velocity components"""
     v_rebound = np.sqrt(vx**2 + vy**2)
 
@@ -61,12 +60,12 @@ def _calculate_rebound_values(
 
 
 def _run_simulations(
-    k_values: List[float],
+    k_values: list[float],
     incident_angles: np.ndarray,
     initial_speed: float,
     ball_params: _BallParameters,
     with_sidespin: bool = False,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Run Mathavan model simulations for different k values and incident angles.
 
     Args:
@@ -150,11 +149,11 @@ def _setup_subplot(config: _SubplotConfig, x_data: np.ndarray) -> None:
 
 
 def _generate_model_behavior_plots(
-    ball_params: Optional[_BallParameters] = None,
+    ball_params: _BallParameters | None = None,
     initial_speed: float = 1.0,
     angle_count: int = 50,
-    figsize: Tuple[float, float] = (12, 10),
-) -> Tuple[Figure, np.ndarray]:
+    figsize: tuple[float, float] = (12, 10),
+) -> tuple[Figure, np.ndarray]:
     """Generate visualization plots demonstrating the Mathavan model behavior.
 
     Creates plots showing model behavior under various conditions of incident angles,

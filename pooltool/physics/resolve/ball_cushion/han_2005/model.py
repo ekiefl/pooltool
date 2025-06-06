@@ -1,4 +1,4 @@
-from typing import Tuple, TypeVar
+from typing import TypeVar
 
 import attrs
 import numpy as np
@@ -93,7 +93,7 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
 Cushion = TypeVar("Cushion", LinearCushionSegment, CircularCushionSegment)
 
 
-def _solve(ball: Ball, cushion: Cushion) -> Tuple[Ball, Cushion]:
+def _solve(ball: Ball, cushion: Cushion) -> tuple[Ball, Cushion]:
     rvw = han2005(
         rvw=ball.state.rvw,
         normal=cushion.get_normal(ball.state.rvw),
@@ -117,7 +117,7 @@ class Han2005Linear(CoreBallLCushionCollision):
 
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
-    ) -> Tuple[Ball, LinearCushionSegment]:
+    ) -> tuple[Ball, LinearCushionSegment]:
         return _solve(ball, cushion)
 
 
@@ -129,5 +129,5 @@ class Han2005Circular(CoreBallCCushionCollision):
 
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment
-    ) -> Tuple[Ball, CircularCushionSegment]:
+    ) -> tuple[Ball, CircularCushionSegment]:
         return _solve(ball, cushion)

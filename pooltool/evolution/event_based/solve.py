@@ -1,5 +1,4 @@
 from math import acos, isnan
-from typing import Tuple
 
 import numpy as np
 from numba import jit
@@ -106,7 +105,7 @@ def ball_ball_collision_coeffs(
     g1: float,
     g2: float,
     R: float,
-) -> Tuple[float, float, float, float, float]:
+) -> tuple[float, float, float, float, float]:
     """Get quartic coeffs required to determine the ball-ball collision time
 
     (just-in-time compiled)
@@ -279,7 +278,7 @@ def ball_circular_cushion_collision_coeffs(
     m: float,
     g: float,
     R: float,
-) -> Tuple[float, float, float, float, float]:
+) -> tuple[float, float, float, float, float]:
     """Get quartic coeffs required to determine the ball-circular-cushion collision time
 
     (just-in-time compiled)
@@ -322,7 +321,7 @@ def ball_pocket_collision_coeffs(
     m: float,
     g: float,
     R: float,
-) -> Tuple[float, float, float, float, float]:
+) -> tuple[float, float, float, float, float]:
     """Get quartic coeffs required to determine the ball-pocket collision time
 
     (just-in-time compiled)

@@ -11,7 +11,6 @@ except ImportError:
 import argparse
 import shutil
 from pathlib import Path
-from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -92,7 +91,7 @@ path = Path(__file__).parent / "timing"
 clear_and_make_dir()
 
 # Create the exporters
-exporters: Dict[str, ImageStorageMethod] = {
+exporters: dict[str, ImageStorageMethod] = {
     "HDF5 uncompressed": HDF5Images(path / "images.hdf5"),
     "image dir (PNG)": ImageZip(path / "png_images", ext="png", compress=False),
     "image zip (PNG)": ImageZip(path / "png_images.zip", ext="png"),
@@ -103,7 +102,7 @@ exporters: Dict[str, ImageStorageMethod] = {
 }
 
 # Initialize the time data
-stats: Dict[str, List[float]] = {}
+stats: dict[str, list[float]] = {}
 stats["resolution"] = []
 stats["frames"] = []
 stats["gray"] = []

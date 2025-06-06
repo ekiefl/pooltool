@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List
 
 import pytest
 
@@ -14,14 +13,14 @@ from pooltool.system.datatypes import System
 
 
 @pytest.fixture
-def example_events() -> List[Event]:
+def example_events() -> list[Event]:
     """
     Returns the list of Event objects from simulating the example system.
     """
     return System.load(Path(__file__).parent / "example_system.msgpack").events
 
 
-def test_get_ball_success(example_events: List[Event]):
+def test_get_ball_success(example_events: list[Event]):
     """
     Find an event that involves a ball (e.g. BALL_BALL or STICK_BALL)
     and verify we can retrieve the ball by ID.
@@ -40,7 +39,7 @@ def test_get_ball_success(example_events: List[Event]):
     assert ball_1_initial.id == "1"
 
 
-def test_get_ball_no_ball_in_event(example_events: List[Event]):
+def test_get_ball_no_ball_in_event(example_events: list[Event]):
     """
     Attempt to retrieve a ball from an event type that doesn't involve a ball, expecting ValueError.
     """
@@ -51,7 +50,7 @@ def test_get_ball_no_ball_in_event(example_events: List[Event]):
         null_event.get_ball("dummy")
 
 
-def test_get_ball_wrong_id(example_events: List[Event]):
+def test_get_ball_wrong_id(example_events: list[Event]):
     """
     Attempt to retrieve a ball using an ID not present in a ball-involving event.
     """
@@ -61,7 +60,7 @@ def test_get_ball_wrong_id(example_events: List[Event]):
         event.get_ball("1")
 
 
-def test_get_cushion_success(example_events: List[Event]):
+def test_get_cushion_success(example_events: list[Event]):
     """
     Find a BALL_LINEAR_CUSHION or BALL_CIRCULAR_CUSHION event and verify we can retrieve the cushion.
     """
@@ -83,7 +82,7 @@ def test_get_cushion_success(example_events: List[Event]):
     assert cushion_obj_circ.id == "8t"
 
 
-def test_get_cushion_not_in_event(example_events: List[Event]):
+def test_get_cushion_not_in_event(example_events: list[Event]):
     """
     Attempt to retrieve a cushion from an event that doesn't involve one.
     """
@@ -92,7 +91,7 @@ def test_get_cushion_not_in_event(example_events: List[Event]):
         event.get_cushion("8t")
 
 
-def test_get_pocket_success(example_events: List[Event]):
+def test_get_pocket_success(example_events: list[Event]):
     """
     Find a BALL_POCKET event (agents: ('1','rt') in your snippet) and retrieve the pocket.
     """
@@ -104,7 +103,7 @@ def test_get_pocket_success(example_events: List[Event]):
     assert pocket_obj.id == "rt"
 
 
-def test_get_pocket_not_in_event(example_events: List[Event]):
+def test_get_pocket_not_in_event(example_events: list[Event]):
     """
     Attempt to retrieve a pocket from a non-pocket event, expecting ValueError.
     """
@@ -115,7 +114,7 @@ def test_get_pocket_not_in_event(example_events: List[Event]):
         event.get_pocket("rt")
 
 
-def test_get_pocket_missing_id(example_events: List[Event]):
+def test_get_pocket_missing_id(example_events: list[Event]):
     """
     Attempt to retrieve a pocket with an ID that doesn't match the event's pocket.
     """

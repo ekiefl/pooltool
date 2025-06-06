@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-from typing import Optional
 
 import numpy as np
 from direct.interval.IntervalGlobal import LerpFunc, Parallel
@@ -214,7 +213,7 @@ class CallShotMode(BaseMode):
             )
             self.ball_highlight_sequence.start()
 
-    def find_closest_pocket(self) -> Optional[Pocket]:
+    def find_closest_pocket(self) -> Pocket | None:
         fixation_pos = cam.fixation.getPos()
         d_min = np.inf
         closest = None
@@ -278,7 +277,7 @@ class CallShotMode(BaseMode):
             self.trans_ball.removeNode()
         self.trans_ball = None
 
-    def find_closest_ball(self) -> Optional[BallRender]:
+    def find_closest_ball(self) -> BallRender | None:
         fixation_pos = cam.fixation.getPos()
         d_min = np.inf
 

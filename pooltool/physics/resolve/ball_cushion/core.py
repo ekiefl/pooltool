@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Protocol, Tuple
+from typing import Protocol
 
 import numpy as np
 
@@ -17,7 +17,7 @@ class _BaseLinearStrategy(Protocol):
 
     def resolve(
         self, ball: Ball, cushion: LinearCushionSegment, inplace: bool = False
-    ) -> Tuple[Ball, LinearCushionSegment]: ...
+    ) -> tuple[Ball, LinearCushionSegment]: ...
 
 
 class _BaseCircularStrategy(Protocol):
@@ -25,7 +25,7 @@ class _BaseCircularStrategy(Protocol):
 
     def resolve(
         self, ball: Ball, cushion: CircularCushionSegment, inplace: bool = False
-    ) -> Tuple[Ball, CircularCushionSegment]: ...
+    ) -> tuple[Ball, CircularCushionSegment]: ...
 
 
 class BallLCushionCollisionStrategy(_BaseLinearStrategy, Protocol):
@@ -33,7 +33,7 @@ class BallLCushionCollisionStrategy(_BaseLinearStrategy, Protocol):
 
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
-    ) -> Tuple[Ball, LinearCushionSegment]:
+    ) -> tuple[Ball, LinearCushionSegment]:
         """This method resolves a ball-circular cushion collision"""
         ...
 
@@ -43,7 +43,7 @@ class BallCCushionCollisionStrategy(_BaseCircularStrategy, Protocol):
 
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment
-    ) -> Tuple[Ball, CircularCushionSegment]:
+    ) -> tuple[Ball, CircularCushionSegment]:
         """This method resolves a ball-circular cushion collision"""
         ...
 
@@ -82,7 +82,7 @@ class CoreBallLCushionCollision(ABC):
 
     def resolve(
         self, ball: Ball, cushion: LinearCushionSegment, inplace: bool = False
-    ) -> Tuple[Ball, LinearCushionSegment]:
+    ) -> tuple[Ball, LinearCushionSegment]:
         if not inplace:
             ball = ball.copy()
             cushion = cushion.copy()
@@ -94,7 +94,7 @@ class CoreBallLCushionCollision(ABC):
     @abstractmethod
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
-    ) -> Tuple[Ball, LinearCushionSegment]:
+    ) -> tuple[Ball, LinearCushionSegment]:
         pass
 
 
@@ -129,7 +129,7 @@ class CoreBallCCushionCollision(ABC):
 
     def resolve(
         self, ball: Ball, cushion: CircularCushionSegment, inplace: bool = False
-    ) -> Tuple[Ball, CircularCushionSegment]:
+    ) -> tuple[Ball, CircularCushionSegment]:
         if not inplace:
             ball = ball.copy()
             cushion = cushion.copy()

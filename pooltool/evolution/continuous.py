@@ -3,7 +3,7 @@
 For an explanation, see :func:`continuize` and :func:`interpolate_ball_states`
 """
 
-from typing import List, Sequence, Union
+from collections.abc import Sequence
 
 import numpy as np
 from numpy.typing import NDArray
@@ -193,10 +193,10 @@ def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> Syste
 
 def interpolate_ball_states(
     ball: Ball,
-    timestamps: Union[NDArray[np.float64], Sequence[float]],
+    timestamps: NDArray[np.float64] | Sequence[float],
     *,
     extrapolate: bool = False,
-) -> List[BallState]:
+) -> list[BallState]:
     """Calculate exact ball states at arbitrary timestamps.
 
     This function calculates the precise ball states at arbitrary timestamps by evolving

@@ -1,7 +1,5 @@
 """Ruleset logic"""
 
-from typing import Type
-
 from pooltool.game.datatypes import GameType
 from pooltool.ruleset.datatypes import (
     AIPlayer,
@@ -45,7 +43,7 @@ _ruleset_classes = {
 }
 
 
-def get_ruleset(game: GameType) -> Type[Ruleset]:
+def get_ruleset(game: GameType) -> type[Ruleset]:
     """Retrieve a ruleset class
 
     Args:

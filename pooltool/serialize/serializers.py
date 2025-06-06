@@ -1,6 +1,7 @@
 import json
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Dict, Union
+from typing import Any
 
 import msgpack
 import msgpack_numpy as m
@@ -8,7 +9,7 @@ import yaml
 
 from pooltool.utils.strenum import StrEnum, auto
 
-Pathish = Union[str, Path]
+Pathish = str | Path
 
 
 class SerializeFormat(StrEnum):
@@ -27,7 +28,7 @@ def to_json(o: Any, path: Pathish) -> None:
 
 
 def from_json(path: Pathish) -> Any:
-    with open(path, "r") as fp:
+    with open(path) as fp:
         return json.load(fp)
 
 
@@ -37,7 +38,7 @@ def to_yaml(o: Any, path: Pathish) -> None:
 
 
 def from_yaml(path: Pathish) -> Any:
-    with open(path, "r") as fp:
+    with open(path) as fp:
         return yaml.safe_load(fp)
 
 
@@ -53,13 +54,13 @@ def from_msgpack(path: Pathish) -> Any:
         return msgpack.unpackb(fp.read(), object_hook=m.decode)
 
 
-serializers: Dict[SerializeFormat, Callable[[Any, Pathish], None]] = {
+serializers: dict[SerializeFormat, Callable[[Any, Pathish], None]] = {
     SerializeFormat.JSON: to_json,
     SerializeFormat.MSGPACK: to_msgpack,
     SerializeFormat.YAML: to_yaml,
 }
 
-deserializers: Dict[SerializeFormat, Callable[[Pathish], Any]] = {
+deserializers: dict[SerializeFormat, Callable[[Pathish], Any]] = {
     SerializeFormat.JSON: from_json,
     SerializeFormat.MSGPACK: from_msgpack,
     SerializeFormat.YAML: from_yaml,

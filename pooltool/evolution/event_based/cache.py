@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Dict, Set, Tuple
-
 import attrs
 import numpy as np
 
@@ -24,7 +22,7 @@ from pooltool.objects.ball.datatypes import Ball
 from pooltool.system.datatypes import System
 
 
-def _null() -> Dict[str, Event]:
+def _null() -> dict[str, Event]:
     return {"null": null_event(time=np.inf)}
 
 
@@ -45,7 +43,7 @@ class TransitionCache:
           event caching, see :class:`CollisionCache`.
     """
 
-    transitions: Dict[str, Event] = attrs.field(factory=_null)
+    transitions: dict[str, Event] = attrs.field(factory=_null)
 
     def get_next(self) -> Event:
         return min(
@@ -129,13 +127,13 @@ class CollisionCache:
           event caching, see :class:`TransitionCache`.
     """
 
-    times: Dict[EventType, Dict[Tuple[str, str], float]] = attrs.field(factory=dict)
+    times: dict[EventType, dict[tuple[str, str], float]] = attrs.field(factory=dict)
 
     @property
     def size(self) -> int:
         return sum(len(cache) for cache in self.times.values())
 
-    def _get_invalid_ball_ids(self, event: Event) -> Set[str]:
+    def _get_invalid_ball_ids(self, event: Event) -> set[str]:
         return {
             event.ids[ball_idx]
             for ball_idx in event_type_to_ball_indices[event.event_type]

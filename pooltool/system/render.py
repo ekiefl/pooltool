@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Dict, Optional
-
 from attrs import define
 from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
@@ -17,7 +15,7 @@ from pooltool.utils.strenum import StrEnum, auto
 
 @define
 class SystemRender:
-    balls: Dict[str, BallRender]
+    balls: dict[str, BallRender]
     table: TableRender
     cue: CueRender
 
@@ -50,7 +48,7 @@ class SystemController:
         self.paused: bool = True
         self.playback_speed: float = 1
         self.playback_mode: PlaybackMode = PlaybackMode.SINGLE
-        self.parallel_systems: Dict[int, SystemRender] = {}
+        self.parallel_systems: dict[int, SystemRender] = {}
         self.is_parallel_mode: bool = False
 
     @property
@@ -146,7 +144,7 @@ class SystemController:
         """Set the playback mode (does not affect pause status)"""
         self.playback_mode = mode
 
-    def animate(self, mode: Optional[PlaybackMode] = None):
+    def animate(self, mode: PlaybackMode | None = None):
         """Start the animation"""
 
         assert len(self.shot_animation), "Must populate shot_animation"

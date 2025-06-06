@@ -6,7 +6,6 @@ import configparser
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Tuple
 
 from direct.gui.DirectGui import (
     DGG,
@@ -73,8 +72,7 @@ class XMLMenu:
             self.roots[name] = root
 
     def iterate_menus(self):
-        for menu in self.roots.values():
-            yield menu
+        yield from self.roots.values()
 
     def write(self, path=None):
         for name in self.paths:
@@ -721,7 +719,7 @@ class Menu:
                 # Update XML object
                 element["xml"].set("value", value)
 
-    def is_entry_floatable(self, value) -> Tuple[bool, str]:
+    def is_entry_floatable(self, value) -> tuple[bool, str]:
         try:
             float(value)
         except Exception:
@@ -729,7 +727,7 @@ class Menu:
         else:
             return True, ""
 
-    def is_table_name_valid(self, value) -> Tuple[bool, str]:
+    def is_table_name_valid(self, value) -> tuple[bool, str]:
         table_names = ani.load_config("tables").keys()
         if value.strip() == "":
             return False, "Error: No name provided"

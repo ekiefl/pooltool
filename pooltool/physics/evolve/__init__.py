@@ -10,8 +10,6 @@ The code should be configurable and passed to `PhysicsEngine` in `physics/engine
 just like the `Resolver` class in `physics/resolve/resolver.py`
 """
 
-from typing import Tuple
-
 import numpy as np
 from numba import jit
 from numpy.typing import NDArray
@@ -31,7 +29,7 @@ def evolve_ball_motion(
     u_r: float,
     g: float,
     t: float,
-) -> Tuple[NDArray[np.float64], int]:
+) -> tuple[NDArray[np.float64], int]:
     if state == const.stationary or state == const.pocketed:
         return rvw, state
 

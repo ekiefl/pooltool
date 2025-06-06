@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterator, List, Optional, Sequence, Tuple
+from collections.abc import Iterator, Sequence
 
 import numpy as np
 from attrs import define, evolve, field, validate
@@ -32,8 +32,8 @@ class BallOrientation:
             Another quaternion.
     """
 
-    pos: Tuple[float, float, float, float]
-    sphere: Tuple[float, float, float, float]
+    pos: tuple[float, float, float, float]
+    sphere: tuple[float, float, float, float]
 
     @staticmethod
     def random() -> BallOrientation:
@@ -147,7 +147,7 @@ class BallHistory:
             A list of time-increasing BallState objects (*default* = ``[]``).
     """
 
-    states: List[BallState] = field(factory=list)
+    states: list[BallState] = field(factory=list)
     """A list of time-increasing BallState objects (*default* = ``[]``)"""
 
     def __getitem__(self, idx: int) -> BallState:
@@ -157,8 +157,7 @@ class BallHistory:
         return len(self.states)
 
     def __iter__(self) -> Iterator[BallState]:
-        for state in self.states:
-            yield state
+        yield from self.states
 
     @property
     def empty(self) -> bool:
@@ -195,7 +194,7 @@ class BallHistory:
 
     def vectorize(
         self,
-    ) -> Tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
         """Compile the attribute from each ball state into arrays
 
         This method unzips each :class:`pooltool.objects.BallState` in :attr:`states`,
@@ -264,9 +263,10 @@ class BallHistory:
 
     @staticmethod
     def from_vectorization(
-        vectorization: Optional[
-            Tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]
-        ],
+        vectorization: tuple[
+            NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]
+        ]
+        | None,
     ) -> BallHistory:
         """Zips a vectorization into a BallHistory
 
@@ -407,7 +407,7 @@ class Ball:
     id: str
     state: BallState = field(factory=BallState.default)
     params: BallParams = field(factory=BallParams.default)
-    ballset: Optional[BallSet] = field(default=None)
+    ballset: BallSet | None = field(default=None)
     initial_orientation: BallOrientation = field(factory=BallOrientation.random)
     history: BallHistory = field(factory=BallHistory.factory)
     history_cts: BallHistory = field(factory=BallHistory.factory)
@@ -481,8 +481,8 @@ class Ball:
     def create(
         id: str,
         *,
-        xy: Optional[Sequence[float]] = None,
-        ballset: Optional[BallSet] = None,
+        xy: Sequence[float] | None = None,
+        ballset: BallSet | None = None,
         **kwargs,
     ) -> Ball:
         """Create a ball using keyword arguments.

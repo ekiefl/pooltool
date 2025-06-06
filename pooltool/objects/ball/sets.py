@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from functools import cached_property
 from pathlib import Path
-from typing import Dict, List
 
 import attrs
 
@@ -91,15 +90,15 @@ class BallSet:
         return (model_dir / "balls") / self.name
 
     @cached_property
-    def _conversion_dict(self) -> Dict[str, str]:
+    def _conversion_dict(self) -> dict[str, str]:
         conversion_path = self.path / _expected_conversion_name
         if conversion_path.exists():
-            return serialize.conversion.structure_from(conversion_path, Dict[str, str])
+            return serialize.conversion.structure_from(conversion_path, dict[str, str])
 
         return {}
 
     @property
-    def ids(self) -> List[str]:
+    def ids(self) -> list[str]:
         return [path.stem for path in self.path.glob("*glb")]
 
     def _ensure_valid(self, id: str) -> str:
@@ -165,6 +164,6 @@ def get_ballset(name: str) -> BallSet:
     return ballsets[name]
 
 
-def get_ballset_names() -> List[str]:
+def get_ballset_names() -> list[str]:
     """Returns a list of available ballset names"""
     return list(ballsets.keys())

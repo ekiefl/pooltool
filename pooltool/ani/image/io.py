@@ -4,7 +4,7 @@ import shutil
 import zipfile
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, List, Union
+from typing import Any
 
 import attrs
 import h5py
@@ -24,7 +24,7 @@ class ImageStorageMethod(ABC):
 
     @staticmethod
     @abstractmethod
-    def read(path: Union[str, Path]) -> NDArray[np.uint8]:
+    def read(path: str | Path) -> NDArray[np.uint8]:
         pass
 
 
@@ -41,7 +41,7 @@ class ImageZip(ImageStorageMethod):
     prefix: str = attrs.field(default="shot")
     compress: bool = attrs.field(default=True)
     image_count: int = attrs.field(init=False, default=0)
-    paths: List[Path] = attrs.field(init=False, factory=list)
+    paths: list[Path] = attrs.field(init=False, factory=list)
 
     def __attrs_post_init__(self):
         if self.compress:
@@ -87,7 +87,7 @@ class ImageZip(ImageStorageMethod):
         return root / name
 
     @staticmethod
-    def read(path: Union[str, Path]) -> NDArray[np.uint8]:
+    def read(path: str | Path) -> NDArray[np.uint8]:
         path = Path(path)
         assert path.exists(), f"{path} doesn't exist"
 
@@ -101,7 +101,7 @@ class ImageZip(ImageStorageMethod):
     def _read_dir(path: Path) -> NDArray[np.uint8]:
         img_pattern = _img_regex_pattern()
 
-        img_arrays: List[NDArray] = []
+        img_arrays: list[NDArray] = []
         for img_path in sorted(path.glob("*")):
             if not img_pattern.match(str(img_path)):
                 continue
@@ -113,7 +113,7 @@ class ImageZip(ImageStorageMethod):
     def _read_zip(path: Path) -> NDArray[np.uint8]:
         img_pattern = _img_regex_pattern()
 
-        img_arrays: List[NDArray] = []
+        img_arrays: list[NDArray] = []
         with zipfile.ZipFile(path, "r") as archive:
             content_list = sorted(archive.namelist())
 
@@ -135,7 +135,7 @@ class HDF5Images(ImageStorageMethod):
             fp.create_dataset("images", np.shape(imgs), h5py.h5t.STD_U8BE, data=imgs)
 
     @staticmethod
-    def read(path: Union[str, Path]) -> NDArray[np.uint8]:
+    def read(path: str | Path) -> NDArray[np.uint8]:
         with h5py.File(path, "r+") as fp:
             return np.array(fp["/images"]).astype("uint8")
 
@@ -148,7 +148,7 @@ class NpyImages(ImageStorageMethod):
         np.save(self.path, imgs)
 
     @staticmethod
-    def read(path: Union[str, Path]) -> NDArray[np.uint8]:
+    def read(path: str | Path) -> NDArray[np.uint8]:
         return np.load(path)
 
 
@@ -161,6 +161,6 @@ class GzipArrayImages(ImageStorageMethod):
             fp.write(gzip.compress(memoryview(imgs), compresslevel=1))  # type: ignore
 
     @staticmethod
-    def read(path: Union[str, Path]) -> NDArray[np.uint8]:
+    def read(path: str | Path) -> NDArray[np.uint8]:
         with open(path, "rb") as fp:
             return np.frombuffer(gzip.decompress(fp.read()), dtype=np.uint8)

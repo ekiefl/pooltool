@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from attrs import define, evolve, field, fields_dict
 
 
@@ -149,12 +147,12 @@ class Cue:
 
     def set_state(
         self,
-        V0: Optional[float] = None,
-        phi: Optional[float] = None,
-        theta: Optional[float] = None,
-        a: Optional[float] = None,
-        b: Optional[float] = None,
-        cue_ball_id: Optional[str] = None,
+        V0: float | None = None,
+        phi: float | None = None,
+        theta: float | None = None,
+        a: float | None = None,
+        b: float | None = None,
+        cue_ball_id: str | None = None,
     ) -> None:
         """Set the cueing parameters
 

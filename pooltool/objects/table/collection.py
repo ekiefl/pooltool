@@ -1,5 +1,3 @@
-from typing import Dict
-
 from pooltool.game.datatypes import GameType
 from pooltool.objects.table.specs import (
     BilliardTableSpecs,
@@ -28,7 +26,7 @@ class TableName(StrEnum):
     SUMTOTHREE_WIP = auto()
 
 
-TABLE_SPECS: Dict[TableName, TableSpecs] = {
+TABLE_SPECS: dict[TableName, TableSpecs] = {
     TableName.SEVEN_FOOT_SHOWOOD: PocketTableSpecs(
         l=1.9812,
         w=1.9812 / 2,
@@ -89,13 +87,13 @@ TABLE_SPECS: Dict[TableName, TableSpecs] = {
 }
 
 
-_default_table_type_map: Dict[TableType, TableName] = {
+_default_table_type_map: dict[TableType, TableName] = {
     TableType.POCKET: TableName.SEVEN_FOOT_SHOWOOD,
     TableType.SNOOKER: TableName.SNOOKER_GENERIC,
     TableType.BILLIARD: TableName.BILLIARD_WIP,
 }
 
-_default_game_type_map: Dict[GameType, TableName] = {
+_default_game_type_map: dict[GameType, TableName] = {
     GameType.EIGHTBALL: TableName.SEVEN_FOOT_SHOWOOD,
     GameType.NINEBALL: TableName.SEVEN_FOOT_SHOWOOD,
     GameType.SNOOKER: TableName.SNOOKER_GENERIC,

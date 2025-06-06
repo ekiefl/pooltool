@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import random
-from typing import Any, Dict, List, Optional, Protocol, Set, Tuple, Union
+from typing import Any, Protocol
 
 import attrs
 import numpy as np
@@ -38,7 +38,7 @@ class Dir(StrEnum):
     UPLEFT = auto()
 
     @classproperty
-    def translation_map(cls) -> Dict[Dir, Tuple[float, float]]:
+    def translation_map(cls) -> dict[Dir, tuple[float, float]]:
         a = np.sqrt(3)
         return {
             Dir.LEFT: (-2, 0),
@@ -54,39 +54,39 @@ class Dir(StrEnum):
 
 class Jump:
     @staticmethod
-    def LEFT(quantity: int = 1) -> List[Dir]:
+    def LEFT(quantity: int = 1) -> list[Dir]:
         return [Dir.LEFT] * quantity
 
     @staticmethod
-    def RIGHT(quantity: int = 1) -> List[Dir]:
+    def RIGHT(quantity: int = 1) -> list[Dir]:
         return [Dir.RIGHT] * quantity
 
     @staticmethod
-    def UP(quantity: int = 1) -> List[Dir]:
+    def UP(quantity: int = 1) -> list[Dir]:
         return [Dir.UP] * quantity
 
     @staticmethod
-    def DOWN(quantity: int = 1) -> List[Dir]:
+    def DOWN(quantity: int = 1) -> list[Dir]:
         return [Dir.DOWN] * quantity
 
     @staticmethod
-    def UPLEFT(quantity: int = 1) -> List[Dir]:
+    def UPLEFT(quantity: int = 1) -> list[Dir]:
         return [Dir.UPLEFT] * quantity
 
     @staticmethod
-    def UPRIGHT(quantity: int = 1) -> List[Dir]:
+    def UPRIGHT(quantity: int = 1) -> list[Dir]:
         return [Dir.UPRIGHT] * quantity
 
     @staticmethod
-    def DOWNRIGHT(quantity: int = 1) -> List[Dir]:
+    def DOWNRIGHT(quantity: int = 1) -> list[Dir]:
         return [Dir.DOWNRIGHT] * quantity
 
     @staticmethod
-    def DOWNLEFT(quantity: int = 1) -> List[Dir]:
+    def DOWNLEFT(quantity: int = 1) -> list[Dir]:
         return [Dir.DOWNLEFT] * quantity
 
     @staticmethod
-    def eval(translations: List[Dir], radius: float) -> Tuple[float, float]:
+    def eval(translations: list[Dir], radius: float) -> tuple[float, float]:
         mapping = Dir.translation_map
         assert isinstance(mapping, dict)
 
@@ -114,8 +114,8 @@ class Pos:
             so (0.0, 0.0) is bottom-left and (1.0, 1.0) is top right.
     """
 
-    loc: List[Dir]
-    relative_to: Union[Pos, Tuple[float, float]]
+    loc: list[Dir]
+    relative_to: Pos | tuple[float, float]
 
 
 @attrs.define
@@ -127,17 +127,17 @@ class BallPos(Pos):
             This set says which ball ids can exist at the given position.
     """
 
-    ids: Set[str]
+    ids: set[str]
 
 
-JumpSequence = List[Tuple[List[Dir], Set[str]]]
+JumpSequence = list[tuple[list[Dir], set[str]]]
 
 
-def ball_cluster_blueprint(seed: BallPos, jump_sequence: JumpSequence) -> List[BallPos]:
+def ball_cluster_blueprint(seed: BallPos, jump_sequence: JumpSequence) -> list[BallPos]:
     """Define a blueprint with a seed ball position and a sequence of quantized jumps"""
 
     anchor = seed
-    blueprint: List[BallPos] = [seed]
+    blueprint: list[BallPos] = [seed]
 
     for jump, ids in jump_sequence:
         anchor = BallPos(jump, anchor, ids)
@@ -146,17 +146,17 @@ def ball_cluster_blueprint(seed: BallPos, jump_sequence: JumpSequence) -> List[B
     return blueprint
 
 
-def _get_ball_ids(positions: List[BallPos]) -> Set[str]:
+def _get_ball_ids(positions: list[BallPos]) -> set[str]:
     ids = set()
     for pos in positions:
         ids.update(pos.ids)
     return ids
 
 
-def _get_anchor_translation(pos: Pos) -> Tuple[Tuple[float, float], List[Dir]]:
+def _get_anchor_translation(pos: Pos) -> tuple[tuple[float, float], list[Dir]]:
     """Traverse the position's parent hierarchy until the anchor is found"""
 
-    translation_from_anchor: List[Dir] = []
+    translation_from_anchor: list[Dir] = []
     translation_from_anchor.extend(pos.loc)
 
     parent = pos.relative_to
@@ -170,13 +170,13 @@ def _get_anchor_translation(pos: Pos) -> Tuple[Tuple[float, float], List[Dir]]:
 
 
 def generate_layout(
-    blueprint: List[BallPos],
+    blueprint: list[BallPos],
     table: Table,
-    ballset: Optional[BallSet] = None,
-    ball_params: Optional[BallParams] = None,
+    ballset: BallSet | None = None,
+    ball_params: BallParams | None = None,
     spacing_factor: float = 1e-3,
-    seed: Optional[int] = None,
-) -> Dict[str, Ball]:
+    seed: int | None = None,
+) -> dict[str, Ball]:
     """Generate Ball objects based on a given blueprint and table dimensions.
 
     The function calculates the absolute position of each ball on the table using the
@@ -232,7 +232,7 @@ def generate_layout(
     ball_radius = ball_params.R
     radius = ball_radius * (1 + spacing_factor)
 
-    balls: Dict[str, Ball] = {}
+    balls: dict[str, Ball] = {}
 
     ball_ids = _get_ball_ids(blueprint)
 
@@ -264,7 +264,7 @@ def generate_layout(
     return balls
 
 
-def _wiggle(x: float, y: float, spacer: float) -> Tuple[float, float]:
+def _wiggle(x: float, y: float, spacer: float) -> tuple[float, float]:
     ang = 2 * np.pi * np.random.rand()
     rad = spacer * np.random.rand()
 
@@ -273,10 +273,10 @@ def _wiggle(x: float, y: float, spacer: float) -> Tuple[float, float]:
 
 def _get_nine_ball_rack(
     table: Table,
-    ballset: Optional[BallSet] = None,
-    ball_params: Optional[BallParams] = None,
+    ballset: BallSet | None = None,
+    ball_params: BallParams | None = None,
     **kwargs,
-) -> Dict[str, Ball]:
+) -> dict[str, Ball]:
     if ball_params is None:
         ball_params = BallParams.default(game_type=GameType.NINEBALL)
 
@@ -313,10 +313,10 @@ def _get_nine_ball_rack(
 
 def _get_eight_ball_rack(
     table: Table,
-    ballset: Optional[BallSet] = None,
-    ball_params: Optional[BallParams] = None,
+    ballset: BallSet | None = None,
+    ball_params: BallParams | None = None,
     **kwargs,
-) -> Dict[str, Ball]:
+) -> dict[str, Ball]:
     if ball_params is None:
         ball_params = BallParams.default(game_type=GameType.EIGHTBALL)
 
@@ -358,10 +358,10 @@ def _get_eight_ball_rack(
 
 def _get_three_cushion_rack(
     table: Table,
-    ballset: Optional[BallSet] = None,
-    ball_params: Optional[BallParams] = None,
+    ballset: BallSet | None = None,
+    ball_params: BallParams | None = None,
     **kwargs,
-) -> Dict[str, Ball]:
+) -> dict[str, Ball]:
     """A three cushion starting position (white to break)
 
     Based on https://www.3cushionbilliards.com/rules/106-official-us-billiard-association-rules-of-play
@@ -384,10 +384,10 @@ def _get_three_cushion_rack(
 
 def _get_sum_to_three_rack(
     table: Table,
-    ballset: Optional[BallSet] = None,
-    ball_params: Optional[BallParams] = None,
+    ballset: BallSet | None = None,
+    ball_params: BallParams | None = None,
     **kwargs,
-) -> Dict[str, Ball]:
+) -> dict[str, Ball]:
     # Borrow 3-cushion ball params
     if ball_params is None:
         ball_params = BallParams.default(game_type=GameType.THREECUSHION)
@@ -407,7 +407,7 @@ def _get_sum_to_three_rack(
     )
 
 
-snooker_color_locs: Dict[str, BallPos] = {
+snooker_color_locs: dict[str, BallPos] = {
     "white": BallPos([], (7 / 12, 0.2), {"white"}),
     "yellow": BallPos([], (0.333, 0.2), {"yellow"}),
     "green": BallPos([], (0.666, 0.2), {"green"}),
@@ -420,11 +420,11 @@ snooker_color_locs: Dict[str, BallPos] = {
 
 def _get_snooker_rack(
     table: Table,
-    ballset: Optional[BallSet] = None,
-    ball_params: Optional[BallParams] = None,
+    ballset: BallSet | None = None,
+    ball_params: BallParams | None = None,
     spacing_factor: float = 1e-3,
     **kwargs,
-) -> Dict[str, Ball]:
+) -> dict[str, Ball]:
     if ball_params is None:
         ball_params = BallParams.default(game_type=GameType.SNOOKER)
 
@@ -476,13 +476,13 @@ class GetRackProtocol(Protocol):
     def __call__(
         self,
         table: Table,
-        ballset: Optional[BallSet] = None,
-        ball_params: Optional[BallParams] = None,
+        ballset: BallSet | None = None,
+        ball_params: BallParams | None = None,
         **kwargs: Any,
-    ) -> Dict[str, Ball]: ...
+    ) -> dict[str, Ball]: ...
 
 
-_game_rack_map: Dict[str, GetRackProtocol] = {
+_game_rack_map: dict[str, GetRackProtocol] = {
     GameType.NINEBALL: _get_nine_ball_rack,
     GameType.EIGHTBALL: _get_eight_ball_rack,
     GameType.THREECUSHION: _get_three_cushion_rack,
@@ -495,10 +495,10 @@ _game_rack_map: Dict[str, GetRackProtocol] = {
 def get_rack(
     game_type: GameType,
     table: Table,
-    ball_params: Optional[BallParams] = None,
-    ballset: Optional[BallSet] = None,
+    ball_params: BallParams | None = None,
+    ballset: BallSet | None = None,
     spacing_factor: float = 1e-3,
-) -> Dict[str, Ball]:
+) -> dict[str, Ball]:
     """Generate a ball rack.
 
     This function ultimately delegates to :func:`pooltool.layouts.generate_layout`.

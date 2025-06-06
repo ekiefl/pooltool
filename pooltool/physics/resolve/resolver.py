@@ -5,7 +5,6 @@ from __future__ import annotations
 import shutil
 import traceback
 from pathlib import Path
-from typing import Optional
 
 import attrs
 from cattrs.errors import ClassValidationError
@@ -106,7 +105,7 @@ class Resolver:
     stick_ball: StickBallCollisionStrategy
     transition: BallTransitionStrategy
 
-    version: Optional[int] = None
+    version: int | None = None
 
     def resolve(self, shot: System, event: Event) -> None:
         """Resolve an event for a system"""

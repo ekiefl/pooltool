@@ -5,8 +5,6 @@ or kept during API documentation generation, using centralized rules from
 the include_exclude module.
 """
 
-from typing import Dict, List
-
 ignore_regex = [
     # No tests
     "*/test_*.py",
@@ -14,7 +12,7 @@ ignore_regex = [
     "*/render.py",
 ]
 
-skip_dict: Dict[str, List[str]] = {
+skip_dict: dict[str, list[str]] = {
     "package": [
         "pooltool.ani",
         "pooltool.ai",
@@ -77,7 +75,7 @@ skip_dict: Dict[str, List[str]] = {
 }
 
 # Overrides
-keep_dict: Dict[str, List[str]] = {
+keep_dict: dict[str, list[str]] = {
     "package": [],
     "module": [],
     "function": [],

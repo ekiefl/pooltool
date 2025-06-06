@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod
 from collections import deque
-from typing import List, Optional
 
 import numpy as np
 from direct.gui.OnscreenImage import OnscreenImage
@@ -37,7 +36,7 @@ class HUD:
         self.elements = None
         self.initialized = False
 
-    def init(self, hide: List[HUDElement] = list()):
+    def init(self, hide: list[HUDElement] = list()):
         """Initialize HUD elements and start the HUD update task"""
 
         self.elements = {
@@ -75,7 +74,7 @@ class HUD:
             return
         self.elements[HUDElement.help_text].toggle()
 
-    def update_cue(self, cue: Cue, cue_ball: Optional[Ball] = None):
+    def update_cue(self, cue: Cue, cue_ball: Ball | None = None):
         """Update HUD to reflect english, jack, and power of cue
 
         Returns silently if HUD is not initialized.

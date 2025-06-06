@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Dict, Optional, Tuple, Type, Union, cast
+from typing import Any, cast
 
 from attrs import define, evolve, field
 from cattrs.converters import Converter
@@ -105,14 +105,9 @@ class EventType(strenum.StrEnum):
         return self == EventType.STICK_BALL
 
 
-Object = Union[
-    NullObject,
-    Cue,
-    Ball,
-    Pocket,
-    LinearCushionSegment,
-    CircularCushionSegment,
-]
+Object = (
+    NullObject | Cue | Ball | Pocket | LinearCushionSegment | CircularCushionSegment
+)
 
 
 class AgentType(strenum.StrEnum):
@@ -135,7 +130,7 @@ class AgentType(strenum.StrEnum):
     CIRCULAR_CUSHION_SEGMENT = strenum.auto()
 
 
-_class_to_type: Dict[Type[Object], AgentType] = {
+_class_to_type: dict[type[Object], AgentType] = {
     NullObject: AgentType.NULL,
     Cue: AgentType.CUE,
     Ball: AgentType.BALL,
@@ -165,8 +160,8 @@ class Agent:
     id: str
     agent_type: AgentType
 
-    initial: Optional[Object] = field(default=None)
-    final: Optional[Object] = field(default=None)
+    initial: Object | None = field(default=None)
+    final: Object | None = field(default=None)
 
     def set_initial(self, obj: Object) -> None:
         """Sets the initial state of the agent (before event resolution).
@@ -254,7 +249,7 @@ class Agent:
 
 
 def _disambiguate_agent_structuring(
-    uo: Dict[str, Any], _: Type[Agent], con: Converter
+    uo: dict[str, Any], _: type[Agent], con: Converter
 ) -> Agent:
     id = con.structure(uo["id"], str)
     agent_type = con.structure(uo["agent_type"], AgentType)
@@ -326,7 +321,7 @@ class Event:
     """
 
     event_type: EventType
-    agents: Tuple[Agent, ...]
+    agents: tuple[Agent, ...]
     time: float
 
     def __repr__(self):
@@ -339,7 +334,7 @@ class Event:
         return "\n".join(lines) + "\n"
 
     @property
-    def ids(self) -> Tuple[str, ...]:
+    def ids(self) -> tuple[str, ...]:
         """Retrieves the IDs of the agents involved in the event.
 
         This property provides access to a tuple of agent IDs, allowing identification
@@ -400,7 +395,7 @@ class Event:
 
     def get_cushion(
         self, cushion_id: str
-    ) -> Union[LinearCushionSegment, CircularCushionSegment]:
+    ) -> LinearCushionSegment | CircularCushionSegment:
         """Return the cushion segment with the given ID."""
         if not self.event_type.has_cushion():
             raise ValueError(
