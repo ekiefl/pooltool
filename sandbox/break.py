@@ -42,15 +42,15 @@ def main(args):
 
             copy = shot.copy()
 
-            with pt.terminal.TimeCode(quiet=True) as timer:
+            with pt.utils.TimeCode(quiet=True) as timer:
                 pt.simulate(copy, inplace=True)
             simulate_times[i] = timer.time.total_seconds()
 
-            with pt.terminal.TimeCode(quiet=True) as timer:
+            with pt.utils.TimeCode(quiet=True) as timer:
                 pt.continuize(copy, inplace=True)
             continuize_times[i] = timer.time.total_seconds()
 
-        run = pt.terminal.Run()
+        run = pt.utils.Run()
 
         mu = np.mean(simulate_times)
         stdev = np.std(simulate_times)
@@ -84,7 +84,7 @@ def main(args):
         copy = shot.copy()
         pt.simulate(copy, inplace=True)
 
-        run = pt.terminal.Run()
+        run = pt.utils.Run()
         run.info_single("Profiling `simulate` and `continuize` (may take awhile)")
 
         with PProfile(Path("cachegrind.out.simulate")):

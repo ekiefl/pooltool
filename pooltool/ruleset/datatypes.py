@@ -14,7 +14,7 @@ import attrs
 
 from pooltool.ai.action import Action
 from pooltool.system.datatypes import System
-from pooltool.terminal import Timer
+from pooltool.utils import Timer
 from pooltool.utils.strenum import StrEnum, auto
 
 

@@ -19,7 +19,6 @@ from panda3d.core import (
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
-import pooltool.terminal as terminal
 from pooltool.ani.camera import CameraState, cam
 from pooltool.ani.collision import cue_avoid
 from pooltool.ani.environment import environment
@@ -37,7 +36,7 @@ from pooltool.ruleset import get_ruleset
 from pooltool.ruleset.datatypes import Player
 from pooltool.system.datatypes import MultiSystem, System, multisystem
 from pooltool.system.render import PlaybackMode, visual
-from pooltool.utils import get_total_memory_usage
+from pooltool.utils import Run, get_total_memory_usage
 
 
 @define
@@ -155,7 +154,7 @@ class Interface(ShowBase):
             tasks.add(self.monitor, "monitor")
 
         self._listen_constant_events()
-        self.stdout = terminal.Run()
+        self.stdout = Run()
 
     def _listen_constant_events(self):
         """Listen for events that are mode independent"""

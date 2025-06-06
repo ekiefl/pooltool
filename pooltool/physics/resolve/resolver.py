@@ -41,7 +41,7 @@ from pooltool.physics.resolve.transition import (
 )
 from pooltool.serialize import Pathish, conversion
 from pooltool.system.datatypes import System
-from pooltool.terminal import Run
+from pooltool.utils import Run
 
 RESOLVER_PATH = pooltool.config.user.PHYSICS_DIR / "resolver.yaml"
 """The location of the resolver path YAML."""

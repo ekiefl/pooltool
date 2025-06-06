@@ -73,7 +73,7 @@ system.strike(V0=8, phi=pt.aim.at_ball(system, "1"))
 pt.simulate(system, inplace=False)
 
 # Time shot simulation
-with pt.terminal.TimeCode(quiet=True) as t:
+with pt.utils.TimeCode(quiet=True) as t:
     pt.simulate(system, inplace=True)
 sim_time = t.time.total_seconds()
 
@@ -128,7 +128,7 @@ image_stack(
     show_hud=False,
 )
 
-run = pt.terminal.Run()
+run = pt.utils.Run()
 resolutions = [80, 144, 240, 360, 480, 720, 1080]
 
 for res in resolutions:
@@ -137,7 +137,7 @@ for res in resolutions:
     stats["fps"].append(args.fps)
     stats["gray"].append(args.gray)
 
-    with pt.terminal.TimeCode(quiet=True) as t:
+    with pt.utils.TimeCode(quiet=True) as t:
         imgs = image_stack(
             system=system,
             interface=stepper,
@@ -152,11 +152,11 @@ for res in resolutions:
     stats["frames"].append(np.shape(imgs)[0])
 
     for name, exporter in exporters.items():
-        with pt.terminal.TimeCode(quiet=True) as t:
+        with pt.utils.TimeCode(quiet=True) as t:
             exporter.save(imgs)
         stats[name + " write"].append(t.time.total_seconds())
 
-        with pt.terminal.TimeCode(quiet=True) as t:
+        with pt.utils.TimeCode(quiet=True) as t:
             exporter.read(exporter.path)
         stats[name + " read"].append(t.time.total_seconds())
 

@@ -33,7 +33,6 @@ skip_dict: dict[str, list[str]] = {
     ],
     "module": [
         "pooltool.error",
-        "pooltool.terminal",
         "pooltool.constants",
         "pooltool.main",
         # API: pooltool.evolution

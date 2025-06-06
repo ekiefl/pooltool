@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 
-"""Borrowed from https://github.com/merenlab/anvio/blob/master/anvio/errors.py"""
-
 import textwrap
 
-from pooltool.terminal import color_text
+
+def color_text(x: str, *args, **kwargs) -> str:
+    return x
 
 
 def remove_spaces(text: str | None) -> str:

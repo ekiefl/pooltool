@@ -6,7 +6,7 @@ import numpy as np
 
 import pooltool as pt
 from pooltool.system import System
-from pooltool.terminal import TimeCode
+from pooltool.utils import TimeCode
 
 np.random.seed(42)
 
