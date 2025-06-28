@@ -168,10 +168,7 @@ class Interface(ShowBase):
             visual.exit_parallel_mode()
 
         visual.teardown()
-
-        environment.unload_room()
-        environment.unload_floor()
-        environment.unload_lights()
+        environment.teardown()
 
         hud.destroy()
 
