@@ -170,6 +170,7 @@ class Interface(ShowBase):
         visual.teardown()
 
         environment.unload_room()
+        environment.unload_floor()
         environment.unload_lights()
 
         hud.destroy()

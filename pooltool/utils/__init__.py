@@ -8,6 +8,7 @@ import os
 import time
 import tracemalloc
 from pathlib import Path
+from typing import Any
 
 from panda3d.core import Filename
 from rich.console import Console
@@ -24,7 +25,9 @@ class Run:
         text = Text(f"* {message}", style=style)
         self.console.print(text)
 
-    def table(self, data, title: str = "Info", border_style: str = "cyan"):
+    def table(
+        self, data: dict[Any, Any], title: str = "Info", border_style: str = "cyan"
+    ):
         """Display information as a formatted table inside a panel"""
         table = Table(expand=True)
         table.add_column("Key", style="cyan")

@@ -4,7 +4,6 @@ from attrs import define
 from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
 
-from pooltool.ani.globals import Global
 from pooltool.evolution.continuous import continuize
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.render import CueRender
@@ -113,15 +112,12 @@ class SystemController:
         """Render all object nodes"""
         self.playback_speed = 1
 
-        # FIXME See the FIXME in teardown for an explanation
-        if not any(
-            child.name == "table" for child in Global.render.find("scene").getChildren()
-        ):
-            self.system.table.render()
+        self.system.table.render()
 
         for ball in self.system.balls.values():
             ball.render()
             ball.reset_angular_integration()
+
         self.system.cue.render()
 
     def teardown(self) -> None:
@@ -132,13 +128,7 @@ class SystemController:
             ball.remove_nodes()
 
         self.system.cue.remove_nodes()
-
-        # FIXME Table has lingering references that prevent it from being unrendered.
-        # And when teardown and buildup are called, the shading gets weird and the balls
-        # disappear. I think it has to do with lingering references in environment.py.
-        # For now, the fix is to simply not remove the table nodes in `teardown`, and
-        # only render them once in `buildup`
-        # self.system.table.remove_nodes()
+        self.system.table.remove_nodes()
 
     def playback(self, mode: PlaybackMode) -> None:
         """Set the playback mode (does not affect pause status)"""
