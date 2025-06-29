@@ -21,7 +21,9 @@ class PoolToolError(Exception):
         padded_lines = [line.ljust(max_length) for line in wrapped_lines]
         error_lines = self._format_error_lines(padded_lines)
 
-        return f"\n\n{'\n'.join(error_lines)}\n\n"
+        # Use chr(10) instead of \n because backslash cannot be used in f-string
+        # expression.
+        return f"\n\n{chr(10).join(error_lines)}\n\n"
 
     def _format_error_lines(self, lines: list[str]) -> list[str]:
         if not lines:
