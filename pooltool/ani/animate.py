@@ -111,8 +111,8 @@ def _resize_offscreen_window(size: tuple[int, int]):
     Global.base.win.setSize(*[int(dim) for dim in size])
 
 
-def _init_simplepbr():
-    simplepbr.init(
+def _init_simplepbr() -> simplepbr.Pipeline:
+    return simplepbr.init(
         enable_shadows=ani.settings.graphics.shadows,
         max_lights=ani.settings.graphics.max_lights,
     )
@@ -131,7 +131,7 @@ class Interface(ShowBase):
         # https://discourse.panda3d.org/t/cant-change-base-background-after-simplepbr-init/28945
         Global.base.setBackgroundColor(0.04, 0.04, 0.04)
 
-        _init_simplepbr()
+        self.simplepbr_pipeline = _init_simplepbr()
 
         if isinstance(self.win, GraphicsWindow):
             mouse.init()
@@ -447,7 +447,7 @@ class ShotViewer(Interface):
 
     def _start(self):
         self.openMainWindow(keepCamera=True)
-        _init_simplepbr()
+        self.simplepbr_pipeline = _init_simplepbr()
         mouse.init()
 
     def _stop(self):
