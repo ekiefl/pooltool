@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
+import sys
+
 import attrs
 import click
 
 from pooltool.ani.animate import Game, ShowBaseConfig
+from pooltool.error import ConfigError, SimulateError, StrokeError
 
 
 @click.command()
@@ -16,4 +19,14 @@ def run(monitor):
 
 
 if __name__ == "__main__":
-    run()
+    try:
+        run()
+    except ConfigError as e:
+        print(e)
+        sys.exit(1)
+    except StrokeError as e:
+        print(e)
+        sys.exit(1)
+    except SimulateError as e:
+        print(e)
+        sys.exit(1)
