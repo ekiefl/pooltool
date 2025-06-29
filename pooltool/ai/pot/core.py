@@ -6,7 +6,7 @@ ignored. Bank shots are not supported. Interfering balls are not detected.
 """
 
 import math
-from typing import Dict, Iterable, List, Optional, Set, Tuple
+from collections.abc import Iterable
 
 import attrs
 import numpy as np
@@ -48,7 +48,7 @@ class Jaw:
     corner: bool
 
 
-pocket_jaw_map: Dict[str, Jaw] = {
+pocket_jaw_map: dict[str, Jaw] = {
     "lb": Jaw("1", "18", "1t", "2", "3", "2t", True),
     "lc": Jaw("4", "3", "4t", "5", "6", "5t", False),
     "lt": Jaw("7", "6", "7t", "8", "9", "8t", True),
@@ -141,7 +141,7 @@ def potting_point_corner(ball: Ball, table: Table, pocket: Pocket) -> Coordinate
 
 def potting_point_jaw_treatment(
     ball: Ball, table: Table, pocket: Pocket
-) -> Optional[Coordinate]:
+) -> Coordinate | None:
     """Determines if ball is in jaws of pocket, decides what to do if should
 
     Returns:
@@ -198,7 +198,7 @@ def calc_cut_angle(
 
 def ball_ids_occluding_ballpath(
     ball: Ball, aim_spot: Coordinate, balls: Iterable[Ball]
-) -> Set[str]:
+) -> set[str]:
     """Returns IDs of balls that occlude the straight line ball path from p1 to p2
 
     Assumes the ball taking the ball path has radius R
@@ -317,7 +317,7 @@ def is_jaw_in_way(ball: Ball, table: Table, pocket: Pocket) -> bool:
     )
 
 
-def open_pockets(ball: Ball, table: Table, balls: Iterable[Ball]) -> Set[str]:
+def open_pockets(ball: Ball, table: Table, balls: Iterable[Ball]) -> set[str]:
     """Return the IDs of pockets that are open to the ball
 
     An open pocket means that the ball has an unobscured path to the pocket, and that
@@ -396,7 +396,7 @@ def viable_pockets(
     table: Table,
     balls: Iterable[Ball],
     max_cut: float = 80,
-) -> List[Tuple[str, float]]:
+) -> list[tuple[str, float]]:
     """Return viable pockets that the cue ball can sink the object ball into
 
     A viable pocket is one that is:
@@ -468,7 +468,7 @@ def calc_potting_angle(
 def pick_easiest_pot(
     system: System,
     ball: Ball,
-) -> Optional[Pocket]:
+) -> Pocket | None:
     """Return best pocket to pot ball into
 
     This function calculates the potting angle required, and the precision required, for

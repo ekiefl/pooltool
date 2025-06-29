@@ -1,10 +1,8 @@
 """An endpoint for classes that enable interaction"""
 
-from typing import Optional
-
 from pooltool.ani.animate import Game, ShotViewer
 
-_shot_viewer: Optional[ShotViewer] = None
+_shot_viewer: ShotViewer | None = None
 
 
 def show(*args, **kwargs):

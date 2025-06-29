@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Tuple
 
 import numpy as np
 from direct.interval.IntervalGlobal import (
@@ -158,7 +157,7 @@ class BallRender(Render):
 
         return self._ball.params.R / model_R
 
-    def get_render_state(self) -> Tuple[float, float, float]:
+    def get_render_state(self) -> tuple[float, float, float]:
         """Return the position of the rendered ball"""
         x, y, z = self.nodes["pos"].getPos()
         return x, y, z

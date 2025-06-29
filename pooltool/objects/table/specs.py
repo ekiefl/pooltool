@@ -94,6 +94,8 @@ class PocketTableSpecs:
           visualizations and descriptions of each attribute.
         - See :class:`pooltool.objects.BilliardTableSpecs` for billiard table specs.
         - See :class:`pooltool.objects.SnookerTableSpecs` for snooker table specs.
+
+    Default parameters match :attr:`pooltool.objects.TableName.SEVEN_FOOT_SHOWOOD`.
     """
 
     # 7-foot table (78x39 in^2 playing surface)
@@ -104,14 +106,14 @@ class PocketTableSpecs:
     cushion_height: float = field(default=0.64 * 2 * 0.028575)
     corner_pocket_width: float = field(default=0.118)
     corner_pocket_angle: float = field(default=5.3)  # degrees
-    corner_pocket_depth: float = field(default=0.0398)
-    corner_pocket_radius: float = field(default=0.124 / 2)
-    corner_jaw_radius: float = field(default=0.0419 / 2)
+    corner_pocket_depth: float = field(default=0.0417)
+    corner_pocket_radius: float = field(default=0.062)
+    corner_jaw_radius: float = field(default=0.02095)
     side_pocket_width: float = field(default=0.137)
     side_pocket_angle: float = field(default=7.14)  # degrees
-    side_pocket_depth: float = field(default=0.00437)
-    side_pocket_radius: float = field(default=0.129 / 2)
-    side_jaw_radius: float = field(default=0.0159 / 2)
+    side_pocket_depth: float = field(default=0.0685)
+    side_pocket_radius: float = field(default=0.0645)
+    side_jaw_radius: float = field(default=0.00795)
 
     # For visualization
     height: float = field(default=0.708)

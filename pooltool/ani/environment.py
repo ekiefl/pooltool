@@ -319,5 +319,10 @@ class Environment:
 
         self.lights_loaded = False
 
+    def teardown(self) -> None:
+        self.unload_room()
+        self.unload_floor()
+        self.unload_lights()
+
 
 environment = Environment()

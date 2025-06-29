@@ -42,25 +42,23 @@ def main(args):
 
             copy = shot.copy()
 
-            with pt.terminal.TimeCode(quiet=True) as timer:
+            with pt.utils.TimeCode(quiet=True) as timer:
                 pt.simulate(copy, inplace=True)
             simulate_times[i] = timer.time.total_seconds()
 
-            with pt.terminal.TimeCode(quiet=True) as timer:
+            with pt.utils.TimeCode(quiet=True) as timer:
                 pt.continuize(copy, inplace=True)
             continuize_times[i] = timer.time.total_seconds()
 
-        run = pt.terminal.Run()
+        run = pt.utils.Run()
 
         mu = np.mean(simulate_times)
         stdev = np.std(simulate_times)
-        run.info_single(
-            f"Shot evolution algorithm: ({mu:.3f} +- {stdev:.3f}) ({N} trials)"
-        )
+        run.info(f"Shot evolution algorithm: ({mu:.3f} +- {stdev:.3f}) ({N} trials)")
 
         mu = np.mean(continuize_times)
         stdev = np.std(continuize_times)
-        run.info_single(f"Continuize: ({mu:.3f} +- {stdev:.3f}) ({N} trials)")
+        run.info(f"Continuize: ({mu:.3f} +- {stdev:.3f}) ({N} trials)")
 
     # Time the shot
     if args.profile_it:
@@ -84,8 +82,8 @@ def main(args):
         copy = shot.copy()
         pt.simulate(copy, inplace=True)
 
-        run = pt.terminal.Run()
-        run.info_single("Profiling `simulate` and `continuize` (may take awhile)")
+        run = pt.utils.Run()
+        run.info("Profiling `simulate` and `continuize` (may take awhile)")
 
         with PProfile(Path("cachegrind.out.simulate")):
             pt.simulate(shot, inplace=True)

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Union
 
 import numpy as np
 from attrs import define
@@ -25,7 +24,7 @@ class Camera:
         self.lens = Global.base.camLens
         self.lens.setNear(0.02)
 
-        self.states: Dict[str, CameraState] = {}
+        self.states: dict[str, CameraState] = {}
         self.last_state = None
         self.fixated = False
 
@@ -192,7 +191,7 @@ class Camera:
         self.fixation_object.setScale(0.0012 * min(dist, 1.5))
 
 
-Vec3D = Tuple[float, float, float]
+Vec3D = tuple[float, float, float]
 
 
 def _vec_to_tuple(vec: LVecBase3f) -> Vec3D:
@@ -203,14 +202,14 @@ def _vec_to_tuple(vec: LVecBase3f) -> Vec3D:
 class CameraState:
     cam_hpr: Vec3D
     cam_pos: Vec3D
-    fixation_hpr: Optional[Vec3D]
-    fixation_pos: Optional[Vec3D]
+    fixation_hpr: Vec3D | None
+    fixation_pos: Vec3D | None
 
-    def to_json(self, path: Union[str, Path]):
+    def to_json(self, path: str | Path):
         conversion.unstructure_to(self, path, fmt="json")
 
     @classmethod
-    def from_json(cls, path: Union[str, Path]) -> CameraState:
+    def from_json(cls, path: str | Path) -> CameraState:
         return conversion.structure_from(path, cls, fmt="json")
 
     @classmethod

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Counter
+from collections import Counter
 
 import pooltool.constants as const
 from pooltool.ruleset.datatypes import (

@@ -5,7 +5,6 @@ from __future__ import annotations
 import shutil
 import traceback
 from pathlib import Path
-from typing import Optional
 
 import attrs
 from cattrs.errors import ClassValidationError
@@ -42,7 +41,7 @@ from pooltool.physics.resolve.transition import (
 )
 from pooltool.serialize import Pathish, conversion
 from pooltool.system.datatypes import System
-from pooltool.terminal import Run
+from pooltool.utils import Run
 
 RESOLVER_PATH = pooltool.config.user.PHYSICS_DIR / "resolver.yaml"
 """The location of the resolver path YAML."""
@@ -106,7 +105,7 @@ class Resolver:
     stick_ball: StickBallCollisionStrategy
     transition: BallTransitionStrategy
 
-    version: Optional[int] = None
+    version: int | None = None
 
     def resolve(self, shot: System, event: Event) -> None:
         """Resolve an event for a system"""
@@ -171,10 +170,11 @@ class Resolver:
         except ClassValidationError:
             full_traceback = traceback.format_exc()
             dump_path = RESOLVER_PATH.parent / f".{RESOLVER_PATH.name}"
-            run.info_single(
+            run.info(
                 f"{RESOLVER_PATH} is malformed and can't be loaded. It is being "
                 f"replaced with a default working version. Your version has been moved to "
-                f"{dump_path} if you want to diagnose it. Here is the error:\n{full_traceback}"
+                f"{dump_path} if you want to diagnose it. Here is the error:\n{full_traceback}",
+                style="red",
             )
             shutil.move(RESOLVER_PATH, dump_path)
             resolver = default_resolver()
@@ -184,10 +184,11 @@ class Resolver:
             return resolver
         else:
             dump_path = RESOLVER_PATH.parent / f".{RESOLVER_PATH.name}"
-            run.info_single(
-                f"{RESOLVER_PATH} is has version {resolver.version}, which is not up to "
+            run.info(
+                f"{RESOLVER_PATH} has version {resolver.version}, which is not up to "
                 f"date with the most current version: {VERSION}. It will be replaced with the "
-                f"default. Your version has been moved to {dump_path}."
+                f"default. Your version has been moved to {dump_path}.",
+                style="yellow",
             )
             shutil.move(RESOLVER_PATH, dump_path)
             resolver = default_resolver()

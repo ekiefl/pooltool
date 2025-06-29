@@ -1,5 +1,5 @@
+from collections.abc import Callable
 from math import degrees, sqrt
-from typing import Callable, Tuple
 
 import numpy as np
 from numba import jit
@@ -97,7 +97,7 @@ def find_intersection_2D(
     l2x: float,
     l2y: float,
     l20: float,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """Find the intersection point of two lines in 2D space
 
     The lines are defined by their linear equations in the general form:

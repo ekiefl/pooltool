@@ -1,5 +1,5 @@
 import math
-from typing import Tuple, TypeVar
+from typing import TypeVar
 
 import attrs
 import numpy as np
@@ -22,7 +22,7 @@ Cushion = TypeVar("Cushion", LinearCushionSegment, CircularCushionSegment)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def get_sin_and_cos_theta(h: float, R: float) -> Tuple[float, float]:
+def get_sin_and_cos_theta(h: float, R: float) -> tuple[float, float]:
     """Returns sin(theta), cos(theta)"""
     sin_theta = (h - R) / R
     cos_theta = np.sqrt(1 - sin_theta**2)
@@ -39,7 +39,7 @@ def calculate_slip_speeds_and_angles(
     omega_x: float,
     omega_y: float,
     omega_z: float,
-) -> Tuple[float, float, float, float]:
+) -> tuple[float, float, float, float]:
     """
     Calculate the slip speeds and angles at the cushion (I) and table (C).
     """
@@ -78,7 +78,7 @@ def update_velocity(
     slip_angle: float,
     slip_angle_prime: float,
     delta_p: float,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """
     Update the centroid velocity components.
     """
@@ -124,7 +124,7 @@ def update_angular_velocity(
     slip_angle: float,
     slip_angle_prime: float,
     delta_p: float,
-) -> Tuple[float, float, float]:
+) -> tuple[float, float, float]:
     """
     Update the angular velocity components.
     """
@@ -182,7 +182,7 @@ def compression_phase(
     omega_z: float,
     max_steps: int = 5000,
     delta_p: float = 0.0001,
-) -> Tuple[float, float, float, float, float, float]:
+) -> tuple[float, float, float, float, float, float]:
     """Run the compression phase until the y-velocity is no longer positive.
 
     Args:
@@ -355,7 +355,7 @@ def restitution_phase(
     target_work_rebound: float,
     max_steps: int = 5000,
     delta_p: float = 0.0001,
-) -> Tuple[float, float, float, float, float]:
+) -> tuple[float, float, float, float, float]:
     """
     Run the restitution phase until the work at the cushion (WzI) reaches the target rebound work.
     """
@@ -493,7 +493,7 @@ def solve(
     omega_z: float,
     max_steps: int = 5000,
     delta_p: float = 0.0001,
-) -> Tuple[float, float, float, float, float]:
+) -> tuple[float, float, float, float, float]:
     """Initialize the state and run both the compression and restitution phases.
 
     Args:
@@ -570,7 +570,7 @@ def solve_paper(
     omega0T: float,
     max_steps: int = 5000,
     delta_p: float = 0.0001,
-) -> Tuple[float, float, float, float, float]:
+) -> tuple[float, float, float, float, float]:
     """
     Convenience method that solves using parameters described in the paper.
 
@@ -610,7 +610,7 @@ def solve_paper(
 
 def solve_mathavan(
     ball: Ball, cushion: Cushion, max_steps: int = 5000, delta_p: float = 0.0001
-) -> Tuple[Ball, Cushion]:
+) -> tuple[Ball, Cushion]:
     """
     Run the Mathavan model to simulate the ball-cushion collision.
 
@@ -705,7 +705,7 @@ class Mathavan2010Linear(CoreBallLCushionCollision):
 
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
-    ) -> Tuple[Ball, LinearCushionSegment]:
+    ) -> tuple[Ball, LinearCushionSegment]:
         """Resolve ball-cushion collision via Mathavan et al. (2010).
 
         This method computes the post-collision linear and angular velocities of a ball
@@ -757,7 +757,7 @@ class Mathavan2010Circular(CoreBallCCushionCollision):
 
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment
-    ) -> Tuple[Ball, CircularCushionSegment]:
+    ) -> tuple[Ball, CircularCushionSegment]:
         """Resolve ball-cushion collision via Mathavan et al. (2010).
 
         This method computes the post-collision linear and angular velocities of a ball

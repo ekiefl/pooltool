@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Dict, Optional, Tuple
-
 import numpy as np
 from attrs import define, evolve, field
 
@@ -59,9 +57,9 @@ class Table:
     """
 
     cushion_segments: CushionSegments
-    pockets: Dict[str, Pocket]
+    pockets: dict[str, Pocket]
     table_type: TableType
-    model_descr: Optional[TableModelDescr] = field(default=None)
+    model_descr: TableModelDescr | None = field(default=None)
     height: float = field(default=0.708)
     lights_height: float = field(default=1.99)
 
@@ -124,7 +122,7 @@ class Table:
         return y2 - y1
 
     @property
-    def center(self) -> Tuple[float, float]:
+    def center(self) -> tuple[float, float]:
         """Return the 2D coordinates of the table's center
 
         Warning:

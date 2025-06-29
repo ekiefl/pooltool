@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import Dict
 
 import attrs
 
@@ -148,7 +147,7 @@ class PrebuiltBallParams(StrEnum):
 # NOTE: nothing here is well-researched or perfect. If you think you have better
 # parameters, you probably do. Please share them.
 
-BALL_PARAMS: Dict[PrebuiltBallParams, BallParams] = {
+BALL_PARAMS: dict[PrebuiltBallParams, BallParams] = {
     PrebuiltBallParams.POOL_GENERIC: BallParams(
         m=0.170097,
         R=0.028575,
@@ -182,7 +181,7 @@ BALL_PARAMS: Dict[PrebuiltBallParams, BallParams] = {
 }
 
 
-_default_map: Dict[GameType, PrebuiltBallParams] = {
+_default_map: dict[GameType, PrebuiltBallParams] = {
     GameType.EIGHTBALL: PrebuiltBallParams.POOL_GENERIC,
     GameType.NINEBALL: PrebuiltBallParams.POOL_GENERIC,
     GameType.THREECUSHION: PrebuiltBallParams.BILLIARD_GENERIC,

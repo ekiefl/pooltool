@@ -13,8 +13,7 @@ import pooltool as pt
 from pooltool.config.user import CONFIG_DIR
 from pooltool.game.datatypes import GameType
 from pooltool.serialize import conversion
-from pooltool.terminal import Run
-from pooltool.utils import panda_path
+from pooltool.utils import Run, panda_path
 
 run = Run()
 

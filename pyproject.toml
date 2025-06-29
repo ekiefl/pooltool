@@ -102,7 +102,8 @@ pyyaml = ">=5.2"
 click = ">=8.0.0"
 Pillow = ">=6.2.0"
 h5py = ">=3.10"
-h11 = ">=0.16.0"
+h11 = ">=0.16.0"  # Avoids security vulnerability
+rich = "^14.0.0"  # 13.8.1 added support for Python 3.13
 
 [tool.poetry.group.dev.dependencies]
 # Testing and formatting
@@ -113,7 +114,6 @@ pyright = ">=1.1.373"
 ruff = ">=0.5.5"
 # Diagnostics
 psutil = ">=6.0.0"
-colored = ">=2.2.4"  # TODO switch to something ubiquitous (like rich)
 ipython = ">=8.18.1"
 ipdb = "^0.13.13"
 pprofile = ">=2.2.0"
@@ -144,14 +144,20 @@ formats = "ipynb,py:percent"
 notebook_metadata_filter="all"
 
 [tool.ruff]
+target-version = "py310"  # Minimum supported version
 line-length = 88
 exclude = [
     "docs",
 ]
 
 [tool.ruff.lint]
-extend-select = ["I"]
-ignore = ["E741"]
+extend-select = [
+    "I", # Import sorting
+    "UP", # Modernize Python syntax for newer versions
+]
+ignore = [
+    "E741",  # Ambiguous variable name
+]
 
 [tool.pytest.ini_options]
 addopts = [

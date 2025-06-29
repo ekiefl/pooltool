@@ -1,7 +1,6 @@
 import copy
 import pdb
 from abc import ABC, abstractmethod
-from typing import Dict
 
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
@@ -28,7 +27,7 @@ class Mode(StrEnum):
 
 
 class BaseMode(ABC):
-    keymap: Dict[Action, bool] = {}
+    keymap: dict[Action, bool] = {}
     name: Mode = Mode.none
 
     def __init__(self):

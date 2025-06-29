@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import copy
 from functools import cached_property
-from typing import Dict, Union
 
 import numpy as np
 from attrs import define, evolve, field
@@ -281,7 +280,7 @@ class CircularCushionSegment:
         )
 
 
-CushionSegment = Union[LinearCushionSegment, CircularCushionSegment]
+CushionSegment = LinearCushionSegment | CircularCushionSegment
 
 
 @define
@@ -307,8 +306,8 @@ class CushionSegments:
                 CircularCushionSegment(id="2t", ...)}``
     """
 
-    linear: Dict[str, LinearCushionSegment] = field()
-    circular: Dict[str, CircularCushionSegment] = field()
+    linear: dict[str, LinearCushionSegment] = field()
+    circular: dict[str, CircularCushionSegment] = field()
 
     @linear.validator  # type: ignore
     @circular.validator  # type: ignore

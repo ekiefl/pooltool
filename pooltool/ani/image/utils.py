@@ -1,5 +1,5 @@
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -17,9 +17,7 @@ class ImageExt(StrEnum):
         return "(" + "|".join(ext.value for ext in cls) + ")"
 
 
-def gif(
-    paths: Sequence[Union[str, Path]], output: Union[str, Path], fps: float
-) -> Path:
+def gif(paths: Sequence[str | Path], output: str | Path, fps: float) -> Path:
     """Create a gif from a sequence of image paths"""
 
     output = Path(output)

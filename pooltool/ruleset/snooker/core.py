@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections import Counter
-from typing import List, Optional, Tuple
 
 from pooltool.ruleset.datatypes import (
     BallInHandOptions,
@@ -37,7 +36,7 @@ from pooltool.ruleset.utils import (
 from pooltool.system.datatypes import System
 
 
-def is_legal(shot: System, constraints: ShotConstraints) -> Tuple[bool, Reason]:
+def is_legal(shot: System, constraints: ShotConstraints) -> tuple[bool, Reason]:
     """Was it a legal shot?
 
     Implemented:
@@ -125,8 +124,8 @@ def is_game_over(shot: System, legal: bool) -> bool:
 
 
 def decide_winner(
-    players: List[Player], points: Counter, game_over: bool
-) -> Optional[Player]:
+    players: list[Player], points: Counter, game_over: bool
+) -> Player | None:
     if not game_over:
         return None
 
@@ -220,7 +219,7 @@ class _Snooker(Ruleset):
         )
 
     def respot_balls(self, shot: System):
-        check: List[str] = ["white"]
+        check: list[str] = ["white"]
 
         if self.phase is GamePhase.ALTERNATING:
             check.extend(list(BallGroup.COLORS.balls))

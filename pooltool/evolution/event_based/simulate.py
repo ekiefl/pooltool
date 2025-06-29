@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from itertools import combinations
-from typing import List, Optional, Set, Tuple
 
 import numpy as np
 
@@ -57,13 +56,13 @@ def _evolve(shot: System, dt: float):
 
 def simulate(
     shot: System,
-    engine: Optional[PhysicsEngine] = None,
+    engine: PhysicsEngine | None = None,
     inplace: bool = False,
     continuous: bool = False,
-    dt: Optional[float] = None,
-    t_final: Optional[float] = None,
+    dt: float | None = None,
+    t_final: float | None = None,
     quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
-    include: Set[EventType] = INCLUDED_EVENTS,
+    include: set[EventType] = INCLUDED_EVENTS,
     max_events: int = 0,
 ) -> System:
     """Run a simulation on a system and return it
@@ -209,8 +208,8 @@ def simulate(
 def get_next_event(
     shot: System,
     *,
-    transition_cache: Optional[TransitionCache] = None,
-    collision_cache: Optional[CollisionCache] = None,
+    transition_cache: TransitionCache | None = None,
+    collision_cache: CollisionCache | None = None,
     quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
     # Start by assuming next event doesn't happen
@@ -260,8 +259,8 @@ def get_next_ball_ball_collision(
 ) -> Event:
     """Returns next ball-ball collision"""
 
-    ball_pairs: List[Tuple[str, str]] = []
-    collision_coeffs: List[Tuple[float, ...]] = []
+    ball_pairs: list[tuple[str, str]] = []
+    collision_coeffs: list[tuple[float, ...]] = []
 
     cache = collision_cache.times.setdefault(EventType.BALL_BALL, {})
 
@@ -341,8 +340,8 @@ def get_next_ball_circular_cushion_event(
     if not shot.table.has_circular_cushions:
         return null_event(np.inf)
 
-    ball_cushion_pairs: List[Tuple[str, str]] = []
-    collision_coeffs: List[Tuple[float, ...]] = []
+    ball_cushion_pairs: list[tuple[str, str]] = []
+    collision_coeffs: list[tuple[float, ...]] = []
 
     cache = collision_cache.times.setdefault(EventType.BALL_CIRCULAR_CUSHION, {})
 
@@ -451,8 +450,8 @@ def get_next_ball_pocket_collision(
     if not shot.table.has_pockets:
         return null_event(np.inf)
 
-    ball_pocket_pairs: List[Tuple[str, str]] = []
-    collision_coeffs: List[Tuple[float, ...]] = []
+    ball_pocket_pairs: list[tuple[str, str]] = []
+    collision_coeffs: list[tuple[float, ...]] = []
 
     cache = collision_cache.times.setdefault(EventType.BALL_POCKET, {})
 

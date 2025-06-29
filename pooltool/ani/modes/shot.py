@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-from typing import Optional
 
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
@@ -43,9 +42,7 @@ class ShotMode(BaseMode):
     # shot, advance to next shot, etc.
     view_only = False
 
-    def enter(
-        self, build_animations=False, playback_mode: Optional[PlaybackMode] = None
-    ):
+    def enter(self, build_animations=False, playback_mode: PlaybackMode | None = None):
         """Enter method for Shot
 
         Parameters

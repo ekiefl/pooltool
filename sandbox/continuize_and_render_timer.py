@@ -3,6 +3,7 @@
 import sys
 
 import pooltool as pt
+from pooltool.ani.animate import ShotViewer
 from pooltool.ani.globals import Global
 from pooltool.ani.modes import ModeManager, all_modes
 
@@ -17,19 +18,19 @@ def main(args):
 
     shot = shot.copy()
 
-    with pt.terminal.TimeCode(success_msg="Trajectories simulated in: "):
+    with pt.utils.TimeCode(message="Trajectories simulated in: "):
         pt.simulate(shot, inplace=True)
 
-    with pt.terminal.TimeCode(success_msg="Trajectories continuized in: "):
+    with pt.utils.TimeCode(message="Trajectories continuized in: "):
         pt.continuize(shot, inplace=True)
 
     class TimedModeManager(ModeManager):
         def change_mode(self, *args, **kwargs):
-            with pt.terminal.TimeCode(success_msg="Animation sequence rendered in: "):
+            with pt.utils.TimeCode(message="Animation sequence rendered in: "):
                 super().change_mode(*args, **kwargs)
             sys.exit()
 
-    interface = pt.ShotViewer()
+    interface = ShotViewer()
     Global.register_mode_mgr(TimedModeManager(all_modes))
     Global.mode_mgr.init_modes()
     interface.show(shot)

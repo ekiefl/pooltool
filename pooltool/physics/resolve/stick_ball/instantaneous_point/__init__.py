@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import attrs
 import numpy as np
 
@@ -132,7 +130,7 @@ class InstantaneousPoint(CoreStickBallCollision):
         default=StickBallModel.INSTANTANEOUS_POINT, init=False, repr=False
     )
 
-    def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]:
+    def solve(self, cue: Cue, ball: Ball) -> tuple[Cue, Ball]:
         # Transform contact point Q from cue frame to ball frame
         # ball_Q represents the point Q_cue after a passive coordinate frame rotation by theta around the x-axis
         # cue_Q = [cue_a, cue_c, cue_b]

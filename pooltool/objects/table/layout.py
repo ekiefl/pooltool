@@ -1,6 +1,4 @@
-"""A place for horrible stuff to happen"""
-
-from typing import Dict, Union
+"""Functions that build table geometry from table parameters."""
 
 import numpy as np
 from numpy.typing import NDArray
@@ -60,7 +58,7 @@ def create_billiard_table_cushion_segments(
 
 
 def create_pocket_table_cushion_segments(
-    specs: Union[PocketTableSpecs, SnookerTableSpecs],
+    specs: PocketTableSpecs | SnookerTableSpecs,
 ) -> CushionSegments:
     # https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times
     # for diagram
@@ -295,8 +293,8 @@ def create_pocket_table_cushion_segments(
 
 
 def create_pocket_table_pockets(
-    specs: Union[PocketTableSpecs, SnookerTableSpecs],
-) -> Dict[str, Pocket]:
+    specs: PocketTableSpecs | SnookerTableSpecs,
+) -> dict[str, Pocket]:
     cr = specs.corner_pocket_radius
     sr = specs.side_pocket_radius
     cd = specs.corner_pocket_depth

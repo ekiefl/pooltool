@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 import numpy as np
 from direct.interval.IntervalGlobal import LerpPosInterval, Sequence
 from panda3d.core import ClockObject, CollisionNode, CollisionSegment, Vec3
@@ -24,8 +22,8 @@ class CueRender(Render):
         self.stroke_clock = ClockObject()
         self.has_focus = False
 
-        self.stroke_pos: List[float] = []
-        self.stroke_time: List[float] = []
+        self.stroke_pos: list[float] = []
+        self.stroke_time: list[float] = []
 
     def set_object_state_as_render_state(self, skip_V0=False):
         (
@@ -232,7 +230,7 @@ class CueRender(Render):
         """Update the cue stick's position to match the cueing ball's position"""
         self.get_node("cue_stick_focus").setPos(self.follow.get_node("pos").getPos())
 
-    def get_render_state(self) -> Tuple[float, float, float, float, float, str]:
+    def get_render_state(self) -> tuple[float, float, float, float, float, str]:
         """Return phi, theta, V0, a, and b as determined by the cue_stick node"""
 
         cue_stick = self.get_node("cue_stick")

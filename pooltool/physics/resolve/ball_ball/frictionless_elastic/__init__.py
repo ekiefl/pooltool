@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import attrs
 import numpy as np
 
@@ -43,7 +41,7 @@ class FrictionlessElastic(CoreBallBallCollision):
         default=BallBallModel.FRICTIONLESS_ELASTIC, init=False, repr=False
     )
 
-    def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
+    def solve(self, ball1: Ball, ball2: Ball) -> tuple[Ball, Ball]:
         """Resolves the collision."""
         rvw1, rvw2 = _resolve_ball_ball(
             ball1.state.rvw.copy(),

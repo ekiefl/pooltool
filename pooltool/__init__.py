@@ -36,7 +36,6 @@ import pooltool.ptmath as ptmath
 import pooltool.ruleset as ruleset
 import pooltool.serialize as serialize
 import pooltool.system as system
-import pooltool.terminal as terminal
 import pooltool.utils as utils
 from pooltool.events import EventType
 from pooltool.evolution import continuize, interpolate_ball_states, simulate
@@ -70,7 +69,6 @@ __all__ = [
     "layouts",
     # non-documented
     "serialize",
-    "terminal",
     "image",
     "ai",
     "pot",

@@ -1,5 +1,5 @@
 import math
-from typing import Dict, Protocol, Type
+from typing import Protocol
 
 import attrs
 
@@ -66,8 +66,8 @@ class AverageBallBallFriction:
         return (ball1.params.u_b + ball2.params.u_b) / 2
 
 
-ball_ball_friction_models: Dict[
-    BallBallFrictionModel, Type[BallBallFrictionStrategy]
+ball_ball_friction_models: dict[
+    BallBallFrictionModel, type[BallBallFrictionStrategy]
 ] = {
     BallBallFrictionModel.AVERAGE: AverageBallBallFriction,
     BallBallFrictionModel.ALCIATORE: AlciatoreBallBallFriction,

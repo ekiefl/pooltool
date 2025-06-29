@@ -2,8 +2,7 @@
 
 import gc
 import sys
-from functools import partial
-from typing import Generator, Optional, Tuple, Union
+from collections.abc import Generator
 
 import simplepbr
 from attrs import define
@@ -19,7 +18,6 @@ from panda3d.core import (
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
-import pooltool.terminal as terminal
 from pooltool.ani.camera import CameraState, cam
 from pooltool.ani.collision import cue_avoid
 from pooltool.ani.environment import environment
@@ -37,14 +35,16 @@ from pooltool.ruleset import get_ruleset
 from pooltool.ruleset.datatypes import Player
 from pooltool.system.datatypes import MultiSystem, System, multisystem
 from pooltool.system.render import PlaybackMode, visual
-from pooltool.utils import get_total_memory_usage
+from pooltool.utils import Run, get_total_memory_usage, human_readable_file_size
+
+run = Run()
 
 
 @define
 class ShowBaseConfig:
-    window_type: Optional[str] = None
-    window_size: Optional[Tuple[int, int]] = None
-    fb_prop: Optional[FrameBufferProperties] = None
+    window_type: str | None = None
+    window_size: tuple[int, int] | None = None
+    fb_prop: FrameBufferProperties | None = None
     monitor: bool = False
 
     @classmethod
@@ -106,13 +106,13 @@ def window_task(win=None):
     Global.base.win.requestProperties(properties)
 
 
-def _resize_offscreen_window(size: Tuple[int, int]):
+def _resize_offscreen_window(size: tuple[int, int]):
     """Changes window size when provided the dimensions (x, y) in pixels"""
     Global.base.win.setSize(*[int(dim) for dim in size])
 
 
-def _init_simplepbr():
-    simplepbr.init(
+def _init_simplepbr() -> simplepbr.Pipeline:
+    return simplepbr.init(
         enable_shadows=ani.settings.graphics.shadows,
         max_lights=ani.settings.graphics.max_lights,
     )
@@ -131,7 +131,7 @@ class Interface(ShowBase):
         # https://discourse.panda3d.org/t/cant-change-base-background-after-simplepbr-init/28945
         Global.base.setBackgroundColor(0.04, 0.04, 0.04)
 
-        _init_simplepbr()
+        self.simplepbr_pipeline = _init_simplepbr()
 
         if isinstance(self.win, GraphicsWindow):
             mouse.init()
@@ -155,7 +155,6 @@ class Interface(ShowBase):
             tasks.add(self.monitor, "monitor")
 
         self._listen_constant_events()
-        self.stdout = terminal.Run()
 
     def _listen_constant_events(self):
         """Listen for events that are mode independent"""
@@ -169,9 +168,7 @@ class Interface(ShowBase):
             visual.exit_parallel_mode()
 
         visual.teardown()
-
-        environment.unload_room()
-        environment.unload_lights()
+        environment.teardown()
 
         hud.destroy()
 
@@ -204,16 +201,15 @@ class Interface(ShowBase):
 
         keymap = Global.mode_mgr.get_keymap()
 
-        header = partial(self.stdout.warning, "", lc="green", nl_before=1, nl_after=0)
-        header(header=f"Frame {self.frame}")
+        debug_data = {
+            "Mode": Global.mode_mgr.mode,
+            "Last": Global.mode_mgr.last_mode,
+            "Tasks": [task.name for task in Global.task_mgr.getAllTasks()],
+            "Memory": human_readable_file_size(get_total_memory_usage()),
+            "Actions": [k for k in keymap if keymap[k]],
+        }
 
-        self.stdout.info("Mode", Global.mode_mgr.mode)
-        self.stdout.info("Last", Global.mode_mgr.last_mode)
-        self.stdout.info("Tasks", [task.name for task in Global.task_mgr.getAllTasks()])
-        self.stdout.info("Memory", get_total_memory_usage())
-        self.stdout.info("Actions", [k for k in keymap if keymap[k]])
-        self.stdout.info("Keymap", Global.mode_mgr.get_keymap())
-        self.stdout.info("Frame", self.frame)
+        run.table(debug_data, title=f"Frame {self.frame}")
 
         return task.cont
 
@@ -259,7 +255,7 @@ class FrameStepper(Interface):
     def _iterator(
         self,
         system: System,
-        size: Tuple[int, int] = (int(1.6 * 720), 720),
+        size: tuple[int, int] = (int(1.6 * 720), 720),
         fps: float = 30.0,
     ) -> Generator:
         continuize(system, dt=1 / fps, inplace=True)
@@ -295,7 +291,7 @@ class FrameStepper(Interface):
 
             yield frame
 
-    def iterator(self, *args, **kwargs) -> Tuple[Generator, int]:
+    def iterator(self, *args, **kwargs) -> tuple[Generator, int]:
         """Iterate through each frame
 
         Args:
@@ -351,9 +347,9 @@ class ShotViewer(Interface):
 
     def show(
         self,
-        shot_or_shots: Union[System, MultiSystem],
+        shot_or_shots: System | MultiSystem,
         title: str = "Press <esc> to continue program execution",
-        camera_state: Optional[CameraState] = None,
+        camera_state: CameraState | None = None,
     ):
         """Opens the interactive interface for one or more shots.
 
@@ -451,7 +447,7 @@ class ShotViewer(Interface):
 
     def _start(self):
         self.openMainWindow(keepCamera=True)
-        _init_simplepbr()
+        self.simplepbr_pipeline = _init_simplepbr()
         mouse.init()
 
     def _stop(self):

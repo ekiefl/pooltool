@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterator, List, Optional
+from collections.abc import Iterator
+from typing import Any
 
 import numpy as np
 from attrs import define, field
@@ -18,7 +19,7 @@ from pooltool.serialize import conversion
 from pooltool.serialize.serializers import Pathish
 
 
-def _convert_balls(balls: Any) -> Dict[str, Ball]:
+def _convert_balls(balls: Any) -> dict[str, Ball]:
     if isinstance(balls, dict):
         return balls
 
@@ -106,9 +107,9 @@ class System:
 
     cue: Cue = field()
     table: Table = field()
-    balls: Dict[str, Ball] = field(converter=_convert_balls)
+    balls: dict[str, Ball] = field(converter=_convert_balls)
     t: float = field(default=0.0)
-    events: List[Event] = field(factory=list)
+    events: list[Event] = field(factory=list)
 
     @balls.validator  # type: ignore
     def _validate_balls(self, _, value) -> None:
@@ -315,9 +316,7 @@ class System:
 
         return energy
 
-    def randomize_positions(
-        self, ball_ids: Optional[List[str]] = None, niter=100
-    ) -> bool:
+    def randomize_positions(self, ball_ids: list[str] | None = None, niter=100) -> bool:
         """Randomize ball positions on the table--ensure no overlap
 
         This initializes a random state, and checks that all the balls are
@@ -651,8 +650,8 @@ class MultiSystem:
         >>> pt.show(multisystem, title="Press 'n' for next, 'p' for previous")
     """
 
-    multisystem: List[System] = field(factory=list)
-    active_index: Optional[int] = field(default=None, init=False)
+    multisystem: list[System] = field(factory=list)
+    active_index: int | None = field(default=None, init=False)
 
     def __len__(self) -> int:
         return len(self.multisystem)
@@ -661,8 +660,7 @@ class MultiSystem:
         return self.multisystem[idx]
 
     def __iter__(self) -> Iterator[System]:
-        for system in self.multisystem:
-            yield system
+        yield from self.multisystem
 
     @property
     def active(self) -> System:
@@ -691,7 +689,7 @@ class MultiSystem:
 
         self.multisystem.append(system)
 
-    def extend(self, systems: List[System]) -> None:
+    def extend(self, systems: list[System]) -> None:
         if self.empty:
             self.active_index = 0
 

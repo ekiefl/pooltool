@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from typing import Dict, Optional
-
 from attrs import define
 from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
 
-from pooltool.ani.globals import Global
 from pooltool.evolution.continuous import continuize
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.render import CueRender
@@ -17,7 +14,7 @@ from pooltool.utils.strenum import StrEnum, auto
 
 @define
 class SystemRender:
-    balls: Dict[str, BallRender]
+    balls: dict[str, BallRender]
     table: TableRender
     cue: CueRender
 
@@ -50,7 +47,7 @@ class SystemController:
         self.paused: bool = True
         self.playback_speed: float = 1
         self.playback_mode: PlaybackMode = PlaybackMode.SINGLE
-        self.parallel_systems: Dict[int, SystemRender] = {}
+        self.parallel_systems: dict[int, SystemRender] = {}
         self.is_parallel_mode: bool = False
 
     @property
@@ -115,15 +112,12 @@ class SystemController:
         """Render all object nodes"""
         self.playback_speed = 1
 
-        # FIXME See the FIXME in teardown for an explanation
-        if not any(
-            child.name == "table" for child in Global.render.find("scene").getChildren()
-        ):
-            self.system.table.render()
+        self.system.table.render()
 
         for ball in self.system.balls.values():
             ball.render()
             ball.reset_angular_integration()
+
         self.system.cue.render()
 
     def teardown(self) -> None:
@@ -134,19 +128,13 @@ class SystemController:
             ball.remove_nodes()
 
         self.system.cue.remove_nodes()
-
-        # FIXME Table has lingering references that prevent it from being unrendered.
-        # And when teardown and buildup are called, the shading gets weird and the balls
-        # disappear. I think it has to do with lingering references in environment.py.
-        # For now, the fix is to simply not remove the table nodes in `teardown`, and
-        # only render them once in `buildup`
-        # self.system.table.remove_nodes()
+        self.system.table.remove_nodes()
 
     def playback(self, mode: PlaybackMode) -> None:
         """Set the playback mode (does not affect pause status)"""
         self.playback_mode = mode
 
-    def animate(self, mode: Optional[PlaybackMode] = None):
+    def animate(self, mode: PlaybackMode | None = None):
         """Start the animation"""
 
         assert len(self.shot_animation), "Must populate shot_animation"

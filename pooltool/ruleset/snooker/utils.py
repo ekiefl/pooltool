@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable, List, Tuple
+from collections.abc import Iterable
 
 from pooltool.ruleset.datatypes import ShotConstraints
 from pooltool.ruleset.snooker.balls import (
@@ -113,7 +113,7 @@ def on_final_black(shot: System) -> bool:
     )
 
 
-def get_on_balls(constraints: ShotConstraints) -> Tuple[str, ...]:
+def get_on_balls(constraints: ShotConstraints) -> tuple[str, ...]:
     """Get all balls that are 'on'
 
     If player is on reds, all reds are on. If player is on colors, the called color is
@@ -156,7 +156,7 @@ def get_lowest_pottable(shot: System) -> str:
 
 def get_color_balls_to_be_potted(
     shot: System, legal: bool, ball_call: str
-) -> List[str]:
+) -> list[str]:
     """Returns all color balls that still need to be potted"""
     color_balls_to_be_potted = [
         ball_id
