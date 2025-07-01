@@ -366,6 +366,7 @@ class SystemController:
 
     def change_speed(self, factor):
         curr_time = self.shot_animation.get_t()
+        was_paused = self.paused
 
         self.reset_animation(force_pause=False)
         self.playback_speed *= factor
@@ -381,11 +382,10 @@ class SystemController:
 
         self.shot_animation.setPlayRate(factor * self.shot_animation.getPlayRate())
 
-        if self.paused:
-            self.animate(PlaybackMode.LOOP)
+        self.animate(PlaybackMode.LOOP)
+
+        if was_paused:
             self.pause_animation()
-        else:
-            self.animate(PlaybackMode.LOOP)
 
         self.shot_animation.set_t(curr_time / factor)
 
