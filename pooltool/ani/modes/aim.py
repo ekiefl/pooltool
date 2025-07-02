@@ -10,11 +10,10 @@ from pooltool.ani.collision import cue_avoid
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
-from pooltool.ani.modes.shot import ShotMode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.ani.scene import visual
 from pooltool.ptmath.utils import norm2d, tip_contact_offset
 from pooltool.system.datatypes import multisystem
-from pooltool.system.render import visual
 
 
 class AimMode(BaseMode):
@@ -149,7 +148,7 @@ class AimMode(BaseMode):
         elif self.keymap[Action.prev_shot]:
             self.keymap[Action.prev_shot] = False
             if len(multisystem) > 1:
-                ShotMode.change_animation(multisystem.active_index - 1)
+                visual.switch_to_shot(multisystem.active_index - 1)
                 Global.mode_mgr.change_mode(Mode.shot)
                 return task.done
         else:

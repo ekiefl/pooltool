@@ -11,10 +11,9 @@ from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
-from pooltool.objects.ball.datatypes import Ball
+from pooltool.ani.scene import visual
 from pooltool.ptmath.utils import norm2d, tip_contact_offset
 from pooltool.system.datatypes import multisystem
-from pooltool.system.render import PlaybackMode, visual
 
 
 class ViewMode(BaseMode):
@@ -138,7 +137,7 @@ class ViewMode(BaseMode):
         elif self.keymap[Action.prev_shot]:
             self.keymap[Action.prev_shot] = False
             if len(multisystem) > 1:
-                self.change_animation(multisystem.active_index - 1)
+                visual.switch_to_shot(multisystem.active_index - 1)
                 Global.mode_mgr.change_mode(
                     Mode.shot, enter_kwargs=dict(build_animations=False)
                 )
@@ -238,38 +237,5 @@ class ViewMode(BaseMode):
             theta=-visual.cue.get_node("cue_stick_focus").getR(),
         )
 
-        system_cue = multisystem.active.cue
-        hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
-
-    def change_animation(self, shot_index):
-        """Switch to a different system in the system collection"""
-        # Switch shots
-        multisystem.set_active(shot_index)
-        visual.attach_system(multisystem.active)
-        visual.buildup()
-
-        # Initialize the animation
-        visual.build_shot_animation()
-
-        # Changing to a different shot is considered advanced maneuvering, we loop the
-        # animation
-        visual.animate(PlaybackMode.LOOP)
-
-        # FIXME No idea what this garbage is. Dissect once you get here.
-        raise NotImplementedError()
-        # A lot of dumb things to make the cue track the initial position of the ball
-        dummy = Ball("dummy")
-        dummy.R = multisystem.active.cue.cueing_ball.params.R
-        dummy.rvw = multisystem.active.cue.cueing_ball.history.rvw[0]
-        dummy.render()
-        visual.cue.init_focus(dummy)
-        multisystem.active.cue.set_render_state_as_object_state()
-        visual.cue.follow = None
-        dummy.remove_nodes()
-        del dummy
-
-        cue_avoid.init_collisions()
-
-        # Set the HUD
         system_cue = multisystem.active.cue
         hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])

@@ -15,10 +15,10 @@ from pooltool.ani.globals import Global
 from pooltool.ani.menu import TextOverlay
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.ani.scene import visual
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.table.components import Pocket
 from pooltool.system.datatypes import multisystem
-from pooltool.system.render import visual
 from pooltool.utils import panda_path
 
 FONT_OPACITY = 0.95

@@ -26,6 +26,7 @@ from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.menu import TextOverlay, menus
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
+from pooltool.ani.scene import PlaybackMode, visual
 from pooltool.evolution import simulate
 from pooltool.evolution.continuous import continuize
 from pooltool.layouts import get_rack
@@ -34,7 +35,6 @@ from pooltool.objects.table.datatypes import Table
 from pooltool.ruleset import get_ruleset
 from pooltool.ruleset.datatypes import Player
 from pooltool.system.datatypes import MultiSystem, System, multisystem
-from pooltool.system.render import PlaybackMode, visual
 from pooltool.utils import Run, get_total_memory_usage, human_readable_file_size
 
 run = Run()
