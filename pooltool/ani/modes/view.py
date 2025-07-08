@@ -138,6 +138,7 @@ class ViewMode(BaseMode):
             self.keymap[Action.prev_shot] = False
             if len(multisystem) > 1:
                 visual.switch_to_shot(multisystem.active_index - 1)
+                self._update_hud()
                 Global.mode_mgr.change_mode(
                     Mode.shot, enter_kwargs=dict(build_animations=False)
                 )
@@ -159,9 +160,8 @@ class ViewMode(BaseMode):
         if V0 > ani.max_stroke_speed:
             V0 = ani.max_stroke_speed
 
-        system_cue = multisystem.active.cue
-        system_cue.set_state(V0=V0)
-        hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
+        multisystem.active.cue.set_state(V0=V0)
+        self._update_hud()
 
     def view_elevate_cue(self):
         visual.cue.show_nodes(ignore=("cue_cseg",))
@@ -184,9 +184,8 @@ class ViewMode(BaseMode):
 
         cue.setR(-new_elevation)
 
-        system_cue = multisystem.active.cue
-        system_cue.set_state(theta=new_elevation)
-        hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
+        multisystem.active.cue.set_state(theta=new_elevation)
+        self._update_hud()
 
     def view_apply_english(self):
         visual.cue.show_nodes(ignore=("cue_cseg",))
@@ -237,5 +236,9 @@ class ViewMode(BaseMode):
             theta=-visual.cue.get_node("cue_stick_focus").getR(),
         )
 
+        self._update_hud()
+
+    def _update_hud(self) -> None:
+        """Update HUD with current system's cue and cue ball"""
         system_cue = multisystem.active.cue
         hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])

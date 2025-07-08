@@ -7,6 +7,7 @@ from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.collision import cue_avoid
 from pooltool.ani.globals import Global
+from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.ani.scene import PlaybackMode, visual
@@ -59,7 +60,7 @@ class ShotMode(BaseMode):
         if playback_mode is not None:
             visual.animate(playback_mode)
 
-        visual.update_hud()
+        self._update_hud()
 
         tasks.register_event("space", visual.toggle_pause)
         tasks.register_event("arrow_up", visual.speed_up)
@@ -161,6 +162,7 @@ class ShotMode(BaseMode):
 
             # Switch shots
             visual.switch_rendered_system(multisystem_idx=-1)
+            self._update_hud()
 
             cue_avoid.init_collisions()
             multisystem.active.cue.reset_state()
@@ -171,6 +173,7 @@ class ShotMode(BaseMode):
                 # Replaying shot that is not most recent. Teardown and then buildup most
                 # recent
                 visual.switch_rendered_system(multisystem_idx=-1)
+                self._update_hud()
                 cue_avoid.init_collisions()
             else:
                 visual.reset_animation()
@@ -222,7 +225,7 @@ class ShotMode(BaseMode):
 
     def shot_animation_task(self, task):
         if self.keymap[Action.restart_ani]:
-            visual.playback(PlaybackMode.LOOP)
+            visual.animate(PlaybackMode.LOOP)
             visual.restart_animation()
 
         elif self.keymap[Action.rewind]:
@@ -253,15 +256,22 @@ class ShotMode(BaseMode):
             self.keymap[Action.prev_shot] = False
             shot_index = self._find_previous_valid_shot()
             visual.switch_to_shot(shot_index)
+            self._update_hud()
             cue_avoid.init_collisions()
 
         elif self.keymap[Action.next_shot]:
             self.keymap[Action.next_shot] = False
             shot_index = self._find_next_valid_shot()
             visual.switch_to_shot(shot_index)
+            self._update_hud()
             cue_avoid.init_collisions()
 
         return task.cont
+
+    def _update_hud(self) -> None:
+        """Update HUD with current system's cue and cue ball"""
+        system_cue = multisystem.active.cue
+        hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
 
     def _find_previous_valid_shot(self) -> int:
         """Find the previous valid shot, wrapping around if needed."""

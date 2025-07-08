@@ -328,7 +328,6 @@ class SceneController:
         multisystem.set_active(multisystem_idx)
         visual.attach_system(multisystem.active)
         visual.buildup(components_to_refresh)
-        self.update_hud()
 
     def playback(self, mode: PlaybackMode) -> None:
         """Sets the playback mode."""
@@ -446,11 +445,6 @@ class SceneController:
         """Update which system is active in parallel mode"""
         self.parallel_manager.update_active_system(new_index)
 
-    def update_hud(self) -> None:
-        """Update HUD with current system's cue and cue ball"""
-        system_cue = multisystem.active.cue
-        hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
-
     def switch_to_shot(self, shot_index: int) -> None:
         """Switch to a different system in the system collection"""
         was_playing = not self.paused
@@ -460,7 +454,6 @@ class SceneController:
         if self.parallel_manager.is_active:
             # In parallel mode, just update which system is active
             self.update_parallel_active(shot_index)
-            self.update_hud()
 
             # Resume animation if it was playing
             if was_playing:
@@ -472,6 +465,8 @@ class SceneController:
 
         # Setup new system - use active index, not -1
         self.switch_rendered_system(multisystem.active_index)
+        system_cue = multisystem.active.cue
+        hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
 
         # Initialize the animation
         self.build_shot_animation()
@@ -485,8 +480,6 @@ class SceneController:
             self.resume_animation()
         else:
             self.pause_animation()
-
-        self.update_hud()
 
     def build_shot_animation(
         self,
