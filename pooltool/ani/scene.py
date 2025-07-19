@@ -4,6 +4,7 @@ from attrs import define
 from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
 
+from pooltool.ani.environment import Environment
 from pooltool.ani.hud import hud
 from pooltool.evolution.continuous import continuize
 from pooltool.objects.ball.render import BallRender
@@ -24,6 +25,7 @@ class SceneComponents(StrEnum):
     TABLE = auto()
     CUE = auto()
     BALLS = auto()
+    ENVIRONMENT = auto()
 
 
 @define
@@ -204,6 +206,7 @@ class ParallelModeManager:
 class SceneController:
     def __init__(self) -> None:
         self.system: SystemRender
+        self.environment: Environment = Environment()
         self.stroke_animation: Sequence = Sequence()
         self.ball_animations: Parallel = Parallel()
         self.shot_animation: Sequence = Sequence()
@@ -300,6 +303,8 @@ class SceneController:
             self.render_balls()
         if SceneComponents.CUE in components:
             self.render_cue()
+        if SceneComponents.ENVIRONMENT in components:
+            self.environment.init(self.system.table._table)
 
     def teardown(
         self, components: list[SceneComponents] = SceneComponents.members_as_list()
@@ -317,6 +322,8 @@ class SceneController:
             self.unrender_balls()
         if SceneComponents.CUE in components:
             self.unrender_cue()
+        if SceneComponents.ENVIRONMENT in components:
+            self.environment.teardown()
 
         if was_in_parallel_mode:
             self.parallel_manager.setup(self, self.system)

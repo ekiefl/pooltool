@@ -20,7 +20,6 @@ import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 from pooltool.ani.camera import CameraState, cam
 from pooltool.ani.collision import cue_avoid
-from pooltool.ani.environment import environment
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.menu import TextOverlay, menus
@@ -168,7 +167,6 @@ class Interface(ShowBase):
             visual.exit_parallel_mode()
 
         visual.teardown()
-        environment.teardown()
 
         hud.destroy()
 
@@ -186,8 +184,6 @@ class Interface(ShowBase):
 
         visual.attach_system(multisystem.active)
         visual.buildup()
-
-        environment.init(multisystem.active.table)
 
         R = max([ball.params.R for ball in multisystem.active.balls.values()])
         cam.fixate(

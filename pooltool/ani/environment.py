@@ -323,6 +323,3 @@ class Environment:
         self.unload_room()
         self.unload_floor()
         self.unload_lights()
-
-
-environment = Environment()
