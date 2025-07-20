@@ -4,8 +4,8 @@ from panda3d.core import CollisionHandlerQueue, CollisionTraverser
 import pooltool.ani as ani
 import pooltool.ptmath as ptmath
 from pooltool.ani.globals import Global
+from pooltool.ani.scene import visual
 from pooltool.system.datatypes import multisystem
-from pooltool.system.render import visual
 
 
 class CueAvoid:

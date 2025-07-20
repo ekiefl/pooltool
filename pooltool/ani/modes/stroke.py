@@ -8,8 +8,8 @@ from pooltool.ani.globals import Global
 from pooltool.ani.menu import TextOverlay
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.ani.scene import visual
 from pooltool.system.datatypes import multisystem
-from pooltool.system.render import visual
 
 
 class StrokeMode(BaseMode):

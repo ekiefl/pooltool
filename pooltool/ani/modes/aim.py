@@ -10,11 +10,10 @@ from pooltool.ani.collision import cue_avoid
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
-from pooltool.ani.modes.shot import ShotMode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.ani.scene import visual
 from pooltool.ptmath.utils import norm2d, tip_contact_offset
 from pooltool.system.datatypes import multisystem
-from pooltool.system.render import visual
 
 
 class AimMode(BaseMode):
@@ -149,7 +148,8 @@ class AimMode(BaseMode):
         elif self.keymap[Action.prev_shot]:
             self.keymap[Action.prev_shot] = False
             if len(multisystem) > 1:
-                ShotMode.change_animation(multisystem.active_index - 1)
+                visual.switch_to_shot(multisystem.active_index - 1)
+                self._update_hud()
                 Global.mode_mgr.change_mode(Mode.shot)
                 return task.done
         else:
@@ -197,9 +197,8 @@ class AimMode(BaseMode):
         if V0 > ani.max_stroke_speed:
             V0 = ani.max_stroke_speed
 
-        system_cue = multisystem.active.cue
-        system_cue.set_state(V0=V0)
-        hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
+        multisystem.active.cue.set_state(V0=V0)
+        self._update_hud()
 
     def aim_elevate_cue(self):
         cue = visual.cue.get_node("cue_stick_focus")
@@ -223,9 +222,8 @@ class AimMode(BaseMode):
         if cam.theta < (new_elevation + ani.min_camera):
             cam.rotate(theta=new_elevation + ani.min_camera)
 
-        system_cue = multisystem.active.cue
-        system_cue.set_state(theta=new_elevation)
-        hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
+        multisystem.active.cue.set_state(theta=new_elevation)
+        self._update_hud()
 
     def apply_english(self):
         with mouse:
@@ -277,5 +275,9 @@ class AimMode(BaseMode):
             theta=-cue_focus.getR(),
         )
 
+        self._update_hud()
+
+    def _update_hud(self) -> None:
+        """Update HUD with current system's cue and cue ball"""
         system_cue = multisystem.active.cue
         hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])

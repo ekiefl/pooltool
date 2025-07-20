@@ -52,7 +52,7 @@ class Global:
 
     With that in mind, this class is designed for two things:
 
-        (1) It gives access to the `ShowBaseGlobal` variables.
+        (1) It gives access to the relevant `ShowBaseGlobal` variables.
         (2) It provide a namespace for other variables designed to be shared across many
             modules.
     """

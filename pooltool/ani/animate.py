@@ -20,21 +20,20 @@ import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 from pooltool.ani.camera import CameraState, cam
 from pooltool.ani.collision import cue_avoid
-from pooltool.ani.environment import environment
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.menu import TextOverlay, menus
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
+from pooltool.ani.scene import PlaybackMode, visual
 from pooltool.evolution import simulate
 from pooltool.evolution.continuous import continuize
 from pooltool.layouts import get_rack
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
 from pooltool.ruleset import get_ruleset
-from pooltool.ruleset.datatypes import Player
+from pooltool.ruleset.datatypes import Player, Ruleset
 from pooltool.system.datatypes import MultiSystem, System, multisystem
-from pooltool.system.render import PlaybackMode, visual
 from pooltool.utils import Run, get_total_memory_usage, human_readable_file_size
 
 run = Run()
@@ -168,7 +167,6 @@ class Interface(ShowBase):
             visual.exit_parallel_mode()
 
         visual.teardown()
-        environment.teardown()
 
         hud.destroy()
 
@@ -186,8 +184,6 @@ class Interface(ShowBase):
 
         visual.attach_system(multisystem.active)
         visual.buildup()
-
-        environment.init(multisystem.active.table)
 
         R = max([ball.params.R for ball in multisystem.active.balls.values()])
         cam.fixate(
@@ -471,15 +467,17 @@ class Game(Interface):
         # This task chain allows simulations to be run in parallel to the game processes
         Global.task_mgr.setupTaskChain("simulation", numThreads=1)
 
-        tasks.register_event("enter-game", self.enter_game)
+        tasks.register_event("enter-game", self._enter_game)
 
         Global.mode_mgr.update_event_baseline()
         Global.mode_mgr.change_mode(Mode.menu)
 
-    def enter_game(self):
+    def _enter_game(self):
         """Close the menu, setup the visualization, and start the game"""
+        if not Global.game or not len(multisystem):
+            self._create_system()
+
         menus.hide_all()
-        self.create_system()
         self.create_scene()
         visual.cue.hide_nodes()
         cue_avoid.init_collisions()
@@ -499,7 +497,7 @@ class Game(Interface):
 
         Global.mode_mgr.change_mode(Mode.aim)
 
-    def create_system(self):
+    def _create_system(self):
         """Create the multisystem and game objects
 
         FIXME This is where menu options for game type and further specifications should
@@ -509,7 +507,6 @@ class Game(Interface):
         # Available options:
         #   {eightball, nineball, threecushion, snooker, sandbox, sumtothree}
         game_type = ani.settings.gameplay.game_type
-
         game = get_ruleset(game_type)()
         game.players = [
             Player("Player 1"),
@@ -527,9 +524,15 @@ class Game(Interface):
         cue = Cue(cue_ball_id=game.shot_constraints.cueball(balls))
         shot = System(table=table, balls=balls, cue=cue)
 
+        self.attach_system(shot)
+        self.attach_ruleset(game)
+
+    def attach_system(self, system: System) -> None:
         multisystem.reset()
-        multisystem.append(shot)
-        Global.game = game
+        multisystem.append(system)
+
+    def attach_ruleset(self, ruleset: Ruleset) -> None:
+        Global.game = ruleset
 
     def start(self):
         Global.task_mgr.run()
