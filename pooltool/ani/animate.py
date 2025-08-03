@@ -22,7 +22,7 @@ from pooltool.ani.camera import CameraState, cam
 from pooltool.ani.collision import cue_avoid
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.hud import HUDElement, hud
-from pooltool.ani.menu import TextOverlay, menus
+from pooltool.ani.menu import MenuRegistry
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
 from pooltool.ani.scene import PlaybackMode, visual
@@ -458,12 +458,6 @@ class Game(Interface):
     def __init__(self, config=ShowBaseConfig.default()):
         Interface.__init__(self, config=config)
 
-        # FIXME can this be added to MenuMode.enter? It produces a lot of events that
-        # end up being part of the baseline due to the update_event_baseline call below.
-        # To see, enter debugger after this command check
-        # Global.base.messenger.get_events()
-        menus.populate()
-
         # This task chain allows simulations to be run in parallel to the game processes
         Global.task_mgr.setupTaskChain("simulation", numThreads=1)
 
@@ -477,7 +471,7 @@ class Game(Interface):
         if not Global.game or not len(multisystem):
             self._create_system()
 
-        menus.hide_all()
+        MenuRegistry.hide_all()
         self.create_scene()
         visual.cue.hide_nodes()
         cue_avoid.init_collisions()
@@ -485,7 +479,7 @@ class Game(Interface):
         if ani.settings.graphics.hud:
             hud.init()
 
-        code_comp_menu = TextOverlay(
+        code_comp_menu = autils.TextOverlay(
             title="Compiling simulation code...",
             frame_color=(0, 0, 0, 0.4),
             title_pos=(0, 0, 0),

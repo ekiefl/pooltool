@@ -7,12 +7,12 @@ from panda3d.core import TransparencyAttrib
 
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
+import pooltool.ani.utils as autils
 import pooltool.constants as c
 import pooltool.ptmath as ptmath
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
-from pooltool.ani.menu import TextOverlay
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.ani.scene import visual
@@ -62,7 +62,7 @@ class CallShotMode(BaseMode):
         # Check if calling shot is required for this shot
         if not Global.game.shot_constraints.call_shot:
             # Show message that calling shot is not required
-            self.instruction_message = TextOverlay(
+            self.instruction_message = autils.TextOverlay(
                 title="Calling shot not required for this shot.",
                 frame_color=(0, 0, 0, 0.0),
                 title_pos=(0, 0, 0.6),
@@ -71,7 +71,7 @@ class CallShotMode(BaseMode):
             )
         else:
             # Show instruction message for ball selection
-            self.instruction_message = TextOverlay(
+            self.instruction_message = autils.TextOverlay(
                 title='Select a ball to call. Click to confirm while holding "c".',
                 frame_color=(0, 0, 0, 0.0),
                 title_pos=(0, 0, 0.6),
@@ -111,7 +111,7 @@ class CallShotMode(BaseMode):
             if self.instruction_message is not None:
                 self.instruction_message.hide()
 
-            self.instruction_message = TextOverlay(
+            self.instruction_message = autils.TextOverlay(
                 title="Calling shot not required for this shot.",
                 frame_color=(0, 0, 0, 0.0),
                 title_pos=(0, 0, 0.6),
@@ -142,7 +142,7 @@ class CallShotMode(BaseMode):
                 if self.instruction_message is not None:
                     self.instruction_message.hide()
 
-                self.instruction_message = TextOverlay(
+                self.instruction_message = autils.TextOverlay(
                     title='Now select a pocket. Click to confirm while holding "c".',
                     frame_color=(0, 0, 0, 0.0),
                     title_pos=(0, 0, 0.6),

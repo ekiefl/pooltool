@@ -2,10 +2,10 @@
 
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
+import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
-from pooltool.ani.menu import TextOverlay
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.evolution import simulate
@@ -24,7 +24,7 @@ class CalculateMode(BaseMode):
     def enter(self):
         mouse.mode(MouseMode.RELATIVE)
 
-        self.shot_sim_overlay = TextOverlay(
+        self.shot_sim_overlay = autils.TextOverlay(
             title="Calculating shot...",
             frame_color=(0, 0, 0, 0.4),
             title_pos=(0, 0, -0.2),

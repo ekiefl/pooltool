@@ -2,10 +2,10 @@
 
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
+import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
-from pooltool.ani.menu import TextOverlay
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.ani.scene import visual
@@ -55,7 +55,7 @@ class StrokeMode(BaseMode):
                 # Shot constraints not satisfied - show message
                 if self.call_shot_message is None:
                     # Create message that appears when shot calling is required
-                    self.call_shot_message = TextOverlay(
+                    self.call_shot_message = autils.TextOverlay(
                         title='Shot must be called. Hold "c" to call your shot.',
                         frame_color=(0, 0, 0, 0.3),
                         title_pos=(0, 0, 0.6),

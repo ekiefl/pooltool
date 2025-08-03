@@ -2,9 +2,9 @@
 
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
+import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.globals import Global
-from pooltool.ani.menu import TextOverlay
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 
@@ -37,7 +37,7 @@ class PurgatoryMode(BaseMode):
 
         self.is_window_active = None
 
-        self.dim_overlay = TextOverlay(
+        self.dim_overlay = autils.TextOverlay(
             title="Click to continue...",
             frame_color=(0, 0, 0, 0.4),
             title_pos=(0, 0, -0.2),

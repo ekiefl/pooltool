@@ -6,12 +6,12 @@ from panda3d.core import TransparencyAttrib
 
 import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
+import pooltool.ani.utils as autils
 import pooltool.constants as c
 import pooltool.ptmath as ptmath
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global
-from pooltool.ani.menu import TextOverlay
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.ani.scene import visual
@@ -53,7 +53,7 @@ class BallInHandMode(BaseMode):
         if Global.game.shot_constraints.movable is None:
             self.picking = "ball"
             # Show instruction for selecting any ball
-            self.instruction_message = TextOverlay(
+            self.instruction_message = autils.TextOverlay(
                 title='Select a ball to move. Click to confirm while holding "g".',
                 frame_color=(0, 0, 0, 0.0),
                 title_pos=(0, 0, 0.6),
@@ -63,7 +63,7 @@ class BallInHandMode(BaseMode):
             self.instruction_message.show()
         elif len(Global.game.shot_constraints.movable) == 0:
             # Message indicating no balls are movable
-            self.instruction_message = TextOverlay(
+            self.instruction_message = autils.TextOverlay(
                 title="No balls are available to move.",
                 frame_color=(0, 0, 0, 0.0),
                 title_pos=(0, 0, 0.6),
@@ -77,7 +77,7 @@ class BallInHandMode(BaseMode):
             self.grab_ball_shadow_node = self.grabbed_ball.get_node("shadow")
             self.picking = "placement"
             # Show instruction for placement since we're already in that phase
-            self.instruction_message = TextOverlay(
+            self.instruction_message = autils.TextOverlay(
                 title='Move the ball to a valid position. Click to place while holding "g".',
                 frame_color=(0, 0, 0, 0.0),
                 title_pos=(0, 0, 0.6),
@@ -89,7 +89,7 @@ class BallInHandMode(BaseMode):
             # If there are specific movable balls, set picking to "ball" to allow selection
             self.picking = "ball"
             # Show instruction for selecting from available balls
-            self.instruction_message = TextOverlay(
+            self.instruction_message = autils.TextOverlay(
                 title='Select a ball to move. Click to confirm while holding "g".',
                 frame_color=(0, 0, 0, 0.0),
                 title_pos=(0, 0, 0.6),
@@ -159,7 +159,7 @@ class BallInHandMode(BaseMode):
                     if self.instruction_message is not None:
                         self.instruction_message.hide()
 
-                    self.instruction_message = TextOverlay(
+                    self.instruction_message = autils.TextOverlay(
                         title='Move the ball to a valid position. Click to place while holding "g".',
                         frame_color=(0, 0, 0, 0.0),
                         title_pos=(0, 0, 0.6),
@@ -202,7 +202,7 @@ class BallInHandMode(BaseMode):
                         if self.instruction_message is not None:
                             self.instruction_message.hide()
 
-                        self.instruction_message = TextOverlay(
+                        self.instruction_message = autils.TextOverlay(
                             title='Select a ball to move. Click to confirm while holding "g".',
                             frame_color=(0, 0, 0, 0.0),
                             title_pos=(0, 0, 0.6),
@@ -219,7 +219,7 @@ class BallInHandMode(BaseMode):
                     if self.instruction_message is not None:
                         self.instruction_message.hide()
 
-                    self.instruction_message = TextOverlay(
+                    self.instruction_message = autils.TextOverlay(
                         title="Invalid position! Balls cannot overlap.",
                         frame_color=(0, 0, 0, 0.0),
                         title_pos=(0, 0, 0.6),

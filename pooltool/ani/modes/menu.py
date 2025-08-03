@@ -5,7 +5,7 @@ import sys
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.globals import Global
-from pooltool.ani.menu import menus
+from pooltool.ani.menu import MenuRegistry
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 
@@ -23,10 +23,11 @@ class MenuMode(BaseMode):
     def enter(self):
         mouse.mode(MouseMode.ABSOLUTE)
 
-        try:
-            menus.show(menus.current.name)
-        except AttributeError:
-            menus.show("main_menu")
+        current_menu = MenuRegistry.get_current_menu()
+        if current_menu:
+            MenuRegistry.show_menu(current_menu.name)
+        else:
+            MenuRegistry.show_menu("main_menu")
 
         self.register_keymap_event("escape", Action.exit, True)
         self.register_keymap_event("escape-up", Action.exit, False)
@@ -40,6 +41,7 @@ class MenuMode(BaseMode):
         tasks.add(self.shared_task, "shared_task")
 
     def exit(self):
+        MenuRegistry.hide_all()
         tasks.remove("shared_task")
         tasks.remove("menu_task")
 
@@ -51,24 +53,26 @@ class MenuMode(BaseMode):
             Global.base.messenger.send("enter-game")
             return task.done
 
-        if self.keymap[Action.scroll_up]:
-            scroll_bar = menus.current.area.verticalScroll
-            scroll_bar.setValue(scroll_bar.getValue() - scroll_bar["pageSize"])
-            self.keymap[Action.scroll_up] = False
+        current_menu = MenuRegistry.get_current_menu()
+        if current_menu:
+            if self.keymap[Action.scroll_up]:
+                scroll_bar = current_menu.area.verticalScroll
+                scroll_bar.setValue(scroll_bar.getValue() - scroll_bar["pageSize"])
+                self.keymap[Action.scroll_up] = False
 
-        if self.keymap[Action.scroll_down]:
-            scroll_bar = menus.current.area.verticalScroll
-            scroll_bar.setValue(scroll_bar.getValue() + scroll_bar["pageSize"])
-            self.keymap[Action.scroll_down] = False
+            if self.keymap[Action.scroll_down]:
+                scroll_bar = current_menu.area.verticalScroll
+                scroll_bar.setValue(scroll_bar.getValue() + scroll_bar["pageSize"])
+                self.keymap[Action.scroll_down] = False
 
-        if self.keymap["click"]:
-            self.keymap["click"] = False
-            for element in menus.current.elements:
-                if (
-                    element["type"] == "entry"
-                    and element["object"]["focus"]
-                    and element["name"] != menus.current.hovered_entry
-                ):
-                    element["object"]["focus"] = False
+            if self.keymap["click"]:
+                self.keymap["click"] = False
+                for element in current_menu.elements:
+                    if (
+                        element["type"] == "entry"
+                        and element.get("object", {}).get("focus")
+                        and element.get("name") != current_menu.hovered_entry
+                    ):
+                        element["object"]["focus"] = False
 
         return task.cont
