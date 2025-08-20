@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 
-import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.config import settings
 
 
 class PurgatoryMode(BaseMode):
@@ -59,7 +59,7 @@ class PurgatoryMode(BaseMode):
         tasks.remove("purgatory_task")
 
         # Set the framerate to pre-purgatory levels
-        Global.clock.setFrameRate(ani.settings.graphics.fps)
+        Global.clock.setFrameRate(settings.graphics.fps)
 
         self.dim_overlay.hide()
 
@@ -73,9 +73,9 @@ class PurgatoryMode(BaseMode):
             # The state of the window has changed. Time to update the FPS
 
             if is_window_active:
-                Global.clock.setFrameRate(ani.settings.graphics.fps)
+                Global.clock.setFrameRate(settings.graphics.fps)
             else:
-                Global.clock.setFrameRate(ani.settings.graphics.fps_inactive)
+                Global.clock.setFrameRate(settings.graphics.fps_inactive)
 
             # Update status
             self.is_window_active = is_window_active

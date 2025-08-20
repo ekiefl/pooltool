@@ -26,10 +26,12 @@ from pooltool.ani.menu import MenuRegistry
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
 from pooltool.ani.scene import PlaybackMode, visual
+from pooltool.config import settings
 from pooltool.evolution import simulate
 from pooltool.evolution.continuous import continuize
 from pooltool.layouts import get_rack
 from pooltool.objects.cue.datatypes import Cue
+from pooltool.objects.table.collection import prebuilt_specs
 from pooltool.objects.table.datatypes import Table
 from pooltool.ruleset import get_ruleset
 from pooltool.ruleset.datatypes import Player, Ruleset
@@ -87,8 +89,8 @@ def window_task(win=None):
     requested_width = Global.base.win.getXSize()
     requested_height = Global.base.win.getYSize()
 
-    diff = abs(requested_width / requested_height - ani.aspect_ratio)
-    if diff / ani.aspect_ratio < 0.05:
+    diff = abs(requested_width / requested_height - settings.panda.aspect_ratio)
+    if diff / settings.panda.aspect_ratio < 0.05:
         # If they are within 5% of the intended ratio, just let them be.
         return
 
@@ -97,8 +99,8 @@ def window_task(win=None):
     # A = w*h
     # A = r*h*h
     # h = (A/r)^(1/2)
-    height = (requested_area / ani.aspect_ratio) ** (1 / 2)
-    width = height * ani.aspect_ratio
+    height = (requested_area / settings.panda.aspect_ratio) ** (1 / 2)
+    width = height * settings.panda.aspect_ratio
 
     properties = WindowProperties()
     properties.setSize(int(width), int(height))
@@ -112,8 +114,8 @@ def _resize_offscreen_window(size: tuple[int, int]):
 
 def _init_simplepbr() -> simplepbr.Pipeline:
     return simplepbr.init(
-        enable_shadows=ani.settings.graphics.shadows,
-        max_lights=ani.settings.graphics.max_lights,
+        enable_shadows=settings.graphics.shadows,
+        max_lights=settings.graphics.max_lights,
     )
 
 
@@ -137,11 +139,11 @@ class Interface(ShowBase):
 
         cam.init()
 
-        if not ani.settings.graphics.shader:
+        if not settings.graphics.shader:
             Global.render.set_shader_off()
 
         Global.clock.setMode(ClockObject.MLimited)
-        Global.clock.setFrameRate(ani.settings.graphics.fps)
+        Global.clock.setFrameRate(settings.graphics.fps)
 
         Global.register_mode_mgr(ModeManager(all_modes))
         assert Global.mode_mgr is not None
@@ -414,7 +416,7 @@ class ShotViewer(Interface):
         self._create_title(title)
         self.title_node.show()
 
-        if ani.settings.graphics.hud:
+        if settings.graphics.hud:
             hud.init(hide=[HUDElement.help_text])
 
         params = dict(
@@ -476,7 +478,7 @@ class Game(Interface):
         visual.cue.hide_nodes()
         cue_avoid.init_collisions()
 
-        if ani.settings.graphics.hud:
+        if settings.graphics.hud:
             hud.init()
 
         code_comp_menu = autils.TextOverlay(
@@ -500,14 +502,14 @@ class Game(Interface):
         # Change the gametype by editing ~/.config/pooltool/general.yaml
         # Available options:
         #   {eightball, nineball, threecushion, snooker, sandbox, sumtothree}
-        game_type = ani.settings.gameplay.game_type
+        game_type = settings.gameplay.game_type
         game = get_ruleset(game_type)()
         game.players = [
             Player("Player 1"),
             Player("Player 2"),
         ]
 
-        table = Table.from_game_type(game_type)
+        table = Table.from_table_specs(prebuilt_specs(settings.gameplay.table_name))
         balls = get_rack(
             game_type=game_type,
             table=table,

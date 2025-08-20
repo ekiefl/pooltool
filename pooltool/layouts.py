@@ -487,7 +487,6 @@ _game_rack_map: dict[str, GetRackProtocol] = {
     GameType.EIGHTBALL: _get_eight_ball_rack,
     GameType.THREECUSHION: _get_three_cushion_rack,
     GameType.SNOOKER: _get_snooker_rack,
-    GameType.SANDBOX: _get_nine_ball_rack,
     GameType.SUMTOTHREE: _get_sum_to_three_rack,
 }
 

@@ -1,13 +1,18 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
+import attrs
 from direct.gui.DirectGui import (
     DGG,
     DirectButton,
+    DirectCheckButton,
     DirectFrame,
     DirectLabel,
+    DirectOptionMenu,
     DirectScrolledFrame,
 )
 from direct.gui.OnscreenImage import OnscreenImage
@@ -27,6 +32,7 @@ import pooltool.ani.utils as autils
 from pooltool.ani.fonts import load_font
 from pooltool.ani.globals import Global
 from pooltool.utils import panda_path
+from pooltool.utils.strenum import StrEnum
 
 TEXT_COLOR = (0.1, 0.1, 0.1, 1)
 FRAME_COLOR = (0, 0, 0, 1)
@@ -46,7 +52,362 @@ TITLE_FONT = "LABTSECW"
 BUTTON_FONT = "LABTSECW"
 
 
-def load_image_as_plane(filepath: Path, yresolution: int = 600) -> NodePath:
+class CleanupProtocol(Protocol):
+    """Protocol for menu elements that can clean up their Panda3D resources"""
+
+    def cleanup(self) -> None:
+        """Clean up any Panda3D objects"""
+        ...
+
+
+@attrs.define
+class MenuElementRegistry:
+    """Registry for tracking menu elements with type-safe cleanup"""
+
+    elements: list[CleanupProtocol] = attrs.field(factory=list)
+
+    def add(self, element: CleanupProtocol) -> None:
+        self.elements.append(element)
+
+    def clear(self) -> None:
+        for element in self.elements:
+            element.cleanup()
+        self.elements.clear()
+
+    def find_focusable_elements(self) -> list[MenuDropdown | MenuCheckbox]:
+        """Find elements that can be focused (for click handling)"""
+        return [
+            e
+            for e in self.elements
+            if hasattr(e, "dropdown") or hasattr(e, "checkbox")  # type: ignore
+        ]
+
+
+@attrs.define
+class MenuTitle:
+    text: str
+    label: DirectLabel
+
+    @classmethod
+    def create(cls, text: str, font: str = TITLE_FONT) -> MenuTitle:
+        label = DirectLabel(
+            text=text,
+            scale=HEADING_SCALE,
+            relief=None,
+            text_fg=TEXT_COLOR,
+            text_align=TextNode.ALeft,
+            text_font=load_font(font),
+        )
+        return cls(text=text, label=label)
+
+    def cleanup(self) -> None:
+        """Clean up the DirectLabel"""
+        self.label.removeNode()
+
+
+@attrs.define
+class MenuButton:
+    text: str
+    command: Callable[[], None]
+    description: str
+    button: DirectButton
+    info_button: DirectButton | None = None
+
+    @classmethod
+    def create(
+        cls,
+        text: str,
+        command: Callable[[], None],
+        description: str,
+        font: str = BUTTON_FONT,
+    ) -> MenuButton:
+        button = DirectButton(
+            text=text,
+            text_align=TextNode.ALeft,
+            text_font=load_font(font),
+            scale=BUTTON_TEXT_SCALE,
+            geom=_load_image_as_plane(MENU_ASSETS / "button.png"),
+            relief=None,
+            command=command,
+        )
+
+        info_button = None
+        if description:
+            info_button = DirectButton(
+                text="",
+                text_align=TextNode.ALeft,
+                scale=INFO_SCALE,
+                image=panda_path(MENU_ASSETS / "info_button.png"),
+                relief=None,
+            )
+
+        return cls(
+            text=text,
+            command=command,
+            description=description,
+            button=button,
+            info_button=info_button,
+        )
+
+    def cleanup(self) -> None:
+        """Clean up the DirectButton and optional info button"""
+        self.button.removeNode()
+        if self.info_button:
+            self.info_button.removeNode()
+
+
+@attrs.define
+class MenuBackButton:
+    command: Callable[[], None]
+    button: DirectButton
+
+    @classmethod
+    def create(cls, command: Callable[[], None]) -> MenuBackButton:
+        button = DirectButton(
+            scale=BACKBUTTON_TEXT_SCALE,
+            geom=(
+                _load_image_as_plane(MENU_ASSETS / "backbutton.png"),
+                _load_image_as_plane(MENU_ASSETS / "backbutton.png"),
+                _load_image_as_plane(MENU_ASSETS / "backbutton_hover.png"),
+                _load_image_as_plane(MENU_ASSETS / "backbutton.png"),
+            ),
+            relief=None,
+            command=command,
+        )
+        return cls(command=command, button=button)
+
+    def cleanup(self) -> None:
+        """Clean up the DirectButton"""
+        self.button.removeNode()
+
+
+@attrs.define
+class MenuText:
+    text: str
+    wrapped_text: str
+    label: DirectLabel
+
+    @classmethod
+    def create(cls, text: str) -> MenuText:
+        max_len = 55
+        new_text = []
+        line, columns = [], 0
+        for word in text.split():
+            if columns + len(word) > max_len:
+                new_text.append(" ".join(line))
+                line, columns = [], 0
+            columns += len(word)
+            line.append(word)
+        new_text.append(" ".join(line))
+        wrapped_text = "\n".join(new_text)
+
+        label = DirectLabel(
+            text=wrapped_text,
+            scale=TEXT_SCALE,
+            relief=None,
+            text_fg=TEXT_COLOR,
+            text_align=TextNode.ALeft,
+            text_font=None,
+        )
+
+        return cls(text=text, wrapped_text=wrapped_text, label=label)
+
+    def cleanup(self) -> None:
+        """Clean up the DirectLabel"""
+        self.label.removeNode()
+
+
+@attrs.define
+class MenuDropdown:
+    name: str
+    options: list[str]
+    initial_selection: str
+    description: str
+    command: Callable[[str], None] | None
+    title: DirectLabel
+    dropdown: DirectOptionMenu
+    info_button: DirectButton | None = None
+
+    @classmethod
+    def create(
+        cls,
+        name: str,
+        options: list[str],
+        initial_selection: str = "",
+        description: str = "",
+        command: Callable[[str], None] | None = None,
+        title_font: str = TITLE_FONT,
+        button_font: str = BUTTON_FONT,
+    ) -> MenuDropdown:
+        # Set initial selection to first option if not provided
+        if not initial_selection and options:
+            initial_selection = options[0]
+
+        # Create header label
+        title = DirectLabel(
+            text=name + ":",
+            scale=AUX_TEXT_SCALE,
+            relief=None,
+            text_fg=TEXT_COLOR,
+            text_align=TextNode.ALeft,
+            text_font=load_font(title_font),
+        )
+
+        # Create dropdown
+        dropdown = DirectOptionMenu(
+            scale=BUTTON_TEXT_SCALE * 0.8,
+            items=options,
+            highlightColor=(0.65, 0.65, 0.65, 1),
+            textMayChange=1,
+            text_align=TextNode.ALeft,
+            text_font=load_font(button_font),
+            relief=DGG.RIDGE,
+            initialitem=(
+                options.index(initial_selection) if initial_selection in options else 0
+            ),
+            popupMarker_scale=0.6,
+            popupMarker_image=_load_image_as_plane(MENU_ASSETS / "dropdown_marker.png"),
+            popupMarker_relief=None,
+            item_pad=(0.2, 0.2),
+            command=command,
+        )
+        dropdown["frameColor"] = (1, 1, 1, 0.3)
+
+        # Create info button if description provided
+        info_button = None
+        if description:
+            info_button = DirectButton(
+                text="",
+                text_align=TextNode.ALeft,
+                scale=INFO_SCALE,
+                image=panda_path(MENU_ASSETS / "info_button.png"),
+                relief=None,
+            )
+
+        return cls(
+            name=name,
+            options=options,
+            initial_selection=initial_selection,
+            description=description,
+            command=command,
+            title=title,
+            dropdown=dropdown,
+            info_button=info_button,
+        )
+
+    @classmethod
+    def from_enum(
+        cls,
+        name: str,
+        enum_class: type[StrEnum],
+        initial_selection: StrEnum | None = None,
+        description: str = "",
+        command: Callable[[str], None] | None = None,
+        title_font: str = TITLE_FONT,
+        button_font: str = BUTTON_FONT,
+    ) -> MenuDropdown:
+        """Create a MenuDropdown from a StrEnum class"""
+        options = [member.value for member in enum_class]
+        initial_selection_str = initial_selection.value if initial_selection else ""
+
+        return cls.create(
+            name=name,
+            options=options,
+            initial_selection=initial_selection_str,
+            description=description,
+            command=command,
+            title_font=title_font,
+            button_font=button_font,
+        )
+
+    def cleanup(self) -> None:
+        """Clean up the DirectLabel, DirectOptionMenu, and optional info button"""
+        self.title.removeNode()
+        self.dropdown.removeNode()
+        if self.info_button:
+            self.info_button.removeNode()
+
+
+@attrs.define
+class MenuCheckbox:
+    name: str
+    initial_state: bool
+    description: str
+    command: Callable[[bool], None] | None
+    title: DirectLabel
+    checkbox: DirectCheckButton
+    info_button: DirectButton | None = None
+
+    @classmethod
+    def create(
+        cls,
+        name: str,
+        initial_state: bool = False,
+        description: str = "",
+        command: Callable[[bool], None] | None = None,
+        title_font: str = TITLE_FONT,
+        button_font: str = BUTTON_FONT,
+    ) -> MenuCheckbox:
+        # Create header label
+        title = DirectLabel(
+            text=name + ":",
+            scale=AUX_TEXT_SCALE,
+            relief=None,
+            text_fg=TEXT_COLOR,
+            text_align=TextNode.ALeft,
+            text_font=load_font(title_font),
+        )
+
+        # Create checkbox with wrapped command to convert int to bool
+        def wrapped_command(value):
+            if command:
+                command(bool(value))
+
+        checkbox = DirectCheckButton(
+            scale=BUTTON_TEXT_SCALE * 0.8,
+            boxBorder=0.05,
+            boxPlacement="left",
+            text_align=TextNode.ALeft,
+            text_font=load_font(button_font),
+            relief=DGG.RIDGE,
+            frameColor=(1, 1, 1, 0.3),
+            command=wrapped_command,
+        )
+
+        # Set initial state after creation
+        if initial_state:
+            checkbox.setIndicatorValue()
+
+        # Create info button if description provided
+        info_button = None
+        if description:
+            info_button = DirectButton(
+                text="",
+                text_align=TextNode.ALeft,
+                scale=INFO_SCALE,
+                image=panda_path(MENU_ASSETS / "info_button.png"),
+                relief=None,
+            )
+
+        return cls(
+            name=name,
+            initial_state=initial_state,
+            description=description,
+            command=command,
+            title=title,
+            checkbox=checkbox,
+            info_button=info_button,
+        )
+
+    def cleanup(self) -> None:
+        """Clean up the DirectLabel, DirectCheckButton, and optional info button"""
+        self.title.removeNode()
+        self.checkbox.removeNode()
+        if self.info_button:
+            self.info_button.removeNode()
+
+
+def _load_image_as_plane(filepath: Path, yresolution: int = 600) -> NodePath:
     tex = Global.loader.loadTexture(panda_path(filepath))
     tex.setBorderColor(Vec4(0, 0, 0, 0))
     tex.setWrapU(Texture.WMBorderColor)
@@ -76,12 +437,11 @@ class BaseMenu(ABC):
 
         self.title_font = load_font(TITLE_FONT)
         self.button_font = load_font(BUTTON_FONT)
-
         if self.title_font.get_num_pages() == 0:
             self.title_font.setPixelsPerUnit(90)
 
         self.last_element: NodePath | None = None
-        self.elements: list[dict[str, Any]] = []
+        self.elements = MenuElementRegistry()
         self.hovered_entry: str | None = None
 
         self._create_backdrop()
@@ -131,22 +491,12 @@ class BaseMenu(ABC):
         self._clear_elements()
 
     def _clear_elements(self) -> None:
-        for element in self.elements:
-            if "content" in element and element["content"]:
-                element["content"].removeNode()
         self.elements.clear()
         self.last_element = None
 
-    def add_title(self, text: str) -> NodePath:
-        title = DirectLabel(
-            text=text,
-            scale=HEADING_SCALE,
-            parent=self.area.getCanvas(),
-            relief=None,
-            text_fg=TEXT_COLOR,
-            text_align=TextNode.ALeft,
-            text_font=self.title_font,
-        )
+    def add_title(self, menu_title: MenuTitle) -> NodePath:
+        title = menu_title.label
+        title.reparentTo(self.area.getCanvas())
 
         if self.last_element:
             autils.alignTo(title, self.last_element, autils.CT, autils.CB, gap=(1, 1))
@@ -181,29 +531,11 @@ class BaseMenu(ABC):
         whitespace.reparentTo(title_obj)
 
         self.last_element = title_obj
-
-        self.elements.append(
-            {
-                "type": "title",
-                "name": text,
-                "content": title_obj,
-            }
-        )
-
+        self.elements.add(menu_title)
         return title_obj
 
-    def add_button(
-        self, text: str, command: Callable[[], None], description: str = ""
-    ) -> NodePath:
-        button = DirectButton(
-            text=text,
-            text_align=TextNode.ALeft,
-            text_font=self.button_font,
-            scale=BUTTON_TEXT_SCALE,
-            geom=load_image_as_plane(MENU_ASSETS / "button.png"),
-            relief=None,
-            command=command,
-        )
+    def add_button(self, menu_button: MenuButton) -> NodePath:
+        button = menu_button.button
 
         # Bind mouse hover to highlighting option
         button.bind(DGG.ENTER, self._highlight_button, extraArgs=[button])
@@ -219,19 +551,14 @@ class BaseMenu(ABC):
         button_np.setX(-0.63)
         button_np.setZ(button_np.getZ() - MOVE)
 
-        # Info button if description provided
+        # Info button if provided
         info_button_np = None
-        if description:
-            info_button = DirectButton(
-                text="",
-                text_align=TextNode.ALeft,
-                scale=INFO_SCALE,
-                image=panda_path(MENU_ASSETS / "info_button.png"),
-                relief=None,
-            )
-
+        if menu_button.info_button:
+            info_button = menu_button.info_button
             info_button.bind(
-                DGG.ENTER, self._display_button_info, extraArgs=[description]
+                DGG.ENTER,
+                self._display_button_info,
+                extraArgs=[menu_button.description],
             )
             info_button.bind(DGG.EXIT, self._destroy_button_info)
 
@@ -243,74 +570,151 @@ class BaseMenu(ABC):
 
         # Create a parent for all the nodes
         button_obj = self.area.getCanvas().attachNewNode(
-            f"button_{text.replace(' ', '_')}"
+            f"button_{menu_button.text.replace(' ', '_')}"
         )
         button_np.reparentTo(button_obj)
         if info_button_np:
             info_button_np.reparentTo(button_obj)
 
         self.last_element = button_np
-
-        self.elements.append(
-            {
-                "type": "button",
-                "name": text,
-                "content": button_obj,
-                "object": button,
-            }
-        )
-
+        self.elements.add(menu_button)
         return button_obj
 
-    def add_back_button(self, command: Callable[[], None]) -> NodePath:
-        button = DirectButton(
-            scale=BACKBUTTON_TEXT_SCALE,
-            geom=(
-                load_image_as_plane(MENU_ASSETS / "backbutton.png"),
-                load_image_as_plane(MENU_ASSETS / "backbutton.png"),
-                load_image_as_plane(MENU_ASSETS / "backbutton_hover.png"),
-                load_image_as_plane(MENU_ASSETS / "backbutton.png"),
-            ),
-            relief=None,
-            command=command,
-        )
-
+    def add_back_button(self, menu_back_button: MenuBackButton) -> NodePath:
+        button = menu_back_button.button
         button_np = NodePath(button)
         button_np.reparentTo(self.area)
         button_np.setPos(-0.92, 0, 0.22)
-
-        self.elements.append(
-            {
-                "type": "backbutton",
-                "content": button_np,
-                "object": button,
-            }
-        )
-
+        self.elements.add(menu_back_button)
         return button_np
 
-    def add_text(self, text: str) -> NodePath:
-        max_len = 55
-        new_text = []
-        line, columns = [], 0
-        for word in text.split():
-            if columns + len(word) > max_len:
-                new_text.append(" ".join(line))
-                line, columns = [], 0
-            columns += len(word)
-            line.append(word)
-        new_text.append(" ".join(line))
-        wrapped_text = "\n".join(new_text)
+    def add_dropdown(self, menu_dropdown: MenuDropdown) -> NodePath:
+        """Add a dropdown menu with the given options"""
 
-        text_obj = DirectLabel(
-            text=wrapped_text,
-            scale=TEXT_SCALE,
-            parent=self.area.getCanvas(),
-            relief=None,
-            text_fg=TEXT_COLOR,
-            text_align=TextNode.ALeft,
-            text_font=None,
-        )
+        title = menu_dropdown.title
+        dropdown = menu_dropdown.dropdown
+
+        title_np = NodePath(title)
+        title_np.reparentTo(self.area.getCanvas())
+
+        dropdown_np = NodePath(dropdown)
+        dropdown_id = f"dropdown-{self.name}-{menu_dropdown.name.replace(' ', '_')}"
+        dropdown_np.setName(dropdown_id)
+        dropdown_np.reparentTo(self.area.getCanvas())
+
+        # Position the title
+        if self.last_element:
+            autils.alignTo(title_np, self.last_element, autils.CT, autils.CB)
+        else:
+            title_np.setPos(-0.63, 0, 0.8)
+        title_np.setX(-0.63)
+        title_np.setZ(title_np.getZ() - MOVE)
+
+        # Align the dropdown next to the title that refers to it
+        autils.alignTo(dropdown_np, title_np, autils.CL, autils.CR)
+        # Then shift it over just a bit to give some space
+        dropdown_np.setX(dropdown_np.getX() + 0.02)
+        # Then shift it down a little to align the text
+        dropdown_np.setZ(dropdown_np.getZ() - 0.005)
+
+        # Info button if provided
+        info_button_np = None
+        if menu_dropdown.info_button:
+            info_button = menu_dropdown.info_button
+
+            # Bind mouse hover to displaying button info
+            info_button.bind(
+                DGG.ENTER,
+                self._display_button_info,
+                extraArgs=[menu_dropdown.description],
+            )
+            info_button.bind(DGG.EXIT, self._destroy_button_info)
+
+            info_button_np = NodePath(info_button)
+            info_button_np.reparentTo(self.area.getCanvas())
+
+            # Align the info button next to the title it refers to
+            autils.alignTo(info_button_np, title_np, autils.CR, autils.CL)
+            # Then shift it over just a bit to give some space
+            info_button_np.setX(info_button_np.getX() - 0.02)
+
+        # Create a parent for all the nodes
+        dropdown_id = f"dropdown_{menu_dropdown.name.replace(' ', '_')}"
+        dropdown_obj = self.area.getCanvas().attachNewNode(dropdown_id)
+        title_np.reparentTo(dropdown_obj)
+        dropdown_np.reparentTo(dropdown_obj)
+        if info_button_np:
+            info_button_np.reparentTo(dropdown_obj)
+
+        self.last_element = dropdown_np
+        self.elements.add(menu_dropdown)
+        return dropdown_obj
+
+    def add_checkbox(self, menu_checkbox: MenuCheckbox) -> NodePath:
+        """Add a checkbox with the given configuration"""
+
+        title = menu_checkbox.title
+        checkbox = menu_checkbox.checkbox
+
+        title_np = NodePath(title)
+        title_np.reparentTo(self.area.getCanvas())
+
+        checkbox_np = NodePath(checkbox)
+        checkbox_id = f"checkbox-{self.name}-{menu_checkbox.name.replace(' ', '_')}"
+        checkbox_np.setName(checkbox_id)
+        checkbox_np.reparentTo(self.area.getCanvas())
+
+        # Position the title
+        if self.last_element:
+            autils.alignTo(title_np, self.last_element, autils.CT, autils.CB)
+        else:
+            title_np.setPos(-0.63, 0, 0.8)
+        title_np.setX(-0.63)
+        title_np.setZ(title_np.getZ() - MOVE)
+
+        # Align the checkbox next to the title that refers to it
+        autils.alignTo(checkbox_np, title_np, autils.CL, autils.CR)
+        # Then shift it over just a bit to give some space
+        checkbox_np.setX(checkbox_np.getX() + 0.02)
+        # Then shift it down a little to align the text
+        checkbox_np.setZ(checkbox_np.getZ() - 0.005)
+
+        # Info button if provided
+        info_button_np = None
+        if menu_checkbox.info_button:
+            info_button = menu_checkbox.info_button
+
+            # Bind mouse hover to displaying button info
+            info_button.bind(
+                DGG.ENTER,
+                self._display_button_info,
+                extraArgs=[menu_checkbox.description],
+            )
+            info_button.bind(DGG.EXIT, self._destroy_button_info)
+
+            info_button_np = NodePath(info_button)
+            info_button_np.reparentTo(self.area.getCanvas())
+
+            # Align the info button next to the title it refers to
+            autils.alignTo(info_button_np, title_np, autils.CR, autils.CL)
+            # Then shift it over just a bit to give some space
+            info_button_np.setX(info_button_np.getX() - 0.02)
+
+        # Create a parent for all the nodes
+        checkbox_id = f"checkbox_{menu_checkbox.name.replace(' ', '_')}"
+        checkbox_obj = self.area.getCanvas().attachNewNode(checkbox_id)
+        title_np.reparentTo(checkbox_obj)
+        checkbox_np.reparentTo(checkbox_obj)
+        if info_button_np:
+            info_button_np.reparentTo(checkbox_obj)
+
+        self.last_element = checkbox_np
+        self.elements.add(menu_checkbox)
+        return checkbox_obj
+
+    def add_text(self, menu_text: MenuText) -> NodePath:
+        text_obj = menu_text.label
+        text_obj.reparentTo(self.area.getCanvas())
 
         if self.last_element:
             autils.alignTo(
@@ -321,17 +725,16 @@ class BaseMenu(ABC):
         text_obj.setX(-0.7)
 
         self.last_element = text_obj
-
-        self.elements.append(
-            {
-                "type": "text",
-                "name": "",
-                "text": wrapped_text,
-                "content": text_obj,
-            }
-        )
-
+        self.elements.add(menu_text)
         return text_obj
+
+    def add_element(self, element: Any):
+        if isinstance(element, MenuCheckbox):
+            self.add_checkbox(element)
+        elif isinstance(element, MenuDropdown):
+            self.add_dropdown(element)
+        else:
+            raise NotImplementedError
 
     def _highlight_button(self, button: DirectButton, mouse_watcher: Any) -> None:
         self.highlighted_menu_button = button
@@ -340,7 +743,10 @@ class BaseMenu(ABC):
         )
 
     def _unhighlight_button(self, mouse_watcher: Any) -> None:
-        if hasattr(self, "highlighted_menu_button"):
+        if (
+            hasattr(self, "highlighted_menu_button")
+            and not self.highlighted_menu_button.is_empty()
+        ):
             self.highlighted_menu_button.setScale(
                 self.highlighted_menu_button.getScale() * 10 / 11
             )

@@ -65,14 +65,4 @@ class MenuMode(BaseMode):
                 scroll_bar.setValue(scroll_bar.getValue() + scroll_bar["pageSize"])
                 self.keymap[Action.scroll_down] = False
 
-            if self.keymap["click"]:
-                self.keymap["click"] = False
-                for element in current_menu.elements:
-                    if (
-                        element["type"] == "entry"
-                        and element.get("object", {}).get("focus")
-                        and element.get("name") != current_menu.hovered_entry
-                    ):
-                        element["object"]["focus"] = False
-
         return task.cont

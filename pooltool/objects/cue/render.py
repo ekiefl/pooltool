@@ -5,6 +5,7 @@ from panda3d.core import ClockObject, CollisionNode, CollisionSegment, Vec3
 import pooltool.ani as ani
 import pooltool.utils as utils
 from pooltool.ani.globals import Global
+from pooltool.config import settings
 from pooltool.error import ConfigError, StrokeError
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.datatypes import Cue
@@ -82,7 +83,7 @@ class CueRender(Render):
         self.has_focus = True
 
     def init_collision_handling(self, collision_handler):
-        if not ani.settings.gameplay.cue_collision:
+        if not settings.gameplay.cue_collision:
             return
 
         if not self.rendered:
@@ -104,7 +105,7 @@ class CueRender(Render):
         self.nodes["cue_cseg"] = collision_node
         Global.base.cTrav.addCollider(collision_node, collision_handler)
 
-        if ani.settings.graphics.debug:
+        if settings.graphics.debug:
             collision_node.show()
 
     def get_length(self):

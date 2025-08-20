@@ -1,10 +1,10 @@
 import numpy as np
 from panda3d.core import CollisionHandlerQueue, CollisionTraverser
 
-import pooltool.ani as ani
 import pooltool.ptmath as ptmath
 from pooltool.ani.globals import Global
 from pooltool.ani.scene import visual
+from pooltool.config import settings
 from pooltool.system.datatypes import multisystem
 
 
@@ -43,7 +43,7 @@ class CueAvoid:
           unrelated to this.
         """
 
-        if not ani.settings.gameplay.cue_collision:
+        if not settings.gameplay.cue_collision:
             return
 
         Global.base.cTrav = CollisionTraverser()

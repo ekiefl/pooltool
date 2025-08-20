@@ -10,6 +10,7 @@ from panda3d.core import (
 
 import pooltool.ani as ani
 from pooltool.ani.globals import Global
+from pooltool.config import settings
 from pooltool.utils import panda_path
 
 
@@ -26,8 +27,8 @@ class Environment:
         self.slights = {}
         self.plights = {}
 
-        shader = ani.settings.graphics.shader
-        lights = ani.settings.graphics.lights
+        shader = settings.graphics.shader
+        lights = settings.graphics.lights
 
         self.slight_str = 4
         self.slight_color = (0.8, 0.8, 0.6, 1)
@@ -39,7 +40,7 @@ class Environment:
         self.dlight_color = (0.8, 0.8, 0.7, 1)
 
     def init(self, table):
-        if ani.settings.graphics.physical_based_rendering:
+        if settings.graphics.physical_based_rendering:
             room_path = panda_path(ani.model_dir / "room/room_pbr.glb")
             floor_path = panda_path(ani.model_dir / "room/floor_pbr.glb")
         else:
@@ -48,11 +49,11 @@ class Environment:
 
         self.set_table_offset(table)
 
-        if ani.settings.graphics.room:
+        if settings.graphics.room:
             self.load_room(room_path)
-        if ani.settings.graphics.floor:
+        if settings.graphics.floor:
             self.load_floor(floor_path)
-        if ani.settings.graphics.lights:
+        if settings.graphics.lights:
             self.load_lights()
 
     def get_slight(

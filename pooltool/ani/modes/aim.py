@@ -12,6 +12,7 @@ from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.ani.scene import visual
+from pooltool.config import settings
 from pooltool.ptmath.utils import norm2d, tip_contact_offset
 from pooltool.system.datatypes import multisystem
 
@@ -100,7 +101,7 @@ class AimMode(BaseMode):
         self.register_keymap_event("i", Action.introspect, True)
         self.register_keymap_event("i-up", Action.introspect, False)
 
-        if ani.settings.gameplay.cue_collision:
+        if settings.gameplay.cue_collision:
             tasks.add(cue_avoid.collision_task, "collision_task")
 
         tasks.add(self.aim_task, "aim_task")
@@ -110,7 +111,7 @@ class AimMode(BaseMode):
         tasks.remove("aim_task")
         tasks.remove("shared_task")
 
-        if ani.settings.gameplay.cue_collision:
+        if settings.gameplay.cue_collision:
             tasks.remove("collision_task")
 
         cam.store_state(Mode.aim, overwrite=True)

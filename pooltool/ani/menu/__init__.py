@@ -1,7 +1,7 @@
 from pooltool.ani.menu._registry import MenuNavigator, MenuRegistry
-from pooltool.ani.menu.game_setup import GameSetupMenu
-from pooltool.ani.menu.main_menu import MainMenu
-from pooltool.ani.menu.settings import SettingsMenu
+from pooltool.ani.menu.menus.game_setup import GameSetupMenu
+from pooltool.ani.menu.menus.main_menu import MainMenu
+from pooltool.ani.menu.menus.settings import SettingsMenu
 
 MenuRegistry.register(GameSetupMenu)
 MenuRegistry.register(MainMenu)

@@ -7,7 +7,7 @@ from pooltool.objects.table.specs import (
     TableSpecs,
     TableType,
 )
-from pooltool.utils.strenum import StrEnum, auto
+from pooltool.utils.strenum import StrEnum
 
 
 class TableName(StrEnum):
@@ -20,10 +20,10 @@ class TableName(StrEnum):
         SUMTOTHREE_WIP:
     """
 
-    SEVEN_FOOT_SHOWOOD = auto()
-    SNOOKER_GENERIC = auto()
-    BILLIARD_WIP = auto()
-    SUMTOTHREE_WIP = auto()
+    SEVEN_FOOT_SHOWOOD = "7 Ft Showood"
+    SNOOKER_GENERIC = "Generic Snooker"
+    BILLIARD_WIP = "Billiard (work in progress)"
+    SUMTOTHREE_WIP = "Sum to Three (work in progress)"
 
 
 TABLE_SPECS: dict[TableName, TableSpecs] = {
@@ -99,7 +99,6 @@ _default_game_type_map: dict[GameType, TableName] = {
     GameType.SNOOKER: TableName.SNOOKER_GENERIC,
     GameType.THREECUSHION: TableName.BILLIARD_WIP,
     GameType.SUMTOTHREE: TableName.SUMTOTHREE_WIP,
-    GameType.SANDBOX: TableName.SEVEN_FOOT_SHOWOOD,
 }
 
 
