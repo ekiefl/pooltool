@@ -5,9 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pooltool as pt
-from pooltool.utils import Run, panda_path
-
-run = Run()
+from pooltool.utils import panda_path
 
 menu_text_scale = 0.07
 menu_text_scale_small = 0.04
