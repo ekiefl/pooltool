@@ -250,7 +250,7 @@ class CueRender(Render):
         a, b = tip_contact_offset(
             np.array([-cue_stick.getY(), cue_stick.getZ()])
             / self.follow._ball.params.R,
-            self._cue.specs.shaft_radius_at_tip,
+            self._cue.specs.tip_radius,
             self.follow._ball.params.R,
         )
         ball_id = self.follow._ball.id
