@@ -173,11 +173,17 @@ class SettingsProxy(Settings):
     """
 
     def __init__(self, path: Path) -> None:
-        self.path = path
+        self.path: Path = path
+        self._valid_cache: bool = True
+        self._cache: Settings = self.read()
 
     def __getattribute__(self, name: str):
         if name in Settings._attrs():
-            return getattr(self.read(), name)
+            if not self._valid_cache:
+                self._cache = self.read()
+                self._valid_cache = True
+
+            return getattr(self._cache, name)
 
         return object.__getattribute__(self, name)
 
@@ -230,6 +236,7 @@ class SettingsProxy(Settings):
         settings_inst = self.read()
         yield settings_inst
         settings_inst.save(self.path)
+        self._valid_cache = False
 
 
 settings = SettingsProxy(GENERAL_CONFIG)
