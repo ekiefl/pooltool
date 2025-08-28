@@ -4,13 +4,13 @@ import numpy as np
 from direct.interval.IntervalGlobal import Parallel
 from panda3d.core import TransparencyAttrib
 
-import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 import pooltool.constants as c
 import pooltool.ptmath as ptmath
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
+from pooltool.ani.constants import ball_highlight
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
@@ -270,7 +270,7 @@ class BallInHandMode(BaseMode):
     def remove_grab_selection_highlight(self):
         if self.grabbed_ball is not None:
             node = self.grabbed_ball.get_node("pos")
-            node.setScale(node.getScale() / ani.ball_highlight["ball_factor"])
+            node.setScale(node.getScale() / ball_highlight["ball_factor"])
             self.grab_ball_shadow_node.setAlphaScale(1)
             self.grab_ball_shadow_node.setScale(1)
             self.grabbed_ball.set_render_state_as_object_state()
@@ -283,20 +283,20 @@ class BallInHandMode(BaseMode):
                 "grab_selection_highlight_animation",
             )
             node = self.grabbed_ball.get_node("pos")
-            node.setScale(node.getScale() * ani.ball_highlight["ball_factor"])
+            node.setScale(node.getScale() * ball_highlight["ball_factor"])
 
     def grab_selection_highlight_animation(self, task):
-        phase = task.time * ani.ball_highlight["ball_frequency"]
+        phase = task.time * ball_highlight["ball_frequency"]
 
-        new_height = ani.ball_highlight["ball_offset"] + ani.ball_highlight[
+        new_height = ball_highlight["ball_offset"] + ball_highlight[
             "ball_amplitude"
         ] * np.sin(phase)
         self.grab_ball_node.setZ(new_height)
 
-        new_alpha = ani.ball_highlight["shadow_alpha_offset"] + ani.ball_highlight[
+        new_alpha = ball_highlight["shadow_alpha_offset"] + ball_highlight[
             "shadow_alpha_amplitude"
         ] * np.sin(-phase)
-        new_scale = ani.ball_highlight["shadow_scale_offset"] + ani.ball_highlight[
+        new_scale = ball_highlight["shadow_scale_offset"] + ball_highlight[
             "shadow_scale_amplitude"
         ] * np.sin(phase)
         self.grab_ball_shadow_node.setAlphaScale(new_alpha)

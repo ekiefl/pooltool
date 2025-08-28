@@ -15,11 +15,11 @@ from panda3d.core import (
     WindowProperties,
 )
 
-import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 from pooltool.ani.camera import CameraState, cam
 from pooltool.ani.collision import cue_avoid
+from pooltool.ani.constants import menu_text_scale
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.menu import MenuRegistry
@@ -436,7 +436,7 @@ class ShotViewer(Interface):
         self.title_node = autils.CustomOnscreenText(
             text=title,
             pos=(-1.55, -0.93),
-            scale=ani.menu_text_scale * 0.7,
+            scale=menu_text_scale * 0.7,
             fg=(1, 1, 1, 1),
             align=TextNode.ALeft,
             parent=Global.aspect2d,

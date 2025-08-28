@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 
-import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
+from pooltool.ani.constants import rotate_downtime
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
@@ -66,7 +66,7 @@ class CalculateMode(BaseMode):
         elif self.keymap[Action.move]:
             cam.move_fixation_via_mouse()
         else:
-            if task.time < ani.rotate_downtime:
+            if task.time < rotate_downtime:
                 # This catch helps prevent the shot follow through from moving the
                 # camera, which is annoying and no one would want. So instead of
                 # rotating the camera, we just touch the mouse so there is not a big

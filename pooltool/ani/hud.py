@@ -8,9 +8,15 @@ from direct.gui.OnscreenImage import OnscreenImage
 from direct.interval.LerpInterval import LerpFunc
 from panda3d.core import CardMaker, NodePath, TextNode, TransparencyAttrib
 
-import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
+from pooltool.ani.constants import (
+    logo_paths,
+    max_stroke_speed,
+    menu_text_scale,
+    min_stroke_speed,
+    model_dir,
+)
 from pooltool.ani.globals import Global
 from pooltool.objects.ball.datatypes import Ball, BallParams
 from pooltool.objects.cue.datatypes import Cue, CueSpecs
@@ -174,7 +180,7 @@ class Help(BaseHUDElement):
             text="Press 'h' to toggle help",
             font_name="LABTSECS",
             pos=(-1.55, 0.93),
-            scale=ani.menu_text_scale * 0.9,
+            scale=menu_text_scale * 0.9,
             fg=(1, 1, 1, 1),
             align=TextNode.ALeft,
             parent=Global.aspect2d,
@@ -191,7 +197,7 @@ class Help(BaseHUDElement):
                 parent=Global.base.a2dTopLeft,
                 align=TextNode.ALeft,
                 pos=(-1.45 if not title else -1.55, 0.85 - pos),
-                scale=ani.menu_text_scale if title else 0.7 * ani.menu_text_scale,
+                scale=menu_text_scale if title else 0.7 * menu_text_scale,
             )
             text.reparentTo(self.help_node)
             self.row_num += 1
@@ -330,7 +336,7 @@ class Logo(BaseHUDElement):
         BaseHUDElement.__init__(self)
 
         self.img = OnscreenImage(
-            image=ani.logo_paths["pt_smaller"],
+            image=logo_paths["pt_smaller"],
             pos=(0.94, 0, 0.89),
             parent=Global.render2d,
             scale=(0.08 * 0.49, 1, 0.08),
@@ -354,7 +360,7 @@ class Logo(BaseHUDElement):
 class English(BaseHUDElement):
     def __init__(self):
         BaseHUDElement.__init__(self)
-        self.dir = ani.model_dir / "hud" / "english"
+        self.dir = model_dir / "hud" / "english"
         self.text_scale = 0.2
         self.ball_scale = 0.15
         self.text_color = (1, 1, 1, 1)
@@ -474,9 +480,7 @@ class Power(NodePath, BaseHUDElement):
     def set(self, V0):
         self.text.setText(f"{V0:.2f} m/s")
 
-        value = (V0 - ani.min_stroke_speed) / (
-            ani.max_stroke_speed - ani.min_stroke_speed
-        )
+        value = (V0 - min_stroke_speed) / (max_stroke_speed - min_stroke_speed)
         if value < 0:
             value = 0
         if value > 1:
@@ -488,7 +492,7 @@ class Power(NodePath, BaseHUDElement):
 class Jack(BaseHUDElement):
     def __init__(self):
         BaseHUDElement.__init__(self)
-        self.dir = ani.model_dir / "hud" / "jack"
+        self.dir = model_dir / "hud" / "jack"
         self.text_scale = 0.4
         self.text_color = (1, 1, 1, 1)
 
@@ -513,7 +517,7 @@ class Jack(BaseHUDElement):
         autils.alignTo(self.arc, self.cue_cartoon, autils.LR, autils.CR)
 
         self.rotational_point = OnscreenImage(
-            image=panda_path(ani.model_dir / "hud" / "english" / "circle.png"),
+            image=panda_path(model_dir / "hud" / "english" / "circle.png"),
             parent=self.arc,
             scale=0.15,
         )

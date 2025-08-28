@@ -2,8 +2,8 @@ import numpy as np
 from direct.interval.IntervalGlobal import LerpPosInterval, Sequence
 from panda3d.core import ClockObject, CollisionNode, CollisionSegment, Vec3
 
-import pooltool.ani as ani
 import pooltool.utils as utils
+from pooltool.ani.constants import model_dir
 from pooltool.ani.globals import Global
 from pooltool.config import settings
 from pooltool.error import ConfigError, StrokeError
@@ -57,7 +57,7 @@ class CueRender(Render):
         cue_stick.setZ(tip_offset_b * self.follow._ball.params.R)  # b
 
     def init_model(self):
-        path = utils.panda_path(ani.model_dir / "cue" / "cue.glb")
+        path = utils.panda_path(model_dir / "cue" / "cue.glb")
         cue_stick_model = Global.loader.loadModel(path)
         cue_stick_model.setName("cue_stick_model")
 

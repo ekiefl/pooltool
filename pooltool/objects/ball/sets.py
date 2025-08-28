@@ -6,7 +6,7 @@ from pathlib import Path
 import attrs
 
 from pooltool import serialize
-from pooltool.ani import model_dir
+from pooltool.ani.constants import model_dir
 
 _expected_conversion_name = "conversion.json"
 

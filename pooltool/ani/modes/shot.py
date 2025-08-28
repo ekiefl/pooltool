@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 
 
-import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.collision import cue_avoid
+from pooltool.ani.constants import rotate_downtime
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
@@ -211,7 +211,7 @@ class ShotMode(BaseMode):
         elif self.keymap[Action.move]:
             cam.move_fixation_via_mouse()
 
-        elif task.time > ani.rotate_downtime:
+        elif task.time > rotate_downtime:
             # Only rotate the camera if some time has passed since the mode was entered,
             # otherwise the shot followthrough jarringly rotates the camera
             cam.rotate_via_mouse()

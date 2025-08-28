@@ -27,8 +27,8 @@ from panda3d.core import (
     Vec4,
 )
 
-import pooltool.ani as ani
 import pooltool.ani.utils as autils
+from pooltool.ani.constants import logo_paths, model_dir
 from pooltool.ani.fonts import load_font
 from pooltool.ani.globals import Global
 from pooltool.utils import panda_path
@@ -47,7 +47,7 @@ SUBHEADING_SCALE = 0.08
 MOVE = 0.02
 INFO_SCALE = 0.025
 INFO_TEXT_SCALE = 0.05
-MENU_ASSETS = ani.model_dir / "menu"
+MENU_ASSETS = model_dir / "menu"
 TITLE_FONT = "LABTSECW"
 BUTTON_FONT = "LABTSECW"
 
@@ -456,7 +456,7 @@ class BaseMenu(ABC):
 
         self.area_backdrop.setImage(panda_path(MENU_ASSETS / "menu_background.jpeg"))
         img = OnscreenImage(
-            image=panda_path(ani.logo_paths["default"]),
+            image=panda_path(logo_paths["default"]),
             pos=(0, 0, 0.65),
             parent=self.area_backdrop,
             scale=(1.4 * 0.25, 1, 1.4 * 0.22),

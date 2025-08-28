@@ -8,7 +8,7 @@ from panda3d.core import (
     Spotlight,
 )
 
-import pooltool.ani as ani
+from pooltool.ani.constants import model_dir
 from pooltool.ani.globals import Global
 from pooltool.config import settings
 from pooltool.utils import panda_path
@@ -41,11 +41,11 @@ class Environment:
 
     def init(self, table):
         if settings.graphics.physical_based_rendering:
-            room_path = panda_path(ani.model_dir / "room/room_pbr.glb")
-            floor_path = panda_path(ani.model_dir / "room/floor_pbr.glb")
+            room_path = panda_path(model_dir / "room/room_pbr.glb")
+            floor_path = panda_path(model_dir / "room/floor_pbr.glb")
         else:
-            room_path = panda_path(ani.model_dir / "room/room.glb")
-            floor_path = panda_path(ani.model_dir / "room/floor.glb")
+            room_path = panda_path(model_dir / "room/room.glb")
+            floor_path = panda_path(model_dir / "room/floor.glb")
 
         self.set_table_offset(table)
 
