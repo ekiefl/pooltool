@@ -7,23 +7,6 @@ from pooltool.ani.menu._datatypes import (
 from pooltool.ani.menu._factory import create_elements_from_dataclass
 from pooltool.ani.menu._registry import MenuNavigator
 from pooltool.config import settings
-from pooltool.game.datatypes import GameType
-from pooltool.objects.table.collection import TableName
-
-
-def _update_game_type(name: str) -> None:
-    with settings.write() as s:
-        s.gameplay.game_type = GameType(name)
-
-
-def _update_enforce_rules(enforce: bool) -> None:
-    with settings.write() as s:
-        s.gameplay.enforce_rules = enforce
-
-
-def _update_table_name(name: str) -> None:
-    with settings.write() as s:
-        s.gameplay.table_name = TableName(name)
 
 
 class GameSetupMenu(BaseMenu):
