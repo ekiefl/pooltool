@@ -69,15 +69,75 @@ class GraphicsConfig:
             description="Whether to render the table or not.",
         ),
     )
-    shadows: bool = False
-    shader: bool = True
-    lights: bool = True
-    max_lights: int = 13
-    physical_based_rendering: bool = False
-    debug: bool = False
-    fps: int = 45
-    fps_inactive: int = 5
-    hud: bool = True
+    shadows: bool = attrs.field(
+        default=False,
+        metadata=dict(
+            display_name="Environment Shadows",
+            description=(
+                "Whether to render environmental shadows. Ball and cushion shadows "
+                "are unaffected by this setting."
+            ),
+        ),
+    )
+    shader: bool = attrs.field(
+        default=True,
+        metadata=dict(
+            display_name="Advanced Shader",
+            description=(
+                "Whether to use the advanced shader. Uncheck for a cartoony "
+                "visual effect."
+            ),
+        ),
+    )
+    lights: bool = attrs.field(
+        default=True,
+        metadata=dict(
+            display_name="Lighting",
+            description="Whether to render scene lighting. When disabled, uses flat shading.",
+        ),
+    )
+    max_lights: int = attrs.field(
+        default=13,
+        metadata=dict(
+            display_name="Maximum Lights",
+            description="Maximum number of dynamic lights that can be rendered simultaneously.",
+        ),
+    )
+    physical_based_rendering: bool = attrs.field(
+        default=False,
+        metadata=dict(
+            display_name="Physically-Based Rendering",
+            description="Use PBR materials for more realistic lighting and surface appearance.",
+        ),
+    )
+    debug: bool = attrs.field(
+        default=False,
+        metadata=dict(
+            display_name="Debug Visualizations",
+            description="Show collision shapes and debug wireframes for balls, table, and cue.",
+        ),
+    )
+    fps: int = attrs.field(
+        default=45,
+        metadata=dict(
+            display_name="Frame Rate",
+            description="Target frames per second when the application window is active.",
+        ),
+    )
+    fps_inactive: int = attrs.field(
+        default=5,
+        metadata=dict(
+            display_name="Inactive Frame Rate",
+            description="Reduced frame rate when the application window loses focus to save resources.",
+        ),
+    )
+    hud: bool = attrs.field(
+        default=True,
+        metadata=dict(
+            display_name="HUD Elements",
+            description="Show heads-up display elements like english indicator, power gauge, and stroke jack.",
+        ),
+    )
 
 
 @attrs.define
