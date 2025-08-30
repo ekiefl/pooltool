@@ -51,8 +51,8 @@ def settings_field(*args, **kwargs) -> Any:
     return attrs.field(*args, **kwargs)
 
 
-@attrs.define
-class PandaConfig:
+@attrs.define(kw_only=True)
+class SystemConfig:
     show_frame_rate: bool = True
     window_width: int = 1400
     sync_video: bool = False
@@ -79,7 +79,7 @@ class PandaConfig:
         )
 
 
-@attrs.define
+@attrs.define(kw_only=True)
 class GraphicsConfig:
     room: bool = settings_field(
         default=True,
@@ -176,6 +176,15 @@ class GraphicsConfig:
             display_type=DisplayType.CHECKBOX,
         ),
     )
+    test: int = settings_field(
+        default=45,
+        metadata=SettingsMetadata(
+            display_name="Integer Input",
+            description=("Help help help"),
+            category=SettingsCategory.GRAPHICS,
+            display_type=DisplayType.INTEGER,
+        ),
+    )
     fps: int = settings_field(
         default=45,
         metadata=SettingsMetadata(
@@ -213,7 +222,7 @@ class GraphicsConfig:
     )
 
 
-@attrs.define
+@attrs.define(kw_only=True)
 class GameplayConfig:
     cue_collision: bool = settings_field(
         default=True,
@@ -261,7 +270,7 @@ class GameplayConfig:
 class Settings:
     graphics: GraphicsConfig
     gameplay: GameplayConfig
-    system: PandaConfig
+    system: SystemConfig
 
     def save(self, path: Path) -> None:
         conversion.unstructure_to(self, path)
@@ -275,7 +284,7 @@ class Settings:
         return cls(
             GraphicsConfig(),
             GameplayConfig(),
-            PandaConfig(),
+            SystemConfig(),
         )
 
     @classmethod
