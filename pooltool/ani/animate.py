@@ -82,8 +82,10 @@ def window_task(win=None):
     user, this will override their resizing, and resize the window to one with an
     area equal to that requested, but at the required aspect ratio.
     """
+    no_purgatory_modes = {Mode.purgatory, Mode.menu}
+
     is_window_active = Global.base.win.get_properties().foreground
-    if not is_window_active and Global.mode_mgr.mode != Mode.purgatory:
+    if not is_window_active and Global.mode_mgr.mode not in no_purgatory_modes:
         Global.mode_mgr.change_mode(Mode.purgatory)
 
     requested_width = Global.base.win.getXSize()
