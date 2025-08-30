@@ -441,7 +441,7 @@ class MenuInput:
 
         # Create text entry field
         entry = DirectEntry(
-            text=initial_value,
+            text="",
             scale=AUX_TEXT_SCALE,
             width=width,
             relief=DGG.SUNKEN,
@@ -449,21 +449,20 @@ class MenuInput:
             text_fg=TEXT_COLOR,
             text_font=load_font(button_font),
             command=command if command else lambda text: None,
-            initialText="",
+            initialText=initial_value,
             numLines=1,
+            focus=0,  # Start without focus to prevent immediate cursor
         )
 
         # Create info button if description is provided
         info_button = None
         if description:
             info_button = DirectButton(
-                text="?",
+                text="",
+                text_align=TextNode.ALeft,
                 scale=INFO_SCALE,
-                relief=DGG.FLAT,
-                frameColor=(0, 0, 0, 0),
-                text_fg=TEXT_COLOR,
-                text_font=load_font(button_font),
-                command=lambda: autils.popup_message(description),
+                image=panda_path(MENU_ASSETS / "info_button.png"),
+                relief=None,
             )
 
         return cls(
@@ -827,8 +826,11 @@ class BaseMenu(ABC):
         title_np.setX(-0.63)
         title_np.setZ(title_np.getZ() - MOVE)
 
-        # Align the input field below the title
-        autils.alignTo(entry_np, title_np, autils.CT, autils.CB)
+        # Align the input field next to the title that refers to it
+        autils.alignTo(entry_np, title_np, autils.CL, autils.CR)
+        # Then shift it over just a bit to give some space
+        entry_np.setX(entry_np.getX() + 0.02)
+        # Then shift it down a little to align the text
         entry_np.setZ(entry_np.getZ() - 0.01)
 
         # Info button if provided
