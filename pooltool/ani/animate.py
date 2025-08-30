@@ -89,8 +89,8 @@ def window_task(win=None):
     requested_width = Global.base.win.getXSize()
     requested_height = Global.base.win.getYSize()
 
-    diff = abs(requested_width / requested_height - settings.panda.aspect_ratio)
-    if diff / settings.panda.aspect_ratio < 0.05:
+    diff = abs(requested_width / requested_height - settings.system.aspect_ratio)
+    if diff / settings.system.aspect_ratio < 0.05:
         # If they are within 5% of the intended ratio, just let them be.
         return
 
@@ -99,8 +99,8 @@ def window_task(win=None):
     # A = w*h
     # A = r*h*h
     # h = (A/r)^(1/2)
-    height = (requested_area / settings.panda.aspect_ratio) ** (1 / 2)
-    width = height * settings.panda.aspect_ratio
+    height = (requested_area / settings.system.aspect_ratio) ** (1 / 2)
+    width = height * settings.system.aspect_ratio
 
     properties = WindowProperties()
     properties.setSize(int(width), int(height))

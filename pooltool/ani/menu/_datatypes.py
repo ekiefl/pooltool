@@ -10,6 +10,7 @@ from direct.gui.DirectGui import (
     DGG,
     DirectButton,
     DirectCheckButton,
+    DirectEntry,
     DirectFrame,
     DirectLabel,
     DirectOptionMenu,
@@ -74,12 +75,12 @@ class MenuElementRegistry:
             element.cleanup()
         self.elements.clear()
 
-    def find_focusable_elements(self) -> list[MenuDropdown | MenuCheckbox]:
+    def find_focusable_elements(self) -> list[MenuDropdown | MenuCheckbox | MenuInput]:
         """Find elements that can be focused (for click handling)"""
         return [
             e
             for e in self.elements
-            if hasattr(e, "dropdown") or hasattr(e, "checkbox")  # type: ignore
+            if hasattr(e, "dropdown") or hasattr(e, "checkbox") or hasattr(e, "entry")  # type: ignore
         ]
 
 
@@ -375,8 +376,8 @@ class MenuCheckbox:
         )
 
         # Set initial state after creation
-        if initial_state:
-            checkbox.setIndicatorValue()
+        checkbox["indicatorValue"] = int(initial_state)
+        checkbox.setIndicatorValue()
 
         # Create info button if description provided
         info_button = None
@@ -403,6 +404,82 @@ class MenuCheckbox:
         """Clean up the DirectLabel, DirectCheckButton, and optional info button"""
         self.title.removeNode()
         self.checkbox.removeNode()
+        if self.info_button:
+            self.info_button.removeNode()
+
+
+@attrs.define
+class MenuInput:
+    name: str
+    initial_value: str
+    description: str
+    command: Callable[[str], None] | None
+    title: DirectLabel
+    entry: DirectEntry
+    info_button: DirectButton | None = None
+
+    @classmethod
+    def create(
+        cls,
+        name: str,
+        initial_value: str = "",
+        description: str = "",
+        command: Callable[[str], None] | None = None,
+        title_font: str = TITLE_FONT,
+        button_font: str = BUTTON_FONT,
+        width: float = 15,
+    ) -> MenuInput:
+        # Create header label
+        title = DirectLabel(
+            text=name + ":",
+            scale=AUX_TEXT_SCALE,
+            relief=None,
+            text_fg=TEXT_COLOR,
+            text_align=TextNode.ALeft,
+            text_font=load_font(title_font),
+        )
+
+        # Create text entry field
+        entry = DirectEntry(
+            text=initial_value,
+            scale=AUX_TEXT_SCALE,
+            width=width,
+            relief=DGG.SUNKEN,
+            frameColor=(1, 1, 1, 1),
+            text_fg=TEXT_COLOR,
+            text_font=load_font(button_font),
+            command=command if command else lambda text: None,
+            initialText="",
+            numLines=1,
+        )
+
+        # Create info button if description is provided
+        info_button = None
+        if description:
+            info_button = DirectButton(
+                text="?",
+                scale=INFO_SCALE,
+                relief=DGG.FLAT,
+                frameColor=(0, 0, 0, 0),
+                text_fg=TEXT_COLOR,
+                text_font=load_font(button_font),
+                command=lambda: autils.popup_message(description),
+            )
+
+        return cls(
+            name=name,
+            initial_value=initial_value,
+            description=description,
+            command=command,
+            title=title,
+            entry=entry,
+            info_button=info_button,
+        )
+
+    def cleanup(self) -> None:
+        """Clean up the DirectLabel, DirectEntry, and optional info button"""
+        self.title.removeNode()
+        self.entry.removeNode()
         if self.info_button:
             self.info_button.removeNode()
 
@@ -728,11 +805,72 @@ class BaseMenu(ABC):
         self.elements.add(menu_text)
         return text_obj
 
+    def add_input(self, menu_input: MenuInput) -> NodePath:
+        """Add a text input field with the given configuration"""
+
+        title = menu_input.title
+        entry = menu_input.entry
+
+        title_np = NodePath(title)
+        title_np.reparentTo(self.area.getCanvas())
+
+        entry_np = NodePath(entry)
+        entry_id = f"input-{self.name}-{menu_input.name.replace(' ', '_')}"
+        entry_np.setName(entry_id)
+        entry_np.reparentTo(self.area.getCanvas())
+
+        # Position the title
+        if self.last_element:
+            autils.alignTo(title_np, self.last_element, autils.CT, autils.CB)
+        else:
+            title_np.setPos(-0.63, 0, 0.8)
+        title_np.setX(-0.63)
+        title_np.setZ(title_np.getZ() - MOVE)
+
+        # Align the input field below the title
+        autils.alignTo(entry_np, title_np, autils.CT, autils.CB)
+        entry_np.setZ(entry_np.getZ() - 0.01)
+
+        # Info button if provided
+        info_button_np = None
+        if menu_input.info_button:
+            info_button = menu_input.info_button
+
+            # Bind mouse hover to displaying button info
+            info_button.bind(
+                DGG.ENTER,
+                self._display_button_info,
+                extraArgs=[menu_input.description],
+            )
+            info_button.bind(DGG.EXIT, self._destroy_button_info)
+
+            info_button_np = NodePath(info_button)
+            info_button_np.reparentTo(self.area.getCanvas())
+
+            # Align the info button next to the title it refers to
+            autils.alignTo(info_button_np, title_np, autils.CR, autils.CL)
+            # Then shift it over just a bit to give some space
+            info_button_np.setX(info_button_np.getX() - 0.02)
+
+        # Create a parent for all the nodes
+        input_id = f"input_{menu_input.name.replace(' ', '_')}"
+        input_obj = self.area.getCanvas().attachNewNode(input_id)
+        title_np.reparentTo(input_obj)
+        entry_np.reparentTo(input_obj)
+        if info_button_np:
+            info_button_np.reparentTo(input_obj)
+
+        self.last_element = entry_np
+        self.elements.add(menu_input)
+        return input_obj
+
     def add_element(self, element: Any):
         if isinstance(element, MenuCheckbox):
             self.add_checkbox(element)
         elif isinstance(element, MenuDropdown):
             self.add_dropdown(element)
+        elif isinstance(element, MenuInput):
+            self.add_input(element)
         else:
             raise NotImplementedError
 
