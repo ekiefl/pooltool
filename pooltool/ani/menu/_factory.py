@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Generator
 from typing import Any
 
 import attrs
@@ -10,12 +11,14 @@ from pooltool.config import DisplayType, SettingsMetadata, settings
 
 def create_elements_from_dataclass(
     obj: attrs.AttrsInstance,
-) -> list[MenuCheckbox | MenuDropdown | MenuInput]:
-    return [
-        create_menu_element(obj, field)
-        for field in attrs.fields_dict(obj.__class__).values()
-        if SettingsMetadata(**field.metadata).display_type != DisplayType.NONE
-    ]
+) -> Generator[
+    tuple[MenuCheckbox | MenuDropdown | MenuInput, attrs.Attribute], None, None
+]:
+    for field in attrs.fields_dict(obj.__class__).values():
+        if SettingsMetadata(**field.metadata).display_type == DisplayType.NONE:
+            continue
+
+        yield create_menu_element(obj, field), field
 
 
 def _create_checkbox(
@@ -56,12 +59,13 @@ def _create_numeric_input(
     current_value: float | int,
 ) -> MenuInput:
     def _process_input(value: str) -> str:
-        if not isinstance(value, int | float):
+        try:
+            assert field.type is not None
+            numeric_value = field.type(value)
+        except ValueError:
             raise TypeError("Error. Not a number.")
 
         with settings.write() as s:
-            assert field.type is not None
-            numeric_value = field.type(value)
             setattr(getattr(s, field_metadata.category), field.name, numeric_value)
 
         return str(numeric_value)

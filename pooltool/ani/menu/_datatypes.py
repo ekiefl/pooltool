@@ -110,6 +110,28 @@ class MenuTitle:
 
 
 @attrs.define(kw_only=True)
+class MenuHeader:
+    text: str
+    label: DirectLabel
+
+    @classmethod
+    def create(cls, text: str, font: str = TITLE_FONT) -> MenuHeader:
+        label = DirectLabel(
+            text=text,
+            scale=SUBHEADING_SCALE,
+            relief=None,
+            text_fg=TEXT_COLOR,
+            text_align=TextNode.ALeft,
+            text_font=load_font(font),
+        )
+        return cls(text=text, label=label)
+
+    def cleanup(self) -> None:
+        """Clean up the DirectLabel"""
+        self.label.removeNode()
+
+
+@attrs.define(kw_only=True)
 class MenuButton:
     text: str
     command: Callable[[], None]
@@ -430,7 +452,6 @@ class MenuInput:
     message: DirectLabel
     direct_entry: DirectEntry
     info_button: DirectButton | None = None
-    command: Callable[[str], str] = lambda x: x
 
     @classmethod
     def create(
@@ -498,7 +519,6 @@ class MenuInput:
             message=message,
             direct_entry=direct_entry,
             info_button=info_button,
-            command=command,
         )
 
         def _command(text: str) -> None:
@@ -685,6 +705,48 @@ class BaseMenu(ABC):
         self.last_element = title_obj
         self.elements.add(menu_title)
         return title_obj
+
+    def add_header(self, menu_header: MenuHeader) -> NodePath:
+        header = menu_header.label
+        header.reparentTo(self.area.getCanvas())
+
+        if self.last_element:
+            autils.alignTo(
+                header, self.last_element, autils.CT, autils.CB, gap=(0.5, 0.5)
+            )
+        else:
+            header.setPos((-0.8, 0, 0.8))
+        header.setX(-0.8)
+
+        header_x, _, header_z = header.getPos()
+        lines = LineSegs()
+        lines.setColor(TEXT_COLOR)
+        lines.moveTo(header_x, 0, header_z - SUBHEADING_SCALE * 0.15)
+        lines.drawTo(0.8, 0, header_z - SUBHEADING_SCALE * 0.15)
+        lines.setThickness(1)
+        node = lines.create()
+        underscore = NodePath(node)
+        underscore.reparentTo(self.area.getCanvas())
+
+        # Invisible line for white space
+        lines = LineSegs()
+        lines.setColor((0, 0, 0, 0))
+        lines.moveTo(header_x, 0, header_z - SUBHEADING_SCALE * 0.4)
+        lines.drawTo(0.8, 0, header_z - SUBHEADING_SCALE * 0.4)
+        lines.setThickness(1)
+        node = lines.create()
+        whitespace = NodePath(node)
+        whitespace.reparentTo(self.area.getCanvas())
+
+        # Create a parent for all the nodes
+        header_obj = self.area.getCanvas().attachNewNode(f"header_{self.name}")
+        header.reparentTo(header_obj)
+        underscore.reparentTo(header_obj)
+        whitespace.reparentTo(header_obj)
+
+        self.last_element = header_obj
+        self.elements.add(menu_header)
+        return header_obj
 
     def add_button(self, menu_button: MenuButton) -> NodePath:
         button = menu_button.button

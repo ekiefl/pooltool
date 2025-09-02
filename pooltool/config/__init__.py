@@ -184,7 +184,7 @@ class GraphicsConfig:
                 "Target frames per second when the application window is active."
             ),
             category=SettingsCategory.GRAPHICS,
-            display_type=DisplayType.NONE,
+            display_type=DisplayType.INTEGER,
         ),
     )
     fps_inactive: int = settings_field(
@@ -215,24 +215,20 @@ class GraphicsConfig:
 
 @attrs.define(kw_only=True)
 class GameplayConfig:
-    cue_collision: bool = settings_field(
-        default=True,
-        metadata=SettingsMetadata(
-            display_name="Cue Collision",
-            description=(
-                "If selected, the cue stick respects cushion and ball geometry, which "
-                "constrains the cue's possible orientations. If unselected, the "
-                "cuestick ignores all geometry."
-            ),
-            category=SettingsCategory.GAMEPLAY,
-            display_type=DisplayType.CHECKBOX,
-        ),
-    )
     game_type: GameType = settings_field(
         default=GameType.NINEBALL,
         metadata=SettingsMetadata(
             display_name="Game Type",
             description="Choose the type of pool game to play.",
+            category=SettingsCategory.GAMEPLAY,
+            display_type=DisplayType.DROPDOWN,
+        ),
+    )
+    table_name: TableName = settings_field(
+        default=TableName.SEVEN_FOOT_SHOWOOD,
+        metadata=SettingsMetadata(
+            display_name="Table",
+            description="Select the table you wish to play on.",
             category=SettingsCategory.GAMEPLAY,
             display_type=DisplayType.DROPDOWN,
         ),
@@ -246,13 +242,17 @@ class GameplayConfig:
             display_type=DisplayType.CHECKBOX,
         ),
     )
-    table_name: TableName = settings_field(
-        default=TableName.SEVEN_FOOT_SHOWOOD,
+    cue_collision: bool = settings_field(
+        default=True,
         metadata=SettingsMetadata(
-            display_name="Table",
-            description="Select the table you wish to play on.",
+            display_name="Cue Collision",
+            description=(
+                "If selected, the cue stick respects cushion and ball geometry, which "
+                "constrains the cue's possible orientations. If unselected, the "
+                "cuestick ignores all geometry."
+            ),
             category=SettingsCategory.GAMEPLAY,
-            display_type=DisplayType.DROPDOWN,
+            display_type=DisplayType.CHECKBOX,
         ),
     )
 
