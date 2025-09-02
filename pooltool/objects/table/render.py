@@ -1,8 +1,8 @@
 import numpy as np
 from panda3d.core import CollisionNode, CollisionPlane, LineSegs, Plane, Point3, Vec3
 
-import pooltool.ani as ani
 from pooltool.ani.globals import Global
+from pooltool.config import settings
 from pooltool.objects.datatypes import Render
 from pooltool.objects.table.collection import TableName
 from pooltool.objects.table.datatypes import Table, TableModelDescr, TableType
@@ -19,16 +19,24 @@ class TableRender(Render):
         if (
             not self._table.model_descr
             or self._table.model_descr == TableModelDescr.null()
-            or not ani.settings.graphics.table
+            or not settings.graphics.table
         ):
             # Rectangular playing surface (not a real table)
-            model = Global.loader.loadModel(TableModelDescr.null().path)
+            model = Global.loader.loadModel(
+                TableModelDescr.null().get_path(
+                    settings.graphics.physical_based_rendering
+                )
+            )
             node = Global.render.find("scene").attachNewNode("table")
             model.reparentTo(node)
             model.setScale(self._table.w, self._table.l, 1)
         else:
             # Real table
-            node = Global.loader.loadModel(self._table.model_descr.path)
+            node = Global.loader.loadModel(
+                self._table.model_descr.get_path(
+                    settings.graphics.physical_based_rendering
+                )
+            )
             node.reparentTo(Global.render.find("scene"))
             node.setName("table")
 
@@ -36,7 +44,7 @@ class TableRender(Render):
         self.collision_nodes = {}
 
     def init_collisions(self):
-        if not ani.settings.gameplay.cue_collision:
+        if not settings.gameplay.cue_collision:
             return
 
         if self._table.table_type not in (
@@ -69,7 +77,7 @@ class TableRender(Render):
 
             self.collision_nodes[f"cushion_ccapsule_{cushion_id}"] = collision_node
 
-            if ani.settings.graphics.debug:
+            if settings.graphics.debug:
                 collision_node.show()
 
         return collision_node
@@ -129,7 +137,7 @@ class TableRender(Render):
         if (
             not self._table.model_descr
             or self._table.model_descr == TableModelDescr.null()
-            or not ani.settings.graphics.table
+            or not settings.graphics.table
             or self._table.model_descr.name == TableName.SNOOKER_GENERIC  # dim are WIP
         ):
             # draw cushion_segments as edges

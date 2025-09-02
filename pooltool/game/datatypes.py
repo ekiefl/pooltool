@@ -1,4 +1,4 @@
-from pooltool.utils.strenum import StrEnum, auto
+from pooltool.utils.strenum import StrEnum
 
 
 class GameType(StrEnum):
@@ -9,13 +9,11 @@ class GameType(StrEnum):
         NINEBALL:
         THREECUSHION:
         SNOOKER:
-        SANDBOX:
         SUMTOTHREE:
     """
 
-    EIGHTBALL = auto()
-    NINEBALL = auto()
-    THREECUSHION = auto()
-    SNOOKER = auto()
-    SANDBOX = auto()
-    SUMTOTHREE = auto()
+    EIGHTBALL = "Eight Ball"
+    NINEBALL = "Nine Ball"
+    THREECUSHION = "Three Cushion"
+    SNOOKER = "Snooker"
+    SUMTOTHREE = "Sum to Three"

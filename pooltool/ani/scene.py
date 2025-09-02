@@ -293,7 +293,7 @@ class SceneController:
         self.system.cue.remove_nodes()
 
     def buildup(
-        self, components: list[SceneComponents] = SceneComponents.members_as_list()
+        self, components: list[SceneComponents] = list(SceneComponents)
     ) -> None:
         self.playback_speed = 1
 
@@ -307,7 +307,7 @@ class SceneController:
             self.environment.init(self.system.table._table)
 
     def teardown(
-        self, components: list[SceneComponents] = SceneComponents.members_as_list()
+        self, components: list[SceneComponents] = list(SceneComponents)
     ) -> None:
         """Stop animations and remove all nodes"""
         self.reset_animation()

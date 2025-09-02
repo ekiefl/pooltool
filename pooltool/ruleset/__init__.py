@@ -11,7 +11,7 @@ from pooltool.ruleset.datatypes import (
 )
 from pooltool.ruleset.eight_ball import _EightBall
 from pooltool.ruleset.nine_ball import _NineBall
-from pooltool.ruleset.sandbox import _SandBox
+from pooltool.ruleset.sandbox import _RulelessMode
 from pooltool.ruleset.snooker import _Snooker
 from pooltool.ruleset.sum_to_three import _SumToThree
 from pooltool.ruleset.three_cushion import _ThreeCushion
@@ -38,22 +38,25 @@ _ruleset_classes = {
     GameType.EIGHTBALL: _EightBall,
     GameType.THREECUSHION: _ThreeCushion,
     GameType.SNOOKER: _Snooker,
-    GameType.SANDBOX: _SandBox,
     GameType.SUMTOTHREE: _SumToThree,
 }
 
 
-def get_ruleset(game: GameType) -> type[Ruleset]:
+def get_ruleset(game: GameType, enforce_rules: bool = True) -> type[Ruleset]:
     """Retrieve a ruleset class
 
     Args:
         game:
             The game type.
+        enforce_rules:
+            Whether to enforce game rules. If False, returns ruleless mode.
 
     Returns:
         Type[Ruleset]:
             An uninitialized class object representing a game.
     """
+    if not enforce_rules:
+        return _RulelessMode
     return _ruleset_classes[game]
 
 

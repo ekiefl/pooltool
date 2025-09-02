@@ -1,14 +1,25 @@
-#! /usr/bin/env python
-
-
 import numpy as np
-from direct.gui.DirectGui import DGG
+from direct.gui.DirectGui import (
+    DGG,
+    DirectButton,
+    DirectFrame,
+    DirectLabel,
+)
 from direct.gui.DirectGuiBase import DirectGuiWidget
 from direct.gui.OnscreenText import OnscreenText
-from panda3d.core import LVector3, NodePath, PGItem, Quat, Vec3, Vec4
+from panda3d.core import (
+    LVector3,
+    NodePath,
+    PGItem,
+    Quat,
+    TextNode,
+    Vec3,
+    Vec4,
+)
 
 import pooltool.ptmath as ptmath
 from pooltool.ani.fonts import load_font
+from pooltool.ani.globals import Global
 
 
 class CustomOnscreenText(OnscreenText):
@@ -21,6 +32,74 @@ class CustomOnscreenText(OnscreenText):
         else:
             font = load_font()
         OnscreenText.__init__(self, font=font, **kwargs)
+
+
+class TextOverlay:
+    def __init__(
+        self,
+        title="",
+        frame_color=(1, 1, 1, 1),
+        title_pos=(0, 0, 0.8),
+        text_fg=(0, 0, 0, 1),
+        text_scale=0.07,
+        font_name="LABTSECS",
+    ):
+        self.titleMenuBackdrop = DirectFrame(
+            frameColor=frame_color,
+            frameSize=(-1, 1, -1, 1),
+            parent=Global.render2d,
+        )
+
+        self._text_scale = text_scale
+        self._move = 0.12
+
+        self.titleMenu = DirectFrame(frameColor=(1, 1, 1, 0))
+
+        font = load_font(font_name)
+
+        self.title = DirectLabel(
+            text=title,
+            text_font=font,
+            scale=self._text_scale * 1.5,
+            pos=title_pos,
+            parent=self.titleMenu,
+            relief=None,
+            text_fg=text_fg,
+        )
+
+        self._next_x, self._next_y = -0.5, 0.6
+        self._num_elements = 0
+
+        self.hide()
+
+    def add_button(self, text, command=None, **kwargs):
+        """Add a button at a location based on self.next_x and self.next_y"""
+        button = DirectButton(
+            text=text,
+            command=command,
+            text_align=TextNode.ACenter,
+            **kwargs,
+        )
+        button.reparentTo(self.titleMenu)
+        button.setPos((self._next_x, 0, self._next_y))
+        self._get_next_pos()
+
+        return button
+
+    def _get_next_pos(self):
+        self._next_y -= self._move
+        if self._next_y <= -1:
+            self._next_y = 0.6
+            self._next_x += 0.5
+        self._num_elements += 1
+
+    def hide(self):
+        self.titleMenuBackdrop.hide()
+        self.titleMenu.hide()
+
+    def show(self):
+        self.titleMenuBackdrop.show()
+        self.titleMenu.show()
 
 
 def get_list_of_Vec3s_from_array(array):

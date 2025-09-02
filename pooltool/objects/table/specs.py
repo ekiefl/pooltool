@@ -6,7 +6,7 @@ from typing import Protocol
 
 from attrs import define, field
 
-import pooltool.ani as ani
+from pooltool.ani.constants import model_dir
 from pooltool.error import ConfigError
 from pooltool.utils import panda_path, strenum
 
@@ -22,13 +22,13 @@ class TableModelDescr:
 
     name: str
 
-    @property
-    def path(self) -> str:
-        """The path of the model
+    def get_path(self, use_pbr: bool = False) -> str:
+        """Get the path of the model based on PBR preference
 
         The path is searched for in ``pooltool/models/table/{name}/{name}[_pbr].glb``.
-        If physical based rendering (PBR) is requested, a model suffixed with _pbr will
-        be looked for.
+
+        Args:
+            use_pbr: Whether to use physical based rendering variant
 
         Raises:
             ConfigError:
@@ -39,11 +39,10 @@ class TableModelDescr:
                 A filename specified with Panda3D filename syntax (see
                 https://docs.panda3d.org/1.10/python/programming/advanced-loading/filename-syntax).
         """
-
-        if ani.settings.graphics.physical_based_rendering:
-            path = ani.model_dir / "table" / self.name / (self.name + "_pbr.glb")
+        if use_pbr:
+            path = model_dir / "table" / self.name / (self.name + "_pbr.glb")
         else:
-            path = ani.model_dir / "table" / self.name / (self.name + ".glb")
+            path = model_dir / "table" / self.name / (self.name + ".glb")
 
         if not path.exists():
             raise ConfigError(f"Couldn't find table model with name: {self.name}")

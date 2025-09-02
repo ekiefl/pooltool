@@ -186,7 +186,7 @@ _default_map: dict[GameType, PrebuiltBallParams] = {
     GameType.NINEBALL: PrebuiltBallParams.POOL_GENERIC,
     GameType.THREECUSHION: PrebuiltBallParams.BILLIARD_GENERIC,
     GameType.SNOOKER: PrebuiltBallParams.SNOOKER_GENERIC,
-    GameType.SANDBOX: PrebuiltBallParams.POOL_GENERIC,
+    GameType.SUMTOTHREE: PrebuiltBallParams.BILLIARD_GENERIC,
 }
 
 

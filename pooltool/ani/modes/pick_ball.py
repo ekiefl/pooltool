@@ -3,12 +3,12 @@
 
 import numpy as np
 
-import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.constants as c
 import pooltool.ptmath as ptmath
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
+from pooltool.ani.constants import ball_highlight
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
@@ -76,7 +76,7 @@ class PickBallMode(BaseMode):
     def remove_ball_highlight(self):
         if self.closest_ball is not None and tasks.has("pick_ball_highlight_animation"):
             node = self.closest_ball.get_node("pos")
-            node.setScale(node.getScale() / ani.ball_highlight["ball_factor"])
+            node.setScale(node.getScale() / ball_highlight["ball_factor"])
             self.closest_ball.get_node("shadow").setAlphaScale(1)
             self.closest_ball.get_node("shadow").setScale(1)
             self.closest_ball.set_render_state_as_object_state()
@@ -88,20 +88,20 @@ class PickBallMode(BaseMode):
                 self.pick_ball_highlight_animation, "pick_ball_highlight_animation"
             )
             node = self.closest_ball.get_node("pos")
-            node.setScale(node.getScale() * ani.ball_highlight["ball_factor"])
+            node.setScale(node.getScale() * ball_highlight["ball_factor"])
 
     def pick_ball_highlight_animation(self, task):
-        phase = task.time * ani.ball_highlight["ball_frequency"]
+        phase = task.time * ball_highlight["ball_frequency"]
 
-        new_height = ani.ball_highlight["ball_offset"] + ani.ball_highlight[
+        new_height = ball_highlight["ball_offset"] + ball_highlight[
             "ball_amplitude"
         ] * np.sin(phase)
         self.ball_highlight.setZ(new_height)
 
-        new_alpha = ani.ball_highlight["shadow_alpha_offset"] + ani.ball_highlight[
+        new_alpha = ball_highlight["shadow_alpha_offset"] + ball_highlight[
             "shadow_alpha_amplitude"
         ] * np.sin(-phase)
-        new_scale = ani.ball_highlight["shadow_scale_offset"] + ani.ball_highlight[
+        new_scale = ball_highlight["shadow_scale_offset"] + ball_highlight[
             "shadow_scale_amplitude"
         ] * np.sin(phase)
         self.closest_ball.get_node("shadow").setAlphaScale(new_alpha)

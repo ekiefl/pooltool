@@ -1,9 +1,0 @@
-<menu name="settings">
-    <title>Settings</title>
-    <backbutton>
-        <func>func_go_main_menu</func>
-    </backbutton>
-    <text>
-        On the horizon, but don't hold your breath...
-    </text>
-</menu>

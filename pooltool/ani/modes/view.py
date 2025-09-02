@@ -2,16 +2,25 @@
 
 import numpy as np
 
-import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.collision import cue_avoid
+from pooltool.ani.constants import (
+    elevate_sensitivity,
+    english_sensitivity,
+    max_elevate,
+    max_english,
+    max_stroke_speed,
+    min_stroke_speed,
+    power_sensitivity,
+)
 from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.ani.scene import visual
+from pooltool.config import settings
 from pooltool.ptmath.utils import norm2d, tip_contact_offset
 from pooltool.system.datatypes import multisystem
 
@@ -88,14 +97,14 @@ class ViewMode(BaseMode):
 
         tasks.add(self.view_task, "view_task")
         tasks.add(self.shared_task, "shared_task")
-        if ani.settings.gameplay.cue_collision:
+        if settings.gameplay.cue_collision:
             tasks.add(cue_avoid.collision_task, "collision_task")
 
     def exit(self):
         tasks.remove("view_task")
         tasks.remove("shared_task")
 
-        if ani.settings.gameplay.cue_collision:
+        if settings.gameplay.cue_collision:
             tasks.remove("collision_task")
         cam.store_state(Mode.view, overwrite=True)
 
@@ -154,11 +163,11 @@ class ViewMode(BaseMode):
         with mouse:
             dy = mouse.get_dy()
 
-        V0 = multisystem.active.cue.V0 + dy * ani.power_sensitivity
-        if V0 < ani.min_stroke_speed:
-            V0 = ani.min_stroke_speed
-        if V0 > ani.max_stroke_speed:
-            V0 = ani.max_stroke_speed
+        V0 = multisystem.active.cue.V0 + dy * power_sensitivity
+        if V0 < min_stroke_speed:
+            V0 = min_stroke_speed
+        if V0 > max_stroke_speed:
+            V0 = max_stroke_speed
 
         multisystem.active.cue.set_state(V0=V0)
         self._update_hud()
@@ -169,10 +178,10 @@ class ViewMode(BaseMode):
         cue = visual.cue.get_node("cue_stick_focus")
 
         with mouse:
-            delta_elevation = mouse.get_dy() * ani.elevate_sensitivity
+            delta_elevation = mouse.get_dy() * elevate_sensitivity
 
         old_elevation = -cue.getR()
-        new_elevation = max(0, min(ani.max_elevate, old_elevation + delta_elevation))
+        new_elevation = max(0, min(max_elevate, old_elevation + delta_elevation))
 
         if cue_avoid.min_theta >= new_elevation - self.magnet_threshold:
             # user set theta to minimum value, resume cushion tracking
@@ -197,7 +206,7 @@ class ViewMode(BaseMode):
         cue_focus = visual.cue.get_node("cue_stick_focus")
         R = visual.cue.follow._ball.params.R
 
-        delta_y, delta_z = dx * ani.english_sensitivity, dy * ani.english_sensitivity
+        delta_y, delta_z = dx * english_sensitivity, dy * english_sensitivity
 
         # y corresponds to side spin, z to top/bottom spin
         new_y = cue.getY() + delta_y
@@ -212,8 +221,8 @@ class ViewMode(BaseMode):
         )
 
         norm = norm2d(contact_point_offset)
-        if norm > ani.max_english:
-            limit_scaling_factor = ani.max_english / norm
+        if norm > max_english:
+            limit_scaling_factor = max_english / norm
             new_y *= limit_scaling_factor
             new_z *= limit_scaling_factor
             cue_axis_offset *= limit_scaling_factor

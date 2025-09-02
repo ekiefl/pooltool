@@ -15,21 +15,23 @@ from panda3d.core import (
     WindowProperties,
 )
 
-import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 from pooltool.ani.camera import CameraState, cam
 from pooltool.ani.collision import cue_avoid
+from pooltool.ani.constants import menu_text_scale
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.hud import HUDElement, hud
-from pooltool.ani.menu import TextOverlay, menus
+from pooltool.ani.menu import MenuRegistry
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
 from pooltool.ani.scene import PlaybackMode, visual
+from pooltool.config import settings
 from pooltool.evolution import simulate
 from pooltool.evolution.continuous import continuize
 from pooltool.layouts import get_rack
 from pooltool.objects.cue.datatypes import Cue
+from pooltool.objects.table.collection import prebuilt_specs
 from pooltool.objects.table.datatypes import Table
 from pooltool.ruleset import get_ruleset
 from pooltool.ruleset.datatypes import Player, Ruleset
@@ -80,15 +82,17 @@ def window_task(win=None):
     user, this will override their resizing, and resize the window to one with an
     area equal to that requested, but at the required aspect ratio.
     """
+    no_purgatory_modes = {Mode.purgatory, Mode.menu}
+
     is_window_active = Global.base.win.get_properties().foreground
-    if not is_window_active and Global.mode_mgr.mode != Mode.purgatory:
+    if not is_window_active and Global.mode_mgr.mode not in no_purgatory_modes:
         Global.mode_mgr.change_mode(Mode.purgatory)
 
     requested_width = Global.base.win.getXSize()
     requested_height = Global.base.win.getYSize()
 
-    diff = abs(requested_width / requested_height - ani.aspect_ratio)
-    if diff / ani.aspect_ratio < 0.05:
+    diff = abs(requested_width / requested_height - settings.system.aspect_ratio)
+    if diff / settings.system.aspect_ratio < 0.05:
         # If they are within 5% of the intended ratio, just let them be.
         return
 
@@ -97,8 +101,8 @@ def window_task(win=None):
     # A = w*h
     # A = r*h*h
     # h = (A/r)^(1/2)
-    height = (requested_area / ani.aspect_ratio) ** (1 / 2)
-    width = height * ani.aspect_ratio
+    height = (requested_area / settings.system.aspect_ratio) ** (1 / 2)
+    width = height * settings.system.aspect_ratio
 
     properties = WindowProperties()
     properties.setSize(int(width), int(height))
@@ -112,8 +116,8 @@ def _resize_offscreen_window(size: tuple[int, int]):
 
 def _init_simplepbr() -> simplepbr.Pipeline:
     return simplepbr.init(
-        enable_shadows=ani.settings.graphics.shadows,
-        max_lights=ani.settings.graphics.max_lights,
+        enable_shadows=settings.graphics.shadows,
+        max_lights=settings.graphics.max_lights,
     )
 
 
@@ -137,11 +141,11 @@ class Interface(ShowBase):
 
         cam.init()
 
-        if not ani.settings.graphics.shader:
+        if not settings.graphics.shader:
             Global.render.set_shader_off()
 
         Global.clock.setMode(ClockObject.MLimited)
-        Global.clock.setFrameRate(ani.settings.graphics.fps)
+        Global.clock.setFrameRate(settings.graphics.fps)
 
         Global.register_mode_mgr(ModeManager(all_modes))
         assert Global.mode_mgr is not None
@@ -414,7 +418,7 @@ class ShotViewer(Interface):
         self._create_title(title)
         self.title_node.show()
 
-        if ani.settings.graphics.hud:
+        if settings.graphics.hud:
             hud.init(hide=[HUDElement.help_text])
 
         params = dict(
@@ -434,7 +438,7 @@ class ShotViewer(Interface):
         self.title_node = autils.CustomOnscreenText(
             text=title,
             pos=(-1.55, -0.93),
-            scale=ani.menu_text_scale * 0.7,
+            scale=menu_text_scale * 0.7,
             fg=(1, 1, 1, 1),
             align=TextNode.ALeft,
             parent=Global.aspect2d,
@@ -458,12 +462,6 @@ class Game(Interface):
     def __init__(self, config=ShowBaseConfig.default()):
         Interface.__init__(self, config=config)
 
-        # FIXME can this be added to MenuMode.enter? It produces a lot of events that
-        # end up being part of the baseline due to the update_event_baseline call below.
-        # To see, enter debugger after this command check
-        # Global.base.messenger.get_events()
-        menus.populate()
-
         # This task chain allows simulations to be run in parallel to the game processes
         Global.task_mgr.setupTaskChain("simulation", numThreads=1)
 
@@ -477,15 +475,15 @@ class Game(Interface):
         if not Global.game or not len(multisystem):
             self._create_system()
 
-        menus.hide_all()
+        MenuRegistry.hide_all()
         self.create_scene()
         visual.cue.hide_nodes()
         cue_avoid.init_collisions()
 
-        if ani.settings.graphics.hud:
+        if settings.graphics.hud:
             hud.init()
 
-        code_comp_menu = TextOverlay(
+        code_comp_menu = autils.TextOverlay(
             title="Compiling simulation code...",
             frame_color=(0, 0, 0, 0.4),
             title_pos=(0, 0, 0),
@@ -506,14 +504,14 @@ class Game(Interface):
         # Change the gametype by editing ~/.config/pooltool/general.yaml
         # Available options:
         #   {eightball, nineball, threecushion, snooker, sandbox, sumtothree}
-        game_type = ani.settings.gameplay.game_type
+        game_type = settings.gameplay.game_type
         game = get_ruleset(game_type)()
         game.players = [
             Player("Player 1"),
             Player("Player 2"),
         ]
 
-        table = Table.from_game_type(game_type)
+        table = Table.from_table_specs(prebuilt_specs(settings.gameplay.table_name))
         balls = get_rack(
             game_type=game_type,
             table=table,

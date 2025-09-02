@@ -2,9 +2,10 @@ import numpy as np
 from direct.interval.IntervalGlobal import LerpPosInterval, Sequence
 from panda3d.core import ClockObject, CollisionNode, CollisionSegment, Vec3
 
-import pooltool.ani as ani
 import pooltool.utils as utils
+from pooltool.ani.constants import model_dir
 from pooltool.ani.globals import Global
+from pooltool.config import settings
 from pooltool.error import ConfigError, StrokeError
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.datatypes import Cue
@@ -56,7 +57,7 @@ class CueRender(Render):
         cue_stick.setZ(tip_offset_b * self.follow._ball.params.R)  # b
 
     def init_model(self):
-        path = utils.panda_path(ani.model_dir / "cue" / "cue.glb")
+        path = utils.panda_path(model_dir / "cue" / "cue.glb")
         cue_stick_model = Global.loader.loadModel(path)
         cue_stick_model.setName("cue_stick_model")
 
@@ -82,7 +83,7 @@ class CueRender(Render):
         self.has_focus = True
 
     def init_collision_handling(self, collision_handler):
-        if not ani.settings.gameplay.cue_collision:
+        if not settings.gameplay.cue_collision:
             return
 
         if not self.rendered:
@@ -104,7 +105,7 @@ class CueRender(Render):
         self.nodes["cue_cseg"] = collision_node
         Global.base.cTrav.addCollider(collision_node, collision_handler)
 
-        if ani.settings.graphics.debug:
+        if settings.graphics.debug:
             collision_node.show()
 
     def get_length(self):
@@ -249,7 +250,7 @@ class CueRender(Render):
         a, b = tip_contact_offset(
             np.array([-cue_stick.getY(), cue_stick.getZ()])
             / self.follow._ball.params.R,
-            self._cue.specs.shaft_radius_at_tip,
+            self._cue.specs.tip_radius,
             self.follow._ball.params.R,
         )
         ball_id = self.follow._ball.id

@@ -44,7 +44,3 @@ class StrEnum(str, Enum):
         Return the lower-cased version of the member name.
         """
         return name.lower()
-
-    @classmethod
-    def members_as_list(cls: type[_S]) -> list[_S]:
-        return list(cls.__members__.values())

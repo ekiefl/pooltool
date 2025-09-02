@@ -5,14 +5,14 @@ import numpy as np
 from direct.interval.IntervalGlobal import LerpFunc, Parallel
 from panda3d.core import TransparencyAttrib
 
-import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
+import pooltool.ani.utils as autils
 import pooltool.constants as c
 import pooltool.ptmath as ptmath
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
+from pooltool.ani.constants import ball_highlight
 from pooltool.ani.globals import Global
-from pooltool.ani.menu import TextOverlay
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.ani.scene import visual
@@ -62,7 +62,7 @@ class CallShotMode(BaseMode):
         # Check if calling shot is required for this shot
         if not Global.game.shot_constraints.call_shot:
             # Show message that calling shot is not required
-            self.instruction_message = TextOverlay(
+            self.instruction_message = autils.TextOverlay(
                 title="Calling shot not required for this shot.",
                 frame_color=(0, 0, 0, 0.0),
                 title_pos=(0, 0, 0.6),
@@ -71,7 +71,7 @@ class CallShotMode(BaseMode):
             )
         else:
             # Show instruction message for ball selection
-            self.instruction_message = TextOverlay(
+            self.instruction_message = autils.TextOverlay(
                 title='Select a ball to call. Click to confirm while holding "c".',
                 frame_color=(0, 0, 0, 0.0),
                 title_pos=(0, 0, 0.6),
@@ -111,7 +111,7 @@ class CallShotMode(BaseMode):
             if self.instruction_message is not None:
                 self.instruction_message.hide()
 
-            self.instruction_message = TextOverlay(
+            self.instruction_message = autils.TextOverlay(
                 title="Calling shot not required for this shot.",
                 frame_color=(0, 0, 0, 0.0),
                 title_pos=(0, 0, 0.6),
@@ -142,7 +142,7 @@ class CallShotMode(BaseMode):
                 if self.instruction_message is not None:
                     self.instruction_message.hide()
 
-                self.instruction_message = TextOverlay(
+                self.instruction_message = autils.TextOverlay(
                     title='Now select a pocket. Click to confirm while holding "c".',
                     frame_color=(0, 0, 0, 0.0),
                     title_pos=(0, 0, 0.6),
@@ -227,7 +227,7 @@ class CallShotMode(BaseMode):
     def remove_ball_highlight(self):
         if self.closest_ball is not None:
             node = self.closest_ball.get_node("pos")
-            node.setScale(node.getScale() / ani.ball_highlight["ball_factor"])
+            node.setScale(node.getScale() / ball_highlight["ball_factor"])
             self.closest_ball.get_node("shadow").setAlphaScale(1)
             self.closest_ball.get_node("shadow").setScale(1)
             self.closest_ball.set_render_state_as_object_state()
@@ -242,19 +242,19 @@ class CallShotMode(BaseMode):
                 "call_shot_ball_highlight_animation",
             )
             node = self.closest_ball.get_node("pos")
-            node.setScale(node.getScale() * ani.ball_highlight["ball_factor"])
+            node.setScale(node.getScale() * ball_highlight["ball_factor"])
 
     def call_shot_ball_highlight_animation(self, task):
-        phase = task.time * ani.ball_highlight["ball_frequency"]
-        new_height = ani.ball_highlight["ball_offset"] + ani.ball_highlight[
+        phase = task.time * ball_highlight["ball_frequency"]
+        new_height = ball_highlight["ball_offset"] + ball_highlight[
             "ball_amplitude"
         ] * np.sin(phase)
         self.ball_highlight.setZ(new_height)
 
-        new_alpha = ani.ball_highlight["shadow_alpha_offset"] + ani.ball_highlight[
+        new_alpha = ball_highlight["shadow_alpha_offset"] + ball_highlight[
             "shadow_alpha_amplitude"
         ] * np.sin(-phase)
-        new_scale = ani.ball_highlight["shadow_scale_offset"] + ani.ball_highlight[
+        new_scale = ball_highlight["shadow_scale_offset"] + ball_highlight[
             "shadow_scale_amplitude"
         ] * np.sin(phase)
         self.closest_ball.get_node("shadow").setAlphaScale(new_alpha)
