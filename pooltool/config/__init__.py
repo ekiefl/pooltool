@@ -252,7 +252,7 @@ class GameplayConfig:
                 "cuestick ignores all geometry."
             ),
             category=SettingsCategory.GAMEPLAY,
-            display_type=DisplayType.CHECKBOX,
+            display_type=DisplayType.NONE,
         ),
     )
 
