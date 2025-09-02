@@ -442,7 +442,7 @@ class MenuInput:
             This function runs when Enter is pressed. Its only argument is the text in
             the input field. Its return value will be used to update the text in the
             input field. The message of any Exceptions raised will be shown to the user
-            in the `direct` DirectLabel.
+            in the `message` DirectLabel.
     """
 
     name: str
