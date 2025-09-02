@@ -176,15 +176,6 @@ class GraphicsConfig:
             display_type=DisplayType.CHECKBOX,
         ),
     )
-    test: int = settings_field(
-        default=45,
-        metadata=SettingsMetadata(
-            display_name="Integer Input",
-            description=("Help help help"),
-            category=SettingsCategory.GRAPHICS,
-            display_type=DisplayType.INTEGER,
-        ),
-    )
     fps: int = settings_field(
         default=45,
         metadata=SettingsMetadata(

@@ -51,46 +51,48 @@ def _create_dropdown(
 
 
 def _create_numeric_input(
-    field: attrs.Attribute, field_metadata: SettingsMetadata, current_value: Any
+    field: attrs.Attribute,
+    field_metadata: SettingsMetadata,
+    current_value: float | int,
 ) -> MenuInput:
-    def _update_numeric(value: str) -> None:
+    def _process_input(value: str) -> str:
+        if not isinstance(value, int | float):
+            raise TypeError("Error. Not a number.")
+
         with settings.write() as s:
-            try:
-                # Convert string input to the appropriate numeric type
-                numeric_value = field.type(value)
-                setattr(getattr(s, field_metadata.category), field.name, numeric_value)
-            except ValueError:
-                # Handle invalid input - could show error message or ignore
-                pass
+            assert field.type is not None
+            numeric_value = field.type(value)
+            setattr(getattr(s, field_metadata.category), field.name, numeric_value)
+
+        return str(numeric_value)
 
     return MenuInput.create(
         name=field_metadata.display_name,
         initial_value=str(current_value),
         description=field_metadata.description,
-        command=_update_numeric,
+        command=_process_input,
     )
 
 
 def _create_string_input(
     field: attrs.Attribute, field_metadata: SettingsMetadata, current_value: Any
 ) -> MenuInput:
-    # TODO
+    def _process_input(value: str) -> str:
+        if field.type is not str:
+            raise TypeError(f"{value} must be a string.")
+        elif len(value) > 20:
+            raise ValueError("Character limit is 20.")
 
-    def _update_numeric(value: str) -> None:
         with settings.write() as s:
-            try:
-                # Convert string input to the appropriate numeric type
-                numeric_value = field.type(value)
-                setattr(getattr(s, field_metadata.category), field.name, numeric_value)
-            except ValueError:
-                # Handle invalid input - could show error message or ignore
-                pass
+            setattr(getattr(s, field_metadata.category), field.name, value)
+
+        return value
 
     return MenuInput.create(
         name=field_metadata.display_name,
         initial_value=str(current_value),
         description=field_metadata.description,
-        command=_update_numeric,
+        command=_process_input,
     )
 
 

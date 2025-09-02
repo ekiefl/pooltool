@@ -28,6 +28,7 @@ from panda3d.core import (
     Vec4,
 )
 
+import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 from pooltool.ani.constants import logo_paths, model_dir
 from pooltool.ani.fonts import load_font
@@ -40,8 +41,10 @@ FRAME_COLOR = (0, 0, 0, 1)
 TEXT_SCALE = 0.05
 BUTTON_TEXT_SCALE = 0.07
 AUX_TEXT_SCALE = BUTTON_TEXT_SCALE * 1.0
+INPUT_TEXT_SCALE = BUTTON_TEXT_SCALE * 0.6
 ERROR_TEXT_SCALE = BUTTON_TEXT_SCALE * 0.6
-ERROR_COLOR = (0.9, 0.4, 0.4, 1)
+ERROR_COLOR = (0.9, 0.4, 0.4, 0.8)
+INFO_COLOR = (1, 1, 0.9, 0.8)
 BACKBUTTON_TEXT_SCALE = 0.06
 HEADING_SCALE = 0.12
 SUBHEADING_SCALE = 0.08
@@ -84,7 +87,7 @@ class MenuElementRegistry:
         ]
 
 
-@attrs.define
+@attrs.define(kw_only=True)
 class MenuTitle:
     text: str
     label: DirectLabel
@@ -106,7 +109,7 @@ class MenuTitle:
         self.label.removeNode()
 
 
-@attrs.define
+@attrs.define(kw_only=True)
 class MenuButton:
     text: str
     command: Callable[[], None]
@@ -157,7 +160,7 @@ class MenuButton:
             self.info_button.removeNode()
 
 
-@attrs.define
+@attrs.define(kw_only=True)
 class MenuBackButton:
     command: Callable[[], None]
     button: DirectButton
@@ -182,7 +185,7 @@ class MenuBackButton:
         self.button.removeNode()
 
 
-@attrs.define
+@attrs.define(kw_only=True)
 class MenuText:
     text: str
     wrapped_text: str
@@ -218,7 +221,7 @@ class MenuText:
         self.label.removeNode()
 
 
-@attrs.define
+@attrs.define(kw_only=True)
 class MenuDropdown:
     name: str
     options: list[str]
@@ -329,7 +332,7 @@ class MenuDropdown:
             self.info_button.removeNode()
 
 
-@attrs.define
+@attrs.define(kw_only=True)
 class MenuCheckbox:
     name: str
     initial_state: bool
@@ -408,28 +411,39 @@ class MenuCheckbox:
             self.info_button.removeNode()
 
 
-@attrs.define
+@attrs.define(kw_only=True)
 class MenuInput:
+    """Input field.
+
+    Attributes:
+        command:
+            This function runs when Enter is pressed. Its only argument is the text in
+            the input field. Its return value will be used to update the text in the
+            input field. The message of any Exceptions raised will be shown to the user
+            in the `direct` DirectLabel.
+    """
+
     name: str
     initial_value: str
     description: str
-    command: Callable[[str], None] | None
     title: DirectLabel
-    entry: DirectEntry
+    message: DirectLabel
+    direct_entry: DirectEntry
     info_button: DirectButton | None = None
+    command: Callable[[str], str] = lambda x: x
 
     @classmethod
     def create(
         cls,
+        *,
         name: str,
         initial_value: str = "",
         description: str = "",
-        command: Callable[[str], None] | None = None,
+        command: Callable[[str], str],
         title_font: str = TITLE_FONT,
         button_font: str = BUTTON_FONT,
         width: float = 15,
     ) -> MenuInput:
-        # Create header label
         title = DirectLabel(
             text=name + ":",
             scale=AUX_TEXT_SCALE,
@@ -439,20 +453,17 @@ class MenuInput:
             text_font=load_font(title_font),
         )
 
-        # Create text entry field
-        entry = DirectEntry(
-            text="",
-            scale=AUX_TEXT_SCALE,
-            width=width,
-            relief=DGG.SUNKEN,
-            frameColor=(1, 1, 1, 1),
+        message = DirectLabel(
+            frameColor=INFO_COLOR,
+            text="Enter to confirm. Esc to cancel.",
+            scale=INFO_TEXT_SCALE,
+            parent=Global.aspect2d,
             text_fg=TEXT_COLOR,
-            text_font=load_font(button_font),
-            command=command if command else lambda text: None,
-            initialText=initial_value,
-            numLines=1,
-            focus=0,  # Start without focus to prevent immediate cursor
+            text_align=TextNode.ALeft,
+            pad=(0.2, 0.2),
         )
+        # Set higher render priority for info messages so they appear on top
+        message.setBin("gui-popup", 50)
 
         # Create info button if description is provided
         info_button = None
@@ -465,22 +476,87 @@ class MenuInput:
                 relief=None,
             )
 
-        return cls(
+        direct_entry = DirectEntry(
+            text="",
+            scale=INPUT_TEXT_SCALE,
+            width=width,
+            relief=DGG.SUNKEN,
+            frameColor=(1, 1, 1, 0.7),
+            text_fg=TEXT_COLOR,
+            text_font=load_font(button_font),
+            initialText=initial_value,
+            numLines=1,
+            focus=0,
+            overflow=1,
+        )
+
+        input_field = MenuInput(
             name=name,
             initial_value=initial_value,
             description=description,
-            command=command,
             title=title,
-            entry=entry,
+            message=message,
+            direct_entry=direct_entry,
             info_button=info_button,
+            command=command,
         )
+
+        def _command(text: str) -> None:
+            try:
+                cleaned_value = command(text)
+            except Exception as e:
+                input_field.direct_entry.set(str(input_field.initial_value))
+                input_field._show_error_message(str(e))
+                return
+
+            if not isinstance(cleaned_value, str):
+                raise TypeError(f"{command} must return a string.")
+
+            input_field.direct_entry.set(cleaned_value)
+            input_field.initial_value = cleaned_value
+
+        def _unfocus_command():
+            if not tasks.has(input_field._task_name):
+                message.hide()
+
+        input_field.direct_entry["focusInCommand"] = lambda: message.show()
+        input_field.direct_entry["focusOutCommand"] = _unfocus_command
+        input_field.direct_entry["command"] = _command
+
+        return input_field
+
+    def _show_error_message(self, error_text: str) -> None:
+        """Show error message with red background and auto-hide after 3 seconds"""
+        if tasks.has(self._task_name):
+            # Error message already is active. Remove it.
+            self.message.hide()
+            tasks.remove(self._task_name)
+
+        self.message["frameColor"] = ERROR_COLOR
+        self.message["text"] = error_text
+        self.message.show()
+
+        def hide_error(task):
+            self.message.hide()
+            self.message["frameColor"] = INFO_COLOR  # Reset to original color
+            self.message["text"] = (
+                "Enter to confirm. Esc to cancel."  # Reset to original text
+            )
+
+        tasks.add_later(3.0, hide_error, self._task_name)
 
     def cleanup(self) -> None:
         """Clean up the DirectLabel, DirectEntry, and optional info button"""
+        tasks.remove(self._task_name)  # Clean up any pending hide task
         self.title.removeNode()
-        self.entry.removeNode()
+        self.message.removeNode()
+        self.direct_entry.removeNode()
         if self.info_button:
             self.info_button.removeNode()
+
+    @property
+    def _task_name(self):
+        return f"hide-error-message-{self.name}"
 
 
 def _load_image_as_plane(filepath: Path, yresolution: int = 600) -> NodePath:
@@ -808,10 +884,15 @@ class BaseMenu(ABC):
         """Add a text input field with the given configuration"""
 
         title = menu_input.title
-        entry = menu_input.entry
+        message = menu_input.message
+        entry = menu_input.direct_entry
 
         title_np = NodePath(title)
         title_np.reparentTo(self.area.getCanvas())
+
+        message_np = NodePath(message)
+        message_np.reparentTo(self.area.getCanvas())
+        message_np.hide()
 
         entry_np = NodePath(entry)
         entry_id = f"input-{self.name}-{menu_input.name.replace(' ', '_')}"
@@ -826,12 +907,11 @@ class BaseMenu(ABC):
         title_np.setX(-0.63)
         title_np.setZ(title_np.getZ() - MOVE)
 
-        # Align the input field next to the title that refers to it
-        autils.alignTo(entry_np, title_np, autils.CL, autils.CR)
-        # Then shift it over just a bit to give some space
-        entry_np.setX(entry_np.getX() + 0.02)
-        # Then shift it down a little to align the text
-        entry_np.setZ(entry_np.getZ() - 0.01)
+        # Align the input field to the right of the title title that refers to it.
+        autils.alignTo(entry_np, title_np, autils.CL, autils.CR, gap=(0.5, 0.0))
+
+        # Align the message field above the entry.
+        autils.alignTo(message_np, entry_np, autils.UL, autils.LL, gap=(0.0, 0.04))
 
         # Info button if provided
         info_button_np = None
@@ -893,7 +973,7 @@ class BaseMenu(ABC):
 
     def _display_button_info(self, msg: str, mouse_watcher: Any) -> None:
         self.hover_msg = DirectLabel(
-            frameColor=(1, 1, 0.9, 1),
+            frameColor=INFO_COLOR,
             text=msg,
             scale=INFO_TEXT_SCALE,
             parent=Global.aspect2d,
@@ -901,6 +981,8 @@ class BaseMenu(ABC):
             text_align=TextNode.ALeft,
             pad=(0.2, 0.2),
         )
+        # Set higher render priority for hover messages so they appear on top
+        self.hover_msg.setBin("gui-popup", 50)
 
         coords = mouse_watcher.getMouse()
         r2d = Point3(coords[0], 0, coords[1])
