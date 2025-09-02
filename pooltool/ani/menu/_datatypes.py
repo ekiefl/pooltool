@@ -463,7 +463,7 @@ class MenuInput:
         command: Callable[[str], str],
         title_font: str = TITLE_FONT,
         button_font: str = BUTTON_FONT,
-        width: float = 15,
+        width: float = 10,
     ) -> MenuInput:
         title = DirectLabel(
             text=name + ":",
