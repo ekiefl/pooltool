@@ -6,5 +6,5 @@ dependencies:
   - python==3.13.0
   - pip
   - pip:
-    # This pin matches CI actions
+    # This pin matches CI actions and pyproject dev deps
     - poetry==1.8.4

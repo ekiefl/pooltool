@@ -123,6 +123,7 @@ pandas = ">=2"
 plotly = ">=5"
 matplotlib = ">=3.8"
 # Publishing
+poetry = "==1.8.4"
 poetry-dynamic-versioning = {extras = ["plugin"], version = ">=1.4.0"}
 
 [tool.poetry.group.docs]
