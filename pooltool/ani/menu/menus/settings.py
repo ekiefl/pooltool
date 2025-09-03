@@ -9,6 +9,9 @@ from pooltool.config import settings
 
 def _fps_wrap(func: Callable[[str], None]) -> Callable[[str], None]:
     def inner(value: str) -> None:
+        if int(float(value)) < 5:
+            value = "5"
+
         func(value)
         Global.clock.setFrameRate(settings.graphics.fps)
 
