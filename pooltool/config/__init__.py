@@ -21,7 +21,7 @@ run = Run()
 
 
 class SettingsCategory(StrEnum):
-    # Values must match the `Settings` attribute names
+    # Members must match the `Settings` attribute names
     GRAPHICS = "graphics"
     GAMEPLAY = "gameplay"
     SYSTEM = "system"

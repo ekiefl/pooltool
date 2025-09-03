@@ -78,14 +78,6 @@ class MenuElementRegistry:
             element.cleanup()
         self.elements.clear()
 
-    def find_focusable_elements(self) -> list[MenuDropdown | MenuCheckbox | MenuInput]:
-        """Find elements that can be focused (for click handling)"""
-        return [
-            e
-            for e in self.elements
-            if hasattr(e, "dropdown") or hasattr(e, "checkbox") or hasattr(e, "entry")  # type: ignore
-        ]
-
 
 @attrs.define(kw_only=True)
 class MenuTitle:
@@ -443,6 +435,11 @@ class MenuInput:
             the input field. Its return value will be used to update the text in the
             input field. The message of any Exceptions raised will be shown to the user
             in the `message` DirectLabel.
+        has_focus:
+            This exists because of an oddity with the Panda3D DirectEntry object. For
+            whatever reason, entry["focus"] can't be used to access whether or not an
+            entry has focus, even though you can change the focus state with
+            entry["focus"] = True/False.
     """
 
     name: str
@@ -452,6 +449,7 @@ class MenuInput:
     message: DirectLabel
     direct_entry: DirectEntry
     info_button: DirectButton | None = None
+    has_focus: bool = False
 
     @classmethod
     def create(
@@ -525,7 +523,7 @@ class MenuInput:
             try:
                 cleaned_value = command(text)
             except Exception as e:
-                input_field.direct_entry.set(str(input_field.initial_value))
+                input_field.reset_value()
                 input_field._show_error_message(str(e))
                 return
 
@@ -535,11 +533,17 @@ class MenuInput:
             input_field.direct_entry.set(cleaned_value)
             input_field.initial_value = cleaned_value
 
+        def _focus_command():
+            input_field.has_focus = True
+            message.show()
+
         def _unfocus_command():
+            input_field.has_focus = False
+            input_field.direct_entry["focus"] = False
             if not tasks.has(input_field._task_name):
                 message.hide()
 
-        input_field.direct_entry["focusInCommand"] = lambda: message.show()
+        input_field.direct_entry["focusInCommand"] = _focus_command
         input_field.direct_entry["focusOutCommand"] = _unfocus_command
         input_field.direct_entry["command"] = _command
 
@@ -564,6 +568,10 @@ class MenuInput:
             )
 
         tasks.add_later(3.0, hide_error, self._task_name)
+
+    def reset_value(self) -> None:
+        """Sets the text back to `initial_value`"""
+        self.direct_entry.set(str(self.initial_value))
 
     def cleanup(self) -> None:
         """Clean up the DirectLabel, DirectEntry, and optional info button"""

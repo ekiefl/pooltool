@@ -53,17 +53,40 @@ def _create_dropdown(
     )
 
 
-def _create_numeric_input(
+def _create_integer_input(
     field: attrs.Attribute,
     field_metadata: SettingsMetadata,
-    current_value: float | int,
+    current_value: int,
 ) -> MenuInput:
     def _process_input(value: str) -> str:
         try:
-            assert field.type is not None
-            numeric_value = field.type(value)
+            numeric_value = int(float(value))
         except ValueError:
-            raise TypeError("Error. Not a number.")
+            raise TypeError("Error. Not an integer.")
+
+        with settings.write() as s:
+            setattr(getattr(s, field_metadata.category), field.name, numeric_value)
+
+        return str(numeric_value)
+
+    return MenuInput.create(
+        name=field_metadata.display_name,
+        initial_value=str(current_value),
+        description=field_metadata.description,
+        command=_process_input,
+    )
+
+
+def _create_float_input(
+    field: attrs.Attribute,
+    field_metadata: SettingsMetadata,
+    current_value: float,
+) -> MenuInput:
+    def _process_input(value: str) -> str:
+        try:
+            numeric_value = float(value)
+        except ValueError:
+            raise TypeError("Error. Not a float.")
 
         with settings.write() as s:
             setattr(getattr(s, field_metadata.category), field.name, numeric_value)
@@ -103,8 +126,8 @@ def _create_string_input(
 _menu_item_fn_lookup = {
     DisplayType.CHECKBOX: _create_checkbox,
     DisplayType.DROPDOWN: _create_dropdown,
-    DisplayType.INTEGER: _create_numeric_input,
-    DisplayType.FLOAT: _create_numeric_input,
+    DisplayType.INTEGER: _create_integer_input,
+    DisplayType.FLOAT: _create_float_input,
     DisplayType.STRING: _create_string_input,
 }
 
