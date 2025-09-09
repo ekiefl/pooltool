@@ -250,6 +250,12 @@ def point_on_line_closest_to_point(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def squared_norm3d(vec: NDArray[np.float64]) -> float:
+    """Calculate the squared norm of a 3D vector"""
+    return vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def norm3d(vec: NDArray[np.float64]) -> float:
     """Calculate the norm of a 3D vector
 
@@ -265,6 +271,12 @@ def norm3d(vec: NDArray[np.float64]) -> float:
     241 ns ± 2.57 ns per loop (mean ± std. dev. of 7 runs, 1,000,000 loops each)
     """
     return sqrt(vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2)
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def squared_norm2d(vec: NDArray[np.float64]) -> float:
+    """Calculate the squared norm of a 2D vector"""
+    return vec[0] ** 2 + vec[1] ** 2
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
