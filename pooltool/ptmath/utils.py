@@ -2,6 +2,8 @@ from collections.abc import Callable
 from math import degrees, sqrt
 
 import numpy as np
+import quaternion
+import scipy.spatial.transform as sp_tf
 from numba import jit
 from numpy.typing import NDArray
 
@@ -65,6 +67,11 @@ def angle_between_vectors(v1: NDArray[np.float64], v2: NDArray[np.float64]) -> f
     """Returns angles between [-180, 180]"""
     angle = np.atan2(np.linalg.det([v1, v2]), np.dot(v1, v2))  # type: ignore
     return degrees(angle)
+
+
+# TODO: replace the one in ptmath, which seems to only work for vectors with 2 dimensions
+def angle_between_vectors_new(a, b):
+    return np.acos(np.dot(a, b) / (norm3d(a) * norm3d(b)))
 
 
 def wiggle(x: float, val: float):
@@ -197,6 +204,18 @@ def angle(v2: NDArray[np.float64], v1: NDArray[np.float64] = np.array([1, 0])) -
         return 2 * np.pi + ang
 
     return ang
+
+
+def rotation_from_vector_to_vector(a, b):
+    angle = angle_between_vectors_new(a, b)
+    axis = unit_vector(cross(a, b))
+    return sp_tf.Rotation.from_rotvec(axis, angle)
+
+
+def quaternion_from_vector_to_vector(a, b):
+    angle = angle_between_vectors_new(a, b)
+    axis = unit_vector(cross(a, b), True)
+    return quaternion.from_rotation_vector(axis * angle)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
