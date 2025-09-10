@@ -1,7 +1,5 @@
 """An unrealistic ball-cushion model"""
 
-from typing import TypeVar
-
 import attrs
 import numpy as np
 
@@ -10,6 +8,7 @@ import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
     CircularCushionSegment,
+    Cushion,
     LinearCushionSegment,
 )
 from pooltool.physics.resolve.ball_cushion.core import (
@@ -17,8 +16,6 @@ from pooltool.physics.resolve.ball_cushion.core import (
     CoreBallLCushionCollision,
 )
 from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
-
-Cushion = TypeVar("Cushion", LinearCushionSegment, CircularCushionSegment)
 
 
 def _solve(

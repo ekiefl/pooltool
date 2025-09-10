@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 from functools import cached_property
+from typing import TypeVar
 
 import numpy as np
 from attrs import define, evolve, field
@@ -412,3 +413,6 @@ class Pocket:
     @staticmethod
     def dummy() -> Pocket:
         return Pocket(id="dummy", center=np.array([0, 0, 0]), radius=10)
+
+
+Cushion = TypeVar("Cushion", LinearCushionSegment, CircularCushionSegment)
