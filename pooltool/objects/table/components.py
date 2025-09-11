@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 from functools import cached_property
+from typing import TypeVar
 
 import numpy as np
 from attrs import define, evolve, field
@@ -142,6 +143,11 @@ class LinearCushionSegment:
         return -p1x if (p2x - p1x) == 0 else (p2y - p1y) / (p2x - p1x) * p1x - p1y
 
     @cached_property
+    def unit_axis(self) -> NDArray[np.float64]:
+        axis = self.p2 - self.p1
+        return axis / ptmath.norm3d(axis)
+
+    @cached_property
     def normal(self) -> NDArray[np.float64]:
         """The line's normal vector, with the z-component set to 0.
 
@@ -154,7 +160,7 @@ class LinearCushionSegment:
         """
         return ptmath.unit_vector(np.array([self.lx, self.ly, 0]))
 
-    def get_normal(self, rvw: NDArray[np.float64]) -> NDArray[np.float64]:
+    def get_normal_xy(self, rvw: NDArray[np.float64]) -> NDArray[np.float64]:
         """Calculates the normal vector
 
         Warning:
@@ -180,6 +186,10 @@ class LinearCushionSegment:
               :meth:`normal` instead.
         """
         return self.normal
+
+    def get_normal_3d(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
+        r = xyz - self.p1
+        return ptmath.unit_vector(r - np.dot(r, self.unit_axis) * self.unit_axis)
 
     def copy(self) -> LinearCushionSegment:
         """Create a copy"""
@@ -249,7 +259,7 @@ class CircularCushionSegment:
         """
         return self.center[1]
 
-    def get_normal(self, rvw: NDArray[np.float64]) -> NDArray[np.float64]:
+    def get_normal_xy(self, rvw: NDArray[np.float64]) -> NDArray[np.float64]:
         """Calculates the normal vector for a ball contacting the cushion
 
         Assumes that the ball is in fact in contact with the cushion.
@@ -265,6 +275,9 @@ class CircularCushionSegment:
         normal = rvw[0, :] - self.center
         normal[2] = 0  # remove z-component
         return ptmath.unit_vector(normal)
+
+    def get_normal_3d(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
+        return ptmath.unit_vector(xyz - self.center)
 
     def copy(self) -> CircularCushionSegment:
         """Create a copy"""
@@ -400,3 +413,6 @@ class Pocket:
     @staticmethod
     def dummy() -> Pocket:
         return Pocket(id="dummy", center=np.array([0, 0, 0]), radius=10)
+
+
+Cushion = TypeVar("Cushion", LinearCushionSegment, CircularCushionSegment)

@@ -2,6 +2,8 @@ from collections.abc import Callable
 from math import degrees, sqrt
 
 import numpy as np
+import quaternion
+import scipy.spatial.transform as sp_tf
 from numba import jit
 from numpy.typing import NDArray
 
@@ -65,6 +67,11 @@ def angle_between_vectors(v1: NDArray[np.float64], v2: NDArray[np.float64]) -> f
     """Returns angles between [-180, 180]"""
     angle = np.atan2(np.linalg.det([v1, v2]), np.dot(v1, v2))  # type: ignore
     return degrees(angle)
+
+
+# TODO: replace the one in ptmath, which seems to only work for vectors with 2 dimensions
+def angle_between_vectors_new(a, b):
+    return np.acos(np.dot(a, b) / (norm3d(a) * norm3d(b)))
 
 
 def wiggle(x: float, val: float):
@@ -199,6 +206,18 @@ def angle(v2: NDArray[np.float64], v1: NDArray[np.float64] = np.array([1, 0])) -
     return ang
 
 
+def rotation_from_vector_to_vector(a, b):
+    angle = angle_between_vectors_new(a, b)
+    axis = unit_vector(cross(a, b))
+    return sp_tf.Rotation.from_rotvec(axis, angle)
+
+
+def quaternion_from_vector_to_vector(a, b):
+    angle = angle_between_vectors_new(a, b)
+    axis = unit_vector(cross(a, b), True)
+    return quaternion.from_rotation_vector(axis * angle)
+
+
 @jit(nopython=True, cache=const.use_numba_cache)
 def coordinate_rotation(v: NDArray[np.float64], phi: float) -> NDArray[np.float64]:
     """Rotate vector/matrix from one frame of reference to another (3D FIXME)
@@ -231,6 +250,12 @@ def point_on_line_closest_to_point(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def squared_norm3d(vec: NDArray[np.float64]) -> float:
+    """Calculate the squared norm of a 3D vector"""
+    return vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def norm3d(vec: NDArray[np.float64]) -> float:
     """Calculate the norm of a 3D vector
 
@@ -246,6 +271,12 @@ def norm3d(vec: NDArray[np.float64]) -> float:
     241 ns ± 2.57 ns per loop (mean ± std. dev. of 7 runs, 1,000,000 loops each)
     """
     return sqrt(vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2)
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def squared_norm2d(vec: NDArray[np.float64]) -> float:
+    """Calculate the squared norm of a 2D vector"""
+    return vec[0] ** 2 + vec[1] ** 2
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
