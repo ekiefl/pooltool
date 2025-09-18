@@ -59,6 +59,9 @@ class BallLCushionModel(StrEnum):
             An unrealistic model in which balls are perfectly reflected. Spin is left
             untouched by the interaction.
 
+        IMPULSE_FRICTIONAL_INELASTIC:
+            TODO(derek)
+
         MATHAVAN_2010:
             Ball-cushion collision resolver for the Mathavan et al. (2010) collision model.
 
