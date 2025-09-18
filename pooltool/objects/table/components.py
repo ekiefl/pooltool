@@ -150,7 +150,7 @@ class LinearCushionSegment:
 
     @cached_property
     def normal(self) -> NDArray[np.float64]:
-        """The line's normal vector, with the z-component set to 0.
+        """The line's normal vector, with the z-component zeroed prior to normalization.
 
         Warning:
             The returned normal vector is arbitrarily directed, meaning it may point
@@ -162,7 +162,7 @@ class LinearCushionSegment:
         return ptmath.unit_vector(np.array([self.lx, self.ly, 0]))
 
     def get_normal_xy(self, rvw: NDArray[np.float64]) -> NDArray[np.float64]:
-        """Calculates the normal vector.
+        """Calculates the normal vector for a ball contacting the cushion.
 
         Warning:
             The returned normal vector is arbitrarily directed, meaning it may point
@@ -179,16 +179,40 @@ class LinearCushionSegment:
 
         Returns:
             NDArray[np.float64]:
-                The line's normal vector, with the z-component set to 0.
+                The line's normal vector, with the z-component zeroed prior to normalization.
 
         Note:
             - This method only exists for call signature parity with
-              :meth:`pooltool.objects.CircularCushionSegment.get_normal`. Consider using
+              :meth:`pooltool.objects.CircularCushionSegment.get_normal_xy`. Consider using
               :meth:`normal` instead.
         """
         return self.normal
 
     def get_normal_3d(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Calculates the 3D normal vector for a point contacting the cushion.
+
+        This method computes the normal by finding the component of the vector from
+        :attr:`p1` to the contact point that is perpendicular to the cushion's
+        :attr:`unit_axis`. Mathematically, this is achieved by subtracting the
+        projection of the position vector onto the cushion's axis from the position
+        vector itself, yielding the perpendicular component which defines the normal
+        direction.
+
+        Warning:
+            The returned normal vector is arbitrarily directed, meaning it may point
+            away from the table surface, rather than towards it. This nonideality is
+            properly handled in downstream simulation logic, however if you're using
+            this method for custom purposes, you may want to reverse the direction of
+            this vector by negating it.
+
+        Args:
+            xyz:
+                The 3D coordinate of the contacting point.
+
+        Returns:
+            NDArray[np.float64]:
+                The 3D normal vector pointing outward from the cushion surface.
+        """
         r = xyz - self.p1
         return ptmath.unit_vector(r - np.dot(r, self.unit_axis) * self.unit_axis)
 
@@ -271,13 +295,23 @@ class CircularCushionSegment:
 
         Returns:
             NDArray[np.float64]:
-                The normal vector, with the z-component set to 0.
+                The normal vector, with the z-component zeroed prior to normalization.
         """
         normal = rvw[0, :] - self.center
         normal[2] = 0  # remove z-component
         return ptmath.unit_vector(normal)
 
     def get_normal_3d(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Calculates the 3D normal vector for a point contacting the cushion.
+
+        Args:
+            xyz:
+                The 3D coordinate of the contacting point.
+
+        Returns:
+            NDArray[np.float64]:
+                The 3D normal vector pointing outward from the cushion surface.
+        """
         return ptmath.unit_vector(xyz - self.center)
 
     def copy(self) -> CircularCushionSegment:
