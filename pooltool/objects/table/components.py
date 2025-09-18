@@ -47,7 +47,7 @@ class CushionDirection:
 
 @define(eq=False, frozen=True, slots=False)
 class LinearCushionSegment:
-    """A linear cushion segment defined by the line between points p1 and p2
+    """A linear cushion segment defined by the line between points :math:`p_1` and :math:`p_2`.
 
     Attributes:
         id:
@@ -56,12 +56,12 @@ class LinearCushionSegment:
             The 3D coordinate where the cushion segment starts.
 
             Note:
-                - p1 and p2 must share the same height (``p1[2] == p2[2]``).
+                - ``p1`` and ``p2`` must share the same height (``p1[2] == p2[2]``).
         p2:
             The 3D coordinate where the cushion segment ends.
 
             Note:
-                - p1 and p2 must share the same height (``p1[2] == p2[2]``).
+                - ``p1`` and ``p2`` must share the same height (``p1[2] == p2[2]``).
         direction:
             The cushion direction (*default* =
             :attr:`pooltool.objects.CushionDirection.BOTH`).
@@ -95,7 +95,7 @@ class LinearCushionSegment:
 
     @cached_property
     def lx(self) -> float:
-        """The x-coefficient (:math:`l_x`) of the cushion's 2D general form line equation
+        """The x-coefficient (:math:`l_x`) of the cushion's 2D general form line equation.
 
         .. cached_property_note::
 
@@ -122,7 +122,7 @@ class LinearCushionSegment:
 
     @cached_property
     def ly(self) -> float:
-        """The x-coefficient (:math:`l_y`) of the cushion's 2D general form line equation
+        """The x-coefficient (:math:`l_y`) of the cushion's 2D general form line equation.
 
         See :meth:`lx` for definition.
 
@@ -132,7 +132,7 @@ class LinearCushionSegment:
 
     @cached_property
     def l0(self) -> float:
-        """The constant term (:math:`l_0`) of the cushion's 2D general form line equation
+        """The constant term (:math:`l_0`) of the cushion's 2D general form line equation.
 
         See :meth:`lx` for definition.
 
@@ -144,6 +144,7 @@ class LinearCushionSegment:
 
     @cached_property
     def unit_axis(self) -> NDArray[np.float64]:
+        """The unit vector :math:`\\frac{p_2 - p_1}{\\|p_2 - p_1\\|}`."""
         axis = self.p2 - self.p1
         return axis / ptmath.norm3d(axis)
 
@@ -161,7 +162,7 @@ class LinearCushionSegment:
         return ptmath.unit_vector(np.array([self.lx, self.ly, 0]))
 
     def get_normal_xy(self, rvw: NDArray[np.float64]) -> NDArray[np.float64]:
-        """Calculates the normal vector
+        """Calculates the normal vector.
 
         Warning:
             The returned normal vector is arbitrarily directed, meaning it may point
