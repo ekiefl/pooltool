@@ -30,7 +30,7 @@ reviews:
   abort_on_close: true
   disable_cache: false
   auto_review:
-    enabled: true
+    enabled: false
     auto_incremental_review: false
     ignore_title_keywords: []
     labels: []
