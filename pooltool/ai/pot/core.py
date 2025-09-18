@@ -7,6 +7,7 @@ ignored. Bank shots are not supported. Interfering balls are not detected.
 
 import math
 from collections.abc import Iterable
+from math import degrees
 
 import attrs
 import numpy as np
@@ -15,7 +16,6 @@ from numpy.typing import NDArray
 import pooltool.constants as const
 from pooltool.objects import Ball, BallState, Pocket, Table
 from pooltool.ptmath import (
-    angle_between_vectors,
     are_points_on_same_side,
     find_intersection_2D,
     norm2d,
@@ -30,6 +30,12 @@ Coordinate = NDArray[np.float64]
 
 # For a diagram, see
 # https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times
+
+
+def angle_between_vectors(v1: NDArray[np.float64], v2: NDArray[np.float64]) -> float:
+    """Returns angles between [-180, 180] between two 2D vectors"""
+    angle = np.atan2(np.linalg.det([v1, v2]), np.dot(v1, v2))  # type: ignore
+    return degrees(angle)
 
 
 @attrs.define(frozen=True)
