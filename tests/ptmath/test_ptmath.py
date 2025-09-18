@@ -110,7 +110,7 @@ def test_rotation_from_vector_to_vector():
     assert np.allclose(np.linalg.norm(rotated_unit), 1.0)
 
 
-def test_quaternion_from_vector_to_vector_basic():
+def test_quaternion_from_vector_to_vector():
     # Test rotation from x-axis to y-axis
     v1 = np.array([1.0, 0.0, 0.0])
     v2 = np.array([0.0, 1.0, 0.0])
