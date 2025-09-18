@@ -154,10 +154,9 @@ def unit_vector_slow(
 
     "Slow", but supports more than just 3D.
 
-    Parameters
-    ==========
-    handle_zero: bool, False
-        If True and vector = <0,0,0>, <0,0,0> is returned.
+    Args:
+        handle_zero:
+            If True and vector = <0,0,0>, <0,0,0> is returned.
     """
     if len(vector.shape) > 1:
         norm = np.linalg.norm(vector, axis=1, keepdims=True)
@@ -177,14 +176,12 @@ def unit_vector(
 ) -> NDArray[np.float64]:
     """Returns the unit vector of the vector (just-in-time compiled)
 
-    Parameters
-    ==========
-    handle_zero: bool, False
-        If True and vector = <0,0,0>, <0,0,0> is returned.
+    Args:
+        handle_zero:
+            If True and vector = <0,0,0>, <0,0,0> is returned.
 
-    Notes
-    =====
-    - Only supports 3D (for 2D see unit_vector_slow)
+    Notes:
+        - Only supports 3D (for 2D see unit_vector_slow)
     """
     norm = norm3d(vector)
     if handle_zero and norm == 0.0:
