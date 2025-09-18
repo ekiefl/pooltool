@@ -31,7 +31,7 @@ def _solve(
     rvw = ball.state.rvw
 
     # Two things about the normal:
-    #   1) Cushions have a get_normal method that returns the normal. For linear
+    #   1) Cushions have a get_normal_xy method that returns the normal. For linear
     #      cushions this is determined solely by it's geometry. For circular
     #      cushions, the normal is a function of the ball's position (specifically,
     #      it is the line connecting the ball's and cushion's centers). To retain
