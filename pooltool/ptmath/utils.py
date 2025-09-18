@@ -1,5 +1,6 @@
 from collections.abc import Callable
-from math import degrees, sqrt
+from math import sqrt
+from typing import Any
 
 import numpy as np
 import quaternion
@@ -61,17 +62,6 @@ def solve_transcendental(
 def convert_2D_to_3D(array: NDArray[np.float64]) -> NDArray[np.float64]:
     """Convert a 2D vector to a 3D vector, setting z=0"""
     return np.pad(array, (0, 1), "constant", constant_values=(0,))
-
-
-def angle_between_vectors(v1: NDArray[np.float64], v2: NDArray[np.float64]) -> float:
-    """Returns angles between [-180, 180]"""
-    angle = np.atan2(np.linalg.det([v1, v2]), np.dot(v1, v2))  # type: ignore
-    return degrees(angle)
-
-
-# TODO: replace the one in ptmath, which seems to only work for vectors with 2 dimensions
-def angle_between_vectors_new(a, b):
-    return np.acos(np.dot(a, b) / (norm3d(a) * norm3d(b)))
 
 
 def wiggle(x: float, val: float):
@@ -203,14 +193,41 @@ def angle(v2: NDArray[np.float64], v1: NDArray[np.float64] = np.array([1, 0])) -
     return ang
 
 
-def rotation_from_vector_to_vector(a, b):
-    angle = angle_between_vectors_new(a, b)
+def angle_between_vectors(a: NDArray[np.float64], b: NDArray[np.float64]) -> float:
+    """Compute the angle between two 3D vectors in radians.
+
+    Returns:
+        The angle between vectors a and b in radians. Can take on values within [0, pi].
+    """
+    return np.acos(np.dot(a, b) / (norm3d(a) * norm3d(b)))
+
+
+def rotation_from_vector_to_vector(
+    a: NDArray[np.float64], b: NDArray[np.float64]
+) -> sp_tf.Rotation:
+    """Compute the rotation that transforms vector a to vector b.
+
+    Returns:
+        A scipy Rotation object representing the rotation from a to b.
+    """
+    angle = angle_between_vectors(a, b)
     axis = unit_vector(cross(a, b))
     return sp_tf.Rotation.from_rotvec(axis, angle)
 
 
-def quaternion_from_vector_to_vector(a, b):
-    angle = angle_between_vectors_new(a, b)
+def quaternion_from_vector_to_vector(
+    a: NDArray[np.float64], b: NDArray[np.float64]
+) -> Any:
+    """Compute the quaternion representing the rotation from vector a to vector b
+
+    Args:
+        a: Initial 3D vector
+        b: Target 3D vector
+
+    Returns:
+        A quaternion representing the rotation from a to b.
+    """
+    angle = angle_between_vectors(a, b)
     axis = unit_vector(cross(a, b), True)
     return quaternion.from_rotation_vector(axis * angle)
 
