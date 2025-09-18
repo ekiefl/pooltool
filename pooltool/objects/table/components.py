@@ -328,9 +328,6 @@ class CircularCushionSegment:
         )
 
 
-CushionSegment = LinearCushionSegment | CircularCushionSegment
-
-
 @define
 class CushionSegments:
     """A collection of cushion segments
