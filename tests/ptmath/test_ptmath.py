@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 import quaternion
-import scipy.spatial.transform as sp_tf
 
 from pooltool.ptmath.utils import (
     angle_between_vectors,

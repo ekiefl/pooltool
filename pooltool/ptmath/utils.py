@@ -212,7 +212,7 @@ def rotation_from_vector_to_vector(
     """
     angle = angle_between_vectors(a, b)
     axis = unit_vector(cross(a, b))
-    return sp_tf.Rotation.from_rotvec(axis, angle)
+    return sp_tf.Rotation.from_rotvec(axis * angle)
 
 
 def quaternion_from_vector_to_vector(
