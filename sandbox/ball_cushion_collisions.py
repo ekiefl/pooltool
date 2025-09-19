@@ -3,20 +3,22 @@ import logging
 import math
 
 import attrs
-import matplotlib.pyplot as plt
 import numpy as np
+import plotly.graph_objects as go
+import plotly.io as pio
 from numpy.typing import NDArray
 
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallParams
 from pooltool.objects.table.components import LinearCushionSegment
 from pooltool.physics.resolve.ball_cushion.core import CoreBallLCushionCollision
-
-# from pooltool.physics.resolve.ball_cushion.han_2005 import Han2005Linear
-# from pooltool.physics.resolve.ball_cushion.mathavan_2010 import Mathavan2010Linear
+from pooltool.physics.resolve.ball_cushion.han_2005 import Han2005Linear
 from pooltool.physics.resolve.ball_cushion.impulse_frictional_inelastic import (
     ImpulseFrictionalInelasticLinear,
 )
+from pooltool.physics.resolve.ball_cushion.mathavan_2010 import Mathavan2010Linear
+
+pio.renderers.default = "browser"
 
 logger = logging.getLogger(__name__)
 ch = logging.StreamHandler()
@@ -220,82 +222,135 @@ N_CUT_ANGLES = 90
 
 
 def plot_rebound_angle_vs_incident_angle(
-    title: str, config, speeds, topspin_factors=None, sidespin_factors=None
+    title: str, configs, speeds, topspin_factors=None, sidespin_factors=None
 ):
     cut_angles = np.linspace(0, np.pi / 2, N_CUT_ANGLES, endpoint=False)
     cut_angles_deg = np.rad2deg(cut_angles)
 
-    results = collision_results_versus_cut_angle(
-        config, cut_angles, speeds, topspin_factors, sidespin_factors
+    fig = go.Figure()
+
+    # Add 1:1 reference line
+    fig.add_trace(
+        go.Scatter(
+            x=cut_angles_deg,
+            y=cut_angles_deg,
+            mode="lines",
+            name="1:1 line (perfect reflection)",
+            line=dict(color="gray", width=1, dash="dash"),
+            opacity=0.7,
+        )
     )
 
-    fig = plt.figure(1)
-    ax = fig.add_subplot()
-    ax.set(
-        xlabel="incident angle (deg)",
-        ylabel="rebound angle (deg)",
+    base_colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+
+    for config_idx, config in enumerate(configs):
+        results = collision_results_versus_cut_angle(
+            config, cut_angles, speeds, topspin_factors, sidespin_factors
+        )
+
+        base_color = base_colors[config_idx % len(base_colors)]
+        trajectory_idx = 0
+        num_trajectories = len(results)
+
+        for (speed, topspin_factor, sidespin_factor), (
+            _,
+            _,
+            _,
+            _,
+            rebound_angles,
+            _,
+        ) in results.items():
+            label = f"{config.model.model}: speed={speed:.3} m/s"
+            if topspin_factors is not None:
+                label += f", topspin_factor={topspin_factor:.2}"
+            if sidespin_factors is not None:
+                label += f", sidespin_factor={sidespin_factor:.2}"
+            rebound_angles_deg = np.rad2deg(rebound_angles)
+
+            opacity = 0.4 + 0.6 * trajectory_idx / max(1, num_trajectories - 1)
+
+            fig.add_trace(
+                go.Scatter(
+                    x=cut_angles_deg,
+                    y=rebound_angles_deg,
+                    mode="lines",
+                    name=label,
+                    line=dict(color=base_color, width=2),
+                    opacity=opacity,
+                )
+            )
+            trajectory_idx += 1
+
+    fig.update_layout(
         title=title,
+        xaxis_title="incident angle (deg)",
+        yaxis_title="rebound angle (deg)",
+        showlegend=True,
     )
-    for (speed, topspin_factor, sidespin_factor), (
-        _,
-        _,
-        _,
-        _,
-        rebound_angles,
-        _,
-    ) in results.items():
-        label = f"speed={speed:.3} m/s"
-        if topspin_factors is not None:
-            label += f", topspin_factor={topspin_factor:.2}"
-        if sidespin_factors is not None:
-            label += f", sidespin_factor={sidespin_factor:.2}"
-        rebound_angles_deg = np.rad2deg(rebound_angles)
-        ax.plot(cut_angles_deg, rebound_angles_deg, label=label)
-    ax.legend()
-    ax.grid()
-    plt.show()
+
+    fig.show(config={"displayModeBar": True})
 
 
 def plot_rebound_speed_vs_incident_angle(
-    title: str, config, speeds, topspin_factors=None, sidespin_factors=None
+    title: str, configs, speeds, topspin_factors=None, sidespin_factors=None
 ):
     cut_angles = np.linspace(0, np.pi / 2, N_CUT_ANGLES, endpoint=False)
     cut_angles_deg = np.rad2deg(cut_angles)
 
-    results = collision_results_versus_cut_angle(
-        config, cut_angles, speeds, topspin_factors, sidespin_factors
+    fig = go.Figure()
+    base_colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+
+    for config_idx, config in enumerate(configs):
+        results = collision_results_versus_cut_angle(
+            config, cut_angles, speeds, topspin_factors, sidespin_factors
+        )
+
+        base_color = base_colors[config_idx % len(base_colors)]
+        trajectory_idx = 0
+        num_trajectories = len(results)
+
+        for (speed, topspin_factor, sidespin_factor), (
+            _,
+            _,
+            _,
+            _,
+            _,
+            rebound_speeds,
+        ) in results.items():
+            label = f"{config.model.model}: speed={speed:.3} m/s"
+            if topspin_factors is not None:
+                label += f", topspin_factor={topspin_factor:.2}"
+            if sidespin_factors is not None:
+                label += f", sidespin_factor={sidespin_factor:.2}"
+
+            opacity = 0.4 + 0.6 * trajectory_idx / max(1, num_trajectories - 1)
+
+            fig.add_trace(
+                go.Scatter(
+                    x=cut_angles_deg,
+                    y=rebound_speeds,
+                    mode="lines",
+                    name=label,
+                    line=dict(color=base_color, width=2),
+                    opacity=opacity,
+                )
+            )
+            trajectory_idx += 1
+
+    fig.update_layout(
+        title=title,
+        xaxis_title="incident angle (deg)",
+        yaxis_title="rebound speed (m/s)",
+        showlegend=True,
     )
 
-    fig = plt.figure(1)
-    ax = fig.add_subplot()
-    ax.set(
-        xlabel="incident angle (deg)",
-        ylabel="rebound speed (m/s)",
-        title=title,
-    )
-    for (speed, topspin_factor, sidespin_factor), (
-        _,
-        _,
-        _,
-        _,
-        _,
-        rebound_speeds,
-    ) in results.items():
-        label = f"speed={speed:.3} m/s"
-        if topspin_factors is not None:
-            label += f", topspin_factor={topspin_factor:.2}"
-        if sidespin_factors is not None:
-            label += f", sidespin_factor={sidespin_factor:.2}"
-        ax.plot(cut_angles_deg, rebound_speeds, label=label)
-    ax.legend()
-    ax.grid()
-    plt.show()
+    fig.show(config={"displayModeBar": True})
 
 
 def main():
     models = [
-        # Han2005Linear(),
-        # Mathavan2010Linear(),
+        Han2005Linear(),
+        Mathavan2010Linear(),
         ImpulseFrictionalInelasticLinear(),
     ]
 
@@ -307,58 +362,58 @@ def main():
         for model in models
     ]
 
-    mathavan_speeds = np.linspace(0.5, 2.5, 5)
-    mathavan_topspins = np.linspace(-2, 2, 5)
+    speeds = np.linspace(0.5, 2.5, 5)
+    topspins = np.linspace(-2, 2, 5)
 
-    plots = [
-        lambda config: plot_rebound_angle_vs_incident_angle(
-            f"Stun-Shot Collision At Various Speeds\nRebound Angle vs. Incident Angle\n(model={config.model.model})",
-            config,
-            mathavan_speeds,
-        ),
-        lambda config: plot_rebound_angle_vs_incident_angle(
-            f"Rolling-Ball Collision At Various Speeds\nRebound Angle vs. Incident Angle\n(model={config.model.model})",
-            config,
-            mathavan_speeds,
-            topspin_factors=[1.0],
-        ),
-        lambda config: plot_rebound_speed_vs_incident_angle(
-            f"Rolling-Ball Collision At Various Speeds\nRebound Speed vs. Incident Angle\n(model={config.model.model})",
-            config,
-            mathavan_speeds,
-            topspin_factors=[1.0],
-        ),
-        lambda config: plot_rebound_angle_vs_incident_angle(
-            f"1.0 m/s Collision At Various Topspins\nRebound Angle vs. Incident Angle\n(model={config.model.model})",
-            config,
-            [1.0],
-            topspin_factors=mathavan_topspins,
-        ),
-        lambda config: plot_rebound_speed_vs_incident_angle(
-            f"1.0 m/s Collision At Various Topspins\nRebound Speed vs. Incident Angle\n(model={config.model.model})",
-            config,
-            [1.0],
-            topspin_factors=mathavan_topspins,
-        ),
-        lambda config: plot_rebound_angle_vs_incident_angle(
-            f"1.0 m/s Rolling-Ball Collision With Various Sidespin\nRebound Angle vs. Incident Angle\n(model={config.model.model})",
-            config,
-            [1.0],
-            topspin_factors=[1.0],
-            sidespin_factors=mathavan_topspins,
-        ),
-        lambda config: plot_rebound_speed_vs_incident_angle(
-            f"1.0 m/s Rolling-Ball Collision With Various Sidespin\nRebound Speed vs. Incident Angle\n(model={config.model.model})",
-            config,
-            [1.0],
-            topspin_factors=[1.0],
-            sidespin_factors=mathavan_topspins,
-        ),
-    ]
+    plot_rebound_angle_vs_incident_angle(
+        "Stun-Shot Collision At Various Speeds\nRebound Angle vs. Incident Angle",
+        configs,
+        speeds,
+    )
 
-    for plot in plots:
-        for config in configs:
-            plot(config)
+    plot_rebound_angle_vs_incident_angle(
+        "Rolling-Ball Collision At Various Speeds\nRebound Angle vs. Incident Angle",
+        configs,
+        speeds,
+        topspin_factors=[1.0],
+    )
+
+    plot_rebound_speed_vs_incident_angle(
+        "Rolling-Ball Collision At Various Speeds\nRebound Speed vs. Incident Angle",
+        configs,
+        speeds,
+        topspin_factors=[1.0],
+    )
+
+    plot_rebound_angle_vs_incident_angle(
+        "1.0 m/s Collision At Various Topspins\nRebound Angle vs. Incident Angle",
+        configs,
+        [1.0],
+        topspin_factors=topspins,
+    )
+
+    plot_rebound_speed_vs_incident_angle(
+        "1.0 m/s Collision At Various Topspins\nRebound Speed vs. Incident Angle",
+        configs,
+        [1.0],
+        topspin_factors=topspins,
+    )
+
+    plot_rebound_angle_vs_incident_angle(
+        "1.0 m/s Rolling-Ball Collision With Various Sidespin\nRebound Angle vs. Incident Angle",
+        configs,
+        [1.0],
+        topspin_factors=[1.0],
+        sidespin_factors=topspins,
+    )
+
+    plot_rebound_speed_vs_incident_angle(
+        "1.0 m/s Rolling-Ball Collision With Various Sidespin\nRebound Speed vs. Incident Angle",
+        configs,
+        [1.0],
+        topspin_factors=[1.0],
+        sidespin_factors=topspins,
+    )
 
 
 if __name__ == "__main__":
