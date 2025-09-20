@@ -81,11 +81,9 @@ class BallParams:
 
     @cached_property
     def u_sp(self) -> float:
-        """Coefficient of spinning friction
+        """Coefficient of spinning friction.
 
-        This is equal to :attr:`u_sp_proportionality` * :attr:`R`
-
-        .. cached_property_note::
+        This is equal to :attr:`u_sp_proportionality` * :attr:`R`.
         """
         return self.u_sp_proportionality * self.R
 

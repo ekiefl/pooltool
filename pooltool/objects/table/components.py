@@ -87,17 +87,12 @@ class LinearCushionSegment:
 
     @cached_property
     def height(self) -> float:
-        """The height of the cushion
-
-        .. cached_property_note::
-        """
+        """The height of the cushion."""
         return self.p1[2]
 
     @cached_property
     def lx(self) -> float:
         """The x-coefficient (:math:`l_x`) of the cushion's 2D general form line equation.
-
-        .. cached_property_note::
 
         The cushion's general form line equation in the :math:`XY` plane (*i.e.*
         dismissing the z-component) is
@@ -125,8 +120,6 @@ class LinearCushionSegment:
         """The x-coefficient (:math:`l_y`) of the cushion's 2D general form line equation.
 
         See :meth:`lx` for definition.
-
-        .. cached_property_note::
         """
         return 0 if (self.p2[0] - self.p1[0]) == 0 else 1
 
@@ -135,8 +128,6 @@ class LinearCushionSegment:
         """The constant term (:math:`l_0`) of the cushion's 2D general form line equation.
 
         See :meth:`lx` for definition.
-
-        .. cached_property_note::
         """
         p1x, p1y, _ = self.p1
         p2x, p2y, _ = self.p2
@@ -262,26 +253,17 @@ class CircularCushionSegment:
 
     @cached_property
     def height(self) -> float:
-        """The height of the cushion
-
-        .. cached_property_note::
-        """
+        """The height of the cushion."""
         return self.center[2]
 
     @cached_property
     def a(self) -> float:
-        """The x-coordinate of the cushion's center
-
-        .. cached_property_note::
-        """
+        """The x-coordinate of the cushion's center."""
         return self.center[0]
 
     @cached_property
     def b(self) -> float:
-        """The y-coordinate of the cushion's center
-
-        .. cached_property_note::
-        """
+        """The y-coordinate of the cushion's center."""
         return self.center[1]
 
     def get_normal_xy(self, rvw: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -412,18 +394,12 @@ class Pocket:
 
     @cached_property
     def a(self) -> float:
-        """The x-coordinate of the pocket's center
-
-        .. cached_property_note::
-        """
+        """The x-coordinate of the pocket's center."""
         return self.center[0]
 
     @cached_property
     def b(self) -> float:
-        """The y-coordinate of the pocket's center
-
-        .. cached_property_note::
-        """
+        """The y-coordinate of the pocket's center."""
         return self.center[1]
 
     def add(self, ball_id: str) -> None:
