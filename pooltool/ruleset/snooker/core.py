@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections import Counter
-from typing import List, Optional, Tuple
 
 from pooltool.ruleset.datatypes import (
     BallInHandOptions,
@@ -37,7 +36,7 @@ from pooltool.ruleset.utils import (
 from pooltool.system.datatypes import System
 
 
-def is_legal(shot: System, constraints: ShotConstraints) -> Tuple[bool, Reason]:
+def is_legal(shot: System, constraints: ShotConstraints) -> tuple[bool, Reason]:
     """Was it a legal shot?
 
     Implemented:
@@ -85,9 +84,9 @@ def is_turn_over(shot: System, constraints: ShotConstraints, legal: bool) -> boo
     assert "white" not in pocketed_on_balls, "Legal shot has cue in pocket?"
 
     # Assert no off-balls are pocketed
-    assert not is_off_ball_pocketed(
-        shot, constraints
-    ), "Legal shot w/ off-ball pocketed?"
+    assert not is_off_ball_pocketed(shot, constraints), (
+        "Legal shot w/ off-ball pocketed?"
+    )
 
     # Assert only one ball pocketed if on COLORS
     if BallGroup.get(constraints.hittable) is BallGroup.COLORS:
@@ -125,8 +124,8 @@ def is_game_over(shot: System, legal: bool) -> bool:
 
 
 def decide_winner(
-    players: List[Player], points: Counter, game_over: bool
-) -> Optional[Player]:
+    players: list[Player], points: Counter, game_over: bool
+) -> Player | None:
     if not game_over:
         return None
 
@@ -220,7 +219,7 @@ class _Snooker(Ruleset):
         )
 
     def respot_balls(self, shot: System):
-        check: List[str] = ["white"]
+        check: list[str] = ["white"]
 
         if self.phase is GamePhase.ALTERNATING:
             check.extend(list(BallGroup.COLORS.balls))

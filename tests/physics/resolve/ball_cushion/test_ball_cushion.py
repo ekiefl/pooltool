@@ -22,7 +22,12 @@ def cushion_yaxis():
 
 
 @pytest.mark.parametrize(
-    "model_name", [BallLCushionModel.HAN_2005, BallLCushionModel.UNREALISTIC]
+    "model_name",
+    [
+        BallLCushionModel.HAN_2005,
+        BallLCushionModel.UNREALISTIC,
+        BallLCushionModel.MATHAVAN_2010,
+    ],
 )
 def test_symmetry(
     cushion_yaxis: LinearCushionSegment, model_name: BallLCushionModel
@@ -69,4 +74,4 @@ def test_symmetry(
         assert np.isclose(ball_after.state.rvw[1, 0], other_after.state.rvw[1, 0])
 
         # Y-velocities are reflected
-        assert ball_after.state.rvw[1, 1] == -other_after.state.rvw[1, 1]
+        assert np.isclose(ball_after.state.rvw[1, 1], -other_after.state.rvw[1, 1])

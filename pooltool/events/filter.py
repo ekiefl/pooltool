@@ -1,11 +1,11 @@
-from typing import Callable, List, Union
+from collections.abc import Callable
 
 from pooltool.events.datatypes import AgentType, Event, EventType
 
-FilterFunc = Callable[[List[Event]], List[Event]]
+FilterFunc = Callable[[list[Event]], list[Event]]
 
 
-def by_type(types: Union[EventType, List[EventType]]) -> FilterFunc:
+def by_type(types: EventType | list[EventType]) -> FilterFunc:
     """Returns a function that filters events based on event type.
 
     Args:
@@ -19,15 +19,15 @@ def by_type(types: Union[EventType, List[EventType]]) -> FilterFunc:
             containing only events matching the passed event type(s).
     """
 
-    def func(events: List[Event]) -> List[Event]:
-        _types: Union[EventType, List[EventType]]
+    def func(events: list[Event]) -> list[Event]:
+        _types: EventType | list[EventType]
 
         if isinstance(types, str):
             _types = [types]
         else:
             _types = types
 
-        new: List[Event] = []
+        new: list[Event] = []
         for event in events:
             if event.event_type in _types:
                 new.append(event)
@@ -37,14 +37,14 @@ def by_type(types: Union[EventType, List[EventType]]) -> FilterFunc:
     return func
 
 
-def by_ball(ball_ids: Union[str, List[str]], keep_nonevent: bool = False) -> FilterFunc:
+def by_ball(ball_ids: str | list[str], keep_nonevent: bool = False) -> FilterFunc:
     """Returns a function that filters events based on ball IDs.
 
     Args:
         ball_ids:
             A collection of ball IDs.
         keep_nonevent:
-            Retain non-events (:attr:`EventType.NONE`).
+            Retain non-events (:attr:`pooltool.events.EventType.NONE`).
 
     Returns:
         FilterFunc:
@@ -52,14 +52,14 @@ def by_ball(ball_ids: Union[str, List[str]], keep_nonevent: bool = False) -> Fil
             containing only events that involve balls matching the passed ball ID(s).
     """
 
-    def func(events: List[Event]) -> List[Event]:
-        _ball_ids: Union[str, List[str]]
+    def func(events: list[Event]) -> list[Event]:
+        _ball_ids: str | list[str]
         if isinstance(ball_ids, str):
             _ball_ids = [ball_ids]
         else:
             _ball_ids = ball_ids
 
-        new: List[Event] = []
+        new: list[Event] = []
         for event in events:
             if keep_nonevent and event.event_type == EventType.NONE:
                 new.append(event)
@@ -90,11 +90,11 @@ def by_time(t: float, after: bool = True) -> FilterFunc:
             containing only events before or after the cutoff time, non-inclusive.
     """
 
-    def func(events: List[Event]) -> List[Event]:
+    def func(events: list[Event]) -> list[Event]:
         if not events == sorted(events, key=lambda event: event.time):
             raise ValueError("Event lists must be chronological")
 
-        new: List[Event] = []
+        new: list[Event] = []
         for event in events:
             if after and event.time > t:
                 new.append(event)
@@ -107,7 +107,7 @@ def by_time(t: float, after: bool = True) -> FilterFunc:
 
 
 def _chain(*funcs: FilterFunc) -> FilterFunc:
-    def func(events: List[Event]) -> List[Event]:
+    def func(events: list[Event]) -> list[Event]:
         result = events
         for f in funcs:
             result = f(result)
@@ -116,7 +116,7 @@ def _chain(*funcs: FilterFunc) -> FilterFunc:
     return func
 
 
-def filter_events(events: List[Event], *funcs: FilterFunc) -> List[Event]:
+def filter_events(events: list[Event], *funcs: FilterFunc) -> list[Event]:
     """Filter events using multiple criteria.
 
     A convenient way to filter based multiple filtering criteria.
@@ -144,8 +144,9 @@ def filter_events(events: List[Event], *funcs: FilterFunc) -> List[Event]:
         >>> events = system.events
 
         In this shot, both the cue-ball and the 1-ball are potted. We are interested in
-        filtering for the cue-ball pocket event. Option 1 is to call :func:`filter_type`
-        and then :func:`filter_ball`:
+        filtering for the cue-ball pocket event. Option 1 is to call
+        :func:`pooltool.events.filter_type` and then
+        :func:`pooltool.events.filter_ball`:
 
         >>> filtered_events = pt.events.filter_type(events, pt.EventType.BALL_POCKET)
         >>> filtered_events = pt.events.filter_ball(filtered_events, "cue")
@@ -156,7 +157,7 @@ def filter_events(events: List[Event], *funcs: FilterFunc) -> List[Event]:
          ├── time   : 3.231130101576186
          └── agents : ('cue', 'rt')
 
-        Option 2, the better option, is to use :func:`filter_events`:
+        Option 2, the better option, is to use :func:`pooltool.events.filter_events`:
 
         >>> filtered_events = pt.events.filter_events(
         >>>     events,
@@ -172,14 +173,13 @@ def filter_events(events: List[Event], *funcs: FilterFunc) -> List[Event]:
 
     See Also:
         - If you're filtering based on a single criterion, you can consider using
-          :func:`filter_type`, :func:`filter_ball`, :func:`filter_time`, etc.
+          :func:`pooltool.events.filter_type`, :func:`pooltool.events.filter_ball`,
+          :func:`pooltool.events.filter_time`, etc.
     """
     return _chain(*funcs)(events)
 
 
-def filter_type(
-    events: List[Event], types: Union[EventType, List[EventType]]
-) -> List[Event]:
+def filter_type(events: list[Event], types: EventType | list[EventType]) -> list[Event]:
     """Filter events based on event type.
 
     Args:
@@ -196,14 +196,14 @@ def filter_type(
 
     See Also:
         - If you're filtering based on multiple criteria, you can (and should!) use
-          :func:`filter_events`.
+          :func:`pooltool.events.filter_events`.
     """
     return by_type(types)(events)
 
 
 def filter_ball(
-    events: List[Event], ball_ids: Union[str, List[str]], keep_nonevent: bool = False
-) -> List[Event]:
+    events: list[Event], ball_ids: str | list[str], keep_nonevent: bool = False
+) -> list[Event]:
     """Filter events based on ball IDs.
 
     Args:
@@ -212,7 +212,7 @@ def filter_ball(
         ball_ids:
             A collection of ball IDs.
         keep_nonevent:
-            Retain non-events (:attr:`EventType.NONE`).
+            Retain non-events (:attr:`pooltool.events.EventType.NONE`).
 
     Returns:
         List[Event]:
@@ -221,12 +221,12 @@ def filter_ball(
 
     See Also:
         - If you're filtering based on multiple criteria, you can (and should!) use
-          :func:`filter_events`.
+          :func:`pooltool.events.filter_events`.
     """
     return by_ball(ball_ids, keep_nonevent)(events)
 
 
-def filter_time(events: List[Event], t: float, after: bool = True) -> List[Event]:
+def filter_time(events: list[Event], t: float, after: bool = True) -> list[Event]:
     """Filter events with respect to a time cutoff.
 
     Args:
@@ -245,6 +245,6 @@ def filter_time(events: List[Event], t: float, after: bool = True) -> List[Event
 
     See Also:
         - If you're filtering based on multiple criteria, you can (and should!) use
-          :func:`filter_events`.
+          :func:`pooltool.events.filter_events`.
     """
     return by_time(t, after)(events)

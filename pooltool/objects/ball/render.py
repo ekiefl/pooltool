@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Tuple
 
 import numpy as np
 from direct.interval.IntervalGlobal import (
@@ -17,10 +16,10 @@ from panda3d.core import (
     TransparencyAttrib,
 )
 
-import pooltool.ani as ani
 import pooltool.ani.utils as autils
 import pooltool.constants as c
 from pooltool.ani.globals import Global
+from pooltool.config import settings
 from pooltool.objects.ball.datatypes import Ball, BallHistory, BallOrientation
 from pooltool.objects.ball.sets import get_ballset
 from pooltool.objects.cue.datatypes import Cue
@@ -118,9 +117,9 @@ class BallRender(Render):
             CollisionNode(f"ball_csphere_{self._ball.id}")
         )
         collision_node.node().addSolid(
-            CollisionCapsule(0, 0, -R, 0, 0, R, cue.specs.tip_radius + R)
+            CollisionCapsule(0, 0, -R, 0, 0, R, cue.specs.shaft_radius_at_tip + R)
         )
-        if ani.settings["graphics"]["debug"]:
+        if settings.graphics.debug:
             collision_node.show()
 
         self.nodes[f"ball_csphere_{self._ball.id}"] = collision_node
@@ -159,7 +158,7 @@ class BallRender(Render):
 
         return self._ball.params.R / model_R
 
-    def get_render_state(self) -> Tuple[float, float, float]:
+    def get_render_state(self) -> tuple[float, float, float]:
         """Return the position of the rendered ball"""
         x, y, z = self.nodes["pos"].getPos()
         return x, y, z
@@ -204,11 +203,12 @@ class BallRender(Render):
         ws = rvws[:, 2, :]
         self.quats = autils.as_quaternion(ws, ts)
 
-    def get_playback_sequence(self, playback_speed=1) -> MetaInterval:
+    def get_playback_sequence(self, playback_speed: float = 1.0) -> MetaInterval:
         """Creates the motion sequences of the ball for a given playback speed"""
-        vectors = self._ball.history_cts.vectorize()
-        if vectors is None:
+        if self._ball.history_cts.empty:
             return Sequence()
+
+        vectors = self._ball.history_cts.vectorize()
 
         rvws, motion_states, ts = vectors
 

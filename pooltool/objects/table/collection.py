@@ -1,5 +1,3 @@
-from typing import Dict
-
 from pooltool.game.datatypes import GameType
 from pooltool.objects.table.specs import (
     BilliardTableSpecs,
@@ -9,17 +7,26 @@ from pooltool.objects.table.specs import (
     TableSpecs,
     TableType,
 )
-from pooltool.utils.strenum import StrEnum, auto
+from pooltool.utils.strenum import StrEnum
 
 
 class TableName(StrEnum):
-    SEVEN_FOOT_SHOWOOD = auto()
-    SNOOKER_GENERIC = auto()
-    BILLIARD_WIP = auto()
-    SUMTOTHREE_WIP = auto()
+    """An Enum specifying table names.
+
+    Attributes:
+        SEVEN_FOOT_SHOWOOD:
+        SNOOKER_GENERIC:
+        BILLIARD_WIP:
+        SUMTOTHREE_WIP:
+    """
+
+    SEVEN_FOOT_SHOWOOD = "7 Ft Showood"
+    SNOOKER_GENERIC = "Generic Snooker"
+    BILLIARD_WIP = "Billiard (work in progress)"
+    SUMTOTHREE_WIP = "Sum to Three (work in progress)"
 
 
-TABLE_SPECS: Dict[TableName, TableSpecs] = {
+TABLE_SPECS: dict[TableName, TableSpecs] = {
     TableName.SEVEN_FOOT_SHOWOOD: PocketTableSpecs(
         l=1.9812,
         w=1.9812 / 2,
@@ -80,19 +87,18 @@ TABLE_SPECS: Dict[TableName, TableSpecs] = {
 }
 
 
-_default_table_type_map: Dict[TableType, TableName] = {
+_default_table_type_map: dict[TableType, TableName] = {
     TableType.POCKET: TableName.SEVEN_FOOT_SHOWOOD,
     TableType.SNOOKER: TableName.SNOOKER_GENERIC,
     TableType.BILLIARD: TableName.BILLIARD_WIP,
 }
 
-_default_game_type_map: Dict[GameType, TableName] = {
+_default_game_type_map: dict[GameType, TableName] = {
     GameType.EIGHTBALL: TableName.SEVEN_FOOT_SHOWOOD,
     GameType.NINEBALL: TableName.SEVEN_FOOT_SHOWOOD,
     GameType.SNOOKER: TableName.SNOOKER_GENERIC,
     GameType.THREECUSHION: TableName.BILLIARD_WIP,
     GameType.SUMTOTHREE: TableName.SUMTOTHREE_WIP,
-    GameType.SANDBOX: TableName.SEVEN_FOOT_SHOWOOD,
 }
 
 

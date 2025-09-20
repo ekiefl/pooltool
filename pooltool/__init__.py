@@ -6,13 +6,13 @@
     >>> import pooltool as pt
     >>> system = pt.System.example()
 
-Alternatively, it can be imported directly from its source location:
+Alternatively, it can be imported directly from its lower-level API location:
 
-    >>> from pooltool.system.datatypes import System
+    >>> from pooltool.system import System
     >>> system = System.example()
 
 If the object you're looking for isn't in this top-level API, **search for it in
-the submodules** listed below. Relatedly, if you believe that an objects deserves to
+the subpackages/submodules** listed below. Relatedly, if you believe that an objects deserves to
 graduate to the top-level API, **your input is valuable** and such changes can be
 considered.
 """
@@ -36,10 +36,9 @@ import pooltool.ptmath as ptmath
 import pooltool.ruleset as ruleset
 import pooltool.serialize as serialize
 import pooltool.system as system
-import pooltool.terminal as terminal
 import pooltool.utils as utils
 from pooltool.events import EventType
-from pooltool.evolution import continuize, simulate
+from pooltool.evolution import continuize, interpolate_ball_states, simulate
 from pooltool.game.datatypes import GameType
 from pooltool.interact import Game, show
 from pooltool.layouts import generate_layout, get_rack
@@ -55,41 +54,43 @@ from pooltool.system import MultiSystem, System
 
 __all__ = [
     # subpackages
-    "serialize",
-    "constants",
+    "events",
+    "evolution",
     "game",
-    "system",
+    "objects",
     "physics",
     "ptmath",
-    "objects",
-    "interact",
-    "evolution",
     "ruleset",
+    "system",
+    "utils",
+    # submodules
+    "constants",
+    "interact",
     "layouts",
-    "events",
-    "terminal",
+    # non-documented
+    "serialize",
     "image",
     "ai",
     "pot",
     "aim",
-    "utils",
     # objects
-    "Player",
-    "System",
+    "EventType",
     "GameType",
-    "MultiSystem",
+    "Game",
     "Ball",
     "BallParams",
     "Cue",
     "Table",
     "TableType",
-    "Game",
-    "show",
-    "EventType",
+    "Player",
+    "MultiSystem",
+    "System",
     # functions
+    "continuize",
+    "interpolate_ball_states",
+    "simulate",
+    "show",
+    "generate_layout",
     "get_rack",
     "get_ruleset",
-    "simulate",
-    "continuize",
-    "generate_layout",
 ]

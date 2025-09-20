@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import copy
 from collections import Counter
-from typing import Tuple
 
 import attrs
 
@@ -32,7 +31,7 @@ from pooltool.ruleset.utils import (
 from pooltool.system.datatypes import System
 
 
-def _is_legal_break(shot: System) -> Tuple[bool, str]:
+def _is_legal_break(shot: System) -> tuple[bool, str]:
     if is_ball_pocketed(shot, "cue"):
         return False, "Cue ball in pocket!"
 
@@ -66,7 +65,7 @@ def _is_cushion_hit_after_first_contact(shot: System) -> bool:
     return bool(len(post_first_contact_cushion_hits))
 
 
-def is_legal(shot: System, break_shot: bool) -> Tuple[bool, str]:
+def is_legal(shot: System, break_shot: bool) -> tuple[bool, str]:
     """Returns whether or not a shot is legal, and the reason"""
     if break_shot:
         return _is_legal_break(shot)

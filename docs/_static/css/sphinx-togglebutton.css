@@ -1,0 +1,10 @@
+/* Fix for sphinx-togglebutton not properly hiding function signatures */
+
+/* When toggle is hidden, hide the entire function signature definition list */
+.toggle-hidden dl.py.class,
+.toggle-hidden dl.py.function,
+.toggle-hidden dl.py.method,
+.toggle-hidden dl.py.attribute,
+.toggle-hidden dl.py.data {
+    display: none !important;
+}

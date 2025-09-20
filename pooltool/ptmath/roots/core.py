@@ -124,7 +124,9 @@ def filter_non_physical_roots_many(
     small_keep = (small_keep1 | small_keep2) & positive
 
     is_real = (small & small_keep) | (big & big_keep)
-    processed_roots = np.where(is_real, roots, np.complex128(np.inf))
+    processed_roots: NDArray[np.complex128] = np.where(
+        is_real, roots, np.complex128(np.inf)
+    )
 
     order = np.argsort(processed_roots.real, axis=1)
     return np.take_along_axis(processed_roots, order, axis=1)

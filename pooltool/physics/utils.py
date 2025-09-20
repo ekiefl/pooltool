@@ -16,6 +16,16 @@ def surface_velocity(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def tangent_surface_velocity(
+    rvw: NDArray[np.float64], d: NDArray[np.float64], R: float
+) -> NDArray[np.float64]:
+    """Compute velocity tangent to surface at a point on ball's surface (specified by unit direction vector)"""
+    _, v, w = rvw
+    v_t = v - np.sum(v * d) * d
+    return v_t + cross(w, R * d)
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def rel_velocity(rvw: NDArray[np.float64], R: float) -> NDArray[np.float64]:
     """Compute velocity of ball's point of contact with the cloth relative to the cloth
 
@@ -94,7 +104,8 @@ def on_table(rvw: NDArray[np.float64], R: float) -> float:
 def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float, g: float) -> float:
     """Get the energy of a ball
 
-    Accounts for linear and rotational kinetic energy and potential energy due to gravity relative to a ball in contact with the table
+    Accounts for linear and rotational kinetic energy and potential energy due to
+    gravity relative to a ball in contact with the table.
     """
     # Linear
     LKE = m * norm3d(rvw[1]) ** 2 / 2
@@ -106,3 +117,64 @@ def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float, g: float) -> f
     MGH = m * g * (rvw[0, 2] - R)
 
     return LKE + RKE + MGH
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def tip_contact_offset(
+    cue_center_offset: NDArray[np.float64], tip_radius: float, ball_radius: float
+) -> NDArray[np.float64]:
+    """Calculate the ball contact point offset from the cue tip center offset.
+
+    This function converts the offset of the cue tip's center (relative to the ball's center,
+    and normalized by the ball's radius) into the offset of the contact point on the ball's surface.
+
+    The conversion is based on the geometry of two circles in contact. Since the distance from the
+    ball's center to the cue tip's center is (ball_radius + tip_radius) while the ball's surface is
+    at a distance ball_radius, the contact point lies along the same line scaled by the factor
+
+        1 / (1 + tip_radius/ball_radius).
+
+    In other words, if (a, b) represent the cue tip center offset, then the ball is struck at
+
+        (a, b) / (1 + tip_radius/ball_radius).
+
+    Args:
+        cue_center_offset:
+            A 2D vector (e.g., [a, b]) representing the offset of the cue tip center
+            relative to the ball center (normalized by the ball's radius).
+        tip_radius: The radius of the cue tip.
+        ball_radius: The radius of the ball.
+
+    Returns:
+        NDArray[np.float64]:
+            A 2D vector representing the offset of the contact point on the ball's
+            surface, normalized by the ball's radius.
+    """
+    return cue_center_offset / (1 + tip_radius / ball_radius)
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def tip_center_offset(
+    tip_center_offset: NDArray[np.float64], tip_radius: float, ball_radius: float
+) -> NDArray[np.float64]:
+    """Calculate the cue tip center offset from a given contact point offset on the ball.
+
+    This function performs the inverse transformation of `tip_contact_offset`. Given a 2D contact point
+    offset on the ball’s surface (normalized by the ball's radius), it computes the corresponding cue tip
+    center offset. Since the cue tip’s center is located an extra tip_radius beyond the ball’s surface,
+    the transformation scales the contact offset by
+
+        1 + tip_radius/ball_radius.
+
+    Args:
+        cue_center_offset:
+            A 2D vector (e.g., [a, b]) representing the offset of the cue tip center
+            relative to the ball center (normalized by the ball's radius).
+        tip_radius: The radius of the cue tip.
+        ball_radius: The radius of the ball.
+
+    Returns:
+        NDArray[np.float64]: A 2D vector representing the offset of the cue tip's center relative to the
+            ball's center (normalized by the ball's radius).
+    """
+    return tip_center_offset * (1 + tip_radius / ball_radius)

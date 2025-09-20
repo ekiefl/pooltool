@@ -32,10 +32,11 @@ conversion.register_structure_hook_func(
     which=(SerializeFormat.JSON,),
 )
 
-# msgpack arrays are already arrays, simply return oneself
+# msgpack arrays are already arrays, but msgpack-numpy creates light-weight views of the
+# msgpack buffer. To create an editable copy, we cast v as an array.
 conversion.register_structure_hook_func(
     lambda t: getattr(t, "__origin__", None) is np.ndarray,
-    lambda v, t: v,
+    lambda v, t: np.array(v),
     which=(SerializeFormat.MSGPACK,),
 )
 

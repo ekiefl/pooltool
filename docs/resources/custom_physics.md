@@ -1,7 +1,3 @@
-:::{note}
-**This is under construction (work in progress)!**
-:::
-
 # Modular Physics
 
 One of pooltool's founding ambitions is completely customizable physics.

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Protocol, Tuple
+from typing import Protocol
 
 import numpy as np
 from numpy.typing import NDArray
@@ -30,13 +30,13 @@ def final_ball_motion_state(rvw: NDArray[np.float64], R: float) -> int:
 class _BaseStrategy(Protocol):
     def resolve(
         self, cue: Cue, ball: Ball, inplace: bool = False
-    ) -> Tuple[Cue, Ball]: ...
+    ) -> tuple[Cue, Ball]: ...
 
 
 class StickBallCollisionStrategy(_BaseStrategy, Protocol):
     """Stick-ball collision models must satisfy this protocol"""
 
-    def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]:
+    def solve(self, cue: Cue, ball: Ball) -> tuple[Cue, Ball]:
         """This method resolves a stick-ball collision"""
         ...
 
@@ -44,7 +44,7 @@ class StickBallCollisionStrategy(_BaseStrategy, Protocol):
 class CoreStickBallCollision(ABC):
     """Operations used by every stick-ball collision resolver"""
 
-    def resolve(self, cue: Cue, ball: Ball, inplace: bool = False) -> Tuple[Cue, Ball]:
+    def resolve(self, cue: Cue, ball: Ball, inplace: bool = False) -> tuple[Cue, Ball]:
         if not inplace:
             cue = cue.copy()
             ball = ball.copy()
@@ -52,5 +52,5 @@ class CoreStickBallCollision(ABC):
         return self.solve(cue, ball)
 
     @abstractmethod
-    def solve(self, cue: Cue, ball: Ball) -> Tuple[Cue, Ball]:
+    def solve(self, cue: Cue, ball: Ball) -> tuple[Cue, Ball]:
         pass

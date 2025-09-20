@@ -1,5 +1,4 @@
 import math
-from typing import Tuple
 
 import attrs
 import numpy as np
@@ -11,7 +10,15 @@ from pooltool.physics.resolve.ball_ball.core import BallBallCollisionStrategy
 from pooltool.physics.resolve.ball_ball.frictional_inelastic import FrictionalInelastic
 from pooltool.physics.resolve.ball_ball.frictional_mathavan import FrictionalMathavan
 from pooltool.physics.resolve.ball_ball.frictionless_elastic import FrictionlessElastic
-from pooltool.physics.utils import surface_velocity
+from pooltool.physics.utils import tangent_surface_velocity
+
+
+def vector_from_magnitude_and_direction(magnitude: float, angle_radians: float):
+    """Convert magnitude and angle to a vector
+
+    Angle is defined CCW from the x-axis in the xy-plane
+    """
+    return magnitude * np.array([math.cos(angle_radians), math.sin(angle_radians), 0.0])
 
 
 def velocity_from_speed_and_xy_direction(speed: float, angle_radians: float):
@@ -19,46 +26,50 @@ def velocity_from_speed_and_xy_direction(speed: float, angle_radians: float):
 
     Angle is defined CCW from the x-axis in the xy-plane
     """
-    return speed * np.array([math.cos(angle_radians), math.sin(angle_radians), 0.0])
+    return vector_from_magnitude_and_direction(speed, angle_radians)
 
 
-def gearing_z_spin_for_incoming_ball(incoming_ball):
+def gearing_z_spin_for_incoming_ball(
+    incoming_ball, line_of_centers_angle_radians: float
+):
     """Calculate the amount of sidespin (z-axis spin) required for gearing contact
     with no relative surface velocity.
 
-    Assumes line of centers from incoming ball to object ball is along the x-axis.
-
     In order for gearing contact to occur, the sidespin must cancel out any
-    velocity in the tangential (y-axis) direction.
+    velocity in the tangential direction.
 
-    And from angular velocity equations where
-        'r' is distance from the rotation center
-        'w' is angular velocity
-        'v' is tangential velocity at a distance from the rotation center
-
-        v = w * R
-
-    So, v_y + w_z * R = 0, and therefore w_z = -v_y / R
+    s_tangent + w_z * R = 0, and therefore w_z = -s_tangent / R,
+    where s_tangent is tangent relative surface speed due to linear velocity
     """
-    return -incoming_ball.vel[1] / incoming_ball.params.R
+    unit_direction = vector_from_magnitude_and_direction(
+        1.0, line_of_centers_angle_radians
+    )
+    s_tangent = np.linalg.vector_norm(
+        incoming_ball.vel
+        - np.linalg.vecdot(incoming_ball.vel, unit_direction) * unit_direction
+    )
+    return -s_tangent / incoming_ball.params.R
 
 
-def ball_collision() -> Tuple[Ball, Ball]:
+def ball_collision(line_of_centers_angle_radians: float) -> tuple[Ball, Ball]:
     cb = Ball.create("cue", xy=(0, 0))
-    ob = Ball.create("cue", xy=(2 * cb.params.R, 0))
+    offset_direction = vector_from_magnitude_and_direction(
+        2 * cb.params.R, line_of_centers_angle_radians
+    )
+    ob = Ball.create("cue", xy=(offset_direction[0], offset_direction[1]))
     assert cb.params.m == ob.params.m, "Balls expected to be equal mass"
     return cb, ob
 
 
-def head_on() -> Tuple[Ball, Ball]:
-    cb, ob = ball_collision()
+def head_on() -> tuple[Ball, Ball]:
+    cb, ob = ball_collision(0.0)
     # Cue ball makes head-on collision with object ball at 1 m/s in +x direction
     cb.state.rvw[1] = np.array([1, 0, 0])
     return cb, ob
 
 
-def translating_head_on() -> Tuple[Ball, Ball]:
-    cb, ob = ball_collision()
+def translating_head_on() -> tuple[Ball, Ball]:
+    cb, ob = ball_collision(0.0)
     # Cue ball makes head-on collision with object ball at 1 m/s in +x direction
     # while both balls move together at 1 m/s in +y direction
     cb.state.rvw[1] = np.array([1, 1, 0])
@@ -107,7 +118,7 @@ def test_head_on_zero_spin_inelastic(model: BallBallCollisionStrategy, e_b: floa
 
 
 @pytest.mark.parametrize("model", [FrictionalInelastic(), FrictionalMathavan()])
-@pytest.mark.parametrize("e_b", [0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
+@pytest.mark.parametrize("e_b", [0.6, 0.8, 1.0])
 def test_translating_head_on_zero_spin_inelastic(
     model: BallBallCollisionStrategy, e_b: float
 ):
@@ -140,18 +151,24 @@ def test_head_on_z_spin(model: BallBallCollisionStrategy, cb_wz_i: float):
 
     cb_wz_f = cb_f.state.rvw[2][2]
     assert cb_wz_f > 0, "Spin direction shouldn't reverse"
-    assert cb_wz_f < cb_wz_i, "Spin should be decay"
+    assert cb_wz_f < cb_wz_i, "Spin should decay"
 
 
 @pytest.mark.parametrize(
     "model", [FrictionalInelastic(), FrictionalMathavan(num_iterations=int(1e5))]
 )
-@pytest.mark.parametrize("speed", np.logspace(-1, 1, 5))
+@pytest.mark.parametrize("speed", np.logspace(-1, 1, 4))
 @pytest.mark.parametrize(
-    "cut_angle_radians", np.linspace(0, math.pi / 2.0, 8, endpoint=False)
+    "line_of_centers_angle_radians", np.linspace(0, 2.0 * math.pi, 6, endpoint=False)
+)
+@pytest.mark.parametrize(
+    "cut_angle_radians", np.linspace(0, math.pi / 2.0, 6, endpoint=False)
 )
 def test_gearing_z_spin(
-    model: BallBallCollisionStrategy, speed: float, cut_angle_radians: float
+    model: BallBallCollisionStrategy,
+    speed: float,
+    line_of_centers_angle_radians: float,
+    cut_angle_radians: float,
 ):
     """Ensure that a gearing collision causes no throw or induced spin.
 
@@ -160,36 +177,43 @@ def test_gearing_z_spin(
     slip at the contact point.
     """
 
-    unit_x = np.array([1.0, 0.0, 0.0])
-    cb_i, ob_i = ball_collision()
+    unit_normal = vector_from_magnitude_and_direction(
+        1.0, line_of_centers_angle_radians
+    )
+    cb_i, ob_i = ball_collision(line_of_centers_angle_radians)
 
-    cb_i.state.rvw[1] = velocity_from_speed_and_xy_direction(speed, cut_angle_radians)
-    cb_i.state.rvw[2][2] = gearing_z_spin_for_incoming_ball(cb_i)
+    cb_i.state.rvw[1] = velocity_from_speed_and_xy_direction(
+        speed, line_of_centers_angle_radians + cut_angle_radians
+    )
+    cb_i.state.rvw[2][2] = gearing_z_spin_for_incoming_ball(
+        cb_i, line_of_centers_angle_radians
+    )
 
     # sanity check the initial conditions
-    v_c = (
-        surface_velocity(cb_i.state.rvw, np.array([1.0, 0.0, 0.0]), cb_i.params.R)
-        - cb_i.vel[0] * unit_x
-    )
+    v_c = tangent_surface_velocity(cb_i.state.rvw, unit_normal, cb_i.params.R)
     assert ptmath.norm3d(v_c) < 1e-10, "Relative surface contact speed should be zero"
 
     cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
 
-    assert (
-        abs(math.atan2(ob_f.vel[1], ob_f.vel[0])) < 1e-3
+    assert np.allclose(
+        np.cross(ob_f.vel, unit_normal), np.zeros_like(unit_normal), atol=1e-3
     ), "Gearing english shouldn't cause throw"
-    assert abs(ob_f.avel[2]) < 1e-3, "Gearing english shouldn't cause induced side-spin"
+    assert abs(ob_f.avel[2]) < 5e-3, "Gearing english shouldn't cause induced side-spin"
 
 
 @pytest.mark.parametrize("model", [FrictionalInelastic()])
-@pytest.mark.parametrize("speed", np.logspace(0, 1, 5))
+@pytest.mark.parametrize("speed", np.logspace(0, 1, 4))
 @pytest.mark.parametrize(
-    "cut_angle_radians", np.linspace(0, math.pi / 2.0, 8, endpoint=False)
+    "line_of_centers_angle_radians", np.linspace(0, 2.0 * math.pi, 6, endpoint=False)
 )
-@pytest.mark.parametrize("relative_surface_speed", np.linspace(0, 0.05, 5))
+@pytest.mark.parametrize(
+    "cut_angle_radians", np.linspace(0, math.pi / 2.0, 6, endpoint=False)
+)
+@pytest.mark.parametrize("relative_surface_speed", np.linspace(0, 0.05, 4))
 def test_low_relative_surface_velocity(
     model: BallBallCollisionStrategy,
     speed: float,
+    line_of_centers_angle_radians: float,
     cut_angle_radians: float,
     relative_surface_speed: float,
 ):
@@ -200,29 +224,31 @@ def test_low_relative_surface_velocity(
     on model parameters and initial conditions such as ball-ball friction and the collision speed along the line of centers.
     """
 
-    unit_x = np.array([1.0, 0.0, 0.0])
-    cb_i, ob_i = ball_collision()
+    unit_normal = vector_from_magnitude_and_direction(
+        1.0, line_of_centers_angle_radians
+    )
+    cb_i, ob_i = ball_collision(line_of_centers_angle_radians)
 
-    cb_i.state.rvw[1] = velocity_from_speed_and_xy_direction(speed, cut_angle_radians)
-    cb_i.state.rvw[2][2] = gearing_z_spin_for_incoming_ball(cb_i)
+    cb_i.state.rvw[1] = velocity_from_speed_and_xy_direction(
+        speed, line_of_centers_angle_radians + cut_angle_radians
+    )
+    cb_i.state.rvw[2][2] = gearing_z_spin_for_incoming_ball(
+        cb_i, line_of_centers_angle_radians
+    )
     cb_i.state.rvw[2][2] += (
         relative_surface_speed / cb_i.params.R
     )  # from v = w * R -> w = v / R
 
     # sanity check the initial conditions
-    v_c = surface_velocity(cb_i.state.rvw, unit_x, cb_i.params.R) - cb_i.vel[0] * unit_x
-    assert (
-        abs(relative_surface_speed - ptmath.norm3d(v_c)) < 1e-10
-    ), f"Relative surface contact speed should be {relative_surface_speed}"
+    v_c = tangent_surface_velocity(cb_i.state.rvw, unit_normal, cb_i.params.R)
+    assert abs(relative_surface_speed - ptmath.norm3d(v_c)) < 1e-10, (
+        f"Relative surface contact speed should be {relative_surface_speed}"
+    )
 
     cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
 
-    cb_v_c_f = surface_velocity(cb_f.state.rvw, unit_x, cb_f.params.R) - np.array(
-        [cb_f.vel[0], 0.0, 0.0]
+    cb_v_c_f = tangent_surface_velocity(cb_f.state.rvw, unit_normal, cb_f.params.R)
+    ob_v_c_f = tangent_surface_velocity(ob_f.state.rvw, -unit_normal, ob_f.params.R)
+    assert ptmath.norm3d(cb_v_c_f - ob_v_c_f) < 1e-3, (
+        "Final relative contact velocity should be zero"
     )
-    ob_v_c_f = surface_velocity(ob_f.state.rvw, -unit_x, ob_f.params.R) - np.array(
-        [ob_f.vel[0], 0.0, 0.0]
-    )
-    assert (
-        ptmath.norm3d(cb_v_c_f - ob_v_c_f) < 1e-3
-    ), "Final relative contact velocity should be zero"

@@ -1,5 +1,3 @@
-from typing import List, Optional, Set, Tuple
-
 import pooltool.constants as const
 from pooltool.events.datatypes import EventType
 from pooltool.events.filter import by_ball, by_type, filter_events, filter_type
@@ -10,8 +8,8 @@ from pooltool.utils.strenum import StrEnum, auto
 
 
 def get_pocketed_ball_ids_during_shot(
-    shot: System, exclude: Optional[Set[str]] = None
-) -> List[str]:
+    shot: System, exclude: set[str] | None = None
+) -> list[str]:
     """Get list of ball IDs pocketed during the shot
 
     See also get_pocketed_ball_ids
@@ -26,7 +24,7 @@ def get_pocketed_ball_ids_during_shot(
     ]
 
 
-def get_pocketed_ball_ids(shot: System) -> List[str]:
+def get_pocketed_ball_ids(shot: System) -> list[str]:
     """Get list of ball IDs that are in the pocketed state (by end of shot)
 
     See also get_pocketed_ball_ids_during_shot
@@ -34,7 +32,7 @@ def get_pocketed_ball_ids(shot: System) -> List[str]:
     return [ball.id for ball in shot.balls.values() if ball.state.s == const.pocketed]
 
 
-def get_id_of_first_ball_hit(shot: System, cue: str = "cue") -> Optional[str]:
+def get_id_of_first_ball_hit(shot: System, cue: str = "cue") -> str | None:
     cue_collisions = filter_events(
         shot.events,
         by_ball(cue),
@@ -64,13 +62,13 @@ def is_ball_pocketed_in_pocket(shot: System, ball_id: str, pocket_id: str) -> bo
 
 
 def is_target_group_hit_first(
-    shot: System, target_balls: Tuple[str, ...], cue: str
+    shot: System, target_balls: tuple[str, ...], cue: str
 ) -> bool:
     return get_id_of_first_ball_hit(shot, cue=cue) in target_balls
 
 
 def respot(
-    shot: System, ball_id: str, x: float, y: float, z: Optional[float] = None
+    shot: System, ball_id: str, x: float, y: float, z: float | None = None
 ) -> None:
     """Respot a ball
 
@@ -98,8 +96,8 @@ def respot(
 
 
 def get_ball_ids_on_table(
-    shot: System, at_start: bool, exclude: Optional[Set[str]] = None
-) -> Set[str]:
+    shot: System, at_start: bool, exclude: set[str] | None = None
+) -> set[str]:
     history_idx = 0 if at_start else -1
     return set(
         ball.id
@@ -185,9 +183,7 @@ def is_lowest_hit_first(shot: System) -> bool:
     return get_lowest_ball(shot, when=StateProbe.START).id == ball_id
 
 
-def balls_that_hit_cushion(
-    shot: System, exclude: Optional[Set[str]] = None
-) -> Set[str]:
+def balls_that_hit_cushion(shot: System, exclude: set[str] | None = None) -> set[str]:
     if exclude is None:
         exclude = set()
 

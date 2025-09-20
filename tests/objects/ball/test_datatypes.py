@@ -12,6 +12,7 @@ from pooltool.objects.ball.datatypes import (
     _null_rvw,
 )
 from pooltool.objects.ball.sets import get_ballset
+from pooltool.serialize import SerializeFormat, conversion
 
 
 def test__null_rvw():
@@ -65,6 +66,23 @@ def test_ball_history_empty():
     assert empty_history.empty
 
 
+def test_ball_history_empty_serialization():
+    """Test that an empty BallHistory can be serialized and deserialized."""
+    empty_history = BallHistory()
+
+    # Test both JSON and MSGPACK formats
+    for fmt in [SerializeFormat.JSON, SerializeFormat.MSGPACK]:
+        c = conversion[fmt]
+        # Serialize
+        serialized = c.unstructure(empty_history)
+        # Deserialize
+        deserialized = c.structure(serialized, BallHistory)
+
+        # Verify both are empty
+        assert deserialized.empty
+        assert empty_history == deserialized
+
+
 def test_ball_history_equality():
     """Test whether ball histories are equal
 
@@ -88,8 +106,9 @@ def test_ball_history_equality():
 def test_ball_history_vectorize():
     history = BallHistory()
 
-    # Empty history returns None
-    assert history.vectorize() is None
+    # Empty history raises ValueError
+    with pytest.raises(ValueError, match="History is empty"):
+        history.vectorize()
 
     # Append same state 10 times
     state = BallState.default()
@@ -97,7 +116,7 @@ def test_ball_history_vectorize():
     for _ in range(10):
         history.add(state)
 
-    assert (vectorize := history.vectorize()) is not None
+    vectorize = history.vectorize()
     rvws, motion_states, t = vectorize
 
     assert np.array_equal(rvws, np.array([state.rvw] * 10))

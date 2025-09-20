@@ -19,9 +19,9 @@ def test_case1(solver: quartic.QuarticSolver):
 
     expected = 0.048943195217641386
     coeffs_array = np.array(coeffs)[np.newaxis, :]
-    assert get_smallest_physical_root_many(quartic.solve_quartics(coeffs_array, solver))[
-        0
-    ] == pytest.approx(expected, rel=1e-4)
+    assert get_smallest_physical_root_many(
+        quartic.solve_quartics(coeffs_array, solver)
+    )[0] == pytest.approx(expected, rel=1e-4)
 
 
 @pytest.mark.parametrize(
@@ -36,7 +36,9 @@ def test_quadratic(solver: quartic.QuarticSolver):
         ]
     )
 
-    result = get_smallest_physical_root_many(quartic.solve_quartics(coeffs_array, solver))
+    result = get_smallest_physical_root_many(
+        quartic.solve_quartics(coeffs_array, solver)
+    )
 
     assert expected == result
 

@@ -1,7 +1,10 @@
-from math import degrees, sqrt
-from typing import Callable, Tuple
+from collections.abc import Callable
+from math import sqrt
+from typing import Any
 
 import numpy as np
+import quaternion
+import scipy.spatial.transform as sp_tf
 from numba import jit
 from numpy.typing import NDArray
 
@@ -61,12 +64,6 @@ def convert_2D_to_3D(array: NDArray[np.float64]) -> NDArray[np.float64]:
     return np.pad(array, (0, 1), "constant", constant_values=(0,))
 
 
-def angle_between_vectors(v1: NDArray[np.float64], v2: NDArray[np.float64]) -> float:
-    """Returns angles between [-180, 180]"""
-    angle = np.atan2(np.linalg.det([v1, v2]), np.dot(v1, v2))  # type: ignore
-    return degrees(angle)
-
-
 def wiggle(x: float, val: float):
     """Vary a float or int x by +- val according to a uniform distribution"""
     return x + val * (2 * np.random.rand() - 1)
@@ -97,7 +94,7 @@ def find_intersection_2D(
     l2x: float,
     l2y: float,
     l20: float,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """Find the intersection point of two lines in 2D space
 
     The lines are defined by their linear equations in the general form:
@@ -200,6 +197,45 @@ def projected_angle(
     return ang
 
 
+def angle_between_vectors(a: NDArray[np.float64], b: NDArray[np.float64]) -> float:
+    """Compute the angle between two 3D vectors in radians.
+
+    Returns:
+        The angle between vectors a and b in radians. Can take on values within [0, pi].
+    """
+    return np.acos(np.dot(a, b) / (norm3d(a) * norm3d(b)))
+
+
+def rotation_from_vector_to_vector(
+    a: NDArray[np.float64], b: NDArray[np.float64]
+) -> sp_tf.Rotation:
+    """Compute the rotation that transforms vector a to vector b.
+
+    Returns:
+        A scipy Rotation object representing the rotation from a to b.
+    """
+    angle = angle_between_vectors(a, b)
+    axis = unit_vector(cross(a, b))
+    return sp_tf.Rotation.from_rotvec(axis * angle)
+
+
+def quaternion_from_vector_to_vector(
+    a: NDArray[np.float64], b: NDArray[np.float64]
+) -> Any:
+    """Compute the quaternion representing the rotation from vector a to vector b
+
+    Args:
+        a: Initial 3D vector
+        b: Target 3D vector
+
+    Returns:
+        A quaternion representing the rotation from a to b.
+    """
+    angle = angle_between_vectors(a, b)
+    axis = unit_vector(cross(a, b), True)
+    return quaternion.from_rotation_vector(axis * angle)
+
+
 @jit(nopython=True, cache=const.use_numba_cache)
 def coordinate_rotation(v: NDArray[np.float64], phi: float) -> NDArray[np.float64]:
     """Rotate vector/matrix from one frame of reference to another (3D FIXME)
@@ -232,6 +268,12 @@ def point_on_line_closest_to_point(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def squared_norm3d(vec: NDArray[np.float64]) -> float:
+    """Calculate the squared norm of a 3D vector"""
+    return vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def norm3d(vec: NDArray[np.float64]) -> float:
     """Calculate the norm of a 3D vector
 
@@ -246,13 +288,13 @@ def norm3d(vec: NDArray[np.float64]) -> float:
     2.65 µs ± 63 ns per loop (mean ± std. dev. of 7 runs, 100,000 loops each)
     241 ns ± 2.57 ns per loop (mean ± std. dev. of 7 runs, 1,000,000 loops each)
     """
-    return sqrt(norm3d_squared(vec))
+    return sqrt(squared_norm3d(vec))
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def norm3d_squared(vec: NDArray[np.float64]) -> float:
-    """Calculate the norm squared of a 3D vector"""
-    return vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2
+def squared_norm2d(vec: NDArray[np.float64]) -> float:
+    """Calculate the squared norm of a 2D vector"""
+    return vec[0] ** 2 + vec[1] ** 2
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -261,7 +303,7 @@ def norm2d(vec: NDArray[np.float64]) -> float:
 
     This is faster than np.linalg.norm
     """
-    return sqrt(vec[0] ** 2 + vec[1] ** 2)
+    return sqrt(squared_norm2d(vec))
 
 
 def is_overlapping(

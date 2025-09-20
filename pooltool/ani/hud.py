@@ -2,17 +2,26 @@
 
 from abc import ABC, abstractmethod
 from collections import deque
-from typing import List
 
+import numpy as np
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.interval.LerpInterval import LerpFunc
 from panda3d.core import CardMaker, NodePath, TextNode, TransparencyAttrib
 
-import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
+from pooltool.ani.constants import (
+    logo_paths,
+    max_stroke_speed,
+    menu_text_scale,
+    min_stroke_speed,
+    model_dir,
+)
 from pooltool.ani.globals import Global
-from pooltool.objects.cue.datatypes import Cue
+from pooltool.objects.ball.datatypes import Ball, BallParams
+from pooltool.objects.cue.datatypes import Cue, CueSpecs
+from pooltool.physics.utils import tip_center_offset
+from pooltool.ruleset.datatypes import BallInHandOptions
 from pooltool.utils import panda_path
 from pooltool.utils.strenum import StrEnum, auto
 
@@ -25,6 +34,7 @@ class HUDElement(StrEnum):
     jack = auto()
     power = auto()
     player_stats = auto()
+    ball_in_hand = auto()
 
 
 class HUD:
@@ -32,7 +42,7 @@ class HUD:
         self.elements = None
         self.initialized = False
 
-    def init(self, hide: List[HUDElement] = list()):
+    def init(self, hide: list[HUDElement] = list()):
         """Initialize HUD elements and start the HUD update task"""
 
         self.elements = {
@@ -43,6 +53,7 @@ class HUD:
             HUDElement.jack: Jack(),
             HUDElement.power: Power(),
             HUDElement.player_stats: PlayerStats(),
+            HUDElement.ball_in_hand: BallInHand(),
         }
 
         for element in self.elements.values():
@@ -69,7 +80,7 @@ class HUD:
             return
         self.elements[HUDElement.help_text].toggle()
 
-    def update_cue(self, cue: Cue):
+    def update_cue(self, cue: Cue, cue_ball: Ball | None = None):
         """Update HUD to reflect english, jack, and power of cue
 
         Returns silently if HUD is not initialized.
@@ -77,6 +88,15 @@ class HUD:
 
         if not self.initialized:
             return
+
+        if cue_ball is not None:
+            tip_offset_a, tip_offset_b = tip_center_offset(
+                np.array([cue.a, cue.b]), cue.specs.tip_radius, cue_ball.params.R
+            )
+            self.elements[HUDElement.english].set_tip_center(tip_offset_a, tip_offset_b)
+            self.elements[HUDElement.english].set_shaft_to_ball_diameter_ratio(
+                cue.specs.shaft_radius_at_tip / cue_ball.params.R
+            )
 
         self.elements[HUDElement.english].set(cue.a, cue.b)
         self.elements[HUDElement.jack].set(cue.theta)
@@ -86,11 +106,19 @@ class HUD:
         if Global.game is not None:
             self.update_log_window()
             self.update_player_stats()
+            self.update_ball_in_hand()
 
         if (help_hint := self.elements[HUDElement.help_text].help_hint).is_hidden():
             help_hint.show()
 
         return task.cont
+
+    def update_ball_in_hand(self):
+        """Update ball in hand status display"""
+        if Global.game is not None:
+            self.elements[HUDElement.ball_in_hand].update(
+                Global.game.shot_constraints.ball_in_hand
+            )
 
     def update_player_stats(self):
         self.elements["player_stats"].update(Global.game)
@@ -152,7 +180,7 @@ class Help(BaseHUDElement):
             text="Press 'h' to toggle help",
             font_name="LABTSECS",
             pos=(-1.55, 0.93),
-            scale=ani.menu_text_scale * 0.9,
+            scale=menu_text_scale * 0.9,
             fg=(1, 1, 1, 1),
             align=TextNode.ALeft,
             parent=Global.aspect2d,
@@ -169,7 +197,7 @@ class Help(BaseHUDElement):
                 parent=Global.base.a2dTopLeft,
                 align=TextNode.ALeft,
                 pos=(-1.45 if not title else -1.55, 0.85 - pos),
-                scale=ani.menu_text_scale if title else 0.7 * ani.menu_text_scale,
+                scale=menu_text_scale if title else 0.7 * menu_text_scale,
             )
             text.reparentTo(self.help_node)
             self.row_num += 1
@@ -308,7 +336,7 @@ class Logo(BaseHUDElement):
         BaseHUDElement.__init__(self)
 
         self.img = OnscreenImage(
-            image=ani.logo_paths["pt_smaller"],
+            image=logo_paths["pt_smaller"],
             pos=(0.94, 0, 0.89),
             parent=Global.render2d,
             scale=(0.08 * 0.49, 1, 0.08),
@@ -332,18 +360,26 @@ class Logo(BaseHUDElement):
 class English(BaseHUDElement):
     def __init__(self):
         BaseHUDElement.__init__(self)
-        self.dir = ani.model_dir / "hud" / "english"
+        self.dir = model_dir / "hud" / "english"
         self.text_scale = 0.2
+        self.ball_scale = 0.15
         self.text_color = (1, 1, 1, 1)
 
         self.circle = OnscreenImage(
             image=panda_path(self.dir / "circle.png"),
             parent=self.dummy_right,
-            scale=0.15,
+            scale=self.ball_scale,
         )
         self.circle.setTransparency(TransparencyAttrib.MAlpha)
         autils.alignTo(self.circle, self.dummy_right, autils.CL, autils.C)
         self.circle.setZ(-0.65)
+
+        self.tip_circle = OnscreenImage(
+            image=panda_path(self.dir / "tip-outline.png"),
+            parent=self.circle,
+            scale=CueSpecs.default().shaft_radius_at_tip / BallParams.default().R,
+        )
+        self.tip_circle.setTransparency(TransparencyAttrib.MAlpha)
 
         self.crosshairs = OnscreenImage(
             image=panda_path(self.dir / "crosshairs.png"),
@@ -366,6 +402,12 @@ class English(BaseHUDElement):
     def set(self, a, b):
         self.crosshairs.setPos(-a, 0, b)
         self.text.setText(f"({a:.3f},{b:.3f})")
+
+    def set_shaft_to_ball_diameter_ratio(self, ratio):
+        self.tip_circle.setScale(ratio)
+
+    def set_tip_center(self, a, b):
+        self.tip_circle.setPos(-a, 0, b)
 
     def init(self):
         self.show()
@@ -438,9 +480,7 @@ class Power(NodePath, BaseHUDElement):
     def set(self, V0):
         self.text.setText(f"{V0:.2f} m/s")
 
-        value = (V0 - ani.min_stroke_speed) / (
-            ani.max_stroke_speed - ani.min_stroke_speed
-        )
+        value = (V0 - min_stroke_speed) / (max_stroke_speed - min_stroke_speed)
         if value < 0:
             value = 0
         if value > 1:
@@ -452,7 +492,7 @@ class Power(NodePath, BaseHUDElement):
 class Jack(BaseHUDElement):
     def __init__(self):
         BaseHUDElement.__init__(self)
-        self.dir = ani.model_dir / "hud" / "jack"
+        self.dir = model_dir / "hud" / "jack"
         self.text_scale = 0.4
         self.text_color = (1, 1, 1, 1)
 
@@ -477,7 +517,7 @@ class Jack(BaseHUDElement):
         autils.alignTo(self.arc, self.cue_cartoon, autils.LR, autils.CR)
 
         self.rotational_point = OnscreenImage(
-            image=panda_path(ani.model_dir / "hud" / "english" / "circle.png"),
+            image=panda_path(model_dir / "hud" / "english" / "circle.png"),
             parent=self.arc,
             scale=0.15,
         )
@@ -593,6 +633,102 @@ class LogWindow(BaseHUDElement):
             duration=0.6,  # Duration of the fade-in animation
         )
         fade_in.start()
+
+
+class BallInHand(BaseHUDElement):
+    def __init__(self):
+        BaseHUDElement.__init__(self)
+        self.vertical_position = -0.09
+        self.text_scale = 0.05
+        self.active_color = (0.5, 1, 0.5, 1)  # Green when active
+        self.inactive_color = (0.5, 0.5, 0.5, 0.6)  # Gray when inactive
+        self.text = None
+        self.visible = False
+        self.animation_active = False
+
+        # Animation parameters
+        self.glow_frequency = 1  # Cycles per second
+        self.glow_min = 0.7
+        self.glow_max = 1.0
+        self.scale_min = 1.0
+        self.scale_max = 1.02
+
+    def init(self):
+        self.destroy()
+
+        # Create text display for ball in hand status
+        self.text = autils.CustomOnscreenText(
+            text="BALL IN HAND",
+            pos=(1.55, self.vertical_position),
+            scale=self.text_scale,
+            fg=self.inactive_color,
+            align=TextNode.ARight,
+            mayChange=True,
+        )
+        self.text.hide()  # Initially hidden
+
+    def update(self, ball_in_hand_option):
+        """Update the ball in hand display based on game state"""
+        if ball_in_hand_option != BallInHandOptions.NONE:
+            self.text.show()
+            self.visible = True
+
+            # Start animation if not already active
+            if not self.animation_active:
+                tasks.add(self.animate_glow, "ball_in_hand_animation")
+                self.animation_active = True
+        else:
+            # When ball in hand is not active, hide the text and stop animation
+            self.text.hide()
+            self.visible = False
+
+            if self.animation_active:
+                tasks.remove("ball_in_hand_animation")
+                self.animation_active = False
+                # Reset visual properties
+                self.text.setFg(self.active_color)
+                self.text.setScale(self.text_scale)
+
+    def animate_glow(self, task):
+        """Animate the Ball in Hand text with a pulsing glow effect"""
+        if not self.visible:
+            return task.done
+
+        # Calculate phase based on time
+        phase = task.time * self.glow_frequency * 2 * np.pi
+
+        # Sine wave oscillation between min and max values
+        alpha_factor = self.glow_min + (self.glow_max - self.glow_min) * 0.5 * (
+            1 + np.sin(phase)
+        )
+        scale_factor = self.scale_min + (self.scale_max - self.scale_min) * 0.5 * (
+            1 + np.sin(phase)
+        )
+
+        # Apply color with varying alpha
+        r, g, b, _ = self.active_color
+        self.text.setFg((r, g, b, alpha_factor))
+
+        # Apply scaling
+        self.text.setScale(self.text_scale * scale_factor)
+
+        return task.cont
+
+    def show(self):
+        if self.visible:
+            self.text.show()
+
+    def hide(self):
+        self.text.hide()
+
+    def destroy(self):
+        if self.animation_active:
+            tasks.remove("ball_in_hand_animation")
+            self.animation_active = False
+
+        if hasattr(self, "text") and self.text is not None:
+            self.text.hide()
+            del self.text
 
 
 hud = HUD()

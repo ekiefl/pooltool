@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Tuple
+from collections.abc import Callable
 
 import numpy as np
 from numba import jit
@@ -161,7 +161,7 @@ def solve(a: float, b: float, c: float, d: float, e: float) -> NDArray[np.comple
 @jit(nopython=True, cache=const.use_numba_cache)
 def _solve_many(
     ps: NDArray[np.complex128],
-) -> Tuple[NDArray[np.complex128], NDArray[np.uint8]]:
+) -> tuple[NDArray[np.complex128], NDArray[np.uint8]]:
     num_eqn = ps.shape[0]
 
     all_roots = np.zeros((num_eqn, 4), dtype=np.complex128)
@@ -176,7 +176,7 @@ def _solve_many(
 @jit(nopython=True, cache=const.use_numba_cache)
 def _solve(
     p: NDArray[np.complex128], ftol: float = 1e-5
-) -> Tuple[NDArray[np.complex128], int]:
+) -> tuple[NDArray[np.complex128], int]:
     """Solve a quartic with mixed strategy
 
     Args:
@@ -388,7 +388,7 @@ def _truth(a_val, b_val, c_val, d_val, e_val, digits=50):
     ]
 
 
-_quartic_routine: Dict[QuarticSolver, Callable] = {
+_quartic_routine: dict[QuarticSolver, Callable] = {
     QuarticSolver.NUMERIC: solve_many_numerical,
     QuarticSolver.HYBRID: solve_many_hybrid,
 }

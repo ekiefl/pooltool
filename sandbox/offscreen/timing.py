@@ -11,7 +11,6 @@ except ImportError:
 import argparse
 import shutil
 from pathlib import Path
-from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -74,7 +73,7 @@ system.strike(V0=8, phi=pt.aim.at_ball(system, "1"))
 pt.simulate(system, inplace=False)
 
 # Time shot simulation
-with pt.terminal.TimeCode(quiet=True) as t:
+with pt.utils.TimeCode(quiet=True) as t:
     pt.simulate(system, inplace=True)
 sim_time = t.time.total_seconds()
 
@@ -92,7 +91,7 @@ path = Path(__file__).parent / "timing"
 clear_and_make_dir()
 
 # Create the exporters
-exporters: Dict[str, ImageStorageMethod] = {
+exporters: dict[str, ImageStorageMethod] = {
     "HDF5 uncompressed": HDF5Images(path / "images.hdf5"),
     "image dir (PNG)": ImageZip(path / "png_images", ext="png", compress=False),
     "image zip (PNG)": ImageZip(path / "png_images.zip", ext="png"),
@@ -103,7 +102,7 @@ exporters: Dict[str, ImageStorageMethod] = {
 }
 
 # Initialize the time data
-stats: Dict[str, List[float]] = {}
+stats: dict[str, list[float]] = {}
 stats["resolution"] = []
 stats["frames"] = []
 stats["gray"] = []
@@ -129,7 +128,6 @@ image_stack(
     show_hud=False,
 )
 
-run = pt.terminal.Run()
 resolutions = [80, 144, 240, 360, 480, 720, 1080]
 
 for res in resolutions:
@@ -138,7 +136,7 @@ for res in resolutions:
     stats["fps"].append(args.fps)
     stats["gray"].append(args.gray)
 
-    with pt.terminal.TimeCode(quiet=True) as t:
+    with pt.utils.TimeCode(quiet=True) as t:
         imgs = image_stack(
             system=system,
             interface=stepper,
@@ -153,11 +151,11 @@ for res in resolutions:
     stats["frames"].append(np.shape(imgs)[0])
 
     for name, exporter in exporters.items():
-        with pt.terminal.TimeCode(quiet=True) as t:
+        with pt.utils.TimeCode(quiet=True) as t:
             exporter.save(imgs)
         stats[name + " write"].append(t.time.total_seconds())
 
-        with pt.terminal.TimeCode(quiet=True) as t:
+        with pt.utils.TimeCode(quiet=True) as t:
             exporter.read(exporter.path)
         stats[name + " read"].append(t.time.total_seconds())
 

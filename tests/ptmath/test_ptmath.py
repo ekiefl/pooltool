@@ -1,9 +1,13 @@
 import numpy as np
 import pytest
+import quaternion
 
 from pooltool.ptmath.utils import (
+    angle_between_vectors,
     are_points_on_same_side,
     projected_angle,
+    quaternion_from_vector_to_vector,
+    rotation_from_vector_to_vector,
     solve_transcendental,
 )
 
@@ -79,3 +83,85 @@ def test_projected_angle():
     assert projected_angle(np.array([1, 0, 1])) == 0.0
     assert projected_angle(np.array([1, 0, 1]), np.array([1, 0, 1])) == 0.0
     assert projected_angle(np.array([0, 1, 1]), np.array([1, 0, 1])) == np.pi / 2
+
+
+def test_angle_between_vectors_basic():
+    # Test orthogonal vectors
+    v1 = np.array([1.0, 0.0, 0.0])
+    v2 = np.array([0.0, 1.0, 0.0])
+    angle = angle_between_vectors(v1, v2)
+    assert pytest.approx(angle) == np.pi / 2
+
+    # Test parallel vectors
+    v1 = np.array([1.0, 0.0, 0.0])
+    v2 = np.array([2.0, 0.0, 0.0])
+    angle = angle_between_vectors(v1, v2)
+    assert pytest.approx(angle) == 0.0
+
+    # Test antiparallel vectors
+    v1 = np.array([1.0, 0.0, 0.0])
+    v2 = np.array([-1.0, 0.0, 0.0])
+    angle = angle_between_vectors(v1, v2)
+    assert pytest.approx(angle) == np.pi
+
+    # Test 45 degree angle
+    v1 = np.array([1.0, 0.0, 0.0])
+    v2 = np.array([1.0, 1.0, 0.0])
+    angle = angle_between_vectors(v1, v2)
+    assert pytest.approx(angle) == np.pi / 4
+
+
+def test_rotation_from_vector_to_vector():
+    # Test rotation from x-axis to y-axis
+    v1 = np.array([1.0, 0.0, 0.0])
+    v2 = np.array([0.0, 1.0, 0.0])
+    rotation = rotation_from_vector_to_vector(v1, v2)
+
+    # Apply rotation to v1 and check it matches v2
+    rotated = rotation.apply(v1)
+    assert np.allclose(rotated, v2)
+
+    # Apply rotation and check direction is preserved
+    normalized_rotated = rotated / np.linalg.norm(rotated)
+    normalized_v2 = v2 / np.linalg.norm(v2)
+    assert np.allclose(normalized_rotated, normalized_v2)
+
+    # Test that rotation preserves magnitude when applied to unit vectors
+    v1_unit = v1 / np.linalg.norm(v1)
+    v2_unit = v2 / np.linalg.norm(v2)
+    rotation = rotation_from_vector_to_vector(v1_unit, v2_unit)
+    rotated_unit = rotation.apply(v1_unit)
+    assert np.allclose(np.linalg.norm(rotated_unit), 1.0)
+
+
+def test_quaternion_from_vector_to_vector():
+    # Test rotation from x-axis to y-axis
+    v1 = np.array([1.0, 0.0, 0.0])
+    v2 = np.array([0.0, 1.0, 0.0])
+    q = quaternion_from_vector_to_vector(v1, v2)
+
+    # Check that it's a valid unit quaternion
+    assert pytest.approx(np.linalg.norm(quaternion.as_float_array(q))) == 1.0
+
+    # Test parallel vectors (should give identity quaternion)
+    v1 = np.array([1.0, 0.0, 0.0])
+    v2 = np.array([2.0, 0.0, 0.0])
+    q = quaternion_from_vector_to_vector(v1, v2)
+
+    # For parallel vectors, should be close to identity quaternion (1, 0, 0, 0)
+    # The real part should be close to 1
+    assert pytest.approx(abs(q.w)) == 1.0
+
+    # Test that quaternion has unit magnitude
+    v1 = np.array([1.0, 2.0, 3.0])
+    v2 = np.array([4.0, 5.0, 6.0])
+    q = quaternion_from_vector_to_vector(v1, v2)
+    assert pytest.approx(np.linalg.norm(quaternion.as_float_array(q))) == 1.0
+
+    # Test orthogonal vectors
+    v1 = np.array([1.0, 0.0, 0.0])
+    v2 = np.array([0.0, 0.0, 1.0])
+    q = quaternion_from_vector_to_vector(v1, v2)
+
+    # For 90 degree rotation, real part should be cos(pi/4) = sqrt(2)/2
+    assert pytest.approx(abs(q.w), abs=1e-10) == np.sqrt(2) / 2

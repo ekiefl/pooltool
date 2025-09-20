@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Counter
+from collections import Counter
 
 from pooltool.events.datatypes import Event, EventType
 from pooltool.events.filter import by_ball, by_time, by_type, filter_events

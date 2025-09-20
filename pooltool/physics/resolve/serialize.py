@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Mapping, Type
+from collections.abc import Mapping
+from typing import Any
 
 from cattrs.gen import make_dict_unstructure_fn
 
@@ -37,7 +38,7 @@ from pooltool.physics.resolve.transition import (
 from pooltool.serialize import conversion
 from pooltool.serialize.serializers import SerializeFormat
 
-_model_map: Mapping[Any, Mapping[Any, Type]] = {
+_model_map: Mapping[Any, Mapping[Any, type]] = {
     BallBallCollisionStrategy: ball_ball_models,
     BallLCushionCollisionStrategy: ball_lcushion_models,
     BallCCushionCollisionStrategy: ball_ccushion_models,
@@ -49,7 +50,7 @@ _model_map: Mapping[Any, Mapping[Any, Type]] = {
 }
 
 
-def _disambiguate_model_structuring(v: Dict[str, Any], t: Type) -> Any:
+def _disambiguate_model_structuring(v: dict[str, Any], t: type) -> Any:
     return conversion[SerializeFormat.YAML].structure(v, _model_map[t][v["model"]])
 
 

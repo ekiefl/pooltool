@@ -5,35 +5,32 @@ from __future__ import annotations
 import shutil
 import traceback
 from pathlib import Path
-from typing import Optional
 
 import attrs
 from cattrs.errors import ClassValidationError
 
-import pooltool.user_config
+import pooltool.config.paths
 from pooltool.events.datatypes import AgentType, Event, EventType
 from pooltool.physics.resolve.ball_ball import (
     BallBallCollisionStrategy,
+    FrictionalInelastic,
 )
 from pooltool.physics.resolve.ball_ball.friction import (
     AlciatoreBallBallFriction,
 )
-from pooltool.physics.resolve.ball_ball.frictional_mathavan import FrictionalMathavan
 from pooltool.physics.resolve.ball_cushion import (
     BallCCushionCollisionStrategy,
     BallLCushionCollisionStrategy,
 )
-from pooltool.physics.resolve.ball_cushion.han_2005.model import (
-    Han2005Circular,
-    Han2005Linear,
+from pooltool.physics.resolve.ball_cushion.mathavan_2010.model import (
+    Mathavan2010Circular,
+    Mathavan2010Linear,
 )
 from pooltool.physics.resolve.ball_pocket import (
     BallPocketStrategy,
     CanonicalBallPocket,
 )
-from pooltool.physics.resolve.ball_table import (
-    FrictionalInelastic as BallTableFrictionalInelastic,
-)
+from pooltool.physics.resolve.ball_table import FrictionalInelasticTable
 from pooltool.physics.resolve.ball_table.core import BallTableCollisionStrategy
 from pooltool.physics.resolve.serialize import register_serialize_hooks
 from pooltool.physics.resolve.stick_ball import (
@@ -46,15 +43,55 @@ from pooltool.physics.resolve.transition import (
 )
 from pooltool.serialize import Pathish, conversion
 from pooltool.system.datatypes import System
-from pooltool.terminal import Run
+from pooltool.utils import Run
 
-RESOLVER_PATH = pooltool.user_config.PHYSICS_DIR / "resolver.yaml"
+RESOLVER_PATH = pooltool.config.paths.PHYSICS_DIR / "resolver.yaml"
 """The location of the resolver path YAML."""
 
-VERSION: int = 7
+VERSION: int = 9
 
 
 run = Run()
+
+
+def default_resolver() -> Resolver:
+    """The default resolver.
+
+    This default resolver will be used and written to the resolver YAML if:
+
+        1. There is no resolver YAML
+        2. The resolver YAML is corrupt
+        3. The resolver YAML version doesn't match `VERSION`
+
+    The resolver YAML is found at `RESOLVER_PATH`.
+    """
+    return Resolver(
+        ball_ball=FrictionalInelastic(
+            friction=AlciatoreBallBallFriction(
+                a=0.009951,
+                b=0.108,
+                c=1.088,
+            ),
+        ),
+        ball_linear_cushion=Mathavan2010Linear(
+            max_steps=1000,
+            delta_p=0.001,
+        ),
+        ball_circular_cushion=Mathavan2010Circular(
+            max_steps=1000,
+            delta_p=0.001,
+        ),
+        ball_pocket=CanonicalBallPocket(),
+        stick_ball=InstantaneousPoint(
+            english_throttle=1.0,
+            squirt_throttle=1.0,
+        ),
+        ball_table=FrictionalInelasticTable(
+            min_bounce_height=0.005,
+        ),
+        transition=CanonicalTransition(),
+        version=VERSION,
+    )
 
 
 @attrs.define
@@ -63,7 +100,7 @@ class Resolver:
 
     Important:
         For everything you need to know about this class, see :doc:`Modular Physics
-        </resources/custom_physics>`_.
+        </resources/custom_physics>`.
     """
 
     ball_ball: BallBallCollisionStrategy
@@ -74,7 +111,7 @@ class Resolver:
     ball_table: BallTableCollisionStrategy
     transition: BallTransitionStrategy
 
-    version: Optional[int] = None
+    version: int | None = None
 
     def resolve(self, shot: System, event: Event) -> None:
         """Resolve an event for a system"""
@@ -133,30 +170,8 @@ class Resolver:
     def default(cls) -> Resolver:
         """Load ~/.config/pooltool/physics/resolver.yaml if exists, create otherwise"""
 
-        def _default_config():
-            return cls(
-                ball_ball=FrictionalMathavan(
-                    friction=AlciatoreBallBallFriction(
-                        a=0.009951,
-                        b=0.108,
-                        c=1.088,
-                    ),
-                    num_iterations=1000,
-                ),
-                ball_linear_cushion=Han2005Linear(),
-                ball_circular_cushion=Han2005Circular(),
-                ball_pocket=CanonicalBallPocket(),
-                stick_ball=InstantaneousPoint(
-                    english_throttle=1.0,
-                    squirt_throttle=1.0,
-                ),
-                ball_table=BallTableFrictionalInelastic(),
-                transition=CanonicalTransition(),
-                version=VERSION,
-            )
-
         if not RESOLVER_PATH.exists():
-            resolver = _default_config()
+            resolver = default_resolver()
             resolver.save(RESOLVER_PATH)
             return resolver
 
@@ -165,26 +180,28 @@ class Resolver:
         except ClassValidationError:
             full_traceback = traceback.format_exc()
             dump_path = RESOLVER_PATH.parent / f".{RESOLVER_PATH.name}"
-            run.info_single(
+            run.info(
                 f"{RESOLVER_PATH} is malformed and can't be loaded. It is being "
                 f"replaced with a default working version. Your version has been moved to "
-                f"{dump_path} if you want to diagnose it. Here is the error:\n{full_traceback}"
+                f"{dump_path} if you want to diagnose it. Here is the error:\n{full_traceback}",
+                style="red",
             )
             shutil.move(RESOLVER_PATH, dump_path)
-            resolver = _default_config()
+            resolver = default_resolver()
             resolver.save(RESOLVER_PATH)
 
         if resolver.version == VERSION:
             return resolver
         else:
             dump_path = RESOLVER_PATH.parent / f".{RESOLVER_PATH.name}"
-            run.info_single(
-                f"{RESOLVER_PATH} is has version {resolver.version}, which is not up to "
+            run.info(
+                f"{RESOLVER_PATH} has version {resolver.version}, which is not up to "
                 f"date with the most current version: {VERSION}. It will be replaced with the "
-                f"default. Your version has been moved to {dump_path}."
+                f"default. Your version has been moved to {dump_path}.",
+                style="yellow",
             )
             shutil.move(RESOLVER_PATH, dump_path)
-            resolver = _default_config()
+            resolver = default_resolver()
             resolver.save(RESOLVER_PATH)
             return resolver
 

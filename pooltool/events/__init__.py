@@ -1,4 +1,4 @@
-"""Event, detection, and filtration
+"""Events, their detection, creation, and filtration.
 
 See `here <https://ekiefl.github.io/2020/12/20/pooltool-alg/#2-what-are-events>`_ to
 learn about events and why they matter.

@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from attrs import define, evolve, field, fields_dict
 
 
 @define(frozen=True)
 class CueSpecs:
-    """Cue stick specifications
+    """Cue stick specifications.
 
     All units are SI.
 
@@ -22,8 +20,10 @@ class CueSpecs:
             The cue length.
         tip_radius:
             The cue tip radius.
-        butt_radius:
-            The butt radius.
+        shaft_radius_at_tip:
+            The cue shaft radius near the tip of the cue.
+        shaft_radius_at_butt:
+            The cue shaft radius near the butt of the cue.
         end_mass:
             The mass of the of the cue's end. This controls the amount of deflection
             (squirt) that occurs when using sidespin. Lower means less deflection. It is
@@ -34,8 +34,11 @@ class CueSpecs:
     brand: str = field(default="Predator")
     M: float = field(default=0.567)
     length: float = field(default=1.4732)
-    tip_radius: float = field(default=0.007)
-    butt_radius: float = field(default=0.02)
+    tip_radius: float = field(default=0.0106045)  # nickel radius
+    shaft_radius_at_tip: float = field(
+        default=0.0065
+    )  # 13 mm shaft diameter at the tip
+    shaft_radius_at_butt: float = field(default=0.02)
     end_mass: float = field(default=0.170097 / 30)
 
     @staticmethod
@@ -50,7 +53,7 @@ class CueSpecs:
 
 @define
 class Cue:
-    """A cue stick
+    """A cue stick.
 
     Attributes:
         id:
@@ -60,8 +63,9 @@ class Cue:
 
             Units are *m/s*.
 
-            Warning: This is the speed of the cue stick upon impact, not the speed of the
-            ball upon impact.
+            Note:
+                This is the speed of the cue stick upon impact, not the speed of the
+                ball upon impact.
         phi:
             The directional strike angle.
 
@@ -143,12 +147,12 @@ class Cue:
 
     def set_state(
         self,
-        V0: Optional[float] = None,
-        phi: Optional[float] = None,
-        theta: Optional[float] = None,
-        a: Optional[float] = None,
-        b: Optional[float] = None,
-        cue_ball_id: Optional[str] = None,
+        V0: float | None = None,
+        phi: float | None = None,
+        theta: float | None = None,
+        a: float | None = None,
+        b: float | None = None,
+        cue_ball_id: str | None = None,
     ) -> None:
         """Set the cueing parameters
 

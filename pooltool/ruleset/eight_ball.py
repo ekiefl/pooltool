@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Counter, Dict, Optional, Tuple
+from collections import Counter
 
 from pooltool.events.datatypes import EventType
 from pooltool.events.filter import by_ball, by_time, by_type, filter_events
@@ -29,7 +29,7 @@ from pooltool.system.datatypes import System
 from pooltool.utils.strenum import StrEnum, auto
 
 
-def _is_legal_break(shot: System) -> Tuple[bool, str]:
+def _is_legal_break(shot: System) -> tuple[bool, str]:
     if is_ball_pocketed(shot, "cue"):
         return False, "Cue ball in pocket!"
 
@@ -85,7 +85,7 @@ def _is_8_ball_pocketed_incorrectly(shot: System, constraints: ShotConstraints) 
 
 def get_next_hittable_balls(
     shot: System, constraints: ShotConstraints, info: ShotInfo
-) -> Tuple[str, ...]:
+) -> tuple[str, ...]:
     turn_over = info.turn_over
     curr_group = BallGroup.get(constraints.hittable)
     ball_call = constraints.ball_call
@@ -100,7 +100,7 @@ def is_legal(
     shot: System,
     constraints: ShotConstraints,
     break_shot: bool,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """Returns whether or not a shot is legal, and the reason"""
     if break_shot:
         return _is_legal_break(shot)
@@ -160,7 +160,7 @@ def is_game_over(shot: System) -> bool:
 
 def decide_winner(
     game_over: bool, legal: bool, active: Player, other: Player
-) -> Optional[Player]:
+) -> Player | None:
     if not game_over:
         return None
 
@@ -307,7 +307,7 @@ class BallGroup(StrEnum):
     EIGHT = auto()
 
     @property
-    def balls(self) -> Tuple[str, ...]:
+    def balls(self) -> tuple[str, ...]:
         """Return the ball IDs associated to a BallGroup"""
         return _group_to_balls_dict[self]
 
@@ -342,7 +342,7 @@ class BallGroup(StrEnum):
 
         raise NotImplementedError(f"{self} unknown to method `other`.")
 
-    def cont(self, shot: System, ball_call: Optional[str]) -> BallGroup:
+    def cont(self, shot: System, ball_call: str | None) -> BallGroup:
         """Get the same player's ball-group for next shot"""
         if ball_call is None:
             # This is the break shot (it's illegal not to call a ball on every shot
@@ -389,17 +389,17 @@ class BallGroup(StrEnum):
         return group
 
     @classmethod
-    def get(cls, balls: Tuple[str, ...]) -> BallGroup:
+    def get(cls, balls: tuple[str, ...]) -> BallGroup:
         return _balls_to_group_dict[balls]
 
 
-_group_to_balls_dict: Dict[BallGroup, Tuple[str, ...]] = {
+_group_to_balls_dict: dict[BallGroup, tuple[str, ...]] = {
     BallGroup.SOLIDS: tuple(str(i) for i in range(1, 8)),
     BallGroup.STRIPES: tuple(str(i) for i in range(9, 16)),
     BallGroup.UNDECIDED: tuple(str(i) for i in range(1, 16) if i != 8),
     BallGroup.EIGHT: ("8",),
 }
 
-_balls_to_group_dict: Dict[Tuple[str, ...], BallGroup] = {
+_balls_to_group_dict: dict[tuple[str, ...], BallGroup] = {
     v: k for k, v in _group_to_balls_dict.items()
 }

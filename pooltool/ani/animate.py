@@ -2,8 +2,7 @@
 
 import gc
 import sys
-from functools import partial
-from typing import Generator, Optional, Tuple, Union
+from collections.abc import Generator
 
 import simplepbr
 from attrs import define
@@ -16,36 +15,37 @@ from panda3d.core import (
     WindowProperties,
 )
 
-import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
-import pooltool.terminal as terminal
 from pooltool.ani.camera import CameraState, cam
 from pooltool.ani.collision import cue_avoid
-from pooltool.ani.environment import environment
+from pooltool.ani.constants import menu_text_scale
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.hud import HUDElement, hud
-from pooltool.ani.menu import GenericMenu, menus
+from pooltool.ani.menu import MenuRegistry
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
+from pooltool.ani.scene import PlaybackMode, visual
+from pooltool.config import settings
 from pooltool.evolution import simulate
-from pooltool.evolution.continuize import continuize
-from pooltool.game.datatypes import GameType
+from pooltool.evolution.continuous import continuize
 from pooltool.layouts import get_rack
 from pooltool.objects.cue.datatypes import Cue
+from pooltool.objects.table.collection import prebuilt_specs
 from pooltool.objects.table.datatypes import Table
 from pooltool.ruleset import get_ruleset
-from pooltool.ruleset.datatypes import Player
+from pooltool.ruleset.datatypes import Player, Ruleset
 from pooltool.system.datatypes import MultiSystem, System, multisystem
-from pooltool.system.render import PlaybackMode, visual
-from pooltool.utils import get_total_memory_usage
+from pooltool.utils import Run, get_total_memory_usage, human_readable_file_size
+
+run = Run()
 
 
 @define
 class ShowBaseConfig:
-    window_type: Optional[str] = None
-    window_size: Optional[Tuple[int, int]] = None
-    fb_prop: Optional[FrameBufferProperties] = None
+    window_type: str | None = None
+    window_size: tuple[int, int] | None = None
+    fb_prop: FrameBufferProperties | None = None
     monitor: bool = False
 
     @classmethod
@@ -82,15 +82,17 @@ def window_task(win=None):
     user, this will override their resizing, and resize the window to one with an
     area equal to that requested, but at the required aspect ratio.
     """
+    no_purgatory_modes = {Mode.purgatory, Mode.menu}
+
     is_window_active = Global.base.win.get_properties().foreground
-    if not is_window_active and Global.mode_mgr.mode != Mode.purgatory:
+    if not is_window_active and Global.mode_mgr.mode not in no_purgatory_modes:
         Global.mode_mgr.change_mode(Mode.purgatory)
 
     requested_width = Global.base.win.getXSize()
     requested_height = Global.base.win.getYSize()
 
-    diff = abs(requested_width / requested_height - ani.aspect_ratio)
-    if diff / ani.aspect_ratio < 0.05:
+    diff = abs(requested_width / requested_height - settings.system.aspect_ratio)
+    if diff / settings.system.aspect_ratio < 0.05:
         # If they are within 5% of the intended ratio, just let them be.
         return
 
@@ -99,23 +101,23 @@ def window_task(win=None):
     # A = w*h
     # A = r*h*h
     # h = (A/r)^(1/2)
-    height = (requested_area / ani.aspect_ratio) ** (1 / 2)
-    width = height * ani.aspect_ratio
+    height = (requested_area / settings.system.aspect_ratio) ** (1 / 2)
+    width = height * settings.system.aspect_ratio
 
     properties = WindowProperties()
     properties.setSize(int(width), int(height))
     Global.base.win.requestProperties(properties)
 
 
-def _resize_offscreen_window(size: Tuple[int, int]):
+def _resize_offscreen_window(size: tuple[int, int]):
     """Changes window size when provided the dimensions (x, y) in pixels"""
     Global.base.win.setSize(*[int(dim) for dim in size])
 
 
-def _init_simplepbr():
-    simplepbr.init(
-        enable_shadows=ani.settings["graphics"]["shadows"],
-        max_lights=ani.settings["graphics"]["max_lights"],
+def _init_simplepbr() -> simplepbr.Pipeline:
+    return simplepbr.init(
+        enable_shadows=settings.graphics.shadows,
+        max_lights=settings.graphics.max_lights,
     )
 
 
@@ -132,18 +134,18 @@ class Interface(ShowBase):
         # https://discourse.panda3d.org/t/cant-change-base-background-after-simplepbr-init/28945
         Global.base.setBackgroundColor(0.04, 0.04, 0.04)
 
-        _init_simplepbr()
+        self.simplepbr_pipeline = _init_simplepbr()
 
         if isinstance(self.win, GraphicsWindow):
             mouse.init()
 
         cam.init()
 
-        if not ani.settings["graphics"]["shader"]:
+        if not settings.graphics.shader:
             Global.render.set_shader_off()
 
         Global.clock.setMode(ClockObject.MLimited)
-        Global.clock.setFrameRate(ani.settings["graphics"]["fps"])
+        Global.clock.setFrameRate(settings.graphics.fps)
 
         Global.register_mode_mgr(ModeManager(all_modes))
         assert Global.mode_mgr is not None
@@ -156,7 +158,6 @@ class Interface(ShowBase):
             tasks.add(self.monitor, "monitor")
 
         self._listen_constant_events()
-        self.stdout = terminal.Run()
 
     def _listen_constant_events(self):
         """Listen for events that are mode independent"""
@@ -165,10 +166,11 @@ class Interface(ShowBase):
         tasks.register_event("toggle-help", hud.toggle_help)
 
     def close_scene(self):
-        visual.teardown()
+        # Ensure parallel mode is exited
+        if visual.is_parallel_mode:
+            visual.exit_parallel_mode()
 
-        environment.unload_room()
-        environment.unload_lights()
+        visual.teardown()
 
         hud.destroy()
 
@@ -187,8 +189,6 @@ class Interface(ShowBase):
         visual.attach_system(multisystem.active)
         visual.buildup()
 
-        environment.init(multisystem.active.table)
-
         R = max([ball.params.R for ball in multisystem.active.balls.values()])
         cam.fixate(
             pos=(multisystem.active.table.w / 2, multisystem.active.table.l / 2, R),
@@ -201,16 +201,15 @@ class Interface(ShowBase):
 
         keymap = Global.mode_mgr.get_keymap()
 
-        header = partial(self.stdout.warning, "", lc="green", nl_before=1, nl_after=0)
-        header(header=f"Frame {self.frame}")
+        debug_data = {
+            "Mode": Global.mode_mgr.mode,
+            "Last": Global.mode_mgr.last_mode,
+            "Tasks": [task.name for task in Global.task_mgr.getAllTasks()],
+            "Memory": human_readable_file_size(get_total_memory_usage()),
+            "Actions": [k for k in keymap if keymap[k]],
+        }
 
-        self.stdout.info("Mode", Global.mode_mgr.mode)
-        self.stdout.info("Last", Global.mode_mgr.last_mode)
-        self.stdout.info("Tasks", [task.name for task in Global.task_mgr.getAllTasks()])
-        self.stdout.info("Memory", get_total_memory_usage())
-        self.stdout.info("Actions", [k for k in keymap if keymap[k]])
-        self.stdout.info("Keymap", Global.mode_mgr.get_keymap())
-        self.stdout.info("Frame", self.frame)
+        run.table(debug_data, title=f"Frame {self.frame}")
 
         return task.cont
 
@@ -256,7 +255,7 @@ class FrameStepper(Interface):
     def _iterator(
         self,
         system: System,
-        size: Tuple[int, int] = (int(1.6 * 720), 720),
+        size: tuple[int, int] = (int(1.6 * 720), 720),
         fps: float = 30.0,
     ) -> Generator:
         continuize(system, dt=1 / fps, inplace=True)
@@ -292,7 +291,7 @@ class FrameStepper(Interface):
 
             yield frame
 
-    def iterator(self, *args, **kwargs) -> Tuple[Generator, int]:
+    def iterator(self, *args, **kwargs) -> tuple[Generator, int]:
         """Iterate through each frame
 
         Args:
@@ -348,9 +347,9 @@ class ShotViewer(Interface):
 
     def show(
         self,
-        shot_or_shots: Union[System, MultiSystem],
+        shot_or_shots: System | MultiSystem,
         title: str = "Press <esc> to continue program execution",
-        camera_state: Optional[CameraState] = None,
+        camera_state: CameraState | None = None,
     ):
         """Opens the interactive interface for one or more shots.
 
@@ -361,13 +360,18 @@ class ShotViewer(Interface):
         Args:
             shot_or_shots:
                 The shot or collection of shots to visualize. This can be a single
-                :class:`pooltool.system.datatypes.System` object or a
-                :class:`pooltool.system.datatypes.MultiSystem` object containing
+                :class:`pooltool.system.System` object or a
+                :class:`pooltool.system.MultiSystem` object containing
                 multiple systems.
 
                 Note:
                     If a multisystem is passed, the systems can be scrolled through by
-                    pressing *n* (next) and *p* (previous).
+                    pressing *n* (next) and *p* (previous). When using ``pt.show()``,
+                    press *Enter* to toggle parallel visualization mode where all systems
+                    play simultaneously with reduced opacity except the active one. In
+                    parallel mode, use *n* and *p* to change which system has full opacity.
+                    Note that parallel visualization is only available in ``pt.show()``
+                    and not when playing the game through ``run-pooltool``.
             title:
                 The title to display in the visualization. Defaults to an empty string.
             camera_state:
@@ -414,7 +418,7 @@ class ShotViewer(Interface):
         self._create_title(title)
         self.title_node.show()
 
-        if ani.settings["graphics"]["hud"]:
+        if settings.graphics.hud:
             hud.init(hide=[HUDElement.help_text])
 
         params = dict(
@@ -434,7 +438,7 @@ class ShotViewer(Interface):
         self.title_node = autils.CustomOnscreenText(
             text=title,
             pos=(-1.55, -0.93),
-            scale=ani.menu_text_scale * 0.7,
+            scale=menu_text_scale * 0.7,
             fg=(1, 1, 1, 1),
             align=TextNode.ALeft,
             parent=Global.aspect2d,
@@ -443,10 +447,11 @@ class ShotViewer(Interface):
 
     def _start(self):
         self.openMainWindow(keepCamera=True)
-        _init_simplepbr()
+        self.simplepbr_pipeline = _init_simplepbr()
         mouse.init()
 
     def _stop(self):
+        self.title_node.destroy()
         self.closeWindow(self.win)
         Global.task_mgr.stop()
 
@@ -457,32 +462,28 @@ class Game(Interface):
     def __init__(self, config=ShowBaseConfig.default()):
         Interface.__init__(self, config=config)
 
-        # FIXME can this be added to MenuMode.enter? It produces a lot of events that
-        # end up being part of the baseline due to the update_event_baseline call below.
-        # To see, enter debugger after this command check
-        # Global.base.messenger.get_events()
-        menus.populate()
-
         # This task chain allows simulations to be run in parallel to the game processes
         Global.task_mgr.setupTaskChain("simulation", numThreads=1)
 
-        tasks.register_event("enter-game", self.enter_game)
+        tasks.register_event("enter-game", self._enter_game)
 
         Global.mode_mgr.update_event_baseline()
         Global.mode_mgr.change_mode(Mode.menu)
 
-    def enter_game(self):
+    def _enter_game(self):
         """Close the menu, setup the visualization, and start the game"""
-        menus.hide_all()
-        self.create_system()
+        if not Global.game or not len(multisystem):
+            self._create_system()
+
+        MenuRegistry.hide_all()
         self.create_scene()
         visual.cue.hide_nodes()
         cue_avoid.init_collisions()
 
-        if ani.settings["graphics"]["hud"]:
+        if settings.graphics.hud:
             hud.init()
 
-        code_comp_menu = GenericMenu(
+        code_comp_menu = autils.TextOverlay(
             title="Compiling simulation code...",
             frame_color=(0, 0, 0, 0.4),
             title_pos=(0, 0, 0),
@@ -494,23 +495,23 @@ class Game(Interface):
 
         Global.mode_mgr.change_mode(Mode.aim)
 
-    def create_system(self):
+    def _create_system(self):
         """Create the multisystem and game objects
 
         FIXME This is where menu options for game type and further specifications should
         plug into.
         """
-        # Change this line to change the game played.
-        # Pick from {NINEBALL, EIGHTBALL, THREECUSHION, SNOOKER, SANDBOX}
-        game_type = GameType.NINEBALL
-
+        # Change the gametype by editing ~/.config/pooltool/general.yaml
+        # Available options:
+        #   {eightball, nineball, threecushion, snooker, sandbox, sumtothree}
+        game_type = settings.gameplay.game_type
         game = get_ruleset(game_type)()
         game.players = [
             Player("Player 1"),
             Player("Player 2"),
         ]
 
-        table = Table.from_game_type(game_type)
+        table = Table.from_table_specs(prebuilt_specs(settings.gameplay.table_name))
         balls = get_rack(
             game_type=game_type,
             table=table,
@@ -521,9 +522,15 @@ class Game(Interface):
         cue = Cue(cue_ball_id=game.shot_constraints.cueball(balls))
         shot = System(table=table, balls=balls, cue=cue)
 
+        self.attach_system(shot)
+        self.attach_ruleset(game)
+
+    def attach_system(self, system: System) -> None:
         multisystem.reset()
-        multisystem.append(shot)
-        Global.game = game
+        multisystem.append(system)
+
+    def attach_ruleset(self, ruleset: Ruleset) -> None:
+        Global.game = ruleset
 
     def start(self):
         Global.task_mgr.run()

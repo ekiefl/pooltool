@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Iterable, Optional, Tuple
+from collections.abc import Iterable
 
 import attrs
 
@@ -13,12 +13,12 @@ class BallGroup(StrEnum):
     COLORS = auto()
 
     @property
-    def balls(self) -> Tuple[str, ...]:
+    def balls(self) -> tuple[str, ...]:
         """Return the ball IDs associated to a BallGroup"""
         return _group_to_balls_dict[self]
 
     @classmethod
-    def get(cls, balls: Tuple[str, ...]) -> BallGroup:
+    def get(cls, balls: tuple[str, ...]) -> BallGroup:
         if balls in _group_to_balls_dict:
             return _balls_to_group_dict[balls]
 
@@ -31,12 +31,12 @@ class BallGroup(StrEnum):
         raise ValueError(f"Cannot match {balls} to a BallGroup")
 
 
-_group_to_balls_dict: Dict[BallGroup, Tuple[str, ...]] = {
+_group_to_balls_dict: dict[BallGroup, tuple[str, ...]] = {
     BallGroup.REDS: tuple(f"red_{i:02d}" for i in range(1, 16)),
     BallGroup.COLORS: ("yellow", "green", "brown", "blue", "pink", "black"),
 }
 
-_balls_to_group_dict: Dict[Tuple[str, ...], BallGroup] = {
+_balls_to_group_dict: dict[tuple[str, ...], BallGroup] = {
     v: k for k, v in _group_to_balls_dict.items()
 }
 
@@ -47,7 +47,7 @@ class BallInfo:
     color: bool
     order: int
     points: int
-    respot: Optional[Tuple[float, float]] = attrs.field(default=None, init=False)
+    respot: tuple[float, float] | None = attrs.field(default=None, init=False)
 
     def __attrs_post_init__(self):
         if self.id == "red":
@@ -57,7 +57,7 @@ class BallInfo:
         self.respot = loc
 
 
-ball_infos_dict: Dict[str, BallInfo] = {
+ball_infos_dict: dict[str, BallInfo] = {
     "white": BallInfo("white", False, -1, 4),
     "red": BallInfo("red", False, -1, 1),
     "yellow": BallInfo("yellow", True, 0, 2),
@@ -77,7 +77,7 @@ def ball_info(ball_id: str) -> BallInfo:
     return ball_infos_dict[_match_ball_id_to_key(ball_id)]
 
 
-def ball_infos(ball_ids: Optional[Iterable[str]] = None) -> Dict[str, BallInfo]:
+def ball_infos(ball_ids: Iterable[str] | None = None) -> dict[str, BallInfo]:
     if ball_ids is None:
         return ball_infos_dict.copy()
 

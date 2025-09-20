@@ -3,14 +3,20 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Union
 
 import numpy as np
 from attrs import define
 from panda3d.core import LVecBase3f, TransparencyAttrib
 
-import pooltool.ani as ani
 import pooltool.ani.utils as autils
+from pooltool.ani.constants import (
+    move_sensitivity,
+    rotate_fine_sensitivity_x,
+    rotate_fine_sensitivity_y,
+    rotate_sensitivity_x,
+    rotate_sensitivity_y,
+    zoom_sensitivity,
+)
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.mouse import mouse
 from pooltool.objects.table.datatypes import Table
@@ -25,7 +31,7 @@ class Camera:
         self.lens = Global.base.camLens
         self.lens.setNear(0.02)
 
-        self.states: Dict[str, CameraState] = {}
+        self.states: dict[str, CameraState] = {}
         self.last_state = None
         self.fixated = False
 
@@ -57,7 +63,7 @@ class Camera:
     def zoom_via_mouse(self):
         """Zoom the camera based on mouse movement for the current frame"""
         with mouse:
-            self.zoom(-mouse.get_dy() * ani.zoom_sensitivity)
+            self.zoom(-mouse.get_dy() * zoom_sensitivity)
 
     def rotate(self, phi=None, theta=None):
         """Rotate about the fixation point
@@ -73,9 +79,9 @@ class Camera:
     def rotate_via_mouse(self, fine_control: bool = False, theta_only: bool = False):
         """Rotate about camera fixation based on mouse movement for the current frame"""
         if fine_control:
-            fx, fy = ani.rotate_fine_sensitivity_x, ani.rotate_fine_sensitivity_y
+            fx, fy = rotate_fine_sensitivity_x, rotate_fine_sensitivity_y
         else:
-            fx, fy = ani.rotate_sensitivity_x, ani.rotate_sensitivity_y
+            fx, fy = rotate_sensitivity_x, rotate_sensitivity_y
 
         with mouse:
             dphi = -fx * mouse.get_dx()
@@ -112,8 +118,8 @@ class Camera:
         dx = dxp * np.cos(h) - dyp * np.sin(h)
         dy = dxp * np.sin(h) + dyp * np.cos(h)
 
-        self.fixation.setX(self.fixation.getX() + dx * ani.move_sensitivity)
-        self.fixation.setY(self.fixation.getY() + dy * ani.move_sensitivity)
+        self.fixation.setX(self.fixation.getX() + dx * move_sensitivity)
+        self.fixation.setY(self.fixation.getY() + dy * move_sensitivity)
 
     def fixate(self, pos, node):
         """Fixate on a position
@@ -192,7 +198,7 @@ class Camera:
         self.fixation_object.setScale(0.0012 * min(dist, 1.5))
 
 
-Vec3D = Tuple[float, float, float]
+Vec3D = tuple[float, float, float]
 
 
 def _vec_to_tuple(vec: LVecBase3f) -> Vec3D:
@@ -203,14 +209,14 @@ def _vec_to_tuple(vec: LVecBase3f) -> Vec3D:
 class CameraState:
     cam_hpr: Vec3D
     cam_pos: Vec3D
-    fixation_hpr: Optional[Vec3D]
-    fixation_pos: Optional[Vec3D]
+    fixation_hpr: Vec3D | None
+    fixation_pos: Vec3D | None
 
-    def to_json(self, path: Union[str, Path]):
+    def to_json(self, path: str | Path):
         conversion.unstructure_to(self, path, fmt="json")
 
     @classmethod
-    def from_json(cls, path: Union[str, Path]) -> CameraState:
+    def from_json(cls, path: str | Path) -> CameraState:
         return conversion.structure_from(path, cls, fmt="json")
 
     @classmethod

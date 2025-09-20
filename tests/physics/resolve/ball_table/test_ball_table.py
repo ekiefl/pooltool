@@ -9,9 +9,11 @@ from pooltool.physics.resolve.ball_table.core import (
     BallTableCollisionStrategy,
     bounce_height,
 )
-from pooltool.physics.resolve.ball_table.frictional_inelastic import FrictionalInelastic
+from pooltool.physics.resolve.ball_table.frictional_inelastic import (
+    FrictionalInelasticTable,
+)
 from pooltool.physics.resolve.ball_table.frictionless_inelastic import (
-    FrictionlessInelastic,
+    FrictionlessInelasticTable,
 )
 
 
@@ -39,7 +41,7 @@ def test_bounce_height_negative_vz():
     assert isclose(result, expected, rel_tol=1e-7), f"Expected {expected}, got {result}"
 
 
-models = [FrictionlessInelastic(), FrictionalInelastic()]
+models = [FrictionlessInelasticTable(), FrictionalInelasticTable()]
 
 
 def example() -> Ball:

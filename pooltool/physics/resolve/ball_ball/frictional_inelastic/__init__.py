@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import attrs
 import numpy as np
 from numba import jit
@@ -34,10 +32,15 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     v2_n_f = 0.5 * ((1.0 + e_b) * rvw1[1][0] + (1.0 - e_b) * rvw2[1][0])
     D_v_n_magnitude = abs(v2_n_f - v1_n_f)
 
+    # angular velocity normal component, unchanged
+    w1_n_f = rvw1[2][0]
+    w2_n_f = rvw2[2][0]
+
     # discard velocity normal components for now
-    # so that surface velocities are tangent
     rvw1[1][0] = 0.0
     rvw2[1][0] = 0.0
+    rvw1[2][0] = 0.0
+    rvw2[2][0] = 0.0
     rvw1_f = rvw1.copy()
     rvw2_f = rvw2.copy()
 
@@ -81,6 +84,8 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     # reintroduce the final normal components
     rvw1_f[1][0] = v1_n_f
     rvw2_f[1][0] = v2_n_f
+    rvw1_f[2][0] = w1_n_f
+    rvw2_f[2][0] = w2_n_f
 
     # rotate everything back to the original frame
     rvw1_f[1] = ptmath.coordinate_rotation(rvw1_f[1], theta)
@@ -100,9 +105,10 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
 class FrictionalInelastic(CoreBallBallCollision):
     """A simple ball-ball collision model including ball-ball friction, and coefficient of restitution for equal-mass balls
 
-    Largely inspired by Dr. David Alciatore's technical proofs (https://billiards.colostate.edu/technical_proofs),
-    in particular, TP_A-5, TP_A-6, and TP_A-14. These ideas have been extended to include motion of both balls,
-    and a more complete analysis of velocity and angular velocity in their vector forms.
+    Largely inspired by Dr. David Alciatore's technical proofs
+    (https://billiards.colostate.edu/technical_proofs), in particular, TP_A-5, TP_A-6,
+    and TP_A-14. These ideas have been extended to include motion of both balls, and a
+    more complete analysis of velocity and angular velocity in their vector forms.
     """
 
     friction: BallBallFrictionStrategy = AlciatoreBallBallFriction()
@@ -111,7 +117,7 @@ class FrictionalInelastic(CoreBallBallCollision):
         default=BallBallModel.FRICTIONAL_INELASTIC, init=False, repr=False
     )
 
-    def solve(self, ball1: Ball, ball2: Ball) -> Tuple[Ball, Ball]:
+    def solve(self, ball1: Ball, ball2: Ball) -> tuple[Ball, Ball]:
         """Resolves the collision."""
         rvw1, rvw2 = _resolve_ball_ball(
             ball1.state.rvw.copy(),

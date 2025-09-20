@@ -1,8 +1,6 @@
-from typing import Dict, Set
-
 from pooltool.events.datatypes import EventType
 
-event_type_to_ball_indices: Dict[EventType, Set[int]] = {
+event_type_to_ball_indices: dict[EventType, set[int]] = {
     EventType.BALL_BALL: {0, 1},
     EventType.BALL_LINEAR_CUSHION: {0},
     EventType.BALL_CIRCULAR_CUSHION: {0},

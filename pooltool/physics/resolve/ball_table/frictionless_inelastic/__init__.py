@@ -19,7 +19,7 @@ def _resolve_ball_table(vz0: float, e_t: float) -> float:
 
 
 @attrs.define
-class FrictionlessInelastic(CoreBallTableCollision):
+class FrictionlessInelasticTable(CoreBallTableCollision):
     """A frictionless, inelastic collision.
 
     In this model the ball bounces on the table with a coefficient of restitution. There

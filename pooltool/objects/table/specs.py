@@ -6,7 +6,7 @@ from typing import Protocol
 
 from attrs import define, field
 
-import pooltool.ani as ani
+from pooltool.ani.constants import model_dir
 from pooltool.error import ConfigError
 from pooltool.utils import panda_path, strenum
 
@@ -22,13 +22,13 @@ class TableModelDescr:
 
     name: str
 
-    @property
-    def path(self) -> str:
-        """The path of the model
+    def get_path(self, use_pbr: bool = False) -> str:
+        """Get the path of the model based on PBR preference
 
         The path is searched for in ``pooltool/models/table/{name}/{name}[_pbr].glb``.
-        If physical based rendering (PBR) is requested, a model suffixed with _pbr will
-        be looked for.
+
+        Args:
+            use_pbr: Whether to use physical based rendering variant
 
         Raises:
             ConfigError:
@@ -39,11 +39,10 @@ class TableModelDescr:
                 A filename specified with Panda3D filename syntax (see
                 https://docs.panda3d.org/1.10/python/programming/advanced-loading/filename-syntax).
         """
-
-        if ani.settings["graphics"]["physical_based_rendering"]:
-            path = ani.model_dir / "table" / self.name / (self.name + "_pbr.glb")
+        if use_pbr:
+            path = model_dir / "table" / self.name / (self.name + "_pbr.glb")
         else:
-            path = ani.model_dir / "table" / self.name / (self.name + ".glb")
+            path = model_dir / "table" / self.name / (self.name + ".glb")
 
         if not path.exists():
             raise ConfigError(f"Couldn't find table model with name: {self.name}")
@@ -56,7 +55,14 @@ class TableModelDescr:
 
 
 class TableType(strenum.StrEnum):
-    """An Enum describing the table type"""
+    """An Enum describing the table type.
+
+    Attributes:
+        POCKET:
+        BILLIARD:
+        SNOOKER:
+        OTHER:
+    """
 
     POCKET = strenum.auto()
     BILLIARD = strenum.auto()
@@ -85,8 +91,10 @@ class PocketTableSpecs:
     See Also:
         - See the :doc:`Table Specification </resources/table_specs>` resource for
           visualizations and descriptions of each attribute.
-        - See :class:`BilliardTableSpecs` for billiard table specs.
-        - See :class:`SnookerTableSpecs` for pocket table specs.
+        - See :class:`pooltool.objects.BilliardTableSpecs` for billiard table specs.
+        - See :class:`pooltool.objects.SnookerTableSpecs` for snooker table specs.
+
+    Default parameters match :attr:`pooltool.objects.TableName.SEVEN_FOOT_SHOWOOD`.
     """
 
     # 7-foot table (78x39 in^2 playing surface)
@@ -97,14 +105,14 @@ class PocketTableSpecs:
     cushion_height: float = field(default=0.64 * 2 * 0.028575)
     corner_pocket_width: float = field(default=0.118)
     corner_pocket_angle: float = field(default=5.3)  # degrees
-    corner_pocket_depth: float = field(default=0.0398)
-    corner_pocket_radius: float = field(default=0.124 / 2)
-    corner_jaw_radius: float = field(default=0.0419 / 2)
+    corner_pocket_depth: float = field(default=0.0417)
+    corner_pocket_radius: float = field(default=0.062)
+    corner_jaw_radius: float = field(default=0.02095)
     side_pocket_width: float = field(default=0.137)
     side_pocket_angle: float = field(default=7.14)  # degrees
-    side_pocket_depth: float = field(default=0.00437)
-    side_pocket_radius: float = field(default=0.129 / 2)
-    side_jaw_radius: float = field(default=0.0159 / 2)
+    side_pocket_depth: float = field(default=0.0685)
+    side_pocket_radius: float = field(default=0.0645)
+    side_jaw_radius: float = field(default=0.00795)
 
     # For visualization
     height: float = field(default=0.708)
@@ -121,17 +129,15 @@ class BilliardTableSpecs:
     See Also:
         - See the :doc:`Table Specification </resources/table_specs>` resource for
           visualizations and descriptions of each attribute.
-        - See :class:`PocketTableSpecs` for billiard table specs.
-        - See :class:`SnookerTableSpecs` for pocket table specs.
+        - See :class:`pooltool.objects.PocketTableSpecs` for billiard table specs.
+        - See :class:`pooltool.objects.SnookerTableSpecs` for snooker table specs.
     """
 
-    # 10-foot table (imprecise)
-    l: float = field(default=3.05)  # noqa  E741
-    w: float = field(default=3.05 / 2)
-
-    # FIXME height should be adjusted for 3-cushion sized balls
+    # https://web.archive.org/web/20130801042614/http://www.umb.org/Rules/Carom_Rules.pdf
+    l: float = field(default=2.84)
+    w: float = field(default=1.42)
     cushion_width: float = field(default=2 * 2.54 / 100)
-    cushion_height: float = field(default=0.64 * 2 * 0.028575)
+    cushion_height: float = field(default=0.037)
 
     # For visualization
     height: float = field(default=0.708)
@@ -148,14 +154,15 @@ class SnookerTableSpecs:
     See Also:
         - See the :doc:`Table Specification </resources/table_specs>` resource for
           visualizations and descriptions of each attribute.
-        - See :class:`BilliardTableSpecs` for billiard table specs.
-        - See :class:`PocketTableSpecs` for pocket table specs.
+        - See :class:`pooltool.objects.BilliardTableSpecs` for billiard table specs.
+        - See :class:`pooltool.objects.PocketTableSpecs` for pocket table specs.
 
     Note:
-        Currently, this class is an identical clone of :class:`PocketTableSpecs`, but
-        with different defaults. That's not very useful, but it's likely that some time
-        in the future, snooker tables may have some parameters distinct from standard
-        pool tables (*e.g.* directional cloth), causing these classes to diverge.
+        Currently, this class is an identical clone of
+        :class:`pooltool.objects.PocketTableSpecs`, but with different defaults. That's
+        not very useful, but it's likely that some time in the future, snooker tables
+        may have some parameters distinct from standard pool tables (*e.g.* directional
+        cloth), causing these classes to diverge.
     """
 
     # https://wpbsa.com/rules/

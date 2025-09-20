@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Protocol, Tuple
+from typing import Protocol
 
 import numpy as np
 from numpy.typing import NDArray
@@ -42,7 +42,7 @@ class _BaseLinearStrategy(Protocol):
 
     def resolve(
         self, ball: Ball, cushion: LinearCushionSegment, inplace: bool = False
-    ) -> Tuple[Ball, LinearCushionSegment]: ...
+    ) -> tuple[Ball, LinearCushionSegment]: ...
 
 
 class _BaseCircularStrategy(Protocol):
@@ -50,7 +50,7 @@ class _BaseCircularStrategy(Protocol):
 
     def resolve(
         self, ball: Ball, cushion: CircularCushionSegment, inplace: bool = False
-    ) -> Tuple[Ball, CircularCushionSegment]: ...
+    ) -> tuple[Ball, CircularCushionSegment]: ...
 
 
 class BallLCushionCollisionStrategy(_BaseLinearStrategy, Protocol):
@@ -58,7 +58,7 @@ class BallLCushionCollisionStrategy(_BaseLinearStrategy, Protocol):
 
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
-    ) -> Tuple[Ball, LinearCushionSegment]:
+    ) -> tuple[Ball, LinearCushionSegment]:
         """This method resolves a ball-circular cushion collision"""
         ...
 
@@ -68,7 +68,7 @@ class BallCCushionCollisionStrategy(_BaseCircularStrategy, Protocol):
 
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment
-    ) -> Tuple[Ball, CircularCushionSegment]:
+    ) -> tuple[Ball, CircularCushionSegment]:
         """This method resolves a ball-circular cushion collision"""
         ...
 
@@ -85,7 +85,7 @@ class CoreBallLCushionCollision(ABC):
         (constants.EPS_SPACE) is put between them, ensuring the cushion and ball are
         separated post-resolution.
         """
-        normal = cushion.get_normal(ball.state.rvw)
+        normal = cushion.get_normal_xy(ball.state.rvw)
 
         # orient the normal so it points away from playing surface
         normal = normal if np.dot(normal, ball.state.rvw[1]) > 0 else -normal
@@ -108,7 +108,7 @@ class CoreBallLCushionCollision(ABC):
 
     def resolve(
         self, ball: Ball, cushion: LinearCushionSegment, inplace: bool = False
-    ) -> Tuple[Ball, LinearCushionSegment]:
+    ) -> tuple[Ball, LinearCushionSegment]:
         if not inplace:
             ball = ball.copy()
             cushion = cushion.copy()
@@ -120,7 +120,7 @@ class CoreBallLCushionCollision(ABC):
     @abstractmethod
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
-    ) -> Tuple[Ball, LinearCushionSegment]:
+    ) -> tuple[Ball, LinearCushionSegment]:
         pass
 
 
@@ -136,7 +136,7 @@ class CoreBallCCushionCollision(ABC):
         (constants.EPS_SPACE) is put between them, ensuring the cushion and ball are
         separated post-resolution.
         """
-        normal = cushion.get_normal(ball.state.rvw)
+        normal = cushion.get_normal_xy(ball.state.rvw)
 
         # orient the normal so it points away from playing surface
         normal = normal if np.dot(normal, ball.state.rvw[1]) > 0 else -normal
@@ -155,7 +155,7 @@ class CoreBallCCushionCollision(ABC):
 
     def resolve(
         self, ball: Ball, cushion: CircularCushionSegment, inplace: bool = False
-    ) -> Tuple[Ball, CircularCushionSegment]:
+    ) -> tuple[Ball, CircularCushionSegment]:
         if not inplace:
             ball = ball.copy()
             cushion = cushion.copy()

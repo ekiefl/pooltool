@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from itertools import combinations
-from typing import List, Optional, Set, Tuple
 
 import numpy as np
 
@@ -22,7 +21,7 @@ from pooltool.events import (
     null_event,
     stick_ball_collision,
 )
-from pooltool.evolution.continuize import continuize
+from pooltool.evolution.continuous import continuize
 from pooltool.evolution.event_based import solve
 from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
@@ -78,13 +77,13 @@ def _evolve(shot: System, dt: float):
 
 def simulate(
     shot: System,
-    engine: Optional[PhysicsEngine] = None,
+    engine: PhysicsEngine | None = None,
     inplace: bool = False,
     continuous: bool = False,
-    dt: Optional[float] = None,
-    t_final: Optional[float] = None,
+    dt: float | None = None,
+    t_final: float | None = None,
     quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
-    include: Set[EventType] = INCLUDED_EVENTS,
+    include: set[EventType] = INCLUDED_EVENTS,
     max_events: int = 0,
 ) -> System:
     """Run a simulation on a system and return it
@@ -95,7 +94,7 @@ def simulate(
             otherwise there will be nothing to simulate.
         engine:
             The engine holds all of the physics. You can instantiate your very own
-            :class:`pooltool.physics.engine.PhysicsEngine` object, or you can modify
+            :class:`pooltool.physics.PhysicsEngine` object, or you can modify
             ``~/.config/pooltool/physics/resolver.json`` to change the default engine.
         inplace:
             By default, a copy of the passed system is simulated and returned. This
@@ -163,7 +162,7 @@ def simulate(
         >>> for ball in system.balls.values(): assert len(ball.history_cts) > 0
 
     See Also:
-        - :func:`pooltool.evolution.continuize.continuize`
+        - :func:`pooltool.evolution.continuize`
     """
     if not inplace:
         shot = shot.copy()
@@ -230,8 +229,8 @@ def simulate(
 def get_next_event(
     shot: System,
     *,
-    transition_cache: Optional[TransitionCache] = None,
-    collision_cache: Optional[CollisionCache] = None,
+    transition_cache: TransitionCache | None = None,
+    collision_cache: CollisionCache | None = None,
     quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
     # Start by assuming next event doesn't happen
@@ -290,11 +289,8 @@ def get_next_ball_ball_collision(
     # FIXME-3D no ball ball collisions
     return null_event(np.inf)
 
-    if len(shot.balls) < 2:
-        return null_event(time=np.inf)
-
-    ball_pairs: List[Tuple[str, str]] = []
-    collision_coeffs: List[Tuple[float, ...]] = []
+    ball_pairs: list[tuple[str, str]] = []
+    collision_coeffs: list[tuple[float, ...]] = []
 
     cache = collision_cache.times.setdefault(EventType.BALL_BALL, {})
 
@@ -349,9 +345,7 @@ def get_next_ball_ball_collision(
             )
 
     if len(collision_coeffs):
-        roots = get_smallest_physical_root_many(
-            solve_quartics(ps=np.array(collision_coeffs), solver=solver)
-        )
+        roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
         for root, ball_pair in zip(roots, ball_pairs):
             cache[ball_pair] = shot.t + root
 
@@ -410,8 +404,8 @@ def get_next_ball_circular_cushion_event(
     if not shot.table.has_circular_cushions:
         return null_event(np.inf)
 
-    ball_cushion_pairs: List[Tuple[str, str]] = []
-    collision_coeffs: List[Tuple[float, ...]] = []
+    ball_cushion_pairs: list[tuple[str, str]] = []
+    collision_coeffs: list[tuple[float, ...]] = []
 
     cache = collision_cache.times.setdefault(EventType.BALL_CIRCULAR_CUSHION, {})
 

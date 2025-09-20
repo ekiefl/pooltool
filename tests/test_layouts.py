@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from itertools import combinations
-from typing import Dict, List, Optional
 
 import attrs
 import numpy as np
@@ -9,6 +8,7 @@ import pytest
 from numpy.typing import NDArray
 
 import pooltool.ptmath as ptmath
+from pooltool.game.datatypes import GameType
 from pooltool.layouts import (
     BallPos,
     Dir,
@@ -17,6 +17,7 @@ from pooltool.layouts import (
     _get_anchor_translation,
     _get_ball_ids,
     generate_layout,
+    get_rack,
 )
 from pooltool.objects import BallParams, Table
 from pooltool.objects.ball.datatypes import Ball
@@ -111,7 +112,7 @@ def test_get_translation(directions, quantities, expected_x, expected_y, radius)
 SPACING_FACTOR = 0.1
 
 
-def get_two_ball_rack(seed: Optional[int] = None):
+def get_two_ball_rack(seed: int | None = None):
     R = 0.03
     ball_params = BallParams(R=R)
 
@@ -128,7 +129,7 @@ def get_two_ball_rack(seed: Optional[int] = None):
 
 
 def test_wiggle():
-    _distance_array: List[float] = []
+    _distance_array: list[float] = []
 
     for _ in range(1000):
         rack = get_two_ball_rack()
@@ -154,7 +155,7 @@ class SeedTestResult:
     ball2_pos: NDArray
 
     @classmethod
-    def from_rack(cls, balls: Dict[str, Ball]) -> SeedTestResult:
+    def from_rack(cls, balls: dict[str, Ball]) -> SeedTestResult:
         ascending_order = balls["1"].state.rvw[0, 0] < balls["2"].state.rvw[0, 0]
 
         return cls(
@@ -166,7 +167,7 @@ class SeedTestResult:
 
 def test_seed():
     # Random seed
-    results_random_seed: List[SeedTestResult] = []
+    results_random_seed: list[SeedTestResult] = []
     for _ in range(20):
         results_random_seed.append(
             SeedTestResult.from_rack(get_two_ball_rack(seed=None))
@@ -184,7 +185,7 @@ def test_seed():
         assert not np.array_equal(result1.ball2_pos, result2.ball2_pos)
 
     # Fixed seed
-    results_fixed_seed: List[SeedTestResult] = []
+    results_fixed_seed: list[SeedTestResult] = []
     for _ in range(20):
         results_fixed_seed.append(SeedTestResult.from_rack(get_two_ball_rack(seed=42)))
 
@@ -198,3 +199,40 @@ def test_seed():
     for result1, result2 in combinations(results_fixed_seed, 2):
         assert np.array_equal(result1.ball1_pos, result2.ball1_pos)
         assert np.array_equal(result1.ball2_pos, result2.ball2_pos)
+
+
+@pytest.mark.parametrize(
+    "game_type",
+    [
+        GameType.EIGHTBALL,
+        GameType.NINEBALL,
+        GameType.SNOOKER,
+    ],
+)
+def test_rack_no_overlapping_balls(game_type: GameType):
+    """Test that the rack generation does not create overlapping balls.
+
+    Generate 200 racks for each game type and verify no balls are overlapping.
+    """
+    for _ in range(200):
+        ball_params = BallParams.default(game_type=game_type)
+        rack = get_rack(
+            game_type=game_type,
+            table=Table.default(),
+            ball_params=ball_params,
+            spacing_factor=1e-5,  # Small spacing factor to more likely expose issues
+        )
+
+        for i, ball1 in enumerate(rack.values()):
+            for j, ball2 in enumerate(rack.values()):
+                if i >= j:
+                    continue
+
+                assert not ptmath.is_overlapping(
+                    ball1.xyz,
+                    ball2.xyz,
+                    ball_params.R,
+                    ball_params.R,
+                ), (
+                    f"Balls {ball1.id} and {ball2.id} are overlapping in {game_type} rack"
+                )

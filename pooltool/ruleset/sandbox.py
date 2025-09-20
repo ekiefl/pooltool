@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Counter
+from collections import Counter
 
 import pooltool.constants as const
 from pooltool.ruleset.datatypes import (
@@ -15,7 +15,7 @@ from pooltool.ruleset.utils import get_pocketed_ball_ids_during_shot, respot
 from pooltool.system.datatypes import System
 
 
-class _SandBox(Ruleset):
+class _RulelessMode(Ruleset):
     def build_shot_info(self, shot: System) -> ShotInfo:
         return ShotInfo(
             player=self.active_player,
@@ -60,5 +60,5 @@ class _SandBox(Ruleset):
                 f"Ball(s) potted: {', '.join(ball_ids)}", sentiment="neutral"
             )
 
-    def copy(self) -> _SandBox:
-        raise NotImplementedError("SandBox copy needs to be implemented")
+    def copy(self) -> _RulelessMode:
+        raise NotImplementedError("RulelessMode copy needs to be implemented")

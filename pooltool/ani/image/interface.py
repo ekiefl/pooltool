@@ -1,4 +1,4 @@
-from typing import Any, List, Protocol, Tuple
+from typing import Any, Protocol
 
 import numpy as np
 from numpy.typing import NDArray
@@ -31,7 +31,7 @@ def get_graphics_texture() -> Texture:
 def image_stack(
     system: System,
     interface: FrameStepper,
-    size: Tuple[int, int] = (230, 144),
+    size: tuple[int, int] = (230, 144),
     fps: float = 30.0,
     camera_state: CameraState = DEFAULT_CAMERA,
     gray: bool = False,
@@ -58,14 +58,14 @@ def image_stack(
     if show_hud:
         hud.init()
         hud.elements[HUDElement.help_text].help_hint.hide()
-        hud.update_cue(system.cue)
+        hud.update_cue(system.cue, system.balls[system.cue.cue_ball_id])
     else:
         hud.destroy()
 
     cam.load_state(camera_state)
 
     # Initialize a numpy array image stack
-    imgs: List[NDArray[np.uint8]] = []
+    imgs: list[NDArray[np.uint8]] = []
 
     for frame in range(frames):
         next(iterator)
@@ -78,7 +78,7 @@ def save_images(
     exporter: Exporter,
     system: System,
     interface: FrameStepper,
-    size: Tuple[int, int] = (230, 144),
+    size: tuple[int, int] = (230, 144),
     fps: float = 30.0,
     camera_state: CameraState = DEFAULT_CAMERA,
     gray: bool = False,

@@ -1,25 +1,27 @@
 #! /usr/bin/env python
 
-from typing import Optional
 
 import numpy as np
 from direct.interval.IntervalGlobal import LerpFunc, Parallel
 from panda3d.core import TransparencyAttrib
 
-import pooltool.ani as ani
 import pooltool.ani.tasks as tasks
+import pooltool.ani.utils as autils
 import pooltool.constants as c
 import pooltool.ptmath as ptmath
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
+from pooltool.ani.constants import ball_highlight
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.ani.scene import visual
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.table.components import Pocket
 from pooltool.system.datatypes import multisystem
-from pooltool.system.render import visual
 from pooltool.utils import panda_path
+
+FONT_OPACITY = 0.95
 
 
 class CallShotMode(BaseMode):
@@ -38,6 +40,7 @@ class CallShotMode(BaseMode):
         self.trans_ball = None
         self.ball_highlight = None
         self.picking = None
+        self.instruction_message = None
 
     def enter(self):
         self.ball_highlight_sequence = Parallel()
@@ -56,6 +59,28 @@ class CallShotMode(BaseMode):
 
         self.picking = "ball"
 
+        # Check if calling shot is required for this shot
+        if not Global.game.shot_constraints.call_shot:
+            # Show message that calling shot is not required
+            self.instruction_message = autils.TextOverlay(
+                title="Calling shot not required for this shot.",
+                frame_color=(0, 0, 0, 0.0),
+                title_pos=(0, 0, 0.6),
+                text_fg=(1, 1, 1, FONT_OPACITY),
+                text_scale=0.05,
+            )
+        else:
+            # Show instruction message for ball selection
+            self.instruction_message = autils.TextOverlay(
+                title='Select a ball to call. Click to confirm while holding "c".',
+                frame_color=(0, 0, 0, 0.0),
+                title_pos=(0, 0, 0.6),
+                text_fg=(1, 1, 1, FONT_OPACITY),
+                text_scale=0.05,
+            )
+
+        self.instruction_message.show()
+
         tasks.add(self.call_shot_task, "call_shot_task")
         tasks.add(self.shared_task, "shared_task")
 
@@ -67,6 +92,12 @@ class CallShotMode(BaseMode):
             self.remove_ball_highlight()
         self.remove_transparent_ball()
         self.ball_highlight_sequence.pause()
+
+        # Clean up instruction message if it exists
+        if self.instruction_message is not None:
+            self.instruction_message.hide()
+            self.instruction_message = None
+
         cam.rotate(theta=cam.theta - self.head_raise)
 
     def call_shot_task(self, task):
@@ -76,7 +107,18 @@ class CallShotMode(BaseMode):
 
         if not Global.game.shot_constraints.call_shot:
             # This shot doesn't require calling shot
-            # FIXME add GUI message
+            # Show message that calling shot is not required
+            if self.instruction_message is not None:
+                self.instruction_message.hide()
+
+            self.instruction_message = autils.TextOverlay(
+                title="Calling shot not required for this shot.",
+                frame_color=(0, 0, 0, 0.0),
+                title_pos=(0, 0, 0.6),
+                text_fg=(1, 1, 1, FONT_OPACITY),
+                text_scale=0.05,
+            )
+            self.instruction_message.show()
             return task.cont
 
         cam.move_fixation_via_mouse()
@@ -96,6 +138,19 @@ class CallShotMode(BaseMode):
                 self.picking = "pocket"
                 self.trans_ball.show()
 
+                # Update instruction message for pocket selection
+                if self.instruction_message is not None:
+                    self.instruction_message.hide()
+
+                self.instruction_message = autils.TextOverlay(
+                    title='Now select a pocket. Click to confirm while holding "c".',
+                    frame_color=(0, 0, 0, 0.0),
+                    title_pos=(0, 0, 0.6),
+                    text_fg=(1, 1, 1, FONT_OPACITY),
+                    text_scale=0.05,
+                )
+                self.instruction_message.show()
+
         elif self.picking == "pocket":
             closest = self.find_closest_pocket()
             if closest != self.closest_pocket:
@@ -111,6 +166,13 @@ class CallShotMode(BaseMode):
                 msg = f"{player} called the {ball_id} in the '{pock_id}' pocket"
                 Global.game.log.add_msg(msg, sentiment="neutral")
                 Global.game.shot_constraints.pocket_call = self.closest_pocket.id
+
+                # Clean up instruction message before exiting
+                if self.instruction_message is not None:
+                    self.instruction_message.hide()
+                    self.instruction_message = None
+
+                # Return to previous mode immediately
                 Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
                 return task.done
 
@@ -151,7 +213,7 @@ class CallShotMode(BaseMode):
             )
             self.ball_highlight_sequence.start()
 
-    def find_closest_pocket(self) -> Optional[Pocket]:
+    def find_closest_pocket(self) -> Pocket | None:
         fixation_pos = cam.fixation.getPos()
         d_min = np.inf
         closest = None
@@ -165,7 +227,7 @@ class CallShotMode(BaseMode):
     def remove_ball_highlight(self):
         if self.closest_ball is not None:
             node = self.closest_ball.get_node("pos")
-            node.setScale(node.getScale() / ani.ball_highlight["ball_factor"])
+            node.setScale(node.getScale() / ball_highlight["ball_factor"])
             self.closest_ball.get_node("shadow").setAlphaScale(1)
             self.closest_ball.get_node("shadow").setScale(1)
             self.closest_ball.set_render_state_as_object_state()
@@ -190,19 +252,19 @@ class CallShotMode(BaseMode):
                 "call_shot_ball_highlight_animation",
             )
             node = self.closest_ball.get_node("pos")
-            node.setScale(node.getScale() * ani.ball_highlight["ball_factor"])
+            node.setScale(node.getScale() * ball_highlight["ball_factor"])
 
     def call_shot_ball_highlight_animation(self, task):
-        phase = task.time * ani.ball_highlight["ball_frequency"]
-        new_height = ani.ball_highlight["ball_offset"] + ani.ball_highlight[
+        phase = task.time * ball_highlight["ball_frequency"]
+        new_height = ball_highlight["ball_offset"] + ball_highlight[
             "ball_amplitude"
         ] * np.sin(phase)
         self.ball_highlight.setZ(new_height)
 
-        new_alpha = ani.ball_highlight["shadow_alpha_offset"] + ani.ball_highlight[
+        new_alpha = ball_highlight["shadow_alpha_offset"] + ball_highlight[
             "shadow_alpha_amplitude"
         ] * np.sin(-phase)
-        new_scale = ani.ball_highlight["shadow_scale_offset"] + ani.ball_highlight[
+        new_scale = ball_highlight["shadow_scale_offset"] + ball_highlight[
             "shadow_scale_amplitude"
         ] * np.sin(phase)
         self.closest_ball.get_node("shadow").setAlphaScale(new_alpha)
@@ -225,7 +287,7 @@ class CallShotMode(BaseMode):
             self.trans_ball.removeNode()
         self.trans_ball = None
 
-    def find_closest_ball(self) -> Optional[BallRender]:
+    def find_closest_ball(self) -> BallRender | None:
         fixation_pos = cam.fixation.getPos()
         d_min = np.inf
 

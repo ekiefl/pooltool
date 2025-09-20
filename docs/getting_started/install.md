@@ -50,7 +50,7 @@ git clone https://github.com/ekiefl/pooltool.git
 cd pooltool
 ```
 
-**2.** Create a new python environment that uses Python 3.12.4.
+**2.** Create a new python environment that uses Python 3.13.0.
 
 If you have `conda`, just run this:
 
@@ -59,11 +59,11 @@ conda env create -f environment.yml
 conda activate pooltool-dev
 ```
 
-Regardless of how you managed your python environment, please verify you're running `3.12.4`
+Regardless of how you managed your python environment, please verify you're running `3.13.0`
 
 ```bash
 $ python
-Python 3.12.4 | packaged by Anaconda, Inc. | (main, Jun 18 2024, 10:14:12) [Clang 14.0.6 ] on darwin
+Python 3.13.0 | packaged by Anaconda, Inc. | (main, Oct  7 2024, 16:40:03) [Clang 14.0.6 ] on darwin
 Type "help", "copyright", "credits" or "license" for more information.
 >>> exit()
 ```
@@ -117,4 +117,4 @@ python -c "import pooltool; print(pooltool.__version__)"
 
 If installed from source, output should be `0.0.0`.
 
-Next, it's time to learn about the interface.
+Next, check out [The Interface](./interface.md).

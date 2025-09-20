@@ -6,7 +6,7 @@ Note:
     ../ball_cushion
 """
 
-from typing import Dict, Protocol, Tuple, Type, cast
+from typing import Protocol, cast
 
 import attrs
 import numpy as np
@@ -22,7 +22,7 @@ class BallPocketStrategy(Protocol):
 
     def resolve(
         self, ball: Ball, pocket: Pocket, inplace: bool = False
-    ) -> Tuple[Ball, Pocket]:
+    ) -> tuple[Ball, Pocket]:
         """This method resolves a ball-circular cushion collision"""
         ...
 
@@ -35,7 +35,7 @@ class CanonicalBallPocket:
 
     def resolve(
         self, ball: Ball, pocket: Pocket, inplace: bool = False
-    ) -> Tuple[Ball, Pocket]:
+    ) -> tuple[Ball, Pocket]:
         if not inplace:
             ball = ball.copy()
             pocket = pocket.copy()
@@ -55,11 +55,11 @@ class CanonicalBallPocket:
         return ball, pocket
 
 
-_ball_pocket_model_registry: Tuple[Type[BallPocketStrategy], ...] = (
+_ball_pocket_model_registry: tuple[type[BallPocketStrategy], ...] = (
     CanonicalBallPocket,
 )
 
-ball_pocket_models: Dict[BallPocketModel, Type[BallPocketStrategy]] = {
+ball_pocket_models: dict[BallPocketModel, type[BallPocketStrategy]] = {
     cast(BallPocketModel, attrs.fields_dict(cls)["model"].default): cls
     for cls in _ball_pocket_model_registry
 }

@@ -4,7 +4,16 @@ These are instructions for how to make new pip-installable pooltool versions on 
 
 ## 1. House keeping
 
-- Update `logo.png` if its not a sub-version (rename logo_small.png to previous version (e.g. logo_v0p1.png) open Blender file, update textures, render at top, save as logo.png). Then make a copy of logo.png that is 640 x 360 called logo_small.png.
+### Updating the logo
+
+The logo must be updated for all major and minor versions (`MAJOR.MINOR.PATCH`).
+
+* Rename `logo_small.png` to current version (e.g. `logo_v0p1.png`)
+* Open `pooltool/logo/logo.blend` in Blender
+* Select the relevant spheres in the "Scene Collection". For each, change the texture under "Surface".
+* Under the "Render" tab, click "Render Image". Save the image as `logo.png`.
+* Make a copy of `logo.png` that is 640 x 360. Call it `logo_small.png`
+* To ensure the state of `logo.blend` is preserved, do not save your changes to `logo.blend`. And if you accidentally do, don't commit them.
 
 ## 2. Create a git tag
 

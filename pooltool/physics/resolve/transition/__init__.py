@@ -2,11 +2,10 @@
 
 Note:
     If this module is ever extended to support multiple treatments for ball transitions,
-    expand this file into a file structure modelled after ../ball_ball or
-    ../ball_cushion
+    it should be expanded into a subpackage to match the other event types.
 """
 
-from typing import Dict, Protocol, Tuple, Type, cast
+from typing import Protocol, cast
 
 import attrs
 import numpy as np
@@ -38,9 +37,9 @@ class CanonicalTransition:
         assert transition.is_transition()
         start, end = _ball_transition_motion_states(transition)
 
-        assert (
-            ball.state.s == start
-        ), f"Start state was {ball.state.s}, expected {start}"
+        assert ball.state.s == start, (
+            f"Start state was {ball.state.s}, expected {start}"
+        )
         ball.state.s = end
 
         if end == const.spinning:
@@ -68,7 +67,7 @@ class CanonicalTransition:
         return ball
 
 
-def _ball_transition_motion_states(event_type: EventType) -> Tuple[int, int]:
+def _ball_transition_motion_states(event_type: EventType) -> tuple[int, int]:
     """Return the ball motion states before and after a transition"""
     assert event_type.is_transition()
 
@@ -84,11 +83,11 @@ def _ball_transition_motion_states(event_type: EventType) -> Tuple[int, int]:
     raise NotImplementedError()
 
 
-_ball_transition_model_registry: Tuple[Type[BallTransitionStrategy], ...] = (
+_ball_transition_model_registry: tuple[type[BallTransitionStrategy], ...] = (
     CanonicalTransition,
 )
 
-ball_transition_models: Dict[BallTransitionModel, Type[BallTransitionStrategy]] = {
+ball_transition_models: dict[BallTransitionModel, type[BallTransitionStrategy]] = {
     cast(BallTransitionModel, attrs.fields_dict(cls)["model"].default): cls
     for cls in _ball_transition_model_registry
 }

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any, Dict, Optional, Tuple, Type, Union, cast
+from typing import Any, cast
 
 from attrs import define, evolve, field
 from cattrs.converters import Converter
@@ -110,14 +110,9 @@ class EventType(strenum.StrEnum):
         return self == EventType.STICK_BALL
 
 
-Object = Union[
-    NullObject,
-    Cue,
-    Ball,
-    Pocket,
-    LinearCushionSegment,
-    CircularCushionSegment,
-]
+Object = (
+    NullObject | Cue | Ball | Pocket | LinearCushionSegment | CircularCushionSegment
+)
 
 
 class AgentType(strenum.StrEnum):
@@ -140,7 +135,7 @@ class AgentType(strenum.StrEnum):
     CIRCULAR_CUSHION_SEGMENT = strenum.auto()
 
 
-_class_to_type: Dict[Type[Object], AgentType] = {
+_class_to_type: dict[type[Object], AgentType] = {
     NullObject: AgentType.NULL,
     Cue: AgentType.CUE,
     Ball: AgentType.BALL,
@@ -170,16 +165,16 @@ class Agent:
     id: str
     agent_type: AgentType
 
-    initial: Optional[Object] = field(default=None)
-    final: Optional[Object] = field(default=None)
+    initial: Object | None = field(default=None)
+    final: Object | None = field(default=None)
 
     def set_initial(self, obj: Object) -> None:
         """Sets the initial state of the agent (before event resolution).
 
         This makes a copy of the passed object and sets it to :attr:`initial`.
 
-        In the case of a :attr:`AgentType.BALL` agent type, it drops history fields
-        before copying to save time and memory.
+        In the case of a :attr:`pooltool.events.AgentType.BALL` agent type, it drops
+        history fields before copying to save time and memory.
 
         Args:
             obj:
@@ -201,8 +196,8 @@ class Agent:
 
         This makes a copy of the passed object and sets it to :attr:`final`.
 
-        In the case of a :attr:`AgentType.BALL` agent type, it drops history fields
-        before copying to save time and memory.
+        In the case of a :attr:`pooltool.events.AgentType.BALL` agent type, it drops
+        history fields before copying to save time and memory.
 
         Args:
             obj:
@@ -259,7 +254,7 @@ class Agent:
 
 
 def _disambiguate_agent_structuring(
-    uo: Dict[str, Any], _: Type[Agent], con: Converter
+    uo: dict[str, Any], _: type[Agent], con: Converter
 ) -> Agent:
     id = con.structure(uo["id"], str)
     agent_type = con.structure(uo["agent_type"], AgentType)
@@ -310,8 +305,8 @@ class Event:
     time at which the event occurs.
 
     Agent states before and after event resolution are stored in the
-    :attr:`Agent.initial` and :attr:`Agent.final` attributes of agents within
-    :attr:`agents`.
+    :attr:`pooltool.events.Agent.initial` and :attr:`pooltool.events.Agent.final`
+    attributes of agents within :attr:`agents`.
 
     Attributes:
         event_type:
@@ -319,18 +314,19 @@ class Event:
         agents:
             A tuple containing one or two agents involved in the event.
 
-            Events that are collisions (:meth:`EventType.is_collision`) have two agents,
-            while events that are transitions (:meth:`EventType.is_transition`), or
-            events with event type :attr:`EventType.NONE`, have one agent.
+            Events that are collisions (:meth:`pooltool.events.EventType.is_collision`)
+            have two agents, while events that are transitions
+            (:meth:`pooltool.events.EventType.is_transition`), or events with event type
+            :attr:`pooltool.events.EventType.NONE`, have one agent.
 
-            By convention, the order of the agents matches how the :class:`EventType`
-            attributes are named.
+            By convention, the order of the agents matches how the
+            :class:`pooltool.events.EventType` attributes are named.
         time:
             The time at which the event occurs.
     """
 
     event_type: EventType
-    agents: Tuple[Agent, ...]
+    agents: tuple[Agent, ...]
     time: float
 
     def __repr__(self):
@@ -343,7 +339,7 @@ class Event:
         return "\n".join(lines) + "\n"
 
     @property
-    def ids(self) -> Tuple[str, ...]:
+    def ids(self) -> tuple[str, ...]:
         """Retrieves the IDs of the agents involved in the event.
 
         This property provides access to a tuple of agent IDs, allowing identification
@@ -404,7 +400,7 @@ class Event:
 
     def get_cushion(
         self, cushion_id: str
-    ) -> Union[LinearCushionSegment, CircularCushionSegment]:
+    ) -> LinearCushionSegment | CircularCushionSegment:
         """Return the cushion segment with the given ID."""
         if not self.event_type.has_cushion():
             raise ValueError(

@@ -1,10 +1,8 @@
 """An endpoint for classes that enable interaction"""
 
-from typing import Optional
-
 from pooltool.ani.animate import Game, ShotViewer
 
-_shot_viewer: Optional[ShotViewer] = None
+_shot_viewer: ShotViewer | None = None
 
 
 def show(*args, **kwargs):
@@ -17,13 +15,18 @@ def show(*args, **kwargs):
     Args:
         shot_or_shots:
             The shot or collection of shots to visualize. This can be a single
-            :class:`pooltool.system.datatypes.System` object or a
-            :class:`pooltool.system.datatypes.MultiSystem` object containing
+            :class:`pooltool.system.System` object or a
+            :class:`pooltool.system.MultiSystem` object containing
             multiple systems.
 
             Note:
                 If a multisystem is passed, the systems can be scrolled through by
-                pressing *n* (next) and *p* (previous).
+                pressing *n* (next) and *p* (previous). When using ``pt.show()``,
+                press *Enter* to toggle parallel visualization mode where all systems
+                play simultaneously with reduced opacity except the active one. In
+                parallel mode, use *n* and *p* to change which system has full opacity.
+                Note that parallel visualization is only available in ``pt.show()``
+                and not when playing the game through ``run-pooltool``.
         title:
             The title to display in the visualization. Defaults to an empty string.
         camera_state:

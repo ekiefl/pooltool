@@ -1,4 +1,6 @@
-# Code of Conduct for pooltool
+# Code of Conduct
+
+Following these guidelines helps to communicate that you respect the time of the developers managing and developing this open-source project. In return, they should reciprocate that respect in their interactions with you.
 
 ## Our Pledge
 

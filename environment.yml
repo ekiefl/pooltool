@@ -3,7 +3,8 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - python==3.12.4
+  - python==3.13.0
   - pip
   - pip:
-    - poetry>=1.8.3
+    # This pin matches CI actions and pyproject dev deps
+    - poetry==1.8.4

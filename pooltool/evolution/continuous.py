@@ -1,11 +1,16 @@
-"""Module for building a time-dense system trajectory
+"""Module for building a time-dense system trajectory and interpolating ball states
 
-For an explanation, see :func:`continuize`
+For an explanation, see :func:`continuize` and :func:`interpolate_ball_states`
 """
+
+from collections.abc import Sequence
+
+import numpy as np
+from numpy.typing import NDArray
 
 import pooltool.physics.evolve as evolve
 from pooltool.events import filter_ball
-from pooltool.objects.ball.datatypes import BallHistory, BallState
+from pooltool.objects.ball.datatypes import Ball, BallHistory, BallState
 from pooltool.system.datatypes import System
 
 
@@ -25,9 +30,8 @@ def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> Syste
     seconds apart. *i.e.* not continuous.
 
     This function calculates the "continous" timestamps for each ball and stores them in
-    :attr:`pooltool.objects.ball.datatypes.Ball.history_cts` (the event-based timestamps
-    are preserved, and are stored in
-    :attr:`pooltool.objects.ball.datatypes.Ball.history`)
+    :attr:`pooltool.objects.Ball.history_cts` (the event-based timestamps are preserved,
+    and are stored in :attr:`pooltool.objects.Ball.history`)
 
     The continous timepoints are shared between all balls and are uniformly spaced
     (except for the last timepoint, which occurs at the final event, which necessarily
@@ -95,8 +99,8 @@ def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> Syste
         >>> assert system.continuized
 
     See Also:
-        - :attr:`pooltool.objects.ball.datatypes.Ball.history_cts`
-        - :func:`pooltool.evolution.event_based.simulate.simulate`
+        - :attr:`pooltool.objects.Ball.history_cts`
+        - :func:`pooltool.evolution.simulate`
     """
     if not inplace:
         system = system.copy()
@@ -185,3 +189,114 @@ def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> Syste
         ball.history_cts = history
 
     return system
+
+
+def interpolate_ball_states(
+    ball: Ball,
+    timestamps: NDArray[np.float64] | Sequence[float],
+    *,
+    extrapolate: bool = False,
+) -> list[BallState]:
+    """Calculate exact ball states at arbitrary timestamps.
+
+    This function calculates the precise ball states at arbitrary timestamps by evolving
+    the ball from the nearest preceding event state using the same physics model as the
+    simulation. It provides physically accurate positions, velocities, and angular velocities
+    according to the ball's motion equations.
+
+    Args:
+        ball:
+            The Ball object containing the history and physical parameters.
+        timestamps:
+            A sequence or numpy array of timestamps at which to calculate ball states.
+            Should be in ascending order and within the history's time range.
+        extrapolate:
+            If True, timestamps outside the history's time range will use the nearest boundary
+            state (initial or final). If False (default), a ValueError is raised for timestamps
+            outside the range.
+
+    Returns:
+        A list of BallState objects corresponding to the given timestamps.
+
+    Raises:
+        ValueError:
+            If history is empty or if timestamps are out of range and extrapolate is False.
+
+    Examples:
+        >>> import pooltool as pt
+        >>> import numpy as np
+        >>> system = pt.simulate(pt.System.example())
+        >>> ball = system.balls["cue"]
+        >>> # Get ball states at specific timestamps
+        >>> timestamps = np.array([0.5, 1.0, 1.5])
+        >>> states = pt.interpolate_ball_states(ball, timestamps)
+        >>> # Use the states
+        >>> states[0].rvw[0]  # Position at t=0.5
+        array([x, y, z])
+    """
+    history = ball.history
+    params = ball.params
+
+    if history.empty:
+        raise ValueError("Cannot interpolate from empty history")
+
+    if not isinstance(timestamps, np.ndarray):
+        timestamps = np.array(timestamps, dtype=np.float64)
+
+    if not np.all(np.diff(timestamps) >= 0):
+        raise ValueError("Timestamps must be in ascending order")
+
+    min_time = history[0].t
+    max_time = history[-1].t
+
+    if not extrapolate and (timestamps[0] < min_time or timestamps[-1] > max_time):
+        raise ValueError(
+            f"Timestamps must be within history time range ({min_time}, {max_time})"
+        )
+
+    result_states = []
+    history_array = history.states
+    history_len = len(history_array)
+
+    idx = 0
+
+    for t in timestamps:
+        if t < min_time:
+            result_states.append(history_array[0].copy())
+            continue
+        elif t > max_time:
+            result_states.append(history_array[-1].copy())
+            continue
+
+        # Find the nearest preceding state in history
+        while idx < history_len - 1 and history_array[idx + 1].t <= t:
+            idx += 1
+
+        # Go back one step if we've advanced too far
+        if history_array[idx].t > t and idx > 0:
+            idx -= 1
+
+        # Get the reference state to evolve from
+        ref_state = history_array[idx]
+
+        if abs(ref_state.t - t) < 1e-10:
+            # The timestamp exactly matches a history state, use it directly
+            result_states.append(ref_state.copy())
+            continue
+
+        evolve_time = t - ref_state.t
+        rvw = evolve.evolve_ball_motion(
+            state=ref_state.s,
+            rvw=ref_state.rvw,
+            R=params.R,
+            m=params.m,
+            u_s=params.u_s,
+            u_sp=params.u_sp,
+            u_r=params.u_r,
+            g=params.g,
+            t=evolve_time,
+        )
+
+        result_states.append(BallState(rvw=rvw, s=ref_state.s, t=t))
+
+    return result_states

@@ -3,23 +3,18 @@ from __future__ import annotations
 
 import copy
 from abc import ABC, abstractmethod
+from collections import Counter
+from collections.abc import Callable, Generator
 from typing import (
     Any,
-    Callable,
-    Counter,
-    Dict,
-    Generator,
-    List,
-    Optional,
     Protocol,
-    Tuple,
 )
 
 import attrs
 
 from pooltool.ai.action import Action
 from pooltool.system.datatypes import System
-from pooltool.terminal import Timer
+from pooltool.utils import Timer
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -28,7 +23,7 @@ class AIPlayer(Protocol):
         self,
         system: System,
         game: Ruleset,
-        callback: Optional[Callable[[Action], None]] = None,
+        callback: Callable[[Action], None] | None = None,
     ) -> Action: ...
 
     def apply(self, system: System, action: Action) -> None: ...
@@ -46,7 +41,7 @@ class Player:
     """
 
     name: str
-    ai: Optional[AIPlayer] = None
+    ai: AIPlayer | None = None
 
     @property
     def is_ai(self) -> bool:
@@ -55,7 +50,7 @@ class Player:
 
 @attrs.define
 class Log:
-    msgs: List[Dict[str, Any]] = attrs.field(factory=list)
+    msgs: list[dict[str, Any]] = attrs.field(factory=list)
     timer: Timer = attrs.field(factory=Timer.factory)
     update: bool = attrs.field(default=False)
 
@@ -63,7 +58,7 @@ class Log:
         self.msgs.append(
             {
                 "time": self.timer.timestamp(),
-                "elapsed": self.timer.time_elapsed(fmt="{minutes}:{seconds}"),
+                "elapsed": self.timer.time_elapsed(),
                 "msg": msg,
                 "quiet": quiet,
                 "sentiment": sentiment,
@@ -118,14 +113,14 @@ class ShotConstraints:
     """
 
     ball_in_hand: BallInHandOptions
-    movable: Optional[List[str]]
-    cueable: Optional[List[str]]
-    hittable: Tuple[str, ...]
+    movable: list[str] | None
+    cueable: list[str] | None
+    hittable: tuple[str, ...]
     call_shot: bool
-    ball_call: Optional[str] = attrs.field(default=None)
-    pocket_call: Optional[str] = attrs.field(default=None)
+    ball_call: str | None = attrs.field(default=None)
+    pocket_call: str | None = attrs.field(default=None)
 
-    def cueball(self, balls: Dict[str, Any]) -> str:
+    def cueball(self, balls: dict[str, Any]) -> str:
         if self.cueable is None:
             assert len(balls)
 
@@ -178,7 +173,7 @@ class ShotInfo:
     reason: str
     turn_over: bool
     game_over: bool
-    winner: Optional[Player]
+    winner: Player | None
     score: Counter[str]
 
 
@@ -191,10 +186,10 @@ class Ruleset(ABC):
     games.
     """
 
-    def __init__(self, players: Optional[List[Player]] = None) -> None:
+    def __init__(self, players: list[Player] | None = None) -> None:
         # Player info
         players = [] if players is None else players
-        self.players: List[Player] = players
+        self.players: list[Player] = players
         self.active_idx: int = 0
 
         # Game progress tracking

@@ -170,7 +170,7 @@ def evolve_perpendicular_spin_state(
     assert v0z == 0, f"Spinning ball can't have non-zero z-component velocity: {v0z}"
 
     # Otherwise ball.state.rvw will be modified and corresponding entry in self.history
-    # FIXME framework has changed, this may not be true. EDIT This is still true.
+    # will, too.
     rvw = rvw.copy()
 
     rvw[2, 2] = evolve_perpendicular_spin_component(rvw[2, 2], R, u_sp, g, t)

@@ -36,7 +36,7 @@ def _resolve_ball_table(
     v_i[2] = 0
 
     v_c_i = physics.surface_velocity(rvw_i, -unit_z, R)
-    has_relative_velocity = ptmath.norm3d_squared(v_c_i) > const.EPS**2
+    has_relative_velocity = ptmath.squared_norm3d(v_c_i) > const.EPS**2
 
     # if there is no relative surface velocity to begin with,
     # don't bother calculating slip condition
@@ -49,9 +49,9 @@ def _resolve_ball_table(
     # if there was no relative velocity to begin with,
     # or if the impulse for the no-slip case is less than the impulse for the slip case
     # then slip condition is invalid so we use the results for the no-slip case
-    if not has_relative_velocity or ptmath.norm3d_squared(
+    if not has_relative_velocity or ptmath.squared_norm3d(
         D_v_parallel_no_slip
-    ) <= ptmath.norm3d_squared(D_v_parallel_slip):
+    ) <= ptmath.squared_norm3d(D_v_parallel_slip):
         rvw[1] = rvw[1] + D_v_perpendicular + D_v_parallel_no_slip
         rvw[2] = rvw[2] + (5.0 / 7.0) * (-w_i + ptmath.cross(unit_z, v_i) / R)
     else:
@@ -64,7 +64,7 @@ def _resolve_ball_table(
 
 
 @attrs.define
-class FrictionalInelastic(CoreBallTableCollision):
+class FrictionalInelasticTable(CoreBallTableCollision):
     """A frictional, inelastic collision."""
 
     min_bounce_height: float = 0.005

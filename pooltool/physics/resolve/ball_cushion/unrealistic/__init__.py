@@ -3,8 +3,6 @@
 FIXME-3D Check math
 """
 
-from typing import Tuple, TypeVar
-
 import attrs
 import numpy as np
 
@@ -13,6 +11,7 @@ import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
     CircularCushionSegment,
+    Cushion,
     LinearCushionSegment,
 )
 from pooltool.physics.resolve.ball_cushion.core import (
@@ -21,12 +20,10 @@ from pooltool.physics.resolve.ball_cushion.core import (
 )
 from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
 
-Cushion = TypeVar("Cushion", LinearCushionSegment, CircularCushionSegment)
-
 
 def _solve(
     ball: Ball, cushion: Cushion, restitution: bool = True
-) -> Tuple[Ball, Cushion]:
+) -> tuple[Ball, Cushion]:
     """Given ball and cushion, unrealistically reflect the ball's momentum
 
     Args:
@@ -37,7 +34,7 @@ def _solve(
     rvw = ball.state.rvw
 
     # Two things about the normal:
-    #   1) Cushions have a get_normal method that returns the normal. For linear
+    #   1) Cushions have a get_normal_xy method that returns the normal. For linear
     #      cushions this is determined solely by it's geometry. For circular
     #      cushions, the normal is a function of the ball's position (specifically,
     #      it is the line connecting the ball's and cushion's centers). To retain
@@ -48,7 +45,7 @@ def _solve(
     #      we're still living with the consequences of. The burden is that you must
     #      assign a convention. Here I opt to orient the normal so it points away
     #      from the playing surface.
-    normal = cushion.get_normal(rvw)
+    normal = cushion.get_normal_xy(rvw)
     normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
 
     # Rotate frame of reference to the cushion frame. The cushion frame is defined
@@ -84,7 +81,7 @@ class UnrealisticLinear(CoreBallLCushionCollision):
 
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
-    ) -> Tuple[Ball, LinearCushionSegment]:
+    ) -> tuple[Ball, LinearCushionSegment]:
         return _solve(ball, cushion, self.restitution)
 
 
@@ -97,5 +94,5 @@ class UnrealisticCircular(CoreBallCCushionCollision):
 
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment
-    ) -> Tuple[Ball, CircularCushionSegment]:
+    ) -> tuple[Ball, CircularCushionSegment]:
         return _solve(ball, cushion, self.restitution)

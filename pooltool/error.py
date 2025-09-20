@@ -1,63 +1,48 @@
-#! /usr/bin/env python
-
-"""Borrowed from https://github.com/merenlab/anvio/blob/master/anvio/errors.py"""
-
+import sys
 import textwrap
-from typing import Optional
-
-from pooltool.terminal import color_text
 
 
-def remove_spaces(text: Optional[str]) -> str:
-    if not text:
-        return ""
+def _red_text(text):
+    return f"\033[0;31m{text}\033[0m" if sys.stdout.isatty() else text
 
-    while "  " in text:
-        text = text.replace("  ", " ")
 
-    return text
+def _normalize_whitespace(text: str) -> str:
+    return " ".join(text.split())
 
 
 class PoolToolError(Exception):
-    def __init__(self, e: Optional[str] = None) -> None:
-        super().__init__()
-        self.e: str = e if e is not None else ""
-        self.error_type = "General Error"
+    error_type = "General Error"
 
     def __str__(self):
-        max_len = max([len(line) for line in textwrap.fill(self.e, 80).split("\n")])
-        error_lines = [
-            "%s%s" % (line, " " * (max_len - len(line)))
-            for line in textwrap.fill(self.e, 80).split("\n")
-        ]
+        message = _normalize_whitespace(super().__str__())
 
-        error_message = [
-            "%s: %s" % (color_text(self.error_type, "red"), error_lines[0])
-        ]
-        for error_line in error_lines[1:]:
-            error_message.append(
-                "%s%s" % (" " * (len(self.error_type) + 2), error_line)
-            )
+        wrapped_lines = textwrap.fill(message, width=80).split("\n")
+        max_length = max(len(line) for line in wrapped_lines)
+        padded_lines = [line.ljust(max_length) for line in wrapped_lines]
+        error_lines = self._format_error_lines(padded_lines)
 
-        return "\n\n" + "\n".join(error_message) + "\n\n"
+        # Use chr(10) instead of \n because backslash cannot be used in f-string
+        # expression.
+        return f"\n\n{chr(10).join(error_lines)}\n\n"
 
-    def clear_text(self):
-        return self.e
+    def _format_error_lines(self, lines: list[str]) -> list[str]:
+        if not lines:
+            return []
+
+        formatted_lines = [f"{_red_text(self.error_type)}: {lines[0]}"]
+        indent = " " * (len(self.error_type) + 2)
+        formatted_lines.extend(f"{indent}{line}" for line in lines[1:])
+
+        return formatted_lines
 
 
 class ConfigError(PoolToolError):
-    def __init__(self, e: Optional[str] = None) -> None:
-        super().__init__(remove_spaces(e))
-        self.error_type = "Config Error"
+    error_type = "Config Error"
 
 
 class StrokeError(PoolToolError):
-    def __init__(self, e: Optional[str] = None) -> None:
-        super().__init__(remove_spaces(e))
-        self.error_type = "Stroke Error"
+    error_type = "Stroke Error"
 
 
 class SimulateError(PoolToolError):
-    def __init__(self, e: Optional[str] = None) -> None:
-        super().__init__(remove_spaces(e))
-        self.error_type = "Simulate Error"
+    error_type = "Simulate Error"

@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 """This examples how to make a custom pool table and ball parameters"""
 
-from typing import Optional
-
 import numpy as np
 
 import pooltool as pt
@@ -45,7 +43,7 @@ def closest_ball(system: pt.System) -> str:
     """Return ball ID closest to the cue ball"""
     cueball = system.balls["cue"]
 
-    closest_id: Optional[str] = None
+    closest_id: str | None = None
     closest_dist = np.inf
 
     for ball in system.balls.values():

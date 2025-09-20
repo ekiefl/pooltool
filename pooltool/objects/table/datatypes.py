@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Optional, Tuple
-
+import numpy as np
 from attrs import define, evolve, field
 
 from pooltool.game.datatypes import GameType
@@ -11,7 +10,12 @@ from pooltool.objects.table.collection import (
     default_specs_from_table_type,
     prebuilt_specs,
 )
-from pooltool.objects.table.components import CushionSegments, Pocket
+from pooltool.objects.table.components import (
+    CircularCushionSegment,
+    CushionSegments,
+    LinearCushionSegment,
+    Pocket,
+)
 from pooltool.objects.table.layout import (
     create_billiard_table_cushion_segments,
     create_pocket_table_cushion_segments,
@@ -53,11 +57,36 @@ class Table:
     """
 
     cushion_segments: CushionSegments
-    pockets: Dict[str, Pocket]
+    pockets: dict[str, Pocket]
     table_type: TableType
-    model_descr: Optional[TableModelDescr] = field(default=None)
+    model_descr: TableModelDescr | None = field(default=None)
     height: float = field(default=0.708)
     lights_height: float = field(default=1.99)
+
+    def set_cushion_height(self, height: float) -> None:
+        """Set the height of all cushion segments.
+
+        Args:
+            height: The new height to set for all cushion segments.
+        """
+        linear: dict[str, LinearCushionSegment] = {}
+        circular: dict[str, CircularCushionSegment] = {}
+
+        for id, segment in self.cushion_segments.linear.items():
+            p1 = np.array([segment.p1[0], segment.p1[1], height], dtype=np.float64)
+            p2 = np.array([segment.p2[0], segment.p2[1], height], dtype=np.float64)
+
+            linear[id] = evolve(segment, p1=p1, p2=p2)
+
+        for id, segment in self.cushion_segments.circular.items():
+            center = np.array(
+                [segment.center[0], segment.center[1], height], dtype=np.float64
+            )
+
+            circular[id] = evolve(segment, center=center)
+
+        self.cushion_segments.linear = linear
+        self.cushion_segments.circular = circular
 
     @property
     def w(self) -> float:
@@ -93,7 +122,7 @@ class Table:
         return y2 - y1
 
     @property
-    def center(self) -> Tuple[float, float]:
+    def center(self) -> tuple[float, float]:
         """Return the 2D coordinates of the table's center
 
         Warning:
@@ -134,30 +163,31 @@ class Table:
                 A valid table specification.
 
                 Accepted objects:
-                    - :class:`pooltool.objects.table.specs.PocketTableSpecs`
-                    - :class:`pooltool.objects.table.specs.BilliardTableSpecs`
-                    - :class:`pooltool.objects.table.specs.SnookerTableSpecs`
+                    - :class:`pooltool.objects.PocketTableSpecs`
+                    - :class:`pooltool.objects.BilliardTableSpecs`
+                    - :class:`pooltool.objects.SnookerTableSpecs`
 
         Returns:
             Table:
                 A table matching the specifications of the input.
 
-                - :class:`pooltool.objects.table.specs.PocketTableSpecs` has
-                  :attr:`table_type` set to `pooltool.objects.table.specs.TableType.POCKET`
-                - :class:`pooltool.objects.table.specs.BilliardTableSpecs` has
-                  :attr:`table_type` set to `pooltool.objects.table.specs.TableType.BILLIARD`
-                - :class:`pooltool.objects.table.specs.SnookerTableSpecs` has
-                  :attr:`table_type` set to `pooltool.objects.table.specs.TableType.SNOOKER`
+                - :class:`pooltool.objects.PocketTableSpecs` has
+                  :attr:`table_type` set to `pooltool.objects.TableType.POCKET`
+                - :class:`pooltool.objects.BilliardTableSpecs` has
+                  :attr:`table_type` set to `pooltool.objects.TableType.BILLIARD`
+                - :class:`pooltool.objects.SnookerTableSpecs` has
+                  :attr:`table_type` set to `pooltool.objects.TableType.SNOOKER`
         """
         if specs.table_type == TableType.BILLIARD:
             assert isinstance(specs, BilliardTableSpecs)
             segments = create_billiard_table_cushion_segments(specs)
             pockets = {}
-        elif (
-            specs.table_type == TableType.POCKET
-            or specs.table_type == TableType.SNOOKER
-        ):
+        elif specs.table_type == TableType.POCKET:
             assert isinstance(specs, PocketTableSpecs)
+            segments = create_pocket_table_cushion_segments(specs)
+            pockets = create_pocket_table_pockets(specs)
+        elif specs.table_type == TableType.SNOOKER:
+            assert isinstance(specs, SnookerTableSpecs)
             segments = create_pocket_table_cushion_segments(specs)
             pockets = create_pocket_table_pockets(specs)
         else:

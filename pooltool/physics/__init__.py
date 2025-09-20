@@ -1,23 +1,30 @@
 """Physics subpackage for pooltool"""
 
-from pooltool.physics import evolve, resolve
 from pooltool.physics.engine import PhysicsEngine
+from pooltool.physics.evolve import (
+    evolve_ball_motion,
+    evolve_perpendicular_spin_component,
+    evolve_perpendicular_spin_state,
+    evolve_roll_state,
+    evolve_slide_state,
+)
+from pooltool.physics.resolve import display_models
 from pooltool.physics.resolve.ball_ball import (
-    BallBallCollisionStrategy,
     BallBallModel,
     ball_ball_models,
 )
+from pooltool.physics.resolve.ball_ball.friction import (
+    BallBallFrictionModel,
+    ball_ball_friction_models,
+)
 from pooltool.physics.resolve.ball_cushion import (
-    BallCCushionCollisionStrategy,
     BallCCushionModel,
-    BallLCushionCollisionStrategy,
     BallLCushionModel,
     ball_ccushion_models,
     ball_lcushion_models,
 )
 from pooltool.physics.resolve.ball_pocket import (
     BallPocketModel,
-    BallPocketStrategy,
     ball_pocket_models,
 )
 from pooltool.physics.resolve.resolver import (
@@ -25,13 +32,11 @@ from pooltool.physics.resolve.resolver import (
     Resolver,
 )
 from pooltool.physics.resolve.stick_ball import (
-    StickBallCollisionStrategy,
     StickBallModel,
     stick_ball_models,
 )
 from pooltool.physics.resolve.transition import (
     BallTransitionModel,
-    BallTransitionStrategy,
     ball_transition_models,
 )
 from pooltool.physics.utils import (
@@ -46,15 +51,9 @@ from pooltool.physics.utils import (
 )
 
 __all__ = [
-    "BallBallCollisionStrategy",
-    "BallCCushionCollisionStrategy",
-    "BallLCushionCollisionStrategy",
-    "BallPocketStrategy",
-    "StickBallCollisionStrategy",
-    "BallTransitionStrategy",
     "PhysicsEngine",
-    "evolve",
-    "resolve",
+    # Resolve
+    "display_models",
     "Resolver",
     "RESOLVER_PATH",
     "BallBallModel",
@@ -72,9 +71,17 @@ __all__ = [
     "get_airborne_time",
     "get_ball_energy",
     "ball_ball_models",
+    "BallBallFrictionModel",
+    "ball_ball_friction_models",
     "ball_lcushion_models",
     "ball_ccushion_models",
     "ball_pocket_models",
     "stick_ball_models",
     "ball_transition_models",
+    # Evolve
+    "evolve_ball_motion",
+    "evolve_slide_state",
+    "evolve_roll_state",
+    "evolve_perpendicular_spin_component",
+    "evolve_perpendicular_spin_state",
 ]
