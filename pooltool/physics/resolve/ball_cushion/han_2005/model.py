@@ -1,5 +1,3 @@
-from typing import TypeVar
-
 import attrs
 import numpy as np
 
@@ -8,6 +6,7 @@ import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.table.components import (
     CircularCushionSegment,
+    Cushion,
     LinearCushionSegment,
 )
 from pooltool.physics.resolve.ball_cushion.core import (
@@ -90,13 +89,10 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
     return rvw
 
 
-Cushion = TypeVar("Cushion", LinearCushionSegment, CircularCushionSegment)
-
-
 def _solve(ball: Ball, cushion: Cushion) -> tuple[Ball, Cushion]:
     rvw = han2005(
         rvw=ball.state.rvw,
-        normal=cushion.get_normal(ball.state.rvw),
+        normal=cushion.get_normal_xy(ball.state.rvw),
         R=ball.params.R,
         m=ball.params.m,
         h=cushion.height,

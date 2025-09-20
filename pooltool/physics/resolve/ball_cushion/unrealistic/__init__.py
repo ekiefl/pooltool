@@ -1,7 +1,5 @@
 """An unrealistic ball-cushion model"""
 
-from typing import TypeVar
-
 import attrs
 import numpy as np
 
@@ -10,6 +8,7 @@ import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
     CircularCushionSegment,
+    Cushion,
     LinearCushionSegment,
 )
 from pooltool.physics.resolve.ball_cushion.core import (
@@ -17,8 +16,6 @@ from pooltool.physics.resolve.ball_cushion.core import (
     CoreBallLCushionCollision,
 )
 from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
-
-Cushion = TypeVar("Cushion", LinearCushionSegment, CircularCushionSegment)
 
 
 def _solve(
@@ -34,7 +31,7 @@ def _solve(
     rvw = ball.state.rvw
 
     # Two things about the normal:
-    #   1) Cushions have a get_normal method that returns the normal. For linear
+    #   1) Cushions have a get_normal_xy method that returns the normal. For linear
     #      cushions this is determined solely by it's geometry. For circular
     #      cushions, the normal is a function of the ball's position (specifically,
     #      it is the line connecting the ball's and cushion's centers). To retain
@@ -45,7 +42,7 @@ def _solve(
     #      we're still living with the consequences of. The burden is that you must
     #      assign a convention. Here I opt to orient the normal so it points away
     #      from the playing surface.
-    normal = cushion.get_normal(rvw)
+    normal = cushion.get_normal_xy(rvw)
     normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
 
     # Rotate frame of reference to the cushion frame. The cushion frame is defined

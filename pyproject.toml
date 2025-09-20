@@ -104,6 +104,7 @@ Pillow = ">=6.2.0"
 h5py = ">=3.10"
 h11 = ">=0.16.0"  # Avoids security vulnerability
 rich = "^14.0.0"  # 13.8.1 added support for Python 3.13
+numpy-quaternion = ">=2024.0.12"
 
 [tool.poetry.group.dev.dependencies]
 # Testing and formatting

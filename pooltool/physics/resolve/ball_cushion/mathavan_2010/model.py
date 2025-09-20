@@ -1,5 +1,4 @@
 import math
-from typing import TypeVar
 
 import attrs
 import numpy as np
@@ -10,6 +9,7 @@ import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.table.components import (
     CircularCushionSegment,
+    Cushion,
     LinearCushionSegment,
 )
 from pooltool.physics.resolve.ball_cushion.core import (
@@ -17,8 +17,6 @@ from pooltool.physics.resolve.ball_cushion.core import (
     CoreBallLCushionCollision,
 )
 from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
-
-Cushion = TypeVar("Cushion", LinearCushionSegment, CircularCushionSegment)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -635,7 +633,7 @@ def solve_mathavan(
     rvw = ball.state.rvw
 
     # Ensure the normal is pointing in the same direction as the ball's velocity.
-    normal = cushion.get_normal(rvw)
+    normal = cushion.get_normal_xy(rvw)
     if np.dot(normal, rvw[1]) <= 0:
         normal = -normal
 

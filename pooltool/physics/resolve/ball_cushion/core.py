@@ -60,7 +60,7 @@ class CoreBallLCushionCollision(ABC):
         (constants.EPS_SPACE) is put between them, ensuring the cushion and ball are
         separated post-resolution.
         """
-        normal = cushion.get_normal(ball.state.rvw)
+        normal = cushion.get_normal_xy(ball.state.rvw)
 
         # orient the normal so it points away from playing surface
         normal = normal if np.dot(normal, ball.state.rvw[1]) > 0 else -normal
@@ -110,7 +110,7 @@ class CoreBallCCushionCollision(ABC):
         (constants.EPS_SPACE) is put between them, ensuring the cushion and ball are
         separated post-resolution.
         """
-        normal = cushion.get_normal(ball.state.rvw)
+        normal = cushion.get_normal_xy(ball.state.rvw)
 
         # orient the normal so it points away from playing surface
         normal = normal if np.dot(normal, ball.state.rvw[1]) > 0 else -normal
