@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from itertools import combinations
 
+import attrs
 import numpy as np
 
 import pooltool.constants as const
@@ -29,6 +30,74 @@ from pooltool.ptmath.roots.quartic import QuarticSolver, solve_quartics
 from pooltool.system.datatypes import System
 
 DEFAULT_ENGINE = PhysicsEngine()
+
+
+@attrs.define
+class _SimulationState:
+    shot: System
+    engine: PhysicsEngine
+
+    t_final: float | None = None
+    quartic_solver: QuarticSolver = QuarticSolver.HYBRID
+    include: set[EventType] = INCLUDED_EVENTS
+    max_events: int = 0
+
+    done: bool = attrs.field(init=False, default=False)
+    num_events: int = attrs.field(init=False, default=0)
+    collision_cache: CollisionCache = attrs.field(init=False)
+    transition_cache: TransitionCache = attrs.field(init=False)
+
+    def __attrs_post_init__(self) -> None:
+        self.collision_cache = CollisionCache.create()
+        self.transition_cache = TransitionCache.create(self.shot)
+
+    def init(self) -> None:
+        self.shot.reset_history()
+        self.shot._update_history(null_event(time=0))
+
+        if self.shot.get_system_energy() == 0 and self.shot.cue.V0 > 0:
+            event = stick_ball_collision(
+                stick=self.shot.cue,
+                ball=self.shot.balls[self.shot.cue.cue_ball_id],
+                time=0,
+                set_initial=True,
+            )
+            self.engine.resolver.resolve(self.shot, event)
+            self.shot._update_history(event)
+
+    def step(self) -> Event:
+        event = get_next_event(
+            self.shot,
+            transition_cache=self.transition_cache,
+            collision_cache=self.collision_cache,
+            quartic_solver=self.quartic_solver,
+        )
+
+        if event.time == np.inf:
+            self.shot._update_history(null_event(time=self.shot.t))
+            self.done = True
+            return event
+
+        _evolve(self.shot, event.time - self.shot.t)
+
+        if event.event_type in self.include:
+            self.engine.resolver.resolve(self.shot, event)
+            self.transition_cache.update(event)
+            self.collision_cache.invalidate(event)
+
+        self.shot._update_history(event)
+
+        if self.t_final is not None and self.shot.t >= self.t_final:
+            self.shot._update_history(null_event(time=self.shot.t))
+            self.done = True
+
+        if self.max_events > 0 and self.num_events > self.max_events:
+            self.shot.stop_balls()
+            self.done = True
+
+        self.num_events += 1
+
+        return event
 
 
 def _evolve(shot: System, dt: float):
@@ -149,60 +218,16 @@ def simulate(
     if not engine:
         engine = DEFAULT_ENGINE
 
-    shot.reset_history()
-    shot._update_history(null_event(time=0))
+    sim = _SimulationState(shot, engine, t_final, quartic_solver, include, max_events)
+    sim.init()
 
-    if shot.get_system_energy() == 0 and shot.cue.V0 > 0:
-        # System has no energy, but the cue stick has an impact velocity. So create and
-        # resolve a stick-ball collision to start things off
-        event = stick_ball_collision(
-            stick=shot.cue,
-            ball=shot.balls[shot.cue.cue_ball_id],
-            time=0,
-            set_initial=True,
-        )
-        engine.resolver.resolve(shot, event)
-        shot._update_history(event)
-
-    collision_cache = CollisionCache.create()
-    transition_cache = TransitionCache.create(shot)
-
-    events = 0
-    while True:
-        event = get_next_event(
-            shot,
-            transition_cache=transition_cache,
-            collision_cache=collision_cache,
-            quartic_solver=quartic_solver,
-        )
-
-        if event.time == np.inf:
-            shot._update_history(null_event(time=shot.t))
-            break
-
-        _evolve(shot, event.time - shot.t)
-
-        if event.event_type in include:
-            engine.resolver.resolve(shot, event)
-            transition_cache.update(event)
-            collision_cache.invalidate(event)
-
-        shot._update_history(event)
-
-        if t_final is not None and shot.t >= t_final:
-            shot._update_history(null_event(time=shot.t))
-            break
-
-        if max_events > 0 and events > max_events:
-            shot.stop_balls()
-            break
-
-        events += 1
+    while not sim.done:
+        sim.step()
 
     if continuous:
-        continuize(shot, dt=0.01 if dt is None else dt, inplace=True)
+        continuize(sim.shot, dt=0.01 if dt is None else dt, inplace=True)
 
-    return shot
+    return sim.shot
 
 
 def get_next_event(
