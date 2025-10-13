@@ -129,7 +129,7 @@ class CollisionCache:
           event caching, see :class:`TransitionCache`.
     """
 
-    times: dict[EventType, dict[tuple[str, str], float]] = attrs.field(factory=dict)
+    times: dict[EventType, dict[tuple[str, ...], float]] = attrs.field(factory=dict)
 
     @property
     def size(self) -> int:

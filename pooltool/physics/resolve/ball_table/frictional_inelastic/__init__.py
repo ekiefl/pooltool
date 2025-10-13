@@ -38,6 +38,10 @@ def _resolve_ball_table(
     v_c_i = physics.surface_velocity(rvw_i, -unit_z, R)
     has_relative_velocity = ptmath.squared_norm3d(v_c_i) > const.EPS**2
 
+    # Initialize variables to avoid unbound errors
+    v_hat_c_i = np.zeros(3, dtype=np.float64)
+    D_v_parallel_slip = np.zeros(3, dtype=np.float64)
+
     # if there is no relative surface velocity to begin with,
     # don't bother calculating slip condition
     if has_relative_velocity:
