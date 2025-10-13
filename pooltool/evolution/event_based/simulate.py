@@ -82,8 +82,6 @@ class _SimulationState:
 
         if event.event_type in self.include:
             self.engine.resolver.resolve(self.shot, event)
-            self.transition_cache.update(event)
-            self.collision_cache.invalidate(event)
 
         self.shot._update_history(event)
 
@@ -98,6 +96,11 @@ class _SimulationState:
         self.num_events += 1
 
         return event
+
+    def update_caches(self, event: Event) -> None:
+        if event.event_type in self.include:
+            self.transition_cache.update(event)
+            self.collision_cache.invalidate(event)
 
 
 def _evolve(shot: System, dt: float):
@@ -222,7 +225,9 @@ def simulate(
     sim.init()
 
     while not sim.done:
-        sim.step()
+        event = sim.step()
+        if not sim.done:
+            sim.update_caches(event)
 
     if continuous:
         continuize(sim.shot, dt=0.01 if dt is None else dt, inplace=True)
