@@ -483,3 +483,36 @@ def test_no_ball_ball_collisions_for_intersecting_balls(solver: quartic.QuarticS
         get_next_ball_ball_collision(system, CollisionCache(), solver=solver).time
         == np.inf
     )
+
+
+def test_ball_history_immutability():
+    """Test that ball positions in history are not modified by resolver operations
+
+    Ball histories should be immutable once recorded. Previously, evolve_ball_motion
+    would return array references (not copies) for stationary/pocketed balls and
+    dt=0 cases. When resolvers later modified these arrays in-place (e.g., make_kiss),
+    historical states would be corrupted due to shared references.
+
+    This test verifies the fix: evolve_ball_motion now always returns copies,
+    ensuring history immutability.
+
+    Test case uses System.example() where:
+    - Ball '1' starts stationary
+    - Cue ball hits ball '1' at t≈0.33 (3rd event)
+    - Ball '1's position at t=0 must remain unchanged after collision
+    """
+    system = System.example()
+
+    ball_1_initial_position = system.balls["1"].state.rvw[0].copy()
+
+    simulated = simulate(system, inplace=False)
+
+    assert len(simulated.balls["1"].history) > 0
+
+    ball_1_history_t0_position = simulated.balls["1"].history[0].rvw[0]
+
+    np.testing.assert_array_equal(
+        ball_1_history_t0_position,
+        ball_1_initial_position,
+        err_msg="Ball '1' position at t=0 was modified by make_kiss during collision",
+    )
