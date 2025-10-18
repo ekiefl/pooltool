@@ -78,7 +78,7 @@ class _SimulationState:
             self.done = True
             return event
 
-        _evolve(self.shot, event.time - self.shot.t)
+        self.evolve(self.shot, event.time - self.shot.t)
 
         if event.event_type in self.include:
             self.engine.resolver.resolve(self.shot, event)
@@ -102,28 +102,28 @@ class _SimulationState:
             self.transition_cache.update(event)
             self.collision_cache.invalidate(event)
 
+    @staticmethod
+    def evolve(shot: System, dt: float):
+        """Evolves system an amount of time dt.
 
-def _evolve(shot: System, dt: float):
-    """Evolves current ball an amount of time dt
+        FIXME This is very inefficent. each ball should store its natural trajectory
+        thereby avoid a call to the clunky evolve_ball_motion. It could even be a
+        partial function so parameters don't continuously need to be passed
+        """
 
-    FIXME This is very inefficent. each ball should store its natural trajectory
-    thereby avoid a call to the clunky evolve_ball_motion. It could even be a
-    partial function so parameters don't continuously need to be passed
-    """
-
-    for ball in shot.balls.values():
-        rvw, _ = evolve.evolve_ball_motion(
-            state=ball.state.s,
-            rvw=ball.state.rvw,
-            R=ball.params.R,
-            m=ball.params.m,
-            u_s=ball.params.u_s,
-            u_sp=ball.params.u_sp,
-            u_r=ball.params.u_r,
-            g=ball.params.g,
-            t=dt,
-        )
-        ball.state = BallState(rvw, ball.state.s, shot.t + dt)
+        for ball in shot.balls.values():
+            rvw, _ = evolve.evolve_ball_motion(
+                state=ball.state.s,
+                rvw=ball.state.rvw,
+                R=ball.params.R,
+                m=ball.params.m,
+                u_s=ball.params.u_s,
+                u_sp=ball.params.u_sp,
+                u_r=ball.params.u_r,
+                g=ball.params.g,
+                t=dt,
+            )
+            ball.state = BallState(rvw, ball.state.s, shot.t + dt)
 
 
 def simulate(
