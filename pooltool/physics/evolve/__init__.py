@@ -30,6 +30,14 @@ def evolve_ball_motion(
     g: float,
     t: float,
 ) -> tuple[NDArray[np.float64], int]:
+    """Evolve a ball's kinematic state forward in time.
+
+    Contract: This function always returns a new array. The input rvw is never
+    modified, and the returned array has no aliasing with the input. The caller
+    owns the returned array.
+    """
+    rvw = rvw.copy()
+
     if state == const.stationary or state == const.pocketed:
         return rvw, state
 
@@ -37,38 +45,38 @@ def evolve_ball_motion(
         dtau_E_slide = ptmath.get_slide_time(rvw, R, u_s, g)
 
         if t >= dtau_E_slide:
-            rvw = evolve_slide_state(rvw, R, m, u_s, u_sp, g, dtau_E_slide)
+            rvw = _evolve_slide_state(rvw, R, m, u_s, u_sp, g, dtau_E_slide)
             state = const.rolling
             t -= dtau_E_slide
         else:
-            return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), const.sliding
+            return _evolve_slide_state(rvw, R, m, u_s, u_sp, g, t), const.sliding
 
     if state == const.rolling:
         dtau_E_roll = ptmath.get_roll_time(rvw, u_r, g)
 
         if t >= dtau_E_roll:
-            rvw = evolve_roll_state(rvw, R, u_r, u_sp, g, dtau_E_roll)
+            rvw = _evolve_roll_state(rvw, R, u_r, u_sp, g, dtau_E_roll)
             state = const.spinning
             t -= dtau_E_roll
         else:
-            return evolve_roll_state(rvw, R, u_r, u_sp, g, t), const.rolling
+            return _evolve_roll_state(rvw, R, u_r, u_sp, g, t), const.rolling
 
     if state == const.spinning:
         dtau_E_spin = ptmath.get_spin_time(rvw, R, u_sp, g)
 
         if t >= dtau_E_spin:
             return (
-                evolve_perpendicular_spin_state(rvw, R, u_sp, g, dtau_E_spin),
+                _evolve_perpendicular_spin_state(rvw, R, u_sp, g, dtau_E_spin),
                 const.stationary,
             )
         else:
-            return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), const.spinning
+            return _evolve_perpendicular_spin_state(rvw, R, u_sp, g, t), const.spinning
 
     raise ValueError
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def evolve_slide_state(
+def _evolve_slide_state(
     rvw: NDArray[np.float64],
     R: float,
     m: float,
@@ -105,7 +113,7 @@ def evolve_slide_state(
 
     # This transformation governs the z evolution of angular velocity
     rvw_B[2, 2] = rvw_B0[2, 2]
-    rvw_B = evolve_perpendicular_spin_state(rvw_B, R, u_sp, g, t)
+    rvw_B = _evolve_perpendicular_spin_state(rvw_B, R, u_sp, g, t)
 
     # Rotate to table reference
     rvw_T = ptmath.coordinate_rotation(rvw_B.T, phi).T
@@ -115,7 +123,7 @@ def evolve_slide_state(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def evolve_roll_state(
+def _evolve_roll_state(
     rvw: NDArray[np.float64], R: float, u_r: float, u_sp: float, g: float, t: float
 ) -> NDArray[np.float64]:
     if t == 0:
@@ -130,7 +138,7 @@ def evolve_roll_state(
     w = ptmath.coordinate_rotation(v / R, np.pi / 2)
 
     # Independently evolve the z spin
-    temp = evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)
+    temp = _evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)
 
     w[2] = temp[2, 2]
 
@@ -143,7 +151,7 @@ def evolve_roll_state(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def evolve_perpendicular_spin_component(
+def _evolve_perpendicular_spin_component(
     wz: float, R: float, u_sp: float, g: float, t: float
 ) -> float:
     if t == 0:
@@ -166,12 +174,8 @@ def evolve_perpendicular_spin_component(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def evolve_perpendicular_spin_state(
+def _evolve_perpendicular_spin_state(
     rvw: NDArray[np.float64], R: float, u_sp: float, g: float, t: float
 ) -> NDArray[np.float64]:
-    # Otherwise ball.state.rvw will be modified and corresponding entry in self.history
-    # will, too.
-    rvw = rvw.copy()
-
-    rvw[2, 2] = evolve_perpendicular_spin_component(rvw[2, 2], R, u_sp, g, t)
+    rvw[2, 2] = _evolve_perpendicular_spin_component(rvw[2, 2], R, u_sp, g, t)
     return rvw

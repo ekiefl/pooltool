@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from itertools import combinations
 
+import attrs
 import numpy as np
 
 import pooltool.constants as const
@@ -31,27 +32,107 @@ from pooltool.system.datatypes import System
 DEFAULT_ENGINE = PhysicsEngine()
 
 
-def _evolve(shot: System, dt: float):
-    """Evolves current ball an amount of time dt
+def _system_has_energy(system: System) -> bool:
+    """Check whether the system has any energy.
 
-    FIXME This is very inefficent. each ball should store its natural trajectory
-    thereby avoid a call to the clunky evolve_ball_motion. It could even be a
-    partial function so parameters don't continuously need to be passed
+    Notes:
+        - Returns False as soon as first energetic ball is iterated through.
+        - Cue energy (e.g. setting system.cue.V0 > 0 doesn't count as energy).
     """
-
-    for ball in shot.balls.values():
-        rvw, _ = evolve.evolve_ball_motion(
-            state=ball.state.s,
-            rvw=ball.state.rvw,
-            R=ball.params.R,
-            m=ball.params.m,
-            u_s=ball.params.u_s,
-            u_sp=ball.params.u_sp,
-            u_r=ball.params.u_r,
-            g=ball.params.g,
-            t=dt,
+    return any(
+        bool(
+            ptmath.get_ball_energy(
+                ball.state.rvw,
+                ball.params.R,
+                ball.params.m,
+            )
         )
-        ball.state = BallState(rvw, ball.state.s, shot.t + dt)
+        for ball in system.balls.values()
+    )
+
+
+@attrs.define
+class _SimulationState:
+    shot: System
+    engine: PhysicsEngine
+
+    t_final: float | None = None
+    quartic_solver: QuarticSolver = QuarticSolver.HYBRID
+    include: set[EventType] = INCLUDED_EVENTS
+    max_events: int = 0
+
+    done: bool = attrs.field(init=False, default=False)
+    num_events: int = attrs.field(init=False, default=0)
+    collision_cache: CollisionCache = attrs.field(init=False)
+    transition_cache: TransitionCache = attrs.field(init=False)
+
+    def __attrs_post_init__(self) -> None:
+        self.collision_cache = CollisionCache.create()
+        self.transition_cache = TransitionCache.create(self.shot)
+
+    def init(self) -> None:
+        self.shot.reset_history()
+        self.shot._update_history(null_event(time=0))
+
+    def step(self) -> Event:
+        event = get_next_event(
+            self.shot,
+            transition_cache=self.transition_cache,
+            collision_cache=self.collision_cache,
+            quartic_solver=self.quartic_solver,
+        )
+
+        if event.time == np.inf:
+            self.shot._update_history(null_event(time=self.shot.t))
+            self.done = True
+            return event
+
+        self.evolve(self.shot, event.time - self.shot.t)
+
+        if event.event_type in self.include:
+            self.engine.resolver.resolve(self.shot, event)
+
+        self.shot._update_history(event)
+
+        if self.t_final is not None and self.shot.t >= self.t_final:
+            self.shot._update_history(null_event(time=self.shot.t))
+            self.done = True
+
+        if self.max_events > 0 and self.num_events > self.max_events:
+            self.shot.stop_balls()
+            self.done = True
+
+        self.num_events += 1
+
+        return event
+
+    def update_caches(self, event: Event) -> None:
+        if event.event_type in self.include:
+            self.transition_cache.update(event)
+            self.collision_cache.invalidate(event)
+
+    @staticmethod
+    def evolve(shot: System, dt: float):
+        """Evolves system an amount of time dt.
+
+        FIXME This is very inefficent. each ball should store its natural trajectory
+        thereby avoid a call to the clunky evolve_ball_motion. It could even be a
+        partial function so parameters don't continuously need to be passed
+        """
+
+        for ball in shot.balls.values():
+            rvw, _ = evolve.evolve_ball_motion(
+                state=ball.state.s,
+                rvw=ball.state.rvw,
+                R=ball.params.R,
+                m=ball.params.m,
+                u_s=ball.params.u_s,
+                u_sp=ball.params.u_sp,
+                u_r=ball.params.u_r,
+                g=ball.params.g,
+                t=dt,
+            )
+            ball.state = BallState(rvw, ball.state.s, shot.t + dt)
 
 
 def simulate(
@@ -149,60 +230,18 @@ def simulate(
     if not engine:
         engine = DEFAULT_ENGINE
 
-    shot.reset_history()
-    shot._update_history(null_event(time=0))
+    sim = _SimulationState(shot, engine, t_final, quartic_solver, include, max_events)
+    sim.init()
 
-    if shot.get_system_energy() == 0 and shot.cue.V0 > 0:
-        # System has no energy, but the cue stick has an impact velocity. So create and
-        # resolve a stick-ball collision to start things off
-        event = stick_ball_collision(
-            stick=shot.cue,
-            ball=shot.balls[shot.cue.cue_ball_id],
-            time=0,
-            set_initial=True,
-        )
-        engine.resolver.resolve(shot, event)
-        shot._update_history(event)
-
-    collision_cache = CollisionCache.create()
-    transition_cache = TransitionCache.create(shot)
-
-    events = 0
-    while True:
-        event = get_next_event(
-            shot,
-            transition_cache=transition_cache,
-            collision_cache=collision_cache,
-            quartic_solver=quartic_solver,
-        )
-
-        if event.time == np.inf:
-            shot._update_history(null_event(time=shot.t))
-            break
-
-        _evolve(shot, event.time - shot.t)
-
-        if event.event_type in include:
-            engine.resolver.resolve(shot, event)
-            transition_cache.update(event)
-            collision_cache.invalidate(event)
-
-        shot._update_history(event)
-
-        if t_final is not None and shot.t >= t_final:
-            shot._update_history(null_event(time=shot.t))
-            break
-
-        if max_events > 0 and events > max_events:
-            shot.stop_balls()
-            break
-
-        events += 1
+    while not sim.done:
+        event = sim.step()
+        if not sim.done:
+            sim.update_caches(event)
 
     if continuous:
-        continuize(shot, dt=0.01 if dt is None else dt, inplace=True)
+        continuize(sim.shot, dt=0.01 if dt is None else dt, inplace=True)
 
-    return shot
+    return sim.shot
 
 
 def get_next_event(
@@ -212,14 +251,28 @@ def get_next_event(
     collision_cache: CollisionCache | None = None,
     quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
+    # If not passed, unpopulated caches are initialized to pass to delegate functions.
+    # These empty caches will be populated by the delegate functions, but then thrown
+    # away when this function returns.
+    if transition_cache is None:
+        transition_cache = TransitionCache.create(shot)
+    if collision_cache is None:
+        collision_cache = CollisionCache.create()
+
     # Start by assuming next event doesn't happen
     event = null_event(time=np.inf)
 
-    if transition_cache is None:
-        transition_cache = TransitionCache.create(shot)
-
-    if collision_cache is None:
-        collision_cache = CollisionCache.create()
+    # Stick-ball collisions only occur at t=0 (shot initiation), so we skip this
+    # check after the first timestep as an optimization. Other collision types are
+    # always checked because they can occur at any time during simulation. Note: even
+    # at t=0, we still call the remaining detection functions to fully populate the
+    # collision cache, which is needed by debug/introspection tools.
+    if shot.t == 0:
+        stick_ball_event = get_next_stick_ball_collision(
+            shot, collision_cache=collision_cache
+        )
+        if stick_ball_event.time < event.time:
+            event = stick_ball_event
 
     transition_event = transition_cache.get_next()
     if transition_event.time < event.time:
@@ -250,6 +303,34 @@ def get_next_event(
         event = ball_pocket_event
 
     return event
+
+
+def get_next_stick_ball_collision(
+    shot: System, collision_cache: CollisionCache
+) -> Event:
+    """Returns next stick-ball collision"""
+
+    cache = collision_cache.times.setdefault(EventType.STICK_BALL, {})
+
+    obj_ids = (shot.cue.id, shot.cue.cue_ball_id)
+
+    if obj_ids in cache:
+        return stick_ball_collision(
+            stick=shot.cue,
+            ball=shot.balls[shot.cue.cue_ball_id],
+            time=cache[obj_ids],
+        )
+
+    if shot.t == 0 and not _system_has_energy(shot) and shot.cue.V0 > 0:
+        cache[obj_ids] = 0.0
+    else:
+        cache[obj_ids] = np.inf
+
+    return stick_ball_collision(
+        stick=shot.cue,
+        ball=shot.balls[shot.cue.cue_ball_id],
+        time=cache[obj_ids],
+    )
 
 
 def get_next_ball_ball_collision(

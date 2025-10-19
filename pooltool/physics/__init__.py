@@ -3,10 +3,6 @@
 from pooltool.physics.engine import PhysicsEngine
 from pooltool.physics.evolve import (
     evolve_ball_motion,
-    evolve_perpendicular_spin_component,
-    evolve_perpendicular_spin_state,
-    evolve_roll_state,
-    evolve_slide_state,
 )
 from pooltool.physics.resolve import display_models
 from pooltool.physics.resolve.ball_ball import (
@@ -62,8 +58,4 @@ __all__ = [
     "ball_transition_models",
     # Evolve
     "evolve_ball_motion",
-    "evolve_slide_state",
-    "evolve_roll_state",
-    "evolve_perpendicular_spin_component",
-    "evolve_perpendicular_spin_state",
 ]
