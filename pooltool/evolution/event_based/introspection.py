@@ -1,4 +1,22 @@
 #! /usr/bin/env python
+"""Event-based simulation introspection tools.
+
+This module provides utilities for capturing and analyzing simulation state at each
+step of event-based pool simulations. It enables detailed inspection of system states,
+events, and collision caches throughout simulation execution.
+
+The primary use case is debugging and understanding simulation behavior by examining:
+- System state before evolution (pre_evolve)
+- System state after time evolution but before collision resolution (post_evolve)
+- System state after collision resolution (post_resolve)
+- All prospective events considered at each step
+- Collision and transition caches at each step
+
+Key components:
+    SimulationSnapshot: Captures complete state at a single simulation step
+    SimulationSnapshotSequence: Collection of snapshots across entire simulation
+    simulate_with_snapshots: Runs simulation while capturing snapshots
+"""
 
 from __future__ import annotations
 

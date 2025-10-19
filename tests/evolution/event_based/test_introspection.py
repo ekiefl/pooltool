@@ -2,7 +2,7 @@ import tempfile
 from pathlib import Path
 
 import pooltool as pt
-from pooltool.evolution.event_based.debug import (
+from pooltool.evolution.event_based.introspection import (
     SimulationSnapshotSequence,
     simulate_with_snapshots,
 )
