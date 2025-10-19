@@ -7,6 +7,7 @@ import pooltool.ptmath as ptmath
 from pooltool.events import EventType, ball_ball_collision, ball_pocket_collision
 from pooltool.evolution.event_based.cache import CollisionCache
 from pooltool.evolution.event_based.simulate import (
+    _system_has_energy,
     get_next_ball_ball_collision,
     get_next_event,
     simulate,
@@ -516,3 +517,61 @@ def test_ball_history_immutability():
         ball_1_initial_position,
         err_msg="Ball '1' position at t=0 was modified by make_kiss during collision",
     )
+
+
+def test_system_has_energy():
+    system = System.example()
+    assert not _system_has_energy(system)
+
+    # We change the cue stick parameters, but energy is only calculated for balls.
+    system.strike(V0=4)
+    assert not _system_has_energy(system)
+
+    # After simulation, the balls have no energy because they come to a rest
+    simulate(system, inplace=True)
+    assert not _system_has_energy(system)
+
+    # If we change to an intermediate state, there is energy in the system
+    event_step = 3
+    for ball in system.balls.values():
+        ball.state = ball.history[event_step]
+    assert _system_has_energy(system)
+
+
+def test_stick_ball_event_detection():
+    """Test that stick-ball events are properly detected as the first event
+
+    When a system has:
+    - t=0 (initial state)
+    - No ball energy (all stationary)
+    - Cue with V0 > 0 (ready to strike)
+
+    The stick-ball collision should be detected as the next event by get_next_event().
+    This event should be:
+    - At time t=0
+    - Type STICK_BALL
+    - Processed through the normal event resolution pipeline
+
+    This validates the refactor that moved stick-ball detection from initialization
+    into get_next_event(), treating it as a first-class event rather than a special case.
+    """
+    system = System.example()
+
+    assert system.t == 0
+    assert not _system_has_energy(system)
+    assert system.cue.V0 > 0
+
+    event = get_next_event(system)
+
+    assert event.event_type == EventType.STICK_BALL
+    assert event.time == 0
+    assert event.ids == ("cue_stick", "cue")
+
+    simulated = simulate(system, inplace=False)
+
+    assert len(simulated.events) >= 2
+    assert simulated.events[0].event_type == EventType.NONE
+    assert simulated.events[0].time == 0
+    assert simulated.events[1].event_type == EventType.STICK_BALL
+    assert simulated.events[1].time == 0
+    assert simulated.events[2].time > 0

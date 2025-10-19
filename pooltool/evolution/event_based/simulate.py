@@ -32,6 +32,20 @@ from pooltool.system.datatypes import System
 DEFAULT_ENGINE = PhysicsEngine()
 
 
+def _system_has_energy(system: System) -> float:
+    """Calculate the energy of the system in Joules."""
+    return any(
+        bool(
+            ptmath.get_ball_energy(
+                ball.state.rvw,
+                ball.params.R,
+                ball.params.m,
+            )
+        )
+        for ball in system.balls.values()
+    )
+
+
 @attrs.define
 class _SimulationState:
     shot: System
@@ -54,16 +68,6 @@ class _SimulationState:
     def init(self) -> None:
         self.shot.reset_history()
         self.shot._update_history(null_event(time=0))
-
-        if self.shot.get_system_energy() == 0 and self.shot.cue.V0 > 0:
-            event = stick_ball_collision(
-                stick=self.shot.cue,
-                ball=self.shot.balls[self.shot.cue.cue_ball_id],
-                time=0,
-                set_initial=True,
-            )
-            self.engine.resolver.resolve(self.shot, event)
-            self.shot._update_history(event)
 
     def step(self) -> Event:
         event = get_next_event(
@@ -244,6 +248,14 @@ def get_next_event(
 ) -> Event:
     # Start by assuming next event doesn't happen
     event = null_event(time=np.inf)
+
+    if shot.t == 0 and not _system_has_energy(shot) and shot.cue.V0 > 0:
+        return stick_ball_collision(
+            stick=shot.cue,
+            ball=shot.balls[shot.cue.cue_ball_id],
+            time=0,
+            set_initial=True,
+        )
 
     if transition_cache is None:
         transition_cache = TransitionCache.create(shot)
