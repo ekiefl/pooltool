@@ -32,8 +32,13 @@ from pooltool.system.datatypes import System
 DEFAULT_ENGINE = PhysicsEngine()
 
 
-def _system_has_energy(system: System) -> float:
-    """Calculate the energy of the system in Joules."""
+def _system_has_energy(system: System) -> bool:
+    """Check whether the system has any energy.
+
+    Notes:
+        - Returns False as soon as first energetic ball is iterated through.
+        - Cue energy (e.g. setting system.cue.V0 > 0 doesn't count as energy).
+    """
     return any(
         bool(
             ptmath.get_ball_energy(
