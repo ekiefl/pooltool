@@ -246,22 +246,28 @@ def get_next_event(
     collision_cache: CollisionCache | None = None,
     quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
+    # If not passed, unpopulated caches are initialized to pass to delegate functions.
+    # These empty caches will be populated by the delegate functions, but then thrown
+    # away when this function returns.
+    if transition_cache is None:
+        transition_cache = TransitionCache.create(shot)
+    if collision_cache is None:
+        collision_cache = CollisionCache.create()
+
     # Start by assuming next event doesn't happen
     event = null_event(time=np.inf)
 
-    if shot.t == 0 and not _system_has_energy(shot) and shot.cue.V0 > 0:
-        return stick_ball_collision(
-            stick=shot.cue,
-            ball=shot.balls[shot.cue.cue_ball_id],
-            time=0,
-            set_initial=True,
+    # Stick-ball collisions only occur at t=0 (shot initiation), so we skip this
+    # check after the first timestep as an optimization. Other collision types are
+    # always checked because they can occur at any time during simulation. Note: even
+    # at t=0, we still call the remaining detection functions to fully populate the
+    # collision cache, which is needed by debug/introspection tools.
+    if shot.t == 0:
+        stick_ball_event = get_next_stick_ball_collision(
+            shot, collision_cache=collision_cache
         )
-
-    if transition_cache is None:
-        transition_cache = TransitionCache.create(shot)
-
-    if collision_cache is None:
-        collision_cache = CollisionCache.create()
+        if stick_ball_event.time < event.time:
+            event = stick_ball_event
 
     transition_event = transition_cache.get_next()
     if transition_event.time < event.time:
@@ -292,6 +298,34 @@ def get_next_event(
         event = ball_pocket_event
 
     return event
+
+
+def get_next_stick_ball_collision(
+    shot: System, collision_cache: CollisionCache
+) -> Event:
+    """Returns next stick-ball collision"""
+
+    cache = collision_cache.times.setdefault(EventType.STICK_BALL, {})
+
+    obj_ids = (shot.cue.id, shot.cue.cue_ball_id)
+
+    if obj_ids in cache:
+        return stick_ball_collision(
+            stick=shot.cue,
+            ball=shot.balls[shot.cue.cue_ball_id],
+            time=cache[obj_ids],
+        )
+
+    if shot.t == 0 and not _system_has_energy(shot) and shot.cue.V0 > 0:
+        cache[obj_ids] = 0.0
+    else:
+        cache[obj_ids] = np.inf
+
+    return stick_ball_collision(
+        stick=shot.cue,
+        ball=shot.balls[shot.cue.cue_ball_id],
+        time=cache[obj_ids],
+    )
 
 
 def get_next_ball_ball_collision(
