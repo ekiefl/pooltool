@@ -19,6 +19,7 @@ from pooltool.events import (
 )
 from pooltool.events.utils import event_type_to_ball_indices
 from pooltool.objects.ball.datatypes import Ball
+from pooltool.serialize import SerializeFormat, conversion
 from pooltool.system.datatypes import System
 
 
@@ -48,6 +49,11 @@ class TransitionCache:
     def get_next(self) -> Event:
         return min(
             (trans for trans in self.transitions.values()), key=lambda event: event.time
+        )
+
+    def copy(self) -> TransitionCache:
+        return TransitionCache(
+            transitions={k: v.copy() for k, v in self.transitions.items()}
         )
 
     def update(self, event: Event) -> None:
@@ -129,11 +135,14 @@ class CollisionCache:
           event caching, see :class:`TransitionCache`.
     """
 
-    times: dict[EventType, dict[tuple[str, str], float]] = attrs.field(factory=dict)
+    times: dict[EventType, dict[tuple[str, ...], float]] = attrs.field(factory=dict)
 
     @property
     def size(self) -> int:
         return sum(len(cache) for cache in self.times.values())
+
+    def copy(self) -> CollisionCache:
+        return CollisionCache(times={k: v.copy() for k, v in self.times.items()})
 
     def _get_invalid_ball_ids(self, event: Event) -> set[str]:
         return {
@@ -161,3 +170,36 @@ class CollisionCache:
     @classmethod
     def create(cls) -> CollisionCache:
         return cls()
+
+
+def _unstructure_collision_cache(cache: CollisionCache) -> dict:
+    return {
+        "times": {
+            event_type: {"|".join(key): value for key, value in event_times.items()}
+            for event_type, event_times in cache.times.items()
+        }
+    }
+
+
+def _structure_collision_cache(data: dict, _: type) -> CollisionCache:
+    return CollisionCache(
+        times={
+            event_type: {
+                tuple(key.split("|")): value for key, value in event_times.items()
+            }
+            for event_type, event_times in data["times"].items()
+        }
+    )
+
+
+conversion.register_unstructure_hook(
+    CollisionCache,
+    _unstructure_collision_cache,
+    which=(SerializeFormat.JSON,),
+)
+
+conversion.register_structure_hook(
+    CollisionCache,
+    _structure_collision_cache,
+    which=(SerializeFormat.JSON,),
+)

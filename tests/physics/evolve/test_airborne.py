@@ -1,6 +1,6 @@
 import numpy as np
 
-from pooltool.physics.evolve import evolve_airborne_state
+from pooltool.physics.evolve import _evolve_airborne_state
 
 
 def test_xy_velocity_conserved():
@@ -13,7 +13,7 @@ def test_xy_velocity_conserved():
     g = 9.81
     t = 1.0
 
-    rvw = evolve_airborne_state(rvw0.copy(), g, t)
+    rvw = _evolve_airborne_state(rvw0.copy(), g, t)
 
     # Check if vx and vy are unchanged
     np.testing.assert_almost_equal(
@@ -34,7 +34,7 @@ def test_angular_velocity_conserved():
     g = 9.81
     t = 2.0
 
-    rvw = evolve_airborne_state(rvw0.copy(), g, t)
+    rvw = _evolve_airborne_state(rvw0.copy(), g, t)
 
     # Check if angular velocity is unchanged
     np.testing.assert_array_almost_equal(
@@ -59,7 +59,7 @@ def test_xy_displacement_linear():
     g = 9.81
 
     for t in [0.0, 1.0, 2.0, 3.0]:
-        rvw = evolve_airborne_state(rvw0.copy(), g, t)
+        rvw = _evolve_airborne_state(rvw0.copy(), g, t)
         expected_x = r0[0] + v0[0] * t
         expected_y = r0[1] + v0[1] * t
         np.testing.assert_almost_equal(
@@ -85,7 +85,7 @@ def test_gravity_direction():
     g = 9.81
     t = 1.0
 
-    rvw_t = evolve_airborne_state(rvw.copy(), g, t)
+    rvw_t = _evolve_airborne_state(rvw.copy(), g, t)
     expected_z = r0[2] + v0[2] * t - 0.5 * g * t**2
     expected_vz = v0[2] - g * t
 
@@ -115,7 +115,7 @@ def test_z_displacement_parabolic():
     z_values = []
 
     for t in times:
-        rvw_t = evolve_airborne_state(rvw.copy(), g, t)
+        rvw_t = _evolve_airborne_state(rvw.copy(), g, t)
         z_values.append(rvw_t[0, 2])
 
     z_values = np.array(z_values)

@@ -43,6 +43,9 @@ def _resolve_ball_table(
     if has_relative_velocity:
         v_hat_c_i = ptmath.unit_vector(v_c_i)
         D_v_parallel_slip = u * D_v_perpendicular_magnitude * -v_hat_c_i
+    else:
+        v_hat_c_i = np.zeros(3)
+        D_v_parallel_slip = np.zeros(3)
 
     D_v_parallel_no_slip = (2.0 / 7.0) * (R * ptmath.cross(w_i, unit_z) - v_i)
 

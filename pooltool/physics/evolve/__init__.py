@@ -31,31 +31,37 @@ def evolve_ball_motion(
     g: float,
     t: float,
 ) -> NDArray[np.float64]:
-    """Evolve ball motion.
+    """Evolve a ball's kinematic state forward in time.
 
     This function delegates to different equations of motion depending on the state passed.
+
+    Contract: This function always returns a new array. The input rvw is never
+    modified, and the returned array has no aliasing with the input. The caller
+    owns the returned array.
 
     Important:
         This function does not evolve through event transitions. For example, if a
         sliding ball is destined to start rolling after 1 second, but you evolve the
         ball with this function for 2 seconds, an unrealistic trajectory will occur.
     """
+    rvw = rvw.copy()
+
     if state == const.stationary or state == const.pocketed:
         return rvw
     elif state == const.sliding:
-        return evolve_slide_state(rvw, R, m, u_s, u_sp, g, t)
+        return _evolve_slide_state(rvw, R, m, u_s, u_sp, g, t)
     elif state == const.rolling:
-        return evolve_roll_state(rvw, R, u_r, u_sp, g, t)
+        return _evolve_roll_state(rvw, R, u_r, u_sp, g, t)
     elif state == const.spinning:
-        return evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)
+        return _evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)
     elif state == const.airborne:
-        return evolve_airborne_state(rvw, g, t)
+        return _evolve_airborne_state(rvw, g, t)
 
     raise NotImplementedError()
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def evolve_slide_state(
+def _evolve_slide_state(
     rvw: NDArray[np.float64],
     R: float,
     m: float,
@@ -99,7 +105,7 @@ def evolve_slide_state(
 
     # This transformation governs the z evolution of angular velocity
     rvw_B[2, 2] = rvw_B0[2, 2]
-    rvw_B = evolve_perpendicular_spin_state(rvw_B, R, u_sp, g, t)
+    rvw_B = _evolve_perpendicular_spin_state(rvw_B, R, u_sp, g, t)
 
     # Rotate to table reference
     rvw_T = ptmath.coordinate_rotation(rvw_B.T, phi).T
@@ -109,7 +115,7 @@ def evolve_slide_state(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def evolve_roll_state(
+def _evolve_roll_state(
     rvw: NDArray[np.float64], R: float, u_r: float, u_sp: float, g: float, t: float
 ) -> NDArray[np.float64]:
     if t == 0:
@@ -127,7 +133,7 @@ def evolve_roll_state(
     w = ptmath.coordinate_rotation(v / R, np.pi / 2)
 
     # Independently evolve the z spin
-    temp = evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)
+    temp = _evolve_perpendicular_spin_state(rvw, R, u_sp, g, t)
 
     w[2] = temp[2, 2]
 
@@ -140,7 +146,7 @@ def evolve_roll_state(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def evolve_perpendicular_spin_component(
+def _evolve_perpendicular_spin_component(
     wz: float, R: float, u_sp: float, g: float, t: float
 ) -> float:
     if t == 0:
@@ -163,22 +169,18 @@ def evolve_perpendicular_spin_component(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def evolve_perpendicular_spin_state(
+def _evolve_perpendicular_spin_state(
     rvw: NDArray[np.float64], R: float, u_sp: float, g: float, t: float
 ) -> NDArray[np.float64]:
     v0z = rvw[1, 2]
     assert v0z == 0, f"Spinning ball can't have non-zero z-component velocity: {v0z}"
 
-    # Otherwise ball.state.rvw will be modified and corresponding entry in self.history
-    # will, too.
-    rvw = rvw.copy()
-
-    rvw[2, 2] = evolve_perpendicular_spin_component(rvw[2, 2], R, u_sp, g, t)
+    rvw[2, 2] = _evolve_perpendicular_spin_component(rvw[2, 2], R, u_sp, g, t)
     return rvw
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def evolve_airborne_state(
+def _evolve_airborne_state(
     rvw: NDArray[np.float64], g: float, t: float
 ) -> NDArray[np.float64]:
     if t == 0:

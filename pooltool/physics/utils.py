@@ -105,7 +105,8 @@ def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float, g: float) -> f
     """Get the energy of a ball
 
     Accounts for linear and rotational kinetic energy and potential energy due to
-    gravity relative to a ball in contact with the table.
+    gravity relative to a ball in contact with the table. 0 potential energy is defined
+    as z=R.
     """
     # Linear
     LKE = m * norm3d(rvw[1]) ** 2 / 2

@@ -8,6 +8,7 @@ import pooltool.ptmath as ptmath
 from pooltool.events import EventType
 from pooltool.evolution.event_based.cache import CollisionCache
 from pooltool.evolution.event_based.simulate import (
+    _system_has_energy,
     get_next_ball_ball_collision,
     get_next_event,
     simulate,
@@ -488,3 +489,94 @@ def test_no_ball_ball_collisions_for_intersecting_balls(solver: quartic.QuarticS
         get_next_ball_ball_collision(system, CollisionCache(), solver=solver).time
         == np.inf
     )
+
+
+def test_ball_history_immutability():
+    """Test that ball positions in history are not modified by resolver operations
+
+    Ball histories should be immutable once recorded. Previously, evolve_ball_motion
+    would return array references (not copies) for stationary/pocketed balls and
+    dt=0 cases. When resolvers later modified these arrays in-place (e.g., make_kiss),
+    historical states would be corrupted due to shared references.
+
+    This test verifies the fix: evolve_ball_motion now always returns copies,
+    ensuring history immutability.
+
+    Test case uses System.example() where:
+    - Ball '1' starts stationary
+    - Cue ball hits ball '1' at t≈0.33 (3rd event)
+    - Ball '1's position at t=0 must remain unchanged after collision
+    """
+    system = System.example()
+
+    ball_1_initial_position = system.balls["1"].state.rvw[0].copy()
+
+    simulated = simulate(system, inplace=False)
+
+    assert len(simulated.balls["1"].history) > 0
+
+    ball_1_history_t0_position = simulated.balls["1"].history[0].rvw[0]
+
+    np.testing.assert_array_equal(
+        ball_1_history_t0_position,
+        ball_1_initial_position,
+        err_msg="Ball '1' position at t=0 was modified by make_kiss during collision",
+    )
+
+
+def test_system_has_energy():
+    system = System.example()
+    assert not _system_has_energy(system)
+
+    # We change the cue stick parameters, but energy is only calculated for balls.
+    system.strike(V0=4)
+    assert not _system_has_energy(system)
+
+    # After simulation, the balls have no energy because they come to a rest
+    simulate(system, inplace=True)
+    assert not _system_has_energy(system)
+
+    # If we change to an intermediate state, there is energy in the system
+    event_step = 3
+    for ball in system.balls.values():
+        ball.state = ball.history[event_step]
+    assert _system_has_energy(system)
+
+
+def test_stick_ball_event_detection():
+    """Test that stick-ball events are properly detected as the first event
+
+    When a system has:
+    - t=0 (initial state)
+    - No ball energy (all stationary)
+    - Cue with V0 > 0 (ready to strike)
+
+    The stick-ball collision should be detected as the next event by get_next_event().
+    This event should be:
+    - At time t=0
+    - Type STICK_BALL
+    - Processed through the normal event resolution pipeline
+
+    This validates the refactor that moved stick-ball detection from initialization
+    into get_next_event(), treating it as a first-class event rather than a special case.
+    """
+    system = System.example()
+
+    assert system.t == 0
+    assert not _system_has_energy(system)
+    assert system.cue.V0 > 0
+
+    event = get_next_event(system)
+
+    assert event.event_type == EventType.STICK_BALL
+    assert event.time == 0
+    assert event.ids == ("cue_stick", "cue")
+
+    simulated = simulate(system, inplace=False)
+
+    assert len(simulated.events) >= 2
+    assert simulated.events[0].event_type == EventType.NONE
+    assert simulated.events[0].time == 0
+    assert simulated.events[1].event_type == EventType.STICK_BALL
+    assert simulated.events[1].time == 0
+    assert simulated.events[2].time > 0

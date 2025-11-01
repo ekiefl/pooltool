@@ -50,18 +50,29 @@ _model_map: Mapping[Any, Mapping[Any, type]] = {
 }
 
 
-def _disambiguate_model_structuring(v: dict[str, Any], t: type) -> Any:
+def _disambiguate_model_structuring_yaml(v: dict[str, Any], t: type) -> Any:
     return conversion[SerializeFormat.YAML].structure(v, _model_map[t][v["model"]])
+
+
+def _disambiguate_model_structuring_json(v: dict[str, Any], t: type) -> Any:
+    return conversion[SerializeFormat.JSON].structure(v, _model_map[t][v["model"]])
 
 
 def register_serialize_hooks():
     conversion.register_structure_hook_func(
-        check_func=lambda t: t in _model_map, func=_disambiguate_model_structuring
+        check_func=lambda t: t in _model_map,
+        func=_disambiguate_model_structuring_yaml,
+        which=(SerializeFormat.YAML,),
+    )
+
+    conversion.register_structure_hook_func(
+        check_func=lambda t: t in _model_map,
+        func=_disambiguate_model_structuring_json,
+        which=(SerializeFormat.JSON,),
     )
 
     for models in _model_map.values():
         for model_cls in models.values():
-            # Unstructure init=False attrs fields
             conversion.register_unstructure_hook(
                 model_cls,
                 make_dict_unstructure_fn(
@@ -70,4 +81,14 @@ def register_serialize_hooks():
                     _cattrs_include_init_false=True,
                 ),
                 which=(SerializeFormat.YAML,),
+            )
+
+            conversion.register_unstructure_hook(
+                model_cls,
+                make_dict_unstructure_fn(
+                    model_cls,
+                    conversion[SerializeFormat.JSON],
+                    _cattrs_include_init_false=True,
+                ),
+                which=(SerializeFormat.JSON,),
             )
