@@ -259,14 +259,15 @@ def _disambiguate_agent_structuring(
     id = con.structure(uo["id"], str)
     agent_type = con.structure(uo["agent_type"], AgentType)
 
-    # All agents but the NULL agent have initial states
-    if agent_type == AgentType.NULL:
+    # NULL agents always have None initial. Other agents may have None initial if
+    # they are unresolved (e.g., events in caches before resolution)
+    if agent_type == AgentType.NULL or uo["initial"] is None:
         initial = None
     else:
         initial = con.structure(uo["initial"], _type_to_class[agent_type])
 
     # Only BALL and POCKET have final states
-    if agent_type in (AgentType.BALL, AgentType.POCKET):
+    if agent_type in (AgentType.BALL, AgentType.POCKET) and uo["final"] is not None:
         final = con.structure(uo["final"], _type_to_class[agent_type])
     else:
         final = None
