@@ -35,8 +35,8 @@ def test_selected_event_in_all_possible_events():
         all_events = snapshot.get_prospective_events()
         first_event = all_events[0]
 
-        assert snapshot.selected_event.event_type == first_event.event_type
-        assert snapshot.selected_event.time == first_event.time
+        assert snapshot.event.event_type == first_event.event_type
+        assert snapshot.event.time == first_event.time
 
 
 def test_pre_evolve_equals_snapshot_system():
@@ -59,7 +59,7 @@ def test_post_evolve_advances_time():
 
     for step in range(len(seq)):
         snapshot = seq[step]
-        event = snapshot.selected_event
+        event = snapshot.event
         post_evolve = snapshot.post_evolve_system(event)
 
         assert post_evolve.t == event.time
@@ -75,7 +75,7 @@ def test_post_resolve_of_n_equals_pre_evolve_of_n_plus_1():
         next_snapshot = seq[step + 1]
 
         post_resolve = current_snapshot.post_resolve_system(
-            current_snapshot.selected_event
+            current_snapshot.event
         )
         pre_evolve_next = next_snapshot.pre_evolve_system()
 
@@ -89,7 +89,7 @@ def test_system_state_progression():
 
     for step in range(len(seq)):
         snapshot = seq[step]
-        event = snapshot.selected_event
+        event = snapshot.event
 
         pre_evolve = snapshot.pre_evolve_system()
         post_evolve = snapshot.post_evolve_system(event)

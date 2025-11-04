@@ -3,7 +3,6 @@ from typing import Protocol
 
 import numpy as np
 
-import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
@@ -57,7 +56,7 @@ class CoreBallLCushionCollision(ABC):
         This makes a correction such that if the ball is not a distance R from the
         cushion, the ball is moved along the normal such that it is. To avoid downstream
         float precision round-off error, a small epsilon of additional distance
-        (constants.EPS_SPACE) is put between them, ensuring the cushion and ball are
+        (`spacer`) is put between them, ensuring the cushion and ball are
         separated post-resolution.
         """
         normal = cushion.get_normal_xy(ball.state.rvw)
@@ -72,10 +71,10 @@ class CoreBallLCushionCollision(ABC):
         )
         c[2] = ball.state.rvw[0, 2]
 
+        spacer = 1e-9
+
         # Move the ball to exactly meet the cushion
-        correction = (
-            ball.params.R - ptmath.norm3d(ball.state.rvw[0] - c) + const.EPS_SPACE
-        )
+        correction = ball.params.R - ptmath.norm3d(ball.state.rvw[0] - c) + spacer
         ball.state.rvw[0] -= correction * normal
 
         return ball
@@ -107,7 +106,7 @@ class CoreBallCCushionCollision(ABC):
         This makes a correction such that if the ball is not a distance R from the
         cushion, the ball is moved along the normal such that it is. To avoid downstream
         float precision round-off error, a small epsilon of additional distance
-        (constants.EPS_SPACE) is put between them, ensuring the cushion and ball are
+        (`spacer`) is put between them, ensuring the cushion and ball are
         separated post-resolution.
         """
         normal = cushion.get_normal_xy(ball.state.rvw)
@@ -115,12 +114,14 @@ class CoreBallCCushionCollision(ABC):
         # orient the normal so it points away from playing surface
         normal = normal if np.dot(normal, ball.state.rvw[1]) > 0 else -normal
 
+        spacer = 1e-9
+
         c = np.array([cushion.center[0], cushion.center[1], ball.state.rvw[0, 2]])
         correction = (
             ball.params.R
             + cushion.radius
             - ptmath.norm3d(ball.state.rvw[0] - c)
-            - const.EPS_SPACE
+            - spacer
         )
 
         ball.state.rvw[0] += correction * normal
