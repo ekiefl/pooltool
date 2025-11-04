@@ -112,7 +112,7 @@ def _get_collision_events_from_cache(
 class SimulationSnapshot:
     step_number: int
     system: System
-    selected_event: Event
+    event: Event
     collision_cache: CollisionCache
     transition_cache: TransitionCache
     engine: PhysicsEngine
@@ -230,7 +230,7 @@ def simulate_with_snapshots(
         snapshot = SimulationSnapshot(
             step_number=step,
             system=system_pre_evolve,
-            selected_event=event,
+            event=event,
             collision_cache=collision_cache_snapshot,
             transition_cache=transition_cache_snapshot,
             engine=engine,
