@@ -74,9 +74,7 @@ def test_post_resolve_of_n_equals_pre_evolve_of_n_plus_1():
         current_snapshot = seq[step]
         next_snapshot = seq[step + 1]
 
-        post_resolve = current_snapshot.post_resolve_system(
-            current_snapshot.event
-        )
+        post_resolve = current_snapshot.post_resolve_system(current_snapshot.event)
         pre_evolve_next = next_snapshot.pre_evolve_system()
 
         assert post_resolve == pre_evolve_next

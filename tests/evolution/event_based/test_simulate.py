@@ -434,16 +434,15 @@ def test_almost_touching_ball_ball_collision(solver: quartic.QuarticSolver):
 @pytest.mark.parametrize(
     "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
 )
-def test_no_ball_ball_collisions_for_intersecting_balls(solver: quartic.QuarticSolver):
-    """Two already intersecting balls don't collide
+def test_ball_ball_collisions_for_intersecting_balls(solver: quartic.QuarticSolver):
+    """Two already intersecting balls collide.
 
-    In this instance, no further collision is detected because the balls are already
-    intersecting. Otherwise perpetual internal collisions occur, keeping the two balls
-    locked.
+    Previously, intersecting balls were prevented from colliding to avoid perpetual
+    internal collisions. Now, with the improved make_kiss implementation, intersecting
+    balls are properly separated and collide normally.
 
-    This test doesn't make sure that balls don't intersect, it tests the safeguard that
-    prevents already intersecting balls from colliding with their internal walls, which
-    keeps them intersected like links in a chain.
+    This test verifies that intersecting balls are detected as a collision at time ==
+    shot.t
 
             , - ~  ,        , - ~  ,
         , '          ' ,, '          ' ,
@@ -478,12 +477,13 @@ def test_no_ball_ball_collisions_for_intersecting_balls(solver: quartic.QuarticS
     _assert_rolling(system.balls["cue"].state.rvw, system.balls["cue"].params.R)
 
     assert (
-        get_next_event(system, quartic_solver=solver).event_type != EventType.BALL_BALL
+        get_next_event(system, quartic_solver=solver).event_type == EventType.BALL_BALL
     )
-    assert (
-        get_next_ball_ball_collision(system, CollisionCache(), solver=solver).time
-        == np.inf
+    collision_event = get_next_ball_ball_collision(
+        system, CollisionCache(), solver=solver
     )
+    assert collision_event.time != np.inf
+    assert collision_event.time == 0
 
 
 def test_ball_history_immutability():

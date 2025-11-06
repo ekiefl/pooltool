@@ -100,6 +100,7 @@ class _SimulationState:
 
         if self.max_events > 0 and self.num_events > self.max_events:
             self.shot.stop_balls()
+            self.shot._update_history(null_event(time=self.shot.t))
             self.done = True
 
         self.num_events += 1
@@ -367,8 +368,7 @@ def get_next_ball_ball_collision(
             ptmath.norm3d(ball1_state.rvw[0] - ball2_state.rvw[0])
             < ball1_params.R + ball2_params.R
         ):
-            # If balls are intersecting, avoid internal collisions
-            cache[ball_pair] = np.inf
+            cache[ball_pair] = shot.t
         else:
             ball_pairs.append(ball_pair)
             collision_coeffs.append(
