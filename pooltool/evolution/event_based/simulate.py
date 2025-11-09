@@ -26,7 +26,7 @@ from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
 from pooltool.objects.ball.datatypes import BallState
 from pooltool.physics.engine import PhysicsEngine
-from pooltool.ptmath.roots.quartic import QuarticSolver, solve_quartics
+from pooltool.ptmath.roots.quartic import solve_quartics
 from pooltool.system.datatypes import System
 
 DEFAULT_ENGINE = PhysicsEngine()
@@ -57,7 +57,6 @@ class _SimulationState:
     engine: PhysicsEngine
 
     t_final: float | None = None
-    quartic_solver: QuarticSolver = QuarticSolver.HYBRID
     include: set[EventType] = INCLUDED_EVENTS
     max_events: int = 0
 
@@ -79,7 +78,6 @@ class _SimulationState:
             self.shot,
             transition_cache=self.transition_cache,
             collision_cache=self.collision_cache,
-            quartic_solver=self.quartic_solver,
         )
 
         if event.time == np.inf:
@@ -142,7 +140,6 @@ def simulate(
     continuous: bool = False,
     dt: float | None = None,
     t_final: float | None = None,
-    quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
     include: set[EventType] = INCLUDED_EVENTS,
     max_events: int = 0,
 ) -> System:
@@ -170,8 +167,6 @@ def simulate(
         t_final:
             If set, the simulation will end prematurely after the calculation of an
             event with ``event.time > t_final``.
-        quartic_solver:
-            Which QuarticSolver do you want to use for solving quartic polynomials?
         include:
             Which EventType are you interested in resolving? By default, all detected
             events are resolved.
@@ -230,7 +225,7 @@ def simulate(
     if not engine:
         engine = DEFAULT_ENGINE
 
-    sim = _SimulationState(shot, engine, t_final, quartic_solver, include, max_events)
+    sim = _SimulationState(shot, engine, t_final, include, max_events)
     sim.init()
 
     while not sim.done:
@@ -249,7 +244,6 @@ def get_next_event(
     *,
     transition_cache: TransitionCache | None = None,
     collision_cache: CollisionCache | None = None,
-    quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
     # If not passed, unpopulated caches are initialized to pass to delegate functions.
     # These empty caches will be populated by the delegate functions, but then thrown
@@ -279,13 +273,13 @@ def get_next_event(
         event = transition_event
 
     ball_ball_event = get_next_ball_ball_collision(
-        shot, collision_cache=collision_cache, solver=quartic_solver
+        shot, collision_cache=collision_cache
     )
     if ball_ball_event.time < event.time:
         event = ball_ball_event
 
     ball_circular_cushion_event = get_next_ball_circular_cushion_event(
-        shot, collision_cache=collision_cache, solver=quartic_solver
+        shot, collision_cache=collision_cache
     )
     if ball_circular_cushion_event.time < event.time:
         event = ball_circular_cushion_event
@@ -297,7 +291,7 @@ def get_next_event(
         event = ball_linear_cushion_event
 
     ball_pocket_event = get_next_ball_pocket_collision(
-        shot, collision_cache=collision_cache, solver=quartic_solver
+        shot, collision_cache=collision_cache
     )
     if ball_pocket_event.time < event.time:
         event = ball_pocket_event
@@ -336,7 +330,6 @@ def get_next_stick_ball_collision(
 def get_next_ball_ball_collision(
     shot: System,
     collision_cache: CollisionCache,
-    solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
     """Returns next ball-ball collision"""
 
@@ -396,7 +389,7 @@ def get_next_ball_ball_collision(
             )
 
     if len(collision_coeffs):
-        roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        roots = solve_quartics(ps=np.array(collision_coeffs))
         for root, ball_pair in zip(roots, ball_pairs):
             cache[ball_pair] = shot.t + root
 
@@ -414,7 +407,6 @@ def get_next_ball_ball_collision(
 def get_next_ball_circular_cushion_event(
     shot: System,
     collision_cache: CollisionCache,
-    solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
     """Returns next ball-cushion collision (circular cushion segment)"""
 
@@ -456,7 +448,7 @@ def get_next_ball_circular_cushion_event(
             )
 
     if len(collision_coeffs):
-        roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        roots = solve_quartics(ps=np.array(collision_coeffs))
         for root, ball_cushion_pair in zip(roots, ball_cushion_pairs):
             cache[ball_cushion_pair] = shot.t + root
 
@@ -524,7 +516,6 @@ def get_next_ball_linear_cushion_collision(
 def get_next_ball_pocket_collision(
     shot: System,
     collision_cache: CollisionCache,
-    solver: QuarticSolver = QuarticSolver.HYBRID,
 ) -> Event:
     """Returns next ball-pocket collision"""
 
@@ -566,7 +557,7 @@ def get_next_ball_pocket_collision(
             )
 
     if len(collision_coeffs):
-        roots = solve_quartics(ps=np.array(collision_coeffs), solver=solver)
+        roots = solve_quartics(ps=np.array(collision_coeffs))
         for root, ball_pocket_pair in zip(roots, ball_pocket_pairs):
             cache[ball_pocket_pair] = shot.t + root
 

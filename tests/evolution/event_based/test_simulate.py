@@ -73,10 +73,7 @@ def test_simulate_continuize():
         assert len(ball.history) > 0
 
 
-@pytest.mark.parametrize(
-    "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
-)
-def test_case1(solver: quartic.QuarticSolver):
+def test_case1():
     """A case that once broke the game
 
     In this shot, the next event should be:
@@ -92,7 +89,7 @@ def test_case1(solver: quartic.QuarticSolver):
         ball.state = ball.history[0]
     shot.reset_history()
 
-    next_event = get_next_event(shot, quartic_solver=solver)
+    next_event = get_next_event(shot)
 
     expected = ball_ball_collision(
         shot.balls["1"], shot.balls["cue"], 0.048943195217641386
@@ -101,10 +98,7 @@ def test_case1(solver: quartic.QuarticSolver):
     assert next_event.time == pytest.approx(expected.time, abs=1e-9)
 
 
-@pytest.mark.parametrize(
-    "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
-)
-def test_case2(solver: quartic.QuarticSolver):
+def test_case2():
     """A case that once broke the game
 
     In this shot, the next event should be:
@@ -116,7 +110,7 @@ def test_case2(solver: quartic.QuarticSolver):
     """
     shot = System.load(TEST_DIR / "case2.msgpack")
 
-    next_event = get_next_event(shot, quartic_solver=solver)
+    next_event = get_next_event(shot)
 
     expected = ball_pocket_collision(
         shot.balls["8"], shot.table.pockets["lc"], 0.08933033587481054
@@ -126,11 +120,8 @@ def test_case2(solver: quartic.QuarticSolver):
     assert next_event.time == pytest.approx(expected.time, abs=1e-9)
 
 
-@pytest.mark.parametrize(
-    "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
-)
-def test_case3(solver: quartic.QuarticSolver):
-    """A case that the HYBRID solver has struggled with
+def test_case3():
+    """A case that once broke the game
 
     In this shot, the next event should be:
 
@@ -154,7 +145,7 @@ def test_case3(solver: quartic.QuarticSolver):
     ball1 = shot.balls["2"]
     ball2 = shot.balls["5"]
 
-    event = get_next_event(shot, quartic_solver=solver)
+    event = get_next_event(shot)
 
     coeffs = ball_ball_collision_coeffs(
         rvw1=ball1.state.rvw,
@@ -175,13 +166,10 @@ def test_case3(solver: quartic.QuarticSolver):
     expected = pytest.approx(5.810383731499328e-06, abs=1e-9)
 
     assert event.time == expected
-    assert quartic.solve_quartics(coeffs_array, solver=solver)[0] == expected
+    assert quartic.solve_quartics(coeffs_array)[0] == expected
 
 
-@pytest.mark.parametrize(
-    "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
-)
-def test_case4(solver: quartic.QuarticSolver):
+def test_case4():
     """An UNSOLVED case that leads to a near-infinite event loop
 
     The infinite loop being:
@@ -233,10 +221,7 @@ def _assert_rolling(rvw: NDArray[np.float64], R: float) -> None:
     assert np.isclose(ptmath.rel_velocity(rvw, R), 0).all()
 
 
-@pytest.mark.parametrize(
-    "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
-)
-def test_grazing_ball_ball_collision(solver: quartic.QuarticSolver):
+def test_grazing_ball_ball_collision():
     """A very narrow hit
 
     In this example, a cue ball is hit in the direction pictured below. In one case, phi
@@ -329,10 +314,7 @@ def test_grazing_ball_ball_collision(solver: quartic.QuarticSolver):
             assert root != np.inf
 
 
-@pytest.mark.parametrize(
-    "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
-)
-def test_almost_touching_ball_ball_collision(solver: quartic.QuarticSolver):
+def test_almost_touching_ball_ball_collision():
     """A hit with two touching/almost touching balls
 
     In this example, a cue ball is hit into the 1 ball at point blank with various
@@ -425,16 +407,13 @@ def test_almost_touching_ball_ball_collision(solver: quartic.QuarticSolver):
         coeffs_array = np.array([coeffs], dtype=np.float64)
 
         truth = true_time_to_collision(eps, V0, ball1.params.u_r, ball1.params.g)
-        calculated = quartic.solve_quartics(coeffs_array, solver=solver)[0]
+        calculated = quartic.solve_quartics(coeffs_array)[0]
         diff = abs(calculated - truth)
 
         assert diff < 10e-12  # Less than 10 femptosecond difference
 
 
-@pytest.mark.parametrize(
-    "solver", [quartic.QuarticSolver.NUMERIC, quartic.QuarticSolver.HYBRID]
-)
-def test_no_ball_ball_collisions_for_intersecting_balls(solver: quartic.QuarticSolver):
+def test_no_ball_ball_collisions_for_intersecting_balls():
     """Two already intersecting balls don't collide
 
     In this instance, no further collision is detected because the balls are already
@@ -477,13 +456,8 @@ def test_no_ball_ball_collisions_for_intersecting_balls(solver: quartic.QuarticS
     # The cue is truly rolling
     _assert_rolling(system.balls["cue"].state.rvw, system.balls["cue"].params.R)
 
-    assert (
-        get_next_event(system, quartic_solver=solver).event_type != EventType.BALL_BALL
-    )
-    assert (
-        get_next_ball_ball_collision(system, CollisionCache(), solver=solver).time
-        == np.inf
-    )
+    assert get_next_event(system).event_type != EventType.BALL_BALL
+    assert get_next_ball_ball_collision(system, CollisionCache()).time == np.inf
 
 
 def test_ball_history_immutability():
