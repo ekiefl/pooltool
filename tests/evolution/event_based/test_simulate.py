@@ -12,9 +12,9 @@ from pooltool.evolution.event_based.simulate import (
     get_next_event,
     simulate,
 )
-from pooltool.evolution.event_based.solve import ball_ball_collision_coeffs
+from pooltool.evolution.event_based.solve import ball_ball_collision_time
 from pooltool.objects import Ball, BilliardTableSpecs, Cue, Table
-from pooltool.ptmath.roots import quadratic, quartic
+from pooltool.ptmath.roots import quadratic
 from pooltool.system import System
 from tests.evolution.event_based.test_data import TEST_DIR
 
@@ -147,7 +147,8 @@ def test_case3():
 
     event = get_next_event(shot)
 
-    coeffs = ball_ball_collision_coeffs(
+    expected = pytest.approx(5.810383731499328e-06, abs=1e-9)
+    calculated = ball_ball_collision_time(
         rvw1=ball1.state.rvw,
         rvw2=ball2.state.rvw,
         s1=ball1.state.s,
@@ -161,12 +162,8 @@ def test_case3():
         R=ball1.params.R,
     )
 
-    coeffs_array = np.array([coeffs], dtype=np.float64)
-
-    expected = pytest.approx(5.810383731499328e-06, abs=1e-9)
-
     assert event.time == expected
-    assert quartic.solve_quartics(coeffs_array)[0] == expected
+    assert calculated == expected
 
 
 def test_case4():
@@ -286,7 +283,7 @@ def test_grazing_ball_ball_collision():
         ball1 = system.balls["cue"]
         ball2 = system.balls["1"]
 
-        coeffs = ball_ball_collision_coeffs(
+        root = ball_ball_collision_time(
             rvw1=ball1.state.rvw,
             rvw2=ball2.state.rvw,
             s1=ball1.state.s,
@@ -303,10 +300,6 @@ def test_grazing_ball_ball_collision():
             g2=ball2.params.g,
             R=ball1.params.R,
         )
-
-        coeffs_array = np.array([coeffs], dtype=np.float64)
-
-        root = quartic.solve_quartics(coeffs_array)[0]
 
         if phi < 90:
             assert root == np.inf
@@ -386,7 +379,8 @@ def test_almost_touching_ball_ball_collision():
         ball1 = system.balls["cue"]
         ball2 = system.balls["1"]
 
-        coeffs = ball_ball_collision_coeffs(
+        truth = true_time_to_collision(eps, V0, ball1.params.u_r, ball1.params.g)
+        calculated = ball_ball_collision_time(
             rvw1=ball1.state.rvw,
             rvw2=ball2.state.rvw,
             s1=ball1.state.s,
@@ -404,10 +398,6 @@ def test_almost_touching_ball_ball_collision():
             R=ball1.params.R,
         )
 
-        coeffs_array = np.array([coeffs], dtype=np.float64)
-
-        truth = true_time_to_collision(eps, V0, ball1.params.u_r, ball1.params.g)
-        calculated = quartic.solve_quartics(coeffs_array)[0]
         diff = abs(calculated - truth)
 
         assert diff < 10e-12  # Less than 10 femptosecond difference

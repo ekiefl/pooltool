@@ -26,7 +26,6 @@ from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
 from pooltool.objects.ball.datatypes import BallState
 from pooltool.physics.engine import PhysicsEngine
-from pooltool.ptmath.roots.quartic import solve_quartics
 from pooltool.system.datatypes import System
 
 DEFAULT_ENGINE = PhysicsEngine()
@@ -333,9 +332,6 @@ def get_next_ball_ball_collision(
 ) -> Event:
     """Returns next ball-ball collision"""
 
-    ball_pairs: list[tuple[str, str]] = []
-    collision_coeffs: list[tuple[float, ...]] = []
-
     cache = collision_cache.times.setdefault(EventType.BALL_BALL, {})
 
     for ball1, ball2 in combinations(shot.balls.values(), 2):
@@ -363,35 +359,28 @@ def get_next_ball_ball_collision(
             # If balls are intersecting, avoid internal collisions
             cache[ball_pair] = np.inf
         else:
-            ball_pairs.append(ball_pair)
-            collision_coeffs.append(
-                solve.ball_ball_collision_coeffs(
-                    rvw1=ball1_state.rvw,
-                    rvw2=ball2_state.rvw,
-                    s1=ball1_state.s,
-                    s2=ball2_state.s,
-                    mu1=(
-                        ball1_params.u_s
-                        if ball1_state.s == const.sliding
-                        else ball1_params.u_r
-                    ),
-                    mu2=(
-                        ball2_params.u_s
-                        if ball2_state.s == const.sliding
-                        else ball2_params.u_r
-                    ),
-                    m1=ball1_params.m,
-                    m2=ball2_params.m,
-                    g1=ball1_params.g,
-                    g2=ball2_params.g,
-                    R=ball1_params.R,
-                )
+            dtau_E = solve.ball_ball_collision_time(
+                rvw1=ball1_state.rvw,
+                rvw2=ball2_state.rvw,
+                s1=ball1_state.s,
+                s2=ball2_state.s,
+                mu1=(
+                    ball1_params.u_s
+                    if ball1_state.s == const.sliding
+                    else ball1_params.u_r
+                ),
+                mu2=(
+                    ball2_params.u_s
+                    if ball2_state.s == const.sliding
+                    else ball2_params.u_r
+                ),
+                m1=ball1_params.m,
+                m2=ball2_params.m,
+                g1=ball1_params.g,
+                g2=ball2_params.g,
+                R=ball1_params.R,
             )
-
-    if len(collision_coeffs):
-        roots = solve_quartics(ps=np.array(collision_coeffs))
-        for root, ball_pair in zip(roots, ball_pairs):
-            cache[ball_pair] = shot.t + root
+            cache[ball_pair] = shot.t + dtau_E
 
     # The cache is now populated and up-to-date
 
@@ -413,9 +402,6 @@ def get_next_ball_circular_cushion_event(
     if not shot.table.has_circular_cushions:
         return null_event(np.inf)
 
-    ball_cushion_pairs: list[tuple[str, str]] = []
-    collision_coeffs: list[tuple[float, ...]] = []
-
     cache = collision_cache.times.setdefault(EventType.BALL_CIRCULAR_CUSHION, {})
 
     for ball in shot.balls.values():
@@ -432,25 +418,18 @@ def get_next_ball_circular_cushion_event(
                 cache[obj_ids] = np.inf
                 continue
 
-            ball_cushion_pairs.append(obj_ids)
-            collision_coeffs.append(
-                solve.ball_circular_cushion_collision_coeffs(
-                    rvw=state.rvw,
-                    s=state.s,
-                    a=cushion.a,
-                    b=cushion.b,
-                    r=cushion.radius,
-                    mu=(params.u_s if state.s == const.sliding else params.u_r),
-                    m=params.m,
-                    g=params.g,
-                    R=params.R,
-                )
+            dtau_E = solve.ball_circular_cushion_collision_time(
+                rvw=state.rvw,
+                s=state.s,
+                a=cushion.a,
+                b=cushion.b,
+                r=cushion.radius,
+                mu=(params.u_s if state.s == const.sliding else params.u_r),
+                m=params.m,
+                g=params.g,
+                R=params.R,
             )
-
-    if len(collision_coeffs):
-        roots = solve_quartics(ps=np.array(collision_coeffs))
-        for root, ball_cushion_pair in zip(roots, ball_cushion_pairs):
-            cache[ball_cushion_pair] = shot.t + root
+            cache[obj_ids] = shot.t + dtau_E
 
     # The cache is now populated and up-to-date
 
@@ -522,9 +501,6 @@ def get_next_ball_pocket_collision(
     if not shot.table.has_pockets:
         return null_event(np.inf)
 
-    ball_pocket_pairs: list[tuple[str, str]] = []
-    collision_coeffs: list[tuple[float, ...]] = []
-
     cache = collision_cache.times.setdefault(EventType.BALL_POCKET, {})
 
     for ball in shot.balls.values():
@@ -541,25 +517,18 @@ def get_next_ball_pocket_collision(
                 cache[obj_ids] = np.inf
                 continue
 
-            ball_pocket_pairs.append(obj_ids)
-            collision_coeffs.append(
-                solve.ball_pocket_collision_coeffs(
-                    rvw=state.rvw,
-                    s=state.s,
-                    a=pocket.a,
-                    b=pocket.b,
-                    r=pocket.radius,
-                    mu=(params.u_s if state.s == const.sliding else params.u_r),
-                    m=params.m,
-                    g=params.g,
-                    R=params.R,
-                )
+            dtau_E = solve.ball_pocket_collision_time(
+                rvw=state.rvw,
+                s=state.s,
+                a=pocket.a,
+                b=pocket.b,
+                r=pocket.radius,
+                mu=(params.u_s if state.s == const.sliding else params.u_r),
+                m=params.m,
+                g=params.g,
+                R=params.R,
             )
-
-    if len(collision_coeffs):
-        roots = solve_quartics(ps=np.array(collision_coeffs))
-        for root, ball_pocket_pair in zip(roots, ball_pocket_pairs):
-            cache[ball_pocket_pair] = shot.t + root
+            cache[obj_ids] = shot.t + dtau_E
 
     # The cache is now populated and up-to-date
 
