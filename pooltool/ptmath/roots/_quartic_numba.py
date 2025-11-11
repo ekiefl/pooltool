@@ -405,13 +405,14 @@ def solve_many(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
     roots = np.zeros((num_eqn, 4), dtype=np.complex128)
 
     for i in range(num_eqn):
-        roots[i, :] = solve(ps[i, :])
+        p = ps[i, :]
+        roots[i, :] = solve(p[0], p[1], p[2], p[3], p[4])
 
     return roots
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def solve(coeff):
+def solve(a: float, b: float, c: float, d: float, e: float) -> NDArray[np.complex128]:
     """Solve quartic equation.
 
     Args:
@@ -422,31 +423,31 @@ def solve(coeff):
     """
     roots = np.zeros(4, dtype=np.complex128)
 
-    if coeff[0] == 0.0:
+    if a == 0.0:
         return roots
 
-    a = coeff[1] / coeff[0]
-    b = coeff[2] / coeff[0]
-    c = coeff[3] / coeff[0]
-    d = coeff[4] / coeff[0]
-    phi0 = oqs_calc_phi0(a, b, c, d, 0)
+    a_p = b / a
+    b_p = c / a
+    c_p = d / a
+    d_p = e / a
+    phi0 = oqs_calc_phi0(a_p, b_p, c_p, d_p, 0)
 
     rfact = 1.0
     if math.isnan(phi0) or math.isinf(phi0):
         rfact = quart_rescal_fact
-        a /= rfact
+        a_p /= rfact
         rfactsq = rfact * rfact
-        b /= rfactsq
-        c /= rfactsq * rfact
-        d /= rfactsq * rfactsq
-        phi0 = oqs_calc_phi0(a, b, c, d, 1)
+        b_p /= rfactsq
+        c_p /= rfactsq * rfact
+        d_p /= rfactsq * rfactsq
+        phi0 = oqs_calc_phi0(a_p, b_p, c_p, d_p, 1)
 
-    l1 = a / 2
-    l3 = b / 6 + phi0 / 2
-    del2 = c - a * l3
+    l1 = a_p / 2
+    l3 = b_p / 6 + phi0 / 2
+    del2 = c_p - a_p * l3
     nsol = 0
-    bl311 = 2.0 * b / 3.0 - phi0 - l1 * l1
-    dml3l3 = d - l3 * l3
+    bl311 = 2.0 * b_p / 3.0 - phi0 - l1 * l1
+    dml3l3 = d_p - l3 * l3
 
     d2m = np.zeros(12, dtype=np.float64)
     l2m = np.zeros(12, dtype=np.float64)
@@ -456,18 +457,18 @@ def solve(coeff):
     if bl311 != 0.0:
         d2m[nsol] = bl311
         l2m[nsol] = del2 / (2.0 * d2m[nsol])
-        res[nsol] = oqs_calc_err_ldlt(b, c, d, d2m[nsol], l1, l2m[nsol], l3)
+        res[nsol] = oqs_calc_err_ldlt(b_p, c_p, d_p, d2m[nsol], l1, l2m[nsol], l3)
         nsol += 1
     if del2 != 0:
         l2m[nsol] = 2 * dml3l3 / del2
         if l2m[nsol] != 0:
             d2m[nsol] = del2 / (2 * l2m[nsol])
-            res[nsol] = oqs_calc_err_ldlt(b, c, d, d2m[nsol], l1, l2m[nsol], l3)
+            res[nsol] = oqs_calc_err_ldlt(b_p, c_p, d_p, d2m[nsol], l1, l2m[nsol], l3)
             nsol += 1
 
         d2m[nsol] = bl311
         l2m[nsol] = 2.0 * dml3l3 / del2
-        res[nsol] = oqs_calc_err_ldlt(b, c, d, d2m[nsol], l1, l2m[nsol], l3)
+        res[nsol] = oqs_calc_err_ldlt(b_p, c_p, d_p, d2m[nsol], l1, l2m[nsol], l3)
         nsol += 1
 
     if nsol == 0:
@@ -511,24 +512,24 @@ def solve(coeff):
         cq = l1 - gamma
         dq = l3 - gamma * l2
         if abs(dq) < abs(bq):
-            dq = d / bq
+            dq = d_p / bq
         elif abs(dq) > abs(bq):
-            bq = d / dq
+            bq = d_p / dq
         if abs(aq) < abs(cq):
             nsol = 0
             aqv = np.zeros(3, dtype=np.float64)
             errv = np.zeros(3, dtype=np.float64)
             errmin = 0.0
             if dq != 0:
-                aqv[nsol] = (c - bq * cq) / dq
-                errv[nsol] = oqs_calc_err_abc(a, b, c, aqv[nsol], bq, cq, dq)
+                aqv[nsol] = (c_p - bq * cq) / dq
+                errv[nsol] = oqs_calc_err_abc(a_p, b_p, c_p, aqv[nsol], bq, cq, dq)
                 nsol += 1
             if cq != 0:
-                aqv[nsol] = (b - dq - bq) / cq
-                errv[nsol] = oqs_calc_err_abc(a, b, c, aqv[nsol], bq, cq, dq)
+                aqv[nsol] = (b_p - dq - bq) / cq
+                errv[nsol] = oqs_calc_err_abc(a_p, b_p, c_p, aqv[nsol], bq, cq, dq)
                 nsol += 1
-            aqv[nsol] = a - cq
-            errv[nsol] = oqs_calc_err_abc(a, b, c, aqv[nsol], bq, cq, dq)
+            aqv[nsol] = a_p - cq
+            errv[nsol] = oqs_calc_err_abc(a_p, b_p, c_p, aqv[nsol], bq, cq, dq)
             nsol += 1
             kmin = 0
             for k in range(nsol):
@@ -542,15 +543,15 @@ def solve(coeff):
             errv = np.zeros(3, dtype=np.float64)
             errmin = 0.0
             if bq != 0:
-                cqv[nsol] = (c - aq * dq) / bq
-                errv[nsol] = oqs_calc_err_abc(a, b, c, aq, bq, cqv[nsol], dq)
+                cqv[nsol] = (c_p - aq * dq) / bq
+                errv[nsol] = oqs_calc_err_abc(a_p, b_p, c_p, aq, bq, cqv[nsol], dq)
                 nsol += 1
             if aq != 0:
-                cqv[nsol] = (b - bq - dq) / aq
-                errv[nsol] = oqs_calc_err_abc(a, b, c, aq, bq, cqv[nsol], dq)
+                cqv[nsol] = (b_p - bq - dq) / aq
+                errv[nsol] = oqs_calc_err_abc(a_p, b_p, c_p, aq, bq, cqv[nsol], dq)
                 nsol += 1
-            cqv[nsol] = a - aq
-            errv[nsol] = oqs_calc_err_abc(a, b, c, aq, bq, cqv[nsol], dq)
+            cqv[nsol] = a_p - aq
+            errv[nsol] = oqs_calc_err_abc(a_p, b_p, c_p, aq, bq, cqv[nsol], dq)
             nsol += 1
             kmin = 0
             for k in range(nsol):
@@ -570,13 +571,13 @@ def solve(coeff):
         realcase[0] = -1
 
     if realcase[0] == -1 or (
-        abs(d2) <= macheps * oqs_max3(abs(2.0 * b / 3.0), abs(phi0), l1 * l1)
+        abs(d2) <= macheps * oqs_max3(abs(2.0 * b_p / 3.0), abs(phi0), l1 * l1)
     ):
-        d3 = d - l3 * l3
+        d3 = d_p - l3 * l3
         if realcase[0] == 1:
-            err0 = oqs_calc_err_abcd(a, b, c, d, aq, bq, cq, dq)
+            err0 = oqs_calc_err_abcd(a_p, b_p, c_p, d_p, aq, bq, cq, dq)
         elif realcase[0] == 0:
-            err0 = oqs_calc_err_abcd_cmplx(a, b, c, d, acx, bcx, ccx, dcx)
+            err0 = oqs_calc_err_abcd_cmplx(a_p, b_p, c_p, d_p, acx, bcx, ccx, dcx)
         if d3 <= 0:
             realcase[1] = 1
             aq1 = l1
@@ -584,17 +585,17 @@ def solve(coeff):
             cq1 = l1
             dq1 = l3 - math.sqrt(-d3)
             if abs(dq1) < abs(bq1):
-                dq1 = d / bq1
+                dq1 = d_p / bq1
             elif abs(dq1) > abs(bq1):
-                bq1 = d / dq1
-            err1 = oqs_calc_err_abcd(a, b, c, d, aq1, bq1, cq1, dq1)
+                bq1 = d_p / dq1
+            err1 = oqs_calc_err_abcd(a_p, b_p, c_p, d_p, aq1, bq1, cq1, dq1)
         else:
             realcase[1] = 0
             acx1 = complex(l1, 0.0)
             bcx1 = complex(l3, math.sqrt(d3))
             ccx1 = complex(l1, 0.0)
             dcx1 = bcx1.conjugate()
-            err1 = oqs_calc_err_abcd_cmplx(a, b, c, d, acx1, bcx1, ccx1, dcx1)
+            err1 = oqs_calc_err_abcd_cmplx(a_p, b_p, c_p, d_p, acx1, bcx1, ccx1, dcx1)
         if realcase[0] == -1 or err1 < err0:
             whichcase = 1
             if realcase[1] == 1:
@@ -609,7 +610,7 @@ def solve(coeff):
                 dcx = dcx1
 
     if realcase[whichcase] == 1:
-        aq, bq, cq, dq = oqs_NRabcd(a, b, c, d, aq, bq, cq, dq)
+        aq, bq, cq, dq = oqs_NRabcd(a_p, b_p, c_p, d_p, aq, bq, cq, dq)
         qroots = oqs_solve_quadratic(aq, bq)
         roots[0] = qroots[0]
         roots[1] = qroots[1]
