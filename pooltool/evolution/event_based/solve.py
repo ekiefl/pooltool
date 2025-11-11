@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 import pooltool.constants as const
 import pooltool.physics.evolve as evolve
 import pooltool.ptmath as ptmath
-from pooltool.ptmath.roots._quartic_numba import solve as solve_quartic
+from pooltool.ptmath.roots import quartic
 from pooltool.ptmath.roots.core import get_real_positive_smallest_root
 
 
@@ -179,7 +179,7 @@ def ball_ball_collision_time(
 ) -> float:
     """Get the time until collision between 2 balls."""
     return get_real_positive_smallest_root(
-        solve_quartic(
+        quartic.solve(
             *ball_ball_collision_coeffs(
                 rvw1,
                 rvw2,
@@ -331,7 +331,7 @@ def ball_circular_cushion_collision_time(
 ) -> float:
     """Get the time until collision between a ball and a circular cushion segment."""
     return get_real_positive_smallest_root(
-        solve_quartic(
+        quartic.solve(
             *ball_circular_cushion_collision_coeffs(
                 rvw,
                 s,
@@ -404,7 +404,7 @@ def ball_pocket_collision_time(
 ) -> float:
     """Get the time until collision between a ball and a pocket."""
     return get_real_positive_smallest_root(
-        solve_quartic(
+        quartic.solve(
             *ball_pocket_collision_coeffs(
                 rvw,
                 s,
