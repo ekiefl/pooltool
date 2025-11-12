@@ -1,13 +1,13 @@
 """1:1 exact translation of the "1010" quartic root-finding algorithm.
 
-The original implementation is written in C, and was converted into numba by Claude
-Code. The 1:1 correspondence has been tested to floating point precision on a test of
-100,000 difficult to determine quartics.
+The original implementation is written in C, and this module was written by Claude Code.
+The 1:1 correspondence has been tested to floating point precision on a test of 100,000
+difficult to determine quartics.
 
 Solve speed:
 
-* Numba (this implementation): ~200ms / 100k quartics
-* C (original implementation): ~120ms / 100k quartics
+* Numba (this implementation): 2.8 million quartics / second
+* C (original implementation): 3.3 million quartics / second
 
 References:
     @article{10.1145/3386241,
@@ -50,7 +50,7 @@ References:
 import math
 
 import numpy as np
-from numba import float64, jit, njit
+from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
@@ -58,20 +58,6 @@ import pooltool.constants as const
 cubic_rescal_fact = 3.488062113727083e102
 quart_rescal_fact = 7.156344627944542e76
 macheps = 2.2204460492503131e-16
-
-
-@njit(float64(float64, float64))
-def oqs_max2(a, b):
-    if a >= b:
-        return a
-    else:
-        return b
-
-
-@njit(float64(float64, float64, float64))
-def oqs_max3(a, b, c):
-    t = oqs_max2(a, b)
-    return oqs_max2(t, c)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -644,7 +630,7 @@ def solve(a: float, b: float, c: float, d: float, e: float) -> NDArray[np.comple
         realcase_0 = -1
 
     if realcase_0 == -1 or (
-        abs(d2) <= macheps * oqs_max3(abs(2.0 * b_p / 3.0), abs(phi0), l1 * l1)
+        abs(d2) <= macheps * max(abs(2.0 * b_p / 3.0), abs(phi0), l1 * l1)
     ):
         d3 = d_p - l3 * l3
         if realcase_0 == 1:
