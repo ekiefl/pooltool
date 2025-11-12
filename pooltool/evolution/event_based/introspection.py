@@ -40,7 +40,6 @@ from pooltool.evolution.event_based.simulate import (
     _SimulationState,
 )
 from pooltool.physics.engine import PhysicsEngine
-from pooltool.ptmath.roots.quartic import QuarticSolver
 from pooltool.serialize import conversion
 from pooltool.serialize.serializers import Pathish
 from pooltool.system.datatypes import System
@@ -193,7 +192,6 @@ def simulate_with_snapshots(
     output_path: Path | None = None,
     engine: PhysicsEngine | None = None,
     t_final: float | None = None,
-    quartic_solver: QuarticSolver = QuarticSolver.HYBRID,
     include: set[EventType] = INCLUDED_EVENTS,
     max_events: int = 0,
 ) -> tuple[System, SimulationSnapshotSequence]:
@@ -204,7 +202,6 @@ def simulate_with_snapshots(
         shot.copy(),
         engine,
         t_final,
-        quartic_solver,
         include,
         max_events,
     )

@@ -7,6 +7,8 @@ from numpy.typing import NDArray
 import pooltool.constants as const
 import pooltool.physics.evolve as evolve
 import pooltool.ptmath as ptmath
+from pooltool.ptmath.roots import quartic
+from pooltool.ptmath.roots.core import get_real_positive_smallest_root
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -161,6 +163,7 @@ def ball_ball_collision_coeffs(
     return a, b, c, d, e
 
 
+@jit(nopython=True, cache=const.use_numba_cache)
 def ball_ball_collision_time(
     rvw1: NDArray[np.float64],
     rvw2: NDArray[np.float64],
@@ -174,20 +177,24 @@ def ball_ball_collision_time(
     g2: float,
     R: float,
 ) -> float:
-    """Get the time until collision between 2 balls
-
-    NOTE This is deprecated. Rather than solve the roots of a single polynomial
-    equation, as is done in this function, all roots of a given collision class are
-    solved simultaneously via ptmath.roots
-    """
-    a, b, c, d, e = ball_ball_collision_coeffs(
-        rvw1, rvw2, s1, s2, mu1, mu2, m1, m2, g1, g2, R
+    """Get the time until collision between 2 balls."""
+    return get_real_positive_smallest_root(
+        quartic.solve(
+            *ball_ball_collision_coeffs(
+                rvw1,
+                rvw2,
+                s1,
+                s2,
+                mu1,
+                mu2,
+                m1,
+                m2,
+                g1,
+                g2,
+                R,
+            )
+        )
     )
-    roots = np.roots([a, b, c, d, e])
-
-    roots = roots[(abs(roots.imag) <= const.EPS) & (roots.real > const.EPS)].real
-
-    return roots.min() if len(roots) else np.inf
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -311,6 +318,36 @@ def ball_circular_cushion_collision_coeffs(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def ball_circular_cushion_collision_time(
+    rvw: NDArray[np.float64],
+    s: int,
+    a: float,
+    b: float,
+    r: float,
+    mu: float,
+    m: float,
+    g: float,
+    R: float,
+) -> float:
+    """Get the time until collision between a ball and a circular cushion segment."""
+    return get_real_positive_smallest_root(
+        quartic.solve(
+            *ball_circular_cushion_collision_coeffs(
+                rvw,
+                s,
+                a,
+                b,
+                r,
+                mu,
+                m,
+                g,
+                R,
+            )
+        )
+    )
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def ball_pocket_collision_coeffs(
     rvw: NDArray[np.float64],
     s: int,
@@ -351,3 +388,33 @@ def ball_pocket_collision_coeffs(
     E = 0.5 * (a**2 + b**2 + cx**2 + cy**2 - r**2) - (cx * a + cy * b)
 
     return A, B, C, D, E
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def ball_pocket_collision_time(
+    rvw: NDArray[np.float64],
+    s: int,
+    a: float,
+    b: float,
+    r: float,
+    mu: float,
+    m: float,
+    g: float,
+    R: float,
+) -> float:
+    """Get the time until collision between a ball and a pocket."""
+    return get_real_positive_smallest_root(
+        quartic.solve(
+            *ball_pocket_collision_coeffs(
+                rvw,
+                s,
+                a,
+                b,
+                r,
+                mu,
+                m,
+                g,
+                R,
+            )
+        )
+    )
