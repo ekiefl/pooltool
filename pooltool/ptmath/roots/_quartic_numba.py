@@ -301,81 +301,99 @@ def oqs_calc_err_abc(a, b, c, aq, bq, cq, dq):
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def oqs_NRabcd(a, b, c, d, AQ, BQ, CQ, DQ):
-    x = np.array([AQ, BQ, CQ, DQ], dtype=np.float64)
-    xold = np.zeros(4, dtype=np.float64)
-    dx = np.zeros(4, dtype=np.float64)
-    Jinv = np.zeros((4, 4), dtype=np.float64)
-    fvec = np.zeros(4, dtype=np.float64)
-    vr = np.array([d, c, b, a], dtype=np.float64)
-    fvec[0] = x[1] * x[3] - d
-    fvec[1] = x[1] * x[2] + x[0] * x[3] - c
-    fvec[2] = x[1] + x[0] * x[2] + x[3] - b
-    fvec[3] = x[0] + x[2] - a
-    errf = 0.0
-    for k1 in range(4):
-        if vr[k1] == 0:
-            errf += abs(fvec[k1])
-        else:
-            errf += abs(fvec[k1] / vr[k1])
+    x0, x1, x2, x3 = AQ, BQ, CQ, DQ
+
+    fvec0 = x1 * x3 - d
+    fvec1 = x1 * x2 + x0 * x3 - c
+    fvec2 = x1 + x0 * x2 + x3 - b
+    fvec3 = x0 + x2 - a
+
+    if d == 0:
+        errf = abs(fvec0)
+    else:
+        errf = abs(fvec0 / d)
+    if c == 0:
+        errf += abs(fvec1)
+    else:
+        errf += abs(fvec1 / c)
+    if b == 0:
+        errf += abs(fvec2)
+    else:
+        errf += abs(fvec2 / b)
+    if a == 0:
+        errf += abs(fvec3)
+    else:
+        errf += abs(fvec3 / a)
+
     for iter in range(8):
-        x02 = x[0] - x[2]
-        det = (
-            x[1] * x[1] + x[1] * (-x[2] * x02 - 2.0 * x[3]) + x[3] * (x[0] * x02 + x[3])
-        )
+        x02 = x0 - x2
+        det = x1 * x1 + x1 * (-x2 * x02 - 2.0 * x3) + x3 * (x0 * x02 + x3)
         if det == 0.0:
             break
-        Jinv[0][0] = x02
-        Jinv[0][1] = x[3] - x[1]
-        Jinv[0][2] = x[1] * x[2] - x[0] * x[3]
-        Jinv[0][3] = -x[1] * Jinv[0][1] - x[0] * Jinv[0][2]
-        Jinv[1][0] = x[0] * Jinv[0][0] + Jinv[0][1]
-        Jinv[1][1] = -x[1] * Jinv[0][0]
-        Jinv[1][2] = -x[1] * Jinv[0][1]
-        Jinv[1][3] = -x[1] * Jinv[0][2]
-        Jinv[2][0] = -Jinv[0][0]
-        Jinv[2][1] = -Jinv[0][1]
-        Jinv[2][2] = -Jinv[0][2]
-        Jinv[2][3] = Jinv[0][2] * x[2] + Jinv[0][1] * x[3]
-        Jinv[3][0] = -x[2] * Jinv[0][0] - Jinv[0][1]
-        Jinv[3][1] = Jinv[0][0] * x[3]
-        Jinv[3][2] = x[3] * Jinv[0][1]
-        Jinv[3][3] = x[3] * Jinv[0][2]
-        for k1 in range(4):
-            dx[k1] = 0
-            for k2 in range(4):
-                dx[k1] += Jinv[k1][k2] * fvec[k2]
-        for k1 in range(4):
-            xold[k1] = x[k1]
 
-        for k1 in range(4):
-            x[k1] += -dx[k1] / det
-        fvec[0] = x[1] * x[3] - d
-        fvec[1] = x[1] * x[2] + x[0] * x[3] - c
-        fvec[2] = x[1] + x[0] * x[2] + x[3] - b
-        fvec[3] = x[0] + x[2] - a
+        J00 = x02
+        J01 = x3 - x1
+        J02 = x1 * x2 - x0 * x3
+        J03 = -x1 * J01 - x0 * J02
+        J10 = x0 * J00 + J01
+        J11 = -x1 * J00
+        J12 = -x1 * J01
+        J13 = -x1 * J02
+        J20 = -J00
+        J21 = -J01
+        J22 = -J02
+        J23 = J02 * x2 + J01 * x3
+        J30 = -x2 * J00 - J01
+        J31 = J00 * x3
+        J32 = x3 * J01
+        J33 = x3 * J02
+
+        dx0 = J00 * fvec0 + J01 * fvec1 + J02 * fvec2 + J03 * fvec3
+        dx1 = J10 * fvec0 + J11 * fvec1 + J12 * fvec2 + J13 * fvec3
+        dx2 = J20 * fvec0 + J21 * fvec1 + J22 * fvec2 + J23 * fvec3
+        dx3 = J30 * fvec0 + J31 * fvec1 + J32 * fvec2 + J33 * fvec3
+
+        xold0, xold1, xold2, xold3 = x0, x1, x2, x3
+
+        x0 += -dx0 / det
+        x1 += -dx1 / det
+        x2 += -dx2 / det
+        x3 += -dx3 / det
+
+        fvec0 = x1 * x3 - d
+        fvec1 = x1 * x2 + x0 * x3 - c
+        fvec2 = x1 + x0 * x2 + x3 - b
+        fvec3 = x0 + x2 - a
+
         errfold = errf
-        errf = 0.0
-        for k1 in range(4):
-            if vr[k1] == 0:
-                errf += abs(fvec[k1])
-            else:
-                errf += abs(fvec[k1] / vr[k1])
+        if d == 0:
+            errf = abs(fvec0)
+        else:
+            errf = abs(fvec0 / d)
+        if c == 0:
+            errf += abs(fvec1)
+        else:
+            errf += abs(fvec1 / c)
+        if b == 0:
+            errf += abs(fvec2)
+        else:
+            errf += abs(fvec2 / b)
+        if a == 0:
+            errf += abs(fvec3)
+        else:
+            errf += abs(fvec3 / a)
+
         if errf == 0:
             break
         if errf >= errfold:
-            for k1 in range(4):
-                x[k1] = xold[k1]
+            x0, x1, x2, x3 = xold0, xold1, xold2, xold3
             break
-    AQ = x[0]
-    BQ = x[1]
-    CQ = x[2]
-    DQ = x[3]
-    return AQ, BQ, CQ, DQ
+
+    return x0, x1, x2, x3
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def oqs_solve_quadratic(a, b):
-    roots = np.zeros(2, dtype=np.complex128)
     diskr = a * a - 4 * b
     if diskr >= 0.0:
         if a >= 0.0:
@@ -390,13 +408,13 @@ def oqs_solve_quadratic(a, b):
         else:
             zmin = b / zmax
 
-        roots[0] = complex(zmax, 0.0)
-        roots[1] = complex(zmin, 0.0)
+        root0 = zmax + 0.0j
+        root1 = zmin + 0.0j
     else:
         sqrtd = math.sqrt(-diskr)
-        roots[0] = complex(-a / 2, sqrtd / 2)
-        roots[1] = complex(-a / 2, -sqrtd / 2)
-    return roots
+        root0 = -a / 2 + sqrtd / 2 * 1j
+        root1 = -a / 2 - sqrtd / 2 * 1j
+    return (root0, root1)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -449,42 +467,67 @@ def solve(a: float, b: float, c: float, d: float, e: float) -> NDArray[np.comple
     bl311 = 2.0 * b_p / 3.0 - phi0 - l1 * l1
     dml3l3 = d_p - l3 * l3
 
-    d2m = np.zeros(12, dtype=np.float64)
-    l2m = np.zeros(12, dtype=np.float64)
-    res = np.zeros(12, dtype=np.float64)
-    resmin = 0.0
+    d2m_0, d2m_1, d2m_2 = 0.0, 0.0, 0.0
+    l2m_0, l2m_1, l2m_2 = 0.0, 0.0, 0.0
+    res_0, res_1, res_2 = 0.0, 0.0, 0.0
 
     if bl311 != 0.0:
-        d2m[nsol] = bl311
-        l2m[nsol] = del2 / (2.0 * d2m[nsol])
-        res[nsol] = oqs_calc_err_ldlt(b_p, c_p, d_p, d2m[nsol], l1, l2m[nsol], l3)
-        nsol += 1
+        d2m_0 = bl311
+        l2m_0 = del2 / (2.0 * d2m_0)
+        res_0 = oqs_calc_err_ldlt(b_p, c_p, d_p, d2m_0, l1, l2m_0, l3)
+        nsol = 1
     if del2 != 0:
-        l2m[nsol] = 2 * dml3l3 / del2
-        if l2m[nsol] != 0:
-            d2m[nsol] = del2 / (2 * l2m[nsol])
-            res[nsol] = oqs_calc_err_ldlt(b_p, c_p, d_p, d2m[nsol], l1, l2m[nsol], l3)
-            nsol += 1
+        if nsol == 0:
+            l2m_0 = 2 * dml3l3 / del2
+            if l2m_0 != 0:
+                d2m_0 = del2 / (2 * l2m_0)
+                res_0 = oqs_calc_err_ldlt(b_p, c_p, d_p, d2m_0, l1, l2m_0, l3)
+                nsol = 1
+        elif nsol == 1:
+            l2m_1 = 2 * dml3l3 / del2
+            if l2m_1 != 0:
+                d2m_1 = del2 / (2 * l2m_1)
+                res_1 = oqs_calc_err_ldlt(b_p, c_p, d_p, d2m_1, l1, l2m_1, l3)
+                nsol = 2
 
-        d2m[nsol] = bl311
-        l2m[nsol] = 2.0 * dml3l3 / del2
-        res[nsol] = oqs_calc_err_ldlt(b_p, c_p, d_p, d2m[nsol], l1, l2m[nsol], l3)
-        nsol += 1
+        if nsol == 1:
+            d2m_1 = bl311
+            l2m_1 = 2.0 * dml3l3 / del2
+            res_1 = oqs_calc_err_ldlt(b_p, c_p, d_p, d2m_1, l1, l2m_1, l3)
+            nsol = 2
+        elif nsol == 2:
+            d2m_2 = bl311
+            l2m_2 = 2.0 * dml3l3 / del2
+            res_2 = oqs_calc_err_ldlt(b_p, c_p, d_p, d2m_2, l1, l2m_2, l3)
+            nsol = 3
 
     if nsol == 0:
         l2 = 0.0
         d2 = 0.0
+    elif nsol == 1:
+        d2 = d2m_0
+        l2 = l2m_0
+    elif nsol == 2:
+        if res_0 <= res_1:
+            d2 = d2m_0
+            l2 = l2m_0
+        else:
+            d2 = d2m_1
+            l2 = l2m_1
     else:
-        kmin = 0
-        for k1 in range(nsol):
-            if k1 == 0 or res[k1] < resmin:
-                resmin = res[k1]
-                kmin = k1
-        d2 = d2m[kmin]
-        l2 = l2m[kmin]
+        if res_0 <= res_1 and res_0 <= res_2:
+            d2 = d2m_0
+            l2 = l2m_0
+        elif res_1 <= res_2:
+            d2 = d2m_1
+            l2 = l2m_1
+        else:
+            d2 = d2m_2
+            l2 = l2m_2
 
     whichcase = 0
-    realcase = np.array([-1, -1], dtype=np.int32)
+    realcase_0 = -1
+    realcase_1 = -1
     aq = 0.0
     bq = 0.0
     cq = 0.0
@@ -516,70 +559,100 @@ def solve(a: float, b: float, c: float, d: float, e: float) -> NDArray[np.comple
         elif abs(dq) > abs(bq):
             bq = d_p / dq
         if abs(aq) < abs(cq):
+            aqv_0, aqv_1, aqv_2 = 0.0, 0.0, 0.0
+            errv_0, errv_1, errv_2 = 0.0, 0.0, 0.0
             nsol = 0
-            aqv = np.zeros(3, dtype=np.float64)
-            errv = np.zeros(3, dtype=np.float64)
-            errmin = 0.0
             if dq != 0:
-                aqv[nsol] = (c_p - bq * cq) / dq
-                errv[nsol] = oqs_calc_err_abc(a_p, b_p, c_p, aqv[nsol], bq, cq, dq)
-                nsol += 1
+                aqv_0 = (c_p - bq * cq) / dq
+                errv_0 = oqs_calc_err_abc(a_p, b_p, c_p, aqv_0, bq, cq, dq)
+                nsol = 1
             if cq != 0:
-                aqv[nsol] = (b_p - dq - bq) / cq
-                errv[nsol] = oqs_calc_err_abc(a_p, b_p, c_p, aqv[nsol], bq, cq, dq)
-                nsol += 1
-            aqv[nsol] = a_p - cq
-            errv[nsol] = oqs_calc_err_abc(a_p, b_p, c_p, aqv[nsol], bq, cq, dq)
-            nsol += 1
-            kmin = 0
-            for k in range(nsol):
-                if k == 0 or errv[k] < errmin:
-                    kmin = k
-                    errmin = errv[k]
-            aq = aqv[kmin]
+                if nsol == 0:
+                    aqv_0 = (b_p - dq - bq) / cq
+                    errv_0 = oqs_calc_err_abc(a_p, b_p, c_p, aqv_0, bq, cq, dq)
+                    nsol = 1
+                else:
+                    aqv_1 = (b_p - dq - bq) / cq
+                    errv_1 = oqs_calc_err_abc(a_p, b_p, c_p, aqv_1, bq, cq, dq)
+                    nsol = 2
+            if nsol == 0:
+                aqv_0 = a_p - cq
+                errv_0 = oqs_calc_err_abc(a_p, b_p, c_p, aqv_0, bq, cq, dq)
+                aq = aqv_0
+            elif nsol == 1:
+                aqv_1 = a_p - cq
+                errv_1 = oqs_calc_err_abc(a_p, b_p, c_p, aqv_1, bq, cq, dq)
+                if errv_0 <= errv_1:
+                    aq = aqv_0
+                else:
+                    aq = aqv_1
+            else:
+                aqv_2 = a_p - cq
+                errv_2 = oqs_calc_err_abc(a_p, b_p, c_p, aqv_2, bq, cq, dq)
+                if errv_0 <= errv_1 and errv_0 <= errv_2:
+                    aq = aqv_0
+                elif errv_1 <= errv_2:
+                    aq = aqv_1
+                else:
+                    aq = aqv_2
         else:
+            cqv_0, cqv_1, cqv_2 = 0.0, 0.0, 0.0
+            errv_0, errv_1, errv_2 = 0.0, 0.0, 0.0
             nsol = 0
-            cqv = np.zeros(3, dtype=np.float64)
-            errv = np.zeros(3, dtype=np.float64)
-            errmin = 0.0
             if bq != 0:
-                cqv[nsol] = (c_p - aq * dq) / bq
-                errv[nsol] = oqs_calc_err_abc(a_p, b_p, c_p, aq, bq, cqv[nsol], dq)
-                nsol += 1
+                cqv_0 = (c_p - aq * dq) / bq
+                errv_0 = oqs_calc_err_abc(a_p, b_p, c_p, aq, bq, cqv_0, dq)
+                nsol = 1
             if aq != 0:
-                cqv[nsol] = (b_p - bq - dq) / aq
-                errv[nsol] = oqs_calc_err_abc(a_p, b_p, c_p, aq, bq, cqv[nsol], dq)
-                nsol += 1
-            cqv[nsol] = a_p - aq
-            errv[nsol] = oqs_calc_err_abc(a_p, b_p, c_p, aq, bq, cqv[nsol], dq)
-            nsol += 1
-            kmin = 0
-            for k in range(nsol):
-                if k == 0 or errv[k] < errmin:
-                    kmin = k
-                    errmin = errv[k]
-            cq = cqv[kmin]
-        realcase[0] = 1
+                if nsol == 0:
+                    cqv_0 = (b_p - bq - dq) / aq
+                    errv_0 = oqs_calc_err_abc(a_p, b_p, c_p, aq, bq, cqv_0, dq)
+                    nsol = 1
+                else:
+                    cqv_1 = (b_p - bq - dq) / aq
+                    errv_1 = oqs_calc_err_abc(a_p, b_p, c_p, aq, bq, cqv_1, dq)
+                    nsol = 2
+            if nsol == 0:
+                cqv_0 = a_p - aq
+                errv_0 = oqs_calc_err_abc(a_p, b_p, c_p, aq, bq, cqv_0, dq)
+                cq = cqv_0
+            elif nsol == 1:
+                cqv_1 = a_p - aq
+                errv_1 = oqs_calc_err_abc(a_p, b_p, c_p, aq, bq, cqv_1, dq)
+                if errv_0 <= errv_1:
+                    cq = cqv_0
+                else:
+                    cq = cqv_1
+            else:
+                cqv_2 = a_p - aq
+                errv_2 = oqs_calc_err_abc(a_p, b_p, c_p, aq, bq, cqv_2, dq)
+                if errv_0 <= errv_1 and errv_0 <= errv_2:
+                    cq = cqv_0
+                elif errv_1 <= errv_2:
+                    cq = cqv_1
+                else:
+                    cq = cqv_2
+        realcase_0 = 1
     elif d2 > 0:
         gamma = math.sqrt(d2)
         acx = complex(l1, gamma)
         bcx = complex(l3, gamma * l2)
         ccx = acx.conjugate()
         dcx = bcx.conjugate()
-        realcase[0] = 0
+        realcase_0 = 0
     else:
-        realcase[0] = -1
+        realcase_0 = -1
 
-    if realcase[0] == -1 or (
+    if realcase_0 == -1 or (
         abs(d2) <= macheps * oqs_max3(abs(2.0 * b_p / 3.0), abs(phi0), l1 * l1)
     ):
         d3 = d_p - l3 * l3
-        if realcase[0] == 1:
+        if realcase_0 == 1:
             err0 = oqs_calc_err_abcd(a_p, b_p, c_p, d_p, aq, bq, cq, dq)
-        elif realcase[0] == 0:
+        elif realcase_0 == 0:
             err0 = oqs_calc_err_abcd_cmplx(a_p, b_p, c_p, d_p, acx, bcx, ccx, dcx)
         if d3 <= 0:
-            realcase[1] = 1
+            realcase_1 = 1
             aq1 = l1
             bq1 = l3 + math.sqrt(-d3)
             cq1 = l1
@@ -590,15 +663,15 @@ def solve(a: float, b: float, c: float, d: float, e: float) -> NDArray[np.comple
                 bq1 = d_p / dq1
             err1 = oqs_calc_err_abcd(a_p, b_p, c_p, d_p, aq1, bq1, cq1, dq1)
         else:
-            realcase[1] = 0
+            realcase_1 = 0
             acx1 = complex(l1, 0.0)
             bcx1 = complex(l3, math.sqrt(d3))
             ccx1 = complex(l1, 0.0)
             dcx1 = bcx1.conjugate()
             err1 = oqs_calc_err_abcd_cmplx(a_p, b_p, c_p, d_p, acx1, bcx1, ccx1, dcx1)
-        if realcase[0] == -1 or err1 < err0:
+        if realcase_0 == -1 or err1 < err0:
             whichcase = 1
-            if realcase[1] == 1:
+            if realcase_1 == 1:
                 aq = aq1
                 bq = bq1
                 cq = cq1
@@ -609,14 +682,10 @@ def solve(a: float, b: float, c: float, d: float, e: float) -> NDArray[np.comple
                 ccx = ccx1
                 dcx = dcx1
 
-    if realcase[whichcase] == 1:
+    if (whichcase == 0 and realcase_0 == 1) or (whichcase == 1 and realcase_1 == 1):
         aq, bq, cq, dq = oqs_NRabcd(a_p, b_p, c_p, d_p, aq, bq, cq, dq)
-        qroots = oqs_solve_quadratic(aq, bq)
-        roots[0] = qroots[0]
-        roots[1] = qroots[1]
-        qroots = oqs_solve_quadratic(cq, dq)
-        roots[2] = qroots[0]
-        roots[3] = qroots[1]
+        roots[0], roots[1] = oqs_solve_quadratic(aq, bq)
+        roots[2], roots[3] = oqs_solve_quadratic(cq, dq)
     else:
         if whichcase == 0:
             cdiskr = acx * acx / 4 - bcx
