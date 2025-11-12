@@ -79,3 +79,13 @@ roots = solve(a=1, b=-10, c=35, d=-50, e=24)
 coeffs = np.array([[1, -10, 35, -50, 24]], dtype=np.float64)
 roots = solve_many(coeffs)
 ```
+
+## Speed Comparison
+
+Run the benchmark:
+
+```bash
+python _speed_test.py
+```
+
+This compares the C implementation (via ctypes) against the production numba implementation across different batch sizes. 
