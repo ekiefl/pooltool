@@ -154,11 +154,11 @@ def ball_ball_collision_coeffs(
     Bx, By = b2x - b1x, b2y - b1y
     Cx, Cy = c2x - c1x, c2y - c1y
 
-    a = Ax**2 + Ay**2
+    a = Ax * Ax + Ay * Ay
     b = 2 * Ax * Bx + 2 * Ay * By
-    c = Bx**2 + 2 * Ax * Cx + 2 * Ay * Cy + By**2
+    c = Bx * Bx + 2 * Ax * Cx + 2 * Ay * Cy + By * By
     d = 2 * Bx * Cx + 2 * By * Cy
-    e = Cx**2 + Cy**2 - 4 * R**2
+    e = Cx * Cx + Cy * Cy - 4 * R * R
 
     return a, b, c, d, e
 
@@ -237,16 +237,16 @@ def ball_linear_cushion_collision_time(
     B = lx * bx + ly * by
 
     if direction == 0:
-        C = l0 + lx * cx + ly * cy + R * np.sqrt(lx**2 + ly**2)
+        C = l0 + lx * cx + ly * cy + R * np.sqrt(lx * lx + ly * ly)
         root1, root2 = ptmath.roots.quadratic.solve(A, B, C)
         roots = [root1, root2]
     elif direction == 1:
-        C = l0 + lx * cx + ly * cy - R * np.sqrt(lx**2 + ly**2)
+        C = l0 + lx * cx + ly * cy - R * np.sqrt(lx * lx + ly * ly)
         root1, root2 = ptmath.roots.quadratic.solve(A, B, C)
         roots = [root1, root2]
     else:
-        C1 = l0 + lx * cx + ly * cy + R * np.sqrt(lx**2 + ly**2)
-        C2 = l0 + lx * cx + ly * cy - R * np.sqrt(lx**2 + ly**2)
+        C1 = l0 + lx * cx + ly * cy + R * np.sqrt(lx * lx + ly * ly)
+        C2 = l0 + lx * cx + ly * cy - R * np.sqrt(lx * lx + ly * ly)
         root1, root2 = ptmath.roots.quadratic.solve(A, B, C1)
         root3, root4 = ptmath.roots.quadratic.solve(A, B, C2)
         roots = [root1, root2, root3, root4]
@@ -308,11 +308,13 @@ def ball_circular_cushion_collision_coeffs(
     bx, by = v * cos_phi, v * sin_phi
     cx, cy = rvw[0, 0], rvw[0, 1]
 
-    A = 0.5 * (ax**2 + ay**2)
+    A = 0.5 * (ax * ax + ay * ay)
     B = ax * bx + ay * by
-    C = ax * (cx - a) + ay * (cy - b) + 0.5 * (bx**2 + by**2)
+    C = ax * (cx - a) + ay * (cy - b) + 0.5 * (bx * bx + by * by)
     D = bx * (cx - a) + by * (cy - b)
-    E = 0.5 * (a**2 + b**2 + cx**2 + cy**2 - (r + R) ** 2) - (cx * a + cy * b)
+    E = 0.5 * (a * a + b * b + cx * cx + cy * cy - (r + R) * (r + R)) - (
+        cx * a + cy * b
+    )
 
     return A, B, C, D, E
 
@@ -381,11 +383,11 @@ def ball_pocket_collision_coeffs(
     bx, by = v * cos_phi, v * sin_phi
     cx, cy = rvw[0, 0], rvw[0, 1]
 
-    A = 0.5 * (ax**2 + ay**2)
+    A = 0.5 * (ax * ax + ay * ay)
     B = ax * bx + ay * by
-    C = ax * (cx - a) + ay * (cy - b) + 0.5 * (bx**2 + by**2)
+    C = ax * (cx - a) + ay * (cy - b) + 0.5 * (bx * bx + by * by)
     D = bx * (cx - a) + by * (cy - b)
-    E = 0.5 * (a**2 + b**2 + cx**2 + cy**2 - r**2) - (cx * a + cy * b)
+    E = 0.5 * (a * a + b * b + cx * cx + cy * cy - r * r) - (cx * a + cy * b)
 
     return A, B, C, D, E
 
