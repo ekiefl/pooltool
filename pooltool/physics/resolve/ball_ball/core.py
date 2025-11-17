@@ -62,7 +62,12 @@ class CoreBallBallCollision(ABC):
         v1 = ball1.state.rvw[1]
         v2 = ball2.state.rvw[1]
 
-        spacer = 1e-6
+        approach_speed = np.dot(v1 - v2, ptmath.unit_vector(r2 - r1))
+
+        spacer_min = 0.5e-6
+        spacer_max = 1e-6
+        speed_factor = max(0, min(approach_speed, 10))
+        spacer = spacer_min + speed_factor * (spacer_max - spacer_min)
         initial_distance = ptmath.norm3d(r2 - r1)
         target_distance = 2 * ball1.params.R + spacer
 
@@ -72,15 +77,20 @@ class CoreBallBallCollision(ABC):
         Cx = r2[0] - r1[0]
         Cy = r2[1] - r1[1]
         Cz = r2[2] - r1[2]
-        alpha = Bx**2 + By**2 + Bz**2
+        alpha = Bx * Bx + By * By + Bz * Bz
         beta = 2 * Bx * Cx + 2 * By * Cy + 2 * Bz * Cz
-        gamma = Cx**2 + Cy**2 + Cz**2 - (2 * ball1.params.R + spacer) ** 2
-        roots = ptmath.roots.quadratic.solve_complex(alpha, beta, gamma)
+        gamma = (
+            Cx * Cx
+            + Cy * Cy
+            + Cz * Cz
+            - (2 * ball1.params.R + spacer) * (2 * ball1.params.R + spacer)
+        )
+        roots_complex = ptmath.roots.quadratic.solve_complex(alpha, beta, gamma)
 
-        imag_mag = np.abs(roots.imag)
-        real_mag = np.abs(roots.real)
+        imag_mag = np.abs(roots_complex.imag)
+        real_mag = np.abs(roots_complex.real)
         keep = (imag_mag / real_mag) < 1e-3
-        roots = roots[keep].real
+        roots = roots_complex[keep].real
         t = roots[np.abs(roots).argmin()]
 
         r1_corrected = r1 + t * v1
