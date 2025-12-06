@@ -2783,6 +2783,14 @@ files = [
     {file = "panda3d-1.10.15-cp313-cp313t-manylinux2014_x86_64.whl", hash = "sha256:db8ad9ff7f48ee1d6b67716124aa8201aa49a92f95b58bb99822208bfbd32a8e"},
     {file = "panda3d-1.10.15-cp313-cp313t-win32.whl", hash = "sha256:09f4a52918faa54f53fc523f2f0be84789cbf0432cc380960d8e3e8437b48021"},
     {file = "panda3d-1.10.15-cp313-cp313t-win_amd64.whl", hash = "sha256:fa195f2b57a6dd819e81bf13728d00f3973cf4c680245c70d7b669a3317decca"},
+    {file = "panda3d-1.10.15-cp314-cp314-macosx_11_0_universal2.whl", hash = "sha256:878551093ddefd1f5f78974a4692733796a1691ed4ec57ecdf23fe7930421597"},
+    {file = "panda3d-1.10.15-cp314-cp314-manylinux2014_x86_64.whl", hash = "sha256:2af5a22e73e8c91bd723d65c3756f296f520a8f8196efe2ea1aae5ac61cf7e36"},
+    {file = "panda3d-1.10.15-cp314-cp314-win32.whl", hash = "sha256:01372bcdd5ae8157dfa0203b953c37fb4d1178006ae4de6c12af4b984da92584"},
+    {file = "panda3d-1.10.15-cp314-cp314-win_amd64.whl", hash = "sha256:ab9984400e764c22768ea1a0b78c0b8e1352603458801381acaeba721354ff68"},
+    {file = "panda3d-1.10.15-cp314-cp314t-macosx_11_0_universal2.whl", hash = "sha256:bbd2c2b7f87ba64521987197f681357830240eefd7312d4e0985fda1a647c0ba"},
+    {file = "panda3d-1.10.15-cp314-cp314t-manylinux2014_x86_64.whl", hash = "sha256:a60dda22ddcc50a159d4e323f8c2c8f57d40a518cb33b27554a1bee2b06b5ff1"},
+    {file = "panda3d-1.10.15-cp314-cp314t-win32.whl", hash = "sha256:c3565023452d0312469264b02653665940a1a789947a824eadc50796195c57e5"},
+    {file = "panda3d-1.10.15-cp314-cp314t-win_amd64.whl", hash = "sha256:3532657ce78f63ded9b887c8f9febebb8df2f9be37f32b59347136709f866c9e"},
     {file = "panda3d-1.10.15-cp34-cp34m-macosx_10_6_i386.whl", hash = "sha256:66e8057099fa36ca520c999fc5068c314ddcf7e291c4847e1e5311e24f5e2f90"},
     {file = "panda3d-1.10.15-cp34-cp34m-macosx_10_6_x86_64.whl", hash = "sha256:aed36505cd4054b598c31fde745e10be43c43b2a3b17f1b8c6c723946d84b3e0"},
     {file = "panda3d-1.10.15-cp34-cp34m-manylinux1_i686.whl", hash = "sha256:33a973266ca16f87581e4b36615ae57bc3cfd40a0f88ff7faf5f3ae6ed5c7a10"},
@@ -4699,7 +4707,7 @@ version = "0.49.1"
 description = "The little ASGI library that shines."
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "docs"]
+groups = ["docs"]
 files = [
     {file = "starlette-0.49.1-py3-none-any.whl", hash = "sha256:d92ce9f07e4a3caa3ac13a79523bd18e3bc0042bb8ff2d759a8e7dd0e1859875"},
     {file = "starlette-0.49.1.tar.gz", hash = "sha256:481a43b71e24ed8c43b11ea02f5353d77840e01480881b8cb5a26b8cae64a8cb"},
@@ -4911,21 +4919,21 @@ dev = ["flake8", "flake8-annotations", "flake8-bandit", "flake8-bugbear", "flake
 
 [[package]]
 name = "urllib3"
-version = "2.5.0"
+version = "2.6.0"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 optional = false
 python-versions = ">=3.9"
 groups = ["dev", "docs"]
 files = [
-    {file = "urllib3-2.5.0-py3-none-any.whl", hash = "sha256:e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc"},
-    {file = "urllib3-2.5.0.tar.gz", hash = "sha256:3fc47733c7e419d4bc3f6b3dc2b4f890bb743906a30d56ba4a5bfa4bbff92760"},
+    {file = "urllib3-2.6.0-py3-none-any.whl", hash = "sha256:c90f7a39f716c572c4e3e58509581ebd83f9b59cced005b7db7ad2d22b0db99f"},
+    {file = "urllib3-2.6.0.tar.gz", hash = "sha256:cb9bcef5a4b345d5da5d145dc3e30834f58e8018828cbc724d30b4cb7d4d49f1"},
 ]
 
 [package.extras]
-brotli = ["brotli (>=1.0.9) ; platform_python_implementation == \"CPython\"", "brotlicffi (>=0.8.0) ; platform_python_implementation != \"CPython\""]
+brotli = ["brotli (>=1.2.0) ; platform_python_implementation == \"CPython\"", "brotlicffi (>=1.2.0.0) ; platform_python_implementation != \"CPython\""]
 h2 = ["h2 (>=4,<5)"]
 socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
-zstd = ["zstandard (>=0.18.0)"]
+zstd = ["backports-zstd (>=1.0.0) ; python_version < \"3.14\""]
 
 [[package]]
 name = "uvicorn"
