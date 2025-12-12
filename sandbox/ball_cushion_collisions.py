@@ -350,6 +350,67 @@ def plot_rebound_speed_vs_incident_angle(
     fig.show(config={"displayModeBar": True})
 
 
+def plot_change_in_angular_velocity_vs_incident_angle(
+    title: str, configs, speeds, topspin_factors=None, sidespin_factors=None
+):
+    cut_angles = np.linspace(0, np.pi / 2, N_CUT_ANGLES, endpoint=False)
+    cut_angles_deg = np.rad2deg(cut_angles)
+
+    fig = go.Figure()
+    base_colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+
+    for config_idx, config in enumerate(configs):
+        results = collision_results_versus_cut_angle(
+            config, cut_angles, speeds, topspin_factors, sidespin_factors
+        )
+
+        base_color = base_colors[config_idx % len(base_colors)]
+        trajectory_idx = 0
+        num_trajectories = len(results)
+
+        for (speed, topspin_factor, sidespin_factor), (
+            _,
+            avel,
+            _,
+            outgoing_avel,
+            _,
+            _,
+        ) in results.items():
+            label = f"{config.model.model}: speed={speed:.3} m/s"
+            if topspin_factors is not None:
+                label += f", topspin_factor={topspin_factor:.2}"
+            if sidespin_factors is not None:
+                label += f", sidespin_factor={sidespin_factor:.2}"
+
+            outgoing_avel_proportion_of_avel = 100 * np.divide(
+                np.multiply(outgoing_avel, avel).sum(1), np.multiply(avel, avel).sum(1)
+            )
+
+            opacity = 0.4 + 0.6 * trajectory_idx / max(1, num_trajectories - 1)
+
+            fig.add_trace(
+                go.Scatter(
+                    x=cut_angles_deg,
+                    y=outgoing_avel_proportion_of_avel,
+                    mode="lines",
+                    name=label,
+                    line=dict(color=base_color, width=2),
+                    opacity=opacity,
+                )
+            )
+
+            trajectory_idx += 1
+
+    fig.update_layout(
+        title=title,
+        xaxis_title="incident angle (deg)",
+        yaxis_title="change in angular velocity (%)",
+        showlegend=True,
+    )
+
+    fig.show(config={"displayModeBar": True})
+
+
 def main():
     models = [
         Han2005Linear(),
@@ -413,6 +474,14 @@ def main():
 
     plot_rebound_speed_vs_incident_angle(
         "1.0 m/s Rolling-Ball Collision With Various Sidespin\nRebound Speed vs. Incident Angle",
+        configs,
+        [1.0],
+        topspin_factors=[1.0],
+        sidespin_factors=topspins,
+    )
+
+    plot_change_in_angular_velocity_vs_incident_angle(
+        "1.0 m/s Rolling-Ball Collision With Various Sidespin\nChange in Angular Velocity vs. Incident Angle",
         configs,
         [1.0],
         topspin_factors=[1.0],
