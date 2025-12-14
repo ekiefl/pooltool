@@ -60,7 +60,8 @@ class BallLCushionModel(StrEnum):
             untouched by the interaction.
 
         IMPULSE_FRICTIONAL_INELASTIC:
-            TODO(derek)
+            An instantaneous/non-smooth, impulse-based collision model.  This model includes effects of
+            tangential friction and normal coefficient of restitution.
 
         MATHAVAN_2010:
             Ball-cushion collision resolver for the Mathavan et al. (2010) collision model.
