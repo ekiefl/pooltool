@@ -79,6 +79,27 @@ class BallLCushionModel(StrEnum):
 
                 Available at
                 https://drdavepoolinfo.com//physics_articles/Mathavan_IMechE_2010.pdf
+
+        STRONGE_COMPLIANT
+            An instananeous/non-smooth, collision model that accounts for tangential compliance.
+            This model includes effects of tangential friction, tangential compliance, and normal
+            coefficient of restitution. Accounting for tangential compliance allows for reversal
+            of the slip direction at the contact point.
+
+            This model assumes the colliding bodies (ball and rail) are rigid bodies, one of which
+            is connected at the contact point to a massless particle via two independent springs.
+            One of the springs is oriented in the normal direction, the other in the tangent
+            direction. During restitution, the stiffness of the normal spring increases depending
+            on the coefficient of restitution. The tangential spring has a constant stiffness. This
+            results in simple harmonic motion in both the normal and tangent directions. These
+            equations can be solved for the final velocities after some root finding to determine
+            transitions between sticking and slipping at the contact point. There is no numerical
+            integration to solve for the final result.
+
+            References:
+                W. J. Stronge, “Tangential Compliance in Planar Impact of Rough Bodies,” in Impact Mechanics,
+                Cambridge: Cambridge University Press, 2018, pp. 89–115
+                doi:10.1017/9781139050227
     """
 
     MATHAVAN_2010 = auto()
