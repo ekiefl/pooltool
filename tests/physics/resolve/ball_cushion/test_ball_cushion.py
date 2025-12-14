@@ -24,9 +24,11 @@ def cushion_yaxis():
 @pytest.mark.parametrize(
     "model_name",
     [
-        BallLCushionModel.HAN_2005,
         BallLCushionModel.UNREALISTIC,
+        BallLCushionModel.HAN_2005,
+        BallLCushionModel.IMPULSE_FRICTIONAL_INELASTIC,
         BallLCushionModel.MATHAVAN_2010,
+        BallLCushionModel.STRONGE_COMPLIANT,
     ],
 )
 def test_symmetry(
