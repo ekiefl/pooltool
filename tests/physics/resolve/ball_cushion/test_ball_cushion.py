@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from pooltool import ptmath
 from pooltool.constants import sliding
 from pooltool.objects import Ball, BallParams, LinearCushionSegment, PocketTableSpecs
 from pooltool.physics.resolve.ball_cushion import (
@@ -19,6 +20,54 @@ def cushion_yaxis():
         p1=np.array([0, -1, h], dtype=np.float64),
         p2=np.array([0, +1, h], dtype=np.float64),
     )
+
+
+@pytest.mark.parametrize(
+    "model_name",
+    [
+        BallLCushionModel.UNREALISTIC,
+        # BallLCushionModel.HAN_2005,
+        BallLCushionModel.IMPULSE_FRICTIONAL_INELASTIC,
+        BallLCushionModel.MATHAVAN_2010,
+        BallLCushionModel.STRONGE_COMPLIANT,
+    ],
+)
+def test_energy(
+    cushion_yaxis: LinearCushionSegment, model_name: BallLCushionModel
+) -> None:
+    """Test that ball-linear cushion interactions do not increase energy"""
+    R = BallParams.default().R
+    pos = [-R, 0, R]
+
+    for theta in np.linspace(1, 89, 10):
+        rads = np.radians(theta)
+        vel = [np.cos(rads), np.sin(rads), 0]
+
+        # Ball hitting left-side of cushion
+        ball = Ball("cue")
+        ball.state.rvw[0] = pos
+        ball.state.rvw[1] = vel
+        ball.state.s = sliding
+
+        initial_energy = ptmath.get_ball_energy(
+            ball.state.rvw,
+            ball.params.R,
+            ball.params.m,
+        )
+
+        # Resolve physics
+        model = ball_lcushion_models[model_name]()
+        ball_after, _ = model.resolve(ball=ball, cushion=cushion_yaxis, inplace=False)
+
+        final_energy = ptmath.get_ball_energy(
+            ball_after.state.rvw,
+            ball_after.params.R,
+            ball_after.params.m,
+        )
+
+        assert (
+            np.isclose(initial_energy, final_energy) or final_energy <= initial_energy
+        ), "energy must not increase during collisions"
 
 
 @pytest.mark.parametrize(
