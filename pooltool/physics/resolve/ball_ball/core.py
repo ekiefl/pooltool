@@ -36,8 +36,8 @@ class CoreBallBallCollision(ABC):
 
         The primary method solves a quadratic equation to find the time offset that
         positions the balls at the target separation. Balls are moved along their
-        trajectories (position + velocity * time) to this configuration. Quadratic terms
-        are assumed negligible.
+        trajectories (position + velocity * time) to this configuration. Acceleration
+        terms are assumed negligible.
 
         If the required movement exceeds 10x the spacer, which can occur if balls are
         moving with nearly the same velocity, a naive fallback strategy is used that
@@ -101,22 +101,26 @@ class CoreBallBallCollision(ABC):
         # distance `spacer` between them can be high enough to significantly displace
         # both balls.
         for r, r_corrected in zip([r1, r2], [r1_corrected, r2_corrected]):
-            if ptmath.norm3d(r - r_corrected) > 10 * spacer:
+            if ptmath.norm3d(r - r_corrected) > 2 * spacer:
                 line_of_centers = (r2 - r1) / initial_distance
                 total_displacement = target_distance - initial_distance
 
-                # Determine which ball is chasing (has higher radial velocity).
-                v1_radial = np.dot(v1, line_of_centers)
-                v2_radial = np.dot(v2, line_of_centers)
+                ## Determine which ball is chasing (has higher radial velocity).
+                # v1_radial = np.dot(v1, line_of_centers)
+                # v2_radial = np.dot(v2, line_of_centers)
 
-                if v1_radial > v2_radial:
-                    # Ball 1 is chasing ball 2, push ball 2 forward.
-                    r1_corrected = r1
-                    r2_corrected = r2 + total_displacement * line_of_centers
-                else:
-                    # Ball 2 is chasing ball 1, push ball 1 backward.
-                    r1_corrected = r1 - total_displacement * line_of_centers
-                    r2_corrected = r2
+                # if v1_radial > v2_radial:
+                #    # Ball 2 is chasing ball 1, pull 2 backwards.
+                #    r1_corrected = r1
+                #    r2_corrected = r2 + total_displacement * line_of_centers
+                # else:
+                #    # Ball 1 is chasing ball 2, pull 1 backwards.
+                #    r1_corrected = r1 - total_displacement * line_of_centers
+                #    r2_corrected = r2
+
+                correction = 2 * ball1.params.R - ptmath.norm3d(r2 - r1) + spacer
+                r1_corrected = r1 - correction / 2 * ptmath.unit_vector(r2 - r1)
+                r2_corrected = r2 + correction / 2 * ptmath.unit_vector(r2 - r1)
 
                 break
 
@@ -233,7 +237,7 @@ class CoreBallBallCollision(ABC):
 
         ball1, ball2 = self.make_kiss(ball1, ball2)
         ball1, ball2 = self.solve(ball1, ball2)
-        ball1, ball2 = self.resolve_continually_touching(ball1, ball2)
+        # ball1, ball2 = self.resolve_continually_touching(ball1, ball2)
 
         return ball1, ball2
 

@@ -1,4 +1,5 @@
 import pooltool as pt
+from pooltool.evolution.event_based.introspection import simulate_with_snapshots
 
 table = pt.Table.default()
 ball_radius = pt.BallParams.default().R
@@ -9,7 +10,7 @@ balls = [
         xy=(0.5 * table.w, 0.4 * table.l + 2 * i * ball_radius),
         ballset=pt.objects.BallSet("pooltool_pocket"),
     )
-    for i in range(4)
+    for i in range(3)
 ]
 
 balls.append(
@@ -28,5 +29,4 @@ system = pt.System(
 
 engine = pt.physics.PhysicsEngine()
 system.strike(V0=2, phi=pt.aim.at_ball(system, "1", cut=0))
-pt.simulate(system, inplace=True, engine=engine)
-pt.show(system)
+system, snapshots = simulate_with_snapshots(system)

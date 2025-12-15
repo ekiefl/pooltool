@@ -111,7 +111,7 @@ def _get_collision_events_from_cache(
 class SimulationSnapshot:
     step_number: int
     system: System
-    event: Event
+    next_event: Event
     collision_cache: CollisionCache
     transition_cache: TransitionCache
     engine: PhysicsEngine
@@ -227,7 +227,7 @@ def simulate_with_snapshots(
         snapshot = SimulationSnapshot(
             step_number=step,
             system=system_pre_evolve,
-            event=event,
+            next_event=event,
             collision_cache=collision_cache_snapshot,
             transition_cache=transition_cache_snapshot,
             engine=engine,
@@ -240,14 +240,3 @@ def simulate_with_snapshots(
         step += 1
 
     return sim.shot, snapshot_sequence
-
-
-if __name__ == "__main__":
-    from pathlib import Path
-
-    import pooltool as pt
-
-    output = Path("test.json")
-    simulate_with_snapshots(pt.System.example(), output)
-    seq = SimulationSnapshotSequence.load(output)
-    system = pt.simulate(pt.System.example())
