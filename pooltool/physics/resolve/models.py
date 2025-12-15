@@ -80,8 +80,8 @@ class BallLCushionModel(StrEnum):
                 Available at
                 https://drdavepoolinfo.com//physics_articles/Mathavan_IMechE_2010.pdf
 
-        STRONGE_COMPLIANT
-            An instananeous/non-smooth, collision model that accounts for tangential compliance.
+        STRONGE_COMPLIANT:
+            An instantaneous/non-smooth, collision model that accounts for tangential compliance.
             This model includes effects of tangential friction, tangential compliance, and normal
             coefficient of restitution. Accounting for tangential compliance allows for reversal
             of the slip direction at the contact point.
@@ -113,29 +113,11 @@ class BallCCushionModel(StrEnum):
     """An Enum for different ball-circular cushion collision models
 
     Attributes:
-        HAN_2005:
-            https://ekiefl.github.io/2020/04/24/pooltool-theory/#3-han-2005
-
-        UNREALISTIC:
-            An unrealistic model in which balls are perfectly reflected. Spin is left
-            untouched by the interaction.
-
-        MATHAVAN_2010:
-            Ball-cushion collision resolver for the Mathavan et al. (2010) collision model.
-
-            This work predicts ball bounce angles and bounce speeds for the ball’s collisions
-            with a cushion, under the assumption of insignificant cushion deformation.
-            Differential equations are derived for the ball dynamics during the impact and these
-            these equations are solved numerically.
-
-            References:
-                Mathavan S, Jackson MR, Parkin RM. A theoretical analysis of billiard
-                ball-cushion dynamics under cushion impacts. Proceedings of the Institution of
-                Mechanical Engineers, Part C. 2010;224(9):1863-1873.
-                doi:10.1243/09544062JMES1964
-
-                Available at
-                https://drdavepoolinfo.com//physics_articles/Mathavan_IMechE_2010.pdf
+        HAN_2005: See :class:`BallLCushionModel`.
+        UNREALISTIC: See :class:`BallLCushionModel`.
+        IMPULSE_FRICTIONAL_INELASTIC: See :class:`BallLCushionModel`.
+        MATHAVAN_2010: See :class:`BallLCushionModel`.
+        STRONGE_COMPLIANT: See :class:`BallLCushionModel`.
     """
 
     MATHAVAN_2010 = auto()
