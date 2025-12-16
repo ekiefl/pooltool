@@ -431,15 +431,15 @@ def collision_duration(t_c, e_n):
 
 
 def resolve_collinear_compliant_frictional_inelastic_collision(
-    v_t_0: float,
-    v_n_0: float,
-    m: float,
-    beta_t: float,
-    beta_n: float,
-    mu: float,
-    e_n: float,
-    k_n: float,
-    eta_squared: float,
+    v_t_0: float,  # tangential velocity (must be <= 0)
+    v_n_0: float,  # normal velocity (must be <0)
+    m: float,  # collision effective mass
+    beta_t: float,  # mass-matrix coefficient
+    beta_n: float,  # mass-matrix coefficient
+    mu: float,  # friction coefficient
+    e_n: float,  # coefficient of restitution
+    k_n: float,  # normal spring stiffness
+    eta_squared: float,  # ratio of normal spring stiffness to tangential spring stiffness
 ) -> tuple[float, float]:
     assert v_t_0 <= 0
     assert v_n_0 < 0
