@@ -362,11 +362,9 @@ def slip_time_for_stick(
         return t_f
 
     t_slip = sp.optimize.toms748(f, t_c, t_f)
-    """
     assert t_stick <= t_slip and t_slip <= t_f, (
         f"t_stick={t_stick} <= t_slip={t_slip} <= t_f={t_f}"
     )
-    """
     return t_slip
 
 
@@ -444,7 +442,7 @@ def resolve_collinear_compliant_frictional_inelastic_collision(
     eta_squared: float,
 ) -> tuple[float, float]:
     assert v_t_0 <= 0
-    assert v_n_0 <= 0
+    assert v_n_0 < 0
 
     beta_t_by_beta_n = beta_t / beta_n
     v_t_0_by_v_n_0 = v_t_0 / v_n_0
