@@ -8,10 +8,6 @@ from numba import jit
 import pooltool.constants as const
 
 logger = logging.getLogger(__name__)
-ch = logging.StreamHandler()
-ch.setLevel(logging.ERROR)
-logger.addHandler(ch)
-logger.setLevel(logging.ERROR)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
