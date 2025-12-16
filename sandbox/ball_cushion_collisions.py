@@ -353,6 +353,10 @@ def plot_rebound_speed_vs_incident_angle(
 def plot_change_in_angular_velocity_vs_incident_angle(
     title: str, configs, speeds, topspin_factors=None, sidespin_factors=None
 ):
+    assert topspin_factors is not None or sidespin_factors is not None, (
+        "must have some initial angular velocity"
+    )
+
     cut_angles = np.linspace(0, np.pi / 2, N_CUT_ANGLES, endpoint=False)
     cut_angles_deg = np.rad2deg(cut_angles)
 
@@ -382,7 +386,7 @@ def plot_change_in_angular_velocity_vs_incident_angle(
             if sidespin_factors is not None:
                 label += f", sidespin_factor={sidespin_factor:.2}"
 
-            outgoing_avel_proportion_of_avel = 100 * np.divide(
+            outgoing_avel_proportion_of_avel = np.divide(
                 np.multiply(outgoing_avel, avel).sum(1), np.multiply(avel, avel).sum(1)
             )
 
@@ -391,7 +395,7 @@ def plot_change_in_angular_velocity_vs_incident_angle(
             fig.add_trace(
                 go.Scatter(
                     x=cut_angles_deg,
-                    y=outgoing_avel_proportion_of_avel,
+                    y=100 * outgoing_avel_proportion_of_avel,
                     mode="lines",
                     name=label,
                     line=dict(color=base_color, width=2),
