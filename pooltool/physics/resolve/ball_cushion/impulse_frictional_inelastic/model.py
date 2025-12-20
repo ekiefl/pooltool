@@ -19,7 +19,7 @@ from pooltool.physics.resolve.sphere_half_space_collision import (
 
 def _solve(ball: Ball, cushion: Cushion) -> tuple[Ball, Cushion]:
     rvw = resolve_sphere_half_space_collision(
-        normal=cushion.get_normal_3d(ball.xyz),
+        normal=cushion.get_normal_xy(ball.xyz),
         rvw=ball.state.rvw,
         R=ball.params.R,
         mu_k=ball.params.f_c,
