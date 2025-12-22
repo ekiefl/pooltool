@@ -251,6 +251,24 @@ def coordinate_rotation(v: NDArray[np.float64], phi: float) -> NDArray[np.float6
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def decompose_normal_tangent(v, n, flip_tangent_direction=False):
+    """Decomposes a vector into normal and tangent components given the unit normal direction
+
+    Returns:
+        magnitude of normal component
+        magnitude of tangent component
+        unit tangent direction
+    """
+    v_n = np.dot(n, v)
+    n_cross_v = cross(n, v)
+    v_t = norm3d(n_cross_v)
+    if flip_tangent_direction:
+        v_t = -v_t
+    t = cross(n_cross_v, n) / v_t if v_t != 0 else np.zeros(3)
+    return v_n, v_t, t
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def point_on_line_closest_to_point(
     p1: NDArray[np.float64], p2: NDArray[np.float64], p0: NDArray[np.float64]
 ) -> NDArray[np.float64]:
