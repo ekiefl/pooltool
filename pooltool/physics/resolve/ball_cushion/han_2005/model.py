@@ -73,6 +73,7 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
     PY = PyE
     PZ = PxE * np.cos(theta_a) - PzE * np.sin(theta_a)
 
+    # Eqs 23
     # Update velocity
     rvw_R[1, 0] += PX / m
     rvw_R[1, 1] += PY / m
