@@ -44,7 +44,7 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
         - R * rvw_R[2, 2] * np.cos(theta_a)
         + R * rvw_R[2, 0] * np.sin(theta_a)
     )
-    c = rvw_R[1, 0] * np.cos(theta_a)  # 2D assumption
+    c = -rvw_R[1, 0] * np.cos(theta_a)  # 2D assumption
 
     # Eqs 16
     II = 2 / 5 * m * R**2
@@ -52,7 +52,7 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
     B = 1 / m
 
     # Eqs 17 & 20
-    PzE = (1 + e) * c / B
+    PzE = -(1 + e) * c / B
     abs_s_0 = np.sqrt(sx**2 + sy**2)
     PzS = abs_s_0 / A
 
