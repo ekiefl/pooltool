@@ -20,14 +20,12 @@ from pooltool.physics.resolve.ball_cushion.han_2005.properties import (
 from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
 
 
-def han2005(rvw, normal, R, m, h, e_c, f_c):
+def han2005(rvw, xy_normal, R, m, h, e_c, f_c):
     """Inhwan Han (2005) 'Dynamics in Carom and Three Cushion Billiards'"""
-    # orient the normal so it points away from playing surface
-    normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
 
     # Change from the table frame to the cushion frame. The cushion frame is defined by
     # the normal vector is parallel with <1,0,0>.
-    psi = ptmath.angle(normal)
+    psi = ptmath.angle(xy_normal)
     rvw_R = ptmath.coordinate_rotation(rvw.T, -psi).T
 
     # The incidence angle--called theta_0 in paper
@@ -90,9 +88,11 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
 
 
 def _solve(ball: Ball, cushion: Cushion) -> tuple[Ball, Cushion]:
+    xy_normal = cushion.get_normal_xy(ball.xyz)
+    xy_normal = xy_normal if np.dot(xy_normal, ball.vel) > 0 else -xy_normal
     rvw = han2005(
         rvw=ball.state.rvw,
-        normal=cushion.get_normal_xy(ball.xyz),
+        xy_normal=xy_normal,
         R=ball.params.R,
         m=ball.params.m,
         h=cushion.height,
