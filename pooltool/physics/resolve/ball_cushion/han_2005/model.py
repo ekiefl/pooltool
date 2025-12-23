@@ -58,7 +58,7 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
     PzE = (1 + e) * c / B
     PzS = np.sqrt(sx**2 + sy**2) / A
 
-    if PzS <= PzE:
+    if PzS <= mu * PzE:
         # Sliding and sticking case
         PX = -sx / A * np.sin(theta_a) - (1 + e) * c / B * np.cos(theta_a)
         PY = sy / A
