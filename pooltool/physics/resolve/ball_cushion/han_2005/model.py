@@ -59,19 +59,18 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
     PzS = np.sqrt(sx**2 + sy**2) / A
 
     if PzS <= mu * PzE:
-        # Sliding and sticking case
-        PX = -sx / A * np.sin(theta_a) - (1 + e) * c / B * np.cos(theta_a)
-        PY = sy / A
-        PZ = sx / A * np.cos(theta_a) - (1 + e) * c / B * np.sin(theta_a)
+        # Eqs 18 Sliding and sticking case
+        PxE = sx / A
+        PyE = sy / A
     else:
-        # Forward sliding case
-        PX = -mu * (1 + e) * c / B * np.cos(phi) * np.sin(theta_a) - (
-            1 + e
-        ) * c / B * np.cos(theta_a)
-        PY = mu * (1 + e) * c / B * np.sin(phi)
-        PZ = mu * (1 + e) * c / B * np.cos(phi) * np.cos(theta_a) - (
-            1 + e
-        ) * c / B * np.sin(theta_a)
+        # Eqs 19 Forward sliding case
+        PxE = mu * PzE * np.cos(phi)
+        PyE = mu * PzE * np.sin(phi)
+
+    # Eqs 21 & 22 (transform P from contact normal coordinate frame to rail coordinate frame)
+    PX = -PxE * np.sin(theta_a) - PzE * np.cos(theta_a)
+    PY = PyE
+    PZ = PxE * np.cos(theta_a) - PzE * np.sin(theta_a)
 
     # Update velocity
     rvw_R[1, 0] += PX / m
