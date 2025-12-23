@@ -30,6 +30,9 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
     psi = ptmath.angle(normal)
     rvw_R = ptmath.coordinate_rotation(rvw.T, -psi).T
 
+    assert rvw_R[1, 0] > 0
+    assert np.isclose(rvw_R[1, 2], 0)
+
     # Get mu and e
     e = get_ball_cushion_restitution(rvw_R, e_c)
     mu = get_ball_cushion_friction(rvw_R, f_c)
