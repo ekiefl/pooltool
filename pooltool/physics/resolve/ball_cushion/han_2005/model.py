@@ -30,9 +30,6 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
     psi = ptmath.angle(normal)
     rvw_R = ptmath.coordinate_rotation(rvw.T, -psi).T
 
-    # The incidence angle--called theta_0 in paper
-    phi = ptmath.angle(rvw_R[1]) % (2 * np.pi)
-
     # Get mu and e
     e = get_ball_cushion_restitution(rvw_R, e_c)
     mu = get_ball_cushion_friction(rvw_R, f_c)
@@ -56,7 +53,8 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
 
     # Eqs 17 & 20
     PzE = (1 + e) * c / B
-    PzS = np.sqrt(sx**2 + sy**2) / A
+    abs_s_0 = np.sqrt(sx**2 + sy**2)
+    PzS = abs_s_0 / A
 
     if PzS <= mu * PzE:
         # Eqs 18 Sliding and sticking case
@@ -64,8 +62,8 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
         PyE = sy / A
     else:
         # Eqs 19 Forward sliding case
-        PxE = mu * PzE * np.cos(phi)
-        PyE = mu * PzE * np.sin(phi)
+        PxE = mu * PzE * sx / abs_s_0
+        PyE = mu * PzE * sy / abs_s_0
 
     # Eqs 21 & 22 (transform P from contact normal coordinate frame to rail coordinate frame)
     PX = -PxE * np.sin(theta_a) - PzE * np.cos(theta_a)
