@@ -92,7 +92,7 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
 def _solve(ball: Ball, cushion: Cushion) -> tuple[Ball, Cushion]:
     rvw = han2005(
         rvw=ball.state.rvw,
-        normal=cushion.get_normal_xy(ball.state.rvw),
+        normal=cushion.get_normal_xy(ball.xyz),
         R=ball.params.R,
         m=ball.params.m,
         h=cushion.height,

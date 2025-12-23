@@ -28,7 +28,7 @@ def _solve(ball: Ball, cushion: Cushion) -> tuple[Ball, Cushion]:
 
     logger.debug(f"v={rvw[1]}, w={rvw[2]}")
 
-    normal_direction = cushion.get_normal_xy(ball.state.rvw)
+    normal_direction = cushion.get_normal_xy(ball.xyz)
     normal_direction = (
         -normal_direction
         if np.dot(normal_direction, ball.state.rvw[1]) > 0

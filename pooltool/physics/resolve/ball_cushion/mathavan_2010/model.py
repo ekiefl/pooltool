@@ -633,7 +633,7 @@ def solve_mathavan(
     rvw = ball.state.rvw
 
     # Ensure the normal is pointing in the same direction as the ball's velocity.
-    normal = cushion.get_normal_xy(rvw)
+    normal = cushion.get_normal_xy(ball.xyz)
     if np.dot(normal, rvw[1]) <= 0:
         normal = -normal
 
