@@ -496,16 +496,9 @@ class Game(Interface):
         Global.mode_mgr.change_mode(Mode.aim)
 
     def _create_system(self):
-        """Create the multisystem and game objects
-
-        FIXME This is where menu options for game type and further specifications should
-        plug into.
-        """
-        # Change the gametype by editing ~/.config/pooltool/general.yaml
-        # Available options:
-        #   {eightball, nineball, threecushion, snooker, sandbox, sumtothree}
+        """Create the multisystem and game objects"""
         game_type = settings.gameplay.game_type
-        game = get_ruleset(game_type)()
+        game = get_ruleset(game_type, enforce_rules=settings.gameplay.enforce_rules)()
         game.players = [
             Player("Player 1"),
             Player("Player 2"),
