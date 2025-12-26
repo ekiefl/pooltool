@@ -1,64 +1,44 @@
 import numpy as np
-import quaternion
 from numba import jit
 
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
 
 
-def resolve_sphere_half_space_collision(normal, rvw, R, mu_k, e):
-    unit_z = np.array([0.0, 0.0, 1.0])
-    frame_rotation = ptmath.quaternion_from_vector_to_vector(normal, unit_z)
-    rvw = quaternion.rotate_vectors(frame_rotation, rvw)
-    rvw = resolve_sphere_half_space_collision_z_normal(rvw=rvw, R=R, mu_k=mu_k, e=e)
-    rvw = quaternion.rotate_vectors(frame_rotation.conjugate(), rvw)
-    return rvw
-
-
 @jit(nopython=True, cache=const.use_numba_cache)
-def resolve_sphere_half_space_collision_z_normal(rvw, R, mu_k, e):
-    unit_z = np.array([0.0, 0.0, 1.0])
-
-    v_i = rvw[1]
-    w_i = rvw[2]
-
+def resolve_sphere_half_space_collision(normal, rvw, R, mu_k, e):
     rvw_f = rvw.copy()
     v_f = rvw_f[1]
     w_f = rvw_f[2]
 
-    assert v_i[2] < 0
+    v_c = ptmath.surface_velocity(rvw, -normal, R)
+    v_n_i, v_t_i, tangent = ptmath.decompose_normal_tangent(v_c, normal)
+    has_relative_velocity = not np.isclose(v_t_i, 0.0)
 
-    D_v_perpendicular_magnitude = (1 + e) * -v_i[2]
-    D_v_perpendicular = np.array([0, 0, D_v_perpendicular_magnitude])
+    w_t_i = np.dot(rvw[1], tangent)
 
-    # discard velocity normal components
-    v_i[2] = 0.0
-    w_i[2] = 0.0
+    D_v_n_magnitude = (1 + e) * -v_n_i
+    D_v_n = D_v_n_magnitude * normal
 
-    v_c_i = ptmath.tangent_surface_velocity(rvw, -unit_z, R)
-    v_c_i_magnitude = ptmath.norm3d(v_c_i)
+    D_v_t_slip_magnitude = mu_k * D_v_n_magnitude
+    D_v_t_slip_magnitude_squared = D_v_t_slip_magnitude**2
+    D_v_t_slip = D_v_t_slip_magnitude * -tangent
 
-    has_relative_velocity = v_c_i_magnitude > const.EPS
-    if has_relative_velocity:
-        v_hat_c_i = v_c_i / v_c_i_magnitude
-        D_v_parallel_slip = mu_k * D_v_perpendicular_magnitude * -v_hat_c_i
-    else:
-        v_hat_c_i = np.zeros(3)
-        D_v_parallel_slip = np.zeros(3)
+    D_v_t_no_slip = (2.0 / 7.0) * (
+        R * ptmath.cross(w_t_i * tangent, normal) - v_t_i * tangent
+    )
+    D_v_t_no_slip_magnitude_squared = ptmath.squared_norm3d(D_v_t_no_slip)
 
-    D_v_parallel_no_slip = (2.0 / 7.0) * (R * ptmath.cross(w_i, unit_z) - v_i)
-
-    if not has_relative_velocity or ptmath.squared_norm3d(
-        D_v_parallel_no_slip
-    ) <= ptmath.squared_norm3d(D_v_parallel_slip):
-        v_f += D_v_perpendicular + D_v_parallel_no_slip
-        w_f += (5.0 / 7.0) * (-w_i + ptmath.cross(unit_z, v_i) / R)
-    else:
-        v_f += D_v_perpendicular + D_v_parallel_slip
-        w_f += (
-            (2.5 / R)
-            * ptmath.norm3d(D_v_parallel_slip)
-            * ptmath.cross(unit_z, v_hat_c_i)
+    if (
+        not has_relative_velocity
+        or D_v_t_no_slip_magnitude_squared <= D_v_t_slip_magnitude_squared
+    ):
+        v_f += D_v_n + D_v_t_no_slip
+        w_f += (5.0 / 7.0) * (
+            -w_t_i * tangent + ptmath.cross(normal, v_t_i * tangent) / R
         )
+    else:
+        v_f += D_v_n + D_v_t_slip
+        w_f += (2.5 / R) * D_v_t_slip_magnitude * ptmath.cross(normal, tangent)
 
     return rvw_f

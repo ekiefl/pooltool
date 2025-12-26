@@ -5,6 +5,7 @@ import quaternion
 from pooltool.ptmath.utils import (
     angle_between_vectors,
     are_points_on_same_side,
+    decompose_normal_tangent,
     quaternion_from_vector_to_vector,
     rotation_from_vector_to_vector,
     solve_transcendental,
@@ -85,6 +86,41 @@ def test_angle_between_vectors_basic():
     v2 = np.array([1.0, 1.0, 0.0])
     angle = angle_between_vectors(v1, v2)
     assert pytest.approx(angle) == np.pi / 4
+
+
+@pytest.mark.parametrize(
+    "vector, normal, expected_v_n, expected_v_t, expected_tangent",
+    [
+        (
+            np.array([1.0, 2.0, 0.0]),
+            np.array([1.0, 0.0, 0.0]),
+            1.0,
+            2.0,
+            np.array([0.0, 1.0, 0.0]),
+        ),
+        (
+            np.array([1.0, 1.0, 1.0]),
+            np.array([1.0, 1.0, 0.0]) / np.sqrt(2),
+            np.sqrt(2),
+            1.0,
+            np.array([0.0, 0.0, 1.0]),
+        ),
+        (
+            np.array([1.0, 0.0, 0.0]),
+            np.array([1.0, 0.0, 0.0]),
+            1.0,
+            0.0,
+            np.array([0.0, 0.0, 0.0]),  # indeterminate tangent direction
+        ),
+    ],
+)
+def test_decompose_normal_tangent(
+    vector, normal, expected_v_n, expected_v_t, expected_tangent
+):
+    v_n, v_t, tangent = decompose_normal_tangent(vector, normal)
+    assert np.isclose(v_n, expected_v_n), f"normal={normal}, tangent={tangent}"
+    assert np.isclose(v_t, expected_v_t), f"normal={normal}, tangent={tangent}"
+    assert np.allclose(tangent, expected_tangent)
 
 
 def test_rotation_from_vector_to_vector():

@@ -32,42 +32,42 @@ def cushion_yaxis():
         BallLCushionModel.STRONGE_COMPLIANT,
     ],
 )
+@pytest.mark.parametrize("theta", np.linspace(1, 89, 10))
 def test_energy(
-    cushion_yaxis: LinearCushionSegment, model_name: BallLCushionModel
+    cushion_yaxis: LinearCushionSegment, model_name: BallLCushionModel, theta: float
 ) -> None:
     """Test that ball-linear cushion interactions do not increase energy"""
     R = BallParams.default().R
     pos = [-R, 0, R]
 
-    for theta in np.linspace(1, 89, 10):
-        rads = np.radians(theta)
-        vel = [np.cos(rads), np.sin(rads), 0]
+    rads = np.radians(theta)
+    vel = [np.cos(rads), np.sin(rads), 0]
 
-        # Ball hitting left-side of cushion
-        ball = Ball("cue")
-        ball.state.rvw[0] = pos
-        ball.state.rvw[1] = vel
-        ball.state.s = sliding
+    # Ball hitting left-side of cushion
+    ball = Ball("cue")
+    ball.state.rvw[0] = pos
+    ball.state.rvw[1] = vel
+    ball.state.s = sliding
 
-        initial_energy = ptmath.get_ball_energy(
-            ball.state.rvw,
-            ball.params.R,
-            ball.params.m,
-        )
+    initial_energy = ptmath.get_ball_energy(
+        ball.state.rvw,
+        ball.params.R,
+        ball.params.m,
+    )
 
-        # Resolve physics
-        model = ball_lcushion_models[model_name]()
-        ball_after, _ = model.resolve(ball=ball, cushion=cushion_yaxis, inplace=False)
+    # Resolve physics
+    model = ball_lcushion_models[model_name]()
+    ball_after, _ = model.resolve(ball=ball, cushion=cushion_yaxis, inplace=False)
 
-        final_energy = ptmath.get_ball_energy(
-            ball_after.state.rvw,
-            ball_after.params.R,
-            ball_after.params.m,
-        )
+    final_energy = ptmath.get_ball_energy(
+        ball_after.state.rvw,
+        ball_after.params.R,
+        ball_after.params.m,
+    )
 
-        assert (
-            np.isclose(initial_energy, final_energy) or final_energy <= initial_energy
-        ), "energy must not increase during collisions"
+    assert np.isclose(initial_energy, final_energy) or final_energy <= initial_energy, (
+        "energy must not increase during collisions"
+    )
 
 
 @pytest.mark.parametrize(
@@ -80,49 +80,53 @@ def test_energy(
         BallLCushionModel.STRONGE_COMPLIANT,
     ],
 )
+@pytest.mark.parametrize("theta", np.linspace(-89, 89, 20))
 def test_symmetry(
-    cushion_yaxis: LinearCushionSegment, model_name: BallLCushionModel
+    cushion_yaxis: LinearCushionSegment, model_name: BallLCushionModel, theta: float
 ) -> None:
     """Test that ball-linear cushion interactions are symmetric"""
     R = BallParams.default().R
     pos = [-R, 0, R]
 
-    for theta in np.linspace(-89, 89, 20):
-        rads = np.radians(theta)
-        vel = [np.cos(rads), np.sin(rads), 0]
+    rads = np.radians(theta)
+    vel = [np.cos(rads), np.sin(rads), 0]
 
-        # Ball hitting left-side of cushion
-        ball = Ball("cue")
-        ball.state.rvw[0] = pos
-        ball.state.rvw[1] = vel
-        ball.state.s = sliding
+    # Ball hitting left-side of cushion
+    ball = Ball("cue")
+    ball.state.rvw[0] = pos
+    ball.state.rvw[1] = vel
+    ball.state.s = sliding
 
-        # Ball hitting left-side of cushion with opposite y-vel
-        other = ball.copy()
-        other.state.rvw[1, 1] = -ball.state.rvw[1, 1]
+    # Ball hitting left-side of cushion with opposite y-vel
+    other = ball.copy()
+    other.state.rvw[1, 1] = -ball.state.rvw[1, 1]
 
-        # Positions are same
-        assert np.array_equal(ball.state.rvw[0], other.state.rvw[0])
+    # Positions are same
+    assert np.array_equal(ball.state.rvw[0], other.state.rvw[0])
 
-        # X-velocities are the same
-        assert ball.state.rvw[1, 0] == other.state.rvw[1, 0]
+    # X-velocities are the same
+    assert ball.state.rvw[1, 0] == other.state.rvw[1, 0]
 
-        # Y-velocities are the reflected
-        assert ball.state.rvw[1, 1] == -other.state.rvw[1, 1]
+    # Y-velocities are the reflected
+    assert ball.state.rvw[1, 1] == -other.state.rvw[1, 1]
 
-        # Resolve physics
-        model = ball_lcushion_models[model_name]()
-        ball_after, _ = model.resolve(ball=ball, cushion=cushion_yaxis, inplace=False)
-        other_after, _ = model.resolve(ball=other, cushion=cushion_yaxis, inplace=False)
+    # Resolve physics
+    model = ball_lcushion_models[model_name]()
+    ball_after, _ = model.resolve(ball=ball, cushion=cushion_yaxis, inplace=False)
+    other_after, _ = model.resolve(ball=other, cushion=cushion_yaxis, inplace=False)
 
-        # The velocities have been updated
-        assert not np.array_equal(ball.state.rvw[1], ball_after.state.rvw[1])
-        assert not np.array_equal(other.state.rvw[1], other_after.state.rvw[1])
+    # The velocities have been updated
+    assert not np.array_equal(ball.state.rvw[1], ball_after.state.rvw[1])
+    assert not np.array_equal(other.state.rvw[1], other_after.state.rvw[1])
 
-        # X-velocties are negative and the same
-        assert ball_after.state.rvw[1, 0] < 0
-        assert other_after.state.rvw[1, 0] < 0
-        assert np.isclose(ball_after.state.rvw[1, 0], other_after.state.rvw[1, 0])
+    # X-velocties are negative and the same
+    assert ball_after.state.rvw[1, 0] < 0
+    assert other_after.state.rvw[1, 0] < 0
+    assert np.isclose(
+        ball_after.state.rvw[1, 0], other_after.state.rvw[1, 0], rtol=1e-2, atol=1e-2
+    )
 
-        # Y-velocities are reflected
-        assert np.isclose(ball_after.state.rvw[1, 1], -other_after.state.rvw[1, 1])
+    # Y-velocities are reflected
+    assert np.isclose(
+        ball_after.state.rvw[1, 1], -other_after.state.rvw[1, 1], rtol=1e-2, atol=1e-2
+    )

@@ -28,25 +28,13 @@ def _solve(ball: Ball, cushion: Cushion) -> tuple[Ball, Cushion]:
 
     logger.debug(f"v={rvw[1]}, w={rvw[2]}")
 
-    normal_direction = cushion.get_normal_xy(ball.state.rvw)
-    normal_direction = (
-        -normal_direction
-        if np.dot(normal_direction, ball.state.rvw[1]) > 0
-        else normal_direction
-    )
-
+    normal_direction = cushion.get_normal_3d(ball.xyz)
     relative_contact_velocity = ptmath.surface_velocity(
         rvw, -normal_direction, ball.params.R
     )
 
-    v_n_0 = np.dot(normal_direction, relative_contact_velocity)
-    n_cross_v = ptmath.cross(normal_direction, relative_contact_velocity)
-    # negative ensures the tangent unit vector is pointing in the opposite direction as the ball's tangential velocity.
-    v_t_0 = -ptmath.norm3d(n_cross_v)
-    tangent_direction = (
-        ptmath.cross(n_cross_v, normal_direction) / v_t_0
-        if v_t_0 != 0.0
-        else np.zeros(3)
+    v_n_0, v_t_0, tangent_direction = ptmath.decompose_normal_tangent(
+        relative_contact_velocity, normal_direction, True
     )
 
     logger.debug(f"v_c_0={relative_contact_velocity}")
