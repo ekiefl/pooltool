@@ -26,7 +26,7 @@ def cushion_yaxis():
     "model_name",
     [
         BallLCushionModel.UNREALISTIC,
-        # BallLCushionModel.HAN_2005,
+        BallLCushionModel.HAN_2005,
         BallLCushionModel.IMPULSE_FRICTIONAL_INELASTIC,
         BallLCushionModel.MATHAVAN_2010,
         BallLCushionModel.STRONGE_COMPLIANT,

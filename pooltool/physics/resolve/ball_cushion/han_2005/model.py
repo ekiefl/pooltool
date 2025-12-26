@@ -30,8 +30,8 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
     psi = ptmath.angle(normal)
     rvw_R = ptmath.coordinate_rotation(rvw.T, -psi).T
 
-    # The incidence angle--called theta_0 in paper
-    phi = ptmath.angle(rvw_R[1]) % (2 * np.pi)
+    assert rvw_R[1, 0] > 0
+    assert np.isclose(rvw_R[1, 2], 0)
 
     # Get mu and e
     e = get_ball_cushion_restitution(rvw_R, e_c)
@@ -47,7 +47,7 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
         - R * rvw_R[2, 2] * np.cos(theta_a)
         + R * rvw_R[2, 0] * np.sin(theta_a)
     )
-    c = rvw_R[1, 0] * np.cos(theta_a)  # 2D assumption
+    c = -rvw_R[1, 0] * np.cos(theta_a)  # 2D assumption
 
     # Eqs 16
     II = 2 / 5 * m * R**2
@@ -55,24 +55,25 @@ def han2005(rvw, normal, R, m, h, e_c, f_c):
     B = 1 / m
 
     # Eqs 17 & 20
-    PzE = (1 + e) * c / B
-    PzS = np.sqrt(sx**2 + sy**2) / A
+    PzE = -(1 + e) * c / B
+    abs_s_0 = np.sqrt(sx**2 + sy**2)
+    PzS = abs_s_0 / A
 
-    if PzS <= PzE:
-        # Sliding and sticking case
-        PX = -sx / A * np.sin(theta_a) - (1 + e) * c / B * np.cos(theta_a)
-        PY = sy / A
-        PZ = sx / A * np.cos(theta_a) - (1 + e) * c / B * np.sin(theta_a)
+    if PzS <= mu * PzE:
+        # Eqs 18 Sliding and sticking case
+        PxE = sx / A
+        PyE = sy / A
     else:
-        # Forward sliding case
-        PX = -mu * (1 + e) * c / B * np.cos(phi) * np.sin(theta_a) - (
-            1 + e
-        ) * c / B * np.cos(theta_a)
-        PY = mu * (1 + e) * c / B * np.sin(phi)
-        PZ = mu * (1 + e) * c / B * np.cos(phi) * np.cos(theta_a) - (
-            1 + e
-        ) * c / B * np.sin(theta_a)
+        # Eqs 19 Forward sliding case
+        PxE = mu * PzE * sx / abs_s_0
+        PyE = mu * PzE * sy / abs_s_0
 
+    # Eqs 21 & 22 (transform P from contact normal coordinate frame to rail coordinate frame)
+    PX = -PxE * np.sin(theta_a) - PzE * np.cos(theta_a)
+    PY = PyE
+    PZ = PxE * np.cos(theta_a) - PzE * np.sin(theta_a)
+
+    # Eqs 23
     # Update velocity
     rvw_R[1, 0] += PX / m
     rvw_R[1, 1] += PY / m
