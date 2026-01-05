@@ -253,13 +253,14 @@ def coordinate_rotation(v: NDArray[np.float64], phi: float) -> NDArray[np.float6
 @jit(nopython=True, cache=const.use_numba_cache)
 def decompose_normal_tangent(
     v: NDArray[np.float64], n: NDArray[np.float64], flip_tangent_direction: bool = False
-):
+) -> tuple[float, float, NDArray[np.float64]]:
     """Decomposes a vector into normal and tangent components given the unit normal direction
 
     Returns:
-        magnitude of normal component
-        magnitude of tangent component
-        unit tangent direction
+        Tuple of decomposed magnitudes and directions, ``(v_n, v_t, t)``. ``v_n`` is the
+        magnitude of the normal component, ``v_t`` is the magnitude of the tangent
+        component, and ``t`` is the unit tangent direction. The unit normal direction
+        isn't returned, since it's passed as an argument.
     """
     v_n = np.dot(n, v)
     n_cross_v = cross(n, v)
