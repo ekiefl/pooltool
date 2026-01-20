@@ -122,11 +122,7 @@ def test_symmetry(
     # X-velocties are negative and the same
     assert ball_after.state.rvw[1, 0] < 0
     assert other_after.state.rvw[1, 0] < 0
-    assert np.isclose(
-        ball_after.state.rvw[1, 0], other_after.state.rvw[1, 0], rtol=1e-2, atol=1e-2
-    )
+    assert np.isclose(ball_after.state.rvw[1, 0], other_after.state.rvw[1, 0])
 
     # Y-velocities are reflected
-    assert np.isclose(
-        ball_after.state.rvw[1, 1], -other_after.state.rvw[1, 1], rtol=1e-2, atol=1e-2
-    )
+    assert np.isclose(ball_after.state.rvw[1, 1], -other_after.state.rvw[1, 1])
