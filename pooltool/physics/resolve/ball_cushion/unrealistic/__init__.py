@@ -36,13 +36,13 @@ def _solve(
     #      cushions, the normal is a function of the ball's position (specifically,
     #      it is the line connecting the ball's and cushion's centers). To retain
     #      symmetry between method calls, both linear and circular cushion segments
-    #      accept `rvw` as a parameter
+    #      accept `xyz` as a parameter
     #   2) The cushion normal is arbitrarily assigned to face either into the table
     #      or away from the table. That's my bad--a mishap during development that
     #      we're still living with the consequences of. The burden is that you must
     #      assign a convention. Here I opt to orient the normal so it points away
     #      from the playing surface.
-    normal = cushion.get_normal_xy(rvw)
+    normal = cushion.get_normal_xy(ball.xyz)
     normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
 
     # Rotate frame of reference to the cushion frame. The cushion frame is defined

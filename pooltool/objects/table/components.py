@@ -152,7 +152,7 @@ class LinearCushionSegment:
         """
         return ptmath.unit_vector(np.array([self.lx, self.ly, 0]))
 
-    def get_normal_xy(self, rvw: NDArray[np.float64]) -> NDArray[np.float64]:
+    def get_normal_xy(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
         """Calculates the normal vector for a ball contacting the cushion.
 
         Warning:
@@ -163,10 +163,10 @@ class LinearCushionSegment:
             this vector by negating it.
 
         Args:
-            rvw:
-                The kinematic state vectors of the contacting balls.
+            xyz:
+                The position of the ball.
 
-                See ``rvw`` parameter of :class:`pooltool.objects.BallState`.
+                See ``xyz`` property of :class:`pooltool.objects.BallState`.
 
         Returns:
             NDArray[np.float64]:
@@ -266,20 +266,21 @@ class CircularCushionSegment:
         """The y-coordinate of the cushion's center."""
         return self.center[1]
 
-    def get_normal_xy(self, rvw: NDArray[np.float64]) -> NDArray[np.float64]:
+    def get_normal_xy(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
         """Calculates the normal vector for a ball contacting the cushion
 
         Assumes that the ball is in fact in contact with the cushion.
 
         Args:
-            rvw: The kinematic state vectors of the contacting ball (see
-            :attr:`pooltool.objects.BallState.rvw`).
+            xyz:
+                The position of the ball. (See ``xyz`` property of class
+                `pooltool.objects.BallState`).
 
         Returns:
             NDArray[np.float64]:
                 The normal vector, with the z-component zeroed prior to normalization.
         """
-        normal = rvw[0, :] - self.center
+        normal = xyz - self.center
         normal[2] = 0  # remove z-component
         return ptmath.unit_vector(normal)
 
