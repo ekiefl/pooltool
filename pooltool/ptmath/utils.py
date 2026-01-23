@@ -257,9 +257,10 @@ def decompose_normal_tangent(
     """Decomposes a vector into normal and tangent components given the unit normal direction
 
     Returns:
-        Tuple of decomposed magnitudes and directions, ``(v_n, v_t, t)``. ``v_n`` is the
-        magnitude of the normal component, ``v_t`` is the magnitude of the tangent
-        component, and ``t`` is the unit tangent direction. The unit normal direction
+        Tuple of decomposed components and directions, ``(v_n, v_t, t)``.
+        ``v_n`` is the signed component in the normal direction,
+        ``v_t`` is the signed component in the tangent component, and
+        ``t`` is the unit tangent direction. The unit normal direction
         isn't returned, since it's passed as an argument.
     """
     v_n = np.dot(n, v)

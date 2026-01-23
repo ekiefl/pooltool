@@ -101,7 +101,7 @@ def test_angle_between_vectors_basic():
         (
             np.array([-1.0, 2.0, 0.0]),  # Reverse x-direction compared to above
             np.array([1.0, 0.0, 0.0]),
-            -1.0,  # FIXME: magnitudes are positive
+            -1.0,
             2.0,
             np.array([0.0, 1.0, 0.0]),
         ),
