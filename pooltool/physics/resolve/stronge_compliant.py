@@ -431,16 +431,40 @@ def collision_duration(t_c, e_n):
 
 
 def resolve_collinear_compliant_frictional_inelastic_collision(
-    v_t_0: float,  # tangential velocity (must be <= 0)
-    v_n_0: float,  # normal velocity (must be <0)
-    m: float,  # collision effective mass
-    beta_t: float,  # mass-matrix coefficient
-    beta_n: float,  # mass-matrix coefficient
-    mu: float,  # friction coefficient
-    e_n: float,  # coefficient of restitution
-    k_n: float,  # normal spring stiffness
-    eta_squared: float,  # ratio of normal spring stiffness to tangential spring stiffness
+    v_t_0: float,
+    v_n_0: float,
+    m: float,
+    beta_t: float,
+    beta_n: float,
+    mu: float,
+    e_n: float,
+    k_n: float,
+    eta_squared: float,
 ) -> tuple[float, float]:
+    """Resolve a collinear compliant frictional inelastic collision.
+
+    Computes the post-collision tangential and normal velocities for a sphere
+    colliding with a half-space, accounting for friction, compliance (spring-like
+    deformation), and inelastic energy loss.
+
+    Args:
+        v_t_0: Initial tangential velocity, must be <= 0.
+        v_n_0: Initial normal velocity, must be < 0.
+        m: Collision effective mass.
+        beta_t: Tangential mass-matrix coefficient.
+        beta_n: Normal mass-matrix coefficient.
+        mu: Friction coefficient.
+        e_n: Coefficient of restitution in the normal direction.
+        k_n: Normal spring stiffness. This value is arbitrary as only the frequency
+            ratio omega_t/omega_n affects the result, which depends on the ratio
+            beta_t/beta_n/eta_squared.
+        eta_squared: Ratio of normal to tangential spring stiffness. Together with
+            beta_t and beta_n, this determines the frequency ratio omega_t/omega_n,
+            which must be in the range (1, 2).
+
+    Returns:
+        Final tangential and normal velocities after collision.
+    """
     assert v_t_0 <= 0
     assert v_n_0 < 0
 
