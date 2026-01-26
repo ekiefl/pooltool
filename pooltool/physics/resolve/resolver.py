@@ -72,10 +72,10 @@ def default_resolver() -> Resolver:
             ),
         ),
         ball_linear_cushion=StrongeCompliantLinear(
-            omega_ratio=1.7,
+            omega_ratio=1.8,
         ),
         ball_circular_cushion=StrongeCompliantCircular(
-            omega_ratio=1.7,
+            omega_ratio=1.8,
         ),
         ball_pocket=CanonicalBallPocket(),
         stick_ball=InstantaneousPoint(
