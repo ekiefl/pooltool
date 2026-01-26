@@ -1,5 +1,4 @@
 import math
-from pathlib import Path
 
 import attrs
 import numpy as np
@@ -11,10 +10,6 @@ from pooltool.physics.resolve.ball_ball.core import BallBallCollisionStrategy
 from pooltool.physics.resolve.ball_ball.frictional_inelastic import FrictionalInelastic
 from pooltool.physics.resolve.ball_ball.frictional_mathavan import FrictionalMathavan
 from pooltool.physics.resolve.ball_ball.frictionless_elastic import FrictionlessElastic
-from pooltool.ptmath.utils import norm3d
-from pooltool.serialize import conversion
-
-MAKE_KISS_TEST_DIR = Path(__file__).parent / "make_kiss_data"
 
 
 def vector_from_magnitude_and_direction(magnitude: float, angle_radians: float):
@@ -260,37 +255,3 @@ def test_low_relative_surface_velocity(
     assert ptmath.norm3d(cb_v_c_f - ob_v_c_f) < 1e-3, (
         "Final relative contact velocity should be zero"
     )
-
-
-@pytest.mark.parametrize(
-    "model",
-    [
-        FrictionalInelastic(),
-        FrictionalMathavan(),
-        FrictionlessElastic(),
-    ],
-)
-@pytest.mark.parametrize(
-    "case",
-    [
-        "case_01",
-    ],
-)
-def test_make_kiss(model: BallBallCollisionStrategy, case: str):
-    ball1 = conversion.structure_from(
-        MAKE_KISS_TEST_DIR / f"{case}_ball_1.msgpack", Ball
-    )
-    ball2 = conversion.structure_from(
-        MAKE_KISS_TEST_DIR / f"{case}_ball_2.msgpack", Ball
-    )
-
-    spacer = norm3d(ball1.xyz - ball2.xyz) - ball1.params.R * 2
-    print(spacer)
-    print(ball1.xyz)
-    print(ball2.xyz)
-
-    model.make_kiss(ball1, ball2)
-    spacer = norm3d(ball1.xyz - ball2.xyz) - ball1.params.R * 2
-    print(spacer)
-    print(ball1.xyz)
-    print(ball2.xyz)
