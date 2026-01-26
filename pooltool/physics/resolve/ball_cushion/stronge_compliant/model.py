@@ -106,22 +106,18 @@ class StrongeCompliantLinear(CoreBallLCushionCollision):
     Notes:
         Architecturally, omega_ratio represents a cushion material property (Poisson's
         ratio) and should ideally be a cushion attribute rather than a model parameter.
-        However, it is exposed here as a model parameter for pragmatic reasons. First,
-        omega_ratio is intuitive to adjust. It ranges from [1, 2] and controls the
-        frequency ratio omega_t/omega_n in the collision dynamics equations. This is the
-        first model requiring cushion material properties, so we defer adding cushion
-        attributes until needed by multiple models.
+        However, it is exposed here as a model parameter because
 
-        Migration Path to Cushion Properties:
-            When cushion material properties are added to cushion segments:
-            1. Add ``poisson_ratio: float`` attribute to Linear/CircularCushionSegment
-            2. Add ``youngs_modulus: float``` (k_n) if collision duration is needed
-            3. Use ``omega_ratio_from_poisson_ratio()`` to convert
-            4. Deprecate omega_ratio model parameter in favor of cushion property
+            (1) It's intuitive to adjust, ranging between [1, 2], and representing the
+            ratio of spring coefficients between tangential and normal components.
 
-        See ``poisson_ratio_from_omega_ratio()`` and
-        ``omega_ratio_from_poisson_ratio()`` in ``stronge_compliant.py`` for conversion
-        utilities.
+            (2) This is the first model requiring cushion material properties, so we
+            defer adding cushion attributes until needed by multiple models.
+
+        When cushion material properties are added to cushion segments, we should add
+        Poisson ratio as a cushion parameter, and use
+        ``poisson_ratio_from_omega_ratio()`` and ``omega_ratio_from_poisson_ratio()`` to
+        convert to/from omega_ratio.
     """
 
     omega_ratio: float = 1.7
