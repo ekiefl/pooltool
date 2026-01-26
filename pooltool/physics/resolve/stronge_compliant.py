@@ -12,7 +12,49 @@ logger = logging.getLogger(__name__)
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def normal_tangent_stiffness_ratio(poisson_ratio):
+    """Calculate eta_squared from Poisson ratio.
+
+    Args:
+        poisson_ratio: Poisson's ratio of the cushion.
+
+    Returns:
+        eta_squared: Ratio of normal to tangential stiffness.
+    """
     return (2 - poisson_ratio) / (2 * (1 - poisson_ratio))
+
+
+def poisson_ratio_from_omega_ratio(
+    omega_ratio: float, beta_t: float = 3.5, beta_n: float = 1.0
+) -> float:
+    """Convert from tangential/normal frequency ratio to Poisson ratio.
+
+    Args:
+        omega_ratio: Frequency ratio omega_t/omega_n. Must be in range (1, 2).
+        beta_t: Tangential mass-matrix coefficient for sphere-half-space collision.
+        beta_n: Normal mass-matrix coefficient for sphere-half-space collision.
+
+    Returns:
+        Poisson's ratio.
+    """
+    eta_squared = (beta_t / beta_n) / (omega_ratio**2)
+    return (2 * eta_squared - 2) / (2 * eta_squared - 1)
+
+
+def omega_ratio_from_poisson_ratio(
+    poisson_ratio: float, beta_t: float = 3.5, beta_n: float = 1.0
+) -> float:
+    """Convert Poisson ratio to the tangential/normal frequency ratio.
+
+    Args:
+        poisson_ratio: Poisson's ratio of the cushion.
+        beta_t: Tangential mass-matrix coefficient for sphere-half-space collision.
+        beta_n: Normal mass-matrix coefficient for sphere-half-space collision.
+
+    Returns:
+        Frequency ratio omega_t/omega_n.
+    """
+    eta_squared = normal_tangent_stiffness_ratio(poisson_ratio)
+    return np.sqrt((beta_t / beta_n) / eta_squared)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
