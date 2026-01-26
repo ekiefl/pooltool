@@ -409,9 +409,13 @@ def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float) -> float:
 
 
 def is_overlapping(
-    rvw1: NDArray[np.float64], rvw2: NDArray[np.float64], R1: float, R2: float
+    rvw1: NDArray[np.float64],
+    rvw2: NDArray[np.float64],
+    R1: float,
+    R2: float,
+    min_spacer: float = 0.0,
 ) -> bool:
-    return norm3d(rvw1[0] - rvw2[0]) < (R1 + R2)
+    return norm3d(rvw1[0] - rvw2[0]) < (R1 + R2 + min_spacer)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
