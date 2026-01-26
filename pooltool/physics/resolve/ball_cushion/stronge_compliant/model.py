@@ -55,7 +55,7 @@ def _solve(ball: Ball, cushion: Cushion, omega_ratio: float) -> tuple[Ball, Cush
         beta_n=beta_n,
         mu=ball.params.f_c,
         e_n=ball.params.e_c,
-        k_n=1e3,
+        k_n=1e3,  # arbitrary: collision outcome depends only on omega_ratio, not k_n.
         eta_squared=(beta_t_by_beta_n / omega_ratio**2),
     )
 
