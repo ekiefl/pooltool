@@ -26,6 +26,8 @@ class TableModelDescr:
         """Get the path of the model based on PBR preference
 
         The path is searched for in ``pooltool/models/table/{name}/{name}[_pbr].glb``.
+        If the PBR variant is requested but doesn't exist, falls back to the non-PBR
+        variant.
 
         Args:
             use_pbr: Whether to use physical based rendering variant
@@ -39,15 +41,16 @@ class TableModelDescr:
                 A filename specified with Panda3D filename syntax (see
                 https://docs.panda3d.org/1.10/python/programming/advanced-loading/filename-syntax).
         """
-        if use_pbr:
-            path = model_dir / "table" / self.name / (self.name + "_pbr.glb")
-        else:
-            path = model_dir / "table" / self.name / (self.name + ".glb")
+        base_path = model_dir / "table" / self.name / (self.name + ".glb")
+        pbr_path = model_dir / "table" / self.name / (self.name + "_pbr.glb")
 
-        if not path.exists():
-            raise ConfigError(f"Couldn't find table model with name: {self.name}")
+        if use_pbr and pbr_path.exists():
+            return panda_path(pbr_path)
 
-        return panda_path(path)
+        if base_path.exists():
+            return panda_path(base_path)
+
+        raise ConfigError(f"Couldn't find table model with name: {self.name}")
 
     @staticmethod
     def null() -> TableModelDescr:
