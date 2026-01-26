@@ -71,8 +71,12 @@ def default_resolver() -> Resolver:
                 c=1.088,
             ),
         ),
-        ball_linear_cushion=StrongeCompliantLinear(),
-        ball_circular_cushion=StrongeCompliantCircular(),
+        ball_linear_cushion=StrongeCompliantLinear(
+            omega_ratio=1.7,
+        ),
+        ball_circular_cushion=StrongeCompliantCircular(
+            omega_ratio=1.7,
+        ),
         ball_pocket=CanonicalBallPocket(),
         stick_ball=InstantaneousPoint(
             english_throttle=1.0,
