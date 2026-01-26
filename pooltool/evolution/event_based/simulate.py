@@ -354,7 +354,10 @@ def get_next_ball_ball_collision(
         ):
             cache[ball_pair] = np.inf
         elif ptmath.is_overlapping(
-            ball1_state.rvw, ball2_state.rvw, ball1_params.R, ball2_params.R,
+            ball1_state.rvw,
+            ball2_state.rvw,
+            ball1_params.R,
+            ball2_params.R,
         ):
             cache[ball_pair] = shot.t
         else:

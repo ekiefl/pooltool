@@ -56,7 +56,7 @@ class CoreBallLCushionCollision(ABC):
         This makes a correction such that if the ball is not a distance R from the
         cushion, the ball is moved along the normal such that it is. To avoid downstream
         float precision round-off error, a small epsilon of additional distance
-        (`spacer`) is put between them, ensuring the cushion and ball are
+        (``spacer``) is put between them, ensuring the cushion and ball are
         separated post-resolution.
         """
         normal = cushion.get_normal_xy(ball.xyz)
@@ -106,7 +106,7 @@ class CoreBallCCushionCollision(ABC):
         This makes a correction such that if the ball is not a distance R from the
         cushion, the ball is moved along the normal such that it is. To avoid downstream
         float precision round-off error, a small epsilon of additional distance
-        (`spacer`) is put between them, ensuring the cushion and ball are
+        (``spacer``) is put between them, ensuring the cushion and ball are
         separated post-resolution.
         """
         normal = cushion.get_normal_xy(ball.xyz)

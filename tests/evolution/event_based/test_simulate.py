@@ -4,7 +4,6 @@ from numpy.typing import NDArray
 
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
-from pooltool.evolution.event_based.introspection import simulate_with_snapshots
 from pooltool import aim, events
 from pooltool.events import EventType, ball_ball_collision, ball_pocket_collision
 from pooltool.evolution.event_based.cache import CollisionCache
@@ -407,8 +406,8 @@ def test_almost_touching_ball_ball_collision():
         assert diff < 10e-12  # Less than 10 femptosecond difference
 
 
-def test_no_ball_ball_collisions_for_intersecting_balls():
-    """Two already intersecting balls don't collide
+def test_ball_ball_collision_for_intersecting_balls():
+    """Two already intersecting balls don't collide.
 
     Previously, intersecting balls were prevented from colliding to avoid perpetual
     internal collisions. Now, with the improved make_kiss implementation, intersecting
