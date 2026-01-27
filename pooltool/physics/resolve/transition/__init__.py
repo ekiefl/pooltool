@@ -15,7 +15,7 @@ from pooltool.events.datatypes import EventType
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.physics.resolve.models import BallTransitionModel
 
-TOLERANCE = 1e-12
+_TOLERANCE = 1e-12
 
 
 class BallTransitionStrategy(Protocol):
@@ -49,8 +49,8 @@ class CanonicalTransition:
             # angular velocity components are nearly 0. Then set them to exactly 0.
             v = ball.state.rvw[1]
             w = ball.state.rvw[2]
-            assert (np.abs(v) < TOLERANCE).all()
-            assert (np.abs(w[:2]) < TOLERANCE).all()
+            assert (np.abs(v) < _TOLERANCE).all()
+            assert (np.abs(w[:2]) < _TOLERANCE).all()
 
             ball.state.rvw[1, :] = [0.0, 0.0, 0.0]
             ball.state.rvw[2, :2] = [0.0, 0.0]
@@ -60,8 +60,8 @@ class CanonicalTransition:
             # set them to exactly 0.
             v = ball.state.rvw[1]
             w = ball.state.rvw[2]
-            assert (np.abs(v) < TOLERANCE).all()
-            assert (np.abs(w) < TOLERANCE).all()
+            assert (np.abs(v) < _TOLERANCE).all()
+            assert (np.abs(w) < _TOLERANCE).all()
 
             ball.state.rvw[1, :] = [0.0, 0.0, 0.0]
             ball.state.rvw[2, :] = [0.0, 0.0, 0.0]

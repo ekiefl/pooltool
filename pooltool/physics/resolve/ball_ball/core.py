@@ -204,7 +204,6 @@ class CoreBallBallCollision(ABC):
 
             # Chased ball steals fraction of chaser's line of centers momentum
             # FIXME: We assume equal mass, so transfer velocity directly
-            theft_fraction = theft_fraction
             stolen_loc_velocity = chaser_loc_vel * theft_fraction
 
             if ball1_is_chaser:

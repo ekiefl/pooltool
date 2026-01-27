@@ -407,7 +407,7 @@ def test_almost_touching_ball_ball_collision():
 
 
 def test_ball_ball_collision_for_intersecting_balls():
-    """Two already intersecting balls don't collide.
+    """Two already intersecting balls collide.
 
     Previously, intersecting balls were prevented from colliding to avoid perpetual
     internal collisions. Now, with the improved make_kiss implementation, intersecting
