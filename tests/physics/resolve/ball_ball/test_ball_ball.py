@@ -197,7 +197,7 @@ def test_gearing_z_spin(
     assert np.allclose(
         np.cross(ob_f.vel, unit_normal), np.zeros_like(unit_normal), atol=1e-3
     ), "Gearing english shouldn't cause throw"
-    assert abs(ob_f.avel[2]) < 1e-2, "Gearing english shouldn't cause induced side-spin"
+    assert abs(ob_f.avel[2]) < 5e-3, "Gearing english shouldn't cause induced side-spin"
 
 
 @pytest.mark.parametrize("model", [FrictionalInelastic()])
