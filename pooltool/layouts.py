@@ -52,48 +52,59 @@ class Dir(StrEnum):
         }
 
 
+Translation = Dir | float
+
+
 class Jump:
     @staticmethod
-    def LEFT(quantity: int = 1) -> list[Dir]:
+    def LEFT(quantity: int = 1) -> list[Translation]:
         return [Dir.LEFT] * quantity
 
     @staticmethod
-    def RIGHT(quantity: int = 1) -> list[Dir]:
+    def RIGHT(quantity: int = 1) -> list[Translation]:
         return [Dir.RIGHT] * quantity
 
     @staticmethod
-    def UP(quantity: int = 1) -> list[Dir]:
+    def UP(quantity: int = 1) -> list[Translation]:
         return [Dir.UP] * quantity
 
     @staticmethod
-    def DOWN(quantity: int = 1) -> list[Dir]:
+    def DOWN(quantity: int = 1) -> list[Translation]:
         return [Dir.DOWN] * quantity
 
     @staticmethod
-    def UPLEFT(quantity: int = 1) -> list[Dir]:
+    def UPLEFT(quantity: int = 1) -> list[Translation]:
         return [Dir.UPLEFT] * quantity
 
     @staticmethod
-    def UPRIGHT(quantity: int = 1) -> list[Dir]:
+    def UPRIGHT(quantity: int = 1) -> list[Translation]:
         return [Dir.UPRIGHT] * quantity
 
     @staticmethod
-    def DOWNRIGHT(quantity: int = 1) -> list[Dir]:
+    def DOWNRIGHT(quantity: int = 1) -> list[Translation]:
         return [Dir.DOWNRIGHT] * quantity
 
     @staticmethod
-    def DOWNLEFT(quantity: int = 1) -> list[Dir]:
+    def DOWNLEFT(quantity: int = 1) -> list[Translation]:
         return [Dir.DOWNLEFT] * quantity
 
     @staticmethod
-    def eval(translations: list[Dir], radius: float) -> tuple[float, float]:
+    def ANGLE(degrees: float, quantity: int = 1) -> list[Translation]:
+        radians = np.radians(degrees)
+        return [radians] * quantity
+
+    @staticmethod
+    def eval(translations: list[Translation], radius: float) -> tuple[float, float]:
         mapping = Dir.translation_map
         assert isinstance(mapping, dict)
 
-        dx, dy = 0, 0
+        dx, dy = 0.0, 0.0
 
-        for direction in translations:
-            i, j = mapping[direction]
+        for translation in translations:
+            if isinstance(translation, Dir):
+                i, j = mapping[translation]
+            else:
+                i, j = 2 * np.cos(translation), 2 * np.sin(translation)
             dx += i * radius
             dy += j * radius
 
@@ -106,7 +117,9 @@ class Pos:
 
     Attributes:
         loc:
-            A sequence of translations.
+            A sequence of translations. Each translation is either a Dir enum
+            for discrete directions, or a float representing an angle in radians
+            (0 = right, pi/2 = up). Use Jump.ANGLE(degrees) for convenience.
         relative_to:
             This defines what the translation is with respect to. This can
             either be another Pos, or a 2D coordinate, normalized by the table's
@@ -114,7 +127,7 @@ class Pos:
             so (0.0, 0.0) is bottom-left and (1.0, 1.0) is top right.
     """
 
-    loc: list[Dir]
+    loc: list[Translation]
     relative_to: Pos | tuple[float, float]
 
 
@@ -130,7 +143,7 @@ class BallPos(Pos):
     ids: set[str]
 
 
-JumpSequence = list[tuple[list[Dir], set[str]]]
+JumpSequence = list[tuple[list[Translation], set[str]]]
 
 
 def ball_cluster_blueprint(seed: BallPos, jump_sequence: JumpSequence) -> list[BallPos]:
@@ -153,10 +166,10 @@ def _get_ball_ids(positions: list[BallPos]) -> set[str]:
     return ids
 
 
-def _get_anchor_translation(pos: Pos) -> tuple[tuple[float, float], list[Dir]]:
+def _get_anchor_translation(pos: Pos) -> tuple[tuple[float, float], list[Translation]]:
     """Traverse the position's parent hierarchy until the anchor is found"""
 
-    translation_from_anchor: list[Dir] = []
+    translation_from_anchor: list[Translation] = []
     translation_from_anchor.extend(pos.loc)
 
     parent = pos.relative_to
@@ -543,6 +556,7 @@ __all__ = [
     "Jump",
     "Pos",
     "BallPos",
+    "Translation",
     "ball_cluster_blueprint",
     "generate_layout",
     "get_rack",

@@ -1,8 +1,14 @@
-"""1:1 exact translation of the "1010" quartic root-finding algorithm.
+"""Translation of the "1010" quartic root-finding algorithm with modifications.
 
 The original implementation is written in C, and this module was written by Claude Code.
-The 1:1 correspondence has been tested to floating point precision on a test of 100,000
-difficult to determine quartics.
+
+Modifications from the original algorithm:
+    - The threshold for falling back to an alternative factorization method has been
+      loosened by a safety factor (d2_safety_factor). The original threshold was too
+      strict for certain edge cases where the discriminant d2 is very small but nonzero,
+      causing the algorithm to produce duplicate roots instead of four distinct roots.
+      This is particularly relevant for Newton's cradle-like simulations where balls
+      move with very similar velocities.
 
 Solve speed:
 
@@ -58,6 +64,7 @@ import pooltool.constants as const
 cubic_rescal_fact = 3.488062113727083e102
 quart_rescal_fact = 7.156344627944542e76
 macheps = 2.2204460492503131e-16
+d2_safety_factor = 100
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -630,7 +637,8 @@ def solve(a: float, b: float, c: float, d: float, e: float) -> NDArray[np.comple
         realcase_0 = -1
 
     if realcase_0 == -1 or (
-        abs(d2) <= macheps * max(abs(2.0 * b_p / 3.0), abs(phi0), l1 * l1)
+        abs(d2)
+        <= d2_safety_factor * macheps * max(abs(2.0 * b_p / 3.0), abs(phi0), l1 * l1)
     ):
         d3 = d_p - l3 * l3
         if realcase_0 == 1:

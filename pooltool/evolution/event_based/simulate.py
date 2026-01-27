@@ -50,6 +50,61 @@ def _system_has_energy(system: System) -> bool:
     )
 
 
+def get_event_priority(event: Event, shot: System) -> tuple[int, float]:
+    """Compute priority for an event to resolve ties among simultaneous events.
+
+    Returns a tuple (tier, energy) where:
+    - Lower tier = higher priority
+    - Higher energy = higher priority within the same tier
+
+    Priority tiers:
+    - Tier 1: STICK_BALL (always first)
+    - Tier 2: Transitions and BALL_POCKET (can resolve without affecting others)
+    - Tier 3: BALL_BALL and ball-cushion collisions
+
+    Args:
+        event: The event to compute priority for.
+        shot: The system state at the time the event was detected.
+
+    Returns:
+        A tuple of (tier, energy) for sorting.
+    """
+    event_type = event.event_type
+
+    if event_type == EventType.NONE:
+        return (99, 0.0)
+
+    if event_type == EventType.STICK_BALL:
+        return (1, shot.cue.V0**2)
+
+    if event_type == EventType.BALL_POCKET:
+        ball_id = event.ids[0]
+        ball = shot.balls[ball_id]
+        energy = ptmath.get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
+        return (2, energy)
+
+    if event_type.is_transition():
+        ball_id = event.ids[0]
+        ball = shot.balls[ball_id]
+        energy = ptmath.get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
+        return (2, energy)
+
+    if event_type == EventType.BALL_BALL:
+        ball1_id, ball2_id = event.ids
+        v1 = shot.balls[ball1_id].state.rvw[1]
+        v2 = shot.balls[ball2_id].state.rvw[1]
+        energy = ptmath.squared_norm3d(v1 - v2)
+        return (3, energy)
+
+    if event_type in (EventType.BALL_LINEAR_CUSHION, EventType.BALL_CIRCULAR_CUSHION):
+        ball_id = event.ids[0]
+        ball = shot.balls[ball_id]
+        energy = ptmath.get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
+        return (3, energy)
+
+    return (99, 0.0)
+
+
 @attrs.define
 class _SimulationState:
     shot: System
@@ -97,6 +152,7 @@ class _SimulationState:
 
         if self.max_events > 0 and self.num_events > self.max_events:
             self.shot.stop_balls()
+            self.shot._update_history(null_event(time=self.shot.t))
             self.done = True
 
         self.num_events += 1
@@ -252,8 +308,8 @@ def get_next_event(
     if collision_cache is None:
         collision_cache = CollisionCache.create()
 
-    # Start by assuming next event doesn't happen
-    event = null_event(time=np.inf)
+    # Collect all candidate events from each detection function.
+    candidates: list[Event] = []
 
     # Stick-ball collisions only occur at t=0 (shot initiation), so we skip this
     # check after the first timestep as an optimization. Other collision types are
@@ -261,41 +317,43 @@ def get_next_event(
     # at t=0, we still call the remaining detection functions to fully populate the
     # collision cache, which is needed by debug/introspection tools.
     if shot.t == 0:
-        stick_ball_event = get_next_stick_ball_collision(
-            shot, collision_cache=collision_cache
+        candidates.append(
+            get_next_stick_ball_collision(shot, collision_cache=collision_cache)
         )
-        if stick_ball_event.time < event.time:
-            event = stick_ball_event
 
-    transition_event = transition_cache.get_next()
-    if transition_event.time < event.time:
-        event = transition_event
-
-    ball_ball_event = get_next_ball_ball_collision(
-        shot, collision_cache=collision_cache
+    candidates.append(transition_cache.get_next())
+    candidates.append(
+        get_next_ball_ball_collision(shot, collision_cache=collision_cache)
     )
-    if ball_ball_event.time < event.time:
-        event = ball_ball_event
-
-    ball_circular_cushion_event = get_next_ball_circular_cushion_event(
-        shot, collision_cache=collision_cache
+    candidates.append(
+        get_next_ball_circular_cushion_event(shot, collision_cache=collision_cache)
     )
-    if ball_circular_cushion_event.time < event.time:
-        event = ball_circular_cushion_event
-
-    ball_linear_cushion_event = get_next_ball_linear_cushion_collision(
-        shot, collision_cache=collision_cache
+    candidates.append(
+        get_next_ball_linear_cushion_collision(shot, collision_cache=collision_cache)
     )
-    if ball_linear_cushion_event.time < event.time:
-        event = ball_linear_cushion_event
-
-    ball_pocket_event = get_next_ball_pocket_collision(
-        shot, collision_cache=collision_cache
+    candidates.append(
+        get_next_ball_pocket_collision(shot, collision_cache=collision_cache)
     )
-    if ball_pocket_event.time < event.time:
-        event = ball_pocket_event
 
-    return event
+    # Find the earliest time among all candidates.
+    min_time = min(event.time for event in candidates)
+
+    if min_time == np.inf:
+        return null_event(time=np.inf)
+
+    # Filter to only events occurring at the earliest time.
+    simultaneous = [e for e in candidates if e.time == min_time]
+
+    if len(simultaneous) == 1:
+        return simultaneous[0]
+
+    # When multiple events occur at the same time, select by priority tier, then by
+    # energy within the tier (higher energy first).
+    def sort_key(e: Event) -> tuple[int, float]:
+        tier, energy = get_event_priority(e, shot)
+        return (tier, -energy)
+
+    return min(simultaneous, key=sort_key)
 
 
 def get_next_stick_ball_collision(
@@ -352,12 +410,13 @@ def get_next_ball_ball_collision(
             and ball2_state.s in const.nontranslating
         ):
             cache[ball_pair] = np.inf
-        elif (
-            ptmath.norm3d(ball1_state.rvw[0] - ball2_state.rvw[0])
-            < ball1_params.R + ball2_params.R
+        elif ptmath.is_overlapping(
+            ball1_state.rvw,
+            ball2_state.rvw,
+            ball1_params.R,
+            ball2_params.R,
         ):
-            # If balls are intersecting, avoid internal collisions
-            cache[ball_pair] = np.inf
+            cache[ball_pair] = shot.t
         else:
             dtau_E = solve.ball_ball_collision_time(
                 rvw1=ball1_state.rvw,
