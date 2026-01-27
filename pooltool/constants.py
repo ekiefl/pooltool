@@ -13,12 +13,16 @@ np.set_printoptions(precision=16, suppress=True)
 
 EPS = np.finfo(float).eps * 100
 
+MIN_DIST = 1e-6
+"""The minimum distance between balls."""
+
 # Ball states
 stationary: int = 0
 """The stationary motion state label
 
 A ball with this motion state is both motionless and not in a pocket.
 """
+
 spinning: int = 1
 """The spinning motion state label
 

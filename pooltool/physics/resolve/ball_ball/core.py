@@ -3,6 +3,7 @@ from typing import Protocol
 
 import numpy as np
 
+import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
 
@@ -39,19 +40,17 @@ class CoreBallBallCollision(ABC):
         trajectories (position + velocity * time) to this configuration. Acceleration
         terms are assumed negligible.
 
-        If the required movement exceeds 10x the spacer, which can occur if balls are
-        moving with nearly the same velocity, a naive fallback strategy is used that
-        moves the balls uniformly along the line of centers until they're separated by
-        an amount ``spacer``.
+        If the midpoint (collision point) shifts by more than 5x the spacer, which can
+        occur if balls are moving with nearly the same velocity, a naive fallback
+        strategy is used that moves the balls uniformly along the line of centers until
+        they're separated by an amount ``spacer``.
 
         Algorithm:
             1. Calculate quadratic coefficients for separation equation
             2. Solve for time offset that achieves target separation
             3. Move balls to corrected positions: r_new = r + t * v
-            4. If movement > 10x spacer (fallback):
-               - Identify which ball is "chasing" (higher line-of-centers velocity) and
-                 which is being "chased" (lower line-of-centers velocity)
-               - Apply full displacement to chased ball, other stays fixed
+            4. If midpoint shifts more than 5x spacer (fallback):
+               - Balls moved along line of centers until separated by amount ``spacer``.
 
         Returns:
             tuple[Ball, Ball]:
@@ -62,14 +61,7 @@ class CoreBallBallCollision(ABC):
         v1 = ball1.state.rvw[1]
         v2 = ball2.state.rvw[1]
 
-        approach_speed = np.dot(v1 - v2, ptmath.unit_vector(r2 - r1))
-
-        spacer_min = 0.5e-6
-        spacer_max = 1e-6
-        speed_factor = max(0, min(approach_speed, 10))
-        spacer = spacer_min + speed_factor * (spacer_max - spacer_min)
-        initial_distance = ptmath.norm3d(r2 - r1)
-        target_distance = 2 * ball1.params.R + spacer
+        spacer = const.MIN_DIST
 
         Bx = v2[0] - v1[0]
         By = v2[1] - v1[1]
@@ -100,29 +92,12 @@ class CoreBallBallCollision(ABC):
         # (i.e. nearly same velocity). In these cases, the amount of time to create a
         # distance `spacer` between them can be high enough to significantly displace
         # both balls.
-        for r, r_corrected in zip([r1, r2], [r1_corrected, r2_corrected]):
-            if ptmath.norm3d(r - r_corrected) > 2 * spacer:
-                line_of_centers = (r2 - r1) / initial_distance
-                total_displacement = target_distance - initial_distance
-
-                ## Determine which ball is chasing (has higher radial velocity).
-                # v1_radial = np.dot(v1, line_of_centers)
-                # v2_radial = np.dot(v2, line_of_centers)
-
-                # if v1_radial > v2_radial:
-                #    # Ball 2 is chasing ball 1, pull 2 backwards.
-                #    r1_corrected = r1
-                #    r2_corrected = r2 + total_displacement * line_of_centers
-                # else:
-                #    # Ball 1 is chasing ball 2, pull 1 backwards.
-                #    r1_corrected = r1 - total_displacement * line_of_centers
-                #    r2_corrected = r2
-
-                correction = 2 * ball1.params.R - ptmath.norm3d(r2 - r1) + spacer
-                r1_corrected = r1 - correction / 2 * ptmath.unit_vector(r2 - r1)
-                r2_corrected = r2 + correction / 2 * ptmath.unit_vector(r2 - r1)
-
-                break
+        midpoint = (r1 + r2) / 2
+        midpoint_corrected = (r1_corrected + r2_corrected) / 2
+        if ptmath.norm3d(midpoint - midpoint_corrected) > 5 * spacer:
+            correction = 2 * ball1.params.R - ptmath.norm3d(r2 - r1) + spacer
+            r1_corrected = r1 - correction / 2 * ptmath.unit_vector(r2 - r1)
+            r2_corrected = r2 + correction / 2 * ptmath.unit_vector(r2 - r1)
 
         ball1.state.rvw[0] = r1_corrected
         ball2.state.rvw[0] = r2_corrected
