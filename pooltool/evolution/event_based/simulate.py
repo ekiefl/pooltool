@@ -348,11 +348,6 @@ def get_next_ball_ball_collision(
 
         if ball1_state.s == const.pocketed or ball2_state.s == const.pocketed:
             cache[ball_pair] = np.inf
-        elif (
-            ball1_state.s in const.nontranslating
-            and ball2_state.s in const.nontranslating
-        ):
-            cache[ball_pair] = np.inf
         elif ptmath.is_overlapping(
             ball1_state.rvw,
             ball2_state.rvw,
@@ -360,6 +355,11 @@ def get_next_ball_ball_collision(
             ball2_params.R,
         ):
             cache[ball_pair] = shot.t
+        elif (
+            ball1_state.s in const.nontranslating
+            and ball2_state.s in const.nontranslating
+        ):
+            cache[ball_pair] = np.inf
         else:
             dtau_E = solve.ball_ball_collision_time(
                 rvw1=ball1_state.rvw,

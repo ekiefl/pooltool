@@ -27,6 +27,24 @@ class BallBallCollisionStrategy(_BaseStrategy, Protocol):
 class CoreBallBallCollision(ABC):
     """Operations used by every ball-ball collision resolver"""
 
+    def _apply_fallback_positioning(
+        self,
+        ball1: Ball,
+        ball2: Ball,
+        r1: np.ndarray,
+        r2: np.ndarray,
+        spacer: float,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Apply fallback positioning by moving balls along line of centers.
+
+        This fallback strategy moves balls uniformly along the line of centers until
+        they're separated by the target distance (2*R + spacer).
+        """
+        correction = 2 * ball1.params.R - ptmath.norm3d(r2 - r1) + spacer
+        r1_corrected = r1 - correction / 2 * ptmath.unit_vector(r2 - r1)
+        r2_corrected = r2 + correction / 2 * ptmath.unit_vector(r2 - r1)
+        return r1_corrected, r2_corrected
+
     def make_kiss(self, ball1: Ball, ball2: Ball) -> tuple[Ball, Ball]:
         """Position balls at precise target separation before collision resolution.
 
@@ -40,17 +58,18 @@ class CoreBallBallCollision(ABC):
         trajectories (position + velocity * time) to this configuration. Acceleration
         terms are assumed negligible.
 
-        If the midpoint (collision point) shifts by more than 5x the spacer, which can
-        occur if balls are moving with nearly the same velocity, a naive fallback
-        strategy is used that moves the balls uniformly along the line of centers until
-        they're separated by an amount ``spacer``.
+        If both balls are non-translating, or if the midpoint (collision point) shifts
+        by more than 5x the spacer (which can occur if balls are moving with nearly the
+        same velocity), a naive fallback strategy is used that moves the balls
+        uniformly along the line of centers until they're separated by an amount
+        ``spacer``.
 
         Algorithm:
-            1. Calculate quadratic coefficients for separation equation
-            2. Solve for time offset that achieves target separation
-            3. Move balls to corrected positions: r_new = r + t * v
-            4. If midpoint shifts more than 5x spacer (fallback):
-               - Balls moved along line of centers until separated by amount ``spacer``.
+            1. If both balls are non-translating, apply fallback
+            2. Otherwise, calculate quadratic coefficients for separation equation
+            3. Solve for time offset that achieves target separation
+            4. Move balls to corrected positions: r_new = r + t * v
+            5. If midpoint shifts more than 5x spacer, apply fallback
 
         Returns:
             tuple[Ball, Ball]:
@@ -63,41 +82,45 @@ class CoreBallBallCollision(ABC):
 
         spacer = const.MIN_DIST
 
-        Bx = v2[0] - v1[0]
-        By = v2[1] - v1[1]
-        Bz = v2[2] - v1[2]
-        Cx = r2[0] - r1[0]
-        Cy = r2[1] - r1[1]
-        Cz = r2[2] - r1[2]
-        alpha = Bx * Bx + By * By + Bz * Bz
-        beta = 2 * Bx * Cx + 2 * By * Cy + 2 * Bz * Cz
-        gamma = (
-            Cx * Cx
-            + Cy * Cy
-            + Cz * Cz
-            - (2 * ball1.params.R + spacer) * (2 * ball1.params.R + spacer)
-        )
-        roots_complex = ptmath.roots.quadratic.solve_complex(alpha, beta, gamma)
+        if (
+            ball1.state.s in const.nontranslating
+            and ball2.state.s in const.nontranslating
+        ):
+            r1_corrected, r2_corrected = self._apply_fallback_positioning(
+                ball1, ball2, r1, r2, spacer
+            )
+        else:
+            Bx = v2[0] - v1[0]
+            By = v2[1] - v1[1]
+            Bz = v2[2] - v1[2]
+            Cx = r2[0] - r1[0]
+            Cy = r2[1] - r1[1]
+            Cz = r2[2] - r1[2]
+            alpha = Bx * Bx + By * By + Bz * Bz
+            beta = 2 * Bx * Cx + 2 * By * Cy + 2 * Bz * Cz
+            gamma = (
+                Cx * Cx
+                + Cy * Cy
+                + Cz * Cz
+                - (2 * ball1.params.R + spacer) * (2 * ball1.params.R + spacer)
+            )
+            roots_complex = ptmath.roots.quadratic.solve_complex(alpha, beta, gamma)
 
-        imag_mag = np.abs(roots_complex.imag)
-        real_mag = np.abs(roots_complex.real)
-        keep = (imag_mag / real_mag) < 1e-3
-        roots = roots_complex[keep].real
-        t = roots[np.abs(roots).argmin()]
+            imag_mag = np.abs(roots_complex.imag)
+            real_mag = np.abs(roots_complex.real)
+            keep = (imag_mag / real_mag) < 1e-3
+            roots = roots_complex[keep].real
+            t = roots[np.abs(roots).argmin()]
 
-        r1_corrected = r1 + t * v1
-        r2_corrected = r2 + t * v2
+            r1_corrected = r1 + t * v1
+            r2_corrected = r2 + t * v2
 
-        # This fallback exists for cases when the balls are moving nearly in unison
-        # (i.e. nearly same velocity). In these cases, the amount of time to create a
-        # distance `spacer` between them can be high enough to significantly displace
-        # both balls.
-        midpoint = (r1 + r2) / 2
-        midpoint_corrected = (r1_corrected + r2_corrected) / 2
-        if ptmath.norm3d(midpoint - midpoint_corrected) > 5 * spacer:
-            correction = 2 * ball1.params.R - ptmath.norm3d(r2 - r1) + spacer
-            r1_corrected = r1 - correction / 2 * ptmath.unit_vector(r2 - r1)
-            r2_corrected = r2 + correction / 2 * ptmath.unit_vector(r2 - r1)
+            midpoint = (r1 + r2) / 2
+            midpoint_corrected = (r1_corrected + r2_corrected) / 2
+            if ptmath.norm3d(midpoint - midpoint_corrected) > 5 * spacer:
+                r1_corrected, r2_corrected = self._apply_fallback_positioning(
+                    ball1, ball2, r1, r2, spacer
+                )
 
         ball1.state.rvw[0] = r1_corrected
         ball2.state.rvw[0] = r2_corrected
