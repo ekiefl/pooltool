@@ -288,7 +288,7 @@ def point_on_line_closest_to_point(
 @jit(nopython=True, cache=const.use_numba_cache)
 def squared_norm3d(vec: NDArray[np.float64]) -> float:
     """Calculate the squared norm of a 3D vector"""
-    return vec[0] ** 2 + vec[1] ** 2 + vec[2] ** 2
+    return vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -312,7 +312,7 @@ def norm3d(vec: NDArray[np.float64]) -> float:
 @jit(nopython=True, cache=const.use_numba_cache)
 def squared_norm2d(vec: NDArray[np.float64]) -> float:
     """Calculate the squared norm of a 2D vector"""
-    return vec[0] ** 2 + vec[1] ** 2
+    return vec[0] * vec[0] + vec[1] * vec[1]
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -409,9 +409,13 @@ def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float) -> float:
 
 
 def is_overlapping(
-    rvw1: NDArray[np.float64], rvw2: NDArray[np.float64], R1: float, R2: float
+    rvw1: NDArray[np.float64],
+    rvw2: NDArray[np.float64],
+    R1: float,
+    R2: float,
+    min_spacer: float = 0.0,
 ) -> bool:
-    return norm3d(rvw1[0] - rvw2[0]) < (R1 + R2)
+    return norm3d(rvw1[0] - rvw2[0]) < (R1 + R2 + min_spacer)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)

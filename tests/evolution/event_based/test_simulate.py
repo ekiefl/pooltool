@@ -4,6 +4,7 @@ from numpy.typing import NDArray
 
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
+from pooltool import aim, events
 from pooltool.events import EventType, ball_ball_collision, ball_pocket_collision
 from pooltool.evolution.event_based.cache import CollisionCache
 from pooltool.evolution.event_based.simulate import (
@@ -14,6 +15,8 @@ from pooltool.evolution.event_based.simulate import (
 )
 from pooltool.evolution.event_based.solve import ball_ball_collision_time
 from pooltool.objects import Ball, BilliardTableSpecs, Cue, Table
+from pooltool.objects.ball.params import BallParams
+from pooltool.objects.ball.sets import BallSet
 from pooltool.ptmath.roots import quadratic
 from pooltool.system import System
 from tests.evolution.event_based.test_data import TEST_DIR
@@ -403,16 +406,15 @@ def test_almost_touching_ball_ball_collision():
         assert diff < 10e-12  # Less than 10 femptosecond difference
 
 
-def test_no_ball_ball_collisions_for_intersecting_balls():
-    """Two already intersecting balls don't collide
+def test_ball_ball_collision_for_intersecting_balls():
+    """Two already intersecting balls collide.
 
-    In this instance, no further collision is detected because the balls are already
-    intersecting. Otherwise perpetual internal collisions occur, keeping the two balls
-    locked.
+    Previously, intersecting balls were prevented from colliding to avoid perpetual
+    internal collisions. Now, with the improved make_kiss implementation, intersecting
+    balls are properly separated and collide normally.
 
-    This test doesn't make sure that balls don't intersect, it tests the safeguard that
-    prevents already intersecting balls from colliding with their internal walls, which
-    keeps them intersected like links in a chain.
+    This test verifies that intersecting balls are detected as a collision at time ==
+    shot.t
 
             , - ~  ,        , - ~  ,
         , '          ' ,, '          ' ,
@@ -446,8 +448,10 @@ def test_no_ball_ball_collisions_for_intersecting_balls():
     # The cue is truly rolling
     _assert_rolling(system.balls["cue"].state.rvw, system.balls["cue"].params.R)
 
-    assert get_next_event(system).event_type != EventType.BALL_BALL
-    assert get_next_ball_ball_collision(system, CollisionCache()).time == np.inf
+    assert get_next_event(system).event_type == EventType.BALL_BALL
+    collision_event = get_next_ball_ball_collision(system, CollisionCache())
+    assert collision_event.time != np.inf
+    assert collision_event.time == 0
 
 
 def test_ball_history_immutability():
@@ -539,3 +543,140 @@ def test_stick_ball_event_detection():
     assert simulated.events[1].event_type == EventType.STICK_BALL
     assert simulated.events[1].time == 0
     assert simulated.events[2].time > 0
+
+
+def test_newtons_cradle_backspin():
+    """Test Newtons's cradle when incoming ball has backspin.
+
+    This is a easier simulation scenario than test_newtons_cradle_rolling_spin because
+    the incoming ball's spin, after the first collision, pulls it away from the line of
+    centers, avoiding a chain of followup collisions that ultimately push the whole line
+    of balls forwards.
+    """
+    # Create a newton's cradle system, where balls 1, 2, and 3 are in a line. the cue
+    # ball is placed on the same line of centers some distance away and has momentum
+    # towards the 1 ball.
+    table = Table.default()
+    ball_radius = BallParams.default().R
+
+    balls = [
+        Ball.create(
+            str(i + 1),
+            xy=(0.5 * table.w, 0.4 * table.l + 2 * i * ball_radius),
+            ballset=BallSet("pooltool_pocket"),
+        )
+        for i in range(3)
+    ]
+
+    balls.append(
+        Ball.create(
+            "cue",
+            xy=(0.5 * table.w, 0.1 * table.l),
+            ballset=BallSet("pooltool_pocket"),
+        )
+    )
+
+    system = System(
+        balls=balls,
+        table=table,
+        cue=Cue.default(),
+    )
+
+    system.strike(V0=2, b=-0.5, phi=aim.at_ball(system, "1", cut=0))
+    system = simulate(system, max_events=10)
+
+    # Define a 1-millisecond window that starts from the first collision.
+    first_collision = events.filter_type(system.events, EventType.BALL_BALL)[0]
+    start_time = first_collision.time - 1e-9
+    end_time = first_collision.time + 1e-3
+
+    collision_chain = events.filter_events(
+        system.events,
+        events.by_time(start_time, after=True),
+        events.by_time(end_time, after=False),
+        events.by_type(EventType.BALL_BALL),
+    )
+
+    # The last ball should be involved in exactly one collision, since a near-elastic
+    # collision should effectively halt the second-last ball while sending the last ball
+    # flying away, precluding followup collisions.
+    assert len(events.filter_ball(collision_chain, "3")) == 1
+
+    # We don't assert how the second wave collision waves play out, but we know the
+    # collision sequence up until the last ball is hit: a chain of events where momentum
+    # is transfered sequentially through the line of balls.
+    expected_collision_order = [{"cue", "1"}, {"1", "2"}, {"2", "3"}]
+
+    assert len(collision_chain) >= len(expected_collision_order)
+
+    for idx, expected in enumerate(expected_collision_order):
+        actual = set(collision_chain[idx].ids)
+        assert expected == actual
+
+
+def test_newtons_cradle_rolling_spin():
+    """Test Newtons's cradle when incoming ball has rolling spin.
+
+    This is a harder simulation scenario than test_newtons_cradle_backspin because the
+    incoming ball's spin, after the first collision, triggers many followup collisions
+    that ultimately push the who line of balls forwards.
+    """
+    # Create a newton's cradle system, where balls 1, 2, and 3 are in a line. the cue
+    # ball is placed on the same line of centers some distance away and has momentum
+    # towards the 1 ball.
+    table = Table.default()
+    ball_radius = BallParams.default().R
+
+    balls = [
+        Ball.create(
+            str(i + 1),
+            xy=(0.5 * table.w, 0.4 * table.l + 2 * i * ball_radius),
+            ballset=BallSet("pooltool_pocket"),
+        )
+        for i in range(3)
+    ]
+
+    balls.append(
+        Ball.create(
+            "cue",
+            xy=(0.5 * table.w, 0.1 * table.l),
+            ballset=BallSet("pooltool_pocket"),
+        )
+    )
+
+    system = System(
+        balls=balls,
+        table=table,
+        cue=Cue.default(),
+    )
+
+    system.strike(V0=2, phi=aim.at_ball(system, "1", cut=0))
+    simulate(system, inplace=True, max_events=10)
+
+    # Define a 1-millisecond window that starts from the first collision.
+    first_collision = events.filter_type(system.events, EventType.BALL_BALL)[0]
+    start_time = first_collision.time - 1e-9
+    end_time = first_collision.time + 1e-3
+
+    collision_chain = events.filter_events(
+        system.events,
+        events.by_time(start_time, after=True),
+        events.by_time(end_time, after=False),
+        events.by_type(EventType.BALL_BALL),
+    )
+
+    # The last ball should be involved in exactly one collision, since a near-elastic
+    # collision should effectively halt the second-last ball while sending the last ball
+    # flying away, precluding followup collisions.
+    assert len(events.filter_ball(collision_chain, "3")) == 1
+
+    # We don't assert how the second wave collision waves play out, but we know the
+    # collision sequence up until the last ball is hit: a chain of events where momentum
+    # is transfered sequentially through the line of balls.
+    expected_collision_order = [{"cue", "1"}, {"1", "2"}, {"2", "3"}]
+
+    assert len(collision_chain) >= len(expected_collision_order)
+
+    for idx, expected in enumerate(expected_collision_order):
+        actual = set(collision_chain[idx].ids)
+        assert expected == actual

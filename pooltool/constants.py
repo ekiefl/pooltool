@@ -12,7 +12,9 @@ use_numba_cache = True
 np.set_printoptions(precision=16, suppress=True)
 
 EPS = np.finfo(float).eps * 100
-EPS_SPACE = 1e-9
+
+MIN_DIST = 1e-6
+"""The minimum distance between balls."""
 
 # Ball states
 stationary: int = 0
@@ -20,6 +22,7 @@ stationary: int = 0
 
 A ball with this motion state is both motionless and not in a pocket.
 """
+
 spinning: int = 1
 """The spinning motion state label
 
