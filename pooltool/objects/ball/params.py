@@ -86,7 +86,7 @@ class BallParams:
     @f_c.validator  # type: ignore
     def _validate_positive_friction(
         self, attribute: attrs.Attribute, value: float
-    ) -> None:  # type: ignore
+    ) -> None:
         if value <= 0:
             raise ValueError(f"{attribute.name} must be positive, got {value}")
 
