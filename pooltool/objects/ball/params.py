@@ -79,6 +79,17 @@ class BallParams:
     f_c: float = attrs.field(default=0.2)
     g: float = attrs.field(default=9.81)
 
+    @u_s.validator  # type: ignore
+    @u_r.validator  # type: ignore
+    @u_sp_proportionality.validator  # type: ignore
+    @u_b.validator  # type: ignore
+    @f_c.validator  # type: ignore
+    def _validate_positive_friction(
+        self, attribute: attrs.Attribute, value: float
+    ) -> None:  # type: ignore
+        if value <= 0:
+            raise ValueError(f"{attribute.name} must be positive, got {value}")
+
     @cached_property
     def u_sp(self) -> float:
         """Coefficient of spinning friction.
