@@ -485,9 +485,10 @@ def resolve_collinear_compliant_frictional_inelastic_collision(
 ) -> tuple[float, float]:
     """Resolve a collinear compliant frictional inelastic collision.
 
-    Computes the post-collision tangential and normal velocities for a sphere
-    colliding with a half-space, accounting for friction, compliance (spring-like
-    deformation), and inelastic energy loss.
+    Computes the post-collision tangential and normal velocities for a general
+    two-body planar collinear collision, accounting for friction, compliance
+    (spring-like deformation), and inelastic energy loss. The beta_t and beta_n
+    parameters encode the moments of inertia of the two bodies.
 
     Args:
         v_t_0: Initial tangential velocity, must be <= 0.
