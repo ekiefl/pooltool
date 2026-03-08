@@ -54,7 +54,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
-          flags: service
+          flags: service,service-no-ani
           name: service-${{ github.run_id }}
           fail_ci_if_error: true
           verbose: true
