@@ -363,3 +363,118 @@ def test_make_kiss_nontranslating_circular(
     normal = cushion_circular.get_normal_xy(ball.state.rvw[0])
     disp_norm = displacement / np.linalg.norm(displacement)
     assert np.allclose(np.abs(np.dot(disp_norm, normal)), 1.0, atol=1e-10)
+
+
+def test_make_kiss_fallback_boundary_linear(
+    cushion_yaxis: LinearCushionSegment,
+) -> None:
+    """Test both sides of the fallback boundary for linear cushions.
+
+    For a ball at [-R, 0, R] with unit velocity at grazing angle phi from the
+    cushion surface, the velocity-based displacement is spacer / sin(phi).
+    The fallback triggers when this exceeds 5 * spacer, i.e. sin(phi) < 1/5.
+    """
+    R = BallParams.default().R
+    spacer = _get_linear_spacer()
+    model = ball_lcushion_models[BallLCushionModel.MATHAVAN_2010]()
+
+    phi = np.degrees(np.arcsin(0.2))
+    dphi = 1.0
+
+    # phi: just above boundary → velocity-based (displacement parallel to velocity)
+    ball = Ball("cue")
+    rads = np.radians(phi + dphi)
+    vel = np.array([np.sin(rads), np.cos(rads), 0.0])
+    ball.state.rvw[0] = [-R, 0, R]
+    ball.state.rvw[1] = vel
+    ball.state.s = sliding
+    pos_before = ball.state.rvw[0].copy()
+    model.make_kiss(ball, cushion_yaxis)
+    displacement = ball.state.rvw[0] - pos_before
+    cross = np.cross(displacement, vel)
+    assert np.allclose(cross, 0, atol=1e-10)
+
+    c = ptmath.point_on_line_closest_to_point(
+        cushion_yaxis.p1, cushion_yaxis.p2, ball.state.rvw[0]
+    )
+    c[2] = ball.state.rvw[0, 2]
+    assert ptmath.norm3d(ball.state.rvw[0] - c) == pytest.approx(R + spacer, abs=1e-12)
+
+    # phi - dphi: just below boundary → fallback (displacement along normal)
+    ball = Ball("cue")
+    rads = np.radians(phi - dphi)
+    vel = np.array([np.sin(rads), np.cos(rads), 0.0])
+    ball.state.rvw[0] = [-R, 0, R]
+    ball.state.rvw[1] = vel
+    ball.state.s = sliding
+    pos_before = ball.state.rvw[0].copy()
+    model.make_kiss(ball, cushion_yaxis)
+    displacement = ball.state.rvw[0] - pos_before
+    normal = cushion_yaxis.get_normal_xy(ball.state.rvw[0])
+    disp_norm = displacement / np.linalg.norm(displacement)
+    assert np.allclose(np.abs(np.dot(disp_norm, normal)), 1.0, atol=1e-10)
+
+    c = ptmath.point_on_line_closest_to_point(
+        cushion_yaxis.p1, cushion_yaxis.p2, ball.state.rvw[0]
+    )
+    c[2] = ball.state.rvw[0, 2]
+    assert ptmath.norm3d(ball.state.rvw[0] - c) == pytest.approx(R + spacer, abs=1e-12)
+
+
+def test_make_kiss_fallback_boundary_circular(
+    cushion_circular: CircularCushionSegment,
+) -> None:
+    """Test both sides of the fallback boundary for circular cushions.
+
+    For a ball at [dist, 0, R] with unit velocity at grazing angle phi from the
+    cushion tangent, the velocity-based displacement is approximately
+    spacer / sin(phi). The fallback triggers when this exceeds 5 * spacer.
+    """
+    R = BallParams.default().R
+    spacer = _get_circular_spacer()
+    dist = R + cushion_circular.radius
+    model = ball_ccushion_models[BallCCushionModel.MATHAVAN_2010]()
+
+    phi = np.degrees(np.arcsin(0.2))
+    dphi = 1.0
+
+    # phi: just above boundary → velocity-based (displacement parallel to velocity)
+    ball = Ball("cue")
+    rads = np.radians(phi + dphi)
+    vel = np.array([-np.sin(rads), np.cos(rads), 0.0])
+    ball.state.rvw[0] = [dist, 0.0, R]
+    ball.state.rvw[1] = vel
+    ball.state.s = sliding
+    pos_before = ball.state.rvw[0].copy()
+    model.make_kiss(ball, cushion_circular)
+    displacement = ball.state.rvw[0] - pos_before
+    cross = np.cross(displacement, vel)
+    assert np.allclose(cross, 0, atol=1e-10)
+
+    c = np.array(
+        [cushion_circular.center[0], cushion_circular.center[1], ball.state.rvw[0, 2]]
+    )
+    assert ptmath.norm3d(ball.state.rvw[0] - c) == pytest.approx(
+        R + cushion_circular.radius + spacer, abs=1e-12
+    )
+
+    # phi - dphi: just below boundary → fallback (displacement along radial)
+    ball = Ball("cue")
+    rads = np.radians(phi - dphi)
+    vel = np.array([-np.sin(rads), np.cos(rads), 0.0])
+    ball.state.rvw[0] = [dist, 0.0, R]
+    ball.state.rvw[1] = vel
+    ball.state.s = sliding
+    pos_before = ball.state.rvw[0].copy()
+    model.make_kiss(ball, cushion_circular)
+    displacement = ball.state.rvw[0] - pos_before
+    normal = cushion_circular.get_normal_xy(ball.state.rvw[0])
+    disp_norm = displacement / np.linalg.norm(displacement)
+    assert np.allclose(np.abs(np.dot(disp_norm, normal)), 1.0, atol=1e-10)
+
+    c = np.array(
+        [cushion_circular.center[0], cushion_circular.center[1], ball.state.rvw[0, 2]]
+    )
+    assert ptmath.norm3d(ball.state.rvw[0] - c) == pytest.approx(
+        R + cushion_circular.radius + spacer, abs=1e-12
+    )
