@@ -12,7 +12,49 @@ logger = logging.getLogger(__name__)
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def normal_tangent_stiffness_ratio(poisson_ratio):
+    """Calculate eta_squared from Poisson ratio.
+
+    Args:
+        poisson_ratio: Poisson's ratio of the cushion.
+
+    Returns:
+        eta_squared: Ratio of normal to tangential stiffness.
+    """
     return (2 - poisson_ratio) / (2 * (1 - poisson_ratio))
+
+
+def poisson_ratio_from_omega_ratio(
+    omega_ratio: float, beta_t: float = 3.5, beta_n: float = 1.0
+) -> float:
+    """Convert from tangential/normal frequency ratio to Poisson ratio.
+
+    Args:
+        omega_ratio: Frequency ratio omega_t/omega_n. Must be in range (1, 2).
+        beta_t: Tangential mass-matrix coefficient for sphere-half-space collision.
+        beta_n: Normal mass-matrix coefficient for sphere-half-space collision.
+
+    Returns:
+        Poisson's ratio.
+    """
+    eta_squared = (beta_t / beta_n) / (omega_ratio**2)
+    return (2 * eta_squared - 2) / (2 * eta_squared - 1)
+
+
+def omega_ratio_from_poisson_ratio(
+    poisson_ratio: float, beta_t: float = 3.5, beta_n: float = 1.0
+) -> float:
+    """Convert Poisson ratio to the tangential/normal frequency ratio.
+
+    Args:
+        poisson_ratio: Poisson's ratio of the cushion.
+        beta_t: Tangential mass-matrix coefficient for sphere-half-space collision.
+        beta_n: Normal mass-matrix coefficient for sphere-half-space collision.
+
+    Returns:
+        Frequency ratio omega_t/omega_n.
+    """
+    eta_squared = normal_tangent_stiffness_ratio(poisson_ratio)
+    return np.sqrt((beta_t / beta_n) / eta_squared)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -431,16 +473,41 @@ def collision_duration(t_c, e_n):
 
 
 def resolve_collinear_compliant_frictional_inelastic_collision(
-    v_t_0: float,  # tangential velocity (must be <= 0)
-    v_n_0: float,  # normal velocity (must be <0)
-    m: float,  # collision effective mass
-    beta_t: float,  # mass-matrix coefficient
-    beta_n: float,  # mass-matrix coefficient
-    mu: float,  # friction coefficient
-    e_n: float,  # coefficient of restitution
-    k_n: float,  # normal spring stiffness
-    eta_squared: float,  # ratio of normal spring stiffness to tangential spring stiffness
+    v_t_0: float,
+    v_n_0: float,
+    m: float,
+    beta_t: float,
+    beta_n: float,
+    mu: float,
+    e_n: float,
+    k_n: float,
+    eta_squared: float,
 ) -> tuple[float, float]:
+    """Resolve a collinear compliant frictional inelastic collision.
+
+    Computes the post-collision tangential and normal velocities for a general
+    two-body planar collinear collision, accounting for friction, compliance
+    (spring-like deformation), and inelastic energy loss. The beta_t and beta_n
+    parameters encode the moments of inertia of the two bodies.
+
+    Args:
+        v_t_0: Initial tangential velocity, must be <= 0.
+        v_n_0: Initial normal velocity, must be < 0.
+        m: Collision effective mass.
+        beta_t: Tangential mass-matrix coefficient.
+        beta_n: Normal mass-matrix coefficient.
+        mu: Friction coefficient.
+        e_n: Coefficient of restitution in the normal direction.
+        k_n: Normal spring stiffness. This value is arbitrary as only the frequency
+            ratio omega_t/omega_n affects the result, which depends on the ratio
+            beta_t/beta_n/eta_squared.
+        eta_squared: Ratio of normal to tangential spring stiffness. Together with
+            beta_t and beta_n, this determines the frequency ratio omega_t/omega_n,
+            which must be in the range (1, 2).
+
+    Returns:
+        Final tangential and normal velocities after collision.
+    """
     assert v_t_0 <= 0
     assert v_n_0 < 0
 
