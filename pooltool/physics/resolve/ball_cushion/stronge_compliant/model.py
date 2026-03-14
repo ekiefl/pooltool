@@ -23,7 +23,7 @@ from pooltool.physics.resolve.stronge_compliant import (
 logger = logging.getLogger(__name__)
 
 
-def _solve(ball: Ball, cushion: Cushion) -> tuple[Ball, Cushion]:
+def _solve(ball: Ball, cushion: Cushion, omega_ratio: float) -> tuple[Ball, Cushion]:
     rvw = ball.state.rvw.copy()
 
     logger.debug(f"v={rvw[1]}, w={rvw[2]}")
@@ -55,8 +55,11 @@ def _solve(ball: Ball, cushion: Cushion) -> tuple[Ball, Cushion]:
         beta_n=beta_n,
         mu=ball.params.f_c,
         e_n=ball.params.e_c,
-        k_n=1e3,  # TODO: cushion params
-        eta_squared=(beta_t_by_beta_n / 1.7**2),  # TODO: cushion params
+        # Currently k_n is arbitrary: collision outcome depends only on omega_ratio. But
+        # if we want to use spring deformation to approximate cushion deformation and
+        # duration, this parameter affects that duration.
+        k_n=1e3,
+        eta_squared=(beta_t_by_beta_n / omega_ratio**2),
     )
 
     Dv_n = (v_n_f - v_n_0) / beta_n
@@ -93,6 +96,34 @@ def _solve(ball: Ball, cushion: Cushion) -> tuple[Ball, Cushion]:
 
 @attrs.define
 class StrongeCompliantLinear(CoreBallLCushionCollision):
+    """Ball-cushion collision resolver using Stronge's compliant collision model.
+
+    This model accounts for the compliant (spring-like) nature of cushion deformation
+    during collision.
+
+    Attributes:
+        omega_ratio:
+            Frequency ratio omega_t/omega_n controlling collision compliance, must be in
+            range (1, 2). Higher values = stiffer cushion, lower values = softer.
+
+    Notes:
+        Architecturally, omega_ratio represents a cushion material property (Poisson's
+        ratio) and should ideally be a cushion attribute rather than a model parameter.
+        However, it is exposed here as a model parameter because
+
+            (1) It's intuitive to adjust, ranging between [1, 2], and representing the
+            ratio of spring coefficients between tangential and normal components.
+
+            (2) This is the first model requiring cushion material properties, so we
+            defer adding cushion attributes until needed by multiple models.
+
+        When cushion material properties are added to cushion segments, we should add
+        Poisson ratio as a cushion parameter, and use
+        ``poisson_ratio_from_omega_ratio()`` and ``omega_ratio_from_poisson_ratio()`` to
+        convert to/from omega_ratio.
+    """
+
+    omega_ratio: float = 1.7
     model: BallLCushionModel = attrs.field(
         default=BallLCushionModel.STRONGE_COMPLIANT, init=False, repr=False
     )
@@ -100,11 +131,14 @@ class StrongeCompliantLinear(CoreBallLCushionCollision):
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
     ) -> tuple[Ball, LinearCushionSegment]:
-        return _solve(ball, cushion)
+        return _solve(ball, cushion, self.omega_ratio)
 
 
 @attrs.define
 class StrongeCompliantCircular(CoreBallCCushionCollision):
+    """See :class:`StrongeCompliantLinear`."""
+
+    omega_ratio: float = 1.7
     model: BallCCushionModel = attrs.field(
         default=BallCCushionModel.STRONGE_COMPLIANT, init=False, repr=False
     )
@@ -112,4 +146,4 @@ class StrongeCompliantCircular(CoreBallCCushionCollision):
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment
     ) -> tuple[Ball, CircularCushionSegment]:
-        return _solve(ball, cushion)
+        return _solve(ball, cushion, self.omega_ratio)
