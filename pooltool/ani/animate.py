@@ -172,6 +172,10 @@ class Interface(ShowBase):
 
         visual.teardown()
 
+        scene_node = Global.render.find("scene")
+        if not scene_node.isEmpty():
+            scene_node.removeNode()
+
         hud.destroy()
 
         multisystem.reset()
