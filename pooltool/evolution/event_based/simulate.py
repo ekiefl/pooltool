@@ -443,6 +443,9 @@ def get_next_ball_ball_collision(
 
     # The cache is now populated and up-to-date
 
+    if not cache:
+        return null_event(np.inf)
+
     ball_pair = min(cache, key=lambda k: cache[k])
 
     return ball_ball_collision(
