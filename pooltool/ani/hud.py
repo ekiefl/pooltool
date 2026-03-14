@@ -247,11 +247,11 @@ class Help(BaseHUDElement):
 
     def destroy(self):
         if hasattr(self, "help_hint"):
-            self.help_hint.hide()
+            self.help_hint.removeNode()
             del self.help_hint
 
         if hasattr(self, "help_node"):
-            self.help_node.hide()
+            self.help_node.removeNode()
             del self.help_node
 
     def show(self):
@@ -302,13 +302,9 @@ class PlayerStats(BaseHUDElement):
 
     def destroy(self):
         """Delete the on screen text nodes"""
-        while True:
-            try:
-                on_screen_text = self.on_screen.pop()
-                on_screen_text.hide()
-                del on_screen_text
-            except IndexError:
-                break
+        while self.on_screen:
+            on_screen_text = self.on_screen.pop()
+            on_screen_text.removeNode()
 
     def show(self):
         for on_screen_text in self.on_screen:
@@ -353,8 +349,8 @@ class Logo(BaseHUDElement):
         self.img.hide()
 
     def destroy(self):
-        self.hide()
-        del self.img
+        self.img.removeNode()
+        self.dummy_right.removeNode()
 
 
 class English(BaseHUDElement):
@@ -419,10 +415,8 @@ class English(BaseHUDElement):
         self.circle.hide()
 
     def destroy(self):
-        self.hide()
-        del self.text
-        del self.crosshairs
-        del self.circle
+        self.circle.removeNode()
+        self.dummy_right.removeNode()
 
 
 class Power(NodePath, BaseHUDElement):
@@ -473,9 +467,8 @@ class Power(NodePath, BaseHUDElement):
         self.show()
 
     def destroy(self):
-        self.hide()
-        del self.text
-        del self
+        self.removeNode()
+        self.dummy_right.removeNode()
 
     def set(self, V0):
         self.text.setText(f"{V0:.2f} m/s")
@@ -552,8 +545,8 @@ class Jack(BaseHUDElement):
         self.cue_cartoon.hide()
 
     def destroy(self):
-        self.hide()
-        del self.arc
+        self.arc.removeNode()
+        self.dummy_right.removeNode()
 
 
 class LogWindow(BaseHUDElement):
@@ -594,8 +587,7 @@ class LogWindow(BaseHUDElement):
         """Delete the on screen text nodes"""
         while self.on_screen:
             on_screen_text = self.on_screen.pop()
-            on_screen_text.hide()
-            del on_screen_text
+            on_screen_text.removeNode()
 
     def show(self):
         for on_screen_text in self.on_screen:
@@ -607,10 +599,8 @@ class LogWindow(BaseHUDElement):
 
     def broadcast_msg(self, msg, color=None):
         if len(self.on_screen) >= self.on_screen_max:
-            # Remove the oldest message from the screen
             off_screen = self.on_screen.pop()
-            off_screen.hide()
-            del off_screen
+            off_screen.removeNode()
 
         # Add the new message to the screen and set its alpha scale to 0 to make it invisible
         new_message = self.init_text_object(0, msg=msg, color=color)
@@ -727,8 +717,10 @@ class BallInHand(BaseHUDElement):
             self.animation_active = False
 
         if hasattr(self, "text") and self.text is not None:
-            self.text.hide()
-            del self.text
+            self.text.removeNode()
+            self.text = None
+
+        self.dummy_right.removeNode()
 
 
 hud = HUD()
