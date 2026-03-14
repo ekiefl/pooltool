@@ -157,8 +157,8 @@ class Environment:
         a_str = 0.1
         alight = AmbientLight("alight")
         alight.setColor((a_str, a_str, a_str, 1))
-        alnp = Global.render.attachNewNode(alight)
-        Global.render.setLight(alnp)
+        self.alnp = Global.render.attachNewNode(alight)
+        Global.render.setLight(self.alnp)
 
         self.slights = {
             # under bar #1
@@ -306,6 +306,8 @@ class Environment:
 
         if not self.lights_loaded:
             return
+
+        self.alnp.removeNode()
 
         for light in self.slights.values():
             light.removeNode()
