@@ -455,6 +455,12 @@ class ShotViewer(Interface):
         mouse.init()
 
     def _stop(self):
+        # Clean up simplepbr resources to prevent memory leak.
+        # Each _start() creates a new pipeline; without cleanup, FilterManager
+        # buffers and update tasks accumulate in the Panda3D engine.
+        # https://github.com/ekiefl/pooltool/issues/219
+        self.simplepbr_pipeline._filtermgr.cleanup()
+        Global.task_mgr.remove("simplepbr update")
         self.title_node.destroy()
         self.closeWindow(self.win)
         Global.task_mgr.stop()
