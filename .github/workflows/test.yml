@@ -29,7 +29,7 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync --group dev --python ${{ matrix.python-version }}
+        run: uv sync --frozen --group dev --python ${{ matrix.python-version }}
 
       - name: Run tests
         run: uv run --no-sync make test

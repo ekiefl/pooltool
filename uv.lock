@@ -2317,7 +2317,7 @@ requires-dist = [
     { name = "panda3d-simplepbr", specifier = ">=0.12.0" },
     { name = "pillow", specifier = ">=6.2.0" },
     { name = "pyyaml", specifier = ">=5.2" },
-    { name = "rich", specifier = ">=14.0.0" },
+    { name = "rich", specifier = ">=14.0.0,<15.0.0" },
     { name = "scipy", specifier = ">=1.12.0" },
 ]
 
