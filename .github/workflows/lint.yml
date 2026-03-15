@@ -26,8 +26,5 @@ jobs:
       - name: Install linting dependencies
         run: uv sync --frozen --only-group dev --no-install-project
 
-      - name: Run lint
-        run: uv run --no-sync make lint-check
-
-      - name: Check formatting
-        run: uv run --no-sync make format-check
+      - name: Lint and format check
+        run: uv run --no-sync make lint

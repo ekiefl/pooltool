@@ -28,22 +28,15 @@ docs-with-notebooks: notebooks docs
 # Linting, Formatting, and Type Checking
 # ========================================
 
-.PHONY: lint
-lint:
-	uv run ruff check . --fix
-	uv run ruff format --check .
-
-.PHONY: lint-check
-lint-check:
-	uv run ruff check . --verbose --diff
-
 .PHONY: format
 format:
 	uv run ruff format .
+	uv run ruff check . --fix
 
-.PHONY: format-check
-format-check:
-	uv run ruff format . --check --verbose --diff
+.PHONY: lint
+lint:
+	uv run ruff format --check .
+	uv run ruff check .
 
 .PHONY: typecheck
 typecheck:

@@ -30,10 +30,8 @@ make docs-with-notebooks  # Build docs including notebook execution
 
 **Code quality:**
 ```bash
-make lint                 # Run linting and fix issues
-make lint-check           # Check linting without fixing
-make format               # Format code
-make format-check         # Check formatting without fixing
+make format               # Auto-format and fix lint issues
+make lint                 # Check formatting and lint (read-only)
 make typecheck            # Run type checking
 ```
 
@@ -244,7 +242,7 @@ To add a new example to the gallery:
 1. **Fork the repository** and create a branch from `main`
 2. **Develop your feature or fix** on your branch
 3. **Ensure all tests pass** by running `make test`
-4. **Format your code** with `make format` and `make lint`
+4. **Format your code** with `make format`
 5. **Check types** with `make typecheck`
 6. **Push your changes** to your fork
 7. **Create a pull request** to the main pooltool repository
