@@ -1,5 +1,5 @@
 {% if obj.display %}
-.. autoclass:: {{ obj.short_name }}{% if obj.args %}({{ obj.args }}){% endif %}
+.. autoclass:: {{ obj.short_name }}
 
 {% for (args, return_annotation) in obj.overloads %}
       {{ " " * (obj.type | length) }}   {{ obj.short_name }}{% if args %}({{ args }}){% endif %}

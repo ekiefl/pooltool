@@ -38,7 +38,15 @@ Pooltool is peer-reviewed and published in the **Journal of Open Source Software
 
    examples/index
    resources/index
-   autoapi/index
+```
+
+```{eval-rst}
+.. toctree::
+   :caption: API Reference
+   :hidden:
+   :maxdepth: 1
+
+   autoapi/pooltool/index
 ```
 
 ```{eval-rst}
@@ -48,8 +56,6 @@ Pooltool is peer-reviewed and published in the **Journal of Open Source Software
    :maxdepth: 1
 
    meta/contributing
-   meta/developer_guide
-   meta/code_of_conduct
    meta/license
    PyPI <https://pypi.org/project/pooltool-billiards/>
 ```

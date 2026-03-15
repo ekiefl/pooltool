@@ -44,6 +44,10 @@ extensions = [
     "custom_directives",
     "custom_extensions",
     "custom_skip_members",
+    "resolve_missing_references",
+    "fix_dataclass_defaults",
+    "restructure_class_layout",
+    "clean_enum_signature",
 ]
 
 
@@ -61,18 +65,27 @@ exclude_patterns = [
     "**.ipynb_checkpoints",
     "**README.md",
     "publish_instructions.md",
+    "autoapi/index.rst",
 ]
 
 # -- Global options ----------------------------------------------------------
 
-# Don't mess with double-dash used in CLI options
-smartquotes_action = "qe"
+# Don't mess with double-dash used in CLI options.
+# Only educate quotes, not ellipses — ellipsis education converts "..." to "…"
+# in type annotations, creating inconsistency with how Sphinx renders them
+# in signatures.
+smartquotes_action = "q"
 
 # -- Notebook rendering -------------------------------------------------
 
 # Something to consider: https://dokk.org/documentation/nbsphinx/0.9.3/prolog-and-epilog/
 nbsphinx_epilog = """"""
 nbsphinx_prolog = """"""
+
+nbsphinx_allow_errors = True
+nbsphinx_input_prompt = "%.0s"
+nbsphinx_output_prompt = "%.0s"
+nbsphinx_prompt_width = "0"
 
 # Don't give nbsphinx the ability to execute nb cells--just render what's present.
 nbsphinx_execute = "never"
@@ -83,7 +96,17 @@ nbsphinx_execute = "never"
 # a list of builtin themes.
 #
 html_theme = "furo"
+
+GOOGLE_FONTS_URL = None
+html_title = ""
 html_logo = "../pooltool/logo/logo_small.png"
+html_theme_options = {
+    # "light_css_variables": {
+    #     "font-stack": "...",
+    #     "font-stack--monospace": "...",
+    #     "font-stack--headings": "...",
+    # },
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -115,15 +138,17 @@ sphinx_tabs_disable_tab_closing = True
 copybutton_exclude = ".linenos, .gp, .go"
 
 # -- myst options
-myst_enable_extensions = ["colon_fence"]
+myst_enable_extensions = ["colon_fence", "dollarmath", "amsmath"]
 togglebutton_hint = "Click to expand"
 togglebutton_hint_hide = ""
 
 # -- autoapi configuration ---------------------------------------------------
 
-# autodoc_typehints = "signature"  # autoapi respects this
+add_module_names = False
 autodoc_typehints = "both"  # autoapi respects this
+autodoc_typehints_format = "short"  # autoapi respects this
 autodoc_typehints_description_target = "documented_params"  # autoapi respects this
+python_use_unqualified_type_names = True
 autodoc_class_signature = "mixed"
 autoclass_content = "class"
 
@@ -141,34 +166,12 @@ autoapi_keep_files = True
 
 autoapi_ignore = ignore_regex
 
-# -- custom auto_summary() macro ---------------------------------------------
-
-
-def contains(seq, item):
-    """Jinja2 custom test to check existence in a container.
-
-    Example of use:
-    {% set class_methods = methods|selectattr("properties", "contains", "classmethod") %}
-
-    Related doc: https://jinja.palletsprojects.com/en/3.1.x/api/#custom-tests
-    """
-    return item in seq
-
-
-def prepare_jinja_env(jinja_env) -> None:
-    """Add `contains` custom test to Jinja environment."""
-    jinja_env.tests["contains"] = contains
-
-
-autoapi_prepare_jinja_env = prepare_jinja_env
-
-# Custom role for labels used in auto_summary() tables.
-rst_prolog = """
-.. role:: summarylabel
-"""
-
-# Related custom CSS
 html_css_files = [
-    "css/label.css",
     "css/sphinx-togglebutton.css",
+    "css/headings.css",
+    "css/rubric.css",
+    "css/nbsphinx-gallery.css",
+    "css/toc.css",
 ]
+if GOOGLE_FONTS_URL:
+    html_css_files.insert(0, GOOGLE_FONTS_URL)

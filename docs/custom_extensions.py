@@ -5,23 +5,11 @@ from sphinx.application import Sphinx
 
 
 def extract_qualified_name(obj):
-    repr_str = repr(obj)
-    class_or_instance_method_pattern = r"<bound method ([\w\.]+)\.([\w]+) of"
-    static_or_func_pattern = r"<function ([\w\.]*\w+)"
-    lambda_pattern = r"<function <lambda>"
-
-    class_or_instance_match = re.search(class_or_instance_method_pattern, repr_str)
-    static_or_func_match = re.search(static_or_func_pattern, repr_str)
-    lambda_match = re.search(lambda_pattern, repr_str)
-
-    if class_or_instance_match:
-        return f"{class_or_instance_match.group(1)}.{class_or_instance_match.group(2)}"
-    elif static_or_func_match:
-        return static_or_func_match.group(1)
-    elif lambda_match:
-        return "UNKNOWN"
-    else:
-        return "UNKNOWN"
+    if hasattr(obj, "__qualname__"):
+        return obj.__qualname__
+    if hasattr(obj, "__name__"):
+        return obj.__name__
+    return "UNKNOWN"
 
 
 def process_signature(app, what, name, obj, options, signature, return_annotation):
@@ -38,7 +26,7 @@ def process_signature(app, what, name, obj, options, signature, return_annotatio
                 replacement_str = f"{factory_full_name}"
 
                 # Define a regex pattern to match the parameter, its type, and the default value
-                pattern = re.compile(rf"({field_name}: [^=]+ = )_Nothing.NOTHING")
+                pattern = re.compile(rf"({field_name}: [^=]+ = )(?:_Nothing\.)?NOTHING")
                 # Replace with the new default value representation
                 new_signature = pattern.sub(rf"\1{replacement_str}", new_signature)
 

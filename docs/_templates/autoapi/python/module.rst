@@ -1,25 +1,14 @@
-{% import 'macros.rst' as macros %}
-
 {% if not obj.display %}
 :orphan:
 
 {% endif %}
-{{ obj.name }}
-{{ "=" * obj.name|length }}
+``{{ obj.name }}``
+{{ "=" * (obj.name|length + 4) }}
 
 .. py:module:: {{ obj.name }}
 
 {% if obj.docstring %}
-    {% set docstring_lines = obj.docstring.split('\n') %}
-    {% set first_line = docstring_lines[0] %}
-    {{ first_line }}
-    {{ "-" * first_line|length }}
-    
-    {% if docstring_lines|length > 1 %}
-    {% for line in docstring_lines[1:] %}
-    {{ line }}
-    {% endfor %}
-    {% endif %}
+{{ obj.docstring }}
 {% endif %}
 
 {% block subpackages %}
@@ -51,7 +40,6 @@ Submodules
    {{ submodule.short_name }}/index.rst
 {% endfor %}
 
-
 {% endif %}
 {% endblock %}
 {% block content %}
@@ -63,32 +51,9 @@ Submodules
 {% set visible_children = obj.children|selectattr("display")|rejectattr("imported")|list %}
 {% endif %}
 {% if visible_children %}
-Overview
---------
-
 {% set visible_classes = visible_children|selectattr("type", "equalto", "class")|list %}
 {% set visible_functions = visible_children|selectattr("type", "equalto", "function")|list %}
 {% set visible_attributes = visible_children|selectattr("type", "equalto", "data")|list %}
-{% if "show-module-summary" in autoapi_options and (visible_classes or visible_functions) %}
-{% block classes scoped %}
-{% if visible_classes %}
-{{ macros.auto_summary(visible_classes, title="Classes") }}
-{% endif %}
-{% endblock %}
-
-{% block functions scoped %}
-{% if visible_functions %}
-{{ macros.auto_summary(visible_functions, title="Function") }}
-{% endif %}
-{% endblock %}
-
-{% block attributes scoped %}
-{% if visible_attributes %}
-{{ macros.auto_summary(visible_attributes, title="Attributes") }}
-{% endif %}
-{% endblock %}
-{% endif %}
-
 {% if visible_classes %}
 Classes
 -------

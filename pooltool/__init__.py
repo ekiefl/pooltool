@@ -1,6 +1,6 @@
-"""The top-level API for the pooltool library
+"""The top-level API for the pooltool library.
 
-**Important and highly used objects are placed in this top-level API**. For example,
+Important and highly used objects are placed in this top-level API. For example,
 ``System`` can be imported directly from the top module:
 
     >>> import pooltool as pt
