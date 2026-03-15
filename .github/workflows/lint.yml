@@ -1,0 +1,30 @@
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            **/uv.lock
+          cache-suffix: "lint"
+
+      - name: Set up Python
+        run: uv python install  # Determines version from .python-version
+
+      - name: Install linting dependencies
+        run: uv sync --frozen --only-group dev --no-install-project
+
+      - name: Lint and format check
+        run: uv run --no-sync make lint

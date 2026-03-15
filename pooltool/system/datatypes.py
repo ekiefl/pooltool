@@ -144,7 +144,7 @@ class System:
             )
 
     @property
-    def continuized(self):
+    def continuized(self) -> bool:
         """Checks if all balls have a non-empty continuous history.
 
         Returns:
@@ -157,7 +157,7 @@ class System:
         return all(not ball.history_cts.empty for ball in self.balls.values())
 
     @property
-    def simulated(self):
+    def simulated(self) -> bool:
         """Checks if the simulation has any events.
 
         If there are events, it is assumed that the system has been simulated.
@@ -194,7 +194,7 @@ class System:
         for ball in self.balls.values():
             ball.set_ballset(ballset)
 
-    def _update_history(self, event: Event):
+    def _update_history(self, event: Event) -> None:
         """Updates the history for all balls based on the given event.
 
         Args:
@@ -208,7 +208,7 @@ class System:
 
         self.events.append(event)
 
-    def reset_history(self):
+    def reset_history(self) -> None:
         """Resets the history for all balls, clearing events and resetting time.
 
         Operations that this method performs:
@@ -234,7 +234,7 @@ class System:
 
         self.events = []
 
-    def reset_balls(self):
+    def reset_balls(self) -> None:
         """Resets balls to their initial states based on their history
 
         This sets the state of each ball to the ball's initial historical state (`i.e.`
@@ -278,7 +278,7 @@ class System:
             if not ball.history.empty:
                 ball.state = ball.history[0].copy()
 
-    def stop_balls(self):
+    def stop_balls(self) -> None:
         """Change ball states to stationary and remove all momentum
 
         This method removes all kinetic energy from the system by:

@@ -17,8 +17,9 @@ graduate to the top-level API, **your input is valuable** and such changes can b
 considered.
 """
 
-# This is a placeholder that is replaced during package building (`poetry build`)
-__version__ = "0.0.0"
+from importlib.metadata import version
+
+__version__ = version("pooltool-billiards")
 
 import pooltool.ai as ai
 import pooltool.ai.aim as aim
