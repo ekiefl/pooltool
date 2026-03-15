@@ -31,7 +31,7 @@ docs-with-notebooks: notebooks docs
 .PHONY: format
 format:
 	uv run ruff format .
-	uv run ruff check . --fix
+	uv run ruff check --fix-only .
 
 .PHONY: lint
 lint:

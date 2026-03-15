@@ -144,7 +144,7 @@ class System:
             )
 
     @property
-    def continuized(self):
+    def continuized(self) -> str:
         """Checks if all balls have a non-empty continuous history.
 
         Returns:
@@ -154,7 +154,7 @@ class System:
             For a proper definition of *continuous history*, please see
             :attr:`pooltool.objects.Ball.history_cts`.
         """
-        return all(not ball.history_cts.empty for ball in self.balls.values())
+        return all(   not ball.history_cts.empty for ball in self.balls.values())
 
     @property
     def simulated(self):

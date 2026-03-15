@@ -17,7 +17,6 @@ graduate to the top-level API, **your input is valuable** and such changes can b
 considered.
 """
 
-import os, sys
 from importlib.metadata import version
 
 __version__ = version("pooltool-billiards")
