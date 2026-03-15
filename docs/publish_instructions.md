@@ -15,12 +15,22 @@ The logo must be updated for all major and minor versions (`MAJOR.MINOR.PATCH`).
 * Make a copy of `logo.png` that is 640 x 360. Call it `logo_small.png`
 * To ensure the state of `logo.blend` is preserved, do not save your changes to `logo.blend`. And if you accidentally do, don't commit them.
 
-## 2. Create a git tag
+## 2. Update the version
 
-Versioning is handled dynamically based on git tags. So to make a new release, you first make a new git tag. Make sure you're on the main branch with no uncommitted changes.
+Update the `version` field in `pyproject.toml` to the new release version. Commit the change.
 
 ```bash
 RELEASE_VERSION=0.1.0
+# Edit pyproject.toml: version = "0.1.0"
+git add pyproject.toml
+git commit -m "Bump version to ${RELEASE_VERSION}"
+```
+
+## 3. Create a git tag
+
+Make sure you're on the main branch with no uncommitted changes.
+
+```bash
 git tag -a v${RELEASE_VERSION} -m "Release version ${RELEASE_VERSION}"
 git push origin v${RELEASE_VERSION}
 ```
@@ -32,29 +42,15 @@ git tag -d <tagname> # Locally delete
 git push origin :refs/tags/<tagname> # If you pushed it
 ```
 
-## 3. Build the distribution
+## 4. Build the distribution
 
 ```bash
 make build
 ```
 
-You should see something like this:
-
-```bash
-Building pooltool-billiards (0.1.0)
-  - Building sdist
-  - Built pooltool_billiards-0.1.0.tar.gz
-  - Building wheel
-  - Built pooltool_billiards-0.1.0-py3-none-any.whl
-```
-
-If there are additional metadata attached to the version (_e.g._ `0.3.4a2.dev1+eb17e9c.dirty`), then your tag isn't up to date.
-
 Open the tar found in `dist/`. If you've added any non-Python files to the package since the last release, make sure they are either present or absent from the package (depending on the desired outcome).
 
-Also open `pooltool/__init__.py` and make sure the `__version__` variable was populated with something other than the placeholder, `0.0.0`.
-
-## 4. Publish to the **test** PyPI repository
+## 5. Publish to the **test** PyPI repository
 
 - Populate your `.env` using `.env.copy` as a template.
 
@@ -62,13 +58,9 @@ Also open `pooltool/__init__.py` and make sure the `__version__` variable was po
 
 - Create a fresh python environment to test the installation
 
-```
-source ~/.bashrc
-conda deactivate
-conda env remove --name asdf
-conda create -y -n asdf python=3.12.4
-PYTHONPATH=""
-conda activate asdf
+```bash
+uv venv --python 3.13 /tmp/pooltool-release-test
+source /tmp/pooltool-release-test/bin/activate
 ```
 
 - Install:
@@ -77,34 +69,30 @@ conda activate asdf
 pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple --extra-index-url https://archive.panda3d.org/ pooltool-billiards==${RELEASE_VERSION} --force-reinstall
 ```
 
-If test PyPi is timing out, you can instead consider testing the installation with 
+If test PyPi is timing out, you can instead consider testing the installation with
 
 ```bash
 pip install dist/pooltool_billiards-${RELEASE_VERSION}.tar.gz --force-reinstall --extra-index-url https://archive.panda3d.org/
 ```
 
-- Test it out. Make sure `which run-pooltool` leads to the asdf environment: `/Users/evan/anaconda3/envs/asdf/bin/run_pooltool`. Then see if the interactive interface can be loaded: `run-pooltool`. Additionally, check the path of `cd ~; python -c "import pooltool; print(pooltool.__file__)"; cd -`. It should be in site-packages of asdf environment.
+- Test it out. Make sure `which run-pooltool` leads to the test environment. Then see if the interactive interface can be loaded: `run-pooltool`. Additionally, check the path of `cd ~; python -c "import pooltool; print(pooltool.__file__)"; cd -`. It should be in site-packages of the test environment.
 
-## 5. Publish to the **real** PyPI repository
+## 6. Publish to the **real** PyPI repository
 
 - Go back to the dev environment.
 
 - Run `make build-and-publish`
 
-- Create a new python environment
+- Create a fresh test environment
 
-```
-source ~/.bashrc
-conda deactivate
-conda env remove --name asdf
-conda create -y -n asdf python=3.12.4
-PYTHONPATH=""
-conda activate asdf
-cd ~
+```bash
+rm -rf /tmp/pooltool-release-test
+uv venv --python 3.13 /tmp/pooltool-release-test
+source /tmp/pooltool-release-test/bin/activate
 ```
 
 - Test installation: `pip install pooltool-billiards==${RELEASE_VERSION}` (you may need to wait for version to be live)
 
-## 6. Make a release
+## 7. Make a release
 
 - Make a release on github from the tag. Upload the `.whl` and `.tar.gz` found in `dist/`.

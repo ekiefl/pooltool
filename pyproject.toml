@@ -1,145 +1,127 @@
 [build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
-build-backend = "poetry_dynamic_versioning.backend"
+requires = ["uv_build>=0.10.9,<0.11"]
+build-backend = "uv_build"
 
-[tool.poetry-dynamic-versioning]
-enable = true
-strict = true
-bump = true
-vcs = "git"
-# The 'pep440' style appends the git commit hash to the version number when
-# there are commits since the last tag.
-style = "pep440"
-# Append a flag to the version number if there are uncommitted changes.
-dirty = true
-# Untracked files don't count as dirty
-ignore-untracked = true
-
-[tool.poetry]
 # The package name is "pooltool". The PyPI project name is "pooltool-billiards"
+[project]
 name = "pooltool-billiards"
-# This version is a placeholder. It will be updated at build time by
-# poetry-dynamic-versioning from the latest git tag. See PYPI.md.
-version = "0.0.0"
+version = "0.5.0"
 description = "A sandbox billiards game that emphasizes realistic physics."
-repository = "https://github.com/ekiefl/pooltool"
-homepage = "https://pooltool.readthedocs.io/en/latest/"
-documentation = "https://pooltool.readthedocs.io/en/latest/"
-authors = ["Evan Kiefl <kiefl.evan@gmail.com>"]
-maintainers = ["Evan Kiefl <kiefl.evan@gmail.com>"]
+authors = [{name = "Evan Kiefl", email = "kiefl.evan@gmail.com"}]
+maintainers = [{name = "Evan Kiefl", email = "kiefl.evan@gmail.com"}]
 license = "Apache-2.0"
 readme = "README.md"
+requires-python = ">=3.10,<3.14"
 keywords = ["simulation", "physics", "pool", "billiards", "panda3d", "snooker", "eight-ball"]
 classifiers = [
-  "Topic :: Scientific/Engineering :: Visualization",
-  "Topic :: Scientific/Engineering :: Physics",
-  "Topic :: Games/Entertainment :: Simulation",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Games/Entertainment :: Simulation",
+]
+dependencies = [
+    "panda3d>=1.10.13,<1.11 ; sys_platform == 'darwin'",
+    "panda3d==1.11.0.dev3702 ; sys_platform != 'darwin'",
+    "panda3d-gltf>=1.2.0",
+    "panda3d-simplepbr>=0.12.0",
+    "numpy>=1.26.0",  # Lower bound for 3.12 (https://github.com/numpy/numpy/releases/tag/v1.26.0)
+    "numba>=0.59.0",  # # Lower bound for 3.12 (https://numba.readthedocs.io/en/latest/user/installing.html#version-support-information)
+    "llvmlite>=0.44.0,<0.46",  # Lower bound for 3.13, requires >=3.10. Upper bound: 0.46.0 lacks wheels for some platforms
+    "scipy>=1.12.0",  # Required for numba. Lower bound for 3.12 is officially 1.11, but in practice seems to be 1.12 on MacOS
+    "attrs>=21.3.0",
+    "cattrs>=22.1.0",
+    "msgpack>=1.0.0",  # cattrs structuring fails with msgpack<1
+    "msgpack-numpy>=0.4.8",
+    "pyyaml>=5.2",
+    "click>=8.0.0",
+    "Pillow>=6.2.0",
+    "h5py>=3.10",
+    "h11>=0.16.0",  # Avoids security vulnerability
+    "rich>=14.0.0",  # 13.8.1 added support for Python 3.13
+    "numpy-quaternion>=2024.0.12",
 ]
 
-packages = [{include = "pooltool"}]
-
-# Include globs override exclude globs below.
-include = [
-  # Logo variants
-  "pooltool/logo/logo_pt.png",
-  "pooltool/logo/logo_pt_smaller.png",
-  "pooltool/logo/logo.png",
-  # Image assets for HUD and menu
-  "pooltool/models/hud/**/*.png",
-  "pooltool/models/menu/**/*.png",
-  "pooltool/models/menu/**/*.jpeg",
-]
-
-exclude = [
-  # All test files
-  "pooltool/**/test_*",
-  # All intermediate modeling formats (Blender, SVG, etc.)
-  "pooltool/**/*.blend*",
-  "pooltool/**/*.svg",
-  "pooltool/**/*.exr",
-  "pooltool/**/*.pptx",
-  "pooltool/**/*.png",  # Some PNGs in `include` override this exclusion
-  "pooltool/**/*.jpg",
-  "pooltool/**/*.jpeg",
-  # To save package size, models with physical based rendering (PBR) are excluded
-  "pooltool/models/**/*_pbr.glb",
-]
-
-[tool.poetry.scripts]
+[project.scripts]
 run-pooltool = "pooltool.main:run"
 
-[[tool.poetry.source]]
-name = "pypi"
-priority = "primary"
+[project.urls]
+Homepage = "https://pooltool.readthedocs.io/en/latest/"
+Documentation = "https://pooltool.readthedocs.io/en/latest/"
+Repository = "https://github.com/ekiefl/pooltool"
 
-[[tool.poetry.source]]
-name = "pypi-test"
-url = "https://test.pypi.org/legacy/"
-
-[[tool.poetry.source]]
+[[tool.uv.index]]
 name = "panda3d-archive"
 url = "https://archive.panda3d.org/simple/"
-priority = "explicit"
+explicit = true
 
-[tool.poetry.dependencies]
-python = ">=3.10,<3.14"
+[tool.uv.sources]
 panda3d = [
-  {platform = "darwin", version=">=1.10.13,<1.11"},
-  {platform = "linux", version = "1.11.0.dev3702", allow-prereleases = true, source = "panda3d-archive"},
-  {platform = "win32", version = "1.11.0.dev3702", allow-prereleases = true, source = "panda3d-archive"},
+    { index = "panda3d-archive", marker = "sys_platform != 'darwin'" },
 ]
-panda3d-gltf = ">=1.2.0"
-panda3d-simplepbr = ">=0.12.0"
-numpy = ">=1.26.0"  # Lower bound for 3.12 (https://github.com/numpy/numpy/releases/tag/v1.26.0)
-numba = ">=0.59.0"  # # Lower bound for 3.12 (https://numba.readthedocs.io/en/latest/user/installing.html#version-support-information)
-llvmlite = ">=0.44.0"  # Lower bound for 3.13, requires >=3.10
-scipy = ">=1.12.0"  # Required for numba. Lower bound for 3.12 is officially 1.11, but in practice seems to be 1.12 on MacOS
-attrs = ">=21.3.0"
-cattrs = ">=22.1.0"
-msgpack = ">=1.0.0"  # cattrs structuring fails with msgpack<1
-msgpack-numpy = ">=0.4.8"
-pyyaml = ">=5.2"
-click = ">=8.0.0"
-Pillow = ">=6.2.0"
-h5py = ">=3.10"
-h11 = ">=0.16.0"  # Avoids security vulnerability
-rich = "^14.0.0"  # 13.8.1 added support for Python 3.13
-numpy-quaternion = ">=2024.0.12"
 
-[tool.poetry.group.dev.dependencies]
-# Testing and formatting
-pytest = ">=8.3.2"
-pytest-cov = "^5.0.0"
-pre-commit = ">=3.7.1"
-pyright = ">=1.1.373"
-ruff = ">=0.5.5"
-# Diagnostics
-psutil = ">=6.0.0"
-ipython = ">=8.18.1"
-ipdb = "^0.13.13"
-pprofile = ">=2.2.0"
-# Vignettes
-jupyterlab = ">=4.0.0"
-pandas = ">=2"
-plotly = ">=5"
-matplotlib = ">=3.8"
-# Publishing
-poetry = "==1.8.4"
-poetry-dynamic-versioning = {extras = ["plugin"], version = ">=1.4.0"}
+[tool.uv.build-backend]
+module-name = "pooltool"
+module-root = "."
+# uv_build includes all files in the package by default. These excludes trim
+# intermediate modeling formats, unwanted images, and PBR model variants to
+# reduce package size. Unlike Poetry, uv_build cannot "re-include" after a
+# global exclude, so PNGs are excluded per-directory rather than globally.
+wheel-exclude = [
+    # All test files
+    "pooltool/**/test_*",
+    # All intermediate modeling formats (Blender, SVG, etc.)
+    "**/*.blend*",
+    "**/*.svg",
+    "**/*.exr",
+    "**/*.pptx",
+    "**/*.jpg",
+    # Exclude JPEGs outside of models/menu/ (where they're needed as package data)
+    "pooltool/models/room/**/*.jpeg",
+    # To save package size, models with physical based rendering (PBR) are excluded
+    "pooltool/models/**/*_pbr.glb",
+    # Exclude PNGs from directories where they're not needed as package data.
+    # PNGs in logo/ (3 specific files), models/hud/, and models/menu/ are kept.
+    "pooltool/models/balls/**/*.png",
+    "pooltool/models/room/**/*.png",
+    "pooltool/models/cue/**/*.png",
+    "pooltool/models/table/**/*.png",
+    "pooltool/models/checkerboard.png",
+    "pooltool/logo/0.png",
+    "pooltool/logo/v.png",
+    "pooltool/logo/logo_small.png",
+    "pooltool/logo/logo_pt_square.png",
+    "pooltool/logo/logo_v0p*.png",
+]
 
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-sphinx = "8.1.3"
-sphinx-copybutton = "0.5.2"
-furo = "2024.8.6"
-myst-parser = "4.0.1"
-sphinx-autoapi = "3.6.0"
-sphinx-tabs = "3.4.7"
-nbsphinx = "0.9.7"
-sphinx-autobuild = "2024.10.3"
-sphinx-togglebutton = "0.3.2"
+[dependency-groups]
+dev = [
+    # Testing and formatting
+    "pytest>=8.3.2",
+    "pytest-cov>=5.0.0",
+    "pre-commit>=3.7.1",
+    "pyright>=1.1.373",
+    "ruff>=0.5.5",
+    # Diagnostics
+    "psutil>=6.0.0",
+    "ipython>=8.18.1",
+    "ipdb>=0.13.13",
+    "pprofile>=2.2.0",
+    # Vignettes
+    "jupyterlab>=4.0.0",
+    "pandas>=2",
+    "plotly>=5",
+    "matplotlib>=3.8",
+]
+docs = [
+    "sphinx==8.1.3",
+    "sphinx-copybutton==0.5.2",
+    "furo==2024.8.6",
+    "myst-parser==4.0.1",
+    "sphinx-autoapi==3.6.0",
+    "sphinx-tabs==3.4.7",
+    "nbsphinx==0.9.7",
+    "sphinx-autobuild==2024.10.3",
+    "sphinx-togglebutton==0.3.2",
+]
 
 [tool.jupytext]
 formats = "ipynb,py:percent"
