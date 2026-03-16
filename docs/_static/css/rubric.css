@@ -1,0 +1,34 @@
+dl.py .base-classes {
+    font-family: var(--font-stack--monospace);
+    font-size: var(--api-font-size);
+    font-weight: 700;
+}
+
+dl.py .rubric {
+    text-transform: uppercase;
+    font-size: 0.75em;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--color-foreground-secondary);
+    border-bottom: 1px solid var(--color-foreground-border);
+    padding-bottom: 0.3em;
+    margin-top: 1.5em;
+    margin-bottom: 0.75em;
+}
+
+p.param-sig {
+    font-family: var(--font-stack--monospace);
+    font-size: var(--api-font-size);
+    font-weight: 700;
+}
+
+p.param-desc {
+    margin-left: 1.5em;
+    margin-top: 0;
+}
+
+dd.return-type p {
+    font-family: var(--font-stack--monospace);
+    font-size: var(--api-font-size);
+    font-weight: 700;
+}

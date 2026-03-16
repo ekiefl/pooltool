@@ -236,13 +236,3 @@ To add a new example to the gallery:
 5. Add assets (images, etc.) to the `docs/examples/assets/your_example_name/` directory if needed
 6. Update the `docs/examples/index.md` file to include your new example
 7. Run `make docs-with-notebooks` to build the documentation with your new example
-
-## Pull request workflow
-
-1. **Fork the repository** and create a branch from `main`
-2. **Develop your feature or fix** on your branch
-3. **Ensure all tests pass** by running `make test`
-4. **Format your code** with `make format`
-5. **Check types** with `make typecheck`
-6. **Push your changes** to your fork
-7. **Create a pull request** to the main pooltool repository

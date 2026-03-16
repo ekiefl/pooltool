@@ -1,4 +1,4 @@
-"""An endpoint for classes that enable interaction"""
+"""An endpoint for classes that enable interaction."""
 
 from pooltool.ani.animate import Game, ShotViewer
 
@@ -21,12 +21,12 @@ def show(*args, **kwargs):
 
             Note:
                 If a multisystem is passed, the systems can be scrolled through by
-                pressing *n* (next) and *p* (previous). When using ``pt.show()``,
+                pressing *n* (next) and *p* (previous). When using :func:`show`,
                 press *Enter* to toggle parallel visualization mode where all systems
                 play simultaneously with reduced opacity except the active one. In
                 parallel mode, use *n* and *p* to change which system has full opacity.
-                Note that parallel visualization is only available in ``pt.show()``
-                and not when playing the game through ``run-pooltool``.
+                Note that parallel visualization is only available in :func:`show`
+                and not when playing the game through the CLI ``run-pooltool``.
         title:
             The title to display in the visualization. Defaults to an empty string.
         camera_state:
