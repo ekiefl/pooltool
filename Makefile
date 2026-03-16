@@ -9,7 +9,7 @@ endif
 
 .PHONY: notebooks
 notebooks:
-	poetry run jupyter nbconvert --to notebook --execute --inplace docs/examples/*.ipynb
+	uv run jupyter nbconvert --to notebook --execute --inplace docs/examples/*.ipynb
 
 .PHONY: docs
 docs:
@@ -28,25 +28,19 @@ docs-with-notebooks: notebooks docs
 # Linting, Formatting, and Type Checking
 # ========================================
 
-.PHONY: lint
-lint:
-	poetry run ruff check . --fix
-
-.PHONY: lint-check
-lint-check:
-	poetry run ruff check . --verbose --diff
-
 .PHONY: format
 format:
-	poetry run ruff format .
+	uv run ruff format .
+	uv run ruff check --fix-only .
 
-.PHONY: format-check
-format-check:
-	poetry run ruff format . --check --verbose --diff
+.PHONY: lint
+lint:
+	uv run ruff format --check .
+	uv run ruff check .
 
 .PHONY: typecheck
 typecheck:
-	poetry run pyright --project ./pyrightconfig.ci.json
+	uv run pyright --project ./pyrightconfig.ci.json
 
 # ========================================
 # Testing
@@ -54,11 +48,11 @@ typecheck:
 
 .PHONY: test
 test:
-	poetry run pytest
+	uv run pytest
 
 .PHONY: test-coverage
 test-coverage:
-	poetry run pytest --cov=pooltool --cov-report=xml --cov-report=term
+	uv run pytest --cov=pooltool --cov-report=xml --cov-report=term
 
 # ========================================
 # Build and Publish
@@ -70,19 +64,15 @@ clean:
 
 .PHONY: build
 build: clean
-	poetry build
+	uv build
 
-# Note: `poetry` does not appear to read the `POETRY_PYPI_TOKEN_<n>` environment variable,
-# so we need to pass it explicitly in these publishing commands.
 .PHONY: build-and-test-publish
 build-and-test-publish: build
-	poetry publish \
-		--repository pypi-test \
-		--username __token__ \
-		--password ${POETRY_PYPI_TOKEN_PYPI_TEST}
+	uv publish \
+		--publish-url https://test.pypi.org/legacy/ \
+		--token ${UV_PUBLISH_TOKEN_TEST}
 
 .PHONY: build-and-publish
 build-and-publish: build
-	poetry publish \
-		--username __token__ \
-		--password ${POETRY_PYPI_TOKEN_PYPI}
+	uv publish \
+		--token ${UV_PUBLISH_TOKEN}

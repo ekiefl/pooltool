@@ -4,7 +4,7 @@ Pooltool is available on Linux, Mac, and Windows for the following Python versio
 
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pooltool-billiards)
 
-## Using pip 
+## Using pip
 
 Pooltool is hosted on the [Python Package Index (PyPI)](https://pypi.org/project/pooltool-billiards/) and can be installed with pip.
 
@@ -40,8 +40,6 @@ If you want to develop for pooltool, have access to the most up-to-date version 
 
 <details><summary style="font-style: italic;">[Click to expand/collapse]</summary>
 
-A small note. If you don't have the ability to create isolated python environments, I would recommend installing `conda` ([here](https://conda.io/projects/conda/en/latest/user-guide/install/index.html)) so you can isolate pooltool from your other business.
-
 **1.** Grab a copy of the codebase.
 
 ```bash
@@ -50,57 +48,33 @@ git clone https://github.com/ekiefl/pooltool.git
 cd pooltool
 ```
 
-**2.** Create a new python environment that uses Python 3.13.0.
-
-If you have `conda`, just run this:
+**2.** Install [uv](https://docs.astral.sh/uv/getting-started/installation/) if you don't already have it.
 
 ```bash
-conda env create -f environment.yml
-conda activate pooltool-dev
-```
-
-Regardless of how you managed your python environment, please verify you're running `3.13.0`
-
-```bash
-$ python
-Python 3.13.0 | packaged by Anaconda, Inc. | (main, Oct  7 2024, 16:40:03) [Clang 14.0.6 ] on darwin
-Type "help", "copyright", "credits" or "license" for more information.
->>> exit()
-```
-
-**3.** Install poetry, a popular python package/environment manager.
-
-If you created your environment with conda (_e.g._ `conda env create -f environment.yml`), poetry is already part of your `pooltool-dev` environment.
-
-Otherwise, install with
-
-```bash
-pip install "poetry>=1.8.3"
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 Verify your installation:
 
 ```bash
-$ poetry --version
-Poetry (version 1.8.3)
+$ uv --version
 ```
 
-**4.** Install pooltool.
+**3.** Install pooltool.
 
 ```bash
-poetry install --with=dev,docs
-pip install -e .
+uv sync --group dev --group docs
 
 # Intend to contribute? Install the pre-commit hooks.
 # This ensures your code is automatically formatted
 # to pooltool's code standards before each commit.
-pre-commit install
+uv run pre-commit install
 ```
 
-**5.** Test out your installation:
+**4.** Test out your installation:
 
 ```bash
-run-pooltool
+uv run run-pooltool
 ```
 
 The game window should appear (escape key to exit).
@@ -112,9 +86,7 @@ The game window should appear (escape key to exit).
 Test your installation by printing the version:
 
 ```bash
-python -c "import pooltool; print(pooltool.__version__)"
+uv run python -c "import pooltool; print(pooltool.__version__)"
 ```
-
-If installed from source, output should be `0.0.0`.
 
 Next, check out [The Interface](./interface.md).

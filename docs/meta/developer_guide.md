@@ -30,10 +30,8 @@ make docs-with-notebooks  # Build docs including notebook execution
 
 **Code quality:**
 ```bash
-make lint                 # Run linting and fix issues
-make lint-check           # Check linting without fixing
-make format               # Format code
-make format-check         # Check formatting without fixing
+make format               # Auto-format and fix lint issues
+make lint                 # Check formatting and lint (read-only)
 make typecheck            # Run type checking
 ```
 
