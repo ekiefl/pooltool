@@ -5,7 +5,7 @@ build-backend = "uv_build"
 # The package name is "pooltool". The PyPI project name is "pooltool-billiards"
 [project]
 name = "pooltool-billiards"
-version = "0.5.0"
+version = "0.6.0"
 description = "A sandbox billiards game that emphasizes realistic physics."
 authors = [{name = "Evan Kiefl", email = "kiefl.evan@gmail.com"}]
 maintainers = [{name = "Evan Kiefl", email = "kiefl.evan@gmail.com"}]

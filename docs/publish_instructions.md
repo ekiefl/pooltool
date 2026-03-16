@@ -27,6 +27,7 @@ Update the `version` field in `pyproject.toml` to the new release version. Commi
 RELEASE_VERSION=0.1.0
 # Edit pyproject.toml: version = "0.1.0"
 git add pyproject.toml
+uv lock
 git commit -m "Bump version to ${RELEASE_VERSION}"
 ```
 
