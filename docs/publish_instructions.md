@@ -99,4 +99,8 @@ source /tmp/pooltool-release-test/bin/activate
 
 ## 8. Make a release
 
-- Make a release on github from the tag. Upload the `.whl` and `.tar.gz` found in `dist/`.
+- Make a release on github from the tag. Upload the `.whl` and `.tar.gz` found in `dist/`. For the release notes body, use:
+
+```
+See [CHANGELOG.md](https://github.com/ekiefl/pooltool/blob/main/CHANGELOG.md) for details.
+```
