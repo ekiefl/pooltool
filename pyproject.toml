@@ -10,6 +10,7 @@ description = "A sandbox billiards game that emphasizes realistic physics."
 authors = [{name = "Evan Kiefl", email = "kiefl.evan@gmail.com"}]
 maintainers = [{name = "Evan Kiefl", email = "kiefl.evan@gmail.com"}]
 license = "Apache-2.0"
+license-files = ["LICENSE.txt"]
 readme = "README.md"
 requires-python = ">=3.10,<3.14"
 keywords = ["simulation", "physics", "pool", "billiards", "panda3d", "snooker", "eight-ball"]
@@ -65,7 +66,9 @@ module-root = "."
 # intermediate modeling formats, unwanted images, and PBR model variants to
 # reduce package size. Unlike Poetry, uv_build cannot "re-include" after a
 # global exclude, so PNGs are excluded per-directory rather than globally.
-wheel-exclude = [
+source-exclude = [
+    # OS junk
+    "**/.DS_Store",
     # All test files
     "pooltool/**/test_*",
     # All intermediate modeling formats (Blender, SVG, etc.)
