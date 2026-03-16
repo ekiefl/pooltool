@@ -64,14 +64,17 @@ Open the tar found in `dist/`. If you've added any non-Python files to the packa
 - Create a fresh python environment to test the installation
 
 ```bash
-uv venv --python 3.13 /tmp/pooltool-release-test
+deactivate
+rm -rf /tmp/pooltool-release-test
+uv venv --python 3.13 --seed /tmp/pooltool-release-test
+cd /tmp/pooltool-release-test
 source /tmp/pooltool-release-test/bin/activate
 ```
 
 - Install:
 
 ```bash
-pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple --extra-index-url https://archive.panda3d.org/ pooltool-billiards==${RELEASE_VERSION} --force-reinstall
+pip install --index-url https://pypi.org/simple --extra-index-url https://test.pypi.org/simple/ --extra-index-url https://archive.panda3d.org/ pooltool-billiards==${RELEASE_VERSION} --force-reinstall
 ```
 
 If test PyPi is timing out, you can instead consider testing the installation with
@@ -91,8 +94,10 @@ pip install dist/pooltool_billiards-${RELEASE_VERSION}.tar.gz --force-reinstall 
 - Create a fresh test environment
 
 ```bash
+deactivate
 rm -rf /tmp/pooltool-release-test
-uv venv --python 3.13 /tmp/pooltool-release-test
+uv venv --python 3.13 --seed /tmp/pooltool-release-test
+cd /tmp/pooltool-release-test
 source /tmp/pooltool-release-test/bin/activate
 ```
 
