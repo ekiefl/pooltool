@@ -15,7 +15,11 @@ The logo must be updated for all major and minor versions (`MAJOR.MINOR.PATCH`).
 * Make a copy of `logo.png` that is 640 x 360. Call it `logo_small.png`
 * To ensure the state of `logo.blend` is preserved, do not save your changes to `logo.blend`. And if you accidentally do, don't commit them.
 
-## 2. Update the version
+## 2. Update the changelog
+
+Move all entries from the `[Unreleased]` section in `CHANGELOG.md` into a new version heading with today's date, and add a fresh empty `[Unreleased]` section above it. Update the comparison links at the bottom of the file.
+
+## 3. Update the version
 
 Update the `version` field in `pyproject.toml` to the new release version. Commit the change.
 
@@ -26,7 +30,7 @@ git add pyproject.toml
 git commit -m "Bump version to ${RELEASE_VERSION}"
 ```
 
-## 3. Create a git tag
+## 4. Create a git tag
 
 Make sure you're on the main branch with no uncommitted changes.
 
@@ -42,7 +46,7 @@ git tag -d <tagname> # Locally delete
 git push origin :refs/tags/<tagname> # If you pushed it
 ```
 
-## 4. Build the distribution
+## 5. Build the distribution
 
 ```bash
 make build
@@ -50,7 +54,7 @@ make build
 
 Open the tar found in `dist/`. If you've added any non-Python files to the package since the last release, make sure they are either present or absent from the package (depending on the desired outcome).
 
-## 5. Publish to the **test** PyPI repository
+## 6. Publish to the **test** PyPI repository
 
 - Populate your `.env` using `.env.copy` as a template.
 
@@ -77,7 +81,7 @@ pip install dist/pooltool_billiards-${RELEASE_VERSION}.tar.gz --force-reinstall 
 
 - Test it out. Make sure `which run-pooltool` leads to the test environment. Then see if the interactive interface can be loaded: `run-pooltool`. Additionally, check the path of `cd ~; python -c "import pooltool; print(pooltool.__file__)"; cd -`. It should be in site-packages of the test environment.
 
-## 6. Publish to the **real** PyPI repository
+## 7. Publish to the **real** PyPI repository
 
 - Go back to the dev environment.
 
@@ -93,6 +97,6 @@ source /tmp/pooltool-release-test/bin/activate
 
 - Test installation: `pip install pooltool-billiards==${RELEASE_VERSION}` (you may need to wait for version to be live)
 
-## 7. Make a release
+## 8. Make a release
 
 - Make a release on github from the tag. Upload the `.whl` and `.tar.gz` found in `dist/`.

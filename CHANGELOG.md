@@ -9,132 +9,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-#### Ball-Cushion Collision Models
-
-- **Impulse Frictional Inelastic model** for ball-cushion collisions ([#226]).
-- **Stronge Compliant Lumped-Parameter model** for ball-cushion collisions ([#240]). Based on Stronge's tangential compliance theory (*Impact Mechanics*, Cambridge University Press, 2018)
-- Configurable `omega_ratio` parameter on `StrongeCompliantLinear`/`StrongeCompliantCircular` for controlling the tangential-to-normal frequency ratio, with conversion functions `poisson_ratio_from_omega_ratio()` and `omega_ratio_from_poisson_ratio()` ([#256]).
-- `get_normal_3d()` method on `LinearCushionSegment` and `CircularCushionSegment` for computing full 3D cushion normals ([#226]).
-- `decompose_normal_tangent()` utility in `ptmath` for decomposing a velocity vector into signed normal/tangent components and tangent direction ([#248]).
-
-#### Simulation Introspection
-
-- `SimulationSnapshot` and `SimulationSnapshotSequence` classes for capturing the complete internal state at every simulation step, including system state, prospective events, caches, and the physics engine ([#232]).
-- `simulate_with_snapshots()` function that runs the simulation while recording a snapshot at every step, with optional incremental JSON saving ([#232]).
-- Methods on `SimulationSnapshot`: `get_prospective_events()`, `pre_evolve_system()`, `post_evolve_system()`, `post_resolve_system()` for reconstructing the system state at different points within a single step ([#232]).
-- `copy()` methods on `TransitionCache` and `CollisionCache` ([#232]).
-- JSON serialization support for `CollisionCache` and resolver model objects ([#232]).
-
-#### Quartic Solver
-
-- Algorithm 1010 quartic solver (Orellana & De Michele, ACM TOMS, 2020), a numba-compiled translation of the peer-reviewed C reference implementation ([#235]). Decomposes the quartic into two quadratics with careful coefficient estimation and Newton-Raphson refinement.
-- `get_real_positive_smallest_root()` function for extracting the smallest positive real root from a single quartic's roots ([#235]).
-- Per-pair on-the-fly collision time functions: `ball_ball_collision_time()`, `ball_circular_cushion_collision_time()`, `ball_pocket_collision_time()` that combine coefficient computation, quartic solving, and root extraction into single numba-jitted calls ([#235]).
-- `solve_complex()` quadratic solver in `ptmath.roots` for complex-domain root finding ([#257]).
-- Comprehensive quartic solver test suite with 3000 ground-truth test cases (standard, pathological, and C-reference-validated) using mpmath at 100-digit precision ([#235]).
-
-#### Ball-Ball Collision Handling
-
-- Event priority system via `get_event_priority()` for resolving simultaneous events: stick-ball (tier 1) > transitions/pocket (tier 2) > ball-ball/cushion (tier 3), with energy-based tiebreaking within tiers ([#257]).
-- `resolve_continually_touching()` for handling Newton's-cradle-like scenarios where balls with nearly identical velocities repeatedly trigger events — transfers 10% of radial momentum from chaser to chased ball ([#257]).
-- Quadratic-solver-based `make_kiss()` for ball-ball collisions that traces balls back along their velocity vectors to find the correct separation distance, replacing the old midpoint correction ([#257]).
-- `Jump.ANGLE(degrees)` for arbitrary-angle ball placement in layouts, with `Translation` type alias supporting both discrete `Dir` and continuous float angles ([#257]).
-
-#### Math Utilities
-
-- `quaternion_from_vector_to_vector()` and `rotation_from_vector_to_vector()` for computing rotations between arbitrary 3D vectors ([#226]).
-- `squared_norm3d()` and `squared_norm2d()` numba-jitted squared norm functions ([#226]).
-- 3D `angle_between_vectors()` returning radians in [0, pi], replacing the old 2D version that returned degrees ([#226]).
-
-#### Validation
-
-- Positive-value validation on `BallParams` friction coefficients (`u_s`, `u_r`, `u_sp_proportionality`, `u_b`, `f_c`), preventing infinite event prediction loops from zero/negative friction ([#265], fixes [#264]).
-
-#### Documentation
-
-- Complete overhaul of API reference appearance with custom Sphinx extensions ([#276]):
-  - `restructure_class_layout.py`: inlines attribute types, restructures class sections with rubric headings, restyles parameter fields.
-  - `clean_enum_signature.py`: strips constructor arguments from enum signatures.
-  - `fix_dataclass_defaults.py`: replaces `<factory>` placeholders with actual factory names.
-  - `resolve_missing_references.py`: handles CPython internal paths, intersphinx mismatches, and re-exported objects.
-- New CSS for headings, rubric sections, parameter styling, TOC, and notebook galleries ([#276]).
-
-#### CI/CD
-
-- Codecov push-event uploads on main branch for base coverage tracking ([#268]).
-- `service-no-ani` Codecov flag that excludes `pooltool/ani/` from coverage metrics, with separate per-flag uploads ([#269], [#270]).
+- Impulse Frictional Inelastic ball-cushion collision model ([#226]).
+- Stronge Compliant Lumped-Parameter ball-cushion collision model with configurable `omega_ratio` ([#240], [#256]).
+- `simulate_with_snapshots()` for capturing simulation internals at every step ([#232]).
+- Algorithm 1010 quartic solver (Orellana & De Michele, 2020) with comprehensive test suite ([#235]).
+- Event priority system for resolving simultaneous collisions ([#257]).
+- Handling for Newton's-cradle-like continuously touching balls ([#257]).
+- `Jump.ANGLE()` for arbitrary-angle ball placement in layouts ([#257]).
+- 3D cushion normals via `get_normal_3d()` on cushion segments ([#226]).
+- Quaternion and rotation utilities in `ptmath` ([#226]).
+- Positive-value validation on `BallParams` friction coefficients ([#265], fixes [#264]).
+- Overhauled API reference with custom Sphinx extensions and new CSS ([#276]).
+- Codecov integration with per-flag coverage tracking ([#268], [#269], [#270]).
 
 ### Changed
 
-- **Stronge Compliant is now the default ball-cushion model**, replacing Mathavan 2010. Default `omega_ratio` is 1.8. Resolver `VERSION` bumped from 8 to 9 ([#256]).
-- **Replaced Poetry with uv** as the package manager, build system, and task runner ([#275]). Migrated to PEP 621 standard `[project]` metadata in `pyproject.toml`, replaced `poetry-dynamic-versioning` with static versioning via `importlib.metadata`, split the monolithic lint-and-check CI workflow into separate lint and typecheck workflows, updated all CI workflows and documentation.
-- Simulation loop refactored into `_SimulationState` class with explicit `init()`, `step()`, and `update_caches()` methods, enabling external observation of simulation internals ([#232]).
-- Stick-ball collisions promoted from special-cased pre-loop handling to first-class events detected inside `get_next_event()` at t=0 ([#232]).
-- `evolve_ball_motion()` now always returns a freshly-copied array, preventing shared-reference corruption when resolvers modify arrays in-place ([#232]).
-- `get_normal()` on cushion segments renamed to `get_normal_xy()` to clarify it returns a 2D normal with zeroed z-component ([#226]).
-- `get_normal_xy()` parameter changed from `rvw` (full kinematic state matrix) to `xyz` (position vector) ([#248]).
-- Normal-flipping logic moved from inside `han2005()` to its caller `_solve()` ([#248]).
-- Overlapping balls now return the current simulation time as their collision time instead of `np.inf`, triggering immediate resolution rather than silent ignoring ([#257]).
-- Ball-cushion `make_kiss()` rewritten to trace balls along their velocity vectors (solving linear/quadratic equations for correct separation) instead of displacing along the geometric normal, with fallback for non-translating balls and grazing angles exceeding 5x spacer displacement ([#271]).
-- `MIN_DIST` constant (1e-6) replaces `EPS_SPACE` (1e-9) as the default spacer ([#257], [#271]).
-- Quartic solver `d2` factorization threshold loosened by a safety factor of 100x `macheps` to handle edge cases like Newton's cradle ([#257]).
-- Numba quartic solver optimized by replacing all numpy array allocations with scalar variables — throughput improved from ~200ms/100k quartics to 2.8 million quartics/second ([#236]).
-- Removed the `quartic_solver` parameter from `simulate()`, `simulate_with_snapshots()`, and `get_next_event()` — Algorithm 1010 is now the only implementation ([#235]).
-- Eliminated batch-solve-then-extract pattern: collision times are computed on-the-fly per object pair instead of collecting coefficients into arrays ([#235]).
-- `System.get_system_energy()` replaced with `_system_has_energy()` that returns a boolean and short-circuits on the first energetic ball ([#232]).
-- Four internal evolve functions privatized: `evolve_slide_state`, `evolve_roll_state`, `evolve_perpendicular_spin_component`, `evolve_perpendicular_spin_state` ([#232]).
-- `CushionSegment` union type alias removed in favor of `Cushion` TypeVar centralized in `components.py` ([#226]).
-- `enforce_rules` setting from user config now applied when creating game rulesets in interactive mode ([#241]).
-- PBR table model loading falls back to non-PBR `.glb` when the `_pbr.glb` file does not exist, instead of raising `ConfigError` ([#244]).
-- `fail_fast: true` added to pre-commit configuration ([#255]).
-- CodeRabbit auto-review disabled ([#227]).
-- `CachedPropertyDirective` removed from documentation; `cached_property_note` directives stripped from all docstrings ([#230]).
-- API reference restructured: removed summary table overview sections, module template simplified, class pages no longer show constructor args in autoapi template ([#276]).
-- Read the Docs config updated to Ubuntu 24.04, Python 3.13, uv-based install ([#275]).
+- Stronge Compliant is now the default ball-cushion model, replacing Mathavan 2010 ([#256]).
+- Replaced Poetry with uv as the package manager and build system ([#275]).
+- Simulation loop refactored to expose internals for introspection ([#232]).
+- Stick-ball collisions are now first-class events rather than special-cased ([#232]).
+- Quartic solver optimized — collision times computed on-the-fly per pair ([#235], [#236]).
+- Improved ball-cushion and ball-ball separation (`make_kiss`) logic ([#257], [#271]).
+- `get_normal()` renamed to `get_normal_xy()` with simplified signature ([#226], [#248]).
+- Overlapping balls now trigger immediate resolution instead of being ignored ([#257]).
+- `enforce_rules` setting now applied in interactive mode ([#241]).
+- PBR table model loading falls back to non-PBR when `_pbr.glb` is missing ([#244]).
+- API reference restructured with simplified templates ([#276]).
 
 ### Fixed
 
-- **Memory leaks** when calling `show()` repeatedly ([#274], fixes [#219]):
-  - simplepbr `FilterManager` buffers and update tasks now cleaned up in `ShotViewer._stop()`.
-  - Ambient light `NodePath` now stored and properly removed via `removeNode()` during environment unload.
-  - All HUD element `destroy()` methods changed from `hide()` + `del` (which left orphaned nodes in `aspect2d`/`render2d`) to `removeNode()` (~130 KB/iteration, 20 nodes/cycle leaked previously).
-- **Han 2005 ball-cushion model** had multiple bugs ([#247]):
-  - Missing friction coefficient `mu` in slip/stick impulse threshold comparison (`PzS <= PzE` changed to `PzS <= mu * PzE`).
-  - Incorrect sign convention for `c` and `PzE` (signs now match the paper's equations).
-  - Impulse computation separated into contact normal coordinates first (Eqs 18-19), then transformed to rail coordinates (Eqs 21-22), replacing the previous coupled expressions.
-  - `HAN_2005` re-enabled in the energy conservation test.
-- **Straight shot example** geometry error: `pocket.radius * np.sqrt(2)` corrected to `pocket.radius / np.sqrt(2)` for computing pocket points along the 45-degree diagonal ([#259]).
-- **Scene node leak** causing old and new tables to overlap when starting a new game — `close_scene()` now removes the scene node itself from the render tree, not just its children ([#267], fixes [#229]).
-- **Single-ball system crash** in `get_next_ball_ball_collision()` when the collision cache is empty ([#271]).
-- **Read the Docs build failure** from astroid 4.x incompatibility with sphinx-autoapi — pinned `astroid==3.3.11` ([ec8cc34]).
-
-### Dependencies
-
-- Added `numpy-quaternion>=2024.0.12` ([#226]).
-- Added `llvmlite<0.46` upper bound ([#275]).
-- Added `rich>=14.0.0,<15.0.0` explicit range ([#275]).
-- Bumped `starlette` from 0.47.3 to 0.49.1 ([#233]).
-- Bumped `filelock` to 3.20.1, `fonttools` to 4.61.1 ([#246]).
-- Pinned `astroid==3.3.11` in docs dependencies ([ec8cc34]).
-- Removed `poetry-dynamic-versioning` build plugin ([#275]).
-- Replaced `poetry-core` build backend with `uv_build` ([#275]).
+- Memory leaks when calling `show()` repeatedly ([#274], fixes [#219]).
+- Han 2005 ball-cushion model correctness issues ([#247]).
+- Straight shot example geometry error ([#259]).
+- Scene node leak causing tables to overlap when starting a new game ([#267], fixes [#229]).
+- Single-ball system crash when collision cache is empty ([#271]).
+- Read the Docs build failure from astroid 4.x incompatibility ([ec8cc34]).
 
 [#219]: https://github.com/ekiefl/pooltool/issues/219
 [#226]: https://github.com/ekiefl/pooltool/pull/226
-[#227]: https://github.com/ekiefl/pooltool/pull/227
 [#229]: https://github.com/ekiefl/pooltool/issues/229
-[#230]: https://github.com/ekiefl/pooltool/pull/230
 [#232]: https://github.com/ekiefl/pooltool/pull/232
-[#233]: https://github.com/ekiefl/pooltool/pull/233
 [#235]: https://github.com/ekiefl/pooltool/pull/235
 [#236]: https://github.com/ekiefl/pooltool/pull/236
 [#240]: https://github.com/ekiefl/pooltool/pull/240
 [#241]: https://github.com/ekiefl/pooltool/pull/241
 [#244]: https://github.com/ekiefl/pooltool/pull/244
-[#246]: https://github.com/ekiefl/pooltool/pull/246
 [#247]: https://github.com/ekiefl/pooltool/pull/247
 [#248]: https://github.com/ekiefl/pooltool/pull/248
-[#255]: https://github.com/ekiefl/pooltool/pull/255
 [#256]: https://github.com/ekiefl/pooltool/pull/256
 [#257]: https://github.com/ekiefl/pooltool/pull/257
 [#259]: https://github.com/ekiefl/pooltool/pull/259
