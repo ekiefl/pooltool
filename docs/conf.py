@@ -98,7 +98,6 @@ nbsphinx_execute = "never"
 html_theme = "furo"
 
 GOOGLE_FONTS_URL = None
-html_title = ""
 html_logo = "../pooltool/logo/logo_small.png"
 html_theme_options = {
     # "light_css_variables": {

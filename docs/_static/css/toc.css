@@ -1,3 +1,7 @@
+.sidebar-brand-text {
+    display: none;
+}
+
 .toc-tree > ul > li > a,
 .toc-tree > ul > li > ul > li > a {
     font-weight: 700;
