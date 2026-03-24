@@ -27,28 +27,42 @@ class CueSpecs:
         end_mass:
             The mass of the of the cue's end. This controls the amount of deflection
             (squirt) that occurs when using sidespin. Lower means less deflection. It is
-            defined here:
-            https://billiards.colostate.edu/technical_proofs/new/TP_A-31.pdf.
+            defined here: https://drdavepoolinfo.com/technical_proofs/new/TP_A-31.pdf.
     """
 
-    brand: str = field(default="Predator")
-    M: float = field(default=0.567)
-    length: float = field(default=1.4732)
-    tip_radius: float = field(default=0.0106045)  # nickel radius
-    shaft_radius_at_tip: float = field(
-        default=0.0065
-    )  # 13 mm shaft diameter at the tip
-    shaft_radius_at_butt: float = field(default=0.02)
-    end_mass: float = field(default=0.170097 / 30)
+    brand: str = field()
+    M: float = field()
+    length: float = field()
+    tip_radius: float = field()
+    shaft_radius_at_tip: float = field()
+    shaft_radius_at_butt: float = field()
+    end_mass: float = field()
 
     @staticmethod
     def default() -> CueSpecs:
         """Construct a default cue spec"""
-        return CueSpecs()
+        return CueSpecs(
+            brand="Pooltool",
+            M=0.567,
+            length=1.4732,
+            tip_radius=0.0106045,
+            shaft_radius_at_tip=0.0065,
+            shaft_radius_at_butt=0.02,
+            end_mass=0.170097 / 30,
+        )
 
     @staticmethod
     def snooker() -> CueSpecs:
-        raise NotImplementedError()
+        # FIXME: this is just a copy paste of the pool cue specs
+        return CueSpecs(
+            brand="Pooltool",
+            M=0.567,
+            length=1.4732,
+            tip_radius=0.0106045,
+            shaft_radius_at_tip=0.0065,
+            shaft_radius_at_butt=0.02,
+            end_mass=0.170097 / 30,
+        )
 
 
 @define
