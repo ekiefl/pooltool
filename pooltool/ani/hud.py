@@ -214,6 +214,7 @@ class Help(BaseHUDElement):
         add("Enter aim mode - [a]")
         add("Apply english - [hold e + mouse]")
         add("Elevate cue - [hold b + mouse]")
+        add("Adjust power - [hold x + mouse]")
         add("Precise aiming - [hold f + mouse]")
         add("Raise head - [hold t + mouse]")
 
