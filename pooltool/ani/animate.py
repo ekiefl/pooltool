@@ -522,7 +522,8 @@ class Game(Interface):
             ballset=None,
             spacing_factor=1e-3,
         )
-        cue = Cue(cue_ball_id=game.shot_constraints.cueball(balls))
+        cue = Cue.from_game_type(game_type)
+        cue.cue_ball_id = game.shot_constraints.cueball(balls)
         shot = System(table=table, balls=balls, cue=cue)
 
         self.attach_system(shot)

@@ -57,7 +57,8 @@ class CueRender(Render):
         cue_stick.setZ(tip_offset_b * self.follow._ball.params.R)  # b
 
     def init_model(self):
-        path = utils.panda_path(model_dir / "cue" / "cue.glb")
+        name = self._cue.model_name or "cue"
+        path = utils.panda_path(model_dir / "cue" / name / "cue.glb")
         cue_stick_model = Global.loader.loadModel(path)
         cue_stick_model.setName("cue_stick_model")
 

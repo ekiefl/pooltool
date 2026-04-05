@@ -15,7 +15,7 @@ from pooltool.objects.ball.datatypes import (
 )
 from pooltool.objects.ball.params import BallParams, PrebuiltBallParams
 from pooltool.objects.ball.sets import BallSet, get_ballset, get_ballset_names
-from pooltool.objects.cue.datatypes import Cue, CueSpecs
+from pooltool.objects.cue.datatypes import Cue, CueSpecs, PrebuiltCueSpecs
 from pooltool.objects.table.collection import TableName
 from pooltool.objects.table.components import (
     CircularCushionSegment,
@@ -42,6 +42,7 @@ __all__ = [
     "BallHistory",
     "BallOrientation",
     "CueSpecs",
+    "PrebuiltCueSpecs",
     "Cue",
     "Pocket",
     "LinearCushionSegment",
