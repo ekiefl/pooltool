@@ -79,6 +79,12 @@ class PrebuiltCueSpecs(StrEnum):
     BILLIARD_GENERIC = auto()
 
 
+CUE_MODELS: dict[PrebuiltCueSpecs, str] = {
+    PrebuiltCueSpecs.POOL_GENERIC: "cue",
+    PrebuiltCueSpecs.SNOOKER_GENERIC: "cue_snooker",
+    PrebuiltCueSpecs.BILLIARD_GENERIC: "cue",
+}
+
 CUE_SPECS: dict[PrebuiltCueSpecs, CueSpecs] = {
     PrebuiltCueSpecs.POOL_GENERIC: CueSpecs(
         brand="Pooltool",
@@ -180,6 +186,10 @@ class Cue:
             The ball ID of the ball being cued.
         specs:
             The cue specs.
+        model_name:
+            The name of the cue model directory under ``pooltool/models/cue/``.
+
+            Important if rendering the cue in a scene.
     """
 
     id: str = field(default="cue_stick")
@@ -190,6 +200,7 @@ class Cue:
     b: float = field(default=0.25)
     cue_ball_id: str = field(default="cue")
     specs: CueSpecs = field(factory=CueSpecs.default)
+    model_name: str | None = field(default=None)
 
     def __repr__(self):
         lines = [
@@ -267,8 +278,10 @@ class Cue:
             id = fields_dict(cls)["id"].default
             assert id is not None
 
+        prebuilt = _default_map[game_type]
         cue = cls(id=id)
-        cue.specs = CueSpecs.default(game_type)
+        cue.specs = CueSpecs.prebuilt(prebuilt)
+        cue.model_name = CUE_MODELS[prebuilt]
         return cue
 
     @classmethod
