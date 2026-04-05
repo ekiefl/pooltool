@@ -48,20 +48,19 @@ class CueSpecs:
             tip_radius=0.0106045,
             shaft_radius_at_tip=0.0065,
             shaft_radius_at_butt=0.02,
-            end_mass=0.170097 / 30,
+            end_mass=0.170097 / 30,  # pool ball mass over 30
         )
 
     @staticmethod
     def snooker() -> CueSpecs:
-        # FIXME: this is just a copy paste of the pool cue specs
         return CueSpecs(
             brand="Pooltool",
-            M=0.567,
-            length=1.4732,
+            M=0.478,
+            length=1.475,
             tip_radius=0.0106045,
-            shaft_radius_at_tip=0.0065,
-            shaft_radius_at_butt=0.02,
-            end_mass=0.170097 / 30,
+            shaft_radius_at_tip=0.0049,
+            shaft_radius_at_butt=0.0124,
+            end_mass=0.140 / 30,  # snooker ball mass over 30
         )
 
 
