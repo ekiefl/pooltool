@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from attrs import define, evolve, field, fields_dict
+
+from pooltool.game.datatypes import GameType
 
 
 @define(frozen=True)
@@ -62,6 +66,15 @@ class CueSpecs:
             shaft_radius_at_butt=0.0124,
             end_mass=0.140 / 30,  # snooker ball mass over 30
         )
+
+
+default_cuespecs_map: dict[GameType, Callable[[], CueSpecs]] = {
+    GameType.EIGHTBALL: CueSpecs.default,
+    GameType.NINEBALL: CueSpecs.default,
+    GameType.THREECUSHION: CueSpecs.default,
+    GameType.SNOOKER: CueSpecs.snooker,
+    GameType.SUMTOTHREE: CueSpecs.default,
+}
 
 
 @define
@@ -192,6 +205,21 @@ class Cue:
             self.b = b
         if cue_ball_id is not None:
             self.cue_ball_id = cue_ball_id
+
+    @classmethod
+    def from_game_type(cls, game_type: GameType, id: str | None = None) -> Cue:
+        if game_type not in default_cuespecs_map:
+            raise NotImplementedError(
+                f"There is no cue stick associated with '{game_type}'"
+            )
+
+        if id is None:
+            id = fields_dict(cls)["id"].default
+            assert id is not None
+
+        cue = cls(id=id)
+        cue.specs = default_cuespecs_map[game_type]()
+        return cue
 
     @classmethod
     def default(cls) -> Cue:
