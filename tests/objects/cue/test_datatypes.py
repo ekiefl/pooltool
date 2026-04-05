@@ -2,7 +2,7 @@ import pytest
 from attrs.exceptions import FrozenInstanceError
 
 from pooltool.game.datatypes import GameType
-from pooltool.objects.cue.datatypes import Cue, CueSpecs
+from pooltool.objects.cue.datatypes import Cue, CueSpecs, PrebuiltCueSpecs
 
 
 def test_cue_copy():
@@ -28,14 +28,17 @@ def test_cue_specs_construction():
     with pytest.raises(TypeError):
         CueSpecs()  # type: ignore
 
-    # All default methods construct properly
+    # All prebuilt/default methods construct properly
     CueSpecs.default()
-    CueSpecs.snooker()
+    CueSpecs.default(GameType.SNOOKER)
+    CueSpecs.prebuilt(PrebuiltCueSpecs.POOL_GENERIC)
 
 
 def test_cue_from_game_type():
     assert Cue.from_game_type(GameType.EIGHTBALL).specs == CueSpecs.default()
-    assert Cue.from_game_type(GameType.SNOOKER).specs == CueSpecs.snooker()
+    assert Cue.from_game_type(GameType.SNOOKER).specs == CueSpecs.default(
+        GameType.SNOOKER
+    )
 
     # ID is passed through
     assert Cue.from_game_type(GameType.SNOOKER).id == "cue_stick"

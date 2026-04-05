@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-
 from attrs import define, evolve, field, fields_dict
 
 from pooltool.game.datatypes import GameType
+from pooltool.utils.strenum import StrEnum, auto
 
 
 @define(frozen=True)
@@ -42,39 +41,90 @@ class CueSpecs:
     shaft_radius_at_butt: float = field()
     end_mass: float = field()
 
-    @staticmethod
-    def default() -> CueSpecs:
-        """Construct a default cue spec"""
-        return CueSpecs(
-            brand="Pooltool",
-            M=0.567,
-            length=1.4732,
-            tip_radius=0.0106045,
-            shaft_radius_at_tip=0.0065,
-            shaft_radius_at_butt=0.02,
-            end_mass=0.170097 / 30,  # pool ball mass over 30
-        )
+    @classmethod
+    def default(cls, game_type: GameType = GameType.EIGHTBALL) -> CueSpecs:
+        """Return prebuilt cue specs based on game type.
 
-    @staticmethod
-    def snooker() -> CueSpecs:
-        return CueSpecs(
-            brand="Pooltool",
-            M=0.478,
-            length=1.475,
-            tip_radius=0.0106045,
-            shaft_radius_at_tip=0.0049,
-            shaft_radius_at_butt=0.0124,
-            end_mass=0.140 / 30,  # snooker ball mass over 30
-        )
+        Args:
+            game_type:
+                What type of game is being played?
+
+        Returns:
+            The prebuilt cue specs associated with the passed game type.
+        """
+        return _get_default_cue_specs(game_type)
+
+    @classmethod
+    def prebuilt(cls, name: PrebuiltCueSpecs) -> CueSpecs:
+        """Return prebuilt cue specs based on name.
+
+        Args:
+            name:
+                A :class:`PrebuiltCueSpecs` member.
+        """
+        return _prebuilt_cue_specs(name)
 
 
-default_cuespecs_map: dict[GameType, Callable[[], CueSpecs]] = {
-    GameType.EIGHTBALL: CueSpecs.default,
-    GameType.NINEBALL: CueSpecs.default,
-    GameType.THREECUSHION: CueSpecs.default,
-    GameType.SNOOKER: CueSpecs.snooker,
-    GameType.SUMTOTHREE: CueSpecs.default,
+class PrebuiltCueSpecs(StrEnum):
+    """An Enum specifying prebuilt cue specs.
+
+    Attributes:
+        POOL_GENERIC:
+        SNOOKER_GENERIC:
+        BILLIARD_GENERIC:
+    """
+
+    POOL_GENERIC = auto()
+    SNOOKER_GENERIC = auto()
+    BILLIARD_GENERIC = auto()
+
+
+CUE_SPECS: dict[PrebuiltCueSpecs, CueSpecs] = {
+    PrebuiltCueSpecs.POOL_GENERIC: CueSpecs(
+        brand="Pooltool",
+        M=0.567,
+        length=1.4732,
+        tip_radius=0.0106045,
+        shaft_radius_at_tip=0.0065,
+        shaft_radius_at_butt=0.02,
+        end_mass=0.170097 / 30,
+    ),
+    PrebuiltCueSpecs.SNOOKER_GENERIC: CueSpecs(
+        brand="Pooltool",
+        M=0.478,
+        length=1.475,
+        tip_radius=0.0106045,
+        shaft_radius_at_tip=0.0049,
+        shaft_radius_at_butt=0.0124,
+        end_mass=0.140 / 30,
+    ),
+    # TODO: These are just copied from the pool cue specs
+    PrebuiltCueSpecs.BILLIARD_GENERIC: CueSpecs(
+        brand="Pooltool",
+        M=0.567,
+        length=1.4732,
+        tip_radius=0.0106045,
+        shaft_radius_at_tip=0.0065,
+        shaft_radius_at_butt=0.02,
+        end_mass=0.210 / 30,
+    ),
 }
+
+_default_map: dict[GameType, PrebuiltCueSpecs] = {
+    GameType.EIGHTBALL: PrebuiltCueSpecs.POOL_GENERIC,
+    GameType.NINEBALL: PrebuiltCueSpecs.POOL_GENERIC,
+    GameType.THREECUSHION: PrebuiltCueSpecs.BILLIARD_GENERIC,
+    GameType.SNOOKER: PrebuiltCueSpecs.SNOOKER_GENERIC,
+    GameType.SUMTOTHREE: PrebuiltCueSpecs.BILLIARD_GENERIC,
+}
+
+
+def _get_default_cue_specs(game_type: GameType) -> CueSpecs:
+    return _prebuilt_cue_specs(_default_map[game_type])
+
+
+def _prebuilt_cue_specs(name: PrebuiltCueSpecs) -> CueSpecs:
+    return CUE_SPECS[name]
 
 
 @define
@@ -208,7 +258,7 @@ class Cue:
 
     @classmethod
     def from_game_type(cls, game_type: GameType, id: str | None = None) -> Cue:
-        if game_type not in default_cuespecs_map:
+        if game_type not in _default_map:
             raise NotImplementedError(
                 f"There is no cue stick associated with '{game_type}'"
             )
@@ -218,7 +268,7 @@ class Cue:
             assert id is not None
 
         cue = cls(id=id)
-        cue.specs = default_cuespecs_map[game_type]()
+        cue.specs = CueSpecs.default(game_type)
         return cue
 
     @classmethod
