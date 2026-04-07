@@ -138,7 +138,6 @@ class TableRender(Render):
             not self._table.model_descr
             or self._table.model_descr == TableModelDescr.null()
             or not settings.graphics.table
-            or self._table.model_descr.name == TableName.SNOOKER_GENERIC  # dim are WIP
         ):
             # draw cushion_segments as edges
             self.cushion_drawer = LineSegs()
