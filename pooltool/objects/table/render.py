@@ -4,7 +4,6 @@ from panda3d.core import CollisionNode, CollisionPlane, LineSegs, Plane, Point3,
 from pooltool.ani.globals import Global
 from pooltool.config import settings
 from pooltool.objects.datatypes import Render
-from pooltool.objects.table.collection import TableName
 from pooltool.objects.table.datatypes import Table, TableModelDescr, TableType
 
 
