@@ -8,7 +8,6 @@ import attrs
 import numpy as np
 
 import pooltool.constants as const
-import pooltool.physics as physics
 import pooltool.physics.evolve as evolve
 import pooltool.ptmath as ptmath
 from pooltool.events import (
@@ -22,11 +21,12 @@ from pooltool.events import (
     stick_ball_collision,
 )
 from pooltool.evolution.continuous import continuize
-from pooltool.evolution.event_based import solve
 from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
 from pooltool.objects.ball.datatypes import BallState
 from pooltool.physics.engine import PhysicsEngine
+from pooltool.physics.motion import solve
+from pooltool.physics.utils import get_ball_energy
 from pooltool.system.datatypes import System
 
 DEFAULT_ENGINE = PhysicsEngine()
@@ -41,7 +41,7 @@ def _system_has_energy(system: System) -> bool:
     """
     return any(
         bool(
-            physics.get_ball_energy(
+            get_ball_energy(
                 ball.state.rvw,
                 ball.params.R,
                 ball.params.m,
@@ -81,13 +81,13 @@ def get_event_priority(event: Event, shot: System) -> tuple[int, float]:
     if event_type == EventType.BALL_POCKET:
         ball_id = event.ids[0]
         ball = shot.balls[ball_id]
-        energy = physics.get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
+        energy = get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
         return (2, energy)
 
     if event_type.is_transition():
         ball_id = event.ids[0]
         ball = shot.balls[ball_id]
-        energy = physics.get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
+        energy = get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
         return (2, energy)
 
     if event_type == EventType.BALL_BALL:
@@ -100,7 +100,7 @@ def get_event_priority(event: Event, shot: System) -> tuple[int, float]:
     if event_type in (EventType.BALL_LINEAR_CUSHION, EventType.BALL_CIRCULAR_CUSHION):
         ball_id = event.ids[0]
         ball = shot.balls[ball_id]
-        energy = physics.get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
+        energy = get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
         return (3, energy)
 
     return (99, 0.0)

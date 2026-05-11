@@ -14,10 +14,10 @@ from pooltool.evolution.event_based.simulate import (
     get_next_event,
     simulate,
 )
-from pooltool.evolution.event_based.solve import ball_ball_collision_time
 from pooltool.objects import Ball, BilliardTableSpecs, Cue, Table
 from pooltool.objects.ball.params import BallParams
 from pooltool.objects.ball.sets import BallSet
+from pooltool.physics.motion.solve import ball_ball_collision_time
 from pooltool.ptmath.roots import quadratic
 from pooltool.system import System
 from tests.evolution.event_based.test_data import TEST_DIR

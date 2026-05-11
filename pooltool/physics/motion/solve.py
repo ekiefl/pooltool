@@ -5,9 +5,9 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
-import pooltool.physics as physics
 import pooltool.physics.evolve as evolve
 import pooltool.ptmath as ptmath
+from pooltool.physics.utils import rel_velocity
 from pooltool.ptmath.roots import quartic
 from pooltool.ptmath.roots.core import get_real_positive_smallest_root
 
@@ -88,7 +88,7 @@ def get_u(
     if s == const.rolling:
         return np.array([1, 0, 0], dtype=np.float64)
 
-    rel_vel = physics.rel_velocity(rvw, R)
+    rel_vel = rel_velocity(rvw, R)
     if (rel_vel == 0).all():
         return np.array([1, 0, 0], dtype=np.float64)
 
