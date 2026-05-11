@@ -3,6 +3,7 @@ import pytest
 from numpy.typing import NDArray
 
 import pooltool.constants as const
+import pooltool.physics as physics
 import pooltool.ptmath as ptmath
 from pooltool import aim, events
 from pooltool.events import EventType, ball_ball_collision, ball_pocket_collision
@@ -218,7 +219,7 @@ def test_case4():
 
 
 def _assert_rolling(rvw: NDArray[np.float64], R: float) -> None:
-    assert np.isclose(ptmath.rel_velocity(rvw, R), 0).all()
+    assert np.isclose(physics.rel_velocity(rvw, R), 0).all()
 
 
 def test_grazing_ball_ball_collision():

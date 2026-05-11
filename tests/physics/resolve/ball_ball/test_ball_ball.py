@@ -10,6 +10,7 @@ from pooltool.physics.resolve.ball_ball.core import BallBallCollisionStrategy
 from pooltool.physics.resolve.ball_ball.frictional_inelastic import FrictionalInelastic
 from pooltool.physics.resolve.ball_ball.frictional_mathavan import FrictionalMathavan
 from pooltool.physics.resolve.ball_ball.frictionless_elastic import FrictionlessElastic
+from pooltool.physics.utils import tangent_surface_velocity
 
 
 def vector_from_magnitude_and_direction(magnitude: float, angle_radians: float):
@@ -189,7 +190,7 @@ def test_gearing_z_spin(
     )
 
     # sanity check the initial conditions
-    v_c = ptmath.tangent_surface_velocity(cb_i.state.rvw, unit_normal, cb_i.params.R)
+    v_c = tangent_surface_velocity(cb_i.state.rvw, unit_normal, cb_i.params.R)
     assert ptmath.norm3d(v_c) < 1e-10, "Relative surface contact speed should be zero"
 
     cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
@@ -239,19 +240,15 @@ def test_low_relative_surface_velocity(
     )  # from v = w * R -> w = v / R
 
     # sanity check the initial conditions
-    v_c = ptmath.tangent_surface_velocity(cb_i.state.rvw, unit_normal, cb_i.params.R)
+    v_c = tangent_surface_velocity(cb_i.state.rvw, unit_normal, cb_i.params.R)
     assert abs(relative_surface_speed - ptmath.norm3d(v_c)) < 1e-10, (
         f"Relative surface contact speed should be {relative_surface_speed}"
     )
 
     cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
 
-    cb_v_c_f = ptmath.tangent_surface_velocity(
-        cb_f.state.rvw, unit_normal, cb_f.params.R
-    )
-    ob_v_c_f = ptmath.tangent_surface_velocity(
-        ob_f.state.rvw, -unit_normal, ob_f.params.R
-    )
+    cb_v_c_f = tangent_surface_velocity(cb_f.state.rvw, unit_normal, cb_f.params.R)
+    ob_v_c_f = tangent_surface_velocity(ob_f.state.rvw, -unit_normal, ob_f.params.R)
     assert ptmath.norm3d(cb_v_c_f - ob_v_c_f) < 1e-3, (
         "Final relative contact velocity should be zero"
     )

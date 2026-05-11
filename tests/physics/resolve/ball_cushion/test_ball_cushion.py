@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pooltool import ptmath
+from pooltool import physics, ptmath
 from pooltool.constants import sliding, stationary
 from pooltool.objects import (
     Ball,
@@ -71,7 +71,7 @@ def test_energy(
     ball.state.rvw[1] = vel
     ball.state.s = sliding
 
-    initial_energy = ptmath.get_ball_energy(
+    initial_energy = physics.get_ball_energy(
         ball.state.rvw,
         ball.params.R,
         ball.params.m,
@@ -81,7 +81,7 @@ def test_energy(
     model = ball_lcushion_models[model_name]()
     ball_after, _ = model.resolve(ball=ball, cushion=cushion_yaxis, inplace=False)
 
-    final_energy = ptmath.get_ball_energy(
+    final_energy = physics.get_ball_energy(
         ball_after.state.rvw,
         ball_after.params.R,
         ball_after.params.m,

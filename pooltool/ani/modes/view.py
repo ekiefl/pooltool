@@ -21,7 +21,8 @@ from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.ani.scene import visual
 from pooltool.config import settings
-from pooltool.ptmath.utils import norm2d, tip_contact_offset
+from pooltool.physics.utils import tip_contact_offset
+from pooltool.ptmath.utils import norm2d
 from pooltool.system.datatypes import multisystem
 
 

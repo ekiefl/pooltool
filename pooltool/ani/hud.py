@@ -20,7 +20,7 @@ from pooltool.ani.constants import (
 from pooltool.ani.globals import Global
 from pooltool.objects.ball.datatypes import Ball, BallParams
 from pooltool.objects.cue.datatypes import Cue, CueSpecs
-from pooltool.ptmath.utils import tip_center_offset
+from pooltool.physics.utils import tip_center_offset
 from pooltool.ruleset.datatypes import BallInHandOptions
 from pooltool.utils import panda_path
 from pooltool.utils.strenum import StrEnum, auto

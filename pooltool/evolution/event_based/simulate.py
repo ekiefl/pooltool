@@ -8,6 +8,7 @@ import attrs
 import numpy as np
 
 import pooltool.constants as const
+import pooltool.physics as physics
 import pooltool.physics.evolve as evolve
 import pooltool.ptmath as ptmath
 from pooltool.events import (
@@ -40,7 +41,7 @@ def _system_has_energy(system: System) -> bool:
     """
     return any(
         bool(
-            ptmath.get_ball_energy(
+            physics.get_ball_energy(
                 ball.state.rvw,
                 ball.params.R,
                 ball.params.m,
@@ -80,13 +81,13 @@ def get_event_priority(event: Event, shot: System) -> tuple[int, float]:
     if event_type == EventType.BALL_POCKET:
         ball_id = event.ids[0]
         ball = shot.balls[ball_id]
-        energy = ptmath.get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
+        energy = physics.get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
         return (2, energy)
 
     if event_type.is_transition():
         ball_id = event.ids[0]
         ball = shot.balls[ball_id]
-        energy = ptmath.get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
+        energy = physics.get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
         return (2, energy)
 
     if event_type == EventType.BALL_BALL:
@@ -99,7 +100,7 @@ def get_event_priority(event: Event, shot: System) -> tuple[int, float]:
     if event_type in (EventType.BALL_LINEAR_CUSHION, EventType.BALL_CIRCULAR_CUSHION):
         ball_id = event.ids[0]
         ball = shot.balls[ball_id]
-        energy = ptmath.get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
+        energy = physics.get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
         return (3, energy)
 
     return (99, 0.0)
