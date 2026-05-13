@@ -43,8 +43,6 @@ class PickBallMode(BaseMode):
         tasks.remove("pick_ball_task")
 
     def pick_ball_task(self, task):
-        raise NotImplementedError("Woops, this is in a broken state, don't press that")
-
         if not self.keymap[Action.pick_ball]:
             Global.mode_mgr.change_mode(Mode.aim)
             return task.done
@@ -55,19 +53,21 @@ class PickBallMode(BaseMode):
         if closest != self.closest_ball:
             self.remove_ball_highlight()
             self.closest_ball = closest
-            self.ball_highlight = self.closest_ball.get_node("pos")
-            self.add_ball_highlight()
+            if self.closest_ball is not None:
+                self.ball_highlight = self.closest_ball.get_node("pos")
+                self.add_ball_highlight()
 
         if self.keymap["done"]:
-            self.remove_ball_highlight()
-            ball_id = self.closest_ball._ball.id
-            if ball_id is not None:
-                multisystem.active.cue.cue_ball_id = ball_id
-                visual.cue.init_focus(visual.balls[ball_id])
-                Global.game.log.add_msg(
-                    f"Now cueing the {multisystem.active.cue.cue_ball_id} ball",
-                    sentiment="neutral",
-                )
+            if self.closest_ball is not None:
+                self.remove_ball_highlight()
+                ball_id = self.closest_ball._ball.id
+                if ball_id is not None:
+                    multisystem.active.cue.cue_ball_id = ball_id
+                    visual.cue.init_focus(visual.balls[ball_id])
+                    Global.game.log.add_msg(
+                        f"Now cueing the {multisystem.active.cue.cue_ball_id} ball",
+                        sentiment="neutral",
+                    )
             Global.mode_mgr.change_mode(Mode.aim)
             return task.done
 
