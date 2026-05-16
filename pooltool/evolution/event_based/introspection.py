@@ -33,13 +33,13 @@ from pooltool.events import (
     ball_pocket_collision,
     stick_ball_collision,
 )
+from pooltool.evolution.engine import SimulationEngine
 from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
 from pooltool.evolution.event_based.simulate import (
     DEFAULT_ENGINE,
     _SimulationState,
 )
-from pooltool.physics.engine import PhysicsEngine
 from pooltool.serialize import conversion
 from pooltool.serialize.serializers import Pathish
 from pooltool.system.datatypes import System
@@ -114,7 +114,7 @@ class SimulationSnapshot:
     next_event: Event
     collision_cache: CollisionCache
     transition_cache: TransitionCache
-    engine: PhysicsEngine
+    engine: SimulationEngine
 
     def get_prospective_events(self) -> list[Event]:
         """Get all prospective events.
@@ -166,7 +166,7 @@ class SimulationSnapshot:
 @attrs.define
 class SimulationSnapshotSequence:
     steps: list[SimulationSnapshot] = attrs.field(factory=list)
-    engine: PhysicsEngine = attrs.field(factory=PhysicsEngine)
+    engine: SimulationEngine = attrs.field(factory=SimulationEngine)
 
     def add(self, snapshot: SimulationSnapshot) -> None:
         self.steps.append(snapshot)
@@ -190,7 +190,7 @@ class SimulationSnapshotSequence:
 def simulate_with_snapshots(
     shot: System,
     output_path: Path | None = None,
-    engine: PhysicsEngine | None = None,
+    engine: SimulationEngine | None = None,
     t_final: float | None = None,
     include: set[EventType] = INCLUDED_EVENTS,
     max_events: int = 0,

@@ -21,15 +21,15 @@ from pooltool.events import (
     stick_ball_collision,
 )
 from pooltool.evolution.continuous import continuize
+from pooltool.evolution.engine import SimulationEngine
 from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
 from pooltool.objects.ball.datatypes import BallState
-from pooltool.physics.engine import PhysicsEngine
 from pooltool.physics.motion import solve
 from pooltool.physics.utils import get_ball_energy
 from pooltool.system.datatypes import System
 
-DEFAULT_ENGINE = PhysicsEngine()
+DEFAULT_ENGINE = SimulationEngine()
 
 
 def _system_has_energy(system: System) -> bool:
@@ -109,7 +109,7 @@ def get_event_priority(event: Event, shot: System) -> tuple[int, float]:
 @attrs.define
 class _SimulationState:
     shot: System
-    engine: PhysicsEngine
+    engine: SimulationEngine
 
     t_final: float | None = None
     include: set[EventType] = INCLUDED_EVENTS
@@ -191,7 +191,7 @@ class _SimulationState:
 
 def simulate(
     shot: System,
-    engine: PhysicsEngine | None = None,
+    engine: SimulationEngine | None = None,
     inplace: bool = False,
     continuous: bool = False,
     dt: float | None = None,
@@ -207,7 +207,7 @@ def simulate(
             otherwise there will be nothing to simulate.
         engine:
             The engine holds all of the physics. You can instantiate your very own
-            :class:`pooltool.physics.PhysicsEngine` object, or you can modify
+            :class:`pooltool.evolution.SimulationEngine` object, or you can modify
             ``~/.config/pooltool/physics/resolver.json`` to change the default engine.
         inplace:
             By default, a copy of the passed system is simulated and returned. This

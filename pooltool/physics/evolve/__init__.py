@@ -6,7 +6,7 @@ i.e. the equations of motion presented in
 
 https://ekiefl.github.io/2020/04/24/pooltool-theory/#3-ball-with-arbitrary-spin
 
-The code should be configurable and passed to `PhysicsEngine` in `physics/engine.py`,
+The code should be configurable and passed to `SimulationEngine` in `evolution/engine.py`,
 just like the `Resolver` class in `physics/resolve/resolver.py`
 """
 

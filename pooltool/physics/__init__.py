@@ -1,6 +1,5 @@
 """Physics subpackage for pooltool"""
 
-from pooltool.physics.engine import PhysicsEngine
 from pooltool.physics.evolve import (
     evolve_ball_motion,
 )
@@ -46,7 +45,6 @@ from pooltool.physics.utils import (
 )
 
 __all__ = [
-    "PhysicsEngine",
     # Resolve
     "display_models",
     "Resolver",
