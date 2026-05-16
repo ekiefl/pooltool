@@ -9,8 +9,8 @@ from pooltool import aim, events
 from pooltool.events import EventType, ball_ball_collision, ball_pocket_collision
 from pooltool.evolution.event_based._utils import _system_has_energy
 from pooltool.evolution.event_based.cache import CollisionCache
+from pooltool.evolution.event_based.detect import BallBallDetection
 from pooltool.evolution.event_based.simulate import (
-    get_next_ball_ball_collision,
     get_next_event,
     simulate,
 )
@@ -450,7 +450,7 @@ def test_ball_ball_collision_for_intersecting_balls():
     _assert_rolling(system.balls["cue"].state.rvw, system.balls["cue"].params.R)
 
     assert get_next_event(system).event_type == EventType.BALL_BALL
-    collision_event = get_next_ball_ball_collision(system, CollisionCache())
+    collision_event = BallBallDetection().get_next(system, CollisionCache())
     assert collision_event.time != np.inf
     assert collision_event.time == 0
 
