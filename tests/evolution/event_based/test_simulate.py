@@ -7,9 +7,9 @@ import pooltool.physics as physics
 import pooltool.ptmath as ptmath
 from pooltool import aim, events
 from pooltool.events import EventType, ball_ball_collision, ball_pocket_collision
+from pooltool.evolution.event_based._utils import _system_has_energy
 from pooltool.evolution.event_based.cache import CollisionCache
 from pooltool.evolution.event_based.simulate import (
-    _system_has_energy,
     get_next_ball_ball_collision,
     get_next_event,
     simulate,

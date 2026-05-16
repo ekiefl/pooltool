@@ -6,27 +6,9 @@ import attrs
 import numpy as np
 
 from pooltool.events import Event, EventType, stick_ball_collision
+from pooltool.evolution.event_based._utils import _system_has_energy
 from pooltool.evolution.event_based.cache import CollisionCache
-from pooltool.physics.utils import get_ball_energy
 from pooltool.system.datatypes import System
-
-
-def _system_has_energy(system: System) -> bool:
-    """Check whether the system has any kinetic energy.
-
-    Returns False as soon as the first energetic ball is encountered. Cue energy (e.g.
-    ``system.cue.V0 > 0``) does not count.
-    """
-    return any(
-        bool(
-            get_ball_energy(
-                ball.state.rvw,
-                ball.params.R,
-                ball.params.m,
-            )
-        )
-        for ball in system.balls.values()
-    )
 
 
 class StickBallDetectionStrategy(Protocol):

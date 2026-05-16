@@ -18,7 +18,6 @@ from pooltool.events import (
     ball_linear_cushion_collision,
     ball_pocket_collision,
     null_event,
-    stick_ball_collision,
 )
 from pooltool.evolution.continuous import continuize
 from pooltool.evolution.engine import SimulationEngine
@@ -30,25 +29,6 @@ from pooltool.physics.utils import get_ball_energy
 from pooltool.system.datatypes import System
 
 DEFAULT_ENGINE = SimulationEngine()
-
-
-def _system_has_energy(system: System) -> bool:
-    """Check whether the system has any energy.
-
-    Notes:
-        - Returns False as soon as first energetic ball is iterated through.
-        - Cue energy (e.g. setting system.cue.V0 > 0 doesn't count as energy).
-    """
-    return any(
-        bool(
-            get_ball_energy(
-                ball.state.rvw,
-                ball.params.R,
-                ball.params.m,
-            )
-        )
-        for ball in system.balls.values()
-    )
 
 
 def get_event_priority(event: Event, shot: System) -> tuple[int, float]:
@@ -133,6 +113,7 @@ class _SimulationState:
             self.shot,
             transition_cache=self.transition_cache,
             collision_cache=self.collision_cache,
+            engine=self.engine,
         )
 
         if event.time == np.inf:
@@ -300,6 +281,7 @@ def get_next_event(
     *,
     transition_cache: TransitionCache | None = None,
     collision_cache: CollisionCache | None = None,
+    engine: SimulationEngine = DEFAULT_ENGINE,
 ) -> Event:
     # If not passed, unpopulated caches are initialized to pass to delegate functions.
     # These empty caches will be populated by the delegate functions, but then thrown
@@ -319,7 +301,7 @@ def get_next_event(
     # collision cache, which is needed by debug/introspection tools.
     if shot.t == 0:
         candidates.append(
-            get_next_stick_ball_collision(shot, collision_cache=collision_cache)
+            engine.event_detector.stick_ball.get_next(shot, collision_cache)
         )
 
     candidates.append(transition_cache.get_next())
@@ -355,34 +337,6 @@ def get_next_event(
         return (tier, -energy)
 
     return min(simultaneous, key=sort_key)
-
-
-def get_next_stick_ball_collision(
-    shot: System, collision_cache: CollisionCache
-) -> Event:
-    """Returns next stick-ball collision"""
-
-    cache = collision_cache.times.setdefault(EventType.STICK_BALL, {})
-
-    obj_ids = (shot.cue.id, shot.cue.cue_ball_id)
-
-    if obj_ids in cache:
-        return stick_ball_collision(
-            stick=shot.cue,
-            ball=shot.balls[shot.cue.cue_ball_id],
-            time=cache[obj_ids],
-        )
-
-    if shot.t == 0 and not _system_has_energy(shot) and shot.cue.V0 > 0:
-        cache[obj_ids] = 0.0
-    else:
-        cache[obj_ids] = np.inf
-
-    return stick_ball_collision(
-        stick=shot.cue,
-        ball=shot.balls[shot.cue.cue_ball_id],
-        time=cache[obj_ids],
-    )
 
 
 def get_next_ball_ball_collision(
