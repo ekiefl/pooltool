@@ -5,6 +5,7 @@ import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.cue.datatypes import Cue
+from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve.models import StickBallModel
 from pooltool.physics.resolve.stick_ball.core import CoreStickBallCollision
 from pooltool.physics.resolve.stick_ball.squirt import get_squirt_angle
@@ -129,6 +130,7 @@ class InstantaneousPoint(CoreStickBallCollision):
     model: StickBallModel = attrs.field(
         default=StickBallModel.INSTANTANEOUS_POINT, init=False, repr=False
     )
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def solve(self, cue: Cue, ball: Ball) -> tuple[Cue, Ball]:
         # Transform contact point Q from cue frame to ball frame

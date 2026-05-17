@@ -5,12 +5,14 @@ from numba import jit
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
+from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve.ball_ball.core import CoreBallBallCollision
 from pooltool.physics.resolve.ball_ball.friction import (
     AlciatoreBallBallFriction,
     BallBallFrictionStrategy,
 )
 from pooltool.physics.resolve.models import BallBallModel
+from pooltool.physics.utils import surface_velocity
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -43,8 +45,8 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     rvw1_f = rvw1.copy()
     rvw2_f = rvw2.copy()
 
-    v1_c = ptmath.surface_velocity(rvw1, unit_x, R)
-    v2_c = ptmath.surface_velocity(rvw2, -unit_x, R)
+    v1_c = surface_velocity(rvw1, unit_x, R)
+    v2_c = surface_velocity(rvw2, -unit_x, R)
     v12_c = v1_c - v2_c
     has_relative_velocity = ptmath.norm3d(v12_c) > const.EPS
 
@@ -61,8 +63,8 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
         rvw2_f[2] = rvw2[2] + D_w1
 
         # calculate new relative contact velocity
-        v1_c_slip = ptmath.surface_velocity(rvw1_f, unit_x, R)
-        v2_c_slip = ptmath.surface_velocity(rvw2_f, -unit_x, R)
+        v1_c_slip = surface_velocity(rvw1_f, unit_x, R)
+        v2_c_slip = surface_velocity(rvw2_f, -unit_x, R)
         v12_c_slip = v1_c_slip - v2_c_slip
 
     # if there was no relative velocity to begin with, or if slip changed directions,
@@ -115,6 +117,7 @@ class FrictionalInelastic(CoreBallBallCollision):
     model: BallBallModel = attrs.field(
         default=BallBallModel.FRICTIONAL_INELASTIC, init=False, repr=False
     )
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def solve(self, ball1: Ball, ball2: Ball) -> tuple[Ball, Ball]:
         """Resolves the collision."""

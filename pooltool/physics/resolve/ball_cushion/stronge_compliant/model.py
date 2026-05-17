@@ -11,6 +11,7 @@ from pooltool.objects.table.components import (
     Cushion,
     LinearCushionSegment,
 )
+from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve.ball_cushion.core import (
     CoreBallCCushionCollision,
     CoreBallLCushionCollision,
@@ -19,6 +20,7 @@ from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
 from pooltool.physics.resolve.stronge_compliant import (
     resolve_collinear_compliant_frictional_inelastic_collision,
 )
+from pooltool.physics.utils import surface_velocity
 
 logger = logging.getLogger(__name__)
 
@@ -29,9 +31,7 @@ def _solve(ball: Ball, cushion: Cushion, omega_ratio: float) -> tuple[Ball, Cush
     logger.debug(f"v={rvw[1]}, w={rvw[2]}")
 
     normal_direction = cushion.get_normal_3d(ball.xyz)
-    relative_contact_velocity = ptmath.surface_velocity(
-        rvw, -normal_direction, ball.params.R
-    )
+    relative_contact_velocity = surface_velocity(rvw, -normal_direction, ball.params.R)
 
     v_n_0, v_t_0, tangent_direction = ptmath.decompose_normal_tangent(
         relative_contact_velocity, normal_direction, True
@@ -78,7 +78,7 @@ def _solve(ball: Ball, cushion: Cushion, omega_ratio: float) -> tuple[Ball, Cush
     # and from `rvw` which was modified based on stronge output,
     # then verify that they're equal
     v_c_f = v_n_f * normal_direction + v_t_f * tangent_direction
-    relative_contact_velocity_f = ptmath.surface_velocity(
+    relative_contact_velocity_f = surface_velocity(
         rvw, -normal_direction, ball.params.R
     )
     logger.debug(f"v_c_f={v_c_f}")
@@ -127,6 +127,7 @@ class StrongeCompliantLinear(CoreBallLCushionCollision):
     model: BallLCushionModel = attrs.field(
         default=BallLCushionModel.STRONGE_COMPLIANT, init=False, repr=False
     )
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
@@ -142,6 +143,7 @@ class StrongeCompliantCircular(CoreBallCCushionCollision):
     model: BallCCushionModel = attrs.field(
         default=BallCCushionModel.STRONGE_COMPLIANT, init=False, repr=False
     )
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment

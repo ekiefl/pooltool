@@ -1,6 +1,5 @@
 """Physics subpackage for pooltool"""
 
-from pooltool.physics.engine import PhysicsEngine
 from pooltool.physics.evolve import (
     evolve_ball_motion,
 )
@@ -35,9 +34,17 @@ from pooltool.physics.resolve.transition import (
     BallTransitionModel,
     ball_transition_models,
 )
+from pooltool.physics.utils import (
+    get_ball_energy,
+    get_roll_time,
+    get_slide_time,
+    get_spin_time,
+    get_u_vec,
+    rel_velocity,
+    surface_velocity,
+)
 
 __all__ = [
-    "PhysicsEngine",
     # Resolve
     "display_models",
     "Resolver",
@@ -48,6 +55,13 @@ __all__ = [
     "BallPocketModel",
     "StickBallModel",
     "BallTransitionModel",
+    "rel_velocity",
+    "surface_velocity",
+    "get_u_vec",
+    "get_slide_time",
+    "get_roll_time",
+    "get_spin_time",
+    "get_ball_energy",
     "ball_ball_models",
     "BallBallFrictionModel",
     "ball_ball_friction_models",

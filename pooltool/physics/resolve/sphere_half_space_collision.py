@@ -4,6 +4,7 @@ from numba import jit
 
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
+from pooltool.physics.utils import tangent_surface_velocity
 
 
 def resolve_sphere_half_space_collision(normal, rvw, R, mu_k, e):
@@ -35,7 +36,7 @@ def resolve_sphere_half_space_collision_z_normal(rvw, R, mu_k, e):
     v_i[2] = 0.0
     w_i[2] = 0.0
 
-    v_c_i = ptmath.tangent_surface_velocity(rvw, -unit_z, R)
+    v_c_i = tangent_surface_velocity(rvw, -unit_z, R)
     v_c_i_magnitude = ptmath.norm3d(v_c_i)
 
     has_relative_velocity = v_c_i_magnitude > const.EPS
