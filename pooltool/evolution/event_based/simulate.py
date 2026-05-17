@@ -40,7 +40,7 @@ class _SimulationState:
         self.shot._update_history(null_event(time=0))
 
     def step(self) -> Event:
-        event = self.engine.event_detector.get_next_event(
+        event = self.engine.detector.get_next_event(
             self.shot,
             transition_cache=self.transition_cache,
             collision_cache=self.collision_cache,

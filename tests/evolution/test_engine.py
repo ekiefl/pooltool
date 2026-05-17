@@ -9,11 +9,11 @@ from pooltool.physics.resolve.resolver import Resolver
 
 def _patch_all_dims(
     resolver: Resolver,
-    event_detector: EventDetector,
+    detector: EventDetector,
     dim_value: Dim,
 ) -> None:
     """Set every strategy's dim to dim_value, in place."""
-    for bundle in (resolver, event_detector):
+    for bundle in (resolver, detector):
         for field in attrs.fields(type(bundle)):
             strategy = getattr(bundle, field.name)
             if hasattr(strategy, "dim"):
@@ -24,11 +24,9 @@ def _patch_all_dims(
 def engine_3d() -> SimulationEngine:
     """A SimulationEngine constructed with every strategy patched to Dim.THREE."""
     resolver = SimulationEngine().resolver
-    event_detector = SimulationEngine().event_detector
-    _patch_all_dims(resolver, event_detector, Dim.THREE)
-    return SimulationEngine(
-        resolver=resolver, event_detector=event_detector, is_3d=True
-    )
+    detector = SimulationEngine().detector
+    _patch_all_dims(resolver, detector, Dim.THREE)
+    return SimulationEngine(resolver=resolver, detector=detector, is_3d=True)
 
 
 def test_default_engine_constructs():
@@ -69,7 +67,7 @@ def test_3d_engine_rejects_one_dim_two_strategy(engine_3d: SimulationEngine):
     with pytest.raises(ValueError, match=r"ball_ball.*incompatible with is_3d=True"):
         SimulationEngine(
             resolver=engine_3d.resolver,
-            event_detector=engine_3d.event_detector,
+            detector=engine_3d.detector,
             is_3d=True,
         )
 
@@ -84,6 +82,6 @@ def test_dim_both_strategy_accepted_in_3d(engine_3d: SimulationEngine):
     engine_3d.resolver.ball_ball.dim = Dim.BOTH
     SimulationEngine(
         resolver=engine_3d.resolver,
-        event_detector=engine_3d.event_detector,
+        detector=engine_3d.detector,
         is_3d=True,
     )

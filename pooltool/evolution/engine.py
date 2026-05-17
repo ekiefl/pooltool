@@ -20,21 +20,21 @@ class SimulationEngine:
     Attributes:
         resolver:
             The strategy responsible for resolving events.
-        event_detector:
+        detector:
             The strategy responsible for detecting the next event.
         is_3d:
             Whether the simulation supports the airborne motion state and ball-table
             events. Validated at construction against the dimensionality capability
-            (``dim``) of every bundled strategy in ``resolver`` and ``event_detector``.
+            (``dim``) of every bundled strategy in ``resolver`` and ``detector``.
     """
 
     resolver: Resolver = attrs.field(factory=Resolver.default)
-    event_detector: EventDetector = attrs.field(factory=EventDetector.default)
+    detector: EventDetector = attrs.field(factory=EventDetector.default)
     is_3d: bool = False
 
     def __attrs_post_init__(self) -> None:
         required = Dim.THREE if self.is_3d else Dim.TWO
-        for bundle in (self.resolver, self.event_detector):
+        for bundle in (self.resolver, self.detector):
             for field in attrs.fields(type(bundle)):
                 strategy = getattr(bundle, field.name)
                 if not attrs.has(type(strategy)):
