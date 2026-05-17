@@ -5,7 +5,7 @@ class Dim(StrEnum):
     """Dimensionality capability declaration for physics strategies.
 
     Each Resolver and EventDetector strategy declares one of these as a class-level
-    attribute. :class:`pooltool.evolution.engine.SimulationEngine` reads these once at
+    attribute. :class:`pooltool.evolution.SimulationEngine` reads these once at
     construction to validate that the bundled strategies are compatible with its
     ``is_3d`` setting.
 

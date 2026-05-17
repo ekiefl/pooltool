@@ -29,6 +29,7 @@ skip_dict: dict[str, list[str]] = {
         "pooltool.ruleset.snooker",
         # API: pooltool.physics
         "pooltool.physics.evolve",
+        "pooltool.physics.motion",
         "pooltool.physics.resolve",
     ],
     "module": [
@@ -58,6 +59,8 @@ skip_dict: dict[str, list[str]] = {
         "pooltool.game.datatypes",
         # API: pooltool.evolution
         "pooltool.evolution.engine",
+        # API: pooltool.physics
+        "pooltool.physics.utils",
         # API: pooltool.physics.resolve
         "pooltool.physics.resolve.models",
         "pooltool.physics.resolve.resolver",

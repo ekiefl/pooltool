@@ -82,7 +82,7 @@ class EventDetector:
     without a discriminator. When a second implementation is added for a given event
     type, this field type should be widened (e.g. to a union of concrete classes, or
     to the protocol with a registry + structure hook that dispatches on a tag, in
-    the style of :class:`pooltool.physics.resolve.resolver.Resolver`).
+    the style of :class:`pooltool.physics.Resolver`).
 
     Attributes:
         stick_ball:
