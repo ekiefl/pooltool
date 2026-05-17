@@ -14,6 +14,7 @@ from pooltool.events import (
     null_event,
 )
 from pooltool.evolution.event_based.cache import CollisionCache
+from pooltool.physics.dimensionality import Dim
 from pooltool.physics.motion.solve import (
     ball_circular_cushion_collision_time,
     ball_linear_cushion_collision_time,
@@ -30,6 +31,8 @@ class BallLCushionDetectionStrategy(Protocol):
 @attrs.define
 class BallLCushionDetection:
     """Detects the next ball-vs-linear-cushion-segment collision in the system."""
+
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def get_next(self, shot: System, collision_cache: CollisionCache) -> Event:
         if not shot.table.has_linear_cushions:
@@ -86,6 +89,8 @@ class BallCCushionDetectionStrategy(Protocol):
 @attrs.define
 class BallCCushionDetection:
     """Detects the next ball-vs-circular-cushion-segment collision in the system."""
+
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def get_next(self, shot: System, collision_cache: CollisionCache) -> Event:
         if not shot.table.has_circular_cushions:

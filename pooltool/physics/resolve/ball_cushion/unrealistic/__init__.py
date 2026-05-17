@@ -11,6 +11,7 @@ from pooltool.objects.table.components import (
     Cushion,
     LinearCushionSegment,
 )
+from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve.ball_cushion.core import (
     CoreBallCCushionCollision,
     CoreBallLCushionCollision,
@@ -72,6 +73,7 @@ class UnrealisticLinear(CoreBallLCushionCollision):
     model: BallLCushionModel = attrs.field(
         default=BallLCushionModel.UNREALISTIC, init=False, repr=False
     )
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
@@ -85,6 +87,7 @@ class UnrealisticCircular(CoreBallCCushionCollision):
     model: BallCCushionModel = attrs.field(
         default=BallCCushionModel.UNREALISTIC, init=False, repr=False
     )
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment

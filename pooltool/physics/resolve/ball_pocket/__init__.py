@@ -14,6 +14,7 @@ import numpy as np
 import pooltool.constants as const
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.table.components import Pocket
+from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve.models import BallPocketModel
 
 
@@ -32,6 +33,7 @@ class CanonicalBallPocket:
     model: BallPocketModel = attrs.field(
         default=BallPocketModel.CANONICAL, init=False, repr=False
     )
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def resolve(
         self, ball: Ball, pocket: Pocket, inplace: bool = False

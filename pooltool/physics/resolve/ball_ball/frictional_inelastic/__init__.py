@@ -5,6 +5,7 @@ from numba import jit
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
+from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve.ball_ball.core import CoreBallBallCollision
 from pooltool.physics.resolve.ball_ball.friction import (
     AlciatoreBallBallFriction,
@@ -116,6 +117,7 @@ class FrictionalInelastic(CoreBallBallCollision):
     model: BallBallModel = attrs.field(
         default=BallBallModel.FRICTIONAL_INELASTIC, init=False, repr=False
     )
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def solve(self, ball1: Ball, ball2: Ball) -> tuple[Ball, Ball]:
         """Resolves the collision."""

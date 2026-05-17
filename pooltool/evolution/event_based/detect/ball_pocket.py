@@ -8,6 +8,7 @@ import numpy as np
 import pooltool.constants as const
 from pooltool.events import Event, EventType, ball_pocket_collision, null_event
 from pooltool.evolution.event_based.cache import CollisionCache
+from pooltool.physics.dimensionality import Dim
 from pooltool.physics.motion.solve import ball_pocket_collision_time
 from pooltool.system.datatypes import System
 
@@ -21,6 +22,8 @@ class BallPocketDetectionStrategy(Protocol):
 @attrs.define
 class BallPocketDetection:
     """Detects the next ball-pocket collision in the system."""
+
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def get_next(self, shot: System, collision_cache: CollisionCache) -> Event:
         if not shot.table.has_pockets:

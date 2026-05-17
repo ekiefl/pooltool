@@ -8,6 +8,7 @@ import numpy as np
 from pooltool.events import Event, EventType, stick_ball_collision
 from pooltool.evolution.event_based._utils import _system_has_energy
 from pooltool.evolution.event_based.cache import CollisionCache
+from pooltool.physics.dimensionality import Dim
 from pooltool.system.datatypes import System
 
 
@@ -24,6 +25,8 @@ class StickBallDetection:
     Stick-ball events fire only at t=0, when the system is at rest and a cue strike is
     queued (V0 > 0).
     """
+
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def get_next(self, shot: System, collision_cache: CollisionCache) -> Event:
         cache = collision_cache.times.setdefault(EventType.STICK_BALL, {})

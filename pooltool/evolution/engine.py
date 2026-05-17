@@ -5,6 +5,7 @@ from __future__ import annotations
 import attrs
 
 from pooltool.evolution.event_based.detect import EventDetector
+from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve import Resolver
 
 
@@ -21,10 +22,36 @@ class SimulationEngine:
             The strategy responsible for resolving events.
         event_detector:
             The strategy responsible for detecting the next event.
+        is_3d:
+            Whether the simulation supports the airborne motion state and ball-table
+            events. Validated at construction against the dimensionality capability
+            (``dim``) of every bundled strategy in ``resolver`` and ``event_detector``.
     """
 
     resolver: Resolver = attrs.field(factory=Resolver.default)
     event_detector: EventDetector = attrs.field(factory=EventDetector.default)
+    is_3d: bool = False
+
+    def __attrs_post_init__(self) -> None:
+        required = Dim.THREE if self.is_3d else Dim.TWO
+        for bundle in (self.resolver, self.event_detector):
+            for field in attrs.fields(type(bundle)):
+                strategy = getattr(bundle, field.name)
+                if not attrs.has(type(strategy)):
+                    continue
+                if not hasattr(strategy, "dim"):
+                    raise AttributeError(
+                        f"{type(bundle).__name__}.{field.name} "
+                        f"({type(strategy).__name__}) is missing required "
+                        f"'dim' attribute"
+                    )
+                if strategy.dim not in (required, Dim.BOTH):
+                    raise ValueError(
+                        f"{type(bundle).__name__}.{field.name} "
+                        f"({type(strategy).__name__}) has dim={strategy.dim}, "
+                        f"incompatible with is_3d={self.is_3d}; "
+                        f"expected {required} or {Dim.BOTH}"
+                    )
 
 
 __all__ = [

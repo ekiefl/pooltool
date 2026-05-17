@@ -10,6 +10,7 @@ import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.events import Event, EventType, ball_ball_collision, null_event
 from pooltool.evolution.event_based.cache import CollisionCache
+from pooltool.physics.dimensionality import Dim
 from pooltool.physics.motion.solve import ball_ball_collision_time
 from pooltool.system.datatypes import System
 
@@ -23,6 +24,8 @@ class BallBallDetectionStrategy(Protocol):
 @attrs.define
 class BallBallDetection:
     """Detects the next ball-ball collision in the system."""
+
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def get_next(self, shot: System, collision_cache: CollisionCache) -> Event:
         cache = collision_cache.times.setdefault(EventType.BALL_BALL, {})
