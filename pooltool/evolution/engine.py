@@ -33,6 +33,9 @@ class SimulationEngine:
     is_3d: bool = False
 
     def __attrs_post_init__(self) -> None:
+        self._validate_dimensionality()
+
+    def _validate_dimensionality(self) -> None:
         required = Dim.THREE if self.is_3d else Dim.TWO
         for bundle in (self.resolver, self.detector):
             for field in attrs.fields(type(bundle)):
