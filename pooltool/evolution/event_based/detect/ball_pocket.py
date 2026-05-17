@@ -16,6 +16,8 @@ from pooltool.system.datatypes import System
 class BallPocketDetectionStrategy(Protocol):
     """Ball-pocket detection models must satisfy this protocol."""
 
+    dim: Dim
+
     def get_next(self, shot: System, collision_cache: CollisionCache) -> Event: ...
 
 

@@ -25,6 +25,8 @@ from pooltool.system.datatypes import System
 class BallLCushionDetectionStrategy(Protocol):
     """Ball-vs-linear-cushion-segment detection models must satisfy this protocol."""
 
+    dim: Dim
+
     def get_next(self, shot: System, collision_cache: CollisionCache) -> Event: ...
 
 
@@ -82,6 +84,8 @@ class BallLCushionDetection:
 
 class BallCCushionDetectionStrategy(Protocol):
     """Ball-vs-circular-cushion-segment detection models must satisfy this protocol."""
+
+    dim: Dim
 
     def get_next(self, shot: System, collision_cache: CollisionCache) -> Event: ...
 

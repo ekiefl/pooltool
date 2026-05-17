@@ -21,6 +21,8 @@ from pooltool.physics.resolve.models import BallPocketModel
 class BallPocketStrategy(Protocol):
     """Ball-pocket collision models must satisfy this protocol"""
 
+    dim: Dim
+
     def resolve(
         self, ball: Ball, pocket: Pocket, inplace: bool = False
     ) -> tuple[Ball, Pocket]:

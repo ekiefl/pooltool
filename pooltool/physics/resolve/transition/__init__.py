@@ -22,6 +22,8 @@ _TOLERANCE = 1e-12
 class BallTransitionStrategy(Protocol):
     """Ball transition models must satisfy this protocol"""
 
+    dim: Dim
+
     def resolve(self, ball: Ball, transition: EventType, inplace: bool = False) -> Ball:
         """This method resolves a ball transition"""
         ...
