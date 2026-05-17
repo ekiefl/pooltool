@@ -1,8 +1,11 @@
+import math
+
 import numpy as np
 from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
+from pooltool.ptmath.roots import quadratic
 from pooltool.ptmath.utils import coordinate_rotation, cross, norm3d, unit_vector
 
 
@@ -47,6 +50,25 @@ def get_u_vec(
         return np.array([1.0, 0.0, 0.0])
 
     return coordinate_rotation(unit_vector(rel_vel), -phi)
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def get_airborne_time(rvw: NDArray[np.float64], R: float, g: float) -> float:
+    """Time until an airborne ball's bottom touches the table plane (z = R).
+
+    Solves ``-0.5 * g * t**2 + v_z * t + (z - R) = 0`` and returns the later root
+    (the descending-leg intersection). Returns ``np.inf`` when gravity is zero, or
+    when the discriminant is negative.
+    """
+    if g == 0.0:
+        return np.inf
+
+    t1, t2 = quadratic.solve(-0.5 * g, rvw[1, 2], rvw[0, 2] - R)
+
+    if math.isnan(t1):
+        return np.inf
+
+    return max(t1, t2)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)

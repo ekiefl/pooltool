@@ -1,7 +1,11 @@
 import numpy as np
 import pytest
 
-from pooltool.physics.utils import surface_velocity, tangent_surface_velocity
+from pooltool.physics.utils import (
+    get_airborne_time,
+    surface_velocity,
+    tangent_surface_velocity,
+)
 
 
 def test_surface_velocity_no_angular_velocity():
@@ -144,3 +148,68 @@ def test_smoke_test(v, w, d, expected_surface, expected_tangent):
 
     v_tangent = tangent_surface_velocity(rvw, d, R)
     assert np.isclose(v_tangent, expected_tangent).all()
+
+
+@pytest.mark.parametrize(
+    "rvw,R,g,expected",
+    [
+        # Zero gravity: no return to table.
+        (
+            np.array(
+                [
+                    [0.0, 0.0, 1.1],
+                    [0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0],
+                ],
+                dtype=np.float64,
+            ),
+            0.1,
+            0.0,
+            np.inf,
+        ),
+        # Drop from apex (v_z = 0): t = sqrt(2 * (z - R) / g).
+        (
+            np.array(
+                [
+                    [0.0, 0.0, 1.1],
+                    [0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0],
+                ],
+                dtype=np.float64,
+            ),
+            0.1,
+            10.0,
+            0.4472135955,
+        ),
+        # xy-velocity does not affect time-to-table.
+        (
+            np.array(
+                [
+                    [0.0, 0.0, 1.1],
+                    [1.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0],
+                ],
+                dtype=np.float64,
+            ),
+            0.1,
+            10.0,
+            0.4472135955,
+        ),
+        # Ball at z=R with downward velocity: already touching, t = 0.
+        (
+            np.array(
+                [
+                    [0.0, 0.0, 0.1],
+                    [0.0, -1.0, 0.0],
+                    [0.0, 0.0, 0.0],
+                ],
+                dtype=np.float64,
+            ),
+            0.1,
+            10.0,
+            0.0,
+        ),
+    ],
+)
+def test_get_airborne_time(rvw, R, g, expected):
+    assert np.isclose(get_airborne_time(rvw, R, g), expected)

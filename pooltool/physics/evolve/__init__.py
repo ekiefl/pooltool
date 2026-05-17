@@ -47,6 +47,9 @@ def evolve_ball_motion(
     if state == const.stationary or state == const.pocketed:
         return rvw, state
 
+    if state == const.airborne:
+        return _evolve_airborne_state(rvw, g, t), const.airborne
+
     if state == const.sliding:
         dtau_E_slide = get_slide_time(rvw, R, u_s, g)
 
@@ -183,3 +186,26 @@ def _evolve_perpendicular_spin_state(
 ) -> NDArray[np.float64]:
     rvw[2, 2] = _evolve_perpendicular_spin_component(rvw[2, 2], R, u_sp, g, t)
     return rvw
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def _evolve_airborne_state(
+    rvw: NDArray[np.float64], g: float, t: float
+) -> NDArray[np.float64]:
+    """Parabolic evolution under gravity. Angular velocity is conserved."""
+    if t == 0:
+        return rvw
+
+    r_0, v_0, w_0 = rvw
+
+    g_vec = np.array([0.0, 0.0, g], dtype=np.float64)
+
+    r = r_0 + v_0 * t - 0.5 * g_vec * t**2
+    v = v_0 - g_vec * t
+
+    new_rvw = np.empty((3, 3), dtype=np.float64)
+    new_rvw[0, :] = r
+    new_rvw[1, :] = v
+    new_rvw[2, :] = w_0
+
+    return new_rvw
