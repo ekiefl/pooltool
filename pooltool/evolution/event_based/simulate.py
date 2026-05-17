@@ -6,72 +6,15 @@ import attrs
 import numpy as np
 
 import pooltool.physics.evolve as evolve
-import pooltool.ptmath as ptmath
 from pooltool.events import Event, EventType, null_event
 from pooltool.evolution.continuous import continuize
 from pooltool.evolution.engine import SimulationEngine
 from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
 from pooltool.objects.ball.datatypes import BallState
-from pooltool.physics.utils import get_ball_energy
 from pooltool.system.datatypes import System
 
 DEFAULT_ENGINE = SimulationEngine()
-
-
-def get_event_priority(event: Event, shot: System) -> tuple[int, float]:
-    """Compute priority for an event to resolve ties among simultaneous events.
-
-    Returns a tuple (tier, energy) where:
-    - Lower tier = higher priority
-    - Higher energy = higher priority within the same tier
-
-    Priority tiers:
-    - Tier 1: STICK_BALL (always first)
-    - Tier 2: Transitions and BALL_POCKET (can resolve without affecting others)
-    - Tier 3: BALL_BALL and ball-cushion collisions
-
-    Args:
-        event: The event to compute priority for.
-        shot: The system state at the time the event was detected.
-
-    Returns:
-        A tuple of (tier, energy) for sorting.
-    """
-    event_type = event.event_type
-
-    if event_type == EventType.NONE:
-        return (99, 0.0)
-
-    if event_type == EventType.STICK_BALL:
-        return (1, shot.cue.V0**2)
-
-    if event_type == EventType.BALL_POCKET:
-        ball_id = event.ids[0]
-        ball = shot.balls[ball_id]
-        energy = get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
-        return (2, energy)
-
-    if event_type.is_transition():
-        ball_id = event.ids[0]
-        ball = shot.balls[ball_id]
-        energy = get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
-        return (2, energy)
-
-    if event_type == EventType.BALL_BALL:
-        ball1_id, ball2_id = event.ids
-        v1 = shot.balls[ball1_id].state.rvw[1]
-        v2 = shot.balls[ball2_id].state.rvw[1]
-        energy = ptmath.squared_norm3d(v1 - v2)
-        return (3, energy)
-
-    if event_type in (EventType.BALL_LINEAR_CUSHION, EventType.BALL_CIRCULAR_CUSHION):
-        ball_id = event.ids[0]
-        ball = shot.balls[ball_id]
-        energy = get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
-        return (3, energy)
-
-    return (99, 0.0)
 
 
 @attrs.define
@@ -97,11 +40,10 @@ class _SimulationState:
         self.shot._update_history(null_event(time=0))
 
     def step(self) -> Event:
-        event = get_next_event(
+        event = self.engine.event_detector.get_next_event(
             self.shot,
             transition_cache=self.transition_cache,
             collision_cache=self.collision_cache,
-            engine=self.engine,
         )
 
         if event.time == np.inf:
@@ -262,62 +204,3 @@ def simulate(
         continuize(sim.shot, dt=0.01 if dt is None else dt, inplace=True)
 
     return sim.shot
-
-
-def get_next_event(
-    shot: System,
-    *,
-    transition_cache: TransitionCache | None = None,
-    collision_cache: CollisionCache | None = None,
-    engine: SimulationEngine = DEFAULT_ENGINE,
-) -> Event:
-    # If not passed, unpopulated caches are initialized to pass to delegate functions.
-    # These empty caches will be populated by the delegate functions, but then thrown
-    # away when this function returns.
-    if transition_cache is None:
-        transition_cache = TransitionCache.create(shot)
-    if collision_cache is None:
-        collision_cache = CollisionCache.create()
-
-    # Collect all candidate events from each detection function.
-    candidates: list[Event] = []
-
-    # Stick-ball collisions only occur at t=0 (shot initiation), so we skip this
-    # check after the first timestep as an optimization. Other collision types are
-    # always checked because they can occur at any time during simulation. Note: even
-    # at t=0, we still call the remaining detection functions to fully populate the
-    # collision cache, which is needed by debug/introspection tools.
-    if shot.t == 0:
-        candidates.append(
-            engine.event_detector.stick_ball.get_next(shot, collision_cache)
-        )
-
-    candidates.append(transition_cache.get_next())
-    candidates.append(engine.event_detector.ball_ball.get_next(shot, collision_cache))
-    candidates.append(
-        engine.event_detector.ball_circular_cushion.get_next(shot, collision_cache)
-    )
-    candidates.append(
-        engine.event_detector.ball_linear_cushion.get_next(shot, collision_cache)
-    )
-    candidates.append(engine.event_detector.ball_pocket.get_next(shot, collision_cache))
-
-    # Find the earliest time among all candidates.
-    min_time = min(event.time for event in candidates)
-
-    if min_time == np.inf:
-        return null_event(time=np.inf)
-
-    # Filter to only events occurring at the earliest time.
-    simultaneous = [e for e in candidates if e.time == min_time]
-
-    if len(simultaneous) == 1:
-        return simultaneous[0]
-
-    # When multiple events occur at the same time, select by priority tier, then by
-    # energy within the tier (higher energy first).
-    def sort_key(e: Event) -> tuple[int, float]:
-        tier, energy = get_event_priority(e, shot)
-        return (tier, -energy)
-
-    return min(simultaneous, key=sort_key)
