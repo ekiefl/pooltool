@@ -45,6 +45,11 @@ pocketed: int = 4
 
 A ball with this motion state is in a pocket.
 """
+airborne: int = 5
+"""The airborne motion state label
+
+A ball with this motion state is airborne.
+"""
 
 state_dict: dict[int, str] = {
     0: "stationary",
@@ -52,8 +57,9 @@ state_dict: dict[int, str] = {
     2: "sliding",
     3: "rolling",
     4: "pocketed",
+    5: "airborne",
 }
 
 on_table = {stationary, spinning, sliding, rolling}
 nontranslating = {stationary, spinning, pocketed}
-energetic = {spinning, sliding, rolling}
+energetic = {spinning, sliding, rolling, airborne}

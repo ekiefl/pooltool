@@ -50,6 +50,34 @@ def get_u_vec(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def get_airborne_time(rvw: NDArray[np.float64], R: float, g: float) -> float:
+    """Time until an airborne ball's bottom touches the table plane (z = R).
+
+    Returns ``np.inf`` if no future intersection exists (either gravity is zero, or the
+    discriminant of the quadratic ``-0.5 * g * t**2 + v_z * t + (z - R) = 0`` is
+    negative).
+    """
+    if g == 0.0:
+        return np.inf
+
+    A = -0.5 * g
+    B = rvw[1, 2]
+    C = rvw[0, 2] - R
+
+    D = B**2 - 4 * A * C
+
+    if D < 0:
+        # Only consider real roots.
+        return np.inf
+
+    # This is the only possible root assuming the ball starts above the table and
+    # acceleration due to gravity is towards table.
+    t_f = -(B + np.sqrt(D)) / (2 * A)
+
+    return t_f
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def get_slide_time(rvw: NDArray[np.float64], R: float, u_s: float, g: float) -> float:
     if u_s == 0.0:
         return np.inf

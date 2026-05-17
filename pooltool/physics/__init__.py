@@ -35,6 +35,7 @@ from pooltool.physics.resolve.transition import (
     ball_transition_models,
 )
 from pooltool.physics.utils import (
+    get_airborne_time,
     get_ball_energy,
     get_roll_time,
     get_slide_time,
@@ -61,6 +62,7 @@ __all__ = [
     "get_slide_time",
     "get_roll_time",
     "get_spin_time",
+    "get_airborne_time",
     "get_ball_energy",
     "ball_ball_models",
     "BallBallFrictionModel",
