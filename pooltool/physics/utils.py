@@ -1,8 +1,11 @@
+import math
+
 import numpy as np
 from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
+from pooltool.ptmath.roots import quadratic
 from pooltool.ptmath.utils import coordinate_rotation, cross, norm3d, unit_vector
 
 
@@ -53,28 +56,19 @@ def get_u_vec(
 def get_airborne_time(rvw: NDArray[np.float64], R: float, g: float) -> float:
     """Time until an airborne ball's bottom touches the table plane (z = R).
 
-    Returns ``np.inf`` if no future intersection exists (either gravity is zero, or the
-    discriminant of the quadratic ``-0.5 * g * t**2 + v_z * t + (z - R) = 0`` is
-    negative).
+    Solves ``-0.5 * g * t**2 + v_z * t + (z - R) = 0`` and returns the later root
+    (the descending-leg intersection). Returns ``np.inf`` when gravity is zero, or
+    when the discriminant is negative.
     """
     if g == 0.0:
         return np.inf
 
-    A = -0.5 * g
-    B = rvw[1, 2]
-    C = rvw[0, 2] - R
+    t1, t2 = quadratic.solve(-0.5 * g, rvw[1, 2], rvw[0, 2] - R)
 
-    D = B**2 - 4 * A * C
-
-    if D < 0:
-        # Only consider real roots.
+    if math.isnan(t1):
         return np.inf
 
-    # This is the only possible root assuming the ball starts above the table and
-    # acceleration due to gravity is towards table.
-    t_f = -(B + np.sqrt(D)) / (2 * A)
-
-    return t_f
+    return max(t1, t2)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
