@@ -9,6 +9,7 @@ from pooltool.objects.table.components import (
     Cushion,
     LinearCushionSegment,
 )
+from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve.ball_cushion.core import (
     CoreBallCCushionCollision,
     CoreBallLCushionCollision,
@@ -111,6 +112,7 @@ class Han2005Linear(CoreBallLCushionCollision):
     model: BallLCushionModel = attrs.field(
         default=BallLCushionModel.HAN_2005, init=False, repr=False
     )
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
@@ -123,6 +125,7 @@ class Han2005Circular(CoreBallCCushionCollision):
     model: BallCCushionModel = attrs.field(
         default=BallCCushionModel.HAN_2005, init=False, repr=False
     )
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment

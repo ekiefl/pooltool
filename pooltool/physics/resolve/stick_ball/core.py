@@ -3,6 +3,7 @@ from typing import Protocol
 
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.cue.datatypes import Cue
+from pooltool.physics.dimensionality import Dim
 
 
 class _BaseStrategy(Protocol):
@@ -13,6 +14,8 @@ class _BaseStrategy(Protocol):
 
 class StickBallCollisionStrategy(_BaseStrategy, Protocol):
     """Stick-ball collision models must satisfy this protocol"""
+
+    dim: Dim
 
     def solve(self, cue: Cue, ball: Ball) -> tuple[Cue, Ball]:
         """This method resolves a ball-circular cushion collision"""

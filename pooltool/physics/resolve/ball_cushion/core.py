@@ -10,6 +10,7 @@ from pooltool.objects.table.components import (
     CircularCushionSegment,
     LinearCushionSegment,
 )
+from pooltool.physics.dimensionality import Dim
 
 
 class _BaseLinearStrategy(Protocol):
@@ -31,6 +32,8 @@ class _BaseCircularStrategy(Protocol):
 class BallLCushionCollisionStrategy(_BaseLinearStrategy, Protocol):
     """Ball-linear cushion collision models must satisfy this protocol"""
 
+    dim: Dim
+
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
     ) -> tuple[Ball, LinearCushionSegment]:
@@ -40,6 +43,8 @@ class BallLCushionCollisionStrategy(_BaseLinearStrategy, Protocol):
 
 class BallCCushionCollisionStrategy(_BaseCircularStrategy, Protocol):
     """Ball-circular cushion collision models must satisfy this protocol"""
+
+    dim: Dim
 
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment

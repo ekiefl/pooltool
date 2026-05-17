@@ -13,6 +13,7 @@ import numpy as np
 import pooltool.constants as const
 from pooltool.events.datatypes import EventType
 from pooltool.objects.ball.datatypes import Ball
+from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve.models import BallTransitionModel
 
 _TOLERANCE = 1e-12
@@ -20,6 +21,8 @@ _TOLERANCE = 1e-12
 
 class BallTransitionStrategy(Protocol):
     """Ball transition models must satisfy this protocol"""
+
+    dim: Dim
 
     def resolve(self, ball: Ball, transition: EventType, inplace: bool = False) -> Ball:
         """This method resolves a ball transition"""
@@ -31,6 +34,7 @@ class CanonicalTransition:
     model: BallTransitionModel = attrs.field(
         default=BallTransitionModel.CANONICAL, init=False, repr=False
     )
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def resolve(self, ball: Ball, transition: EventType, inplace: bool = False) -> Ball:
         if not inplace:

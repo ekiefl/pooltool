@@ -10,7 +10,7 @@ from pooltool.error import ConfigError, StrokeError
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.datatypes import Render
-from pooltool.ptmath.utils import tip_center_offset, tip_contact_offset
+from pooltool.physics.utils import tip_center_offset, tip_contact_offset
 
 
 class CueRender(Render):

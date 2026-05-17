@@ -163,7 +163,7 @@ To add an inlaid dropdown signature:
 Add optional text here
 
 ```{eval-rst}
-.. autoclass:: pooltool.physics.PhysicsEngine
+.. autoclass:: pooltool.evolution.SimulationEngine
     :noindex:
 ```
 :::

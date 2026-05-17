@@ -5,6 +5,7 @@ import attrs
 
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
+from pooltool.physics.utils import tangent_surface_velocity
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -46,12 +47,8 @@ class AlciatoreBallBallFriction:
 
     def calculate_friction(self, ball1: Ball, ball2: Ball) -> float:
         unit_normal = ptmath.unit_vector(ball2.xyz - ball1.xyz)
-        v1_c = ptmath.tangent_surface_velocity(
-            ball1.state.rvw, unit_normal, ball1.params.R
-        )
-        v2_c = ptmath.tangent_surface_velocity(
-            ball2.state.rvw, -unit_normal, ball2.params.R
-        )
+        v1_c = tangent_surface_velocity(ball1.state.rvw, unit_normal, ball1.params.R)
+        v2_c = tangent_surface_velocity(ball2.state.rvw, -unit_normal, ball2.params.R)
         relative_surface_speed = ptmath.norm3d(v1_c - v2_c)
         return self.a + self.b * math.exp(-self.c * relative_surface_speed)
 

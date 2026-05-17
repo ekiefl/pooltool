@@ -3,23 +3,23 @@ import pytest
 from numpy.typing import NDArray
 
 import pooltool.constants as const
+import pooltool.physics as physics
 import pooltool.ptmath as ptmath
 from pooltool import aim, events
 from pooltool.events import EventType, ball_ball_collision, ball_pocket_collision
+from pooltool.evolution.event_based._utils import _system_has_energy
 from pooltool.evolution.event_based.cache import CollisionCache
-from pooltool.evolution.event_based.simulate import (
-    _system_has_energy,
-    get_next_ball_ball_collision,
-    get_next_event,
-    simulate,
-)
-from pooltool.evolution.event_based.solve import ball_ball_collision_time
+from pooltool.evolution.event_based.detect import BallBallDetection, EventDetector
+from pooltool.evolution.event_based.simulate import simulate
 from pooltool.objects import Ball, BilliardTableSpecs, Cue, Table
 from pooltool.objects.ball.params import BallParams
 from pooltool.objects.ball.sets import BallSet
+from pooltool.physics.motion.solve import ball_ball_collision_time
 from pooltool.ptmath.roots import quadratic
 from pooltool.system import System
 from tests.evolution.event_based.test_data import TEST_DIR
+
+_DETECTOR = EventDetector()
 
 
 def test_simulate_inplace():
@@ -92,7 +92,7 @@ def test_case1():
         ball.state = ball.history[0]
     shot.reset_history()
 
-    next_event = get_next_event(shot)
+    next_event = _DETECTOR.get_next_event(shot)
 
     expected = ball_ball_collision(
         shot.balls["1"], shot.balls["cue"], 0.048943195217641386
@@ -113,7 +113,7 @@ def test_case2():
     """
     shot = System.load(TEST_DIR / "case2.msgpack")
 
-    next_event = get_next_event(shot)
+    next_event = _DETECTOR.get_next_event(shot)
 
     expected = ball_pocket_collision(
         shot.balls["8"], shot.table.pockets["lc"], 0.08933033587481054
@@ -148,7 +148,7 @@ def test_case3():
     ball1 = shot.balls["2"]
     ball2 = shot.balls["5"]
 
-    event = get_next_event(shot)
+    event = _DETECTOR.get_next_event(shot)
 
     expected = pytest.approx(5.810383731499328e-06, abs=1e-9)
     calculated = ball_ball_collision_time(
@@ -218,7 +218,7 @@ def test_case4():
 
 
 def _assert_rolling(rvw: NDArray[np.float64], R: float) -> None:
-    assert np.isclose(ptmath.rel_velocity(rvw, R), 0).all()
+    assert np.isclose(physics.rel_velocity(rvw, R), 0).all()
 
 
 def test_grazing_ball_ball_collision():
@@ -448,8 +448,8 @@ def test_ball_ball_collision_for_intersecting_balls():
     # The cue is truly rolling
     _assert_rolling(system.balls["cue"].state.rvw, system.balls["cue"].params.R)
 
-    assert get_next_event(system).event_type == EventType.BALL_BALL
-    collision_event = get_next_ball_ball_collision(system, CollisionCache())
+    assert _DETECTOR.get_next_event(system).event_type == EventType.BALL_BALL
+    collision_event = BallBallDetection().get_next(system, CollisionCache())
     assert collision_event.time != np.inf
     assert collision_event.time == 0
 
@@ -514,14 +514,15 @@ def test_stick_ball_event_detection():
     - No ball energy (all stationary)
     - Cue with V0 > 0 (ready to strike)
 
-    The stick-ball collision should be detected as the next event by get_next_event().
-    This event should be:
+    The stick-ball collision should be detected as the next event by
+    EventDetector.get_next_event(). This event should be:
     - At time t=0
     - Type STICK_BALL
     - Processed through the normal event resolution pipeline
 
     This validates the refactor that moved stick-ball detection from initialization
-    into get_next_event(), treating it as a first-class event rather than a special case.
+    into EventDetector.get_next_event(), treating it as a first-class event rather
+    than a special case.
     """
     system = System.example()
 
@@ -529,7 +530,7 @@ def test_stick_ball_event_detection():
     assert not _system_has_energy(system)
     assert system.cue.V0 > 0
 
-    event = get_next_event(system)
+    event = _DETECTOR.get_next_event(system)
 
     assert event.event_type == EventType.STICK_BALL
     assert event.time == 0

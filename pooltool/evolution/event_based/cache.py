@@ -6,7 +6,6 @@ import attrs
 import numpy as np
 
 import pooltool.constants as const
-import pooltool.ptmath as ptmath
 from pooltool.events import (
     AgentType,
     Event,
@@ -19,6 +18,7 @@ from pooltool.events import (
 )
 from pooltool.events.utils import event_type_to_ball_indices
 from pooltool.objects.ball.datatypes import Ball
+from pooltool.physics.utils import get_roll_time, get_slide_time, get_spin_time
 from pooltool.serialize import SerializeFormat, conversion
 from pooltool.system.datatypes import System
 
@@ -75,18 +75,16 @@ def _next_transition(ball: Ball) -> Event:
         return null_event(time=np.inf)
 
     elif ball.state.s == const.spinning:
-        dtau_E = ptmath.get_spin_time(
+        dtau_E = get_spin_time(
             ball.state.rvw, ball.params.R, ball.params.u_sp, ball.params.g
         )
         return spinning_stationary_transition(ball, ball.state.t + dtau_E)
 
     elif ball.state.s == const.rolling:
-        dtau_E_spin = ptmath.get_spin_time(
+        dtau_E_spin = get_spin_time(
             ball.state.rvw, ball.params.R, ball.params.u_sp, ball.params.g
         )
-        dtau_E_roll = ptmath.get_roll_time(
-            ball.state.rvw, ball.params.u_r, ball.params.g
-        )
+        dtau_E_roll = get_roll_time(ball.state.rvw, ball.params.u_r, ball.params.g)
 
         if dtau_E_spin > dtau_E_roll:
             return rolling_spinning_transition(ball, ball.state.t + dtau_E_roll)
@@ -94,7 +92,7 @@ def _next_transition(ball: Ball) -> Event:
             return rolling_stationary_transition(ball, ball.state.t + dtau_E_roll)
 
     elif ball.state.s == const.sliding:
-        dtau_E = ptmath.get_slide_time(
+        dtau_E = get_slide_time(
             ball.state.rvw, ball.params.R, ball.params.u_s, ball.params.g
         )
         return sliding_rolling_transition(ball, ball.state.t + dtau_E)

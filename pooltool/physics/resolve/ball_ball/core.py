@@ -6,6 +6,7 @@ import numpy as np
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
+from pooltool.physics.dimensionality import Dim
 
 
 class _BaseStrategy(Protocol):
@@ -18,6 +19,8 @@ class _BaseStrategy(Protocol):
 
 class BallBallCollisionStrategy(_BaseStrategy, Protocol):
     """Ball-ball collision models must satisfy this protocol"""
+
+    dim: Dim
 
     def solve(self, ball1: Ball, ball2: Ball) -> tuple[Ball, Ball]:
         """This method resolves a ball-ball collision"""

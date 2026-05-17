@@ -181,13 +181,27 @@ class CoreBallLCushionCollision(ABC):
 
 With these, we can draft our template by following the example code: [5ecddb2c0c010e3f058e666fd5a7fc1f10117638](https://github.com/ekiefl/pooltool/commit/5ecddb2c0c010e3f058e666fd5a7fc1f10117638)
 
-It's just missing two things. First, the class must be an attrs class. Pooltool requires that all the resolver models are [attrs](https://www.attrs.org/en/stable/) classes. If you've never used attrs before, stick close to the example and you'll have no problems. Second, the class must have an attribute called `model`, and this attribute should be the Enum member that you had previously added to `pooltool/physics/resolve/models.py`.
+It's just missing three things. First, the class must be an attrs class. Pooltool requires that all the resolver models are [attrs](https://www.attrs.org/en/stable/) classes. If you've never used attrs before, stick close to the example and you'll have no problems. Second, the class must have an attribute called `model`, and this attribute should be the Enum member that you had previously added to `pooltool/physics/resolve/models.py`. Third, the class must have an attribute called `dim` that declares the simulation dimensionality your model supports.
 
-To apply these changes, follow the example code: [9c12a6efa2b9d201d8cedfc75b1a83b8134dd7ec](https://github.com/ekiefl/pooltool/commit/9c12a6efa2b9d201d8cedfc75b1a83b8134dd7ec). Since I added `UNREALISTIC` to the `BallLCushionModel` model, I added the following attribute to my class:
+To apply the `model` requirement, follow the example code: [9c12a6efa2b9d201d8cedfc75b1a83b8134dd7ec](https://github.com/ekiefl/pooltool/commit/9c12a6efa2b9d201d8cedfc75b1a83b8134dd7ec). Since I added `UNREALISTIC` to the `BallLCushionModel` model, I added the following attribute to my class:
 
 ```python
 model: BallLCushionModel = attrs.field(default=BallLCushionModel.UNREALISTIC, init=False, repr=False)
 ```
+
+For the `dim` requirement, add a `dim` field declaring whether your model is safe in 2D, 3D, or both:
+
+```python
+from pooltool.physics.dimensionality import Dim
+
+dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
+```
+
+`Dim` is a capability declaration consumed at engine construction:
+
+- `Dim.TWO` — your model is safe only when [](#pooltool.evolution.engine.SimulationEngine)'s `is_3d` is `False`. Use this if your model assumes balls are on the table surface (z=R, vz=0).
+- `Dim.THREE` — your model is safe only when `is_3d` is `True`. Use this if your model assumes 3D ball state (e.g. it produces or handles airborne balls).
+- `Dim.BOTH` — your model behaves identically in either mode. This is a strong promise: a `Dim.BOTH` model doesn't care or know whether it's handling a 2D/3D simulation.
 
 Great, now we are done with the boilerplate code. But `resolve` currently does *nothing*, it just returns what is handed to it. Let's change that.
 

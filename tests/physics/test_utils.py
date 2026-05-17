@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pooltool.ptmath.utils import surface_velocity, tangent_surface_velocity
+from pooltool.physics.utils import surface_velocity, tangent_surface_velocity
 
 
 def test_surface_velocity_no_angular_velocity():

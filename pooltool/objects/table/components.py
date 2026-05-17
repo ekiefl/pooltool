@@ -36,7 +36,7 @@ class CushionDirection:
 
     Note:
         This used to inherit from ``Enum``, but accessing the cushion direction in
-        ``get_next_ball_linear_cushion_collision`` took up 20% of the function's
+        ball-vs-linear-cushion-segment detection took up 20% of the function's
         runtime, so it was removed.
     """
 
