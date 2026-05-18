@@ -6,14 +6,26 @@ import numpy as np
 import pooltool.ptmath as ptmath
 from pooltool.events import Event, EventType, null_event
 from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
-from pooltool.evolution.event_based.detect.ball_ball import BallBallDetection
-from pooltool.evolution.event_based.detect.ball_cushion import (
-    BallCCushionDetection,
-    BallLCushionDetection,
+from pooltool.evolution.event_based.detect.ball_ball import (
+    get_next_ball_ball_2d_event,
+    get_next_ball_ball_3d_event,
 )
-from pooltool.evolution.event_based.detect.ball_pocket import BallPocketDetection
-from pooltool.evolution.event_based.detect.ball_table import BallTableDetection
-from pooltool.evolution.event_based.detect.stick_ball import StickBallDetection
+from pooltool.evolution.event_based.detect.ball_cushion import (
+    get_next_ball_circular_cushion_2d_event,
+    get_next_ball_circular_cushion_3d_event,
+    get_next_ball_linear_cushion_2d_event,
+    get_next_ball_linear_cushion_3d_event,
+)
+from pooltool.evolution.event_based.detect.ball_pocket import (
+    get_next_ball_pocket_2d_event,
+    get_next_ball_pocket_3d_event,
+)
+from pooltool.evolution.event_based.detect.ball_table import (
+    get_next_ball_table_event,
+)
+from pooltool.evolution.event_based.detect.stick_ball import (
+    get_next_stick_ball_event,
+)
 from pooltool.physics.utils import get_ball_energy
 from pooltool.system.datatypes import System
 
@@ -86,42 +98,18 @@ def _get_event_priority(event: Event, shot: System) -> tuple[int, float]:
 
 @attrs.define
 class EventDetector:
-    """Bundles per-event-type detection strategies.
+    """Orchestrates per-event-type detection.
 
-    Fields are typed as the concrete strategy class rather than the corresponding
-    ``*DetectionStrategy`` protocol. This keeps cattrs structuring trivial — cattrs
-    can structure into a concrete attrs class natively but cannot resolve a Protocol
-    without a discriminator. When a second implementation is added for a given event
-    type, this field type should be widened (e.g. to a union of concrete classes, or
-    to the protocol with a registry + structure hook that dispatches on a tag, in
-    the style of :class:`pooltool.physics.Resolver`).
+    The 2D-vs-3D branching for forked event types happens here, in ``get_next_event``.
+    The per-event-type ``get_next_*_event`` functions are each mode-pure.
 
     Attributes:
-        stick_ball:
-            Strategy for detecting the next stick-ball collision.
-        ball_ball:
-            Strategy for detecting the next ball-ball collision.
-        ball_linear_cushion:
-            Strategy for detecting the next ball-vs-linear-cushion-segment collision.
-        ball_circular_cushion:
-            Strategy for detecting the next ball-vs-circular-cushion-segment collision.
-        ball_pocket:
-            Strategy for detecting the next ball-pocket collision.
-        ball_table:
-            Strategy for detecting the next ball-table collision (airborne ball
-            landing on the table surface).
+        is_3d:
+            Whether to dispatch to 3D detection variants. Set by ``SimulationEngine`` at
+            construction.
     """
 
-    stick_ball: StickBallDetection = attrs.field(factory=StickBallDetection)
-    ball_ball: BallBallDetection = attrs.field(factory=BallBallDetection)
-    ball_linear_cushion: BallLCushionDetection = attrs.field(
-        factory=BallLCushionDetection
-    )
-    ball_circular_cushion: BallCCushionDetection = attrs.field(
-        factory=BallCCushionDetection
-    )
-    ball_pocket: BallPocketDetection = attrs.field(factory=BallPocketDetection)
-    ball_table: BallTableDetection = attrs.field(factory=BallTableDetection)
+    is_3d: bool = False
 
     @classmethod
     def default(cls) -> EventDetector:
@@ -146,20 +134,36 @@ class EventDetector:
 
         candidates: list[Event] = []
 
-        # Stick-ball collisions only occur at t=0 (shot initiation), so we skip this
-        # check after the first timestep as an optimization. Other collision types are
-        # always checked because they can occur at any time during simulation. Note:
-        # even at t=0, we still call the remaining detection strategies to fully
-        # populate the collision cache, which is needed by debug/introspection tools.
+        # Stick-ball collisions only occur at t=0 (shot initiation), so we skip
+        # this check after the first timestep as an optimization. Other collision
+        # types are always checked because they can occur at any time during
+        # simulation. Note: even at t=0, we still call the remaining detection
+        # functions to fully populate the collision cache, which is needed by
+        # debug/introspection tools.
         if shot.t == 0:
-            candidates.append(self.stick_ball.get_next(shot, collision_cache))
+            candidates.append(get_next_stick_ball_event(shot, collision_cache))
 
         candidates.append(transition_cache.get_next())
-        candidates.append(self.ball_ball.get_next(shot, collision_cache))
-        candidates.append(self.ball_circular_cushion.get_next(shot, collision_cache))
-        candidates.append(self.ball_linear_cushion.get_next(shot, collision_cache))
-        candidates.append(self.ball_pocket.get_next(shot, collision_cache))
-        candidates.append(self.ball_table.get_next(shot, collision_cache))
+
+        if self.is_3d:
+            candidates.append(get_next_ball_ball_3d_event(shot, collision_cache))
+            candidates.append(
+                get_next_ball_circular_cushion_3d_event(shot, collision_cache)
+            )
+            candidates.append(
+                get_next_ball_linear_cushion_3d_event(shot, collision_cache)
+            )
+            candidates.append(get_next_ball_pocket_3d_event(shot, collision_cache))
+            candidates.append(get_next_ball_table_event(shot, collision_cache))
+        else:
+            candidates.append(get_next_ball_ball_2d_event(shot, collision_cache))
+            candidates.append(
+                get_next_ball_circular_cushion_2d_event(shot, collision_cache)
+            )
+            candidates.append(
+                get_next_ball_linear_cushion_2d_event(shot, collision_cache)
+            )
+            candidates.append(get_next_ball_pocket_2d_event(shot, collision_cache))
 
         min_time = min(event.time for event in candidates)
 
