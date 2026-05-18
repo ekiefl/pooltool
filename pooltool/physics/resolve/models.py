@@ -141,21 +141,32 @@ class BallPocketModel(StrEnum):
 class StickBallModel(StrEnum):
     """An Enum for different stick-ball collision models
 
+    The underlying math (see :func:`cue_strike`) is fully 3D: it produces a
+    ball velocity with a vertical component proportional to ``sin(theta)``,
+    the cue elevation. The two members below differ only in what they do with
+    that vertical component.
+
     Attributes:
-        INSTANTANEOUS_POINT:
-            Instantaneous and point-like stick-ball interaction.
+        INSTANTANEOUS_POINT_3D:
+            Instantaneous and point-like stick-ball interaction. The full 3D
+            cue-strike result is applied to the ball, including any vertical
+            velocity produced by cue elevation. Suitable for a 3D simulation
+            that supports airborne motion.
 
-            This collision assumes the stick-ball interaction is instantaneous and point-like.
+            A derivation can be found in Dr. Dave Billiard's technical proof
+            A-30 (https://billiards.colostate.edu/technical_proofs/new/TP_A-30.pdf).
+            A deflection (squirt) angle is calculated via
+            :mod:`pooltool.physics.resolve.stick_ball.squirt`.
 
-            Note:
-                - A derivation of this model can be found in Dr. Dave Billiard's technical proof
-                  A-30 (https://billiards.colostate.edu/technical_proofs/new/TP_A-30.pdf)
-
-            Additionally, a deflection (squirt) angle is calculated via
-            :mod:`pooltool.physics.resolve.stick_ball.squirt`).
+        INSTANTANEOUS_POINT_2D:
+            Same 3D cue-strike math as ``INSTANTANEOUS_POINT_3D``, followed by
+            a clamp that zeros the vertical velocity component of the ball.
+            Suitable for a 2D simulation: the ball never leaves the table
+            surface regardless of cue elevation.
     """
 
-    INSTANTANEOUS_POINT = auto()
+    INSTANTANEOUS_POINT_2D = auto()
+    INSTANTANEOUS_POINT_3D = auto()
 
 
 class BallTableModel(StrEnum):

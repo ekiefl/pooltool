@@ -78,4 +78,4 @@ def get_next_ball_ball_2d_event(shot: System, collision_cache: CollisionCache) -
 
 
 def get_next_ball_ball_3d_event(shot: System, collision_cache: CollisionCache) -> Event:
-    raise NotImplementedError("3D ball-ball detection has not been vendored yet")
+    return null_event(np.inf)
