@@ -174,7 +174,7 @@ class CoreBallCCushionCollision(ABC):
         beta = 2 * (diff[0] * v[0] + diff[1] * v[1])
         gamma = diff[0] ** 2 + diff[1] ** 2 - target**2
 
-        roots_complex = ptmath.roots.quadratic.solve_complex(alpha, beta, gamma)
+        roots_complex = ptmath.roots.quadratic.solve(alpha, beta, gamma)
 
         imag_mag = np.abs(roots_complex.imag)
         real_mag = np.abs(roots_complex.real)
