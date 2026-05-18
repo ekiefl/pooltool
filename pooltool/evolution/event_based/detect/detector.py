@@ -6,26 +6,14 @@ import numpy as np
 import pooltool.ptmath as ptmath
 from pooltool.events import Event, EventType, null_event
 from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
-from pooltool.evolution.event_based.detect.ball_ball import (
-    get_next_ball_ball_2d_event,
-    get_next_ball_ball_3d_event,
-)
+from pooltool.evolution.event_based.detect.ball_ball import get_next_ball_ball_event
 from pooltool.evolution.event_based.detect.ball_cushion import (
-    get_next_ball_circular_cushion_2d_event,
-    get_next_ball_circular_cushion_3d_event,
-    get_next_ball_linear_cushion_2d_event,
-    get_next_ball_linear_cushion_3d_event,
+    get_next_ball_circular_cushion_event,
+    get_next_ball_linear_cushion_event,
 )
-from pooltool.evolution.event_based.detect.ball_pocket import (
-    get_next_ball_pocket_2d_event,
-    get_next_ball_pocket_3d_event,
-)
-from pooltool.evolution.event_based.detect.ball_table import (
-    get_next_ball_table_event,
-)
-from pooltool.evolution.event_based.detect.stick_ball import (
-    get_next_stick_ball_event,
-)
+from pooltool.evolution.event_based.detect.ball_pocket import get_next_ball_pocket_event
+from pooltool.evolution.event_based.detect.ball_table import get_next_ball_table_event
+from pooltool.evolution.event_based.detect.stick_ball import get_next_stick_ball_event
 from pooltool.physics.utils import get_ball_energy
 from pooltool.system.datatypes import System
 
@@ -100,13 +88,16 @@ def _get_event_priority(event: Event, shot: System) -> tuple[int, float]:
 class EventDetector:
     """Orchestrates per-event-type detection.
 
-    The 2D-vs-3D branching for forked event types happens here, in ``get_next_event``.
-    The per-event-type ``get_next_*_event`` functions are each mode-pure.
+    Detection isn't pluggable — there's one canonical algorithm per event type.
+    The class exists to bundle the per-event-type functions together and apply
+    priority-based tie-breaking when multiple events occur simultaneously.
 
     Attributes:
         is_3d:
-            Whether to dispatch to 3D detection variants. Set by ``SimulationEngine`` at
-            construction.
+            Whether the simulator is running in 3D mode. Currently inert
+            (the per-event-type functions don't yet fork on mode), but
+            present as the architectural anchor for future 2D/3D dispatch.
+            Synced from ``SimulationEngine.is_3d`` at engine construction.
     """
 
     is_3d: bool = False
@@ -144,26 +135,11 @@ class EventDetector:
             candidates.append(get_next_stick_ball_event(shot, collision_cache))
 
         candidates.append(transition_cache.get_next())
-
-        if self.is_3d:
-            candidates.append(get_next_ball_ball_3d_event(shot, collision_cache))
-            candidates.append(
-                get_next_ball_circular_cushion_3d_event(shot, collision_cache)
-            )
-            candidates.append(
-                get_next_ball_linear_cushion_3d_event(shot, collision_cache)
-            )
-            candidates.append(get_next_ball_pocket_3d_event(shot, collision_cache))
-            candidates.append(get_next_ball_table_event(shot, collision_cache))
-        else:
-            candidates.append(get_next_ball_ball_2d_event(shot, collision_cache))
-            candidates.append(
-                get_next_ball_circular_cushion_2d_event(shot, collision_cache)
-            )
-            candidates.append(
-                get_next_ball_linear_cushion_2d_event(shot, collision_cache)
-            )
-            candidates.append(get_next_ball_pocket_2d_event(shot, collision_cache))
+        candidates.append(get_next_ball_ball_event(shot, collision_cache))
+        candidates.append(get_next_ball_circular_cushion_event(shot, collision_cache))
+        candidates.append(get_next_ball_linear_cushion_event(shot, collision_cache))
+        candidates.append(get_next_ball_pocket_event(shot, collision_cache))
+        candidates.append(get_next_ball_table_event(shot, collision_cache))
 
         min_time = min(event.time for event in candidates)
 

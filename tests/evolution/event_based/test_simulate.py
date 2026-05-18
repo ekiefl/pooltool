@@ -11,7 +11,7 @@ from pooltool.evolution.event_based._utils import _system_has_energy
 from pooltool.evolution.event_based.cache import CollisionCache
 from pooltool.evolution.event_based.detect import (
     EventDetector,
-    get_next_ball_ball_2d_event,
+    get_next_ball_ball_event,
 )
 from pooltool.evolution.event_based.simulate import simulate
 from pooltool.objects import Ball, BilliardTableSpecs, Cue, Table
@@ -452,7 +452,7 @@ def test_ball_ball_collision_for_intersecting_balls():
     _assert_rolling(system.balls["cue"].state.rvw, system.balls["cue"].params.R)
 
     assert _DETECTOR.get_next_event(system).event_type == EventType.BALL_BALL
-    collision_event = get_next_ball_ball_2d_event(system, CollisionCache())
+    collision_event = get_next_ball_ball_event(system, CollisionCache())
     assert collision_event.time != np.inf
     assert collision_event.time == 0
 
