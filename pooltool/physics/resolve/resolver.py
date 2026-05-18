@@ -38,7 +38,7 @@ from pooltool.physics.resolve.serialize import register_serialize_hooks
 from pooltool.physics.resolve.stick_ball import (
     StickBallCollisionStrategy,
 )
-from pooltool.physics.resolve.stick_ball.instantaneous_point import InstantaneousPoint
+from pooltool.physics.resolve.stick_ball.instantaneous_point import InstantaneousPoint2D
 from pooltool.physics.resolve.transition import (
     BallTransitionStrategy,
     CanonicalTransition,
@@ -50,7 +50,7 @@ from pooltool.utils import Run
 RESOLVER_PATH = pooltool.config.paths.PHYSICS_DIR / "resolver.yaml"
 """The location of the resolver path YAML."""
 
-VERSION: int = 10
+VERSION: int = 11
 
 
 run = Run()
@@ -82,7 +82,7 @@ def default_resolver() -> Resolver:
             omega_ratio=1.8,
         ),
         ball_pocket=CanonicalBallPocket(),
-        stick_ball=InstantaneousPoint(
+        stick_ball=InstantaneousPoint2D(
             english_throttle=1.0,
             squirt_throttle=1.0,
         ),

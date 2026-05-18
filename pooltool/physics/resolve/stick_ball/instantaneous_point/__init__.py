@@ -1,13 +1,15 @@
 import attrs
 import numpy as np
 
-import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve.models import StickBallModel
-from pooltool.physics.resolve.stick_ball.core import CoreStickBallCollision
+from pooltool.physics.resolve.stick_ball.core import (
+    CoreStickBallCollision,
+    final_ball_motion_state,
+)
 from pooltool.physics.resolve.stick_ball.squirt import get_squirt_angle
 from pooltool.ptmath.utils import coordinate_rotation
 
@@ -85,9 +87,7 @@ def cue_strike(m, M, R, V0, phi, theta, Q):
     denominator = 1 + m / M + temp / I_m
     v = numerator / denominator
 
-    # 3D FIXME
-    # v_B = -v * np.array([0, np.cos(theta), np.sin(theta)])
-    v_B = -v * np.array([0, np.cos(theta), 0])
+    v_B = -v * np.array([0, np.cos(theta), np.sin(theta)])
 
     vec_x = -c * np.sin(theta) + b * np.cos(theta)
     vec_y = a * np.sin(theta)
@@ -105,7 +105,7 @@ def cue_strike(m, M, R, V0, phi, theta, Q):
 
 
 @attrs.define
-class InstantaneousPoint(CoreStickBallCollision):
+class InstantaneousPoint3D(CoreStickBallCollision):
     """Instantaneous and point-like stick-ball interaction
 
     This collision assumes the stick-ball interaction is instantaneous and point-like.
@@ -128,9 +128,9 @@ class InstantaneousPoint(CoreStickBallCollision):
     squirt_throttle: float = 1.0
 
     model: StickBallModel = attrs.field(
-        default=StickBallModel.INSTANTANEOUS_POINT, init=False, repr=False
+        default=StickBallModel.INSTANTANEOUS_POINT_3D, init=False, repr=False
     )
-    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
+    dim: Dim = attrs.field(default=Dim.THREE, init=False, repr=False)
 
     def solve(self, cue: Cue, ball: Ball) -> tuple[Cue, Ball]:
         # Transform contact point Q from cue frame to ball frame
@@ -163,8 +163,27 @@ class InstantaneousPoint(CoreStickBallCollision):
         v = coordinate_rotation(v, alpha)
 
         rvw = np.array([ball.state.rvw[0], v, w * self.english_throttle])
-        s = const.sliding
+        s = final_ball_motion_state(rvw, ball.params.R)
 
         ball.state = BallState(rvw, s)
 
+        return cue, ball
+
+
+@attrs.define
+class InstantaneousPoint2D(InstantaneousPoint3D):
+    """Instantaneous and point-like stick-ball interaction (2D)
+
+    For details see :class:`InstantaneousPoint3D`.
+    """
+
+    model: StickBallModel = attrs.field(
+        default=StickBallModel.INSTANTANEOUS_POINT_2D, init=False, repr=False
+    )
+    dim: Dim = attrs.field(default=Dim.BOTH, init=False, repr=False)
+
+    def solve(self, cue: Cue, ball: Ball) -> tuple[Cue, Ball]:
+        cue, ball = super().solve(cue, ball)
+        ball.state.rvw[1, 2] = 0.0
+        ball.state.s = final_ball_motion_state(ball.state.rvw, ball.params.R)
         return cue, ball
