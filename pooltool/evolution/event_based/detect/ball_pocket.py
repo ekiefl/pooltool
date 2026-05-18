@@ -9,8 +9,10 @@ from pooltool.physics.motion.solve import ball_pocket_collision_time
 from pooltool.system.datatypes import System
 
 
-def get_next_ball_pocket_event(shot: System, collision_cache: CollisionCache) -> Event:
-    """Detect the next ball-pocket collision."""
+def get_next_ball_pocket_2d_event(
+    shot: System, collision_cache: CollisionCache
+) -> Event:
+    """Detect the next ball-pocket collision in 2D mode."""
     if not shot.table.has_pockets:
         return null_event(np.inf)
 
@@ -50,3 +52,9 @@ def get_next_ball_pocket_event(shot: System, collision_cache: CollisionCache) ->
         pocket=shot.table.pockets[pocket_id],
         time=cache[(ball_id, pocket_id)],
     )
+
+
+def get_next_ball_pocket_3d_event(
+    shot: System, collision_cache: CollisionCache
+) -> Event:
+    raise NotImplementedError("3D ball-pocket detection has not been vendored yet")

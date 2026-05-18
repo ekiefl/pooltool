@@ -12,8 +12,8 @@ from pooltool.physics.motion.solve import ball_ball_collision_time
 from pooltool.system.datatypes import System
 
 
-def get_next_ball_ball_event(shot: System, collision_cache: CollisionCache) -> Event:
-    """Detect the next ball-ball collision."""
+def get_next_ball_ball_2d_event(shot: System, collision_cache: CollisionCache) -> Event:
+    """Detect the next ball-ball collision in 2D mode."""
     cache = collision_cache.times.setdefault(EventType.BALL_BALL, {})
 
     for ball1, ball2 in combinations(shot.balls.values(), 2):
@@ -75,3 +75,7 @@ def get_next_ball_ball_event(shot: System, collision_cache: CollisionCache) -> E
         ball2=shot.balls[ball_pair[1]],
         time=cache[ball_pair],
     )
+
+
+def get_next_ball_ball_3d_event(shot: System, collision_cache: CollisionCache) -> Event:
+    raise NotImplementedError("3D ball-ball detection has not been vendored yet")

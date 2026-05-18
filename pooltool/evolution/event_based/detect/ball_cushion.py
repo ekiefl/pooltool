@@ -18,10 +18,10 @@ from pooltool.physics.motion.solve import (
 from pooltool.system.datatypes import System
 
 
-def get_next_ball_linear_cushion_event(
+def get_next_ball_linear_cushion_2d_event(
     shot: System, collision_cache: CollisionCache
 ) -> Event:
-    """Detect the next ball-vs-linear-cushion collision."""
+    """Detect the next ball-vs-linear-cushion collision in 2D mode."""
     if not shot.table.has_linear_cushions:
         return null_event(np.inf)
 
@@ -67,10 +67,18 @@ def get_next_ball_linear_cushion_event(
     )
 
 
-def get_next_ball_circular_cushion_event(
+def get_next_ball_linear_cushion_3d_event(
     shot: System, collision_cache: CollisionCache
 ) -> Event:
-    """Detect the next ball-vs-circular-cushion collision."""
+    raise NotImplementedError(
+        "3D ball-linear-cushion detection has not been vendored yet"
+    )
+
+
+def get_next_ball_circular_cushion_2d_event(
+    shot: System, collision_cache: CollisionCache
+) -> Event:
+    """Detect the next ball-vs-circular-cushion collision in 2D mode."""
     if not shot.table.has_circular_cushions:
         return null_event(np.inf)
 
@@ -109,4 +117,12 @@ def get_next_ball_circular_cushion_event(
         ball=shot.balls[ball_id],
         cushion=shot.table.cushion_segments.circular[cushion_id],
         time=cache[(ball_id, cushion_id)],
+    )
+
+
+def get_next_ball_circular_cushion_3d_event(
+    shot: System, collision_cache: CollisionCache
+) -> Event:
+    raise NotImplementedError(
+        "3D ball-circular-cushion detection has not been vendored yet"
     )
