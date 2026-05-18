@@ -370,8 +370,8 @@ def test_almost_touching_ball_ball_collision():
         """
         collision_time = np.inf
         for t in quadratic.solve(0.5 * mu_r * g, -V0, eps):
-            if t >= 0 and t < collision_time:
-                collision_time = t
+            if t.real >= 0 and t.real < collision_time:
+                collision_time = t.real
         return collision_time
 
     V0 = 2

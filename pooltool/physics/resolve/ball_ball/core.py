@@ -107,7 +107,7 @@ class CoreBallBallCollision(ABC):
                 + Cz * Cz
                 - (2 * ball1.params.R + spacer) * (2 * ball1.params.R + spacer)
             )
-            roots_complex = ptmath.roots.quadratic.solve_complex(alpha, beta, gamma)
+            roots_complex = ptmath.roots.quadratic.solve(alpha, beta, gamma)
 
             imag_mag = np.abs(roots_complex.imag)
             real_mag = np.abs(roots_complex.real)
