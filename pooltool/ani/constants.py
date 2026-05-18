@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pooltool as pt
+import pooltool
 from pooltool.utils import panda_path
 
 menu_text_scale = 0.07
@@ -41,9 +41,9 @@ ball_highlight = {
     "shadow_scale_amplitude": 0.4,
 }
 
-model_dir: Path = Path(pt.__file__).parent / "models"
+model_dir: Path = Path(pooltool.__file__).parent / "models"
 
-logo_dir = Path(pt.__file__).parent / "logo"
+logo_dir = Path(pooltool.__file__).parent / "logo"
 logo_paths = {
     "default": panda_path(logo_dir / "logo.png"),
     "small": panda_path(logo_dir / "logo_small.png"),

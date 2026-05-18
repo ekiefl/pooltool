@@ -12,6 +12,10 @@ from pooltool.evolution.event_based.detect.ball_pocket import (
     BallPocketDetection,
     BallPocketDetectionStrategy,
 )
+from pooltool.evolution.event_based.detect.ball_table import (
+    BallTableDetection,
+    BallTableDetectionStrategy,
+)
 from pooltool.evolution.event_based.detect.detector import EventDetector
 from pooltool.evolution.event_based.detect.stick_ball import (
     StickBallDetection,
@@ -28,6 +32,8 @@ __all__ = [
     "BallLCushionDetectionStrategy",
     "BallPocketDetection",
     "BallPocketDetectionStrategy",
+    "BallTableDetection",
+    "BallTableDetectionStrategy",
     "StickBallDetection",
     "StickBallDetectionStrategy",
 ]

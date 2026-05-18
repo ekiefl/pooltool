@@ -12,6 +12,7 @@ from pooltool.evolution.event_based.detect.ball_cushion import (
     BallLCushionDetection,
 )
 from pooltool.evolution.event_based.detect.ball_pocket import BallPocketDetection
+from pooltool.evolution.event_based.detect.ball_table import BallTableDetection
 from pooltool.evolution.event_based.detect.stick_ball import StickBallDetection
 from pooltool.physics.utils import get_ball_energy
 from pooltool.system.datatypes import System
@@ -27,7 +28,7 @@ def _get_event_priority(event: Event, shot: System) -> tuple[int, float]:
     Priority tiers:
     - Tier 1: STICK_BALL (always first)
     - Tier 2: Transitions and BALL_POCKET (can resolve without affecting others)
-    - Tier 3: BALL_BALL and ball-cushion collisions
+    - Tier 3: BALL_BALL, ball-cushion collisions, and BALL_TABLE
 
     Args:
         event: The event to compute priority for.
@@ -69,6 +70,17 @@ def _get_event_priority(event: Event, shot: System) -> tuple[int, float]:
         energy = get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
         return (3, energy)
 
+    # TODO: tier and energy choice for BALL_TABLE has not been well thought
+    # through or tested. Mirroring the cushion-collision semantics, but
+    # BALL_TABLE-vs-other ties only become real once 3D activation lands and
+    # airborne balls actually arise. Revisit once break / aerial trajectories
+    # exercise this path.
+    if event_type == EventType.BALL_TABLE:
+        ball_id = event.ids[0]
+        ball = shot.balls[ball_id]
+        energy = get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
+        return (3, energy)
+
     return (99, 0.0)
 
 
@@ -95,6 +107,9 @@ class EventDetector:
             Strategy for detecting the next ball-vs-circular-cushion-segment collision.
         ball_pocket:
             Strategy for detecting the next ball-pocket collision.
+        ball_table:
+            Strategy for detecting the next ball-table collision (airborne ball
+            landing on the table surface).
     """
 
     stick_ball: StickBallDetection = attrs.field(factory=StickBallDetection)
@@ -106,6 +121,7 @@ class EventDetector:
         factory=BallCCushionDetection
     )
     ball_pocket: BallPocketDetection = attrs.field(factory=BallPocketDetection)
+    ball_table: BallTableDetection = attrs.field(factory=BallTableDetection)
 
     @classmethod
     def default(cls) -> EventDetector:
@@ -143,6 +159,7 @@ class EventDetector:
         candidates.append(self.ball_circular_cushion.get_next(shot, collision_cache))
         candidates.append(self.ball_linear_cushion.get_next(shot, collision_cache))
         candidates.append(self.ball_pocket.get_next(shot, collision_cache))
+        candidates.append(self.ball_table.get_next(shot, collision_cache))
 
         min_time = min(event.time for event in candidates)
 

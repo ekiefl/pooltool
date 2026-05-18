@@ -1,7 +1,6 @@
 import attrs
 
 from pooltool.objects.ball.datatypes import Ball, BallState
-from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve.ball_table.core import (
     CoreBallTableCollision,
     bounce_height,
@@ -36,7 +35,6 @@ class FrictionlessInelasticTable(CoreBallTableCollision):
     model: BallTableModel = attrs.field(
         default=BallTableModel.FRICTIONLESS_INELASTIC, init=False, repr=False
     )
-    dim: Dim = attrs.field(default=Dim.THREE, init=False, repr=False)
 
     def solve(self, ball: Ball) -> Ball:
         """Resolves the collision."""

@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import attrs
 
-from pooltool.evolution.event_based.config import DORMANT_IN_2D
 from pooltool.evolution.event_based.detect import EventDetector
-from pooltool.physics.dimensionality import Dim
+from pooltool.physics.dimensionality import SKIP_DIMENSION, Dim
 from pooltool.physics.resolve import Resolver
 
 
@@ -40,10 +39,10 @@ class SimulationEngine:
         required = Dim.THREE if self.is_3d else Dim.TWO
         for bundle in (self.resolver, self.detector):
             for field in attrs.fields(type(bundle)):
+                if field.name in SKIP_DIMENSION:
+                    continue
                 strategy = getattr(bundle, field.name)
                 if not attrs.has(type(strategy)):
-                    continue
-                if not self.is_3d and field.name in DORMANT_IN_2D:
                     continue
                 if not hasattr(strategy, "dim"):
                     raise AttributeError(

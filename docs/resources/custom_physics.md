@@ -201,7 +201,11 @@ dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
 - `Dim.TWO` — your model is safe only when [](#pooltool.evolution.engine.SimulationEngine)'s `is_3d` is `False`. Use this if your model assumes balls are on the table surface (z=R, vz=0).
 - `Dim.THREE` — your model is safe only when `is_3d` is `True`. Use this if your model assumes 3D ball state (e.g. it produces or handles airborne balls).
-- `Dim.BOTH` — your model behaves identically in either mode. This is a strong promise: a `Dim.BOTH` model doesn't care or know whether it's handling a 2D/3D simulation.
+- `Dim.BOTH` — your model is safe in either mode. It may still take different code paths depending on the input it receives (e.g. a branch on `state == const.airborne` is dead in 2D and live in 3D), as long as neither path is incorrect for the mode it runs under.
+
+:::{note}
+**Ball-table resolvers are an exception:** they do not declare a `dim` attribute. Ball-table events do not exist as a concept in 2D, so a 2D-vs-3D capability declaration is not meaningful for them.
+:::
 
 Great, now we are done with the boilerplate code. But `resolve` currently does *nothing*, it just returns what is handed to it. Let's change that.
 
