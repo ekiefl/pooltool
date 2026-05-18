@@ -48,6 +48,11 @@ from pooltool.system.datatypes import System
 def _get_collision_events_from_cache(
     system: System, cache: CollisionCache
 ) -> list[Event]:
+    # TODO: BALL_TABLE entries in the cache are not reconstructed here. In 2D
+    # mode this is harmless (the detector doesn't populate the BALL_TABLE
+    # bucket). When 3D activation lands, prospective BALL_TABLE events will be
+    # silently missed from get_prospective_events(). Add a branch that builds
+    # ball_table_collision(ball, time) from each (ball_id,) key.
     events = []
 
     if EventType.BALL_BALL in cache.times:
