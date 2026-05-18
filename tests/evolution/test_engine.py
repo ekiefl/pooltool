@@ -2,31 +2,24 @@ import attrs
 import pytest
 
 from pooltool.evolution.engine import SimulationEngine
-from pooltool.evolution.event_based.detect import EventDetector
 from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve.resolver import Resolver
 
 
-def _patch_all_dims(
-    resolver: Resolver,
-    detector: EventDetector,
-    dim_value: Dim,
-) -> None:
-    """Set every strategy's dim to dim_value, in place."""
-    for bundle in (resolver, detector):
-        for field in attrs.fields(type(bundle)):
-            strategy = getattr(bundle, field.name)
-            if hasattr(strategy, "dim"):
-                strategy.dim = dim_value
+def _patch_resolver_dims(resolver: Resolver, dim_value: Dim) -> None:
+    """Set every resolver strategy's dim to dim_value, in place."""
+    for field in attrs.fields(type(resolver)):
+        strategy = getattr(resolver, field.name)
+        if hasattr(strategy, "dim"):
+            strategy.dim = dim_value
 
 
 @pytest.fixture
 def engine_3d() -> SimulationEngine:
-    """A SimulationEngine constructed with every strategy patched to Dim.THREE."""
+    """A SimulationEngine constructed with every resolver strategy patched to Dim.THREE."""
     resolver = SimulationEngine().resolver
-    detector = SimulationEngine().detector
-    _patch_all_dims(resolver, detector, Dim.THREE)
-    return SimulationEngine(resolver=resolver, detector=detector, is_3d=True)
+    _patch_resolver_dims(resolver, Dim.THREE)
+    return SimulationEngine(resolver=resolver, is_3d=True)
 
 
 def test_default_engine_constructs():
@@ -36,6 +29,7 @@ def test_default_engine_constructs():
 
 def test_3d_engine_constructs(engine_3d: SimulationEngine):
     assert engine_3d.is_3d is True
+    assert engine_3d.detector.is_3d is True
 
 
 def test_3d_engine_with_all_2d_strategies_raises():
@@ -44,7 +38,7 @@ def test_3d_engine_with_all_2d_strategies_raises():
 
 
 def test_validation_error_identifies_offending_strategy():
-    with pytest.raises(ValueError, match=r"Resolver\.|EventDetector\."):
+    with pytest.raises(ValueError, match=r"Resolver\."):
         SimulationEngine(is_3d=True)
 
 
@@ -65,11 +59,7 @@ def test_3d_engine_rejects_one_dim_two_strategy(engine_3d: SimulationEngine):
     engine_3d.resolver.ball_ball.dim = Dim.TWO
 
     with pytest.raises(ValueError, match=r"ball_ball.*incompatible with is_3d=True"):
-        SimulationEngine(
-            resolver=engine_3d.resolver,
-            detector=engine_3d.detector,
-            is_3d=True,
-        )
+        SimulationEngine(resolver=engine_3d.resolver, is_3d=True)
 
 
 def test_dim_both_strategy_accepted_in_2d():
@@ -80,21 +70,20 @@ def test_dim_both_strategy_accepted_in_2d():
 
 def test_dim_both_strategy_accepted_in_3d(engine_3d: SimulationEngine):
     engine_3d.resolver.ball_ball.dim = Dim.BOTH
-    SimulationEngine(
-        resolver=engine_3d.resolver,
-        detector=engine_3d.detector,
-        is_3d=True,
-    )
+    SimulationEngine(resolver=engine_3d.resolver, is_3d=True)
 
 
 def test_ball_table_exempt_from_dim_validation():
-    """ball_table strategies don't carry a `dim` attribute. The validator
-    skips both Resolver.ball_table and EventDetector.ball_table fields in
-    either mode via SKIP_DIMENSION."""
+    """Ball-table resolver strategies don't carry a `dim` attribute. The
+    validator skips this field in either mode via SKIP_DIMENSION."""
     resolver = SimulationEngine().resolver
-    detector = SimulationEngine().detector
 
     assert not hasattr(resolver.ball_table, "dim")
-    assert not hasattr(detector.ball_table, "dim")
 
-    SimulationEngine(resolver=resolver, detector=detector, is_3d=False)
+    SimulationEngine(resolver=resolver, is_3d=False)
+
+
+def test_detector_is_not_constructor_passable():
+    """``detector`` is init=False on SimulationEngine."""
+    with pytest.raises(TypeError):
+        SimulationEngine(detector="anything")  # type: ignore[call-arg]
