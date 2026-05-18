@@ -51,6 +51,12 @@ def get_u_vec(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def on_table(rvw: NDArray[np.float64], R: float) -> bool:
+    """True when the ball's center is at the table-plane height (z == R)."""
+    return rvw[0, 2] == R
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def get_airborne_time(rvw: NDArray[np.float64], R: float, g: float) -> float:
     """Time until an airborne ball's bottom touches the table plane (z = R).
 

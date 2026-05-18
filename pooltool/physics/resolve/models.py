@@ -158,6 +158,21 @@ class StickBallModel(StrEnum):
     INSTANTANEOUS_POINT = auto()
 
 
+class BallTableModel(StrEnum):
+    """An Enum for different ball-table collision models
+
+    Attributes:
+        FRICTIONLESS_INELASTIC:
+            Frictionless, instantaneous, inelastic collision.
+        FRICTIONAL_INELASTIC:
+            Frictional, inelastic
+            (https://billiards.colostate.edu/technical_proofs/new/TP_A-14.pdf).
+    """
+
+    FRICTIONLESS_INELASTIC = auto()
+    FRICTIONAL_INELASTIC = auto()
+
+
 class BallTransitionModel(StrEnum):
     """An Enum for different transition models
 
