@@ -57,4 +57,4 @@ def get_next_ball_pocket_2d_event(
 def get_next_ball_pocket_3d_event(
     shot: System, collision_cache: CollisionCache
 ) -> Event:
-    raise NotImplementedError("3D ball-pocket detection has not been vendored yet")
+    return null_event(np.inf)

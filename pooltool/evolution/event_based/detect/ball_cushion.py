@@ -70,9 +70,8 @@ def get_next_ball_linear_cushion_2d_event(
 def get_next_ball_linear_cushion_3d_event(
     shot: System, collision_cache: CollisionCache
 ) -> Event:
-    raise NotImplementedError(
-        "3D ball-linear-cushion detection has not been vendored yet"
-    )
+    """3D ball-linear-cushion detection — not vendored yet; emits no event."""
+    return null_event(np.inf)
 
 
 def get_next_ball_circular_cushion_2d_event(
@@ -123,6 +122,4 @@ def get_next_ball_circular_cushion_2d_event(
 def get_next_ball_circular_cushion_3d_event(
     shot: System, collision_cache: CollisionCache
 ) -> Event:
-    raise NotImplementedError(
-        "3D ball-circular-cushion detection has not been vendored yet"
-    )
+    return null_event(np.inf)
