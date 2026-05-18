@@ -26,3 +26,10 @@ class Dim(StrEnum):
     TWO = auto()
     THREE = auto()
     BOTH = auto()
+
+
+SKIP_DIMENSION: frozenset[str] = frozenset({"ball_table"})
+"""Resolver/EventDetector field names whose strategies don't carry a ``dim``
+attribute. ``SimulationEngine._validate_dimensionality`` skips these fields
+entirely (in either mode). Used for slots whose events have no meaning in 2D
+(currently just ``ball_table``: airborne balls only exist in 3D)."""

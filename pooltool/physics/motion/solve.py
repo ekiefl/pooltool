@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 import pooltool.constants as const
 import pooltool.physics.evolve as evolve
 import pooltool.ptmath as ptmath
-from pooltool.physics.utils import rel_velocity
+from pooltool.physics.utils import get_airborne_time, rel_velocity
 from pooltool.ptmath.roots import quartic
 from pooltool.ptmath.roots.core import get_real_positive_smallest_root
 
@@ -421,3 +421,20 @@ def ball_pocket_collision_time(
             )
         )
     )
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def ball_table_collision_time(
+    rvw: NDArray[np.float64],
+    s: int,
+    g: float,
+    R: float,
+) -> float:
+    """Time until an airborne ball's bottom touches the table plane.
+
+    Returns ``np.inf`` if the ball is not airborne (no ball-table collision can
+    occur for any other motion state).
+    """
+    if s != const.airborne:
+        return np.inf
+    return get_airborne_time(rvw=rvw, R=R, g=g)

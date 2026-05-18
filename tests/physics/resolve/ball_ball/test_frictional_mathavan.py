@@ -1,8 +1,9 @@
 import numpy as np
 import pytest
 
-import pooltool as pt
 from pooltool.physics.resolve.ball_ball.frictional_mathavan import _collide_balls
+from pooltool.physics.utils import get_slide_time, rel_velocity
+from pooltool.ptmath.utils import norm2d
 
 DEG2RAD = np.pi / 180
 RAD2DEG = 180 / np.pi
@@ -56,14 +57,14 @@ def test_collide_balls(initial_conditions, expected):
     def calc_rolling_velocity(v, w):
         rvw = np.zeros((3, 3), dtype=np.float64)
         rvw[1], rvw[2] = v, w
-        u = pt.physics.rel_velocity(rvw, R)
+        u = rel_velocity(rvw, R)
         a = -mu_s * g * u / np.linalg.norm(u)
-        return v + a * pt.physics.get_slide_time(rvw, R, mu_s, g)
+        return v + a * get_slide_time(rvw, R, mu_s, g)
 
     v_iS = calc_rolling_velocity(v_i1, w_i1)
     v_jS = calc_rolling_velocity(v_j1, w_j1)
-    v_iS_mag = pt.ptmath.norm2d(v_iS)
-    v_jS_mag = pt.ptmath.norm2d(v_jS)
+    v_iS_mag = norm2d(v_iS)
+    v_jS_mag = norm2d(v_jS)
     assert abs(v_iS_mag - v_iS_mag_ex) / abs(v_iS_mag_ex) < 1e-2
     assert abs(v_jS_mag - v_jS_mag_ex) / abs(v_jS_mag_ex) < 1e-2
 

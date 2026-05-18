@@ -6,7 +6,6 @@ from numpy.typing import NDArray
 
 import pooltool.constants as const
 from pooltool.objects.ball.datatypes import Ball
-from pooltool.physics.dimensionality import Dim
 from pooltool.physics.utils import on_table, rel_velocity
 from pooltool.ptmath.utils import norm2d, norm3d
 
@@ -40,15 +39,17 @@ def final_ball_motion_state(rvw: NDArray[np.float64], R: float) -> int:
 
 
 class _BaseStrategy(Protocol):
-    dim: Dim
-
     def resolve(self, ball: Ball, inplace: bool = False) -> Ball: ...
 
     def make_kiss(self, ball: Ball) -> Ball: ...
 
 
 class BallTableCollisionStrategy(_BaseStrategy, Protocol):
-    """Ball-table collision models must satisfy this protocol"""
+    """Ball-table collision models must satisfy this protocol.
+
+    Unlike the other resolver-strategy protocols, this one does not declare a
+    ``dim`` attribute.
+    """
 
     def solve(self, ball: Ball) -> Ball:
         """Resolves a ball-table collision"""

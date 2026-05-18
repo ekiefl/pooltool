@@ -87,20 +87,14 @@ def test_dim_both_strategy_accepted_in_3d(engine_3d: SimulationEngine):
     )
 
 
-def test_dormant_ball_table_skipped_in_2d():
-    """In 2D, ball_table's dim is not validated (the slot is dormant)."""
+def test_ball_table_exempt_from_dim_validation():
+    """ball_table strategies don't carry a `dim` attribute. The validator
+    skips both Resolver.ball_table and EventDetector.ball_table fields in
+    either mode via SKIP_DIMENSION."""
     resolver = SimulationEngine().resolver
-    assert resolver.ball_table.dim == Dim.THREE
-    SimulationEngine(resolver=resolver, is_3d=False)
+    detector = SimulationEngine().detector
 
+    assert not hasattr(resolver.ball_table, "dim")
+    assert not hasattr(detector.ball_table, "dim")
 
-def test_misdeclared_ball_table_still_caught_in_3d(engine_3d: SimulationEngine):
-    """In 3D, ball_table's dim *is* validated — a Dim.TWO ball_table is a bug."""
-    engine_3d.resolver.ball_table.dim = Dim.TWO
-
-    with pytest.raises(ValueError, match=r"ball_table.*incompatible with is_3d=True"):
-        SimulationEngine(
-            resolver=engine_3d.resolver,
-            detector=engine_3d.detector,
-            is_3d=True,
-        )
+    SimulationEngine(resolver=resolver, detector=detector, is_3d=False)

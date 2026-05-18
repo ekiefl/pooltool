@@ -1,23 +1,23 @@
 import tempfile
 from pathlib import Path
 
-import pooltool as pt
 from pooltool.evolution.event_based.introspection import (
     SimulationSnapshotSequence,
     simulate_with_snapshots,
 )
 from pooltool.evolution.event_based.simulate import simulate
+from pooltool.system.datatypes import System
 
 
 def test_simulate_with_snapshots_equivalence_with_simulate():
     """Tests that `simulates_with_snapshots` returns same thing as `simulate`."""
-    system = pt.System.example()
+    system = System.example()
     result, _ = simulate_with_snapshots(system)
     assert result == simulate(system)
 
 
 def test_snapshot_sequence_roundtrip():
-    system = pt.System.example()
+    system = System.example()
 
     with tempfile.TemporaryDirectory() as tmpdir:
         _, seq = simulate_with_snapshots(system)
@@ -27,7 +27,7 @@ def test_snapshot_sequence_roundtrip():
 
 
 def test_selected_event_in_all_possible_events():
-    system = pt.System.example()
+    system = System.example()
     _, seq = simulate_with_snapshots(system)
 
     for step in range(len(seq) - 1):
@@ -41,7 +41,7 @@ def test_selected_event_in_all_possible_events():
 
 def test_pre_evolve_equals_snapshot_system():
     """pre_evolve_system should return the same system as stored in snapshot."""
-    system = pt.System.example()
+    system = System.example()
     _, seq = simulate_with_snapshots(system)
 
     for step in range(len(seq)):
@@ -54,7 +54,7 @@ def test_pre_evolve_equals_snapshot_system():
 
 def test_post_evolve_advances_time():
     """post_evolve_system should advance time to the selected event."""
-    system = pt.System.example()
+    system = System.example()
     _, seq = simulate_with_snapshots(system)
 
     for step in range(len(seq)):
@@ -67,7 +67,7 @@ def test_post_evolve_advances_time():
 
 def test_post_resolve_of_n_equals_pre_evolve_of_n_plus_1():
     """post_resolve_system of step n should equal pre_evolve_system of step n+1."""
-    system = pt.System.example()
+    system = System.example()
     _, seq = simulate_with_snapshots(system)
 
     for step in range(len(seq) - 1):
@@ -82,7 +82,7 @@ def test_post_resolve_of_n_equals_pre_evolve_of_n_plus_1():
 
 def test_system_state_progression():
     """Test the full progression: pre_evolve -> post_evolve -> post_resolve."""
-    system = pt.System.example()
+    system = System.example()
     _, seq = simulate_with_snapshots(system)
 
     for step in range(len(seq)):
