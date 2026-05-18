@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import attrs
 
+from pooltool.evolution.event_based.config import DORMANT_IN_2D
 from pooltool.evolution.event_based.detect import EventDetector
 from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve import Resolver
@@ -41,6 +42,8 @@ class SimulationEngine:
             for field in attrs.fields(type(bundle)):
                 strategy = getattr(bundle, field.name)
                 if not attrs.has(type(strategy)):
+                    continue
+                if not self.is_3d and field.name in DORMANT_IN_2D:
                     continue
                 if not hasattr(strategy, "dim"):
                     raise AttributeError(

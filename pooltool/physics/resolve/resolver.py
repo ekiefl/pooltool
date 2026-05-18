@@ -30,6 +30,10 @@ from pooltool.physics.resolve.ball_pocket import (
     BallPocketStrategy,
     CanonicalBallPocket,
 )
+from pooltool.physics.resolve.ball_table import (
+    BallTableCollisionStrategy,
+    FrictionalInelasticTable,
+)
 from pooltool.physics.resolve.serialize import register_serialize_hooks
 from pooltool.physics.resolve.stick_ball import (
     StickBallCollisionStrategy,
@@ -46,7 +50,7 @@ from pooltool.utils import Run
 RESOLVER_PATH = pooltool.config.paths.PHYSICS_DIR / "resolver.yaml"
 """The location of the resolver path YAML."""
 
-VERSION: int = 9
+VERSION: int = 10
 
 
 run = Run()
@@ -82,6 +86,9 @@ def default_resolver() -> Resolver:
             english_throttle=1.0,
             squirt_throttle=1.0,
         ),
+        ball_table=FrictionalInelasticTable(
+            min_bounce_height=0.005,
+        ),
         transition=CanonicalTransition(),
         version=VERSION,
     )
@@ -101,6 +108,7 @@ class Resolver:
     ball_circular_cushion: BallCCushionCollisionStrategy
     ball_pocket: BallPocketStrategy
     stick_ball: StickBallCollisionStrategy
+    ball_table: BallTableCollisionStrategy
     transition: BallTransitionStrategy
 
     version: int | None = None
@@ -141,6 +149,10 @@ class Resolver:
             cue = shot.cue
             ball = shot.balls[ids[1]]
             self.stick_ball.resolve(cue, ball, inplace=True)
+            ball.state.t = event.time
+        elif event.event_type == EventType.BALL_TABLE:
+            ball = shot.balls[ids[0]]
+            self.ball_table.resolve(ball, inplace=True)
             ball.state.t = event.time
 
         _snapshot_final(shot, event)

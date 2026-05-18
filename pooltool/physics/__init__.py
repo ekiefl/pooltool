@@ -22,6 +22,10 @@ from pooltool.physics.resolve.ball_pocket import (
     BallPocketModel,
     ball_pocket_models,
 )
+from pooltool.physics.resolve.ball_table import (
+    BallTableModel,
+    ball_table_models,
+)
 from pooltool.physics.resolve.resolver import (
     RESOLVER_PATH,
     Resolver,
@@ -54,6 +58,7 @@ __all__ = [
     "BallCCushionModel",
     "BallLCushionModel",
     "BallPocketModel",
+    "BallTableModel",
     "StickBallModel",
     "BallTransitionModel",
     "rel_velocity",
@@ -70,6 +75,7 @@ __all__ = [
     "ball_lcushion_models",
     "ball_ccushion_models",
     "ball_pocket_models",
+    "ball_table_models",
     "stick_ball_models",
     "ball_transition_models",
     # Evolve

@@ -85,3 +85,22 @@ def test_dim_both_strategy_accepted_in_3d(engine_3d: SimulationEngine):
         detector=engine_3d.detector,
         is_3d=True,
     )
+
+
+def test_dormant_ball_table_skipped_in_2d():
+    """In 2D, ball_table's dim is not validated (the slot is dormant)."""
+    resolver = SimulationEngine().resolver
+    assert resolver.ball_table.dim == Dim.THREE
+    SimulationEngine(resolver=resolver, is_3d=False)
+
+
+def test_misdeclared_ball_table_still_caught_in_3d(engine_3d: SimulationEngine):
+    """In 3D, ball_table's dim *is* validated — a Dim.TWO ball_table is a bug."""
+    engine_3d.resolver.ball_table.dim = Dim.TWO
+
+    with pytest.raises(ValueError, match=r"ball_table.*incompatible with is_3d=True"):
+        SimulationEngine(
+            resolver=engine_3d.resolver,
+            detector=engine_3d.detector,
+            is_3d=True,
+        )
