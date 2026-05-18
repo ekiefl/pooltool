@@ -66,7 +66,7 @@ def test_solve_large_values():
     # This should give one very large and one very small solution.
     a, b, c = 1.0, -1e7, 1.0
     u1, u2 = solve(a, b, c)
-    solutions = sorted([u1, u2])
+    solutions = sorted([u1, u2], key=lambda z: (z.real, z.imag))
 
     # The large root should be close to 1e7, the smaller should be close to 1e-7. We're
     # able to use a very small relative tolerance due to the way the solver avoids
