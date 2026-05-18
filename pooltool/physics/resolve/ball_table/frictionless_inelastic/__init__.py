@@ -36,7 +36,7 @@ class FrictionlessInelasticTable(CoreBallTableCollision):
     model: BallTableModel = attrs.field(
         default=BallTableModel.FRICTIONLESS_INELASTIC, init=False, repr=False
     )
-    dim: Dim = attrs.field(default=Dim.BOTH, init=False, repr=False)
+    dim: Dim = attrs.field(default=Dim.THREE, init=False, repr=False)
 
     def solve(self, ball: Ball) -> Ball:
         """Resolves the collision."""
