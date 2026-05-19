@@ -60,13 +60,17 @@ def _get_event_priority(event: Event, shot: System) -> tuple[int, float]:
     if event_type == EventType.BALL_POCKET:
         ball_id = event.ids[0]
         ball = shot.balls[ball_id]
-        energy = get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
+        energy = get_ball_energy(
+            ball.state.rvw, ball.params.R, ball.params.m, ball.params.g
+        )
         return (2, energy)
 
     if event_type.is_transition():
         ball_id = event.ids[0]
         ball = shot.balls[ball_id]
-        energy = get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
+        energy = get_ball_energy(
+            ball.state.rvw, ball.params.R, ball.params.m, ball.params.g
+        )
         return (2, energy)
 
     if event_type == EventType.BALL_BALL:
@@ -79,7 +83,9 @@ def _get_event_priority(event: Event, shot: System) -> tuple[int, float]:
     if event_type in (EventType.BALL_LINEAR_CUSHION, EventType.BALL_CIRCULAR_CUSHION):
         ball_id = event.ids[0]
         ball = shot.balls[ball_id]
-        energy = get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
+        energy = get_ball_energy(
+            ball.state.rvw, ball.params.R, ball.params.m, ball.params.g
+        )
         return (3, energy)
 
     # TODO: tier and energy choice for BALL_TABLE has not been well thought
@@ -90,7 +96,9 @@ def _get_event_priority(event: Event, shot: System) -> tuple[int, float]:
     if event_type == EventType.BALL_TABLE:
         ball_id = event.ids[0]
         ball = shot.balls[ball_id]
-        energy = get_ball_energy(ball.state.rvw, ball.params.R, ball.params.m)
+        energy = get_ball_energy(
+            ball.state.rvw, ball.params.R, ball.params.m, ball.params.g
+        )
         return (3, energy)
 
     return (99, 0.0)

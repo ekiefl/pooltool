@@ -75,6 +75,7 @@ def test_energy(
         ball.state.rvw,
         ball.params.R,
         ball.params.m,
+        ball.params.g,
     )
 
     # Resolve physics
@@ -85,6 +86,7 @@ def test_energy(
         ball_after.state.rvw,
         ball_after.params.R,
         ball_after.params.m,
+        ball_after.params.g,
     )
 
     assert np.isclose(initial_energy, final_energy) or final_energy <= initial_energy, (

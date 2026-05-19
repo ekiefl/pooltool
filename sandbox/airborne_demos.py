@@ -45,22 +45,6 @@ def _build_3d_engine() -> SimulationEngine:
     return SimulationEngine(resolver=resolver, is_3d=True)
 
 
-def _empty_cue() -> Cue:
-    """A cue with ``V0=0`` so the simulator doesn't fire a stick strike at t=0.
-
-    The default ``Cue`` constructor sets ``V0=2.0``; the stick-ball detector
-    fires whenever ``V0 > 0`` and ``_system_has_energy`` reports false. For
-    a ball that's airborne but momentarily at apex (vz=0), kinetic energy is
-    zero and the detector would trigger a strike on the handcrafted state.
-    Explicitly zero V0 to suppress that.
-
-    TODO: Fix underlying problem in codebase
-    """
-    cue = Cue(cue_ball_id="cue")
-    cue.V0 = 0
-    return cue
-
-
 def drop() -> System:
     """Ball dropped from 0.3 m with a small horizontal nudge in +x."""
     ball = Ball.create("cue", xy=(0.5, 0.5))
@@ -69,7 +53,7 @@ def drop() -> System:
     ball.state.s = const.airborne
 
     return System(
-        cue=_empty_cue(),
+        cue=Cue(cue_ball_id="cue"),
         table=Table.default(),
         balls=(ball,),
     )
@@ -83,7 +67,7 @@ def impulse_into() -> System:
     ball.state.s = const.airborne
 
     return System(
-        cue=_empty_cue(),
+        cue=Cue(cue_ball_id="cue"),
         table=Table.default(),
         balls=(ball,),
     )

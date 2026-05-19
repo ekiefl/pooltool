@@ -96,19 +96,18 @@ def get_spin_time(rvw: NDArray[np.float64], R: float, u_sp: float, g: float) -> 
     return np.abs(w[2]) * 2 / 5 * R / u_sp / g
 
 
-def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float) -> float:
-    """Get the energy of a ball
+def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float, g: float) -> float:
+    """Get the energy of a ball.
 
-    Currently calculating linear and rotational kinetic energy. Need to add potential
-    energy if z-axis is freed
+    Sum of linear kinetic, rotational kinetic, and gravitational potential energy.
+    Potential energy is defined relative to a ball at rest on the table (``z = R``),
+    so a ball sitting on the table contributes zero energy.
     """
-    # Linear
     LKE = m * norm3d(rvw[1]) ** 2 / 2
-
-    # Rotational
     RKE = (2 / 5 * m * R**2) * norm3d(rvw[2]) ** 2 / 2
+    PE = m * g * (rvw[0, 2] - R)
 
-    return LKE + RKE
+    return LKE + RKE + PE
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
