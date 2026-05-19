@@ -31,6 +31,7 @@ from pooltool.events import (
     ball_circular_cushion_collision,
     ball_linear_cushion_collision,
     ball_pocket_collision,
+    ball_table_collision,
     stick_ball_collision,
 )
 from pooltool.evolution.engine import SimulationEngine
@@ -48,11 +49,6 @@ from pooltool.system.datatypes import System
 def _get_collision_events_from_cache(
     system: System, cache: CollisionCache
 ) -> list[Event]:
-    # TODO: BALL_TABLE entries in the cache are not reconstructed here. In 2D
-    # mode this is harmless (the detector doesn't populate the BALL_TABLE
-    # bucket). When 3D activation lands, prospective BALL_TABLE events will be
-    # silently missed from get_prospective_events(). Add a branch that builds
-    # ball_table_collision(ball, time) from each (ball_id,) key.
     events = []
 
     if EventType.BALL_BALL in cache.times:
@@ -104,6 +100,15 @@ def _get_collision_events_from_cache(
             events.append(
                 stick_ball_collision(
                     stick=system.cue,
+                    ball=system.balls[ball_id],
+                    time=time,
+                )
+            )
+
+    if EventType.BALL_TABLE in cache.times:
+        for (ball_id,), time in cache.times[EventType.BALL_TABLE].items():
+            events.append(
+                ball_table_collision(
                     ball=system.balls[ball_id],
                     time=time,
                 )

@@ -508,6 +508,15 @@ def test_system_has_energy():
         ball.state = ball.history[event_step]
     assert _system_has_energy(system)
 
+    # An airborne ball at apex (vz=0, KE=0) still has potential energy.
+    system = System.example()
+    ball = next(iter(system.balls.values()))
+    ball.state.rvw[0, 2] = 0.3
+    ball.state.rvw[1] = 0.0
+    ball.state.rvw[2] = 0.0
+    ball.state.s = const.airborne
+    assert _system_has_energy(system)
+
 
 def test_stick_ball_event_detection():
     """Test that stick-ball events are properly detected as the first event
