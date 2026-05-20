@@ -34,7 +34,7 @@ class CanonicalTransition:
     model: BallTransitionModel = attrs.field(
         default=BallTransitionModel.CANONICAL, init=False, repr=False
     )
-    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
+    dim: Dim = attrs.field(default=Dim.BOTH, init=False, repr=False)
 
     def resolve(self, ball: Ball, transition: EventType, inplace: bool = False) -> Ball:
         if not inplace:

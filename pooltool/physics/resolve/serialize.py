@@ -23,6 +23,10 @@ from pooltool.physics.resolve.ball_pocket import (
     BallPocketStrategy,
     ball_pocket_models,
 )
+from pooltool.physics.resolve.ball_table import (
+    BallTableCollisionStrategy,
+    ball_table_models,
+)
 from pooltool.physics.resolve.stick_ball import (
     StickBallCollisionStrategy,
     stick_ball_models,
@@ -42,6 +46,7 @@ _model_map: Mapping[Any, Mapping[Any, type]] = {
     StickBallCollisionStrategy: stick_ball_models,
     BallTransitionStrategy: ball_transition_models,
     BallBallFrictionStrategy: ball_ball_friction_models,
+    BallTableCollisionStrategy: ball_table_models,
 }
 
 

@@ -35,7 +35,7 @@ class CanonicalBallPocket:
     model: BallPocketModel = attrs.field(
         default=BallPocketModel.CANONICAL, init=False, repr=False
     )
-    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
+    dim: Dim = attrs.field(default=Dim.BOTH, init=False, repr=False)
 
     def resolve(
         self, ball: Ball, pocket: Pocket, inplace: bool = False

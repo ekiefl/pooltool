@@ -154,6 +154,9 @@ addopts = [
 testpaths = [
     "tests",
 ]
+pythonpath = [
+    "tests",
+]
 
 # [tool.pyright]
 # pyright config is stored in pyrightconfig.json (local) and pyrightconfig.ci.json (CI)

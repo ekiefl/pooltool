@@ -3,6 +3,7 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
+from pooltool.ptmath.roots import quadratic
 from pooltool.ptmath.utils import coordinate_rotation, cross, norm3d, unit_vector
 
 
@@ -36,17 +37,36 @@ def rel_velocity(rvw: NDArray[np.float64], R: float) -> NDArray[np.float64]:
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def get_u_vec(
-    rvw: NDArray[np.float64], phi: float, R: float, s: int
+    rvw: NDArray[np.float64], R: float, phi: float, s: int
 ) -> NDArray[np.float64]:
     if s == const.rolling:
-        return np.array([1.0, 0.0, 0.0])
+        return np.array([1, 0, 0], dtype=np.float64)
 
     rel_vel = rel_velocity(rvw, R)
-
-    if (rel_vel == 0.0).all():
-        return np.array([1.0, 0.0, 0.0])
+    if (rel_vel == 0).all():
+        return np.array([1, 0, 0], dtype=np.float64)
 
     return coordinate_rotation(unit_vector(rel_vel), -phi)
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def on_table(rvw: NDArray[np.float64], R: float) -> bool:
+    """True when the ball's center is at the table-plane height (z == R)."""
+    return rvw[0, 2] == R
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def get_airborne_time(rvw: NDArray[np.float64], R: float, g: float) -> float:
+    """Time until an airborne ball's bottom touches the table plane (z = R).
+
+    Solves ``-0.5 * g * t**2 + v_z * t + (z - R) = 0`` and returns the later root
+    (the descending-leg intersection). Returns ``np.inf`` when gravity is zero.
+    """
+    if g == 0.0:
+        return np.inf
+
+    t1, t2 = quadratic.solve(-0.5 * g, rvw[1, 2], rvw[0, 2] - R)
+    return max(t1.real, t2.real)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -75,19 +95,18 @@ def get_spin_time(rvw: NDArray[np.float64], R: float, u_sp: float, g: float) -> 
     return np.abs(w[2]) * 2 / 5 * R / u_sp / g
 
 
-def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float) -> float:
-    """Get the energy of a ball
+def get_ball_energy(rvw: NDArray[np.float64], R: float, m: float, g: float) -> float:
+    """Get the energy of a ball.
 
-    Currently calculating linear and rotational kinetic energy. Need to add potential
-    energy if z-axis is freed
+    Sum of linear kinetic, rotational kinetic, and gravitational potential energy.
+    Potential energy is defined relative to a ball at rest on the table (``z = R``),
+    so a ball sitting on the table contributes zero energy.
     """
-    # Linear
     LKE = m * norm3d(rvw[1]) ** 2 / 2
-
-    # Rotational
     RKE = (2 / 5 * m * R**2) * norm3d(rvw[2]) ** 2 / 2
+    PE = m * g * (rvw[0, 2] - R)
 
-    return LKE + RKE
+    return LKE + RKE + PE
 
 
 @jit(nopython=True, cache=const.use_numba_cache)

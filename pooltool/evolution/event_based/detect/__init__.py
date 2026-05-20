@@ -1,33 +1,29 @@
 from pooltool.evolution.event_based.detect.ball_ball import (
-    BallBallDetection,
-    BallBallDetectionStrategy,
+    get_next_ball_ball_2d_event,
+    get_next_ball_ball_3d_event,
 )
 from pooltool.evolution.event_based.detect.ball_cushion import (
-    BallCCushionDetection,
-    BallCCushionDetectionStrategy,
-    BallLCushionDetection,
-    BallLCushionDetectionStrategy,
+    get_next_ball_circular_cushion_event,
+    get_next_ball_linear_cushion_event,
 )
 from pooltool.evolution.event_based.detect.ball_pocket import (
-    BallPocketDetection,
-    BallPocketDetectionStrategy,
+    get_next_ball_pocket_event,
+)
+from pooltool.evolution.event_based.detect.ball_table import (
+    get_next_ball_table_event,
 )
 from pooltool.evolution.event_based.detect.detector import EventDetector
 from pooltool.evolution.event_based.detect.stick_ball import (
-    StickBallDetection,
-    StickBallDetectionStrategy,
+    get_next_stick_ball_event,
 )
 
 __all__ = [
     "EventDetector",
-    "BallBallDetection",
-    "BallBallDetectionStrategy",
-    "BallCCushionDetection",
-    "BallCCushionDetectionStrategy",
-    "BallLCushionDetection",
-    "BallLCushionDetectionStrategy",
-    "BallPocketDetection",
-    "BallPocketDetectionStrategy",
-    "StickBallDetection",
-    "StickBallDetectionStrategy",
+    "get_next_ball_ball_2d_event",
+    "get_next_ball_ball_3d_event",
+    "get_next_ball_circular_cushion_event",
+    "get_next_ball_linear_cushion_event",
+    "get_next_ball_pocket_event",
+    "get_next_ball_table_event",
+    "get_next_stick_ball_event",
 ]

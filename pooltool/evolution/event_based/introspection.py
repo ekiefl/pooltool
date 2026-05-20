@@ -31,6 +31,7 @@ from pooltool.events import (
     ball_circular_cushion_collision,
     ball_linear_cushion_collision,
     ball_pocket_collision,
+    ball_table_collision,
     stick_ball_collision,
 )
 from pooltool.evolution.engine import SimulationEngine
@@ -99,6 +100,15 @@ def _get_collision_events_from_cache(
             events.append(
                 stick_ball_collision(
                     stick=system.cue,
+                    ball=system.balls[ball_id],
+                    time=time,
+                )
+            )
+
+    if EventType.BALL_TABLE in cache.times:
+        for (ball_id,), time in cache.times[EventType.BALL_TABLE].items():
+            events.append(
+                ball_table_collision(
                     ball=system.balls[ball_id],
                     time=time,
                 )

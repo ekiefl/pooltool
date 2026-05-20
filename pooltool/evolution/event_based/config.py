@@ -6,6 +6,7 @@ INCLUDED_EVENTS = {
     EventType.BALL_LINEAR_CUSHION,
     EventType.BALL_CIRCULAR_CUSHION,
     EventType.BALL_POCKET,
+    EventType.BALL_TABLE,
     EventType.STICK_BALL,
     EventType.SPINNING_STATIONARY,
     EventType.ROLLING_STATIONARY,
