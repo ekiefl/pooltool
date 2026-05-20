@@ -21,7 +21,7 @@ from pooltool.system.datatypes import System
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def ball_linear_cushion_collision_time(
+def ball_vertical_plane_collision_time(
     rvw: NDArray[np.float64],
     s: int,
     lx: float,
@@ -35,9 +35,10 @@ def ball_linear_cushion_collision_time(
     g: float,
     R: float,
 ) -> float:
-    """Get time until collision between ball and linear cushion segment
+    """Get time until collision between a ball and a vertical plane.
 
-    (just-in-time compiled)
+    For ball trajectories limited to the playing surface, this suffices for
+    detecting ball collisions with linear cushion segments.
     """
     if s == const.spinning or s == const.pocketed or s == const.stationary:
         return np.inf
@@ -98,7 +99,7 @@ def ball_linear_cushion_collision_time(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def ball_circular_cushion_collision_coeffs(
+def ball_vertical_cyclinder_collision_time(
     rvw: NDArray[np.float64],
     s: int,
     a: float,
@@ -108,14 +109,15 @@ def ball_circular_cushion_collision_coeffs(
     m: float,
     g: float,
     R: float,
-) -> tuple[float, float, float, float, float]:
-    """Get quartic coeffs required to determine the ball-circular-cushion collision time
+) -> float:
+    """Get the time until collision between a ball and a vertical cylinder.
 
-    (just-in-time compiled)
+    For ball trajectories limited to the playing surface, this suffices for
+    detecting ball collisions with circular cushion segments.
     """
 
     if s == const.spinning or s == const.pocketed or s == const.stationary:
-        return np.inf, np.inf, np.inf, np.inf, np.inf
+        return np.inf
 
     phi = ptmath.angle(rvw[1])
     v = ptmath.norm3d(rvw[1])
@@ -139,40 +141,10 @@ def ball_circular_cushion_collision_coeffs(
         cx * a + cy * b
     )
 
-    return A, B, C, D, E
+    return get_real_positive_smallest_root(quartic.solve(A, B, C, D, E))
 
 
-@jit(nopython=True, cache=const.use_numba_cache)
-def ball_circular_cushion_collision_time(
-    rvw: NDArray[np.float64],
-    s: int,
-    a: float,
-    b: float,
-    r: float,
-    mu: float,
-    m: float,
-    g: float,
-    R: float,
-) -> float:
-    """Get the time until collision between a ball and a circular cushion segment."""
-    return get_real_positive_smallest_root(
-        quartic.solve(
-            *ball_circular_cushion_collision_coeffs(
-                rvw,
-                s,
-                a,
-                b,
-                r,
-                mu,
-                m,
-                g,
-                R,
-            )
-        )
-    )
-
-
-def get_next_ball_linear_cushion_2d_event(
+def get_next_ball_linear_cushion_event(
     shot: System, collision_cache: CollisionCache
 ) -> Event:
     """Detect the next ball-vs-linear-cushion collision in 2D mode."""
@@ -195,20 +167,24 @@ def get_next_ball_linear_cushion_2d_event(
                 cache[obj_ids] = np.inf
                 continue
 
-            dtau_E = ball_linear_cushion_collision_time(
-                rvw=state.rvw,
-                s=state.s,
-                lx=cushion.lx,
-                ly=cushion.ly,
-                l0=cushion.l0,
-                p1=cushion.p1,
-                p2=cushion.p2,
-                direction=cushion.direction,
-                mu=(params.u_s if state.s == const.sliding else params.u_r),
-                m=params.m,
-                g=params.g,
-                R=params.R,
-            )
+            if ball.state.s == const.airborne:
+                # TODO
+                dtau_E = np.inf
+            else:
+                dtau_E = ball_vertical_plane_collision_time(
+                    rvw=state.rvw,
+                    s=state.s,
+                    lx=cushion.lx,
+                    ly=cushion.ly,
+                    l0=cushion.l0,
+                    p1=cushion.p1,
+                    p2=cushion.p2,
+                    direction=cushion.direction,
+                    mu=(params.u_s if state.s == const.sliding else params.u_r),
+                    m=params.m,
+                    g=params.g,
+                    R=params.R,
+                )
 
             cache[obj_ids] = shot.t + dtau_E
 
@@ -221,14 +197,7 @@ def get_next_ball_linear_cushion_2d_event(
     )
 
 
-def get_next_ball_linear_cushion_3d_event(
-    shot: System, collision_cache: CollisionCache
-) -> Event:
-    """3D ball-linear-cushion detection — not vendored yet; emits no event."""
-    return null_event(np.inf)
-
-
-def get_next_ball_circular_cushion_2d_event(
+def get_next_ball_circular_cushion_event(
     shot: System, collision_cache: CollisionCache
 ) -> Event:
     """Detect the next ball-vs-circular-cushion collision in 2D mode."""
@@ -251,17 +220,22 @@ def get_next_ball_circular_cushion_2d_event(
                 cache[obj_ids] = np.inf
                 continue
 
-            dtau_E = ball_circular_cushion_collision_time(
-                rvw=state.rvw,
-                s=state.s,
-                a=cushion.a,
-                b=cushion.b,
-                r=cushion.radius,
-                mu=(params.u_s if state.s == const.sliding else params.u_r),
-                m=params.m,
-                g=params.g,
-                R=params.R,
-            )
+            if ball.state.s == const.airborne:
+                # TODO
+                dtau_E = np.inf
+            else:
+                dtau_E = ball_vertical_cyclinder_collision_time(
+                    rvw=state.rvw,
+                    s=state.s,
+                    a=cushion.a,
+                    b=cushion.b,
+                    r=cushion.radius,
+                    mu=(params.u_s if state.s == const.sliding else params.u_r),
+                    m=params.m,
+                    g=params.g,
+                    R=params.R,
+                )
+
             cache[obj_ids] = shot.t + dtau_E
 
     ball_id, cushion_id = min(cache, key=lambda k: cache[k])
@@ -271,9 +245,3 @@ def get_next_ball_circular_cushion_2d_event(
         cushion=shot.table.cushion_segments.circular[cushion_id],
         time=cache[(ball_id, cushion_id)],
     )
-
-
-def get_next_ball_circular_cushion_3d_event(
-    shot: System, collision_cache: CollisionCache
-) -> Event:
-    return null_event(np.inf)

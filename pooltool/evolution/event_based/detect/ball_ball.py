@@ -17,7 +17,7 @@ from pooltool.system.datatypes import System
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def ball_ball_collision_coeffs(
+def ball_ball_collision_time(
     rvw1: NDArray[np.float64],
     rvw2: NDArray[np.float64],
     s1: int,
@@ -29,12 +29,8 @@ def ball_ball_collision_coeffs(
     g1: float,
     g2: float,
     R: float,
-) -> tuple[float, float, float, float, float]:
-    """Get quartic coeffs required to determine the ball-ball collision time
-
-    (just-in-time compiled)
-    """
-
+) -> float:
+    """Get the time until collision between 2 balls."""
     c1x, c1y = rvw1[0, 0], rvw1[0, 1]
     c2x, c2y = rvw2[0, 0], rvw2[0, 1]
 
@@ -82,41 +78,7 @@ def ball_ball_collision_coeffs(
     d = 2 * Bx * Cx + 2 * By * Cy
     e = Cx * Cx + Cy * Cy - 4 * R * R
 
-    return a, b, c, d, e
-
-
-@jit(nopython=True, cache=const.use_numba_cache)
-def ball_ball_collision_time(
-    rvw1: NDArray[np.float64],
-    rvw2: NDArray[np.float64],
-    s1: int,
-    s2: int,
-    mu1: float,
-    mu2: float,
-    m1: float,
-    m2: float,
-    g1: float,
-    g2: float,
-    R: float,
-) -> float:
-    """Get the time until collision between 2 balls."""
-    return get_real_positive_smallest_root(
-        quartic.solve(
-            *ball_ball_collision_coeffs(
-                rvw1,
-                rvw2,
-                s1,
-                s2,
-                mu1,
-                mu2,
-                m1,
-                m2,
-                g1,
-                g2,
-                R,
-            )
-        )
-    )
+    return get_real_positive_smallest_root(quartic.solve(a, b, c, d, e))
 
 
 def get_next_ball_ball_2d_event(shot: System, collision_cache: CollisionCache) -> Event:
