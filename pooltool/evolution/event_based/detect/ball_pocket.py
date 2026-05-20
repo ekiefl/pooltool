@@ -9,8 +9,7 @@ import pooltool.ptmath as ptmath
 from pooltool.events import Event, EventType, ball_pocket_collision, null_event
 from pooltool.evolution.event_based.cache import CollisionCache
 from pooltool.physics.utils import get_airborne_time, get_u_vec
-from pooltool.ptmath.roots import quadratic, quartic
-from pooltool.ptmath.roots.core import get_real_positive_smallest_root
+from pooltool.ptmath.roots import get_real_positive_smallest_root, quadratic, quartic
 from pooltool.system.datatypes import System
 
 

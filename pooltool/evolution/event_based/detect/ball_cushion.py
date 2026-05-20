@@ -16,8 +16,7 @@ from pooltool.events import (
 )
 from pooltool.evolution.event_based.cache import CollisionCache
 from pooltool.physics.utils import get_u_vec
-from pooltool.ptmath.roots import quartic
-from pooltool.ptmath.roots.core import get_real_positive_smallest_root
+from pooltool.ptmath.roots import get_real_positive_smallest_root, quartic
 from pooltool.system.datatypes import System
 
 
