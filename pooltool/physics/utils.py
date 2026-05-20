@@ -37,15 +37,14 @@ def rel_velocity(rvw: NDArray[np.float64], R: float) -> NDArray[np.float64]:
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def get_u_vec(
-    rvw: NDArray[np.float64], phi: float, R: float, s: int
+    rvw: NDArray[np.float64], R: float, phi: float, s: int
 ) -> NDArray[np.float64]:
     if s == const.rolling:
-        return np.array([1.0, 0.0, 0.0])
+        return np.array([1, 0, 0], dtype=np.float64)
 
     rel_vel = rel_velocity(rvw, R)
-
-    if (rel_vel == 0.0).all():
-        return np.array([1.0, 0.0, 0.0])
+    if (rel_vel == 0).all():
+        return np.array([1, 0, 0], dtype=np.float64)
 
     return coordinate_rotation(unit_vector(rel_vel), -phi)
 

@@ -97,7 +97,7 @@ def airborne_pocket_collision() -> System:
 
     Exercises both Strategy 1 (landing directly inside the pocket) and Strategy 2
     (xy trajectory crossing the pocket cylinder mid-fall) in
-    :func:`pooltool.physics.motion.solve.ball_pocket_collision_time_airborne`.
+    :func:`pooltool.evolution.event_based.detect.ball_pocket.ball_pocket_collision_time_airborne`.
     """
     ball = Ball.create("cue")
     scale = 0.18

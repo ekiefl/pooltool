@@ -6,6 +6,7 @@ import pooltool.constants as const
 from pooltool.events import EventType, filter_type
 from pooltool.evolution.event_based.cache import CollisionCache
 from pooltool.evolution.event_based.detect.ball_pocket import (
+    ball_pocket_collision_time_airborne,
     get_next_ball_pocket_3d_event,
 )
 from pooltool.evolution.event_based.simulate import simulate
@@ -13,7 +14,6 @@ from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
 from pooltool.objects.table.specs import TableType
-from pooltool.physics.motion.solve import ball_pocket_collision_time_airborne
 from pooltool.physics.utils import get_airborne_time
 from pooltool.system.datatypes import System
 
