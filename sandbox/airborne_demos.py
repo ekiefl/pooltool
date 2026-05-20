@@ -8,12 +8,14 @@ Usage:
 import argparse
 
 import attrs
+import numpy as np
 
 from pooltool import constants as const
 from pooltool.evolution.engine import SimulationEngine
 from pooltool.evolution.event_based.simulate import simulate
 from pooltool.interact import show
 from pooltool.objects.ball.datatypes import Ball
+from pooltool.objects.ball.sets import BallSet
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
 from pooltool.physics.dimensionality import Dim
@@ -90,10 +92,93 @@ def jump() -> System:
     )
 
 
+def airborne_pocket_collision() -> System:
+    """Six airborne balls dropping toward a corner pocket from varied heights.
+
+    Exercises both Strategy 1 (landing directly inside the pocket) and Strategy 2
+    (xy trajectory crossing the pocket cylinder mid-fall) in
+    :func:`pooltool.evolution.event_based.detect.ball_pocket.ball_pocket_collision_time_if_airborne`.
+    """
+    ball = Ball.create("cue")
+    scale = 0.18
+    ball.state.rvw = np.array(
+        [
+            [0.8, 0.2, 1.228575],
+            [1.8 * scale, -1.8 * scale, 1.5],
+            [0, 0, 0],
+        ]
+    )
+    ball.state.s = const.airborne
+
+    other = Ball.create("1")
+    scale = 0.27
+    other.state.rvw = np.array(
+        [
+            [0.8, 0.2, 1.0],
+            [1.8 * scale, -1.8 * scale, 1.5],
+            [0, 0, 0],
+        ]
+    )
+    other.state.s = const.airborne
+
+    another = Ball.create("2")
+    scale = 0.11
+    another.state.rvw = np.array(
+        [
+            [0.8, 0.2, 0.8],
+            [1.8 * scale, -1.8 * scale, 1.5],
+            [0, 0, 0],
+        ]
+    )
+    another.state.s = const.airborne
+
+    fast1 = Ball.create("3")
+    scale = 2
+    fast1.state.rvw = np.array(
+        [
+            [0.3, 0.7, fast1.params.R * 7 / 5],
+            [1.8 * scale, -1.8 * scale, 0.6],
+            [0, 0, 0],
+        ]
+    )
+    fast1.state.s = const.airborne
+
+    fast2 = Ball.create("4")
+    scale = 2
+    fast2.state.rvw = np.array(
+        [
+            [0.8, 0.2, fast2.params.R * 7 / 5],
+            [1.8 * scale, -1.8 * scale, -2.0],
+            [0, 0, 0],
+        ]
+    )
+    fast2.state.s = const.airborne
+
+    vertical = Ball.create("5")
+    vertical.state.rvw = np.array(
+        [
+            [1.0, -0.05, 0.75],
+            [0, 0, 0],
+            [0, 0, 0],
+        ]
+    )
+    vertical.state.s = const.airborne
+
+    shot = System(
+        cue=Cue(cue_ball_id="cue"),
+        table=Table.default(),
+        balls=(ball, other, another, fast1, fast2, vertical),
+    )
+    shot.set_ballset(BallSet("pooltool_pocket"))
+
+    return shot
+
+
 _map = {
     "drop": drop,
     "impulse_into": impulse_into,
     "jump": jump,
+    "pocket_collision": airborne_pocket_collision,
 }
 
 

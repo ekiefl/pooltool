@@ -1,25 +1,15 @@
 import attrs
 import pytest
+from _helpers import build_3d_engine
 
 from pooltool.evolution.engine import SimulationEngine
 from pooltool.physics.dimensionality import Dim
-from pooltool.physics.resolve.resolver import Resolver
-
-
-def _patch_resolver_dims(resolver: Resolver, dim_value: Dim) -> None:
-    """Set every resolver strategy's dim to dim_value, in place."""
-    for field in attrs.fields(type(resolver)):
-        strategy = getattr(resolver, field.name)
-        if hasattr(strategy, "dim"):
-            strategy.dim = dim_value
 
 
 @pytest.fixture
 def engine_3d() -> SimulationEngine:
     """A SimulationEngine constructed with every resolver strategy patched to Dim.THREE."""
-    resolver = SimulationEngine().resolver
-    _patch_resolver_dims(resolver, Dim.THREE)
-    return SimulationEngine(resolver=resolver, is_3d=True)
+    return build_3d_engine()
 
 
 def test_default_engine_constructs():
