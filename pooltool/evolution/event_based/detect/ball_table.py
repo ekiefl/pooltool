@@ -1,9 +1,31 @@
 from __future__ import annotations
 
+import numpy as np
+from numba import jit
+from numpy.typing import NDArray
+
+import pooltool.constants as const
 from pooltool.events import Event, EventType, ball_table_collision
 from pooltool.evolution.event_based.cache import CollisionCache
-from pooltool.physics.motion.solve import ball_table_collision_time
+from pooltool.physics.utils import get_airborne_time
 from pooltool.system.datatypes import System
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def ball_table_collision_time(
+    rvw: NDArray[np.float64],
+    s: int,
+    g: float,
+    R: float,
+) -> float:
+    """Time until an airborne ball's bottom touches the table plane.
+
+    Returns ``np.inf`` if the ball is not airborne (no ball-table collision can
+    occur for any other motion state).
+    """
+    if s != const.airborne:
+        return np.inf
+    return get_airborne_time(rvw=rvw, R=R, g=g)
 
 
 def get_next_ball_table_event(shot: System, collision_cache: CollisionCache) -> Event:

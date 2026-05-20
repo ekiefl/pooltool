@@ -11,14 +11,11 @@ from pooltool.evolution.event_based.detect.ball_ball import (
     get_next_ball_ball_3d_event,
 )
 from pooltool.evolution.event_based.detect.ball_cushion import (
-    get_next_ball_circular_cushion_2d_event,
-    get_next_ball_circular_cushion_3d_event,
-    get_next_ball_linear_cushion_2d_event,
-    get_next_ball_linear_cushion_3d_event,
+    get_next_ball_circular_cushion_event,
+    get_next_ball_linear_cushion_event,
 )
 from pooltool.evolution.event_based.detect.ball_pocket import (
-    get_next_ball_pocket_2d_event,
-    get_next_ball_pocket_3d_event,
+    get_next_ball_pocket_event,
 )
 from pooltool.evolution.event_based.detect.ball_table import (
     get_next_ball_table_event,
@@ -152,26 +149,15 @@ class EventDetector:
             candidates.append(get_next_stick_ball_event(shot, collision_cache))
 
         candidates.append(transition_cache.get_next())
+        candidates.append(get_next_ball_linear_cushion_event(shot, collision_cache))
+        candidates.append(get_next_ball_circular_cushion_event(shot, collision_cache))
+        candidates.append(get_next_ball_pocket_event(shot, collision_cache))
 
         if self.is_3d:
             candidates.append(get_next_ball_ball_3d_event(shot, collision_cache))
-            candidates.append(
-                get_next_ball_circular_cushion_3d_event(shot, collision_cache)
-            )
-            candidates.append(
-                get_next_ball_linear_cushion_3d_event(shot, collision_cache)
-            )
-            candidates.append(get_next_ball_pocket_3d_event(shot, collision_cache))
             candidates.append(get_next_ball_table_event(shot, collision_cache))
         else:
             candidates.append(get_next_ball_ball_2d_event(shot, collision_cache))
-            candidates.append(
-                get_next_ball_circular_cushion_2d_event(shot, collision_cache)
-            )
-            candidates.append(
-                get_next_ball_linear_cushion_2d_event(shot, collision_cache)
-            )
-            candidates.append(get_next_ball_pocket_2d_event(shot, collision_cache))
 
         min_time = min(event.time for event in candidates)
 
