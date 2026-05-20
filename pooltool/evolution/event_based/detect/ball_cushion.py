@@ -39,6 +39,9 @@ def ball_vertical_plane_collision_time(
 
     For ball trajectories limited to the playing surface, this suffices for
     detecting ball collisions with linear cushion segments.
+
+    Note:
+        - This is broken for airborne balls.
     """
     if s == const.spinning or s == const.pocketed or s == const.stationary:
         return np.inf
@@ -99,7 +102,7 @@ def ball_vertical_plane_collision_time(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def ball_vertical_cyclinder_collision_time(
+def ball_vertical_cylinder_collision_time(
     rvw: NDArray[np.float64],
     s: int,
     a: float,
@@ -114,6 +117,9 @@ def ball_vertical_cyclinder_collision_time(
 
     For ball trajectories limited to the playing surface, this suffices for
     detecting ball collisions with circular cushion segments.
+
+    Note:
+        - This is broken for airborne balls.
     """
 
     if s == const.spinning or s == const.pocketed or s == const.stationary:
@@ -224,7 +230,7 @@ def get_next_ball_circular_cushion_event(
                 # TODO
                 dtau_E = np.inf
             else:
-                dtau_E = ball_vertical_cyclinder_collision_time(
+                dtau_E = ball_vertical_cylinder_collision_time(
                     rvw=state.rvw,
                     s=state.s,
                     a=cushion.a,
