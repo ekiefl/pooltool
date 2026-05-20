@@ -14,7 +14,7 @@ from pooltool.system.datatypes import System
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def ball_pocket_collision_coeffs(
+def ball_pocket_collision_time(
     rvw: NDArray[np.float64],
     s: int,
     a: float,
@@ -24,14 +24,18 @@ def ball_pocket_collision_coeffs(
     m: float,
     g: float,
     R: float,
-) -> tuple[float, float, float, float, float]:
-    """Get quartic coeffs required to determine the ball-pocket collision time
+) -> float:
+    """Get the time until collision between a ball and a pocket.
 
-    (just-in-time compiled)
+    Contains branching logic depending on whether the ball is airborne.
     """
 
     if s == const.spinning or s == const.pocketed or s == const.stationary:
-        return np.inf, np.inf, np.inf, np.inf, np.inf
+        return np.inf
+
+    if s == const.airborne:
+        # Special treatment if ball is airborne
+        return ball_pocket_collision_time_if_airborne(rvw, a, b, r, g, R)
 
     phi = ptmath.angle(rvw[1])
     v = ptmath.norm3d(rvw[1])
@@ -53,41 +57,11 @@ def ball_pocket_collision_coeffs(
     D = bx * (cx - a) + by * (cy - b)
     E = 0.5 * (a * a + b * b + cx * cx + cy * cy - r * r) - (cx * a + cy * b)
 
-    return A, B, C, D, E
+    return get_real_positive_smallest_root(quartic.solve(A, B, C, D, E))
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def ball_pocket_collision_time(
-    rvw: NDArray[np.float64],
-    s: int,
-    a: float,
-    b: float,
-    r: float,
-    mu: float,
-    m: float,
-    g: float,
-    R: float,
-) -> float:
-    """Get the time until collision between a ball and a pocket."""
-    return get_real_positive_smallest_root(
-        quartic.solve(
-            *ball_pocket_collision_coeffs(
-                rvw,
-                s,
-                a,
-                b,
-                r,
-                mu,
-                m,
-                g,
-                R,
-            )
-        )
-    )
-
-
-@jit(nopython=True, cache=const.use_numba_cache)
-def ball_pocket_collision_time_airborne(
+def ball_pocket_collision_time_if_airborne(
     rvw: NDArray[np.float64],
     a: float,
     b: float,
@@ -180,61 +154,11 @@ def ball_pocket_collision_time_airborne(
     return (r1 + r2) / 2.0
 
 
-def get_next_ball_pocket_2d_event(
-    shot: System, collision_cache: CollisionCache
+def get_next_ball_pocket_event(
+    shot: System,
+    collision_cache: CollisionCache,
 ) -> Event:
-    """Detect the next ball-pocket collision in 2D mode."""
-    if not shot.table.has_pockets:
-        return null_event(np.inf)
-
-    cache = collision_cache.times.setdefault(EventType.BALL_POCKET, {})
-
-    for ball in shot.balls.values():
-        state = ball.state
-        params = ball.params
-
-        for pocket in shot.table.pockets.values():
-            obj_ids = (ball.id, pocket.id)
-
-            if obj_ids in cache:
-                continue
-
-            if ball.state.s in const.nontranslating:
-                cache[obj_ids] = np.inf
-                continue
-
-            dtau_E = ball_pocket_collision_time(
-                rvw=state.rvw,
-                s=state.s,
-                a=pocket.a,
-                b=pocket.b,
-                r=pocket.radius,
-                mu=(params.u_s if state.s == const.sliding else params.u_r),
-                m=params.m,
-                g=params.g,
-                R=params.R,
-            )
-            cache[obj_ids] = shot.t + dtau_E
-
-    ball_id, pocket_id = min(cache, key=lambda k: cache[k])
-
-    return ball_pocket_collision(
-        ball=shot.balls[ball_id],
-        pocket=shot.table.pockets[pocket_id],
-        time=cache[(ball_id, pocket_id)],
-    )
-
-
-def get_next_ball_pocket_3d_event(
-    shot: System, collision_cache: CollisionCache
-) -> Event:
-    """Detect the next ball-pocket collision in 3D mode.
-
-    Airborne balls use :func:`ball_pocket_collision_time_airborne`, which models the
-    pocket as a vertical cylinder and accounts for the parabolic z-trajectory.
-    Non-airborne, translating balls delegate to the same 2D detection routine as
-    :func:`get_next_ball_pocket_2d_event`.
-    """
+    """Detect the next ball-pocket collision."""
     if not shot.table.has_pockets:
         return null_event(np.inf)
 
@@ -254,27 +178,17 @@ def get_next_ball_pocket_3d_event(
                 cache[obj_ids] = np.inf
                 continue
 
-            if state.s == const.airborne:
-                dtau_E = ball_pocket_collision_time_airborne(
-                    rvw=state.rvw,
-                    a=pocket.a,
-                    b=pocket.b,
-                    r=pocket.radius,
-                    g=params.g,
-                    R=params.R,
-                )
-            else:
-                dtau_E = ball_pocket_collision_time(
-                    rvw=state.rvw,
-                    s=state.s,
-                    a=pocket.a,
-                    b=pocket.b,
-                    r=pocket.radius,
-                    mu=(params.u_s if state.s == const.sliding else params.u_r),
-                    m=params.m,
-                    g=params.g,
-                    R=params.R,
-                )
+            dtau_E = ball_pocket_collision_time(
+                rvw=state.rvw,
+                s=state.s,
+                a=pocket.a,
+                b=pocket.b,
+                r=pocket.radius,
+                mu=(params.u_s if state.s == const.sliding else params.u_r),
+                m=params.m,
+                g=params.g,
+                R=params.R,
+            )
             cache[obj_ids] = shot.t + dtau_E
 
     ball_id, pocket_id = min(cache, key=lambda k: cache[k])
