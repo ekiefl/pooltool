@@ -1,0 +1,9 @@
+version: 2
+updates:
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      lockfile-bumps:
+        update-types: ["patch", "minor"]
