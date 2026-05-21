@@ -15,6 +15,7 @@ from panda3d.core import (
     TransparencyAttrib,
 )
 
+import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 import pooltool.constants as c
 from pooltool.ani.globals import Global
@@ -125,8 +126,7 @@ class BallRender(Render):
 
     def init_shadow(self):
         N = 20
-        start, stop = 0.5, 0.9  # fraction of ball radius
-        z_offset = 0.0005
+        start, stop = 0.4, 0.9  # fraction of ball radius
         scales = np.linspace(start, stop, N)
 
         if (ballset := self._ball.ballset) is not None:
@@ -146,7 +146,8 @@ class BallRender(Render):
             shadow_layer = Global.loader.loadModel(panda_path(shadow_path))
             shadow_layer.reparentTo(shadow_node)
             shadow_layer.setScale(self.get_scale_factor(shadow_layer) * scale)
-            shadow_layer.setZ(z_offset * (1 - i / N))
+            shadow_layer.setZ(0.0005 * (1 - i / N))
+            shadow_layer.setAlphaScale(np.exp(-i / N))
 
         return shadow_node
 
@@ -342,6 +343,45 @@ class BallRender(Render):
 
         ball.setHpr(0, 0, 0)
 
+    def _shadow_update_task(self, task):
+        """Update shadow scale/visibility each frame from the current ball height.
+
+        The shadow position is controlled by the playback sequence. If the shadow
+        position is updated within this task, it (1) lags behind the actual ball
+        position and (2) leads to crashes.
+        """
+        shadow_node = self.nodes["shadow"]
+
+        z = self.nodes["pos"].getZ()
+        R = self._ball.params.R
+
+        max_bottom_height = 0.13
+
+        bottom_height = max(z - R, 0)
+        if bottom_height >= max_bottom_height:
+            shadow_node.hide()
+        else:
+            if shadow_node.is_hidden():
+                shadow_node.show()
+
+            f = bottom_height / max_bottom_height
+
+            alpha = np.exp(-5 * f)
+            scale = 1 + 2.0 * f
+
+            shadow_node.setScale(scale)
+            shadow_node.setAlphaScale(alpha)
+
+        return task.cont
+
+    def _shadow_task_name(self) -> str:
+        return f"update_shadow_{self._ball.id}"
+
     def render(self):
         super().render()
         self.init_sphere()
+        tasks.add(self._shadow_update_task, self._shadow_task_name())
+
+    def remove_nodes(self):
+        tasks.remove(self._shadow_task_name())
+        super().remove_nodes()

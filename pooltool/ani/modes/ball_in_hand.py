@@ -276,8 +276,15 @@ class BallInHandMode(BaseMode):
             self.grabbed_ball.set_render_state_as_object_state()
             tasks.remove("grab_selection_highlight_animation")
 
+            tasks.add(
+                self.grabbed_ball._shadow_update_task,
+                self.grabbed_ball._shadow_task_name(),
+            )
+
     def add_grab_selection_highlight(self):
         if self.grabbed_ball is not None:
+            tasks.remove(self.grabbed_ball._shadow_task_name())
+
             tasks.add(
                 self.grab_selection_highlight_animation,
                 "grab_selection_highlight_animation",
