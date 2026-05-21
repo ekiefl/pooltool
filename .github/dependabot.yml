@@ -6,4 +6,4 @@ updates:
       interval: "monthly"
     groups:
       lockfile-bumps:
-        update-types: ["patch", "minor"]
+        update-types: ["patch", "minor", "major"]
