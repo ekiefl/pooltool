@@ -56,21 +56,6 @@ class BallCCushionCollisionStrategy(_BaseCircularStrategy, Protocol):
 class CoreBallLCushionCollision(ABC):
     """Operations used by every ball-linear cushion collision resolver"""
 
-    def _apply_fallback_positioning_linear(
-        self, ball: Ball, cushion: LinearCushionSegment, spacer: float
-    ) -> np.ndarray:
-        """Place the ball at R + spacer from the cushion along the geometric normal.
-
-        Used when the ball is nontranslating (no velocity to trace back along) or
-        when the velocity-based correction would produce an excessive displacement.
-        """
-        c = ptmath.point_on_line_closest_to_point(
-            cushion.p1, cushion.p2, ball.state.rvw[0]
-        )
-        c[2] = ball.state.rvw[0, 2]
-        direction = ptmath.unit_vector(ball.state.rvw[0] - c)
-        return c + (ball.params.R + spacer) * direction
-
     def make_kiss(self, ball: Ball, cushion: LinearCushionSegment) -> Ball:
         """Translate the ball along its velocity so it nearly touches the cushion.
 
@@ -88,10 +73,7 @@ class CoreBallLCushionCollision(ABC):
         spacer = const.MIN_DIST
 
         if ball.state.s in const.nontranslating:
-            ball.state.rvw[0] = self._apply_fallback_positioning_linear(
-                ball, cushion, spacer
-            )
-            return ball
+            return _apply_fallback_positioning_linear(ball, cushion, spacer)
 
         n = cushion.get_normal_xy(ball.xyz)
         n = n if np.dot(n, v) > 0 else -n
@@ -104,18 +86,10 @@ class CoreBallLCushionCollision(ABC):
         t = t1 if abs(t1) < abs(t2) else t2
 
         if ptmath.norm3d(t * v) > 5 * spacer:
-            ball.state.rvw[0] = self._apply_fallback_positioning_linear(
-                ball, cushion, spacer
-            )
-            return ball
+            return _apply_fallback_positioning_linear(ball, cushion, spacer)
 
         ball.state.rvw[0] = r + t * v
-
-        # Guard against z-drift.
-        if ball.state.rvw[0, 2] < ball.params.R:
-            ball.state.rvw[0, 2] = ball.params.R
-        if ball.state.rvw[0, 2] > ball.params.R and ball.state.s != const.airborne:
-            ball.state.rvw[0, 2] = ball.params.R
+        ball = _guard_against_z_drift(ball)
 
         return ball
 
@@ -140,18 +114,6 @@ class CoreBallLCushionCollision(ABC):
 class CoreBallCCushionCollision(ABC):
     """Operations used by every ball-circular cushion collision resolver"""
 
-    def _apply_fallback_positioning_circular(
-        self, ball: Ball, cushion: CircularCushionSegment, spacer: float
-    ) -> np.ndarray:
-        """Place the ball at R + radius + spacer from the cushion center along the radial.
-
-        Used when the ball is nontranslating (no velocity to trace back along) or
-        when the velocity-based correction would produce an excessive displacement.
-        """
-        c = np.array([cushion.center[0], cushion.center[1], ball.state.rvw[0, 2]])
-        direction = ptmath.unit_vector(ball.state.rvw[0] - c)
-        return c + (ball.params.R + cushion.radius + spacer) * direction
-
     def make_kiss(self, ball: Ball, cushion: CircularCushionSegment) -> Ball:
         """Translate the ball along its velocity so it nearly touches the cushion.
 
@@ -168,10 +130,7 @@ class CoreBallCCushionCollision(ABC):
         spacer = const.MIN_DIST
 
         if ball.state.s in const.nontranslating:
-            ball.state.rvw[0] = self._apply_fallback_positioning_circular(
-                ball, cushion, spacer
-            )
-            return ball
+            return _apply_fallback_positioning_circular(ball, cushion, spacer)
 
         c = np.array([cushion.center[0], cushion.center[1], r[2]])
         diff = r - c
@@ -190,18 +149,10 @@ class CoreBallCCushionCollision(ABC):
         t = roots[np.abs(roots).argmin()]
 
         if ptmath.norm3d(t * v) > 5 * spacer:
-            ball.state.rvw[0] = self._apply_fallback_positioning_circular(
-                ball, cushion, spacer
-            )
-            return ball
+            return _apply_fallback_positioning_circular(ball, cushion, spacer)
 
         ball.state.rvw[0] = r + t * v
-
-        # Guard against z-drift.
-        if ball.state.rvw[0, 2] < ball.params.R:
-            ball.state.rvw[0, 2] = ball.params.R
-        if ball.state.rvw[0, 2] > ball.params.R and ball.state.s != const.airborne:
-            ball.state.rvw[0, 2] = ball.params.R
+        ball = _guard_against_z_drift(ball)
 
         return ball
 
@@ -215,3 +166,43 @@ class CoreBallCCushionCollision(ABC):
         ball = self.make_kiss(ball, cushion)
 
         return self.solve(ball, cushion)  # type: ignore
+
+
+def _guard_against_z_drift(ball: Ball) -> Ball:
+    if ball.state.rvw[0, 2] < ball.params.R:
+        ball.state.rvw[0, 2] = ball.params.R
+    if ball.state.rvw[0, 2] > ball.params.R and ball.state.s != const.airborne:
+        ball.state.rvw[0, 2] = ball.params.R
+
+    return ball
+
+
+def _apply_fallback_positioning_linear(
+    ball: Ball, cushion: LinearCushionSegment, spacer: float
+) -> Ball:
+    """Place the ball at R + spacer from the cushion along the geometric normal.
+
+    Used when the ball is nontranslating (no velocity to trace back along) or
+    when the velocity-based correction would produce an excessive displacement.
+    """
+    c = ptmath.point_on_line_closest_to_point(cushion.p1, cushion.p2, ball.state.rvw[0])
+    c[2] = ball.state.rvw[0, 2]
+    direction = ptmath.unit_vector(ball.state.rvw[0] - c)
+    ball.state.rvw[0] = c + (ball.params.R + spacer) * direction
+
+    return _guard_against_z_drift(ball)
+
+
+def _apply_fallback_positioning_circular(
+    ball: Ball, cushion: CircularCushionSegment, spacer: float
+) -> Ball:
+    """Place the ball at R + radius + spacer from the cushion center along the radial.
+
+    Used when the ball is nontranslating (no velocity to trace back along) or
+    when the velocity-based correction would produce an excessive displacement.
+    """
+    c = np.array([cushion.center[0], cushion.center[1], ball.state.rvw[0, 2]])
+    direction = ptmath.unit_vector(ball.state.rvw[0] - c)
+    ball.state.rvw[0] = c + (ball.params.R + cushion.radius + spacer) * direction
+
+    return _guard_against_z_drift(ball)
