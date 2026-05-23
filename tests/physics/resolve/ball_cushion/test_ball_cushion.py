@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from pooltool import physics, ptmath
-from pooltool.constants import sliding, stationary
+from pooltool.constants import airborne, sliding, stationary
 from pooltool.objects import (
     Ball,
     BallParams,
@@ -482,3 +482,48 @@ def test_make_kiss_fallback_boundary_circular(
     assert ptmath.norm3d(ball.state.rvw[0] - c) == pytest.approx(
         R + cushion_circular.radius + spacer, abs=1e-12
     )
+
+
+def test_make_kiss_z_clamp_linear(cushion_yaxis: LinearCushionSegment) -> None:
+    """Non-airborne balls end at z = R; airborne balls end at max(z_in, R)."""
+    R = BallParams.default().R
+    model = ball_lcushion_models[BallLCushionModel.MATHAVAN_2010]()
+
+    for z_in in [R - 1e-7, R, R + 1e-7]:
+        ball = Ball("cue")
+        ball.state.rvw[0] = [-R, 0, z_in]
+        ball.state.rvw[1] = [1.0, 0.0, 0.0]
+        ball.state.s = sliding
+        model.make_kiss(ball, cushion_yaxis)
+        assert ball.state.rvw[0, 2] == R
+
+    for z_in in [R - 1e-7, R, R + 0.05]:
+        ball = Ball("cue")
+        ball.state.rvw[0] = [-R, 0, z_in]
+        ball.state.rvw[1] = [1.0, 0.0, 0.0]
+        ball.state.s = airborne
+        model.make_kiss(ball, cushion_yaxis)
+        assert ball.state.rvw[0, 2] == max(z_in, R)
+
+
+def test_make_kiss_z_clamp_circular(cushion_circular: CircularCushionSegment) -> None:
+    """Non-airborne balls end at z = R; airborne balls end at max(z_in, R)."""
+    R = BallParams.default().R
+    dist = R + cushion_circular.radius
+    model = ball_ccushion_models[BallCCushionModel.MATHAVAN_2010]()
+
+    for z_in in [R - 1e-7, R, R + 1e-7]:
+        ball = Ball("cue")
+        ball.state.rvw[0] = [dist, 0.0, z_in]
+        ball.state.rvw[1] = [-1.0, 0.0, 0.0]
+        ball.state.s = sliding
+        model.make_kiss(ball, cushion_circular)
+        assert ball.state.rvw[0, 2] == R
+
+    for z_in in [R - 1e-7, R, R + 0.05]:
+        ball = Ball("cue")
+        ball.state.rvw[0] = [dist, 0.0, z_in]
+        ball.state.rvw[1] = [-1.0, 0.0, 0.0]
+        ball.state.s = airborne
+        model.make_kiss(ball, cushion_circular)
+        assert ball.state.rvw[0, 2] == max(z_in, R)
