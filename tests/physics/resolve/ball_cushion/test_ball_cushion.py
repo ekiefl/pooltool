@@ -24,12 +24,13 @@ from pooltool.physics.resolve.models import BallCCushionModel
 
 @pytest.fixture
 def cushion_yaxis():
-    h = PocketTableSpecs().cushion_height
+    specs = PocketTableSpecs()
 
     return LinearCushionSegment(
         "cushion",
-        p1=np.array([0, -1, h], dtype=np.float64),
-        p2=np.array([0, +1, h], dtype=np.float64),
+        p1=np.array([0, -1, specs.cushion_height], dtype=np.float64),
+        p2=np.array([0, +1, specs.cushion_height], dtype=np.float64),
+        nose_radius=specs.cushion_nose_radius,
     )
 
 
@@ -159,11 +160,12 @@ def _get_linear_spacer() -> float:
 
     probe = _Probe()
     R = BallParams.default().R
-    h = PocketTableSpecs().cushion_height
+    specs = PocketTableSpecs()
     cushion = LinearCushionSegment(
         "probe",
-        p1=np.array([0, -1, h], dtype=np.float64),
-        p2=np.array([0, +1, h], dtype=np.float64),
+        p1=np.array([0, -1, specs.cushion_height], dtype=np.float64),
+        p2=np.array([0, +1, specs.cushion_height], dtype=np.float64),
+        nose_radius=specs.cushion_nose_radius,
     )
     ball = Ball("probe")
     ball.state.rvw[0] = [-R, 0, R]
