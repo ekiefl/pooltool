@@ -110,6 +110,13 @@ class CoreBallLCushionCollision(ABC):
             return ball
 
         ball.state.rvw[0] = r + t * v
+
+        # Guard against z-drift.
+        if ball.state.rvw[0, 2] < ball.params.R:
+            ball.state.rvw[0, 2] = ball.params.R
+        if ball.state.rvw[0, 2] > ball.params.R and ball.state.s != const.airborne:
+            ball.state.rvw[0, 2] = ball.params.R
+
         return ball
 
     def resolve(
@@ -189,6 +196,13 @@ class CoreBallCCushionCollision(ABC):
             return ball
 
         ball.state.rvw[0] = r + t * v
+
+        # Guard against z-drift.
+        if ball.state.rvw[0, 2] < ball.params.R:
+            ball.state.rvw[0, 2] = ball.params.R
+        if ball.state.rvw[0, 2] > ball.params.R and ball.state.s != const.airborne:
+            ball.state.rvw[0, 2] = ball.params.R
+
         return ball
 
     def resolve(
