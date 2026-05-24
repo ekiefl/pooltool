@@ -17,7 +17,9 @@ from pooltool.physics.resolve.ball_ball import (
 from pooltool.physics.resolve.ball_ball.friction import (
     AlciatoreBallBallFriction,
 )
-from pooltool.physics.resolve.ball_ball.frictional_inelastic import FrictionalInelastic
+from pooltool.physics.resolve.ball_ball.frictional_inelastic import (
+    FrictionalInelastic2D,
+)
 from pooltool.physics.resolve.ball_cushion import (
     BallCCushionCollisionStrategy,
     BallLCushionCollisionStrategy,
@@ -68,7 +70,7 @@ def default_resolver() -> Resolver:
     The resolver YAML is found at `RESOLVER_PATH`.
     """
     return Resolver(
-        ball_ball=FrictionalInelastic(
+        ball_ball=FrictionalInelastic2D(
             friction=AlciatoreBallBallFriction(
                 a=0.009951,
                 b=0.108,
