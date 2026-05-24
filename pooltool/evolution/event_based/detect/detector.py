@@ -7,8 +7,7 @@ import pooltool.ptmath as ptmath
 from pooltool.events import Event, EventType, null_event
 from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.detect.ball_ball import (
-    get_next_ball_ball_2d_event,
-    get_next_ball_ball_3d_event,
+    get_next_ball_ball_event,
 )
 from pooltool.evolution.event_based.detect.ball_cushion import (
     get_next_ball_circular_cushion_event,
@@ -152,12 +151,11 @@ class EventDetector:
         candidates.append(get_next_ball_linear_cushion_event(shot, collision_cache))
         candidates.append(get_next_ball_circular_cushion_event(shot, collision_cache))
         candidates.append(get_next_ball_pocket_event(shot, collision_cache))
-
+        candidates.append(
+            get_next_ball_ball_event(shot, collision_cache, is_3d=self.is_3d)
+        )
         if self.is_3d:
-            candidates.append(get_next_ball_ball_3d_event(shot, collision_cache))
             candidates.append(get_next_ball_table_event(shot, collision_cache))
-        else:
-            candidates.append(get_next_ball_ball_2d_event(shot, collision_cache))
 
         min_time = min(event.time for event in candidates)
 
