@@ -12,6 +12,14 @@ from pooltool.objects.table.components import (
 )
 from pooltool.physics.dimensionality import Dim
 
+FALLBACK_DISPLACEMENT_FACTOR = 5
+"""Multiplier on ``spacer`` defining the max make_kiss displacement before falling back.
+
+If the velocity-based correction would move the ball more than
+``FALLBACK_DISPLACEMENT_FACTOR * spacer`` (e.g. on a near-grazing trajectory), make_kiss
+falls back to positioning along the cushion normal instead.
+"""
+
 
 class _BaseLinearStrategy(Protocol):
     def make_kiss(self, ball: Ball, cushion: LinearCushionSegment) -> Ball: ...
@@ -85,7 +93,7 @@ class CoreBallLCushionCollision(ABC):
         t2 = (-(R + spacer) - d0) / vn
         t = t1 if abs(t1) < abs(t2) else t2
 
-        if ptmath.norm3d(t * v) > 5 * spacer:
+        if ptmath.norm3d(t * v) > FALLBACK_DISPLACEMENT_FACTOR * spacer:
             return _apply_fallback_positioning_linear(ball, cushion, spacer)
 
         ball.state.rvw[0] = r + t * v
@@ -140,14 +148,9 @@ class CoreBallCCushionCollision(ABC):
         gamma = diff[0] ** 2 + diff[1] ** 2 - target**2
 
         roots_complex = ptmath.roots.quadratic.solve(alpha, beta, gamma)
+        t = ptmath.roots.get_real_smallest_magnitude_root(roots_complex)
 
-        imag_mag = np.abs(roots_complex.imag)
-        real_mag = np.abs(roots_complex.real)
-        keep = (imag_mag / real_mag) < 1e-3
-        roots = roots_complex[keep].real
-        t = roots[np.abs(roots).argmin()]
-
-        if ptmath.norm3d(t * v) > 5 * spacer:
+        if ptmath.norm3d(t * v) > FALLBACK_DISPLACEMENT_FACTOR * spacer:
             return _apply_fallback_positioning_circular(ball, cushion, spacer)
 
         ball.state.rvw[0] = r + t * v
