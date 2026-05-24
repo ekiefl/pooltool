@@ -9,6 +9,7 @@ from pooltool.objects.ball.datatypes import Ball
 from pooltool.physics.resolve.ball_ball.core import BallBallCollisionStrategy
 from pooltool.physics.resolve.ball_ball.frictional_inelastic import (
     FrictionalInelastic2D,
+    FrictionalInelastic3D,
 )
 from pooltool.physics.resolve.ball_ball.frictional_mathavan import FrictionalMathavan
 from pooltool.physics.resolve.ball_ball.frictionless_elastic import FrictionlessElastic
@@ -92,6 +93,7 @@ def test_head_on_zero_spin(model: BallBallCollisionStrategy):
     "model",
     [
         FrictionalInelastic2D(),
+        FrictionalInelastic3D(),
         FrictionalMathavan(num_iterations=int(1e6)),
     ],
 )
@@ -123,7 +125,9 @@ def test_head_on_zero_spin_inelastic(model: BallBallCollisionStrategy, e_b: floa
         assert cb_f.state.rvw[1][0] > 0
 
 
-@pytest.mark.parametrize("model", [FrictionalInelastic2D(), FrictionalMathavan()])
+@pytest.mark.parametrize(
+    "model", [FrictionalInelastic2D(), FrictionalInelastic3D(), FrictionalMathavan()]
+)
 @pytest.mark.parametrize("e_b", [0.6, 0.8, 1.0])
 def test_translating_head_on_zero_spin_inelastic(
     model: BallBallCollisionStrategy, e_b: float
@@ -140,7 +144,9 @@ def test_translating_head_on_zero_spin_inelastic(
     assert abs(cb_f.vel[1] - ob_f.vel[1]) < 1e-10
 
 
-@pytest.mark.parametrize("model", [FrictionalInelastic2D(), FrictionalMathavan()])
+@pytest.mark.parametrize(
+    "model", [FrictionalInelastic2D(), FrictionalInelastic3D(), FrictionalMathavan()]
+)
 @pytest.mark.parametrize("cb_wz_i", [0.1, 1, 10, 100])
 def test_head_on_z_spin(model: BallBallCollisionStrategy, cb_wz_i: float):
     """Cue ball has positive z-spin (e.g. hitting right-hand-side of cue ball)"""
@@ -164,6 +170,7 @@ def test_head_on_z_spin(model: BallBallCollisionStrategy, cb_wz_i: float):
     "model",
     [
         FrictionalInelastic2D(),
+        FrictionalInelastic3D(),
         FrictionalMathavan(num_iterations=int(1e5)),
     ],
 )
@@ -211,7 +218,7 @@ def test_gearing_z_spin(
     assert abs(ob_f.avel[2]) < 5e-3, "Gearing english shouldn't cause induced side-spin"
 
 
-@pytest.mark.parametrize("model", [FrictionalInelastic2D()])
+@pytest.mark.parametrize("model", [FrictionalInelastic2D(), FrictionalInelastic3D()])
 @pytest.mark.parametrize("speed", np.logspace(0, 1, 4))
 @pytest.mark.parametrize(
     "line_of_centers_angle_radians", np.linspace(0, 2.0 * math.pi, 6, endpoint=False)
