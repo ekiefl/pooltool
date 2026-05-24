@@ -89,7 +89,6 @@ class CoreBallLCushionCollision(ABC):
             return _apply_fallback_positioning_linear(ball, cushion, spacer)
 
         ball.state.rvw[0] = r + t * v
-        ball = _guard_against_z_drift(ball)
 
         return ball
 
@@ -152,7 +151,6 @@ class CoreBallCCushionCollision(ABC):
             return _apply_fallback_positioning_circular(ball, cushion, spacer)
 
         ball.state.rvw[0] = r + t * v
-        ball = _guard_against_z_drift(ball)
 
         return ball
 
@@ -168,15 +166,6 @@ class CoreBallCCushionCollision(ABC):
         return self.solve(ball, cushion)  # type: ignore
 
 
-def _guard_against_z_drift(ball: Ball) -> Ball:
-    if ball.state.rvw[0, 2] < ball.params.R:
-        ball.state.rvw[0, 2] = ball.params.R
-    if ball.state.rvw[0, 2] > ball.params.R and ball.state.s != const.airborne:
-        ball.state.rvw[0, 2] = ball.params.R
-
-    return ball
-
-
 def _apply_fallback_positioning_linear(
     ball: Ball, cushion: LinearCushionSegment, spacer: float
 ) -> Ball:
@@ -190,7 +179,7 @@ def _apply_fallback_positioning_linear(
     direction = ptmath.unit_vector(ball.state.rvw[0] - c)
     ball.state.rvw[0] = c + (ball.params.R + spacer) * direction
 
-    return _guard_against_z_drift(ball)
+    return ball
 
 
 def _apply_fallback_positioning_circular(
@@ -205,4 +194,4 @@ def _apply_fallback_positioning_circular(
     direction = ptmath.unit_vector(ball.state.rvw[0] - c)
     ball.state.rvw[0] = c + (ball.params.R + cushion.radius + spacer) * direction
 
-    return _guard_against_z_drift(ball)
+    return ball
