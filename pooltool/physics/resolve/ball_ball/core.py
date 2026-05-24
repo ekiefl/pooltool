@@ -2,11 +2,29 @@ from abc import ABC, abstractmethod
 from typing import Protocol
 
 import numpy as np
+from numpy.typing import NDArray
 
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.physics.dimensionality import Dim
+
+
+# stolen from stick_ball/core.py
+# TODO: move to common place
+def final_ball_motion_state(rvw: NDArray[np.float64], R: float) -> int:
+    """Return the final (post-strike) motion state label.
+
+    If the z-velocity is non-zero the ball is considered airborne, otherwise
+    it is sliding (a struck ball is always kinetic).
+
+    Notes:
+        - A universal ``final_ball_motion_state`` fn could be a good idea.
+    """
+    if rvw[1, 2] != 0.0:
+        return const.airborne
+
+    return const.sliding
 
 
 class _BaseStrategy(Protocol):

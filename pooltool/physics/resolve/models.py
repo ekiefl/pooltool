@@ -44,7 +44,8 @@ class BallBallModel(StrEnum):
     """
 
     FRICTIONLESS_ELASTIC = auto()
-    FRICTIONAL_INELASTIC = auto()
+    FRICTIONAL_INELASTIC_2D = auto()
+    FRICTIONAL_INELASTIC_3D = auto()
     FRICTIONAL_MATHAVAN = auto()
 
 
