@@ -68,13 +68,13 @@ class CoreBallLCushionCollision(ABC):
         """Translate the ball along its velocity so it nearly touches the cushion.
 
         Solves a quadratic equation for the time offset t such that the ball's
-        3D perpendicular distance to the cushion line equals R + spacer, then moves
+        perpendicular distance to the cushion line equals R + spacer, then moves
         the ball to r + t * v. The smallest-magnitude real root is chosen.
 
         If the ball is nontranslating or the displacement would exceed
         FALLBACK_DISPLACEMENT_FACTOR * spacer (e.g. on a near-grazing trajectory,
         or when the ball's velocity is parallel to the cushion axis), falls back to
-        positioning along the 3D perpendicular from the cushion line.
+        positioning along the perpendicular from the cushion line.
         """
         r = ball.state.rvw[0]
         v = ball.state.rvw[1]
@@ -100,7 +100,9 @@ class CoreBallLCushionCollision(ABC):
         if ptmath.norm3d(t * v) > FALLBACK_DISPLACEMENT_FACTOR * spacer:
             return _apply_fallback_positioning_linear(ball, cushion, spacer)
 
-        ball.state.rvw[0] = _lift_above_table(r + t * v, cushion, R)
+        ball.state.rvw[0] = _constrain_to_table(
+            r + t * v, cushion, R, airborne=ball.state.s == const.airborne
+        )
 
         return ball
 
@@ -157,7 +159,7 @@ class CoreBallCCushionCollision(ABC):
         if ptmath.norm3d(t * v) > FALLBACK_DISPLACEMENT_FACTOR * spacer:
             return _apply_fallback_positioning_circular(ball, cushion, spacer)
 
-        ball.state.rvw[0] = r + t * v
+        ball.state.rvw[0] = _clamp_to_table(r + t * v, R)
 
         return ball
 
@@ -176,7 +178,7 @@ class CoreBallCCushionCollision(ABC):
 def _apply_fallback_positioning_linear(
     ball: Ball, cushion: LinearCushionSegment, spacer: float
 ) -> Ball:
-    """Place the ball at R + spacer from the cushion line along the 3D perpendicular.
+    """Place the ball at R + spacer from the cushion line along the perpendicular.
 
     Used when the ball is nontranslating (no velocity to trace back along) or
     when the velocity-based correction would produce an excessive displacement.
@@ -185,29 +187,48 @@ def _apply_fallback_positioning_linear(
     c = ptmath.point_on_line_closest_to_point(cushion.p1, cushion.p2, ball.state.rvw[0])
     direction = ptmath.unit_vector(ball.state.rvw[0] - c)
     candidate = c + (R + spacer) * direction
-    ball.state.rvw[0] = _lift_above_table(candidate, cushion, R)
+    ball.state.rvw[0] = _constrain_to_table(
+        candidate, cushion, R, airborne=ball.state.s == const.airborne
+    )
 
     return ball
 
 
-def _lift_above_table(
+def _clamp_to_table(pos: np.ndarray, R: float) -> np.ndarray:
+    """Raise ``pos[2]`` to ``R`` if below, leave unchanged otherwise.
+
+    For vertical-axis cushions (the current circular cushion model), this preserves
+    distance from the cushion axis since the axis runs along z.
+    """
+    if pos[2] >= R:
+        return pos
+    new_pos = pos.copy()
+    new_pos[2] = R
+    return new_pos
+
+
+def _constrain_to_table(
     pos: np.ndarray,
     cushion: LinearCushionSegment,
     R: float,
+    airborne: bool,
 ) -> np.ndarray:
-    """Rotate ``pos`` around the cushion axis until ``pos[2] == R``, preserving its
-    distance from the cushion line. Returns ``pos`` unchanged if ``pos[2] >= R``.
+    """Rotate ``pos`` around the cushion axis to enforce the ball's table constraint.
 
-    Constrains a candidate ball position to the table (z = R) when the 3D
-    perpendicular from the cushion line would otherwise place it below. The ball
-    traces a circle around the cushion axis at the existing arm length, and is
-    moved along that circle to the intersection with the z = R plane that is on
-    the same side as the original position.
+    For non-airborne balls, the constraint is ``z == R`` exactly: the ball must rest on
+    the table. The perpendicular from the cushion line can place the candidate either
+    above or below R, and both directions need correcting — above is unphysical lift
+    (artificial PE gain), below is table penetration.
 
-    Degenerate cases (cushion axis nearly aligned with z, or arm too short to
-    reach z = R) return ``pos`` unchanged.
+    For airborne balls, the constraint is ``z >= R``: only lift when below R.
+
+    The rotation preserves the arm length (distance from cushion line) and keeps the
+    ball on its original side around the axis.
     """
-    if pos[2] >= R:
+    if airborne and pos[2] >= R:
+        return pos
+
+    if pos[2] == R:
         return pos
 
     c = ptmath.point_on_line_closest_to_point(cushion.p1, cushion.p2, pos)
@@ -216,22 +237,12 @@ def _lift_above_table(
     direction = arm / arm_len
 
     u = cushion.unit_axis
-    u_z = u[2]
-    sin_lat = np.sqrt(1.0 - u_z * u_z)
-    if sin_lat < 1e-12:
-        return pos
+    z_hat = np.array([0.0, 0.0, 1.0])
+    h_hat = np.array([u[1], -u[0], 0.0])
 
-    z_in_plane_unit = np.array(
-        [-u[0] * u_z, -u[1] * u_z, 1.0 - u_z * u_z], dtype=np.float64
-    ) / sin_lat
-    h_hat = np.cross(u, z_in_plane_unit)
-
-    a = (R - c[2]) / arm_len / sin_lat
-    if abs(a) > 1.0:
-        return pos
-
-    b = float(np.sign(np.dot(direction, h_hat))) * np.sqrt(1.0 - a * a)
-    new_direction = a * z_in_plane_unit + b * h_hat
+    a = (R - c[2]) / arm_len
+    b = np.sign(np.dot(direction, h_hat)) * np.sqrt(1.0 - a * a)
+    new_direction = a * z_hat + b * h_hat
 
     return c + arm_len * new_direction
 
