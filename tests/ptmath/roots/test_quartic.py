@@ -1,9 +1,10 @@
 from pathlib import Path
 
 import numpy as np
+import pytest
 from numpy.typing import NDArray
 
-from pooltool.ptmath.roots._quartic_numba import solve_many
+from pooltool.ptmath.roots._quartic_numba import solve, solve_many
 
 TEST_DIR = Path(__file__).parent
 DATA_DIR = TEST_DIR / "data"
@@ -53,6 +54,11 @@ def test_coefficients_ground_truth():
             computed_roots_array[i], true_roots_array[i]
         )
         assert np.allclose(computed_roots, true_roots, rtol=1e-15)
+
+
+def test_raises_when_not_a_quartic():
+    with pytest.raises(ValueError, match="not a quartic"):
+        solve(0.0, 1.0, -6.0, 11.0, -6.0)
 
 
 def test_1010_reference():
