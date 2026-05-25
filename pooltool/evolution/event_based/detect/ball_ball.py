@@ -47,7 +47,7 @@ def ball_ball_collision_time_3d(
     p12: NDArray[np.float64] = p1 - p2
 
     C: NDArray[np.float64] = parabola_sphere_distance_quartic_coefficients(
-        p12, ball1.params.R + ball2.params.R
+        p12.T, ball1.params.R + ball2.params.R
     )
 
     # FIXME: quartic solver can't handle cubics or quadratics, so checking for quadratic here
