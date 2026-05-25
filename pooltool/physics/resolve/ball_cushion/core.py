@@ -67,9 +67,11 @@ class CoreBallLCushionCollision(ABC):
     def make_kiss(self, ball: Ball, cushion: LinearCushionSegment) -> Ball:
         """Translate the ball along its velocity so it nearly touches the cushion.
 
-        Solves a quadratic equation for the time offset t such that the ball's
-        perpendicular distance to the cushion line equals R + spacer, then moves
-        the ball to r + t * v. The smallest-magnitude real root is chosen.
+        The cushion is modeled as a thin cylinder of radius ``cushion.nose_radius``
+        around the line through ``p1`` and ``p2``. Solves a quadratic equation for
+        the time offset t such that the ball's perpendicular distance to the
+        cushion line equals ``R + nose_radius + spacer``, then moves the ball to
+        ``r + t * v``. The smallest-magnitude real root is chosen.
 
         If the ball is nontranslating or the displacement would exceed
         FALLBACK_DISPLACEMENT_FACTOR * spacer (e.g. on a near-grazing trajectory,
@@ -88,7 +90,7 @@ class CoreBallLCushionCollision(ABC):
         q0 = r - cushion.p1
         v_perp = v - np.dot(v, u) * u
         q0_perp = q0 - np.dot(q0, u) * u
-        target = R + spacer
+        target = R + cushion.nose_radius + spacer
 
         alpha = np.dot(v_perp, v_perp)
         beta = 2 * np.dot(q0_perp, v_perp)
@@ -178,7 +180,7 @@ class CoreBallCCushionCollision(ABC):
 def _apply_fallback_positioning_linear(
     ball: Ball, cushion: LinearCushionSegment, spacer: float
 ) -> Ball:
-    """Place the ball at R + spacer from the cushion line along the perpendicular.
+    """Place the ball at R + nose_radius + spacer from the cushion line along the perpendicular.
 
     Used when the ball is nontranslating (no velocity to trace back along) or
     when the velocity-based correction would produce an excessive displacement.
@@ -186,7 +188,7 @@ def _apply_fallback_positioning_linear(
     R = ball.params.R
     c = ptmath.point_on_line_closest_to_point(cushion.p1, cushion.p2, ball.state.rvw[0])
     direction = ptmath.unit_vector(ball.state.rvw[0] - c)
-    candidate = c + (R + spacer) * direction
+    candidate = c + (R + cushion.nose_radius + spacer) * direction
     ball.state.rvw[0] = _constrain_to_table(
         candidate, cushion, R, airborne=ball.state.s == const.airborne
     )
