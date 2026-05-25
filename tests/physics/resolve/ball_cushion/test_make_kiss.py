@@ -14,6 +14,16 @@ from pooltool.physics.resolve.ball_cushion import (
 from pooltool.physics.resolve.models import BallLCushionModel
 
 
+def touch_radius(cushion: LinearCushionSegment) -> float:
+    """Distance from cushion axis to ball center at which the ball just touches the cushion surface."""
+    return BallParams.default().R + cushion.nose_radius
+
+
+def expected_post_kiss_dist(cushion: LinearCushionSegment) -> float:
+    """Distance from cushion axis to ball center expected after a successful make_kiss."""
+    return touch_radius(cushion) + MIN_DIST
+
+
 def ball_at(
     cushion: LinearCushionSegment,
     theta_deg: float,
@@ -34,15 +44,14 @@ def ball_at(
     Args:
         theta_deg: Elevation angle of the ball position from the cushion axis (degrees).
         penetrance: Effective dr inside the touch radius. ``penetrance = 0`` puts the
-            ball center at distance R from the cushion axis (just touching).
-            Positive values place the ball overlapping the cushion; negative values
-            place it separated.
+            ball center at distance ``R + nose_radius`` from the cushion axis
+            (just touching the cushion surface). Positive values place the ball
+            overlapping the cushion; negative values place it separated.
 
     Assumes the cushion is along the y-axis (as in the conftest fixture).
     """
-    R = BallParams.default().R
     h_cushion = cushion.p1[2]
-    r = R - penetrance
+    r = touch_radius(cushion) - penetrance
     theta_rad = np.radians(theta_deg)
     xb = -r * np.cos(theta_rad)
     zb = h_cushion + r * np.sin(theta_rad)
@@ -71,16 +80,16 @@ def ball_on_table(
 
     Args:
         penetrance: Effective dr inside the touch radius. ``penetrance = 0`` puts the
-            ball center at distance R from the cushion axis (just touching).
-            Positive values place the ball overlapping the cushion; negative values
-            place it separated.
+            ball center at distance ``R + nose_radius`` from the cushion axis
+            (just touching the cushion surface). Positive values place the ball
+            overlapping the cushion; negative values place it separated.
 
     The ball is placed on the -x side, at y = 0. Assumes the cushion is along the
     y-axis (as in the conftest fixture).
     """
     R = BallParams.default().R
     h_cushion = cushion.p1[2]
-    r = R - penetrance
+    r = touch_radius(cushion) - penetrance
     xy_dist = float(np.sqrt(r**2 - (R - h_cushion) ** 2))
 
     ball = Ball("cue")
@@ -119,19 +128,19 @@ def assert_displaced_along_velocity(ball_before: Ball, ball: Ball) -> None:
 
 def test_ball_on_table(cushion: LinearCushionSegment) -> None:
     """Ball resting on the table (z=R), slight overlap, horizontal velocity."""
-    R = BallParams.default().R
     ball = ball_on_table(cushion, penetrance=1e-7, vel=(1.0, 0.0, 0.0))
     ball_before = ball.copy()
 
     make_kiss_linear(ball, cushion)
 
-    assert dist_to_cushion_axis(ball, cushion) == pytest.approx(R + MIN_DIST, abs=1e-12)
+    assert dist_to_cushion_axis(ball, cushion) == pytest.approx(
+        expected_post_kiss_dist(cushion), abs=1e-12
+    )
     assert_displaced_along_velocity(ball_before, ball)
 
 
 def test_ball_above_cushion(cushion: LinearCushionSegment) -> None:
     """Airborne ball above cushion line, slight overlap, horizontal velocity."""
-    R = BallParams.default().R
     ball = ball_at(
         cushion, theta_deg=15, penetrance=1e-7, vel=(1.0, 0.0, 0.0), s=airborne
     )
@@ -139,13 +148,14 @@ def test_ball_above_cushion(cushion: LinearCushionSegment) -> None:
 
     make_kiss_linear(ball, cushion)
 
-    assert dist_to_cushion_axis(ball, cushion) == pytest.approx(R + MIN_DIST, abs=1e-12)
+    assert dist_to_cushion_axis(ball, cushion) == pytest.approx(
+        expected_post_kiss_dist(cushion), abs=1e-12
+    )
     assert_displaced_along_velocity(ball_before, ball)
 
 
 def test_ball_above_cushion_diagonal_velocity(cushion: LinearCushionSegment) -> None:
     """Airborne ball above cushion with vz != 0; displacement still along 3D velocity."""
-    R = BallParams.default().R
     vel_unit = np.array([1.0, 0.0, -0.5]) / np.linalg.norm([1.0, 0.0, -0.5])
     vel = (float(vel_unit[0]), float(vel_unit[1]), float(vel_unit[2]))
     ball = ball_at(cushion, theta_deg=15, penetrance=1e-7, vel=vel, s=airborne)
@@ -153,7 +163,9 @@ def test_ball_above_cushion_diagonal_velocity(cushion: LinearCushionSegment) -> 
 
     make_kiss_linear(ball, cushion)
 
-    assert dist_to_cushion_axis(ball, cushion) == pytest.approx(R + MIN_DIST, abs=1e-12)
+    assert dist_to_cushion_axis(ball, cushion) == pytest.approx(
+        expected_post_kiss_dist(cushion), abs=1e-12
+    )
     assert_displaced_along_velocity(ball_before, ball)
 
 
@@ -193,7 +205,9 @@ def test_nonairborne_ball_on_table_stays_on_table(
     assert ball.state.rvw[0, 2] == pytest.approx(R, abs=1e-12), (
         f"Non-airborne ball not on table: z={ball.state.rvw[0, 2]}, R={R}"
     )
-    assert dist_to_cushion_axis(ball, cushion) == pytest.approx(R + MIN_DIST, abs=1e-12)
+    assert dist_to_cushion_axis(ball, cushion) == pytest.approx(
+        expected_post_kiss_dist(cushion), abs=1e-12
+    )
 
 
 def test_airborne_overlapping_ball_on_table_lands_on_table(
@@ -213,16 +227,18 @@ def test_airborne_overlapping_ball_on_table_lands_on_table(
     assert ball.state.rvw[0, 2] == pytest.approx(R, abs=1e-12), (
         f"Airborne ball not on table: z={ball.state.rvw[0, 2]}, R={R}"
     )
-    assert dist_to_cushion_axis(ball, cushion) == pytest.approx(R + MIN_DIST, abs=1e-12)
+    assert dist_to_cushion_axis(ball, cushion) == pytest.approx(
+        expected_post_kiss_dist(cushion), abs=1e-12
+    )
 
 
 def test_airborne_stress(cushion: LinearCushionSegment) -> None:
-    """Random airborne configurations all satisfy dist == R + spacer after make_kiss.
+    """Random airborne configurations all satisfy dist == R + nose_radius + spacer after make_kiss.
 
     Sweeps theta, penetrance, and 3D velocity. Covers both branches: the velocity
     branch (most cases) and the fallback (grazing or velocity-parallel-to-axis).
     """
-    R = BallParams.default().R
+    expected = expected_post_kiss_dist(cushion)
     rng = np.random.default_rng(42)
     N = 50
 
@@ -242,7 +258,7 @@ def test_airborne_stress(cushion: LinearCushionSegment) -> None:
         make_kiss_linear(ball, cushion)
 
         assert dist_to_cushion_axis(ball, cushion) == pytest.approx(
-            R + MIN_DIST, abs=1e-12
+            expected, abs=1e-12
         ), (
             f"airborne case failed: theta_deg={theta_deg}, penetrance={penetrance}, "
             f"vel={vel}"
@@ -250,11 +266,11 @@ def test_airborne_stress(cushion: LinearCushionSegment) -> None:
 
 
 def test_nonairborne_stress(cushion: LinearCushionSegment) -> None:
-    """Random sliding/rolling configurations all satisfy dist == R + spacer after make_kiss.
+    """Random sliding/rolling configurations all satisfy dist == R + nose_radius + spacer after make_kiss.
 
     Sweeps penetrance, xy velocity, and motion state (sliding vs rolling).
     """
-    R = BallParams.default().R
+    expected = expected_post_kiss_dist(cushion)
     rng = np.random.default_rng(42)
     states = (sliding, rolling)
     N = 50
@@ -271,7 +287,7 @@ def test_nonairborne_stress(cushion: LinearCushionSegment) -> None:
         make_kiss_linear(ball, cushion)
 
         assert dist_to_cushion_axis(ball, cushion) == pytest.approx(
-            R + MIN_DIST, abs=1e-12
+            expected, abs=1e-12
         ), (
             f"non-airborne case failed: penetrance={penetrance}, vel={vel}, state={state}"
         )
