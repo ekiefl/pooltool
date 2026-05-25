@@ -17,7 +17,7 @@ from pooltool.evolution.event_based.detect.quartic_coefficients import (
     parabola_sphere_distance_quartic_coefficients,
 )
 from pooltool.physics.utils import get_u_vec
-from pooltool.ptmath.roots import quartic
+from pooltool.ptmath.roots import quadratic, quartic
 from pooltool.ptmath.roots.core import get_real_positive_smallest_root
 from pooltool.system.datatypes import System
 
@@ -49,6 +49,12 @@ def ball_ball_collision_time_3d(
     C: NDArray[np.float64] = parabola_sphere_distance_quartic_coefficients(
         p12, ball1.params.R + ball2.params.R
     )
+
+    # FIXME: quartic solver can't handle cubics or quadratics, so checking for quadratic here
+    if np.isclose(C[4], 0.0):
+        # C[3] must also be 0.0, and this is a quadratic
+        assert np.isclose(C[3], 0.0)
+        return get_real_positive_smallest_root(quadratic.solve(C[2], C[1], C[0]))
 
     return get_real_positive_smallest_root(quartic.solve(C[4], C[3], C[2], C[1], C[0]))
 
