@@ -424,18 +424,38 @@ def solve_many(ps: NDArray[np.float64]) -> NDArray[np.complex128]:
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def solve(a: float, b: float, c: float, d: float, e: float) -> NDArray[np.complex128]:
-    """Solve quartic equation.
+    """Solve quartic equation ``a*t^4 + b*t^3 + c*t^2 + d*t + e = 0``.
 
     Args:
-        coeff: Array [a, b, c, d, e] representing at^4 + bt^3 + ct^2 + dt + e = 0
+        a: Coefficient of ``t^4``. Must be nonzero.
+        b: Coefficient of ``t^3``.
+        c: Coefficient of ``t^2``.
+        d: Coefficient of ``t``.
+        e: Constant term.
 
     Returns:
-        Array of 4 complex roots
-    """
-    roots = np.zeros(4, dtype=np.complex128)
+        Array of 4 complex roots.
 
+    Raises:
+        ValueError: If ``a == 0`` (the polynomial is not a quartic).
+
+    Note:
+        TODO: Currently, this handles genuine quartics only, i.e. ``a != 0``.
+
+        For all collision-detection contexts that we're aware of, ``a == 0`` always
+        implies ``b == 0``. Thus, the cubic case (``a == 0, b != 0``) is unreachable.
+        Thus, until this function handles ``a == 0``, the workaround is to detect ``a ==
+        0`` upstream and dispatch to the quadratic solver instead (after also verifying
+        that ``b==0``).
+    """
     if a == 0.0:
-        return roots
+        raise ValueError(
+            "Leading coefficient a is zero; this is not a quartic. "
+            "Use a cubic/quadratic/linear solver, or handle the degenerate case at "
+            "the call site."
+        )
+
+    roots = np.zeros(4, dtype=np.complex128)
 
     a_p = b / a
     b_p = c / a
