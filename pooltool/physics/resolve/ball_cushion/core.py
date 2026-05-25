@@ -159,7 +159,7 @@ class CoreBallCCushionCollision(ABC):
         if ptmath.norm3d(t * v) > FALLBACK_DISPLACEMENT_FACTOR * spacer:
             return _apply_fallback_positioning_circular(ball, cushion, spacer)
 
-        ball.state.rvw[0] = _clamp_to_table(r + t * v, R)
+        ball.state.rvw[0] = r + t * v
 
         return ball
 
@@ -192,19 +192,6 @@ def _apply_fallback_positioning_linear(
     )
 
     return ball
-
-
-def _clamp_to_table(pos: np.ndarray, R: float) -> np.ndarray:
-    """Raise ``pos[2]`` to ``R`` if below, leave unchanged otherwise.
-
-    For vertical-axis cushions (the current circular cushion model), this preserves
-    distance from the cushion axis since the axis runs along z.
-    """
-    if pos[2] >= R:
-        return pos
-    new_pos = pos.copy()
-    new_pos[2] = R
-    return new_pos
 
 
 def _constrain_to_table(

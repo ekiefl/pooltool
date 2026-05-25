@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from pooltool import ptmath
-from pooltool.constants import MIN_DIST, airborne, sliding, stationary
+from pooltool.constants import MIN_DIST, airborne, rolling, sliding, stationary
 from pooltool.objects import (
     Ball,
     BallParams,
@@ -214,3 +214,64 @@ def test_airborne_overlapping_ball_on_table_lands_on_table(
         f"Airborne ball not on table: z={ball.state.rvw[0, 2]}, R={R}"
     )
     assert dist_to_cushion_axis(ball, cushion) == pytest.approx(R + MIN_DIST, abs=1e-12)
+
+
+def test_airborne_stress(cushion: LinearCushionSegment) -> None:
+    """Random airborne configurations all satisfy dist == R + spacer after make_kiss.
+
+    Sweeps theta, penetrance, and 3D velocity. Covers both branches: the velocity
+    branch (most cases) and the fallback (grazing or velocity-parallel-to-axis).
+    """
+    R = BallParams.default().R
+    rng = np.random.default_rng(42)
+    N = 50
+
+    for _ in range(N):
+        theta_deg = float(rng.uniform(-85.0, 85.0))
+        penetrance = float(rng.uniform(-0.01, 0.005))
+        vel_dir = rng.standard_normal(3)
+        vel_dir /= np.linalg.norm(vel_dir)
+        speed = float(rng.uniform(0.1, 2.0))
+        vel = (
+            float(speed * vel_dir[0]),
+            float(speed * vel_dir[1]),
+            float(speed * vel_dir[2]),
+        )
+
+        ball = ball_at(cushion, theta_deg, penetrance, vel=vel, s=airborne)
+        make_kiss_linear(ball, cushion)
+
+        assert dist_to_cushion_axis(ball, cushion) == pytest.approx(
+            R + MIN_DIST, abs=1e-12
+        ), (
+            f"airborne case failed: theta_deg={theta_deg}, penetrance={penetrance}, "
+            f"vel={vel}"
+        )
+
+
+def test_nonairborne_stress(cushion: LinearCushionSegment) -> None:
+    """Random sliding/rolling configurations all satisfy dist == R + spacer after make_kiss.
+
+    Sweeps penetrance, xy velocity, and motion state (sliding vs rolling).
+    """
+    R = BallParams.default().R
+    rng = np.random.default_rng(42)
+    states = (sliding, rolling)
+    N = 50
+
+    for _ in range(N):
+        penetrance = float(rng.uniform(-0.01, 0.005))
+        vel_xy = rng.standard_normal(2)
+        vel_xy /= np.linalg.norm(vel_xy)
+        speed = float(rng.uniform(0.1, 2.0))
+        vel = (float(speed * vel_xy[0]), float(speed * vel_xy[1]), 0.0)
+        state = states[int(rng.integers(0, 2))]
+
+        ball = ball_on_table(cushion, penetrance=penetrance, vel=vel, s=state)
+        make_kiss_linear(ball, cushion)
+
+        assert dist_to_cushion_axis(ball, cushion) == pytest.approx(
+            R + MIN_DIST, abs=1e-12
+        ), (
+            f"non-airborne case failed: penetrance={penetrance}, vel={vel}, state={state}"
+        )
