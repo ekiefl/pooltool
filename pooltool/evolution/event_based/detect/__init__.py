@@ -1,6 +1,5 @@
 from pooltool.evolution.event_based.detect.ball_ball import (
-    get_next_ball_ball_2d_event,
-    get_next_ball_ball_3d_event,
+    get_next_ball_ball_event,
 )
 from pooltool.evolution.event_based.detect.ball_cushion import (
     get_next_ball_circular_cushion_event,
@@ -19,8 +18,7 @@ from pooltool.evolution.event_based.detect.stick_ball import (
 
 __all__ = [
     "EventDetector",
-    "get_next_ball_ball_2d_event",
-    "get_next_ball_ball_3d_event",
+    "get_next_ball_ball_event",
     "get_next_ball_circular_cushion_event",
     "get_next_ball_linear_cushion_event",
     "get_next_ball_pocket_event",

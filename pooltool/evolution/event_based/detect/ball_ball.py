@@ -10,10 +10,53 @@ import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.events import Event, EventType, ball_ball_collision, null_event
 from pooltool.evolution.event_based.cache import CollisionCache
+from pooltool.evolution.event_based.detect.ball_position_polynomial import (
+    ball_position_polynomial,
+)
+from pooltool.evolution.event_based.detect.quartic_coefficients import (
+    parabola_sphere_distance_quartic_coefficients,
+)
 from pooltool.physics.utils import get_u_vec
-from pooltool.ptmath.roots import quartic
+from pooltool.ptmath.roots import quadratic, quartic
 from pooltool.ptmath.roots.core import get_real_positive_smallest_root
 from pooltool.system.datatypes import System
+
+
+def ball_ball_collision_time_3d(
+    ball1,
+    ball2,
+) -> float:
+    """Get the time until collision between 2 balls."""
+    p1: NDArray[np.float64] = ball_position_polynomial(
+        ball1.state.s,
+        ball1.state.rvw,
+        ball1.params.R,
+        ball1.params.u_r,
+        ball1.params.u_s,
+        ball1.params.g,
+    )
+    p2: NDArray[np.float64] = ball_position_polynomial(
+        ball2.state.s,
+        ball2.state.rvw,
+        ball2.params.R,
+        ball2.params.u_r,
+        ball2.params.u_s,
+        ball2.params.g,
+    )
+
+    p12: NDArray[np.float64] = p1 - p2
+
+    C: NDArray[np.float64] = parabola_sphere_distance_quartic_coefficients(
+        p12.T, ball1.params.R + ball2.params.R
+    )
+
+    # FIXME: quartic solver can't handle cubics or quadratics, so checking for quadratic here
+    if np.isclose(C[4], 0.0):
+        # C[3] must also be 0.0, and this is a quadratic
+        assert np.isclose(C[3], 0.0)
+        return get_real_positive_smallest_root(quadratic.solve(C[2], C[1], C[0]))
+
+    return get_real_positive_smallest_root(quartic.solve(C[4], C[3], C[2], C[1], C[0]))
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -81,7 +124,9 @@ def ball_ball_collision_time(
     return get_real_positive_smallest_root(quartic.solve(a, b, c, d, e))
 
 
-def get_next_ball_ball_2d_event(shot: System, collision_cache: CollisionCache) -> Event:
+def get_next_ball_ball_event(
+    shot: System, collision_cache: CollisionCache, *, is_3d: bool
+) -> Event:
     """Detect the next ball-ball collision in 2D mode."""
     cache = collision_cache.times.setdefault(EventType.BALL_BALL, {})
 
@@ -111,27 +156,30 @@ def get_next_ball_ball_2d_event(shot: System, collision_cache: CollisionCache) -
         ):
             cache[ball_pair] = shot.t
         else:
-            dtau_E = ball_ball_collision_time(
-                rvw1=ball1_state.rvw,
-                rvw2=ball2_state.rvw,
-                s1=ball1_state.s,
-                s2=ball2_state.s,
-                mu1=(
-                    ball1_params.u_s
-                    if ball1_state.s == const.sliding
-                    else ball1_params.u_r
-                ),
-                mu2=(
-                    ball2_params.u_s
-                    if ball2_state.s == const.sliding
-                    else ball2_params.u_r
-                ),
-                m1=ball1_params.m,
-                m2=ball2_params.m,
-                g1=ball1_params.g,
-                g2=ball2_params.g,
-                R=ball1_params.R,
-            )
+            if is_3d:
+                dtau_E = ball_ball_collision_time_3d(ball1, ball2)
+            else:
+                dtau_E = ball_ball_collision_time(
+                    rvw1=ball1_state.rvw,
+                    rvw2=ball2_state.rvw,
+                    s1=ball1_state.s,
+                    s2=ball2_state.s,
+                    mu1=(
+                        ball1_params.u_s
+                        if ball1_state.s == const.sliding
+                        else ball1_params.u_r
+                    ),
+                    mu2=(
+                        ball2_params.u_s
+                        if ball2_state.s == const.sliding
+                        else ball2_params.u_r
+                    ),
+                    m1=ball1_params.m,
+                    m2=ball2_params.m,
+                    g1=ball1_params.g,
+                    g2=ball2_params.g,
+                    R=ball1_params.R,
+                )
             cache[ball_pair] = shot.t + dtau_E
 
     if not cache:
@@ -144,7 +192,3 @@ def get_next_ball_ball_2d_event(shot: System, collision_cache: CollisionCache) -
         ball2=shot.balls[ball_pair[1]],
         time=cache[ball_pair],
     )
-
-
-def get_next_ball_ball_3d_event(shot: System, collision_cache: CollisionCache) -> Event:
-    return null_event(np.inf)
