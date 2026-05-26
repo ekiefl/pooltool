@@ -409,7 +409,8 @@ def test_almost_touching_ball_ball_collision():
         assert diff < 10e-12  # Less than 10 femptosecond difference
 
 
-def test_ball_ball_collision_for_intersecting_balls():
+@pytest.mark.parametrize("is_3d", [True, False])
+def test_ball_ball_collision_for_intersecting_balls(is_3d: bool):
     """Two already intersecting balls collide.
 
     Previously, intersecting balls were prevented from colliding to avoid perpetual
@@ -452,7 +453,7 @@ def test_ball_ball_collision_for_intersecting_balls():
     _assert_rolling(system.balls["cue"].state.rvw, system.balls["cue"].params.R)
 
     assert _DETECTOR.get_next_event(system).event_type == EventType.BALL_BALL
-    collision_event = get_next_ball_ball_event(system, CollisionCache(), is_3d=True)
+    collision_event = get_next_ball_ball_event(system, CollisionCache(), is_3d=is_3d)
     assert collision_event.time != np.inf
     assert collision_event.time == 0
 
