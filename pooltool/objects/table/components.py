@@ -47,7 +47,7 @@ class CushionDirection:
 
 @define(eq=False, frozen=True, slots=False)
 class LinearCushionSegment:
-    """A linear cushion segment defined by the line between points :math:`p_1` and :math:`p_2`.
+    """A linear cushion segment defined by a skinny cylinder between points :math:`p_1` and :math:`p_2`.
 
     Attributes:
         id:
@@ -62,6 +62,9 @@ class LinearCushionSegment:
 
             Note:
                 - ``p1`` and ``p2`` must share the same height (``p1[2] == p2[2]``).
+        nose_radius:
+            The radius of the cylinder defined between points ``p1`` and ``p2``. This is
+            referred to as the cushion nose radius.
         direction:
             The cushion direction (*default* =
             :attr:`pooltool.objects.CushionDirection.BOTH`).
@@ -72,6 +75,7 @@ class LinearCushionSegment:
     id: str
     p1: NDArray[np.float64]
     p2: NDArray[np.float64]
+    nose_radius: float
     direction: int = field(default=CushionDirection.BOTH)
 
     def __attrs_post_init__(self):
@@ -217,7 +221,10 @@ class LinearCushionSegment:
     @staticmethod
     def dummy() -> LinearCushionSegment:
         return LinearCushionSegment(
-            id="dummy", p1=np.array([0, 0, 1]), p2=np.array([1, 1, 1])
+            id="dummy",
+            p1=np.array([0, 0, 1]),
+            p2=np.array([1, 1, 1]),
+            nose_radius=0.005,
         )
 
 

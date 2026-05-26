@@ -16,6 +16,7 @@ def lin_seg():
         "lt",
         p1=np.array([0, 0, 0]),
         p2=np.array([1, 1, 0]),
+        nose_radius=0.005,
     )
 
 
@@ -44,6 +45,7 @@ def test_linear_segment_creation():
             "lt",
             p1=np.array([0, 0, 0]),
             p2=np.array([0, 0, 1]),
+            nose_radius=0.005,
         )
 
 
