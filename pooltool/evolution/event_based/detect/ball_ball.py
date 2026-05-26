@@ -22,7 +22,7 @@ from pooltool.ptmath.roots.core import get_real_positive_smallest_root
 from pooltool.system.datatypes import Ball, System
 
 
-def ball_ball_collision_time_3d(
+def ball_ball_collision_time(
     ball1: Ball,
     ball2: Ball,
 ) -> float:
@@ -165,7 +165,7 @@ def get_next_ball_ball_event(
             cache[ball_pair] = shot.t
         else:
             if is_3d:
-                dtau_E = ball_ball_collision_time_3d(ball1, ball2)
+                dtau_E = ball_ball_collision_time(ball1, ball2)
             else:
                 dtau_E = ball_ball_collision_time_2d(
                     rvw1=ball1_state.rvw,
