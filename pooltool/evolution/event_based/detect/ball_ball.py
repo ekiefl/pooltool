@@ -26,7 +26,7 @@ def ball_ball_collision_time_3d(
     ball1,
     ball2,
 ) -> float:
-    """Get the time until collision between 2 balls."""
+    """Get the time until collision between two balls."""
     p1: NDArray[np.float64] = ball_position_polynomial(
         ball1.state.s,
         ball1.state.rvw,
@@ -60,7 +60,7 @@ def ball_ball_collision_time_3d(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
-def ball_ball_collision_time(
+def ball_ball_collision_time_2d(
     rvw1: NDArray[np.float64],
     rvw2: NDArray[np.float64],
     s1: int,
@@ -73,7 +73,15 @@ def ball_ball_collision_time(
     g2: float,
     R: float,
 ) -> float:
-    """Get the time until collision between 2 balls."""
+    """Get the time until collision between two balls.
+
+    Note:
+        - TODO(Evan) This is a legacy function used for detecting ball-ball collisions
+          under the assumption of 2D (on-table) trajectories. It's behavior is in theory
+          superseded by :func:`ball_ball_collision_time`, however remains in production
+          until it can be proven that :func:`ball_ball_collision` treats 2D trajectories
+          identically.
+    """
     c1x, c1y = rvw1[0, 0], rvw1[0, 1]
     c2x, c2y = rvw2[0, 0], rvw2[0, 1]
 
@@ -159,7 +167,7 @@ def get_next_ball_ball_event(
             if is_3d:
                 dtau_E = ball_ball_collision_time_3d(ball1, ball2)
             else:
-                dtau_E = ball_ball_collision_time(
+                dtau_E = ball_ball_collision_time_2d(
                     rvw1=ball1_state.rvw,
                     rvw2=ball2_state.rvw,
                     s1=ball1_state.s,

@@ -11,7 +11,24 @@ from pooltool.physics.utils import tangent_surface_velocity
 def ball_position_polynomial(
     s: int, rvw: NDArray[np.float64], R: float, mu_rr: float, mu_s: float, g: float
 ) -> NDArray[np.float64]:
+    """Build the position-vs-time polynomial for a ball.
 
+    The trajectory is expressed as
+
+        r(t) = r0   + V0   * t + 1/2 a * t**2
+             = p[0] + p[1] * t + p[2]  * t**2
+
+    where each row of the returned ``(3, 3)`` array is an ``(x, y, z)`` vector.
+
+    Returns:
+        A ``(3, 3)`` array ``p`` where rows are the coefficients of the
+        position polynomial in increasing power of ``t``:
+
+        * ``p[0]``: initial position (``rvw[0]``).
+        * ``p[1]``: initial velocity (``rvw[1]``).
+        * ``p[2]``: half the acceleration vector (the coefficient of ``t**2``, not
+          the acceleration itself).
+    """
     p: NDArray[np.float64] = np.empty((3, 3), dtype=np.float64)
     p[0] = rvw[0]
     p[1] = rvw[1]
