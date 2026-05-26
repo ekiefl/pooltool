@@ -19,12 +19,12 @@ from pooltool.evolution.event_based.detect.quartic_coefficients import (
 from pooltool.physics.utils import get_u_vec
 from pooltool.ptmath.roots import quadratic, quartic
 from pooltool.ptmath.roots.core import get_real_positive_smallest_root
-from pooltool.system.datatypes import System
+from pooltool.system.datatypes import Ball, System
 
 
 def ball_ball_collision_time_3d(
-    ball1,
-    ball2,
+    ball1: Ball,
+    ball2: Ball,
 ) -> float:
     """Get the time until collision between two balls."""
     p1: NDArray[np.float64] = ball_position_polynomial(
