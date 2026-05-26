@@ -21,13 +21,13 @@ def test_sliding_ball_collision_time(is_3d: bool):
 
     cue_ball_position = (1 / 4) * table.l
     one_ball_position = (3 / 4) * table.l
-    cue_ball = Ball.create("cue", xy=(table.w / 2, cue_ball_position), u_s=1e-9)
+    cue_ball = Ball.create("cue", xy=(table.w / 2, cue_ball_position))
     one_ball = Ball.create("1", xy=(table.w / 2, one_ball_position))
 
     distance = abs(one_ball_position - cue_ball_position) - (
         cue_ball.params.R + one_ball.params.R
     )
-    speed = 1
+    speed = 5
 
     cue_ball.state.rvw[1] = speed * np.array([0, 1, 0])
     cue_ball.state.s = const.sliding
@@ -44,7 +44,12 @@ def test_sliding_ball_collision_time(is_3d: bool):
     event = get_next_ball_ball_event(system, CollisionCache(), is_3d=is_3d)
     assert event.event_type == EventType.BALL_BALL
     actual = event.time
-    expected = distance / speed
+
+    # Constant sliding deceleration a = u_s*g.  d = speed*t - 0.5*a*t**2  =>  smaller
+    # positive root gives the collision time.
+    a = cue_ball.params.u_s * cue_ball.params.g
+    expected = (speed - np.sqrt(speed**2 - 2 * a * distance)) / a
+
     assert np.isclose(actual, expected), f"actual={actual}, expected={expected}"
 
 

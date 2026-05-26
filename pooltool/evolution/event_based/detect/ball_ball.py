@@ -135,7 +135,7 @@ def ball_ball_collision_time_2d(
 def get_next_ball_ball_event(
     shot: System, collision_cache: CollisionCache, *, is_3d: bool
 ) -> Event:
-    """Detect the next ball-ball collision in 2D mode."""
+    """Detect the next ball-ball collision."""
     cache = collision_cache.times.setdefault(EventType.BALL_BALL, {})
 
     for ball1, ball2 in combinations(shot.balls.values(), 2):

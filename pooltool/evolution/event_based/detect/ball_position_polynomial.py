@@ -39,8 +39,8 @@ def ball_position_polynomial(
         p[2] = 0.5 * u_r * g * -(rvw[1] / ptmath.norm3d(rvw[1]))
     elif s == const.sliding:
         unit_z = np.array([0, 0, 1])
-        v_hat_c_0 = tangent_surface_velocity(rvw, -unit_z, R)
-        p[2] = 0.5 * u_s * g * -v_hat_c_0
+        v_c = tangent_surface_velocity(rvw, -unit_z, R)
+        p[2] = 0.5 * u_s * g * -ptmath.unit_vector(v_c)
     elif s == const.airborne:
         p[2] = 0.5 * np.array([0, 0, -g])
     else:
