@@ -50,7 +50,7 @@ def cushion_circular():
     [
         BallLCushionModel.UNREALISTIC,
         BallLCushionModel.HAN_2005,
-        BallLCushionModel.IMPULSE_FRICTIONAL_INELASTIC,
+        BallLCushionModel.IMPULSE_FRICTIONAL_INELASTIC_2D,
         BallLCushionModel.MATHAVAN_2010,
         BallLCushionModel.STRONGE_COMPLIANT,
     ],
@@ -100,7 +100,7 @@ def test_energy(
     [
         BallLCushionModel.UNREALISTIC,
         BallLCushionModel.HAN_2005,
-        BallLCushionModel.IMPULSE_FRICTIONAL_INELASTIC,
+        BallLCushionModel.IMPULSE_FRICTIONAL_INELASTIC_2D,
         BallLCushionModel.MATHAVAN_2010,
         BallLCushionModel.STRONGE_COMPLIANT,
     ],
