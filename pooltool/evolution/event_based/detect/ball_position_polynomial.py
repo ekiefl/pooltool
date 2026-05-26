@@ -44,6 +44,6 @@ def ball_position_polynomial(
     elif s == const.airborne:
         p[2] = 0.5 * np.array([0, 0, -g])
     else:
-        raise ValueError("invalid state")
+        raise ValueError("'{s}' is an unknown motion state")
 
     return p
