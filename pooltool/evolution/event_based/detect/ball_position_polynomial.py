@@ -9,7 +9,7 @@ from pooltool.physics.utils import tangent_surface_velocity
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def ball_position_polynomial(
-    s: int, rvw: NDArray[np.float64], R: float, mu_rr: float, mu_s: float, g: float
+    s: int, rvw: NDArray[np.float64], R: float, u_r: float, u_s: float, g: float
 ) -> NDArray[np.float64]:
     """Build the position-vs-time polynomial for a ball.
 
@@ -36,11 +36,11 @@ def ball_position_polynomial(
     if s == const.stationary or s == const.spinning or s == const.pocketed:
         p[2] = np.zeros(3)
     elif s == const.rolling:
-        p[2] = 0.5 * mu_rr * g * -(rvw[1] / ptmath.norm3d(rvw[1]))
+        p[2] = 0.5 * u_r * g * -(rvw[1] / ptmath.norm3d(rvw[1]))
     elif s == const.sliding:
         unit_z = np.array([0, 0, 1])
         v_hat_c_0 = tangent_surface_velocity(rvw, -unit_z, R)
-        p[2] = 0.5 * mu_s * g * -v_hat_c_0
+        p[2] = 0.5 * u_s * g * -v_hat_c_0
     elif s == const.airborne:
         p[2] = 0.5 * np.array([0, 0, -g])
     else:
