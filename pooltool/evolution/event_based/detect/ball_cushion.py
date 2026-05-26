@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import quaternion
 from numba import jit
 from numpy.typing import NDArray
 
@@ -15,9 +16,89 @@ from pooltool.events import (
     null_event,
 )
 from pooltool.evolution.event_based.cache import CollisionCache
+from pooltool.evolution.event_based.detect.ball_position_polynomial import (
+    ball_position_polynomial,
+)
+from pooltool.evolution.event_based.detect.quartic_coefficients import (
+    parabola_circle_distance_2d_quartic_coefficients,
+)
+from pooltool.objects.ball.datatypes import Ball
+from pooltool.objects.table.components import LinearCushionSegment
 from pooltool.physics.utils import get_u_vec
-from pooltool.ptmath.roots import get_real_positive_smallest_root, quartic
+from pooltool.ptmath import quaternion_from_vector_to_vector
+from pooltool.ptmath.roots import (
+    get_real_positive_smallest_root,
+    is_real_number,
+    quadratic,
+    quartic,
+)
 from pooltool.system.datatypes import System
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def select_ball_linear_cushion_segment_collision_root(
+    sorted_real_positive_roots: NDArray[np.float64],
+    p_rot_z: NDArray[np.float64],
+    start_z: float,
+    end_z: float,
+):
+    """Smallest positive real root that is within the bounds of the cushion segment"""
+    for t in sorted_real_positive_roots:
+        collision_z = p_rot_z[0] + p_rot_z[1] * t + p_rot_z[2] * t * t
+        if start_z < collision_z and collision_z < end_z:
+            return t
+    return np.inf
+
+
+def ball_linear_cushion_segment_collison_time(
+    ball: Ball, cushion: LinearCushionSegment
+):
+    """Time until collision between ball and linear cushion segment
+
+    Finds the collision time between the ball's 3D position polynomial and the cushion nose cylinder.
+
+    This works by ignoring the component of ball's 3D position polynomial parallel to the cushion axis,
+    reducing the problem to a 2D parabola intersecting with a circle.
+    """
+    p = ball_position_polynomial(
+        ball.state.s,
+        ball.state.rvw,
+        ball.params.R,
+        ball.params.u_r,
+        ball.params.u_s,
+        ball.params.g,
+    )
+
+    unit_z = np.array([0, 0, 1])
+    frame_rotation = quaternion_from_vector_to_vector(cushion.unit_axis, unit_z)
+    p_rotated = quaternion.rotate_vectors(frame_rotation, p)
+    cushion_origin_rotated = quaternion.rotate_vectors(frame_rotation, cushion.p1)
+
+    C = parabola_circle_distance_2d_quartic_coefficients(
+        p_rotated.T[0:1],
+        cushion_origin_rotated[0:1],
+        cushion.nose_radius + ball.params.R,
+    )
+
+    # FIXME: quartic solver can't handle cubics or quadratics, so checking for quadratic here
+    if np.isclose(C[4], 0.0):
+        # C[3] must also be 0.0, and this is a quadratic
+        assert np.isclose(C[3], 0.0)
+        roots = quadratic.solve(C[2], C[1], C[0])
+
+    roots = quartic.solve(C[4], C[3], C[2], C[1], C[0])
+
+    start_z = cushion_origin_rotated[2]
+    end_z = start_z + ptmath.norm3d(cushion.p2 - cushion.p1)
+    sorted_real_positive_roots = np.array(
+        sorted(root.real for root in roots if is_real_number(root) and root.real > 0)
+    )
+    return select_ball_linear_cushion_segment_collision_root(
+        sorted_real_positive_roots,
+        p_rotated.T[2],
+        start_z,
+        end_z,
+    )
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -151,7 +232,7 @@ def ball_vertical_cylinder_collision_time(
 
 
 def get_next_ball_linear_cushion_event(
-    shot: System, collision_cache: CollisionCache
+    shot: System, collision_cache: CollisionCache, *, is_3d: bool
 ) -> Event:
     """Detect the next ball-vs-linear-cushion collision in 2D mode."""
     if not shot.table.has_linear_cushions:
@@ -173,9 +254,8 @@ def get_next_ball_linear_cushion_event(
                 cache[obj_ids] = np.inf
                 continue
 
-            if ball.state.s == const.airborne:
-                # TODO
-                dtau_E = np.inf
+            if is_3d:
+                dtau_E = ball_linear_cushion_segment_collison_time(ball, cushion)
             else:
                 dtau_E = ball_vertical_plane_collision_time(
                     rvw=state.rvw,

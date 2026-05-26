@@ -12,6 +12,14 @@ from pooltool.objects.table.components import (
 )
 from pooltool.physics.dimensionality import Dim
 
+FALLBACK_DISPLACEMENT_FACTOR = 5
+"""Multiplier on ``spacer`` defining the max make_kiss displacement before falling back.
+
+If the velocity-based correction would move the ball more than
+``FALLBACK_DISPLACEMENT_FACTOR * spacer`` (e.g. on a near-grazing trajectory), make_kiss
+falls back to positioning along the cushion normal instead.
+"""
+
 
 class _BaseLinearStrategy(Protocol):
     def make_kiss(self, ball: Ball, cushion: LinearCushionSegment) -> Ball: ...
@@ -56,31 +64,19 @@ class BallCCushionCollisionStrategy(_BaseCircularStrategy, Protocol):
 class CoreBallLCushionCollision(ABC):
     """Operations used by every ball-linear cushion collision resolver"""
 
-    def _apply_fallback_positioning_linear(
-        self, ball: Ball, cushion: LinearCushionSegment, spacer: float
-    ) -> np.ndarray:
-        """Place the ball at R + spacer from the cushion along the geometric normal.
-
-        Used when the ball is nontranslating (no velocity to trace back along) or
-        when the velocity-based correction would produce an excessive displacement.
-        """
-        c = ptmath.point_on_line_closest_to_point(
-            cushion.p1, cushion.p2, ball.state.rvw[0]
-        )
-        c[2] = ball.state.rvw[0, 2]
-        direction = ptmath.unit_vector(ball.state.rvw[0] - c)
-        return c + (ball.params.R + spacer) * direction
-
     def make_kiss(self, ball: Ball, cushion: LinearCushionSegment) -> Ball:
         """Translate the ball along its velocity so it nearly touches the cushion.
 
-        Solves a linear equation for the time offset t such that the ball's
-        perpendicular distance to the cushion line equals R + spacer, then moves
-        the ball to r + t * v. The perpendicular distance to a line is linear in t,
-        so no quadratic solver is needed.
+        The cushion is modeled as a thin cylinder of radius ``cushion.nose_radius``
+        around the line through ``p1`` and ``p2``. Solves a quadratic equation for
+        the time offset t such that the ball's perpendicular distance to the
+        cushion line equals ``R + nose_radius + spacer``, then moves the ball to
+        ``r + t * v``. The smallest-magnitude real root is chosen.
 
-        If the ball is nontranslating or the displacement would exceed 5 * spacer,
-        falls back to positioning along the geometric normal.
+        If the ball is nontranslating or the displacement would exceed
+        FALLBACK_DISPLACEMENT_FACTOR * spacer (e.g. on a near-grazing trajectory,
+        or when the ball's velocity is parallel to the cushion axis), falls back to
+        positioning along the perpendicular from the cushion line.
         """
         r = ball.state.rvw[0]
         v = ball.state.rvw[1]
@@ -88,28 +84,28 @@ class CoreBallLCushionCollision(ABC):
         spacer = const.MIN_DIST
 
         if ball.state.s in const.nontranslating:
-            ball.state.rvw[0] = self._apply_fallback_positioning_linear(
-                ball, cushion, spacer
-            )
-            return ball
+            return _apply_fallback_positioning_linear(ball, cushion, spacer)
 
-        n = cushion.get_normal_xy(ball.xyz)
-        n = n if np.dot(n, v) > 0 else -n
+        u = cushion.unit_axis
+        q0 = r - cushion.p1
+        v_perp = v - np.dot(v, u) * u
+        q0_perp = q0 - np.dot(q0, u) * u
+        target = R + cushion.nose_radius + spacer
 
-        d0 = np.dot(r - cushion.p1, n)
-        vn = np.dot(v, n)
+        alpha = np.dot(v_perp, v_perp)
+        beta = 2 * np.dot(q0_perp, v_perp)
+        gamma = np.dot(q0_perp, q0_perp) - target**2
 
-        t1 = (R + spacer - d0) / vn
-        t2 = (-(R + spacer) - d0) / vn
-        t = t1 if abs(t1) < abs(t2) else t2
+        roots_complex = ptmath.roots.quadratic.solve(alpha, beta, gamma)
+        t = ptmath.roots.get_real_smallest_magnitude_root(roots_complex)
 
-        if ptmath.norm3d(t * v) > 5 * spacer:
-            ball.state.rvw[0] = self._apply_fallback_positioning_linear(
-                ball, cushion, spacer
-            )
-            return ball
+        if ptmath.norm3d(t * v) > FALLBACK_DISPLACEMENT_FACTOR * spacer:
+            return _apply_fallback_positioning_linear(ball, cushion, spacer)
 
-        ball.state.rvw[0] = r + t * v
+        ball.state.rvw[0] = _constrain_to_table(
+            r + t * v, cushion, R, airborne=ball.state.s == const.airborne
+        )
+
         return ball
 
     def resolve(
@@ -133,18 +129,6 @@ class CoreBallLCushionCollision(ABC):
 class CoreBallCCushionCollision(ABC):
     """Operations used by every ball-circular cushion collision resolver"""
 
-    def _apply_fallback_positioning_circular(
-        self, ball: Ball, cushion: CircularCushionSegment, spacer: float
-    ) -> np.ndarray:
-        """Place the ball at R + radius + spacer from the cushion center along the radial.
-
-        Used when the ball is nontranslating (no velocity to trace back along) or
-        when the velocity-based correction would produce an excessive displacement.
-        """
-        c = np.array([cushion.center[0], cushion.center[1], ball.state.rvw[0, 2]])
-        direction = ptmath.unit_vector(ball.state.rvw[0] - c)
-        return c + (ball.params.R + cushion.radius + spacer) * direction
-
     def make_kiss(self, ball: Ball, cushion: CircularCushionSegment) -> Ball:
         """Translate the ball along its velocity so it nearly touches the cushion.
 
@@ -161,10 +145,7 @@ class CoreBallCCushionCollision(ABC):
         spacer = const.MIN_DIST
 
         if ball.state.s in const.nontranslating:
-            ball.state.rvw[0] = self._apply_fallback_positioning_circular(
-                ball, cushion, spacer
-            )
-            return ball
+            return _apply_fallback_positioning_circular(ball, cushion, spacer)
 
         c = np.array([cushion.center[0], cushion.center[1], r[2]])
         diff = r - c
@@ -175,20 +156,13 @@ class CoreBallCCushionCollision(ABC):
         gamma = diff[0] ** 2 + diff[1] ** 2 - target**2
 
         roots_complex = ptmath.roots.quadratic.solve(alpha, beta, gamma)
+        t = ptmath.roots.get_real_smallest_magnitude_root(roots_complex)
 
-        imag_mag = np.abs(roots_complex.imag)
-        real_mag = np.abs(roots_complex.real)
-        keep = (imag_mag / real_mag) < 1e-3
-        roots = roots_complex[keep].real
-        t = roots[np.abs(roots).argmin()]
-
-        if ptmath.norm3d(t * v) > 5 * spacer:
-            ball.state.rvw[0] = self._apply_fallback_positioning_circular(
-                ball, cushion, spacer
-            )
-            return ball
+        if ptmath.norm3d(t * v) > FALLBACK_DISPLACEMENT_FACTOR * spacer:
+            return _apply_fallback_positioning_circular(ball, cushion, spacer)
 
         ball.state.rvw[0] = r + t * v
+
         return ball
 
     def resolve(
@@ -201,3 +175,77 @@ class CoreBallCCushionCollision(ABC):
         ball = self.make_kiss(ball, cushion)
 
         return self.solve(ball, cushion)  # type: ignore
+
+
+def _apply_fallback_positioning_linear(
+    ball: Ball, cushion: LinearCushionSegment, spacer: float
+) -> Ball:
+    """Place the ball at R + nose_radius + spacer from the cushion line along the perpendicular.
+
+    Used when the ball is nontranslating (no velocity to trace back along) or
+    when the velocity-based correction would produce an excessive displacement.
+    """
+    R = ball.params.R
+    c = ptmath.point_on_line_closest_to_point(cushion.p1, cushion.p2, ball.state.rvw[0])
+    direction = ptmath.unit_vector(ball.state.rvw[0] - c)
+    candidate = c + (R + cushion.nose_radius + spacer) * direction
+    ball.state.rvw[0] = _constrain_to_table(
+        candidate, cushion, R, airborne=ball.state.s == const.airborne
+    )
+
+    return ball
+
+
+def _constrain_to_table(
+    pos: np.ndarray,
+    cushion: LinearCushionSegment,
+    R: float,
+    airborne: bool,
+) -> np.ndarray:
+    """Rotate ``pos`` around the cushion axis to enforce the ball's table constraint.
+
+    For non-airborne balls, the constraint is ``z == R`` exactly: the ball must rest on
+    the table. The perpendicular from the cushion line can place the candidate either
+    above or below R, and both directions need correcting — above is unphysical lift
+    (artificial PE gain), below is table penetration.
+
+    For airborne balls, the constraint is ``z >= R``: only lift when below R.
+
+    The rotation preserves the arm length (distance from cushion line) and keeps the
+    ball on its original side around the axis.
+    """
+    if airborne and pos[2] >= R:
+        return pos
+
+    if pos[2] == R:
+        return pos
+
+    c = ptmath.point_on_line_closest_to_point(cushion.p1, cushion.p2, pos)
+    arm = pos - c
+    arm_len = ptmath.norm3d(arm)
+    direction = arm / arm_len
+
+    u = cushion.unit_axis
+    z_hat = np.array([0.0, 0.0, 1.0])
+    h_hat = np.array([u[1], -u[0], 0.0])
+
+    a = (R - c[2]) / arm_len
+    b = np.sign(np.dot(direction, h_hat)) * np.sqrt(1.0 - a * a)
+    new_direction = a * z_hat + b * h_hat
+
+    return c + arm_len * new_direction
+
+
+def _apply_fallback_positioning_circular(
+    ball: Ball, cushion: CircularCushionSegment, spacer: float
+) -> Ball:
+    """Place the ball at R + radius + spacer from the cushion center along the radial.
+
+    Used when the ball is nontranslating (no velocity to trace back along) or
+    when the velocity-based correction would produce an excessive displacement.
+    """
+    c = np.array([cushion.center[0], cushion.center[1], ball.state.rvw[0, 2]])
+    direction = ptmath.unit_vector(ball.state.rvw[0] - c)
+    ball.state.rvw[0] = c + (ball.params.R + cushion.radius + spacer) * direction
+
+    return ball
