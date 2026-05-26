@@ -51,9 +51,9 @@ def ball_ball_collision_time_3d(
     )
 
     # FIXME: quartic solver can't handle cubics or quadratics, so checking for quadratic here
-    if np.isclose(C[4], 0.0):
+    if C[4] == 0.0:
         # C[3] must also be 0.0, and this is a quadratic
-        assert np.isclose(C[3], 0.0)
+        assert C[3] == 0.0
         return get_real_positive_smallest_root(quadratic.solve(C[2], C[1], C[0]))
 
     return get_real_positive_smallest_root(quartic.solve(C[4], C[3], C[2], C[1], C[0]))
