@@ -11,9 +11,9 @@ from pooltool.evolution.event_based._utils import _system_has_energy
 from pooltool.evolution.event_based.cache import CollisionCache
 from pooltool.evolution.event_based.detect import (
     EventDetector,
-    get_next_ball_ball_2d_event,
+    get_next_ball_ball_event,
 )
-from pooltool.evolution.event_based.detect.ball_ball import ball_ball_collision_time
+from pooltool.evolution.event_based.detect.ball_ball import ball_ball_collision_time_2d
 from pooltool.evolution.event_based.simulate import simulate
 from pooltool.objects import Ball, BilliardTableSpecs, Cue, Table
 from pooltool.objects.ball.params import BallParams
@@ -154,7 +154,7 @@ def test_case3():
     event = _DETECTOR.get_next_event(shot)
 
     expected = pytest.approx(5.810383731499328e-06, abs=1e-9)
-    calculated = ball_ball_collision_time(
+    calculated = ball_ball_collision_time_2d(
         rvw1=ball1.state.rvw,
         rvw2=ball2.state.rvw,
         s1=ball1.state.s,
@@ -289,7 +289,7 @@ def test_grazing_ball_ball_collision():
         ball1 = system.balls["cue"]
         ball2 = system.balls["1"]
 
-        root = ball_ball_collision_time(
+        root = ball_ball_collision_time_2d(
             rvw1=ball1.state.rvw,
             rvw2=ball2.state.rvw,
             s1=ball1.state.s,
@@ -386,7 +386,7 @@ def test_almost_touching_ball_ball_collision():
         ball2 = system.balls["1"]
 
         truth = true_time_to_collision(eps, V0, ball1.params.u_r, ball1.params.g)
-        calculated = ball_ball_collision_time(
+        calculated = ball_ball_collision_time_2d(
             rvw1=ball1.state.rvw,
             rvw2=ball2.state.rvw,
             s1=ball1.state.s,
@@ -409,7 +409,8 @@ def test_almost_touching_ball_ball_collision():
         assert diff < 10e-12  # Less than 10 femptosecond difference
 
 
-def test_ball_ball_collision_for_intersecting_balls():
+@pytest.mark.parametrize("is_3d", [True, False])
+def test_ball_ball_collision_for_intersecting_balls(is_3d: bool):
     """Two already intersecting balls collide.
 
     Previously, intersecting balls were prevented from colliding to avoid perpetual
@@ -452,7 +453,7 @@ def test_ball_ball_collision_for_intersecting_balls():
     _assert_rolling(system.balls["cue"].state.rvw, system.balls["cue"].params.R)
 
     assert _DETECTOR.get_next_event(system).event_type == EventType.BALL_BALL
-    collision_event = get_next_ball_ball_2d_event(system, CollisionCache())
+    collision_event = get_next_ball_ball_event(system, CollisionCache(), is_3d=is_3d)
     assert collision_event.time != np.inf
     assert collision_event.time == 0
 
