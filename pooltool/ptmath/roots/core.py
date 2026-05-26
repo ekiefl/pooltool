@@ -6,6 +6,22 @@ from pooltool import constants as const
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def is_real_number(
+    number: np.complex128,
+    abs_or_rel_cutoff: float = 1e-3,
+    rtol: float = 1e-3,
+    atol: float = 1e-9,
+) -> np.bool:
+    imag_mag = abs(number.imag)
+    real_mag = abs(number.real)
+    if real_mag > abs_or_rel_cutoff:
+        return imag_mag < atol
+    elif real_mag > 0:
+        return (imag_mag / real_mag) < rtol
+    return imag_mag == 0.0
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def get_real_positive_smallest_root(
     roots: NDArray[np.complex128],
     abs_or_rel_cutoff: float = 1e-3,
