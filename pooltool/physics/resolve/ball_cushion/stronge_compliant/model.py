@@ -2,10 +2,11 @@ import logging
 
 import attrs
 import numpy as np
+from numpy.typing import NDArray
 
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
-from pooltool.objects.ball.datatypes import Ball, BallState
+from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
     CircularCushionSegment,
     Cushion,
@@ -25,7 +26,12 @@ from pooltool.physics.utils import surface_velocity
 logger = logging.getLogger(__name__)
 
 
-def _solve(ball: Ball, cushion: Cushion, omega_ratio: float) -> tuple[Ball, Cushion]:
+# TODO: move to common place
+def final_ball_motion_state(rvw: NDArray[np.float64]) -> int:
+    return const.airborne if rvw[1, 2] != 0.0 else const.sliding
+
+
+def _solve(ball: Ball, cushion: Cushion, omega_ratio: float) -> NDArray[np.float64]:
     rvw = ball.state.rvw.copy()
 
     logger.debug(f"v={rvw[1]}, w={rvw[2]}")
@@ -86,16 +92,11 @@ def _solve(ball: Ball, cushion: Cushion, omega_ratio: float) -> tuple[Ball, Cush
         f"v_c_f={v_c_f}, relative_contact_velocity_f={relative_contact_velocity_f}"
     )
 
-    # FIXME-3D: add z-velocity back in
-    rvw[1][2] = 0.0
-
-    ball.state = BallState(rvw, const.sliding)
-
-    return ball, cushion
+    return rvw
 
 
 @attrs.define
-class StrongeCompliantLinear(CoreBallLCushionCollision):
+class StrongeCompliantLinear3D(CoreBallLCushionCollision):
     """Ball-cushion collision resolver using Stronge's compliant collision model.
 
     This model accounts for the compliant (spring-like) nature of cushion deformation
@@ -125,27 +126,76 @@ class StrongeCompliantLinear(CoreBallLCushionCollision):
 
     omega_ratio: float = 1.7
     model: BallLCushionModel = attrs.field(
-        default=BallLCushionModel.STRONGE_COMPLIANT, init=False, repr=False
+        default=BallLCushionModel.STRONGE_COMPLIANT_3D, init=False, repr=False
+    )
+    dim: Dim = attrs.field(default=Dim.THREE, init=False, repr=False)
+
+    def solve(
+        self, ball: Ball, cushion: LinearCushionSegment
+    ) -> tuple[Ball, LinearCushionSegment]:
+        rvw = _solve(ball, cushion, self.omega_ratio)
+        ball.state.rvw = rvw
+        ball.state.s = final_ball_motion_state(ball.state.rvw)
+        return ball, cushion
+
+
+@attrs.define
+class StrongeCompliantCircular3D(CoreBallCCushionCollision):
+    """See :class:`StrongeCompliantLinear3D`."""
+
+    omega_ratio: float = 1.7
+    model: BallCCushionModel = attrs.field(
+        default=BallCCushionModel.STRONGE_COMPLIANT_3D, init=False, repr=False
+    )
+    dim: Dim = attrs.field(default=Dim.THREE, init=False, repr=False)
+
+    def solve(
+        self, ball: Ball, cushion: CircularCushionSegment
+    ) -> tuple[Ball, CircularCushionSegment]:
+        rvw = _solve(ball, cushion, self.omega_ratio)
+        ball.state.rvw = rvw
+        ball.state.s = final_ball_motion_state(ball.state.rvw)
+        return ball, cushion
+
+
+@attrs.define
+class StrongeCompliantLinear2D(CoreBallLCushionCollision):
+    """2D Ball-cushion collision resolver using Stronge's compliant collision model.
+
+    See :class:`StrongeCompliantLinear3D`.
+    """
+
+    omega_ratio: float = 1.7
+    model: BallLCushionModel = attrs.field(
+        default=BallLCushionModel.STRONGE_COMPLIANT_2D, init=False, repr=False
     )
     dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
     ) -> tuple[Ball, LinearCushionSegment]:
-        return _solve(ball, cushion, self.omega_ratio)
+        rvw = _solve(ball, cushion, self.omega_ratio)
+        rvw[1, 2] = 0.0
+        ball.state.rvw = rvw
+        ball.state.s = const.sliding
+        return ball, cushion
 
 
 @attrs.define
-class StrongeCompliantCircular(CoreBallCCushionCollision):
-    """See :class:`StrongeCompliantLinear`."""
+class StrongeCompliantCircular2D(CoreBallCCushionCollision):
+    """See :class:`StrongeCompliantLinear2D`."""
 
     omega_ratio: float = 1.7
     model: BallCCushionModel = attrs.field(
-        default=BallCCushionModel.STRONGE_COMPLIANT, init=False, repr=False
+        default=BallCCushionModel.STRONGE_COMPLIANT_2D, init=False, repr=False
     )
     dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment
     ) -> tuple[Ball, CircularCushionSegment]:
-        return _solve(ball, cushion, self.omega_ratio)
+        rvw = _solve(ball, cushion, self.omega_ratio)
+        rvw[1, 2] = 0.0
+        ball.state.rvw = rvw
+        ball.state.s = const.sliding
+        return ball, cushion
