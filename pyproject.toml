@@ -26,7 +26,7 @@ dependencies = [
     "panda3d-simplepbr>=0.12.0",
     "numpy>=1.26.0",  # Lower bound for 3.12 (https://github.com/numpy/numpy/releases/tag/v1.26.0)
     "numba>=0.59.0",  # # Lower bound for 3.12 (https://numba.readthedocs.io/en/latest/user/installing.html#version-support-information)
-    "llvmlite>=0.44.0,<0.46",  # Lower bound for 3.13, requires >=3.10. Upper bound: 0.46.0 lacks wheels for some platforms
+    "llvmlite>=0.44.0,<0.48",  # Lower bound for 3.13, requires >=3.10. Upper bound: 0.46.0 lacks wheels for some platforms
     "scipy>=1.12.0",  # Required for numba. Lower bound for 3.12 is officially 1.11, but in practice seems to be 1.12 on MacOS
     "attrs>=21.3.0",
     "cattrs>=22.1.0",
@@ -37,7 +37,7 @@ dependencies = [
     "Pillow>=6.2.0",
     "h5py>=3.10",
     "h11>=0.16.0",  # Avoids security vulnerability
-    "rich>=14.0.0,<15.0.0",  # 13.8.1 added support for Python 3.13
+    "rich>=14.0.0,<16.0.0",  # 13.8.1 added support for Python 3.13
     "numpy-quaternion>=2024.0.12",
 ]
 
@@ -117,14 +117,14 @@ dev = [
 docs = [
     "sphinx==8.1.3",
     "sphinx-copybutton==0.5.2",
-    "furo==2024.8.6",
+    "furo==2025.12.19",
     "myst-parser==4.0.1",
-    "sphinx-autoapi==3.6.0",
-    "astroid==3.3.11",
-    "sphinx-tabs==3.4.7",
-    "nbsphinx==0.9.7",
+    "sphinx-autoapi==3.8.0",
+    "astroid==4.1.2",
+    "sphinx-tabs==3.5.0",
+    "nbsphinx==0.9.8",
     "sphinx-autobuild==2024.10.3",
-    "sphinx-togglebutton==0.3.2",
+    "sphinx-togglebutton==0.4.5",
 ]
 
 [tool.jupytext]
