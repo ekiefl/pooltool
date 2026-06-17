@@ -1,12 +1,16 @@
 import attrs
 import numpy as np
+import quaternion
 from numba import jit
 
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
-from pooltool.objects.ball.datatypes import Ball, BallState
+from pooltool.objects.ball.datatypes import Ball
 from pooltool.physics.dimensionality import Dim
-from pooltool.physics.resolve.ball_ball.core import CoreBallBallCollision
+from pooltool.physics.resolve.ball_ball.core import (
+    CoreBallBallCollision,
+    final_ball_motion_state,
+)
 from pooltool.physics.resolve.ball_ball.friction import (
     AlciatoreBallBallFriction,
     BallBallFrictionStrategy,
@@ -15,18 +19,21 @@ from pooltool.physics.resolve.models import BallBallModel
 from pooltool.physics.utils import surface_velocity
 
 
-@jit(nopython=True, cache=const.use_numba_cache)
 def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     unit_x = np.array([1.0, 0.0, 0.0])
-
-    # rotate the x-axis to be in line with the line of centers
     delta_centers = rvw2[0] - rvw1[0]
-    # FIXME3D: this should use quaternion rotation in 3D
-    theta = ptmath.angle(delta_centers, unit_x)
-    rvw1[1] = ptmath.coordinate_rotation(rvw1[1], -theta)
-    rvw1[2] = ptmath.coordinate_rotation(rvw1[2], -theta)
-    rvw2[1] = ptmath.coordinate_rotation(rvw2[1], -theta)
-    rvw2[2] = ptmath.coordinate_rotation(rvw2[2], -theta)
+    frame_rotation = ptmath.quaternion_from_vector_to_vector(delta_centers, unit_x)
+    rvw1 = quaternion.rotate_vectors(frame_rotation, rvw1)
+    rvw2 = quaternion.rotate_vectors(frame_rotation, rvw2)
+    rvw1, rvw2 = _resolve_ball_ball_x_normal(rvw1, rvw2, R, u_b, e_b)
+    rvw1 = quaternion.rotate_vectors(frame_rotation.conjugate(), rvw1)
+    rvw2 = quaternion.rotate_vectors(frame_rotation.conjugate(), rvw2)
+    return rvw1, rvw2
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def _resolve_ball_ball_x_normal(rvw1, rvw2, R, u_b, e_b):
+    unit_x = np.array([1.0, 0.0, 0.0])
 
     # velocity normal component, same for both slip and no-slip after collison cases
     v1_n_f = 0.5 * ((1.0 - e_b) * rvw1[1][0] + (1.0 + e_b) * rvw2[1][0])
@@ -88,22 +95,11 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     rvw1_f[2][0] = w1_n_f
     rvw2_f[2][0] = w2_n_f
 
-    # rotate everything back to the original frame
-    rvw1_f[1] = ptmath.coordinate_rotation(rvw1_f[1], theta)
-    rvw1_f[2] = ptmath.coordinate_rotation(rvw1_f[2], theta)
-    rvw2_f[1] = ptmath.coordinate_rotation(rvw2_f[1], theta)
-    rvw2_f[2] = ptmath.coordinate_rotation(rvw2_f[2], theta)
-
-    # FIXME3D: include z velocity components
-    # remove any z velocity components from spin-induced throw
-    rvw1_f[1][2] = 0.0
-    rvw2_f[1][2] = 0.0
-
     return rvw1_f, rvw2_f
 
 
 @attrs.define
-class FrictionalInelastic(CoreBallBallCollision):
+class FrictionalInelastic3D(CoreBallBallCollision):
     """A simple ball-ball collision model including ball-ball friction, and coefficient of restitution for equal-mass balls
 
     Largely inspired by Dr. David Alciatore's technical proofs
@@ -115,9 +111,9 @@ class FrictionalInelastic(CoreBallBallCollision):
     friction: BallBallFrictionStrategy = AlciatoreBallBallFriction()
 
     model: BallBallModel = attrs.field(
-        default=BallBallModel.FRICTIONAL_INELASTIC, init=False, repr=False
+        default=BallBallModel.FRICTIONAL_INELASTIC_3D, init=False, repr=False
     )
-    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
+    dim: Dim = attrs.field(default=Dim.THREE, init=False, repr=False)
 
     def solve(self, ball1: Ball, ball2: Ball) -> tuple[Ball, Ball]:
         """Resolves the collision."""
@@ -130,7 +126,35 @@ class FrictionalInelastic(CoreBallBallCollision):
             e_b=(ball1.params.e_b + ball2.params.e_b) / 2,
         )
 
-        ball1.state = BallState(rvw1, const.sliding)
-        ball2.state = BallState(rvw2, const.sliding)
+        ball1.state.rvw = rvw1
+        ball2.state.rvw = rvw2
+
+        ball1.state.s = final_ball_motion_state(rvw1, ball1.params.R)
+        ball2.state.s = final_ball_motion_state(rvw2, ball2.params.R)
+
+        return ball1, ball2
+
+
+@attrs.define
+class FrictionalInelastic2D(FrictionalInelastic3D):
+    """A simple ball-ball collision model including ball-ball friction, and coefficient of restitution for equal-mass balls
+
+    For details see :class:`FrictionalInelastic3D`.
+    """
+
+    model: BallBallModel = attrs.field(
+        default=BallBallModel.FRICTIONAL_INELASTIC_2D, init=False, repr=False
+    )
+    dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
+
+    def solve(self, ball1: Ball, ball2: Ball) -> tuple[Ball, Ball]:
+        """Resolves the collision."""
+        ball1, ball2 = super().solve(ball1, ball2)
+
+        # remove any z velocity components for 2D
+        ball1.state.rvw[1, 2] = 0.0
+        ball1.state.rvw[1, 2] = 0.0
+        ball1.state.s = const.sliding
+        ball2.state.s = const.sliding
 
         return ball1, ball2

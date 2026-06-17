@@ -18,8 +18,28 @@ from pooltool.evolution.event_based.detect.quartic_coefficients import (
 )
 from pooltool.physics.utils import get_u_vec
 from pooltool.ptmath.roots import quadratic, quartic
-from pooltool.ptmath.roots.core import get_real_positive_smallest_root
+from pooltool.ptmath.roots.core import (
+    get_real_positive_smallest_root,
+    is_real_number,
+)
 from pooltool.system.datatypes import Ball, System
+
+
+# @jit(nopython=True, cache=const.use_numba_cache)
+def select_ball_ball_collision_root(
+    sorted_real_positive_roots: NDArray[np.float64], p12: NDArray[np.float64]
+):
+    """Smallest positive real root for which the two balls are moving towards each other"""
+
+    v12: NDArray[np.float64] = np.array([p12[1], 0.5 * p12[2]])
+
+    for t in sorted_real_positive_roots:
+        p12_collision = p12[0] + p12[1] * t + p12[2] * t * t
+        v12_collision = v12[0] + v12[1] * t
+        if np.dot(p12_collision, v12_collision) > 0:
+            continue
+        return t
+    return np.inf
 
 
 def ball_ball_collision_time(
@@ -54,9 +74,15 @@ def ball_ball_collision_time(
     if C[4] == 0.0:
         # C[3] must also be 0.0, and this is a quadratic
         assert C[3] == 0.0
-        return get_real_positive_smallest_root(quadratic.solve(C[2], C[1], C[0]))
+        roots = quadratic.solve(C[2], C[1], C[0])
+    else:
+        roots = quartic.solve(C[4], C[3], C[2], C[1], C[0])
 
-    return get_real_positive_smallest_root(quartic.solve(C[4], C[3], C[2], C[1], C[0]))
+    sorted_real_positive_roots = np.array(
+        sorted(root.real for root in roots if is_real_number(root) and root.real > 0)
+    )
+
+    return select_ball_ball_collision_root(sorted_real_positive_roots, p12)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
