@@ -57,23 +57,11 @@ def get_real_positive_smallest_root(
     for i in range(len(roots)):
         root = roots[i]
         root_real = root.real
-        root_imag = root.imag
 
         if root_real < 0.0:
             continue
 
-        imag_mag = abs(root_imag)
-        real_mag = abs(root_real)
-
-        is_real = False
-        if real_mag > abs_or_rel_cutoff:
-            is_real = imag_mag < atol
-        elif real_mag > 0:
-            is_real = (imag_mag / real_mag) < rtol
-        else:
-            is_real = imag_mag == 0.0
-
-        if is_real and root_real < min_root:
+        if is_real_number(root, abs_or_rel_cutoff, rtol, atol) and root_real < min_root:
             min_root = root_real
 
     return min_root
