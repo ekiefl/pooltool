@@ -28,7 +28,7 @@ def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     rvw2[1] = ptmath.coordinate_rotation(rvw2[1], -theta)
     rvw2[2] = ptmath.coordinate_rotation(rvw2[2], -theta)
 
-    # velocity normal component, same for both slip and no-slip after collison cases
+    # velocity normal component, same for both slip and no-slip after collision cases
     v1_n_f = 0.5 * ((1.0 - e_b) * rvw1[1][0] + (1.0 + e_b) * rvw2[1][0])
     v2_n_f = 0.5 * ((1.0 + e_b) * rvw1[1][0] + (1.0 - e_b) * rvw2[1][0])
     D_v_n_magnitude = abs(v2_n_f - v1_n_f)
