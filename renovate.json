@@ -35,6 +35,13 @@
       "enabled": false
     },
     {
+      "description": "For PyPI deps in pyproject.toml, widen the upper bound to include the new version rather than tightening the lower bound. Preserves the widest possible install footprint for users of the published pooltool-billiards package.",
+      "matchManagers": [
+        "pep621"
+      ],
+      "rangeStrategy": "widen"
+    },
+    {
       "matchUpdateTypes": [
         "patch",
         "minor"
