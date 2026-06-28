@@ -51,7 +51,7 @@ def select_ball_linear_cushion_segment_collision_root(
     end_z = start_z + cushion_length
 
     v0 = p[1]
-    v1 = 0.5 * p[2]
+    v1 = 2 * p[2]
 
     for t in sorted_real_positive_roots:
         p_collision = p[0] + p[1] * t + p[2] * t * t
