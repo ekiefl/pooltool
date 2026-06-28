@@ -80,7 +80,7 @@ def select_ball_linear_cushion_segment_collision_root(
     return np.inf
 
 
-def ball_linear_cushion_segment_collison_time(
+def ball_linear_cushion_segment_collision_time(
     ball: Ball, cushion: LinearCushionSegment
 ):
     """Time until collision between ball and linear cushion segment
@@ -284,7 +284,7 @@ def get_next_ball_linear_cushion_event(
                 continue
 
             if is_3d:
-                dtau_E = ball_linear_cushion_segment_collison_time(ball, cushion)
+                dtau_E = ball_linear_cushion_segment_collision_time(ball, cushion)
             else:
                 dtau_E = ball_vertical_plane_collision_time(
                     rvw=state.rvw,
