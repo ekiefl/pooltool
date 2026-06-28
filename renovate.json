@@ -1,0 +1,65 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "schedule": [
+    "before 6am on the first day of the month"
+  ],
+  "prConcurrentLimit": 5,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": [
+      "before 6am on the first day of the month"
+    ]
+  },
+  "packageRules": [
+    {
+      "description": "Do not update documentation dependencies (the [dependency-groups].docs entries in pyproject.toml). New deps added to that group are excluded automatically.",
+      "matchManagers": [
+        "pep621"
+      ],
+      "matchDepTypes": [
+        "dependency-groups"
+      ],
+      "matchJsonata": [
+        "managerData.depGroup = 'docs'"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Do not bump Python itself. The lower bound in pyproject.toml's requires-python defines the minimum Python users must have, and the .python-version pin is the project's dev interpreter; both are managed by hand.",
+      "matchPackageNames": [
+        "python"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "For PyPI deps in pyproject.toml, widen the upper bound to include the new version rather than tightening the lower bound. Preserves the widest possible install footprint for users of the published pooltool-billiards package.",
+      "matchManagers": [
+        "pep621"
+      ],
+      "rangeStrategy": "widen"
+    },
+    {
+      "matchUpdateTypes": [
+        "patch",
+        "minor"
+      ],
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-non-major"
+    },
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "groupName": "security updates",
+    "labels": [
+      "security"
+    ]
+  }
+}
