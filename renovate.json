@@ -42,6 +42,14 @@
       "rangeStrategy": "widen"
     },
     {
+      "description": "Do not bump numba or llvmlite. They drop x86_64 (Intel) macOS wheels at numba 0.63 / llvmlite 0.46, which forces a from-source build that fails on Intel Macs. The upper bounds in pyproject.toml are a deliberate guard and are managed by hand. This rule comes after the widen rule so it overrides it for these two packages.",
+      "matchPackageNames": [
+        "numba",
+        "llvmlite"
+      ],
+      "enabled": false
+    },
+    {
       "matchUpdateTypes": [
         "patch",
         "minor"
