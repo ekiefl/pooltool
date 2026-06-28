@@ -35,7 +35,7 @@ from pooltool.ptmath.roots import (
 from pooltool.system.datatypes import System
 
 
-# @jit(nopython=True, cache=const.use_numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def select_ball_linear_cushion_segment_collision_root(
     sorted_real_positive_roots: NDArray[np.float64],
     p: NDArray[np.float64],
@@ -50,14 +50,15 @@ def select_ball_linear_cushion_segment_collision_root(
     start_z = c[2]
     end_z = start_z + cushion_length
 
-    v = np.array([p[1], 0.5 * p[2]])
+    v0 = p[1]
+    v1 = 0.5 * p[2]
 
     for t in sorted_real_positive_roots:
         p_collision = p[0] + p[1] * t + p[2] * t * t
         if not (start_z < p_collision[2] and p_collision[2] < end_z):
             continue
         xy_normal = p_collision[0:2] - c[0:2]
-        v_collision = v[0] + v[1] * t
+        v_collision = v0 + v1 * t
         if np.dot(xy_normal, v_collision[0:2]) > 0:
             continue
         return t
