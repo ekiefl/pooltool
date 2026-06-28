@@ -15,6 +15,19 @@
   },
   "packageRules": [
     {
+      "description": "Do not update documentation dependencies (the [dependency-groups].docs entries in pyproject.toml). New deps added to that group are excluded automatically.",
+      "matchManagers": [
+        "pep621"
+      ],
+      "matchDepTypes": [
+        "dependency-groups"
+      ],
+      "matchJsonata": [
+        "managerData.depGroup = 'docs'"
+      ],
+      "enabled": false
+    },
+    {
       "matchUpdateTypes": [
         "patch",
         "minor"
