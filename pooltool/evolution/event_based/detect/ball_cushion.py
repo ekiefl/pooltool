@@ -90,8 +90,8 @@ def ball_linear_cushion_segment_collison_time(
     cushion_origin_rotated = quaternion.rotate_vectors(frame_rotation, cushion.p1)
 
     C = parabola_circle_distance_2d_quartic_coefficients(
-        p_rotated.T[0:1],
-        cushion_origin_rotated[0:1],
+        p_rotated.T[0:2],
+        cushion_origin_rotated[0:2],
         cushion.nose_radius + ball.params.R,
     )
 
