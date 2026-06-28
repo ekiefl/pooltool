@@ -41,10 +41,21 @@ def select_ball_linear_cushion_segment_collision_root(
     p: NDArray[np.float64],
     c: NDArray[np.float64],
     cushion_length: float,
-):
-    """Smallest positive real root
-    1. that is within the bounds of the cushion segment
-    2. for which the ball is moving towards the cushion segment
+) -> float:
+    """Smallest root that is a genuine collision with the cushion.
+
+    Works in the frame rotated so the cushion axis lies along +z. A root is kept only if
+    the contact point falls within the segment's z-extent and the ball is moving toward
+    the cushion. Roots are sorted ascending, so the first one passing both checks is
+    returned; ``np.inf`` if none do.
+
+    Args:
+        sorted_real_positive_roots: Candidate collision times, ascending.
+        p: Ball position polynomial ``p[0] + p[1] * t + p[2] * t**2`` in the rotated
+            frame, as a ``(3, 3)`` array of ``(constant, linear, quadratic)`` rows.
+        c: Cushion origin (``p1``) in the rotated frame; ``c[2]`` is the segment
+            start and ``c[0:2]`` the nose circle center.
+        cushion_length: Segment length along the axis.
     """
 
     start_z = c[2]
@@ -57,11 +68,15 @@ def select_ball_linear_cushion_segment_collision_root(
         p_collision = p[0] + p[1] * t + p[2] * t * t
         if not (start_z < p_collision[2] and p_collision[2] < end_z):
             continue
+
         xy_normal = p_collision[0:2] - c[0:2]
         v_collision = v0 + v1 * t
+
         if np.dot(xy_normal, v_collision[0:2]) > 0:
             continue
+
         return t
+
     return np.inf
 
 
