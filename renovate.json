@@ -28,6 +28,13 @@
       "enabled": false
     },
     {
+      "description": "Do not bump Python itself. The lower bound in pyproject.toml's requires-python defines the minimum Python users must have, and the .python-version pin is the project's dev interpreter; both are managed by hand.",
+      "matchPackageNames": [
+        "python"
+      ],
+      "enabled": false
+    },
+    {
       "matchUpdateTypes": [
         "patch",
         "minor"
