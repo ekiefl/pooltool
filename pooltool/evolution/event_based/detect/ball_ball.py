@@ -54,6 +54,9 @@ def ball_ball_collision_time(
     if C[4] == 0.0:
         # C[3] must also be 0.0, and this is a quadratic
         assert C[3] == 0.0
+        # Exact contact only collides at t=0 if the balls are closing.
+        if C[0] == 0.0 and C[1] >= 0.0:
+            return np.inf
         return get_real_positive_smallest_root(quadratic.solve(C[2], C[1], C[0]))
 
     return get_real_positive_smallest_root(quartic.solve(C[4], C[3], C[2], C[1], C[0]))
@@ -128,6 +131,15 @@ def ball_ball_collision_time_2d(
     c = Bx * Bx + 2 * Ax * Cx + 2 * Ay * Cy + By * By
     d = 2 * Bx * Cx + 2 * By * Cy
     e = Cx * Cx + Cy * Cy - 4 * R * R
+
+    if a == 0.0:
+        # If relative acceleration is zero, the cubic term must also be zero and the
+        # distance equation reduces to a quadratic.
+        assert b == 0.0
+        # Exact contact only collides at t=0 if the balls are closing.
+        if e == 0.0 and d >= 0.0:
+            return np.inf
+        return get_real_positive_smallest_root(quadratic.solve(c, d, e))
 
     return get_real_positive_smallest_root(quartic.solve(a, b, c, d, e))
 
