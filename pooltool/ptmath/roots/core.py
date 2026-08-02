@@ -76,6 +76,16 @@ def get_real_smallest_magnitude_root(
 ) -> float:
     """Returns the real root with smallest magnitude (closest to zero) from a set of roots.
 
+    Args:
+        roots:
+            A 1D array of n polynomial roots.
+        abs_or_rel_cutoff:
+            See :func:`get_real_positive_smallest_root`.
+        atol:
+            See :func:`get_real_positive_smallest_root`.
+        rtol:
+            See :func:`get_real_positive_smallest_root`.
+
     Returns:
         The real root with smallest absolute value. If no real root exists, returns
         ``np.inf``.
@@ -85,22 +95,10 @@ def get_real_smallest_magnitude_root(
 
     for i in range(len(roots)):
         root = roots[i]
-        root_real = root.real
-        root_imag = root.imag
+        real_mag = abs(root.real)
 
-        imag_mag = abs(root_imag)
-        real_mag = abs(root_real)
-
-        is_real = False
-        if real_mag > abs_or_rel_cutoff:
-            is_real = imag_mag < atol
-        elif real_mag > 0:
-            is_real = (imag_mag / real_mag) < rtol
-        else:
-            is_real = imag_mag == 0.0
-
-        if is_real and real_mag < min_mag:
-            min_root = root_real
+        if is_real_number(root, abs_or_rel_cutoff, rtol, atol) and real_mag < min_mag:
+            min_root = root.real
             min_mag = real_mag
 
     return min_root
