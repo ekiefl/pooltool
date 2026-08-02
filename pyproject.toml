@@ -150,7 +150,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 # Vendored StrEnum backport, kept byte-faithful to upstream
-"pooltool/utils/strenum.py" = ["PYI019", "RUF022", "SIM102"]
+"pooltool/utils/strenum.py" = ["ALL"]
 
 [tool.pytest.ini_options]
 addopts = [
