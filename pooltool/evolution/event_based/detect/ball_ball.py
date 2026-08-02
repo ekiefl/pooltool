@@ -7,7 +7,7 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 from pooltool.events import Event, EventType, ball_ball_collision, null_event
 from pooltool.evolution.event_based.cache import CollisionCache
 from pooltool.evolution.event_based.detect.ball_position_polynomial import (
@@ -149,11 +149,13 @@ def get_next_ball_ball_event(
         ball2_state = ball2.state
         ball2_params = ball2.params
 
-        if ball1_state.s == const.pocketed or ball2_state.s == const.pocketed:
-            cache[ball_pair] = np.inf
-        elif (
-            ball1_state.s in const.nontranslating
-            and ball2_state.s in const.nontranslating
+        if (
+            ball1_state.s == const.pocketed
+            or ball2_state.s == const.pocketed
+            or (
+                ball1_state.s in const.nontranslating
+                and ball2_state.s in const.nontranslating
+            )
         ):
             cache[ball_pair] = np.inf
         elif ptmath.is_overlapping(

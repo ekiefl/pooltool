@@ -8,9 +8,9 @@ from collections.abc import Sequence
 import numpy as np
 from numpy.typing import NDArray
 
-import pooltool.physics.evolve as evolve
 from pooltool.events import filter_ball
 from pooltool.objects.ball.datatypes import Ball, BallHistory, BallState
+from pooltool.physics import evolve
 from pooltool.system.datatypes import System
 
 

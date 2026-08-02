@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 import plotly.io as pio
 from numpy.typing import NDArray
 
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 from pooltool.objects.ball.datatypes import Ball, BallParams
 from pooltool.objects.table.components import LinearCushionSegment
 from pooltool.physics.resolve.ball_cushion.core import CoreBallLCushionCollision

@@ -90,10 +90,8 @@ class Camera:
         theta = self.theta + dtheta
         phi = self.phi + dphi
 
-        if theta > 90:
-            theta = 90
-        if theta < 0:
-            theta = 0
+        theta = min(theta, 90)
+        theta = max(theta, 0)
 
         if theta_only:
             self.rotate(theta=theta)

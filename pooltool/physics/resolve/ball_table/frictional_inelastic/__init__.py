@@ -4,8 +4,7 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
-import pooltool.physics as physics
-import pooltool.ptmath as ptmath
+from pooltool import physics, ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.physics.resolve.ball_table.core import (
     CoreBallTableCollision,

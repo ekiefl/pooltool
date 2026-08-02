@@ -1,6 +1,6 @@
 """Math functions"""
 
-import pooltool.ptmath.roots as roots
+from pooltool.ptmath import roots
 from pooltool.ptmath.utils import (
     angle,
     angle_between_vectors,
@@ -25,25 +25,25 @@ from pooltool.ptmath.utils import (
 )
 
 __all__ = [
-    "roots",
     "angle",
     "angle_between_vectors",
+    "are_points_on_same_side",
+    "convert_2D_to_3D",
     "coordinate_rotation",
     "cross",
     "decompose_normal_tangent",
-    "squared_norm3d",
-    "norm3d",
-    "solve_transcendental",
-    "convert_2D_to_3D",
-    "squared_norm2d",
-    "norm2d",
-    "point_on_line_closest_to_point",
     "find_intersection_2D",
-    "are_points_on_same_side",
+    "is_overlapping",
+    "norm2d",
+    "norm3d",
+    "point_on_line_closest_to_point",
+    "quaternion_from_vector_to_vector",
+    "roots",
+    "rotation_from_vector_to_vector",
+    "solve_transcendental",
+    "squared_norm2d",
+    "squared_norm3d",
     "unit_vector",
     "unit_vector_slow",
     "wiggle",
-    "rotation_from_vector_to_vector",
-    "quaternion_from_vector_to_vector",
-    "is_overlapping",
 ]

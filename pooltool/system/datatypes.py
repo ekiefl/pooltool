@@ -9,7 +9,7 @@ import numpy as np
 from attrs import define, field
 
 import pooltool.constants as const
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 from pooltool.events import Event
 from pooltool.objects.ball.datatypes import Ball, BallHistory
 from pooltool.objects.ball.sets import BallSet

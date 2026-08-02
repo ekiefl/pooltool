@@ -19,8 +19,6 @@ all_modes = {cls.name: cls for cls in BaseMode.__subclasses__()}
 
 
 __all__ = [
-    "Mode",
-    "ModeManager",
     "AimMode",
     "BallInHandMode",
     "CalculateMode",
@@ -29,6 +27,8 @@ __all__ = [
     "CamSaveMode",
     "GameOverMode",
     "MenuMode",
+    "Mode",
+    "ModeManager",
     "PickBallMode",
     "PurgatoryMode",
     "ShotMode",

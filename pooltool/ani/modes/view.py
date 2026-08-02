@@ -2,7 +2,7 @@
 
 import numpy as np
 
-import pooltool.ani.tasks as tasks
+from pooltool.ani import tasks
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.collision import cue_avoid
@@ -165,10 +165,8 @@ class ViewMode(BaseMode):
             dy = mouse.get_dy()
 
         V0 = multisystem.active.cue.V0 + dy * power_sensitivity
-        if V0 < min_stroke_speed:
-            V0 = min_stroke_speed
-        if V0 > max_stroke_speed:
-            V0 = max_stroke_speed
+        V0 = max(V0, min_stroke_speed)
+        V0 = min(V0, max_stroke_speed)
 
         multisystem.active.cue.set_state(V0=V0)
         self._update_hud()

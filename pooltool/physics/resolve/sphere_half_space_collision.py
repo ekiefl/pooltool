@@ -3,7 +3,7 @@ import quaternion
 from numba import jit
 
 import pooltool.constants as const
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 from pooltool.physics.utils import tangent_surface_velocity
 
 

@@ -2,7 +2,7 @@ import copy
 import pdb
 from abc import ABC, abstractmethod
 
-import pooltool.ani.tasks as tasks
+from pooltool.ani import tasks
 from pooltool.ani.action import Action
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.system.datatypes import multisystem

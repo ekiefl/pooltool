@@ -106,7 +106,7 @@ class Table:
         return x2 - x1
 
     @property
-    def l(self) -> float:  # noqa F743
+    def l(self) -> float:
         """The length of the table.
 
         Warning:

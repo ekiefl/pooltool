@@ -4,8 +4,8 @@ from pooltool.system.datatypes import MultiSystem, System, multisystem
 from pooltool.system.render import SystemRender
 
 __all__ = [
-    "System",
     "MultiSystem",
-    "multisystem",
+    "System",
     "SystemRender",
+    "multisystem",
 ]

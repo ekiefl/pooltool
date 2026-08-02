@@ -2,8 +2,8 @@
 
 from direct.gui.DirectGui import DGG
 
-import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
+from pooltool.ani import tasks
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.globals import Global

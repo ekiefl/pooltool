@@ -9,7 +9,7 @@ from attrs import define, evolve, field, validate
 from numpy.typing import NDArray
 
 import pooltool.constants as c
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 from pooltool.objects.ball.params import BallParams
 from pooltool.objects.ball.sets import BallSet
 from pooltool.serialize import SerializeFormat, conversion

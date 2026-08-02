@@ -3,9 +3,7 @@ import pytest
 from numpy.typing import NDArray
 
 import pooltool.constants as const
-import pooltool.physics as physics
-import pooltool.ptmath as ptmath
-from pooltool import aim, events
+from pooltool import aim, events, physics, ptmath
 from pooltool.events import EventType, ball_ball_collision, ball_pocket_collision
 from pooltool.evolution.event_based._utils import _system_has_energy
 from pooltool.evolution.event_based.cache import CollisionCache

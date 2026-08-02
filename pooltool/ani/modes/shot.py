@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 
-import pooltool.ani.tasks as tasks
+from pooltool.ani import tasks
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.collision import cue_avoid

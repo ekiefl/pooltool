@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
-import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
+from pooltool.ani import tasks
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.constants import rotate_downtime

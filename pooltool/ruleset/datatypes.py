@@ -137,9 +137,7 @@ class ShotConstraints:
             self.call_shot
             and self.ball_call is not None
             and self.pocket_call is not None
-        ):
-            return True
-        elif not self.call_shot:
+        ) or not self.call_shot:
             return True
         else:
             return False
@@ -324,4 +322,3 @@ class Ruleset(ABC):
             def copy(self):
                 return self
         """
-        pass

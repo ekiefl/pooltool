@@ -10,7 +10,7 @@ import numpy as np
 from attrs import define, evolve, field
 from numpy.typing import NDArray
 
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 from pooltool.utils.dataclasses import are_dataclasses_equal
 
 

@@ -101,7 +101,7 @@ class PocketTableSpecs:
     """
 
     # 7-foot table (78x39 in^2 playing surface)
-    l: float = field(default=1.9812)  # noqa  E741
+    l: float = field(default=1.9812)
     w: float = field(default=1.9812 / 2)
 
     cushion_width: float = field(default=2 * 2.54 / 100)
@@ -173,7 +173,7 @@ class SnookerTableSpecs:
     # https://wpbsa.com/rules/
     # The playing area is within the cushion faces and shall measure
     # 11 ft 8½ in x 5 ft 10 in (3569 mm x 1778 mm) with a tolerance on both dimensions of +/- ½ in (13 mm).
-    l: float = field(default=3.5445)  # noqa  E741
+    l: float = field(default=3.5445)
     w: float = field(default=1.7465)
 
     cushion_width: float = field(default=1.55 * 25.4 / 1000)

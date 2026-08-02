@@ -6,8 +6,7 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
-import pooltool.physics.evolve as evolve
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 from pooltool.events import (
     Event,
     EventType,
@@ -24,6 +23,7 @@ from pooltool.evolution.event_based.detect.quartic_coefficients import (
 )
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import LinearCushionSegment
+from pooltool.physics import evolve
 from pooltool.physics.utils import get_u_vec
 from pooltool.ptmath import quaternion_from_vector_to_vector
 from pooltool.ptmath.roots import (
@@ -205,8 +205,7 @@ def ball_vertical_plane_collision_time(
         if not (0 <= s_score <= 1):
             continue
 
-        if root.real < min_time:
-            min_time = root.real
+        min_time = min(min_time, root.real)
 
     return min_time
 

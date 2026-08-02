@@ -2,7 +2,7 @@
 
 import sys
 
-import pooltool.ani.tasks as tasks
+from pooltool.ani import tasks
 from pooltool.ani.action import Action
 from pooltool.ani.globals import Global
 from pooltool.ani.menu import MenuRegistry

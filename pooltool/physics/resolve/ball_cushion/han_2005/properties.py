@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.typing import NDArray
 
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 
 
 def get_ball_cushion_restitution(rvw: NDArray[np.float64], e_c: float):

@@ -3,7 +3,7 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 from pooltool.physics.utils import tangent_surface_velocity
 
 

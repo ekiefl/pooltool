@@ -4,7 +4,7 @@ from typing import Protocol
 import numpy as np
 
 import pooltool.constants as const
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
     CircularCushionSegment,

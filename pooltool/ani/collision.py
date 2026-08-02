@@ -1,7 +1,7 @@
 import numpy as np
 from panda3d.core import CollisionHandlerQueue, CollisionTraverser
 
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 from pooltool.ani.globals import Global
 from pooltool.ani.scene import visual
 from pooltool.config import settings
@@ -77,8 +77,7 @@ class CueAvoid:
 
         for entry in self.collision_handler.entries:
             min_theta = self.process_collision(entry)
-            if min_theta > max_min_theta:
-                max_min_theta = min_theta
+            max_min_theta = max(max_min_theta, min_theta)
 
         self.min_theta = max_min_theta
         return task.cont

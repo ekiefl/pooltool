@@ -5,7 +5,7 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 from pooltool.events import Event, EventType, ball_pocket_collision, null_event
 from pooltool.evolution.event_based.cache import CollisionCache
 from pooltool.physics.utils import get_airborne_time, get_u_vec

@@ -2,7 +2,7 @@ import numpy as np
 from direct.interval.IntervalGlobal import LerpPosInterval, Sequence
 from panda3d.core import ClockObject, CollisionNode, CollisionSegment, Vec3
 
-import pooltool.utils as utils
+from pooltool import utils
 from pooltool.ani.constants import model_dir
 from pooltool.ani.globals import Global
 from pooltool.config import settings

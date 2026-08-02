@@ -365,7 +365,7 @@ def slip_time_for_initial_stick(
         return t_c
 
     t_slip = sp.optimize.toms748(f, t_c, t_f)
-    assert t_c <= t_slip and t_slip <= t_f, f"t_c={t_c} <= t_slip={t_slip} <= t_f={t_f}"
+    assert t_c <= t_slip <= t_f, f"t_c={t_c} <= t_slip={t_slip} <= t_f={t_f}"
     return t_slip
 
 
@@ -404,7 +404,7 @@ def slip_time_for_stick(
         return t_f
 
     t_slip = sp.optimize.toms748(f, t_c, t_f)
-    assert t_stick <= t_slip and t_slip <= t_f, (
+    assert t_stick <= t_slip <= t_f, (
         f"t_stick={t_stick} <= t_slip={t_slip} <= t_f={t_f}"
     )
     return t_slip
@@ -418,23 +418,25 @@ def nondimensional_stick_time_for_initial_slip(
     e_n: float,
     eta_squared: float,
 ) -> float:
-    assert mu * eta_squared <= v_t_0_by_v_n_0 and v_t_0_by_v_n_0 <= mu * (
-        (1 + e_n) * beta_t_by_beta_n - eta_squared / e_n
+    assert (
+        mu * eta_squared
+        <= v_t_0_by_v_n_0
+        <= mu * ((1 + e_n) * beta_t_by_beta_n - eta_squared / e_n)
     )
     if v_t_0_by_v_n_0 <= mu * beta_t_by_beta_n:
         x = ((v_t_0_by_v_n_0 / mu) - beta_t_by_beta_n) / (
             eta_squared - beta_t_by_beta_n
         )
-        assert -1 <= x and x <= 1, f"x={x}"
+        assert -1 <= x <= 1, f"x={x}"
         result = (2 / math.pi) * math.acos(x)
-        assert 0 <= result and result <= 1, f"result={result}"
+        assert 0 <= result <= 1, f"result={result}"
     else:
         x = ((v_t_0_by_v_n_0 / mu) - beta_t_by_beta_n) / (
             eta_squared / e_n - e_n * beta_t_by_beta_n
         )
-        assert -1 <= x and x <= 1, f"x={x}"
+        assert -1 <= x <= 1, f"x={x}"
         result = (2 / math.pi) * (math.acos(x) - t_c_shift(e_n)) * e_n
-        assert 1 <= result and result <= (1 + e_n), f"result={result}, e_n={e_n}"
+        assert 1 <= result <= (1 + e_n), f"result={result}, e_n={e_n}"
     return result
 
 

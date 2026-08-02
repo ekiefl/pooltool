@@ -15,7 +15,7 @@ from numba import jit
 from numpy.typing import NDArray
 
 import pooltool.constants as const
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 from pooltool.physics.utils import (
     get_roll_time,
     get_slide_time,

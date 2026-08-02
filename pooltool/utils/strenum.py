@@ -3,7 +3,9 @@ from __future__ import annotations
 from enum import Enum, auto
 from typing import Any, TypeVar
 
-__all__ = ["auto", "StrEnum"]
+from typing_extensions import Self
+
+__all__ = ["StrEnum", "auto"]
 
 _S = TypeVar("_S", bound="StrEnum")
 
@@ -13,7 +15,7 @@ class StrEnum(str, Enum):
     Enum where members are also (and must be) strings
     """
 
-    def __new__(cls: type[_S], *values: str) -> _S:
+    def __new__(cls, *values: str) -> Self:
         if len(values) > 3:
             raise TypeError(f"too many arguments for str(): {values!r}")
         if len(values) == 1:

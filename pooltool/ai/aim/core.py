@@ -4,7 +4,7 @@ from typing import overload
 import numpy as np
 from numpy.typing import NDArray
 
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.system.datatypes import System
 

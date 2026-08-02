@@ -3,7 +3,7 @@ from __future__ import annotations
 import attrs
 import numpy as np
 
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 from pooltool.events import Event, EventType, null_event
 from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.detect.ball_ball import (

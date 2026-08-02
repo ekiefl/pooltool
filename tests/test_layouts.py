@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 from pooltool.game.datatypes import GameType
 from pooltool.layouts import (
     BallPos,

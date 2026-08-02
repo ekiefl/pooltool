@@ -5,7 +5,7 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.io as pio
 
-import pooltool.ptmath as ptmath
+from pooltool import ptmath
 from pooltool.objects.ball.datatypes import Ball, BallParams
 from pooltool.physics.resolve.ball_ball.core import BallBallCollisionStrategy
 
