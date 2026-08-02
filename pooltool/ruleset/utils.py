@@ -99,12 +99,12 @@ def get_ball_ids_on_table(
     shot: System, at_start: bool, exclude: set[str] | None = None
 ) -> set[str]:
     history_idx = 0 if at_start else -1
-    return set(
+    return {
         ball.id
         for ball in shot.balls.values()
         if ball.history[history_idx].s in const.on_table
         and (exclude is None or ball.id not in exclude)
-    )
+    }
 
 
 class StateProbe(StrEnum):
@@ -197,7 +197,7 @@ def balls_that_hit_cushion(shot: System, exclude: set[str] | None = None) -> set
         by_ball(numbered_ball_ids),
     )
 
-    return set(event.agents[0].id for event in cushion_events)
+    return {event.agents[0].id for event in cushion_events}
 
 
 def is_ball_hit(shot: System) -> bool:
@@ -212,7 +212,4 @@ def is_shot_called_if_required(shot_constraints: ShotConstraints) -> bool:
     if not shot_constraints.call_shot:
         return True
 
-    if shot_constraints.ball_call is None or shot_constraints.pocket_call is None:
-        return False
-
-    return True
+    return not (shot_constraints.ball_call is None or shot_constraints.pocket_call is None)

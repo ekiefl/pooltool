@@ -129,7 +129,7 @@ class BallInHandMode(BaseMode):
         if not self.keymap[Action.ball_in_hand]:
             Global.mode_mgr.change_mode(
                 Global.mode_mgr.last_mode,
-                enter_kwargs=dict(load_prev_cam=False),
+                enter_kwargs={"load_prev_cam": False},
             )
             return task.done
 

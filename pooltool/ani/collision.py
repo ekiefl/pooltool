@@ -108,7 +108,7 @@ class CueAvoid:
         )
 
         # Center ofthe cueing ball
-        Bx, By, Bz = self.avoid_nodes["cue_stick_focus"].getPos(
+        _Bx, _By, _Bz = self.avoid_nodes["cue_stick_focus"].getPos(
             self.avoid_nodes["scene"]
         )
 

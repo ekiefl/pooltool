@@ -75,9 +75,9 @@ class CamLoadMode(BaseMode):
     def cam_load_task(self, task):
         if not self.keymap[Action.cam_load]:
             enter_kwargs = (
-                dict(load_prev_cam=True)
+                {"load_prev_cam": True}
                 if Global.mode_mgr.last_mode == Mode.aim
-                else dict()
+                else {}
             )
             Global.mode_mgr.change_mode(
                 Global.mode_mgr.last_mode, enter_kwargs=enter_kwargs

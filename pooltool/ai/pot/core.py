@@ -331,13 +331,13 @@ def open_pockets(ball: Ball, table: Table, balls: Iterable[Ball]) -> set[str]:
 
     See also: viable_pockets
     """
-    return set(
+    return {
         pocket.id
         for pocket in table.pockets.values()
         if not is_pocket_occluded(ball, table, pocket, balls)
         and is_room_for_cue_ball(ball, table, pocket, balls)
         and not is_jaw_in_way(ball, table, pocket)
-    )
+    }
 
 
 def required_precision(

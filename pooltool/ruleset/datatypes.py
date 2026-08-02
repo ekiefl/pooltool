@@ -133,14 +133,9 @@ class ShotConstraints:
         return self.cueable[0]
 
     def can_shoot(self) -> bool:
-        if (
-            self.call_shot
-            and self.ball_call is not None
-            and self.pocket_call is not None
-        ) or not self.call_shot:
+        if not self.call_shot:
             return True
-        else:
-            return False
+        return self.ball_call is not None and self.pocket_call is not None
 
 
 @attrs.define(frozen=True)

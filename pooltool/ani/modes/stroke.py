@@ -111,11 +111,11 @@ class StrokeMode(BaseMode):
 
         if newX < 0:
             newX = 0
-            collision = True if visual.cue.is_shot() else False
+            collision = bool(visual.cue.is_shot())
         else:
             collision = False
 
         cue_stick_node.setX(newX)
         visual.cue.append_stroke_data()
 
-        return True if collision else False
+        return bool(collision)

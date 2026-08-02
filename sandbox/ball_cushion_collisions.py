@@ -239,7 +239,7 @@ def plot_rebound_angle_vs_incident_angle(
             y=cut_angles_deg,
             mode="lines",
             name="1:1 line (perfect reflection)",
-            line=dict(color="gray", width=1, dash="dash"),
+            line={"color": "gray", "width": 1, "dash": "dash"},
             opacity=0.7,
         )
     )
@@ -278,7 +278,7 @@ def plot_rebound_angle_vs_incident_angle(
                     y=rebound_angles_deg,
                     mode="lines",
                     name=label,
-                    line=dict(color=base_color, width=2),
+                    line={"color": base_color, "width": 2},
                     opacity=opacity,
                 )
             )
@@ -334,7 +334,7 @@ def plot_rebound_speed_vs_incident_angle(
                     y=rebound_speeds,
                     mode="lines",
                     name=label,
-                    line=dict(color=base_color, width=2),
+                    line={"color": base_color, "width": 2},
                     opacity=opacity,
                 )
             )
@@ -398,7 +398,7 @@ def plot_change_in_angular_velocity_vs_incident_angle(
                     y=100 * outgoing_avel_proportion_of_avel,
                     mode="lines",
                     name=label,
-                    line=dict(color=base_color, width=2),
+                    line={"color": base_color, "width": 2},
                     opacity=opacity,
                 )
             )

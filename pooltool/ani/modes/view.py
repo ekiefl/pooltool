@@ -136,7 +136,7 @@ class ViewMode(BaseMode):
         elif self.keymap[Action.power]:
             self.view_apply_power()
         elif self.keymap[Action.aim]:
-            Global.mode_mgr.change_mode(Mode.aim, enter_kwargs=dict(load_prev_cam=True))
+            Global.mode_mgr.change_mode(Mode.aim, enter_kwargs={"load_prev_cam": True})
         elif self.keymap[Action.exec_shot]:
             self.keymap[Action.exec_shot] = False
             if Global.game.shot_constraints.can_shoot():
@@ -150,7 +150,7 @@ class ViewMode(BaseMode):
                 visual.switch_to_shot(multisystem.active_index - 1)
                 self._update_hud()
                 Global.mode_mgr.change_mode(
-                    Mode.shot, enter_kwargs=dict(build_animations=False)
+                    Mode.shot, enter_kwargs={"build_animations": False}
                 )
                 return task.done
         else:

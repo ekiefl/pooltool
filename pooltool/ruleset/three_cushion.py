@@ -115,7 +115,7 @@ class _ThreeCushion(Ruleset):
             ball_in_hand=BallInHandOptions.NONE,
             movable=[],
             cueable=["white"],
-            hittable=tuple(),
+            hittable=(),
             call_shot=False,
         )
 
@@ -129,7 +129,7 @@ class _ThreeCushion(Ruleset):
             ball_in_hand=BallInHandOptions.NONE,
             movable=[],
             cueable=cueable,
-            hittable=tuple(),
+            hittable=(),
             call_shot=False,
         )
 

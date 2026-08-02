@@ -148,10 +148,7 @@ def is_turn_over(shot: System, constraints: ShotConstraints, legal: bool) -> boo
     assert constraints.ball_call is not None
     assert constraints.pocket_call is not None
 
-    if is_ball_pocketed_in_pocket(shot, constraints.ball_call, constraints.pocket_call):
-        return False
-
-    return True
+    return not is_ball_pocketed_in_pocket(shot, constraints.ball_call, constraints.pocket_call)
 
 
 def is_game_over(shot: System) -> bool:

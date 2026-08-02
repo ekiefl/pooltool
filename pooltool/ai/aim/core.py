@@ -128,7 +128,7 @@ def _at_ball(cue_ball: Ball, object_ball: Ball, cut: float = 0.0) -> float:
 
     assert -89.0 <= cut <= 89.0, "Cut must be less than 89 and more than -89"
 
-    left = True if cut < 0 else False
+    left = cut < 0
     cut = np.abs(cut) * np.pi / 180
     R = object_ball.params.R
     d = ptmath.norm3d(object_ball.state.rvw[0] - cue_ball.state.rvw[0])

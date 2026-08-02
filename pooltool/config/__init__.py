@@ -284,7 +284,7 @@ class Settings:
 
     @staticmethod
     def _attrs() -> set[str]:
-        return set([attr.name for attr in attrs.fields_dict(Settings).values()])
+        return {attr.name for attr in attrs.fields_dict(Settings).values()}
 
 
 # Inherits from Settings so the LSP recognizes Settings attributes. Yet truthfully these

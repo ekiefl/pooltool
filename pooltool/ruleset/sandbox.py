@@ -32,7 +32,7 @@ class _RulelessMode(Ruleset):
             ball_in_hand=BallInHandOptions.ANYWHERE,
             movable=None,
             cueable=None,
-            hittable=tuple(),
+            hittable=(),
             call_shot=False,
         )
 

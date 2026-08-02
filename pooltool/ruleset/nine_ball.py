@@ -97,10 +97,7 @@ def is_turn_over(shot: System, legal: bool) -> bool:
 
     ids = get_pocketed_ball_ids_during_shot(shot, exclude={"cue"})
 
-    if len(ids):
-        return False
-
-    return True
+    return not len(ids)
 
 
 def is_game_over(shot: System, legal: bool) -> bool:

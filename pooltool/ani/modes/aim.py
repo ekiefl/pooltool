@@ -128,7 +128,7 @@ class AimMode(BaseMode):
 
     def aim_task(self, task):
         if self.keymap[Action.view]:
-            Global.mode_mgr.change_mode(Mode.view, enter_kwargs=dict(move_active=True))
+            Global.mode_mgr.change_mode(Mode.view, enter_kwargs={"move_active": True})
             return task.done
         elif self.keymap[Action.stroke]:
             Global.mode_mgr.change_mode(Mode.stroke)

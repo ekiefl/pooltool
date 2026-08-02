@@ -42,7 +42,7 @@ class HUD:
         self.elements = None
         self.initialized = False
 
-    def init(self, hide: list[HUDElement] = list()):
+    def init(self, hide: list[HUDElement] = []):
         """Initialize HUD elements and start the HUD update task"""
 
         self.elements = {

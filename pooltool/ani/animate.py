@@ -425,10 +425,10 @@ class ShotViewer(Interface):
         if settings.graphics.hud:
             hud.init(hide=[HUDElement.help_text])
 
-        params = dict(
-            build_animations=True,
-            playback_mode=PlaybackMode.LOOP,
-        )
+        params = {
+            "build_animations": True,
+            "playback_mode": PlaybackMode.LOOP,
+        }
         Global.mode_mgr.update_event_baseline()
         Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
         Global.task_mgr.run()

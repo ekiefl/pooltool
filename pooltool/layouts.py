@@ -444,7 +444,7 @@ def _get_snooker_rack(
     if ballset is None:
         ballset = DEFAULT_SNOOKER_BALLSET
 
-    red_ids = set([f"red_{i:02d}" for i in range(1, 16)])
+    red_ids = {f"red_{i:02d}" for i in range(1, 16)}
 
     first_red_y = 0.75 + (2 * (spacing_factor + 1) * ball_params.R / table.l)
 
