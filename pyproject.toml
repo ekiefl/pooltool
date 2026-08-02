@@ -148,6 +148,10 @@ ignore = [
     "PLR0402",  # The architecture relies on `import pooltool.x as x` submodule aliasing
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# Vendored StrEnum backport, kept byte-faithful to upstream
+"pooltool/utils/strenum.py" = ["PYI019", "RUF022", "SIM102"]
+
 [tool.pytest.ini_options]
 addopts = [
     "--import-mode=importlib",
