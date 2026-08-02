@@ -102,7 +102,7 @@ dev = [
     "pytest-cov>=5.0.0",
     "pre-commit>=3.7.1",
     "pyright>=1.1.373",
-    "ruff>=0.5.5",
+    "ruff>0.16,<0.17",
     # Diagnostics
     "psutil>=6.0.0",
     "ipython>=8.18.1",
@@ -136,6 +136,7 @@ target-version = "py310"  # Minimum supported version
 line-length = 88
 exclude = [
     "docs",
+    "pooltool/utils/strenum.py",  # Vendored StrEnum backport, kept byte-faithful to upstream
 ]
 
 [tool.ruff.lint]
@@ -145,6 +146,7 @@ extend-select = [
 ]
 ignore = [
     "E741",  # Ambiguous variable name
+    "PLR0402",  # The architecture relies on `import pooltool.x as x` submodule aliasing
 ]
 
 [tool.pytest.ini_options]

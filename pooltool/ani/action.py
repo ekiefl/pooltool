@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from pooltool.utils.strenum import StrEnum, auto
 
 

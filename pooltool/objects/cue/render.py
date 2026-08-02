@@ -195,17 +195,14 @@ class CueRender(Render):
             # There is only a handful of frames
             return False
 
-        if not any([x > 0 for x in self.stroke_pos]):
+        if not any(x > 0 for x in self.stroke_pos):
             # No backstroke
             return False
 
         backstroke_time, _, strike_time = self.get_stroke_times()
 
-        if (strike_time - backstroke_time) < 0.3:
-            # Stroke is too short
-            return False
-
-        return True
+        stroke_duration = strike_time - backstroke_time
+        return stroke_duration >= 0.3
 
     def calc_V0_from_stroke(self):
         """Calculates V0 from the stroke sequence

@@ -522,7 +522,7 @@ class MenuInput:
         def _command(text: str) -> None:
             try:
                 cleaned_value = command(text)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 input_field.reset_value()
                 input_field._show_error_message(str(e))
                 return

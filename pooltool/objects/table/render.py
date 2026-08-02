@@ -60,7 +60,6 @@ class TableRender(Render):
             cushion = self._table.cushion_segments.linear[cushion_id]
 
             x1, y1, z1 = cushion.p1
-            x2, y2, z2 = cushion.p2
 
             n1, n2, n3 = cushion.normal
             if cushion_id in ["9", "12"]:

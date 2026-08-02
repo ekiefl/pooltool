@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from __future__ import annotations
 
 from attrs import define, evolve, field, fields_dict

@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-
 import attrs
 import click
 

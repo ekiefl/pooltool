@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 import numpy as np
 from panda3d.core import ClockObject, WindowProperties
 

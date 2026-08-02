@@ -4,8 +4,8 @@ from pooltool.ani.camera.states import camera_states
 cam = Camera()
 
 __all__ = [
-    "cam",
     "Camera",
     "CameraState",
+    "cam",
     "camera_states",
 ]

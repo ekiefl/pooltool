@@ -179,8 +179,11 @@ def unit_vector(
     return vector / norm
 
 
+_X_AXIS = np.array([1, 0])
+
+
 @jit(nopython=True, cache=const.use_numba_cache)
-def angle(v2: NDArray[np.float64], v1: NDArray[np.float64] = np.array([1, 0])) -> float:
+def angle(v2: NDArray[np.float64], v1: NDArray[np.float64] = _X_AXIS) -> float:
     """Returns counter-clockwise angle of projections of v1 and v2 onto the x-y plane
 
     (just-in-time compiled)

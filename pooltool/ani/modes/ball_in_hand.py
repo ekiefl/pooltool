@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+from typing import ClassVar
 
 import numpy as np
 from direct.interval.IntervalGlobal import Parallel
@@ -23,7 +23,7 @@ FONT_OPACITY = 0.95
 
 class BallInHandMode(BaseMode):
     name = Mode.ball_in_hand
-    keymap = {
+    default_keymap: ClassVar[dict[Action, bool]] = {
         Action.quit: False,
         Action.ball_in_hand: True,
         Action.next: False,
@@ -113,9 +113,12 @@ class BallInHandMode(BaseMode):
         if self.picking == "ball":
             self.remove_grab_selection_highlight()
 
-        if self.picking == "placement" and not success:
-            if self.grabbed_ball is not None:
-                self.grabbed_ball.set_render_state_as_object_state()
+        if (
+            self.picking == "placement"
+            and not success
+            and self.grabbed_ball is not None
+        ):
+            self.grabbed_ball.set_render_state_as_object_state()
 
         # Clean up instruction message if it exists
         if self.instruction_message is not None:
@@ -129,7 +132,7 @@ class BallInHandMode(BaseMode):
         if not self.keymap[Action.ball_in_hand]:
             Global.mode_mgr.change_mode(
                 Global.mode_mgr.last_mode,
-                enter_kwargs=dict(load_prev_cam=False),
+                enter_kwargs={"load_prev_cam": False},
             )
             return task.done
 

@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from __future__ import annotations
 
 from collections import Counter
@@ -32,7 +30,7 @@ class _RulelessMode(Ruleset):
             ball_in_hand=BallInHandOptions.ANYWHERE,
             movable=None,
             cueable=None,
-            hittable=tuple(),
+            hittable=(),
             call_shot=False,
         )
 

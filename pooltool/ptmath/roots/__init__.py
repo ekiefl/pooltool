@@ -7,9 +7,9 @@ from pooltool.ptmath.roots.core import (
 )
 
 __all__ = [
-    "quadratic",
-    "quartic",
-    "is_real_number",
     "get_real_positive_smallest_root",
     "get_real_positive_smallest_roots",
+    "is_real_number",
+    "quadratic",
+    "quartic",
 ]

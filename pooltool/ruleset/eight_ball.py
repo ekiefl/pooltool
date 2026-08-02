@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from __future__ import annotations
 
 from collections import Counter
@@ -148,10 +146,9 @@ def is_turn_over(shot: System, constraints: ShotConstraints, legal: bool) -> boo
     assert constraints.ball_call is not None
     assert constraints.pocket_call is not None
 
-    if is_ball_pocketed_in_pocket(shot, constraints.ball_call, constraints.pocket_call):
-        return False
-
-    return True
+    return not is_ball_pocketed_in_pocket(
+        shot, constraints.ball_call, constraints.pocket_call
+    )
 
 
 def is_game_over(shot: System) -> bool:
@@ -272,8 +269,10 @@ class _EightBall(Ruleset):
                 num_active = num_stripes
                 num_other = num_solids
 
-            assert (ball_call := self.shot_constraints.ball_call) == "8"
-            assert (pocket_call := self.shot_constraints.pocket_call) is not None
+            ball_call = self.shot_constraints.ball_call
+            pocket_call = self.shot_constraints.pocket_call
+            assert ball_call == "8"
+            assert pocket_call is not None
             if (
                 is_ball_pocketed_in_pocket(shot, ball_call, pocket_call)
                 and self.shot_info.legal

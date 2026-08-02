@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+from typing import ClassVar
 
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
@@ -14,7 +14,7 @@ from pooltool.system.datatypes import System, multisystem
 
 class CalculateMode(BaseMode):
     name = Mode.calculate
-    keymap = {
+    default_keymap: ClassVar[dict[Action, bool]] = {
         Action.move: False,
         Action.quit: False,
         Action.zoom: False,
@@ -59,7 +59,7 @@ class CalculateMode(BaseMode):
         if not tasks.has("run_simulation"):
             # simulation calculation is finished
             Global.mode_mgr.change_mode(
-                Mode.shot, enter_kwargs=dict(build_animations=True)
+                Mode.shot, enter_kwargs={"build_animations": True}
             )
         elif self.keymap[Action.zoom]:
             cam.zoom_via_mouse()

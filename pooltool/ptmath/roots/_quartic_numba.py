@@ -193,8 +193,7 @@ def oqs_calc_phi0(a, b, c, d, scaled):
         maxtt = abs(xxx)
     else:
         maxtt = abs(gx)
-    if abs(h) > maxtt:
-        maxtt = abs(h)
+    maxtt = max(maxtt, abs(h))
 
     if abs(f) > macheps * maxtt:
         for iter in range(8):

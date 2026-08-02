@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from __future__ import annotations
 
 from collections.abc import Iterator

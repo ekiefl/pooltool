@@ -75,6 +75,6 @@ def display_models():
 
 
 __all__ = [
-    "Resolver",
     "RESOLVER_PATH",
+    "Resolver",
 ]

@@ -8,6 +8,6 @@ MenuRegistry.register(MainMenu)
 MenuRegistry.register(SettingsMenu)
 
 __all__ = [
-    "MenuRegistry",
     "MenuNavigator",
+    "MenuRegistry",
 ]

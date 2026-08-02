@@ -205,8 +205,7 @@ def ball_vertical_plane_collision_time(
         if not (0 <= s_score <= 1):
             continue
 
-        if root.real < min_time:
-            min_time = root.real
+        min_time = min(min_time, root.real)
 
     return min_time
 

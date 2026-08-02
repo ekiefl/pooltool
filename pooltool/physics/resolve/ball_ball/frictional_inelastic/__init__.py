@@ -112,7 +112,7 @@ class FrictionalInelastic(CoreBallBallCollision):
     more complete analysis of velocity and angular velocity in their vector forms.
     """
 
-    friction: BallBallFrictionStrategy = AlciatoreBallBallFriction()
+    friction: BallBallFrictionStrategy = attrs.field(factory=AlciatoreBallBallFriction)
 
     model: BallBallModel = attrs.field(
         default=BallBallModel.FRICTIONAL_INELASTIC, init=False, repr=False

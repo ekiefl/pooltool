@@ -1,5 +1,4 @@
-#! /usr/bin/env python
-
+from typing import ClassVar
 
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
@@ -17,7 +16,7 @@ from pooltool.system.datatypes import multisystem
 
 class ShotMode(BaseMode):
     name = Mode.shot
-    keymap = {
+    default_keymap: ClassVar[dict[Action, bool]] = {
         Action.aim: False,
         Action.move: False,
         Action.toggle_pause: False,
@@ -203,7 +202,7 @@ class ShotMode(BaseMode):
             # Either the user has requested to start the next shot, or the animation has
             # finished
 
-            Global.mode_mgr.change_mode(Mode.aim, exit_kwargs=dict(key="advance"))
+            Global.mode_mgr.change_mode(Mode.aim, exit_kwargs={"key": "advance"})
 
         elif self.keymap[Action.zoom]:
             cam.zoom_via_mouse()
@@ -241,8 +240,8 @@ class ShotMode(BaseMode):
         elif self.keymap[Action.undo_shot]:
             Global.mode_mgr.change_mode(
                 Global.mode_mgr.mode_stroked_from,
-                exit_kwargs=dict(key="reset"),
-                enter_kwargs=dict(load_prev_cam=True),
+                exit_kwargs={"key": "reset"},
+                enter_kwargs={"load_prev_cam": True},
             )
 
         elif self.keymap[Action.parallel] and self.view_only:

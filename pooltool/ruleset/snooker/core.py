@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from __future__ import annotations
 
 from collections import Counter
@@ -117,10 +115,7 @@ def is_game_over(shot: System, legal: bool) -> bool:
         # Foul on black at this stage is an end of frame
         return True
 
-    if "black" in get_pocketed_ball_ids_during_shot(shot, exclude={"white"}):
-        return True
-
-    return False
+    return "black" in get_pocketed_ball_ids_during_shot(shot, exclude={"white"})
 
 
 def decide_winner(
@@ -191,7 +186,7 @@ class _Snooker(Ruleset):
 
         if self.phase is GamePhase.ALTERNATING:
             hittable = ball_group.balls
-            call_shot = True if ball_group is BallGroup.COLORS else False
+            call_shot = ball_group is BallGroup.COLORS
             ball_call = None
         else:
             lowest = get_lowest_pottable(shot)
@@ -224,7 +219,8 @@ class _Snooker(Ruleset):
         if self.phase is GamePhase.ALTERNATING:
             check.extend(list(BallGroup.COLORS.balls))
         else:
-            assert (ball_call := self.shot_constraints.ball_call) is not None
+            ball_call = self.shot_constraints.ball_call
+            assert ball_call is not None
             check.extend(
                 get_color_balls_to_be_potted(
                     shot,

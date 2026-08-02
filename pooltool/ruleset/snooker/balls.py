@@ -53,7 +53,8 @@ class BallInfo:
         if self.id == "red":
             return
 
-        assert isinstance((loc := snooker_color_locs[self.id].relative_to), tuple)
+        loc = snooker_color_locs[self.id].relative_to
+        assert isinstance(loc, tuple)
         self.respot = loc
 
 

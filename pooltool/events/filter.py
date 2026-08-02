@@ -96,9 +96,7 @@ def by_time(t: float, after: bool = True) -> FilterFunc:
 
         new: list[Event] = []
         for event in events:
-            if after and event.time > t:
-                new.append(event)
-            elif not after and event.time < t:
+            if after and event.time > t or not after and event.time < t:
                 new.append(event)
 
         return new

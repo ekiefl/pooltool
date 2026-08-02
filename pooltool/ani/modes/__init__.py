@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from pooltool.ani.modes.aim import AimMode
 from pooltool.ani.modes.ball_in_hand import BallInHandMode
 from pooltool.ani.modes.calculate import CalculateMode
@@ -19,8 +17,6 @@ all_modes = {cls.name: cls for cls in BaseMode.__subclasses__()}
 
 
 __all__ = [
-    "Mode",
-    "ModeManager",
     "AimMode",
     "BallInHandMode",
     "CalculateMode",
@@ -29,6 +25,8 @@ __all__ = [
     "CamSaveMode",
     "GameOverMode",
     "MenuMode",
+    "Mode",
+    "ModeManager",
     "PickBallMode",
     "PurgatoryMode",
     "ShotMode",

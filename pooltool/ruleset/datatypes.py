@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 from __future__ import annotations
 
 import copy
@@ -128,21 +127,17 @@ class ShotConstraints:
                 if cue in balls:
                     return cue
 
-            return list(balls.keys())[0]
+            return next(iter(balls))
 
         return self.cueable[0]
 
     def can_shoot(self) -> bool:
-        if (
+        return bool(
             self.call_shot
             and self.ball_call is not None
             and self.pocket_call is not None
-        ):
-            return True
-        elif not self.call_shot:
-            return True
-        else:
-            return False
+            or not self.call_shot
+        )
 
 
 @attrs.define(frozen=True)
@@ -324,4 +319,3 @@ class Ruleset(ABC):
             def copy(self):
                 return self
         """
-        pass
