@@ -107,11 +107,6 @@ class CueAvoid:
             self.avoid_nodes["scene"]
         )
 
-        # Center ofthe cueing ball
-        _Bx, _By, _Bz = self.avoid_nodes["cue_stick_focus"].getPos(
-            self.avoid_nodes["scene"]
-        )
-
         # The desired point where cue contacts collision plane, excluding cue width
         Dx, Dy, Dz = Px, Py, cushion_height
 
