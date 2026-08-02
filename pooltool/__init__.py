@@ -21,24 +21,23 @@ from importlib.metadata import version
 
 __version__ = version("pooltool-billiards")
 
-from pooltool import (
-    ai,
-    constants,
-    events,
-    evolution,
-    game,
-    interact,
-    layouts,
-    objects,
-    physics,
-    ptmath,
-    ruleset,
-    serialize,
-    system,
-    utils,
-)
-from pooltool.ai import aim, pot
-from pooltool.ani import image
+import pooltool.ai as ai
+import pooltool.ai.aim as aim
+import pooltool.ai.pot as pot
+import pooltool.ani.image as image
+import pooltool.constants as constants
+import pooltool.events as events
+import pooltool.evolution as evolution
+import pooltool.game as game
+import pooltool.interact as interact
+import pooltool.layouts as layouts
+import pooltool.objects as objects
+import pooltool.physics as physics
+import pooltool.ptmath as ptmath
+import pooltool.ruleset as ruleset
+import pooltool.serialize as serialize
+import pooltool.system as system
+import pooltool.utils as utils
 from pooltool.events import EventType
 from pooltool.evolution import continuize, interpolate_ball_states, simulate
 from pooltool.game.datatypes import GameType

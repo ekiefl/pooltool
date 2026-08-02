@@ -252,17 +252,12 @@ def plot_rebound_angle_vs_incident_angle(
         )
 
         base_color = base_colors[config_idx % len(base_colors)]
-        trajectory_idx = 0
         num_trajectories = len(results)
 
-        for (speed, topspin_factor, sidespin_factor), (
-            _,
-            _,
-            _,
-            _,
-            rebound_angles,
-            _,
-        ) in results.items():
+        for trajectory_idx, (
+            (speed, topspin_factor, sidespin_factor),
+            (_, _, _, _, rebound_angles, _),
+        ) in enumerate(results.items()):
             label = f"{config.model.model}: speed={speed:.3} m/s"
             if topspin_factors is not None:
                 label += f", topspin_factor={topspin_factor:.2}"
@@ -282,7 +277,6 @@ def plot_rebound_angle_vs_incident_angle(
                     opacity=opacity,
                 )
             )
-            trajectory_idx += 1
 
     fig.update_layout(
         title=title,
@@ -309,17 +303,12 @@ def plot_rebound_speed_vs_incident_angle(
         )
 
         base_color = base_colors[config_idx % len(base_colors)]
-        trajectory_idx = 0
         num_trajectories = len(results)
 
-        for (speed, topspin_factor, sidespin_factor), (
-            _,
-            _,
-            _,
-            _,
-            _,
-            rebound_speeds,
-        ) in results.items():
+        for trajectory_idx, (
+            (speed, topspin_factor, sidespin_factor),
+            (_, _, _, _, _, rebound_speeds),
+        ) in enumerate(results.items()):
             label = f"{config.model.model}: speed={speed:.3} m/s"
             if topspin_factors is not None:
                 label += f", topspin_factor={topspin_factor:.2}"
@@ -338,7 +327,6 @@ def plot_rebound_speed_vs_incident_angle(
                     opacity=opacity,
                 )
             )
-            trajectory_idx += 1
 
     fig.update_layout(
         title=title,
@@ -369,17 +357,12 @@ def plot_change_in_angular_velocity_vs_incident_angle(
         )
 
         base_color = base_colors[config_idx % len(base_colors)]
-        trajectory_idx = 0
         num_trajectories = len(results)
 
-        for (speed, topspin_factor, sidespin_factor), (
-            _,
-            avel,
-            _,
-            outgoing_avel,
-            _,
-            _,
-        ) in results.items():
+        for trajectory_idx, (
+            (speed, topspin_factor, sidespin_factor),
+            (_, avel, _, outgoing_avel, _, _),
+        ) in enumerate(results.items()):
             label = f"{config.model.model}: speed={speed:.3} m/s"
             if topspin_factors is not None:
                 label += f", topspin_factor={topspin_factor:.2}"
@@ -402,8 +385,6 @@ def plot_change_in_angular_velocity_vs_incident_angle(
                     opacity=opacity,
                 )
             )
-
-            trajectory_idx += 1
 
     fig.update_layout(
         title=title,

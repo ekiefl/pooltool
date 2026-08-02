@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+from typing import ClassVar
 
 from direct.gui.DirectGui import DGG
 
@@ -13,7 +13,7 @@ from pooltool.ani.mouse import MouseMode, mouse
 
 class CamSaveMode(BaseMode):
     name = Mode.cam_save
-    keymap = {
+    default_keymap: ClassVar[dict[Action, bool]] = {
         Action.quit: False,
         Action.cam_save: True,
     }
@@ -77,9 +77,7 @@ class CamSaveMode(BaseMode):
     def cam_save_task(self, task):
         if not self.keymap[Action.cam_save]:
             enter_kwargs = (
-                {"load_prev_cam": True}
-                if Global.mode_mgr.last_mode == Mode.aim
-                else {}
+                {"load_prev_cam": True} if Global.mode_mgr.last_mode == Mode.aim else {}
             )
             Global.mode_mgr.change_mode(
                 Global.mode_mgr.last_mode, enter_kwargs=enter_kwargs

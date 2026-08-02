@@ -292,9 +292,8 @@ class SceneController:
     def unrender_cue(self) -> None:
         self.system.cue.remove_nodes()
 
-    def buildup(
-        self, components: list[SceneComponents] = list(SceneComponents)
-    ) -> None:
+    def buildup(self, components: list[SceneComponents] | None = None) -> None:
+        components = list(SceneComponents) if components is None else components
         self.playback_speed = 1
 
         if SceneComponents.TABLE in components:
@@ -306,10 +305,9 @@ class SceneController:
         if SceneComponents.ENVIRONMENT in components:
             self.environment.init(self.system.table._table)
 
-    def teardown(
-        self, components: list[SceneComponents] = list(SceneComponents)
-    ) -> None:
+    def teardown(self, components: list[SceneComponents] | None = None) -> None:
         """Stop animations and remove all nodes"""
+        components = list(SceneComponents) if components is None else components
         self.reset_animation()
 
         was_in_parallel_mode = self.parallel_manager.is_active

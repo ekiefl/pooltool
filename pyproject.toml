@@ -147,6 +147,12 @@ ignore = [
     "E741",  # Ambiguous variable name
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# The top-level facade participates in import cycles that its submodules
+# tolerate only via the aliased `import pooltool.x as x` form, whose statement
+# order also controls initialization order.
+"pooltool/__init__.py" = ["PLR0402"]
+
 [tool.pytest.ini_options]
 addopts = [
     "--import-mode=importlib",

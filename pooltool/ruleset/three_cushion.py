@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from __future__ import annotations
 
 from collections import Counter
@@ -21,7 +19,7 @@ def _other(cue: str, event: Event) -> str:
         if id != cue:
             return id
 
-    raise Exception()
+    raise ValueError(f"Event {event} does not involve a ball other than '{cue}'")
 
 
 def is_point(shot: System) -> bool:
@@ -120,7 +118,8 @@ class _ThreeCushion(Ruleset):
         )
 
     def next_shot_constraints(self, shot: System) -> ShotConstraints:
-        assert (cueable := self.shot_constraints.cueable) is not None
+        cueable = self.shot_constraints.cueable
+        assert cueable is not None
 
         if self.shot_info.turn_over:
             cueable = [next_cue(cueable[0], len(self.players))]

@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -19,6 +17,7 @@ from pooltool.ani.constants import (
 )
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.ani.mouse import mouse
+from pooltool.error import PoolToolError
 from pooltool.objects.table.datatypes import Table
 from pooltool.ptmath import wiggle
 from pooltool.serialize import conversion
@@ -157,7 +156,7 @@ class Camera:
     def store_state(self, name, overwrite=False):
         """Store the current camera state in self.states"""
         if name in self.states and not overwrite:
-            raise Exception(f"Camera :: '{name}' is already a camera state")
+            raise PoolToolError(f"Camera :: '{name}' is already a camera state")
 
         self.states[name] = self.state
         self.last_state = name
@@ -168,7 +167,7 @@ class Camera:
             if ok_if_not_exists:
                 return
             else:
-                raise Exception(f"Camera :: '{name}' is not a camera state")
+                raise PoolToolError(f"Camera :: '{name}' is not a camera state")
 
         self.load_state(self.states[name])
 

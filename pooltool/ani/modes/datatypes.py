@@ -1,6 +1,7 @@
 import copy
-import pdb
+import pdb  # noqa: T100
 from abc import ABC, abstractmethod
+from typing import ClassVar
 
 from pooltool.ani import tasks
 from pooltool.ani.action import Action
@@ -27,13 +28,13 @@ class Mode(StrEnum):
 
 
 class BaseMode(ABC):
-    keymap: dict[Action, bool] = {}
+    default_keymap: ClassVar[dict[Action, bool]] = {}
     name: Mode = Mode.none
 
     def __init__(self):
-        if not len(self.keymap):
+        if not len(self.default_keymap):
             raise NotImplementedError(
-                "Subclasses of BaseMode must have non-empty keymap"
+                "Subclasses of BaseMode must have non-empty default_keymap"
             )
 
         if self.name == Mode.none:
@@ -41,7 +42,7 @@ class BaseMode(ABC):
                 "Subclasses of BaseMode must have 'name' attribute"
             )
 
-        self.defaults = copy.deepcopy(self.keymap)
+        self.keymap: dict[Action, bool] = copy.deepcopy(self.default_keymap)
 
     def shared_task(self, task):
         if self.keymap.get(Action.quit):
@@ -51,8 +52,8 @@ class BaseMode(ABC):
 
         elif self.keymap.get(Action.introspect):
             self.keymap[Action.introspect] = False
-            shot = multisystem.active  # noqa F841
-            pdb.set_trace()
+            shot = multisystem.active  # noqa: F841
+            pdb.set_trace()  # noqa: T100
 
         elif self.keymap.get(Action.show_help):
             self.keymap[Action.show_help] = False
@@ -74,7 +75,7 @@ class BaseMode(ABC):
         tasks.register_event(keystroke, self.update_keymap, [action_name, action_state])
 
     def reset_action_states(self):
-        self.keymap = copy.deepcopy(self.defaults)
+        self.keymap = copy.deepcopy(self.default_keymap)
 
     @abstractmethod
     def enter(self):
@@ -111,8 +112,11 @@ class ModeManager:
         """
         self.baseline_events = Global.base.messenger.get_events()
 
-    def change_mode(self, mode, exit_kwargs={}, enter_kwargs={}):
+    def change_mode(self, mode, exit_kwargs=None, enter_kwargs=None):
         assert mode in Mode
+
+        exit_kwargs = {} if exit_kwargs is None else exit_kwargs
+        enter_kwargs = {} if enter_kwargs is None else enter_kwargs
 
         # Teardown operations for the old mode
         self.end_mode(**exit_kwargs)

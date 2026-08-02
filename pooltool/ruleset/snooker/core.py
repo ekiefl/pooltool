@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from __future__ import annotations
 
 from collections import Counter
@@ -221,7 +219,8 @@ class _Snooker(Ruleset):
         if self.phase is GamePhase.ALTERNATING:
             check.extend(list(BallGroup.COLORS.balls))
         else:
-            assert (ball_call := self.shot_constraints.ball_call) is not None
+            ball_call = self.shot_constraints.ball_call
+            assert ball_call is not None
             check.extend(
                 get_color_balls_to_be_potted(
                     shot,

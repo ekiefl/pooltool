@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+from typing import ClassVar
 
 import pooltool.ani.utils as autils
 from pooltool.ani import tasks
@@ -14,7 +14,7 @@ from pooltool.system.datatypes import System, multisystem
 
 class CalculateMode(BaseMode):
     name = Mode.calculate
-    keymap = {
+    default_keymap: ClassVar[dict[Action, bool]] = {
         Action.move: False,
         Action.quit: False,
         Action.zoom: False,

@@ -1,4 +1,5 @@
-#! /usr/bin/env python
+from typing import ClassVar
+
 """A mode to for picking which ball to cue"""
 
 import numpy as np
@@ -18,7 +19,7 @@ from pooltool.system.datatypes import multisystem
 
 class PickBallMode(BaseMode):
     name = Mode.pick_ball
-    keymap = {
+    default_keymap: ClassVar[dict[Action, bool]] = {
         Action.quit: False,
         Action.pick_ball: True,
         Action.done: False,

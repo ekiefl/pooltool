@@ -98,8 +98,8 @@ def test_ball_history_equality():
     history1 = BallHistory(states=[state1])
     history2 = BallHistory(states=[state2])
 
-    assert history1 == history1
-    assert history2 == history2
+    assert history1 == history1  # noqa: PLR0124
+    assert history2 == history2  # noqa: PLR0124
     assert history1 != history2
 
 

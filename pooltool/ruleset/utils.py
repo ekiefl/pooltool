@@ -212,4 +212,6 @@ def is_shot_called_if_required(shot_constraints: ShotConstraints) -> bool:
     if not shot_constraints.call_shot:
         return True
 
-    return not (shot_constraints.ball_call is None or shot_constraints.pocket_call is None)
+    return not (
+        shot_constraints.ball_call is None or shot_constraints.pocket_call is None
+    )

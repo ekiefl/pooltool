@@ -59,7 +59,7 @@ class Timer:
         self.timer_start = self.timestamp()
 
     def timestamp(self) -> datetime.datetime:
-        return datetime.datetime.fromtimestamp(time.time())
+        return datetime.datetime.now(tz=datetime.timezone.utc).astimezone()
 
     def timedelta_to_checkpoint(
         self, timestamp: datetime.datetime
@@ -165,8 +165,8 @@ def get_total_memory_usage() -> int:
     for child in current_process.children(recursive=True):
         try:
             mem += child.memory_info().rss
-        except Exception:
-            pass
+        except psutil.Error:
+            continue
 
     return mem
 

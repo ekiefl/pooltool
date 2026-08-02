@@ -1,5 +1,4 @@
-#! /usr/bin/env python
-
+from typing import ClassVar
 
 from pooltool.ani import tasks
 from pooltool.ani.action import Action
@@ -17,7 +16,7 @@ from pooltool.system.datatypes import multisystem
 
 class ShotMode(BaseMode):
     name = Mode.shot
-    keymap = {
+    default_keymap: ClassVar[dict[Action, bool]] = {
         Action.aim: False,
         Action.move: False,
         Action.toggle_pause: False,

@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from pooltool.ani.modes.aim import AimMode
 from pooltool.ani.modes.ball_in_hand import BallInHandMode
 from pooltool.ani.modes.calculate import CalculateMode

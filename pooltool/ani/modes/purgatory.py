@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+from typing import ClassVar
 
 import pooltool.ani.utils as autils
 from pooltool.ani import tasks
@@ -28,7 +28,7 @@ class PurgatoryMode(BaseMode):
     """
 
     name = Mode.purgatory
-    keymap = {
+    default_keymap: ClassVar[dict[Action, bool]] = {
         Action.regain_control: False,
     }
 

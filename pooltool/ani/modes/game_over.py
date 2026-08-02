@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+from typing import ClassVar
 
 import pooltool.ani.utils as autils
 from pooltool.ani.action import Action
@@ -14,7 +14,7 @@ class GameOverMode(BaseMode):
     stat_font_size = 0.04
     left_most = -0.33
     top_most = 0.4
-    keymap = {
+    default_keymap: ClassVar[dict[Action, bool]] = {
         Action.quit: False,
     }
 

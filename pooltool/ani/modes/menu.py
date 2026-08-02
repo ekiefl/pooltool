@@ -1,6 +1,5 @@
-#! /usr/bin/env python
-
 import sys
+from typing import ClassVar
 
 from pooltool.ani import tasks
 from pooltool.ani.action import Action
@@ -13,7 +12,7 @@ from pooltool.ani.mouse import MouseMode, mouse
 
 class MenuMode(BaseMode):
     name = Mode.menu
-    keymap = {
+    default_keymap: ClassVar[dict[Action, bool]] = {
         Action.exit: False,
         Action.new_game: False,
         Action.scroll_up: False,

@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from abc import ABC, abstractmethod
 from collections import deque
 
@@ -42,8 +40,9 @@ class HUD:
         self.elements = None
         self.initialized = False
 
-    def init(self, hide: list[HUDElement] = []):
+    def init(self, hide: list[HUDElement] | None = None):
         """Initialize HUD elements and start the HUD update task"""
+        hide = [] if hide is None else hide
 
         self.elements = {
             HUDElement.help_text: Help(),

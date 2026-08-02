@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 import gc
 import sys
 from collections.abc import Generator
@@ -339,7 +337,8 @@ class ShotViewer(Interface):
     For usage, see :meth:`show`.
     """
 
-    def __init__(self, config=ShowBaseConfig.default()):
+    def __init__(self, config=None):
+        config = ShowBaseConfig.default() if config is None else config
         Interface.__init__(self, config=config)
         self._create_title("")
 
@@ -469,7 +468,8 @@ class ShotViewer(Interface):
 class Game(Interface):
     """This class runs the pooltool application"""
 
-    def __init__(self, config=ShowBaseConfig.default()):
+    def __init__(self, config=None):
+        config = ShowBaseConfig.default() if config is None else config
         Interface.__init__(self, config=config)
 
         # This task chain allows simulations to be run in parallel to the game processes

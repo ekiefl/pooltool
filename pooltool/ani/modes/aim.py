@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+from typing import ClassVar
 
 import numpy as np
 
@@ -29,7 +29,7 @@ from pooltool.system.datatypes import multisystem
 
 class AimMode(BaseMode):
     name = Mode.aim
-    keymap = {
+    default_keymap: ClassVar[dict[Action, bool]] = {
         Action.rotate_cue_left: False,
         Action.rotate_cue_right: False,
         Action.fine_control: False,

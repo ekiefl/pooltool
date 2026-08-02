@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+from typing import ClassVar
 
 import pooltool.ani.utils as autils
 from pooltool.ani import tasks
@@ -18,7 +18,7 @@ from pooltool.system.datatypes import multisystem
 
 class StrokeMode(BaseMode):
     name = Mode.stroke
-    keymap = {
+    default_keymap: ClassVar[dict[Action, bool]] = {
         Action.fine_control: False,
         Action.stroke: True,
     }

@@ -215,7 +215,7 @@ class GraphicsConfig:
 
 @attrs.define(kw_only=True)
 class GameplayConfig:
-    game_type: GameType = settings_field(
+    game_type: GameType = settings_field(  # noqa: RUF009
         default=GameType.NINEBALL,
         metadata=SettingsMetadata(
             display_name="Game Type",
@@ -224,7 +224,7 @@ class GameplayConfig:
             display_type=DisplayType.DROPDOWN,
         ),
     )
-    table_name: TableName = settings_field(
+    table_name: TableName = settings_field(  # noqa: RUF009
         default=TableName.SEVEN_FOOT_SHOWOOD,
         metadata=SettingsMetadata(
             display_name="Table",
@@ -341,7 +341,7 @@ class SettingsProxy(Settings):
         if self.path.exists():
             try:
                 cfg = Settings.load(self.path)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 full_traceback = traceback.format_exc()
                 dump_path = self.path.parent / f".{self.path.name}"
                 run.info(

@@ -77,7 +77,9 @@ def main():
     print(f"Numba:       {numba_mean * 1e6:8.4f} μs ± {numba_std * 1e6:6.4f} μs")
 
     benchmark_path = Path(__file__).parent / "_1010_source_code" / "benchmark"
-    result = subprocess.run([str(benchmark_path)], capture_output=True, text=True)
+    result = subprocess.run(
+        [str(benchmark_path)], capture_output=True, text=True, check=True
+    )
     print(result.stdout.strip())
 
 

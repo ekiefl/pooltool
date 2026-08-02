@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 """Event-based simulation introspection tools.
 
 This module provides utilities for capturing and analyzing simulation state at each

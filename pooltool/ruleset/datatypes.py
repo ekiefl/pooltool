@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 from __future__ import annotations
 
 import copy
@@ -128,7 +127,7 @@ class ShotConstraints:
                 if cue in balls:
                     return cue
 
-            return list(balls.keys())[0]
+            return next(iter(balls))
 
         return self.cueable[0]
 

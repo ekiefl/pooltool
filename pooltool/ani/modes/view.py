@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+from typing import ClassVar
 
 import numpy as np
 
@@ -28,7 +28,7 @@ from pooltool.system.datatypes import multisystem
 
 class ViewMode(BaseMode):
     name = Mode.view
-    keymap = {
+    default_keymap: ClassVar[dict[Action, bool]] = {
         Action.aim: False,
         Action.call_shot: False,
         Action.fine_control: False,
