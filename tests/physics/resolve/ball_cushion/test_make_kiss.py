@@ -232,6 +232,55 @@ def test_airborne_overlapping_ball_on_table_lands_on_table(
     )
 
 
+def test_velocity_parallel_to_cushion_axis_falls_back(
+    cushion: LinearCushionSegment,
+) -> None:
+    """A ball travelling exactly along the cushion axis still gets a valid position.
+
+    With the velocity purely along the axis there is no perpendicular component, so
+    the quadratic degenerates to ``0 = gamma`` and yields no real root. make_kiss must
+    fall back to perpendicular positioning rather than propagating the non-finite root
+    into the ball's position.
+    """
+    R = BallParams.default().R
+    ball = ball_on_table(cushion, penetrance=1e-7, vel=(0.0, 1.0, 0.0))
+
+    make_kiss_linear(ball, cushion)
+
+    assert np.all(np.isfinite(ball.state.rvw[0])), (
+        f"Non-finite position: {ball.state.rvw[0]}"
+    )
+    assert ball.state.rvw[0, 2] == pytest.approx(R, abs=1e-12)
+    assert dist_to_cushion_axis(ball, cushion) == pytest.approx(
+        expected_post_kiss_dist(cushion), abs=1e-12
+    )
+
+
+def test_ball_directly_above_cushion_axis(cushion: LinearCushionSegment) -> None:
+    """A ball on the vertical through the cushion axis is placed at the target distance.
+
+    Placed exactly on the vertical through the axis, the ball has no horizontal offset
+    and therefore no side of the cushion to be rotated back down onto.
+    ``_constrain_to_table`` must still produce a unit direction and preserve the arm
+    length, rather than collapsing the horizontal component and leaving the ball inside
+    the cushion. The position is built directly rather than via :func:`ball_at`, since
+    ``cos(radians(90))`` is not exactly zero and would leave a residual offset.
+    """
+    R = BallParams.default().R
+    ball = Ball("cue")
+    ball.state.rvw[0] = (0.0, 0.0, cushion.height + touch_radius(cushion) + 0.005)
+    ball.state.s = stationary
+
+    assert ball.state.rvw[0, 0] == 0.0
+
+    make_kiss_linear(ball, cushion)
+
+    assert ball.state.rvw[0, 2] == pytest.approx(R, abs=1e-12)
+    assert dist_to_cushion_axis(ball, cushion) == pytest.approx(
+        expected_post_kiss_dist(cushion), abs=1e-12
+    )
+
+
 def test_airborne_stress(cushion: LinearCushionSegment) -> None:
     """Random airborne configurations all satisfy dist == R + nose_radius + spacer after make_kiss.
 

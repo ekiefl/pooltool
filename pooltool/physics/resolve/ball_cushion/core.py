@@ -73,10 +73,11 @@ class CoreBallLCushionCollision(ABC):
         cushion line equals ``R + nose_radius + spacer``, then moves the ball to
         ``r + t * v``. The smallest-magnitude real root is chosen.
 
-        If the ball is nontranslating or the displacement would exceed
-        FALLBACK_DISPLACEMENT_FACTOR * spacer (e.g. on a near-grazing trajectory,
-        or when the ball's velocity is parallel to the cushion axis), falls back to
-        positioning along the perpendicular from the cushion line.
+        If the ball is nontranslating, if the quadratic has no real root (which
+        happens when the velocity is parallel to the cushion axis, leaving no
+        perpendicular component to travel along), or if the displacement would exceed
+        FALLBACK_DISPLACEMENT_FACTOR * spacer (e.g. on a near-grazing trajectory),
+        falls back to positioning along the perpendicular from the cushion line.
         """
         r = ball.state.rvw[0]
         v = ball.state.rvw[1]
@@ -98,6 +99,9 @@ class CoreBallLCushionCollision(ABC):
 
         roots_complex = ptmath.roots.quadratic.solve(alpha, beta, gamma)
         t = ptmath.roots.get_real_smallest_magnitude_root(roots_complex)
+
+        if not np.isfinite(t):
+            return _apply_fallback_positioning_linear(ball, cushion, spacer)
 
         if ptmath.norm3d(t * v) > FALLBACK_DISPLACEMENT_FACTOR * spacer:
             return _apply_fallback_positioning_linear(ball, cushion, spacer)
@@ -212,7 +216,9 @@ def _constrain_to_table(
     For airborne balls, the constraint is ``z >= R``: only lift when below R.
 
     The rotation preserves the arm length (distance from cushion line) and keeps the
-    ball on its original side around the axis.
+    ball on its original side around the axis. When the ball sits exactly on the
+    vertical through the cushion axis it has no side to preserve, and the positive
+    side is chosen arbitrarily.
     """
     if airborne and pos[2] >= R:
         return pos
@@ -230,7 +236,8 @@ def _constrain_to_table(
     h_hat = np.array([u[1], -u[0], 0.0])
 
     a = (R - c[2]) / arm_len
-    b = np.sign(np.dot(direction, h_hat)) * np.sqrt(1.0 - a * a)
+    side = 1.0 if np.dot(direction, h_hat) >= 0 else -1.0
+    b = side * np.sqrt(1.0 - a * a)
     new_direction = a * z_hat + b * h_hat
 
     return c + arm_len * new_direction
