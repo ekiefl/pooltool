@@ -136,6 +136,7 @@ target-version = "py310"  # Minimum supported version
 line-length = 88
 exclude = [
     "docs",
+    "pooltool/utils/strenum.py",  # Vendored StrEnum backport, kept byte-faithful to upstream
 ]
 
 [tool.ruff.lint]
@@ -147,10 +148,6 @@ ignore = [
     "E741",  # Ambiguous variable name
     "PLR0402",  # The architecture relies on `import pooltool.x as x` submodule aliasing
 ]
-
-[tool.ruff.lint.per-file-ignores]
-# Vendored StrEnum backport, kept byte-faithful to upstream
-"pooltool/utils/strenum.py" = ["ALL"]
 
 [tool.pytest.ini_options]
 addopts = [
