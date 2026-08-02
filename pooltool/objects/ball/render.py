@@ -15,9 +15,9 @@ from panda3d.core import (
     TransparencyAttrib,
 )
 
+import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 import pooltool.constants as c
-from pooltool.ani import tasks
 from pooltool.ani.globals import Global
 from pooltool.config import settings
 from pooltool.objects.ball.datatypes import Ball, BallHistory, BallOrientation

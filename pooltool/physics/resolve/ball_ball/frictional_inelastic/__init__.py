@@ -3,7 +3,7 @@ import numpy as np
 from numba import jit
 
 import pooltool.constants as const
-from pooltool import ptmath
+import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve.ball_ball.core import CoreBallBallCollision

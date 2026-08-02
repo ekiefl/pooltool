@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 import pooltool.constants as const
-from pooltool import ptmath
+import pooltool.ptmath as ptmath
 from pooltool.events import EventType
 from pooltool.evolution.event_based.cache import CollisionCache
 from pooltool.evolution.event_based.detect.ball_ball import (

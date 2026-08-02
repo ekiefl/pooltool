@@ -3,7 +3,7 @@ from typing import Protocol
 
 import attrs
 
-from pooltool import ptmath
+import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.physics.utils import tangent_surface_velocity
 from pooltool.utils.strenum import StrEnum, auto

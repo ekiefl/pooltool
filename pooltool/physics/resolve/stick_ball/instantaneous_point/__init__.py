@@ -1,7 +1,7 @@
 import attrs
 import numpy as np
 
-from pooltool import ptmath
+import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.physics.dimensionality import Dim

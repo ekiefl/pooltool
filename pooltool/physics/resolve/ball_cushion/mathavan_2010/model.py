@@ -5,7 +5,7 @@ import numpy as np
 from numba import jit
 
 import pooltool.constants as const
-from pooltool import ptmath
+import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.table.components import (
     CircularCushionSegment,

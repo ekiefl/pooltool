@@ -13,8 +13,8 @@ from panda3d.core import (
     WindowProperties,
 )
 
+import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
-from pooltool.ani import tasks
 from pooltool.ani.camera import CameraState, cam
 from pooltool.ani.collision import cue_avoid
 from pooltool.ani.constants import menu_text_scale

@@ -1,6 +1,6 @@
 """Math functions"""
 
-from pooltool.ptmath import roots
+import pooltool.ptmath.roots as roots
 from pooltool.ptmath.utils import (
     angle,
     angle_between_vectors,

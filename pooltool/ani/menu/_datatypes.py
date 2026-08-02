@@ -28,8 +28,8 @@ from panda3d.core import (
     Vec4,
 )
 
+import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
-from pooltool.ani import tasks
 from pooltool.ani.constants import logo_paths, model_dir
 from pooltool.ani.fonts import load_font
 from pooltool.ani.globals import Global

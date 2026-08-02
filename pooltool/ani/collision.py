@@ -1,7 +1,7 @@
 import numpy as np
 from panda3d.core import CollisionHandlerQueue, CollisionTraverser
 
-from pooltool import ptmath
+import pooltool.ptmath as ptmath
 from pooltool.ani.globals import Global
 from pooltool.ani.scene import visual
 from pooltool.config import settings

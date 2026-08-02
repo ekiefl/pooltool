@@ -17,7 +17,7 @@ from panda3d.core import (
     Vec4,
 )
 
-from pooltool import ptmath
+import pooltool.ptmath as ptmath
 from pooltool.ani.fonts import load_font
 from pooltool.ani.globals import Global
 

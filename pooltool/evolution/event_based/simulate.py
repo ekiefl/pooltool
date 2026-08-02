@@ -3,13 +3,13 @@ from __future__ import annotations
 import attrs
 import numpy as np
 
+import pooltool.physics.evolve as evolve
 from pooltool.events import Event, EventType, null_event
 from pooltool.evolution.continuous import continuize
 from pooltool.evolution.engine import SimulationEngine
 from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.config import INCLUDED_EVENTS
 from pooltool.objects.ball.datatypes import BallState
-from pooltool.physics import evolve
 from pooltool.system.datatypes import System
 
 DEFAULT_ENGINE = SimulationEngine()

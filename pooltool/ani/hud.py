@@ -6,8 +6,8 @@ from direct.gui.OnscreenImage import OnscreenImage
 from direct.interval.LerpInterval import LerpFunc
 from panda3d.core import CardMaker, NodePath, TextNode, TransparencyAttrib
 
+import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
-from pooltool.ani import tasks
 from pooltool.ani.constants import (
     logo_paths,
     max_stroke_speed,

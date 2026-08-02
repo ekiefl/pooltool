@@ -3,7 +3,7 @@ import pdb  # noqa: T100
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
-from pooltool.ani import tasks
+import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.globals import Global, require_showbase
 from pooltool.system.datatypes import multisystem

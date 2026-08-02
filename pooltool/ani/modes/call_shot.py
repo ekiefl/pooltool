@@ -4,10 +4,10 @@ import numpy as np
 from direct.interval.IntervalGlobal import LerpFunc, Parallel
 from panda3d.core import TransparencyAttrib
 
+import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 import pooltool.constants as c
-from pooltool import ptmath
-from pooltool.ani import tasks
+import pooltool.ptmath as ptmath
 from pooltool.ani.action import Action
 from pooltool.ani.camera import cam
 from pooltool.ani.constants import ball_highlight
