@@ -102,7 +102,7 @@ dev = [
     "pytest-cov>=5.0.0",
     "pre-commit>=3.7.1",
     "pyright>=1.1.373",
-    "ruff>=0.5.5",
+    "ruff>0.16,<0.17",
     # Diagnostics
     "psutil>=6.0.0",
     "ipython>=8.18.1",

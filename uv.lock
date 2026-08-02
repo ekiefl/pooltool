@@ -2438,7 +2438,7 @@ dev = [
     { name = "pyright", specifier = ">=1.1.373" },
     { name = "pytest", specifier = ">=8.3.2" },
     { name = "pytest-cov", specifier = ">=5.0.0" },
-    { name = "ruff", specifier = ">=0.5.5" },
+    { name = "ruff", specifier = ">0.16,<0.17" },
 ]
 docs = [
     { name = "astroid", specifier = "==3.3.11" },
