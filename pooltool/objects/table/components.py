@@ -193,13 +193,6 @@ class LinearCushionSegment:
         vector itself, yielding the perpendicular component which defines the normal
         direction.
 
-        Warning:
-            The returned normal vector is arbitrarily directed, meaning it may point
-            away from the table surface, rather than towards it. This nonideality is
-            properly handled in downstream simulation logic, however if you're using
-            this method for custom purposes, you may want to reverse the direction of
-            this vector by negating it.
-
         Args:
             xyz:
                 The 3D coordinate of the contacting point.

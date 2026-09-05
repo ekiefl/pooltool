@@ -47,11 +47,12 @@ A ball with this motion state is in a pocket.
 airborne: int = 5
 """The airborne motion state label
 
-A ball with this motion state is considered airborne.
+A ball with this motion state is considered airborne. This state exists only in 3D
+simulations.
 
 Important:
     This state includes balls at z=R moving downward; the label routes them to
-    ball-table detection
+    ball-table detection.
 """
 
 state_dict: dict[int, str] = {

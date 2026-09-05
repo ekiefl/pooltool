@@ -45,6 +45,11 @@ def _solve(ball: Ball, cushion: Cushion) -> NDArray[np.float64]:
 
 @attrs.define
 class ImpulseFrictionalInelasticLinear2D(CoreBallLCushionCollision):
+    """Impulse-based frictional inelastic ball-linear cushion collision (2D)
+
+    For details see :class:`ImpulseFrictionalInelasticLinear3D`.
+    """
+
     model: BallLCushionModel = attrs.field(
         default=BallLCushionModel.IMPULSE_FRICTIONAL_INELASTIC_2D,
         init=False,
@@ -63,6 +68,11 @@ class ImpulseFrictionalInelasticLinear2D(CoreBallLCushionCollision):
 
 @attrs.define
 class ImpulseFrictionalInelasticCircular2D(CoreBallCCushionCollision):
+    """Impulse-based frictional inelastic ball-circular cushion collision (2D)
+
+    For details see :class:`ImpulseFrictionalInelasticCircular3D`.
+    """
+
     model: BallCCushionModel = attrs.field(
         default=BallCCushionModel.IMPULSE_FRICTIONAL_INELASTIC_2D,
         init=False,
@@ -81,6 +91,14 @@ class ImpulseFrictionalInelasticCircular2D(CoreBallCCushionCollision):
 
 @attrs.define
 class ImpulseFrictionalInelasticLinear3D(CoreBallLCushionCollision):
+    """Impulse-based frictional inelastic ball-linear cushion collision
+
+    An instantaneous, impulse-based collision model that includes the effects of
+    tangential friction and normal coefficient of restitution. The collision is
+    resolved against the cushion's 3D contact normal, so the ball can leave the
+    collision with a vertical velocity component and be labeled airborne.
+    """
+
     model: BallLCushionModel = attrs.field(
         default=BallLCushionModel.IMPULSE_FRICTIONAL_INELASTIC_3D,
         init=False,
@@ -98,6 +116,14 @@ class ImpulseFrictionalInelasticLinear3D(CoreBallLCushionCollision):
 
 @attrs.define
 class ImpulseFrictionalInelasticCircular3D(CoreBallCCushionCollision):
+    """Impulse-based frictional inelastic ball-circular cushion collision
+
+    An instantaneous, impulse-based collision model that includes the effects of
+    tangential friction and normal coefficient of restitution. The collision is
+    resolved against the cushion's 3D contact normal, so the ball can leave the
+    collision with a vertical velocity component and be labeled airborne.
+    """
+
     model: BallCCushionModel = attrs.field(
         default=BallCCushionModel.IMPULSE_FRICTIONAL_INELASTIC_3D,
         init=False,
