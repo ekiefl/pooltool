@@ -47,6 +47,7 @@ from pooltool.physics.utils import (
     get_u_vec,
     rel_velocity,
     surface_velocity,
+    surface_velocity_vw,
 )
 
 __all__ = [
@@ -78,4 +79,5 @@ __all__ = [
     "rel_velocity",
     "stick_ball_models",
     "surface_velocity",
+    "surface_velocity_vw",
 ]

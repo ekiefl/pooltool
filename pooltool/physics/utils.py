@@ -8,12 +8,20 @@ from pooltool.ptmath.utils import coordinate_rotation, cross, norm3d, unit_vecto
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def surface_velocity_vw(
+    v: NDArray[np.float64], w: NDArray[np.float64], d: NDArray[np.float64], R: float
+) -> NDArray[np.float64]:
+    """Compute velocity of a point on ball's surface (specified by unit direction vector)"""
+    return v + cross(w, R * d)
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def surface_velocity(
     rvw: NDArray[np.float64], d: NDArray[np.float64], R: float
 ) -> NDArray[np.float64]:
     """Compute velocity of a point on ball's surface (specified by unit direction vector)"""
     _, v, w = rvw
-    return v + cross(w, R * d)
+    return surface_velocity_vw(v, w, d, R)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
