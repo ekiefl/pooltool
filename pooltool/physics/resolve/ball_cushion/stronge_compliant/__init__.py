@@ -7,7 +7,7 @@ from pooltool.physics.resolve.ball_cushion.stronge_compliant.model import (
 
 __all__ = [
     "StrongeCompliantCircular2D",
-    "StrongeCompliantLinear2D",
     "StrongeCompliantCircular3D",
+    "StrongeCompliantLinear2D",
     "StrongeCompliantLinear3D",
 ]
