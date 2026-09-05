@@ -1,3 +1,4 @@
+import attrs
 import numpy as np
 import pytest
 from numpy.typing import NDArray
@@ -6,9 +7,17 @@ import pooltool.constants as const
 import pooltool.physics as physics
 import pooltool.ptmath as ptmath
 from pooltool import aim, events
-from pooltool.events import EventType, ball_ball_collision, ball_pocket_collision
+from pooltool.error import SimulateError
+from pooltool.events import (
+    Event,
+    EventType,
+    ball_ball_collision,
+    ball_pocket_collision,
+    null_event,
+)
+from pooltool.evolution.engine import SimulationEngine
 from pooltool.evolution.event_based._utils import _system_has_energy
-from pooltool.evolution.event_based.cache import CollisionCache
+from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.detect import (
     EventDetector,
     get_next_ball_ball_event,
@@ -694,3 +703,33 @@ def test_newtons_cradle_rolling_spin():
     for idx, expected in enumerate(expected_collision_order):
         actual = set(collision_chain[idx].ids)
         assert expected == actual
+
+
+@attrs.define
+class CannedDetector:
+    """A stand-in detector that serves a prescribed sequence of events."""
+
+    events: list[Event]
+
+    def get_next_event(
+        self,
+        shot: System,
+        transition_cache: TransitionCache,
+        collision_cache: CollisionCache,
+    ) -> Event:
+        return self.events.pop(0)
+
+
+def engine_with_canned_events(canned_events: list[Event]) -> SimulationEngine:
+    engine = SimulationEngine()
+    engine.detector = CannedDetector(canned_events)
+    return engine
+
+
+@pytest.mark.parametrize("event_time", [-1.0, -1e-13])
+def test_simulate_rejects_event_scheduled_in_the_past(event_time: float) -> None:
+    shot = System.example()
+    engine = engine_with_canned_events([null_event(time=event_time)])
+
+    with pytest.raises(SimulateError, match="before the current simulation time"):
+        simulate(shot, engine=engine)

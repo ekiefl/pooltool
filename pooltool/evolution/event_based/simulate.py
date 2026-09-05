@@ -4,6 +4,7 @@ import attrs
 import numpy as np
 
 import pooltool.physics.evolve as evolve
+from pooltool.error import SimulateError
 from pooltool.events import Event, EventType, null_event
 from pooltool.evolution.continuous import continuize
 from pooltool.evolution.engine import SimulationEngine
@@ -49,7 +50,14 @@ class _SimulationState:
             self.done = True
             return event
 
-        self.evolve(self.shot, event.time - self.shot.t)
+        dt = event.time - self.shot.t
+        if dt < 0.0:
+            raise SimulateError(
+                f"{event} is scheduled at t={event.time}, which is before the "
+                f"current simulation time t={self.shot.t}"
+            )
+
+        self.evolve(self.shot, dt)
 
         if event.event_type in self.include:
             self.engine.resolver.resolve(self.shot, event)
