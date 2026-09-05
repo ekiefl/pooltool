@@ -59,9 +59,17 @@ class BallLCushionModel(StrEnum):
             An unrealistic model in which balls are perfectly reflected. Spin is left
             untouched by the interaction.
 
-        IMPULSE_FRICTIONAL_INELASTIC:
-            An instantaneous/non-smooth, impulse-based collision model.  This model includes effects of
-            tangential friction and normal coefficient of restitution.
+        IMPULSE_FRICTIONAL_INELASTIC_3D:
+            An instantaneous/non-smooth, impulse-based collision model. This model includes
+            effects of tangential friction and normal coefficient of restitution. The full
+            3D collision result is applied to the ball, including any vertical velocity
+            produced by the tilted contact normal. Suitable for a 3D simulation that
+            supports airborne motion.
+
+        IMPULSE_FRICTIONAL_INELASTIC_2D:
+            Same 3D collision math as ``IMPULSE_FRICTIONAL_INELASTIC_3D``, followed by a
+            clamp that zeros the vertical velocity component of the ball. Suitable for a
+            2D simulation: the ball never leaves the table surface.
 
         MATHAVAN_2010:
             Ball-cushion collision resolver for the Mathavan et al. (2010) collision model.
@@ -104,7 +112,8 @@ class BallLCushionModel(StrEnum):
 
     MATHAVAN_2010 = auto()
     HAN_2005 = auto()
-    IMPULSE_FRICTIONAL_INELASTIC = auto()
+    IMPULSE_FRICTIONAL_INELASTIC_2D = auto()
+    IMPULSE_FRICTIONAL_INELASTIC_3D = auto()
     STRONGE_COMPLIANT = auto()
     UNREALISTIC = auto()
 
@@ -115,14 +124,16 @@ class BallCCushionModel(StrEnum):
     Attributes:
         HAN_2005: See :class:`BallLCushionModel`.
         UNREALISTIC: See :class:`BallLCushionModel`.
-        IMPULSE_FRICTIONAL_INELASTIC: See :class:`BallLCushionModel`.
+        IMPULSE_FRICTIONAL_INELASTIC_2D: See :class:`BallLCushionModel`.
+        IMPULSE_FRICTIONAL_INELASTIC_3D: See :class:`BallLCushionModel`.
         MATHAVAN_2010: See :class:`BallLCushionModel`.
         STRONGE_COMPLIANT: See :class:`BallLCushionModel`.
     """
 
     MATHAVAN_2010 = auto()
     HAN_2005 = auto()
-    IMPULSE_FRICTIONAL_INELASTIC = auto()
+    IMPULSE_FRICTIONAL_INELASTIC_2D = auto()
+    IMPULSE_FRICTIONAL_INELASTIC_3D = auto()
     STRONGE_COMPLIANT = auto()
     UNREALISTIC = auto()
 

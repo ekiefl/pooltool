@@ -10,7 +10,10 @@ import attrs
 from cattrs.errors import ClassValidationError
 
 import pooltool.config.paths
+import pooltool.constants as const
+from pooltool.error import SimulateError
 from pooltool.events.datatypes import AgentType, Event, EventType
+from pooltool.objects.ball.datatypes import Ball
 from pooltool.physics.resolve.ball_ball import (
     BallBallCollisionStrategy,
 )
@@ -50,7 +53,7 @@ from pooltool.utils import Run
 RESOLVER_PATH = pooltool.config.paths.PHYSICS_DIR / "resolver.yaml"
 """The location of the resolver path YAML."""
 
-VERSION: int = 11
+VERSION: int = 12
 
 
 run = Run()
@@ -155,6 +158,10 @@ class Resolver:
             self.ball_table.resolve(ball, inplace=True)
             ball.state.t = event.time
 
+        for agent in event.agents:
+            if agent.agent_type == AgentType.BALL:
+                _verify_ball_height(shot.balls[agent.id], event)
+
         _snapshot_final(shot, event)
 
     def save(self, path: Pathish) -> Path:
@@ -204,6 +211,37 @@ class Resolver:
             resolver = default_resolver()
             resolver.save(RESOLVER_PATH)
             return resolver
+
+
+def _verify_ball_height(ball: Ball, event: Event) -> None:
+    """Validate and a ball's height after event resolution.
+
+    Non-pocketed balls must sit at or above the table plane.
+
+    Args:
+        ball: The ball to validate.
+        event: The event that was just resolved, used for error context.
+
+    Raises:
+        SimulateError: If the ball intersects with the playing surface, or if a ball in
+        an on-table motion state is floating above the table plane.
+    """
+    if ball.state.s == const.pocketed:
+        return
+
+    R = ball.params.R
+    z = ball.state.rvw[0, 2]
+
+    if z < R:
+        raise SimulateError(
+            f"Ball '{ball.id}' is underground (z={z}, R={R}) after resolving {event}"
+        )
+
+    if ball.state.s != const.airborne and z > R:
+        raise SimulateError(
+            f"Ball '{ball.id}' is floating (z={z}, R={R}) despite motion state "
+            f"'{const.state_dict[ball.state.s]}' after resolving {event}"
+        )
 
 
 def _snapshot_initial(shot: System, event: Event) -> None:

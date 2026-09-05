@@ -14,7 +14,7 @@ from pooltool.objects.table.components import LinearCushionSegment
 from pooltool.physics.resolve.ball_cushion.core import CoreBallLCushionCollision
 from pooltool.physics.resolve.ball_cushion.han_2005 import Han2005Linear
 from pooltool.physics.resolve.ball_cushion.impulse_frictional_inelastic import (
-    ImpulseFrictionalInelasticLinear,
+    ImpulseFrictionalInelasticLinear2D,
 )
 from pooltool.physics.resolve.ball_cushion.mathavan_2010 import Mathavan2010Linear
 from pooltool.physics.resolve.ball_cushion.stronge_compliant import (
@@ -400,7 +400,7 @@ def main():
     models = [
         Han2005Linear(),
         Mathavan2010Linear(),
-        ImpulseFrictionalInelasticLinear(),
+        ImpulseFrictionalInelasticLinear2D(),
         StrongeCompliantLinear(),
     ]
 

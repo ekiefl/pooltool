@@ -86,6 +86,7 @@ def respot(
         z = R
 
     if z > R:
+        # TODO(Evan)
         raise NotImplementedError("No airborne state exists")
         #  state = "airborne"
     else:

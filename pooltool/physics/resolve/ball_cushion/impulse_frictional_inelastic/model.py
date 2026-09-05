@@ -1,7 +1,17 @@
+"""Impulse frictional inelastic cushion models.
+
+This group of models all resolve the collision with the function
+:func:`pooltool.physics.resolve.sphere_half_space_collision.resolve_sphere_half_space_collision`.
+Since this natively handles the 3D case, the 2D case simply zeros the vz velocity
+component.
+"""
+
 import attrs
+import numpy as np
+from numpy.typing import NDArray
 
 import pooltool.constants as const
-from pooltool.objects.ball.datatypes import Ball, BallState
+from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
     CircularCushionSegment,
     Cushion,
@@ -18,8 +28,13 @@ from pooltool.physics.resolve.sphere_half_space_collision import (
 )
 
 
-def _solve(ball: Ball, cushion: Cushion) -> tuple[Ball, Cushion]:
-    rvw = resolve_sphere_half_space_collision(
+# TODO: move to common place
+def final_ball_motion_state(rvw: NDArray[np.float64]) -> int:
+    return const.airborne if rvw[1, 2] != 0.0 else const.sliding
+
+
+def _solve(ball: Ball, cushion: Cushion) -> NDArray[np.float64]:
+    return resolve_sphere_half_space_collision(
         normal=cushion.get_normal_3d(ball.xyz),
         rvw=ball.state.rvw,
         R=ball.params.R,
@@ -27,35 +42,98 @@ def _solve(ball: Ball, cushion: Cushion) -> tuple[Ball, Cushion]:
         e=ball.params.e_c,
     )
 
-    # FIXME-3D: add z-velocity back in
-    rvw[1][2] = 0.0
-
-    ball.state = BallState(rvw, const.sliding)
-
-    return ball, cushion
-
 
 @attrs.define
-class ImpulseFrictionalInelasticLinear(CoreBallLCushionCollision):
+class ImpulseFrictionalInelasticLinear2D(CoreBallLCushionCollision):
+    """Impulse-based frictional inelastic ball-linear cushion collision (2D)
+
+    For details see :class:`ImpulseFrictionalInelasticLinear3D`.
+    """
+
     model: BallLCushionModel = attrs.field(
-        default=BallLCushionModel.IMPULSE_FRICTIONAL_INELASTIC, init=False, repr=False
+        default=BallLCushionModel.IMPULSE_FRICTIONAL_INELASTIC_2D,
+        init=False,
+        repr=False,
     )
     dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def solve(
         self, ball: Ball, cushion: LinearCushionSegment
     ) -> tuple[Ball, LinearCushionSegment]:
-        return _solve(ball, cushion)
+        ball.state.rvw = _solve(ball, cushion)
+        ball.state.rvw[1, 2] = 0.0
+        ball.state.s = const.sliding
+        return ball, cushion
 
 
 @attrs.define
-class ImpulseFrictionalInelasticCircular(CoreBallCCushionCollision):
+class ImpulseFrictionalInelasticCircular2D(CoreBallCCushionCollision):
+    """Impulse-based frictional inelastic ball-circular cushion collision (2D)
+
+    For details see :class:`ImpulseFrictionalInelasticCircular3D`.
+    """
+
     model: BallCCushionModel = attrs.field(
-        default=BallCCushionModel.IMPULSE_FRICTIONAL_INELASTIC, init=False, repr=False
+        default=BallCCushionModel.IMPULSE_FRICTIONAL_INELASTIC_2D,
+        init=False,
+        repr=False,
     )
     dim: Dim = attrs.field(default=Dim.TWO, init=False, repr=False)
 
     def solve(
         self, ball: Ball, cushion: CircularCushionSegment
     ) -> tuple[Ball, CircularCushionSegment]:
-        return _solve(ball, cushion)
+        ball.state.rvw = _solve(ball, cushion)
+        ball.state.rvw[1, 2] = 0.0
+        ball.state.s = const.sliding
+        return ball, cushion
+
+
+@attrs.define
+class ImpulseFrictionalInelasticLinear3D(CoreBallLCushionCollision):
+    """Impulse-based frictional inelastic ball-linear cushion collision
+
+    An instantaneous, impulse-based collision model that includes the effects of
+    tangential friction and normal coefficient of restitution. The collision is
+    resolved against the cushion's 3D contact normal, so the ball can leave the
+    collision with a vertical velocity component and be labeled airborne.
+    """
+
+    model: BallLCushionModel = attrs.field(
+        default=BallLCushionModel.IMPULSE_FRICTIONAL_INELASTIC_3D,
+        init=False,
+        repr=False,
+    )
+    dim: Dim = attrs.field(default=Dim.THREE, init=False, repr=False)
+
+    def solve(
+        self, ball: Ball, cushion: LinearCushionSegment
+    ) -> tuple[Ball, LinearCushionSegment]:
+        ball.state.rvw = _solve(ball, cushion)
+        ball.state.s = final_ball_motion_state(ball.state.rvw)
+        return ball, cushion
+
+
+@attrs.define
+class ImpulseFrictionalInelasticCircular3D(CoreBallCCushionCollision):
+    """Impulse-based frictional inelastic ball-circular cushion collision
+
+    An instantaneous, impulse-based collision model that includes the effects of
+    tangential friction and normal coefficient of restitution. The collision is
+    resolved against the cushion's 3D contact normal, so the ball can leave the
+    collision with a vertical velocity component and be labeled airborne.
+    """
+
+    model: BallCCushionModel = attrs.field(
+        default=BallCCushionModel.IMPULSE_FRICTIONAL_INELASTIC_3D,
+        init=False,
+        repr=False,
+    )
+    dim: Dim = attrs.field(default=Dim.THREE, init=False, repr=False)
+
+    def solve(
+        self, ball: Ball, cushion: CircularCushionSegment
+    ) -> tuple[Ball, CircularCushionSegment]:
+        ball.state.rvw = _solve(ball, cushion)
+        ball.state.s = final_ball_motion_state(ball.state.rvw)
+        return ball, cushion
