@@ -88,11 +88,13 @@ class BallLCushionModel(StrEnum):
                 Available at
                 https://drdavepoolinfo.com//physics_articles/Mathavan_IMechE_2010.pdf
 
-        STRONGE_COMPLIANT:
+        STRONGE_COMPLIANT_3D:
             An instantaneous/non-smooth, collision model that accounts for tangential compliance.
             This model includes effects of tangential friction, tangential compliance, and normal
             coefficient of restitution. Accounting for tangential compliance allows for reversal
             of the slip direction at the contact point.
+
+            The full 3D collision result is applied to the ball.
 
             This model assumes the colliding bodies (ball and rail) are rigid bodies, one of which
             is connected at the contact point to a massless particle via two independent springs.
@@ -108,13 +110,19 @@ class BallLCushionModel(StrEnum):
                 W. J. Stronge, “Tangential Compliance in Planar Impact of Rough Bodies,” in Impact Mechanics,
                 Cambridge: Cambridge University Press, 2018, pp. 89–115
                 doi:10.1017/9781139050227
+
+        STRONGE_COMPLIANT_2D:
+            Same 3D collision math as ``STRONGE_COMPLIANT_3D``, followed by a clamp that
+            zeros the vertical velocity component of the ball. Suitable for a 2D
+            simulation: the ball never leaves the table surface.
     """
 
     MATHAVAN_2010 = auto()
     HAN_2005 = auto()
     IMPULSE_FRICTIONAL_INELASTIC_2D = auto()
     IMPULSE_FRICTIONAL_INELASTIC_3D = auto()
-    STRONGE_COMPLIANT = auto()
+    STRONGE_COMPLIANT_2D = auto()
+    STRONGE_COMPLIANT_3D = auto()
     UNREALISTIC = auto()
 
 
@@ -126,6 +134,8 @@ class BallCCushionModel(StrEnum):
         UNREALISTIC: See :class:`BallLCushionModel`.
         IMPULSE_FRICTIONAL_INELASTIC_2D: See :class:`BallLCushionModel`.
         IMPULSE_FRICTIONAL_INELASTIC_3D: See :class:`BallLCushionModel`.
+        STRONGE_COMPLIANT_3D: See :class:`BallLCushionModel`.
+        STRONGE_COMPLIANT_2D: See :class:`BallLCushionModel`.
         MATHAVAN_2010: See :class:`BallLCushionModel`.
         STRONGE_COMPLIANT: See :class:`BallLCushionModel`.
     """
@@ -134,7 +144,8 @@ class BallCCushionModel(StrEnum):
     HAN_2005 = auto()
     IMPULSE_FRICTIONAL_INELASTIC_2D = auto()
     IMPULSE_FRICTIONAL_INELASTIC_3D = auto()
-    STRONGE_COMPLIANT = auto()
+    STRONGE_COMPLIANT_2D = auto()
+    STRONGE_COMPLIANT_3D = auto()
     UNREALISTIC = auto()
 
 

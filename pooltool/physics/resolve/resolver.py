@@ -26,8 +26,8 @@ from pooltool.physics.resolve.ball_cushion import (
     BallLCushionCollisionStrategy,
 )
 from pooltool.physics.resolve.ball_cushion.stronge_compliant.model import (
-    StrongeCompliantCircular,
-    StrongeCompliantLinear,
+    StrongeCompliantCircular2D,
+    StrongeCompliantLinear2D,
 )
 from pooltool.physics.resolve.ball_pocket import (
     BallPocketStrategy,
@@ -78,10 +78,10 @@ def default_resolver() -> Resolver:
                 c=1.088,
             ),
         ),
-        ball_linear_cushion=StrongeCompliantLinear(
+        ball_linear_cushion=StrongeCompliantLinear2D(
             omega_ratio=1.8,
         ),
-        ball_circular_cushion=StrongeCompliantCircular(
+        ball_circular_cushion=StrongeCompliantCircular2D(
             omega_ratio=1.8,
         ),
         ball_pocket=CanonicalBallPocket(),

@@ -510,8 +510,8 @@ def resolve_collinear_compliant_frictional_inelastic_collision(
     Returns:
         Final tangential and normal velocities after collision.
     """
-    assert v_t_0 <= 0
-    assert v_n_0 < 0
+    assert v_t_0 <= 0, f"v_t_0: {v_t_0}"
+    assert v_n_0 < 0, f"v_n_0: {v_n_0}"
 
     beta_t_by_beta_n = beta_t / beta_n
     v_t_0_by_v_n_0 = v_t_0 / v_n_0

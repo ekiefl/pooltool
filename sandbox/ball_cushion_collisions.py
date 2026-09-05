@@ -1,4 +1,11 @@
 #! /usr/bin/env python
+"""Ball cushion behavior compared across models.
+
+Note:
+    - This currently excludes 3D models, which produce vertical velocity components
+      either into the table or into the air. These alter how the plots are interpreted.
+"""
+
 import logging
 import math
 
@@ -18,7 +25,7 @@ from pooltool.physics.resolve.ball_cushion.impulse_frictional_inelastic import (
 )
 from pooltool.physics.resolve.ball_cushion.mathavan_2010 import Mathavan2010Linear
 from pooltool.physics.resolve.ball_cushion.stronge_compliant import (
-    StrongeCompliantLinear,
+    StrongeCompliantLinear2D,
 )
 
 pio.renderers.default = "browser"
@@ -84,6 +91,7 @@ class BallCushionCollisionExperiment:
     @cushion.default
     def __default_cushion(self):
         length = 2.0
+        nose_radius = 0.005
         p1 = ptmath.coordinate_rotation(
             np.array([0.5 * length, 0.0, 0.0]),
             np.pi / 2 + self.config.xy_line_of_centers_angle_radians,
@@ -92,7 +100,9 @@ class BallCushionCollisionExperiment:
         height = 2.0 * self.config.params.R * 0.635
         p1[2] = height
         p2[2] = height
-        cushion = LinearCushionSegment(id="dummy", p1=p1, p2=p2)
+        cushion = LinearCushionSegment(
+            id="dummy", p1=p1, p2=p2, nose_radius=nose_radius
+        )
         return cushion
 
     cb_i: Ball = attrs.field(init=False)
@@ -401,7 +411,7 @@ def main():
         Han2005Linear(),
         Mathavan2010Linear(),
         ImpulseFrictionalInelasticLinear2D(),
-        StrongeCompliantLinear(),
+        StrongeCompliantLinear2D(),
     ]
 
     ball_params = BallParams.default()
