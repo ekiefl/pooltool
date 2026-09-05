@@ -1,3 +1,11 @@
+"""Impulse frictional inelastic cushion models.
+
+This group of models all resolve the collision with the function
+:func:`pooltool.physics.resolve.sphere_half_space_collision.resolve_sphere_half_space_collision`.
+Since this natively handles the 3D case, the 2D case simply zeros the vz velocity
+component.
+"""
+
 import attrs
 import numpy as np
 from numpy.typing import NDArray

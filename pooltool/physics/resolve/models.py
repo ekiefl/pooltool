@@ -59,7 +59,7 @@ class BallLCushionModel(StrEnum):
             An unrealistic model in which balls are perfectly reflected. Spin is left
             untouched by the interaction.
 
-        IMPULSE_FRICTIONAL_INELASTIC:
+        IMPULSE_FRICTIONAL_INELASTIC_{2D,3D}:
             An instantaneous/non-smooth, impulse-based collision model.  This model includes effects of
             tangential friction and normal coefficient of restitution.
 
