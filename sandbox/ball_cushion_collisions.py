@@ -1,9 +1,11 @@
+#! /usr/bin/env python
 """Ball cushion behavior compared across models.
 
 Note:
     - This currently excludes 3D models, which produce vertical velocity components
       either into the table or into the air. These alter how the plots are interpreted.
 """
+
 import logging
 import math
 
@@ -98,7 +100,9 @@ class BallCushionCollisionExperiment:
         height = 2.0 * self.config.params.R * 0.635
         p1[2] = height
         p2[2] = height
-        cushion = LinearCushionSegment(id="dummy", p1=p1, p2=p2, nose_radius=0.005)
+        cushion = LinearCushionSegment(
+            id="dummy", p1=p1, p2=p2, nose_radius=nose_radius
+        )
         return cushion
 
     cb_i: Ball = attrs.field(init=False)
