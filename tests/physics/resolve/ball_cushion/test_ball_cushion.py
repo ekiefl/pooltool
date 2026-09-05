@@ -16,6 +16,7 @@ from pooltool.physics.resolve.ball_cushion import (
     ball_lcushion_models,
 )
 from pooltool.physics.resolve.ball_cushion.core import (
+    BallLCushionCollisionStrategy,
     CoreBallCCushionCollision,
     CoreBallLCushionCollision,
 )
@@ -46,18 +47,14 @@ def cushion_circular():
 
 
 @pytest.mark.parametrize(
-    "model_name",
-    [
-        BallLCushionModel.UNREALISTIC,
-        BallLCushionModel.HAN_2005,
-        BallLCushionModel.IMPULSE_FRICTIONAL_INELASTIC_2D,
-        BallLCushionModel.MATHAVAN_2010,
-        BallLCushionModel.STRONGE_COMPLIANT,
-    ],
+    "model_cls",
+    ball_lcushion_models.values(),
 )
 @pytest.mark.parametrize("theta", np.linspace(1, 89, 10))
-def test_energy(
-    cushion_yaxis: LinearCushionSegment, model_name: BallLCushionModel, theta: float
+def test_ball_cushion_energy(
+    cushion_yaxis: LinearCushionSegment,
+    model_cls: type[BallLCushionCollisionStrategy],
+    theta: float,
 ) -> None:
     """Test that ball-linear cushion interactions do not increase energy"""
     R = BallParams.default().R
@@ -80,7 +77,7 @@ def test_energy(
     )
 
     # Resolve physics
-    model = ball_lcushion_models[model_name]()
+    model = model_cls()
     ball_after, _ = model.resolve(ball=ball, cushion=cushion_yaxis, inplace=False)
 
     final_energy = physics.get_ball_energy(
@@ -96,18 +93,14 @@ def test_energy(
 
 
 @pytest.mark.parametrize(
-    "model_name",
-    [
-        BallLCushionModel.UNREALISTIC,
-        BallLCushionModel.HAN_2005,
-        BallLCushionModel.IMPULSE_FRICTIONAL_INELASTIC_2D,
-        BallLCushionModel.MATHAVAN_2010,
-        BallLCushionModel.STRONGE_COMPLIANT,
-    ],
+    "model_cls",
+    ball_lcushion_models.values(),
 )
 @pytest.mark.parametrize("theta", np.linspace(-89, 89, 20))
-def test_symmetry(
-    cushion_yaxis: LinearCushionSegment, model_name: BallLCushionModel, theta: float
+def test_ball_cushion_symmetry(
+    cushion_yaxis: LinearCushionSegment,
+    model_cls: type[BallLCushionCollisionStrategy],
+    theta: float,
 ) -> None:
     """Test that ball-linear cushion interactions are symmetric"""
     R = BallParams.default().R
@@ -136,7 +129,7 @@ def test_symmetry(
     assert ball.state.rvw[1, 1] == -other.state.rvw[1, 1]
 
     # Resolve physics
-    model = ball_lcushion_models[model_name]()
+    model = model_cls()
     ball_after, _ = model.resolve(ball=ball, cushion=cushion_yaxis, inplace=False)
     other_after, _ = model.resolve(ball=other, cushion=cushion_yaxis, inplace=False)
 
@@ -144,7 +137,7 @@ def test_symmetry(
     assert not np.array_equal(ball.state.rvw[1], ball_after.state.rvw[1])
     assert not np.array_equal(other.state.rvw[1], other_after.state.rvw[1])
 
-    # X-velocties are negative and the same
+    # X-velocities are negative and the same
     assert ball_after.state.rvw[1, 0] < 0
     assert other_after.state.rvw[1, 0] < 0
     assert np.isclose(ball_after.state.rvw[1, 0], other_after.state.rvw[1, 0])
