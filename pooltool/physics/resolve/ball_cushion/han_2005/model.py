@@ -90,8 +90,7 @@ def han2005(rvw, xy_normal, R, m, h, e_c, f_c):
 
 
 def _solve(ball: Ball, cushion: Cushion) -> tuple[Ball, Cushion]:
-    xy_normal = cushion.get_normal_xy(ball.xyz)
-    xy_normal = xy_normal if np.dot(xy_normal, ball.vel) > 0 else -xy_normal
+    xy_normal = -cushion.get_normal_xy(ball.xyz)
     rvw = han2005(
         rvw=ball.state.rvw,
         xy_normal=xy_normal,

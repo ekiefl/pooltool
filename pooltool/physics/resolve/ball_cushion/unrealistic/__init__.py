@@ -1,7 +1,6 @@
 """An unrealistic ball-cushion model"""
 
 import attrs
-import numpy as np
 
 import pooltool.constants as const
 import pooltool.ptmath as ptmath
@@ -31,20 +30,9 @@ def _solve(
     """
     rvw = ball.state.rvw
 
-    # Two things about the normal:
-    #   1) Cushions have a get_normal_xy method that returns the normal. For linear
-    #      cushions this is determined solely by it's geometry. For circular
-    #      cushions, the normal is a function of the ball's position (specifically,
-    #      it is the line connecting the ball's and cushion's centers). To retain
-    #      symmetry between method calls, both linear and circular cushion segments
-    #      accept `xyz` as a parameter
-    #   2) The cushion normal is arbitrarily assigned to face either into the table
-    #      or away from the table. That's my bad--a mishap during development that
-    #      we're still living with the consequences of. The burden is that you must
-    #      assign a convention. Here I opt to orient the normal so it points away
-    #      from the playing surface.
-    normal = cushion.get_normal_xy(ball.xyz)
-    normal = normal if np.dot(normal, rvw[1]) > 0 else -normal
+    # get_normal_xy points from the cushion toward the ball. Here the convention is
+    # for the normal to point away from the playing surface, hence the negation.
+    normal = -cushion.get_normal_xy(ball.xyz)
 
     # Rotate frame of reference to the cushion frame. The cushion frame is defined
     # by the cushion's normal vector (convention: points away from table) being
