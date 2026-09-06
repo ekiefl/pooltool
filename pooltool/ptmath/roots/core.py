@@ -68,6 +68,43 @@ def get_real_positive_smallest_root(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def get_real_smallest_magnitude_root(
+    roots: NDArray[np.complex128],
+    abs_or_rel_cutoff: float = 1e-3,
+    rtol: float = 1e-3,
+    atol: float = 1e-9,
+) -> float:
+    """Returns the real root with smallest magnitude (closest to zero) from a set of roots.
+
+    Args:
+        roots:
+            A 1D array of n polynomial roots.
+        abs_or_rel_cutoff:
+            See :func:`get_real_positive_smallest_root`.
+        atol:
+            See :func:`get_real_positive_smallest_root`.
+        rtol:
+            See :func:`get_real_positive_smallest_root`.
+
+    Returns:
+        The real root with smallest absolute value. If no real root exists, returns
+        ``np.inf``.
+    """
+    min_root = np.inf
+    min_mag = np.inf
+
+    for i in range(len(roots)):
+        root = roots[i]
+        real_mag = abs(root.real)
+
+        if is_real_number(root, abs_or_rel_cutoff, rtol, atol) and real_mag < min_mag:
+            min_root = root.real
+            min_mag = real_mag
+
+    return min_root
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def get_real_positive_smallest_roots(
     roots: NDArray[np.complex128],
     abs_or_rel_cutoff: float = 1e-3,
