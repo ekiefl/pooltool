@@ -157,7 +157,7 @@ class FrictionalInelastic2D(FrictionalInelastic3D):
 
         # remove any z velocity components for 2D
         ball1.state.rvw[1, 2] = 0.0
-        ball1.state.rvw[1, 2] = 0.0
+        ball2.state.rvw[1, 2] = 0.0
         ball1.state.s = const.sliding
         ball2.state.s = const.sliding
 
