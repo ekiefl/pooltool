@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+from typing import ClassVar
 
 import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
@@ -18,7 +18,7 @@ from pooltool.system.datatypes import multisystem
 
 class StrokeMode(BaseMode):
     name = Mode.stroke
-    keymap = {
+    default_keymap: ClassVar[dict[Action, bool]] = {
         Action.fine_control: False,
         Action.stroke: True,
     }
@@ -111,11 +111,11 @@ class StrokeMode(BaseMode):
 
         if newX < 0:
             newX = 0
-            collision = True if visual.cue.is_shot() else False
+            collision = bool(visual.cue.is_shot())
         else:
             collision = False
 
         cue_stick_node.setX(newX)
         visual.cue.append_stroke_data()
 
-        return True if collision else False
+        return bool(collision)

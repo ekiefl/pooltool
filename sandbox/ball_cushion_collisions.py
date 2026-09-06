@@ -1,4 +1,11 @@
 #! /usr/bin/env python
+"""Ball cushion behavior compared across models.
+
+Note:
+    - This currently excludes 3D models, which produce vertical velocity components
+      either into the table or into the air. These alter how the plots are interpreted.
+"""
+
 import logging
 import math
 
@@ -14,11 +21,11 @@ from pooltool.objects.table.components import LinearCushionSegment
 from pooltool.physics.resolve.ball_cushion.core import CoreBallLCushionCollision
 from pooltool.physics.resolve.ball_cushion.han_2005 import Han2005Linear
 from pooltool.physics.resolve.ball_cushion.impulse_frictional_inelastic import (
-    ImpulseFrictionalInelasticLinear,
+    ImpulseFrictionalInelasticLinear2D,
 )
 from pooltool.physics.resolve.ball_cushion.mathavan_2010 import Mathavan2010Linear
 from pooltool.physics.resolve.ball_cushion.stronge_compliant import (
-    StrongeCompliantLinear,
+    StrongeCompliantLinear2D,
 )
 
 pio.renderers.default = "browser"
@@ -84,6 +91,7 @@ class BallCushionCollisionExperiment:
     @cushion.default
     def __default_cushion(self):
         length = 2.0
+        nose_radius = 0.005
         p1 = ptmath.coordinate_rotation(
             np.array([0.5 * length, 0.0, 0.0]),
             np.pi / 2 + self.config.xy_line_of_centers_angle_radians,
@@ -92,7 +100,9 @@ class BallCushionCollisionExperiment:
         height = 2.0 * self.config.params.R * 0.635
         p1[2] = height
         p2[2] = height
-        cushion = LinearCushionSegment(id="dummy", p1=p1, p2=p2)
+        cushion = LinearCushionSegment(
+            id="dummy", p1=p1, p2=p2, nose_radius=nose_radius
+        )
         return cushion
 
     cb_i: Ball = attrs.field(init=False)
@@ -239,7 +249,7 @@ def plot_rebound_angle_vs_incident_angle(
             y=cut_angles_deg,
             mode="lines",
             name="1:1 line (perfect reflection)",
-            line=dict(color="gray", width=1, dash="dash"),
+            line={"color": "gray", "width": 1, "dash": "dash"},
             opacity=0.7,
         )
     )
@@ -252,17 +262,12 @@ def plot_rebound_angle_vs_incident_angle(
         )
 
         base_color = base_colors[config_idx % len(base_colors)]
-        trajectory_idx = 0
         num_trajectories = len(results)
 
-        for (speed, topspin_factor, sidespin_factor), (
-            _,
-            _,
-            _,
-            _,
-            rebound_angles,
-            _,
-        ) in results.items():
+        for trajectory_idx, (
+            (speed, topspin_factor, sidespin_factor),
+            (_, _, _, _, rebound_angles, _),
+        ) in enumerate(results.items()):
             label = f"{config.model.model}: speed={speed:.3} m/s"
             if topspin_factors is not None:
                 label += f", topspin_factor={topspin_factor:.2}"
@@ -278,11 +283,10 @@ def plot_rebound_angle_vs_incident_angle(
                     y=rebound_angles_deg,
                     mode="lines",
                     name=label,
-                    line=dict(color=base_color, width=2),
+                    line={"color": base_color, "width": 2},
                     opacity=opacity,
                 )
             )
-            trajectory_idx += 1
 
     fig.update_layout(
         title=title,
@@ -309,17 +313,12 @@ def plot_rebound_speed_vs_incident_angle(
         )
 
         base_color = base_colors[config_idx % len(base_colors)]
-        trajectory_idx = 0
         num_trajectories = len(results)
 
-        for (speed, topspin_factor, sidespin_factor), (
-            _,
-            _,
-            _,
-            _,
-            _,
-            rebound_speeds,
-        ) in results.items():
+        for trajectory_idx, (
+            (speed, topspin_factor, sidespin_factor),
+            (_, _, _, _, _, rebound_speeds),
+        ) in enumerate(results.items()):
             label = f"{config.model.model}: speed={speed:.3} m/s"
             if topspin_factors is not None:
                 label += f", topspin_factor={topspin_factor:.2}"
@@ -334,11 +333,10 @@ def plot_rebound_speed_vs_incident_angle(
                     y=rebound_speeds,
                     mode="lines",
                     name=label,
-                    line=dict(color=base_color, width=2),
+                    line={"color": base_color, "width": 2},
                     opacity=opacity,
                 )
             )
-            trajectory_idx += 1
 
     fig.update_layout(
         title=title,
@@ -369,17 +367,12 @@ def plot_change_in_angular_velocity_vs_incident_angle(
         )
 
         base_color = base_colors[config_idx % len(base_colors)]
-        trajectory_idx = 0
         num_trajectories = len(results)
 
-        for (speed, topspin_factor, sidespin_factor), (
-            _,
-            avel,
-            _,
-            outgoing_avel,
-            _,
-            _,
-        ) in results.items():
+        for trajectory_idx, (
+            (speed, topspin_factor, sidespin_factor),
+            (_, avel, _, outgoing_avel, _, _),
+        ) in enumerate(results.items()):
             label = f"{config.model.model}: speed={speed:.3} m/s"
             if topspin_factors is not None:
                 label += f", topspin_factor={topspin_factor:.2}"
@@ -398,12 +391,10 @@ def plot_change_in_angular_velocity_vs_incident_angle(
                     y=100 * outgoing_avel_proportion_of_avel,
                     mode="lines",
                     name=label,
-                    line=dict(color=base_color, width=2),
+                    line={"color": base_color, "width": 2},
                     opacity=opacity,
                 )
             )
-
-            trajectory_idx += 1
 
     fig.update_layout(
         title=title,
@@ -419,8 +410,8 @@ def main():
     models = [
         Han2005Linear(),
         Mathavan2010Linear(),
-        ImpulseFrictionalInelasticLinear(),
-        StrongeCompliantLinear(),
+        ImpulseFrictionalInelasticLinear2D(),
+        StrongeCompliantLinear2D(),
     ]
 
     ball_params = BallParams.default()

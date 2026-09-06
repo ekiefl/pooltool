@@ -1,5 +1,4 @@
-#! /usr/bin/env python
-
+from typing import ClassVar
 
 import numpy as np
 from direct.interval.IntervalGlobal import LerpFunc, Parallel
@@ -26,7 +25,7 @@ FONT_OPACITY = 0.95
 
 class CallShotMode(BaseMode):
     name = Mode.call_shot
-    keymap = {
+    default_keymap: ClassVar[dict[Action, bool]] = {
         Action.quit: False,
         Action.call_shot: True,
         Action.next: False,

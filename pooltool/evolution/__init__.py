@@ -7,6 +7,6 @@ from pooltool.evolution.event_based.simulate import simulate
 __all__ = [
     "SimulationEngine",
     "continuize",
-    "simulate",
     "interpolate_ball_states",
+    "simulate",
 ]

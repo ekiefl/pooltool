@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from abc import ABC, abstractmethod
 from collections import deque
 
@@ -42,8 +40,9 @@ class HUD:
         self.elements = None
         self.initialized = False
 
-    def init(self, hide: list[HUDElement] = list()):
+    def init(self, hide: list[HUDElement] | None = None):
         """Initialize HUD elements and start the HUD update task"""
+        hide = [] if hide is None else hide
 
         self.elements = {
             HUDElement.help_text: Help(),
@@ -475,10 +474,8 @@ class Power(NodePath, BaseHUDElement):
         self.text.setText(f"{V0:.2f} m/s")
 
         value = (V0 - min_stroke_speed) / (max_stroke_speed - min_stroke_speed)
-        if value < 0:
-            value = 0
-        if value > 1:
-            value = 1
+        value = max(value, 0)
+        value = min(value, 1)
         self.fg.setScale(value, 1, 1)
         self.bg.setScale(1.0 - value, 1, 1)
 

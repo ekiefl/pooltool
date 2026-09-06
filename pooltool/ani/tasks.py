@@ -24,7 +24,7 @@ def remove(name):
 
 
 @require_showbase
-def register_event(sequence, func, func_args=[]):
+def register_event(sequence, func, func_args=None):
     """Register event listener that triggers based on keystroke/mouse/message
 
     Args:
@@ -51,4 +51,5 @@ def register_event(sequence, func, func_args=[]):
                     Global.base.messenger.send("test")
     """
 
+    func_args = [] if func_args is None else func_args
     Global.base.accept(sequence, func, func_args)

@@ -136,7 +136,7 @@ def _evolve_roll_state(
     if t == 0:
         return rvw
 
-    r_0, v_0, w_0 = rvw
+    r_0, v_0, _w_0 = rvw
 
     v_0_hat = ptmath.unit_vector(v_0)
 
@@ -169,9 +169,8 @@ def _evolve_perpendicular_spin_component(
 
     alpha = 5 * u_sp * g / (2 * R)
 
-    if t > np.abs(wz) / alpha:
-        # You can't decay past 0 angular velocity
-        t = np.abs(wz) / alpha
+    # You can't decay past 0 angular velocity
+    t = min(t, np.abs(wz) / alpha)
 
     # Always decay towards 0, whether spin is +ve or -ve
     sign = 1 if wz > 0 else -1

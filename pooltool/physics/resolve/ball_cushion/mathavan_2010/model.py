@@ -633,10 +633,9 @@ def solve_mathavan(
 
     rvw = ball.state.rvw
 
-    # Ensure the normal is pointing in the same direction as the ball's velocity.
-    normal = cushion.get_normal_xy(ball.xyz)
-    if np.dot(normal, rvw[1]) <= 0:
-        normal = -normal
+    # get_normal_xy points from the cushion toward the ball. Here the normal must point
+    # from the ball into the cushion, hence the negation.
+    normal = -cushion.get_normal_xy(ball.xyz)
 
     # Rotate the ball's state into the cushion frame.
     psi = ptmath.angle(normal)

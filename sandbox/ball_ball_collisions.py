@@ -148,7 +148,7 @@ def collision_results_versus_cut_angle(
                     vel[i] = collision_experiment.cb_i.vel
                     avel[i] = collision_experiment.cb_i.avel
 
-                    cb_f, ob_f = collision_experiment.result()
+                    _cb_f, ob_f = collision_experiment.result()
 
                     induced_vel[i] = ptmath.coordinate_rotation(
                         ob_f.vel, -config.xy_line_of_centers_angle_radians
@@ -202,7 +202,7 @@ def collision_results_versus_sidespin(
                     vel[i] = collision_experiment.cb_i.vel
                     avel[i] = collision_experiment.cb_i.avel
 
-                    cb_f, ob_f = collision_experiment.result()
+                    _cb_f, ob_f = collision_experiment.result()
 
                     induced_vel[i] = ptmath.coordinate_rotation(
                         ob_f.vel, -config.xy_line_of_centers_angle_radians

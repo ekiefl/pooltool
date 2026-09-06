@@ -53,19 +53,15 @@ class TableRender(Render):
         ):
             raise NotImplementedError()
 
-        # Make 4 planes
+        # Make 4 planes, each with its normal facing into the table
         # For diagram of cushion ids, see
         # https://ekiefl.github.io/2020/12/20/pooltool-alg/#ball-cushion-collision-times
+        table_center = np.array([*self._table.center, 0.0])
         for cushion_id in ["3", "9", "12", "18"]:
             cushion = self._table.cushion_segments.linear[cushion_id]
 
             x1, y1, z1 = cushion.p1
-            x2, y2, z2 = cushion.p2
-
-            n1, n2, n3 = cushion.normal
-            if cushion_id in ["9", "12"]:
-                # These normals need to be flipped
-                n1, n2, n3 = -n1, -n2, -n3
+            n1, n2, n3 = cushion.get_normal_xy(table_center)
 
             collision_node = self.nodes["table"].attachNewNode(
                 CollisionNode(f"cushion_cplane_{cushion_id}")

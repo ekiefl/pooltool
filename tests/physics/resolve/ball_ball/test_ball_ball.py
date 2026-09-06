@@ -80,7 +80,7 @@ def translating_head_on() -> tuple[Ball, Ball]:
 @pytest.mark.parametrize("model", [FrictionlessElastic()])
 def test_head_on_zero_spin(model: BallBallCollisionStrategy):
     cb_i, ob_i = head_on()
-    cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
+    cb_f, _ob_f = model.resolve(cb_i, ob_i, inplace=False)
 
     # Since balls are of equal mass, final cue ball +x speed should not be positive
     assert cb_f.state.rvw[1][0] <= 0
@@ -193,7 +193,7 @@ def test_gearing_z_spin(
     v_c = tangent_surface_velocity(cb_i.state.rvw, unit_normal, cb_i.params.R)
     assert ptmath.norm3d(v_c) < 1e-10, "Relative surface contact speed should be zero"
 
-    cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
+    _cb_f, ob_f = model.resolve(cb_i, ob_i, inplace=False)
 
     assert np.allclose(
         np.cross(ob_f.vel, unit_normal), np.zeros_like(unit_normal), atol=1e-3

@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 import gc
 import sys
 from collections.abc import Generator
@@ -339,7 +337,8 @@ class ShotViewer(Interface):
     For usage, see :meth:`show`.
     """
 
-    def __init__(self, config=ShowBaseConfig.default()):
+    def __init__(self, config=None):
+        config = ShowBaseConfig.default() if config is None else config
         Interface.__init__(self, config=config)
         self._create_title("")
 
@@ -425,10 +424,10 @@ class ShotViewer(Interface):
         if settings.graphics.hud:
             hud.init(hide=[HUDElement.help_text])
 
-        params = dict(
-            build_animations=True,
-            playback_mode=PlaybackMode.LOOP,
-        )
+        params = {
+            "build_animations": True,
+            "playback_mode": PlaybackMode.LOOP,
+        }
         Global.mode_mgr.update_event_baseline()
         Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
         Global.task_mgr.run()
@@ -469,7 +468,8 @@ class ShotViewer(Interface):
 class Game(Interface):
     """This class runs the pooltool application"""
 
-    def __init__(self, config=ShowBaseConfig.default()):
+    def __init__(self, config=None):
+        config = ShowBaseConfig.default() if config is None else config
         Interface.__init__(self, config=config)
 
         # This task chain allows simulations to be run in parallel to the game processes
@@ -541,7 +541,7 @@ class Game(Interface):
 
 
 __all__ = [
+    "FrameStepper",
     "Game",
     "ShotViewer",
-    "FrameStepper",
 ]

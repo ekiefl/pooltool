@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+from typing import ClassVar
 
 import numpy as np
 
@@ -28,7 +28,7 @@ from pooltool.system.datatypes import multisystem
 
 class ViewMode(BaseMode):
     name = Mode.view
-    keymap = {
+    default_keymap: ClassVar[dict[Action, bool]] = {
         Action.aim: False,
         Action.call_shot: False,
         Action.fine_control: False,
@@ -136,7 +136,7 @@ class ViewMode(BaseMode):
         elif self.keymap[Action.power]:
             self.view_apply_power()
         elif self.keymap[Action.aim]:
-            Global.mode_mgr.change_mode(Mode.aim, enter_kwargs=dict(load_prev_cam=True))
+            Global.mode_mgr.change_mode(Mode.aim, enter_kwargs={"load_prev_cam": True})
         elif self.keymap[Action.exec_shot]:
             self.keymap[Action.exec_shot] = False
             if Global.game.shot_constraints.can_shoot():
@@ -150,7 +150,7 @@ class ViewMode(BaseMode):
                 visual.switch_to_shot(multisystem.active_index - 1)
                 self._update_hud()
                 Global.mode_mgr.change_mode(
-                    Mode.shot, enter_kwargs=dict(build_animations=False)
+                    Mode.shot, enter_kwargs={"build_animations": False}
                 )
                 return task.done
         else:
@@ -165,10 +165,8 @@ class ViewMode(BaseMode):
             dy = mouse.get_dy()
 
         V0 = multisystem.active.cue.V0 + dy * power_sensitivity
-        if V0 < min_stroke_speed:
-            V0 = min_stroke_speed
-        if V0 > max_stroke_speed:
-            V0 = max_stroke_speed
+        V0 = max(V0, min_stroke_speed)
+        V0 = min(V0, max_stroke_speed)
 
         multisystem.active.cue.set_state(V0=V0)
         self._update_hud()

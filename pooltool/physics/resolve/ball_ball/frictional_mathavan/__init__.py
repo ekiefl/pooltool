@@ -235,7 +235,7 @@ class FrictionalMathavan(CoreBallBallCollision):
         https://billiards.colostate.edu/physics_articles/Mathavan_Sports_2014.pdf
     """
 
-    friction: BallBallFrictionStrategy = AlciatoreBallBallFriction()
+    friction: BallBallFrictionStrategy = attrs.field(factory=AlciatoreBallBallFriction)
     num_iterations: int = 1000
 
     model: BallBallModel = attrs.field(

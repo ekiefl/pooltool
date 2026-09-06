@@ -5,7 +5,7 @@ import numpy as np
 
 import pooltool as pt
 
-get_pos = lambda table, ball: (  # noqa E731
+get_pos = lambda table, ball: (
     (table.w - 2 * ball.params.R) * np.random.rand() + ball.params.R,
     (table.l - 2 * ball.params.R) * np.random.rand() + ball.params.R,
     ball.params.R,

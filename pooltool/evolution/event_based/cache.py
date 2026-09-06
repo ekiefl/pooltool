@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from __future__ import annotations
 
 import attrs
@@ -60,7 +58,8 @@ class TransitionCache:
         """Update transition cache for all balls in Event"""
         for agent in event.agents:
             if agent.agent_type == AgentType.BALL:
-                assert isinstance(ball := agent.final, Ball)
+                ball = agent.final
+                assert isinstance(ball, Ball)
                 self.transitions[agent.id] = _next_transition(ball)
 
     @classmethod

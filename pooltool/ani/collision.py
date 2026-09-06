@@ -77,8 +77,7 @@ class CueAvoid:
 
         for entry in self.collision_handler.entries:
             min_theta = self.process_collision(entry)
-            if min_theta > max_min_theta:
-                max_min_theta = min_theta
+            max_min_theta = max(max_min_theta, min_theta)
 
         self.min_theta = max_min_theta
         return task.cont
@@ -105,11 +104,6 @@ class CueAvoid:
 
         # The tip of the cue stick
         Ex, Ey, Ez = self.avoid_nodes["cue_stick_model"].getPos(
-            self.avoid_nodes["scene"]
-        )
-
-        # Center ofthe cueing ball
-        Bx, By, Bz = self.avoid_nodes["cue_stick_focus"].getPos(
             self.avoid_nodes["scene"]
         )
 

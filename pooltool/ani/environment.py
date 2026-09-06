@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from panda3d.core import (
     AmbientLight,
     DirectionalLight,

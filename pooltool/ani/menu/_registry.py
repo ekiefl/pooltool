@@ -1,13 +1,14 @@
 import sys
 from collections.abc import Callable
+from typing import ClassVar
 
 from pooltool.ani.globals import Global
 from pooltool.ani.menu._datatypes import BaseMenu
 
 
 class MenuRegistry:
-    _menus: dict[str, type[BaseMenu]] = {}
-    _current_menu: BaseMenu | None = None
+    _menus: ClassVar[dict[str, type[BaseMenu]]] = {}
+    _current_menu: ClassVar[BaseMenu | None] = None
 
     @classmethod
     def register(cls, menu_class: type[BaseMenu]) -> None:
