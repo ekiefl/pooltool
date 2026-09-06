@@ -7,11 +7,22 @@ import pooltool.ptmath as ptmath
 from pooltool.events import EventType
 from pooltool.evolution.event_based.cache import CollisionCache
 from pooltool.evolution.event_based.detect.ball_ball import (
+    ball_ball_collision_time_2d,
     get_next_ball_ball_event,
 )
 from pooltool.physics.evolve import evolve_ball_motion
 from pooltool.physics.utils import get_airborne_time
 from pooltool.system.datatypes import Ball, Cue, System, Table
+
+
+def _make_rolling_ball(ball_id: str, xy: tuple[float, float], velocity: float) -> Ball:
+    ball = Ball.create(ball_id, xy=xy)
+    v = np.array([0.0, velocity, 0.0])
+    w = ptmath.cross(np.array([0.0, 0.0, 1.0]), v) / ball.params.R
+    ball.state.rvw[1] = v
+    ball.state.rvw[2] = w
+    ball.state.s = const.rolling
+    return ball
 
 
 @pytest.mark.parametrize("is_3d", [True, False])
@@ -51,6 +62,134 @@ def test_sliding_ball_collision_time(is_3d: bool):
     expected = (speed - np.sqrt(speed**2 - 2 * a * distance)) / a
 
     assert np.isclose(actual, expected), f"actual={actual}, expected={expected}"
+
+
+@pytest.mark.parametrize("is_3d", [True, False])
+def test_parallel_rolling_balls_do_not_collide(is_3d: bool):
+    """Parallel rolling balls at fixed separation never collide."""
+
+    table = Table.default()
+    cue = Cue.default()
+
+    cue_ball = _make_rolling_ball("cue", (table.w / 2, table.l / 4), velocity=1.0)
+    one_ball = _make_rolling_ball("1", (table.w / 2, 3 * table.l / 4), velocity=1.0)
+
+    system = System(
+        cue=cue,
+        table=table,
+        balls={
+            "cue": cue_ball,
+            "1": one_ball,
+        },
+    )
+
+    event = get_next_ball_ball_event(system, CollisionCache(), is_3d=is_3d)
+    assert event.time == np.inf
+
+    if not is_3d:
+        actual = ball_ball_collision_time_2d(
+            rvw1=cue_ball.state.rvw,
+            rvw2=one_ball.state.rvw,
+            s1=cue_ball.state.s,
+            s2=one_ball.state.s,
+            mu1=cue_ball.params.u_r,
+            mu2=one_ball.params.u_r,
+            m1=cue_ball.params.m,
+            m2=one_ball.params.m,
+            g1=cue_ball.params.g,
+            g2=one_ball.params.g,
+            R=cue_ball.params.R,
+        )
+        assert actual == np.inf
+
+
+def test_parallel_rolling_balls_collide_from_quadratic_root_2d():
+    """The 2D detector handles finite roots when the quartic term is zero."""
+
+    table = Table.default()
+    cue = Cue.default()
+
+    cue_ball = _make_rolling_ball("cue", (table.w / 2, table.l / 4), velocity=2.0)
+    R = cue_ball.params.R
+    center_gap = 4 * R
+    one_ball = _make_rolling_ball(
+        "1",
+        (table.w / 2, table.l / 4 + center_gap),
+        velocity=1.0,
+    )
+
+    system = System(
+        cue=cue,
+        table=table,
+        balls={
+            "cue": cue_ball,
+            "1": one_ball,
+        },
+    )
+
+    expected = (center_gap - 2 * R) / (
+        cue_ball.state.rvw[1, 1] - one_ball.state.rvw[1, 1]
+    )
+
+    event = get_next_ball_ball_event(system, CollisionCache(), is_3d=False)
+    assert np.isclose(event.time, expected)
+
+
+@pytest.mark.parametrize(
+    ("cue_velocity", "one_velocity", "expected"),
+    [
+        (2.0, 1.0, 0.0),
+        (1.0, 1.0, np.inf),
+        (1.0, 2.0, np.inf),
+    ],
+)
+@pytest.mark.parametrize("is_3d", [True, False])
+def test_tangent_parallel_rolling_balls_only_collide_when_closing(
+    cue_velocity: float,
+    one_velocity: float,
+    expected: float,
+    is_3d: bool,
+):
+    table = Table.default()
+    cue = Cue.default()
+
+    cue_ball = _make_rolling_ball("cue", (0.0, 0.0), velocity=cue_velocity)
+    one_ball = _make_rolling_ball(
+        "1",
+        (0.0, 2 * cue_ball.params.R),
+        velocity=one_velocity,
+    )
+
+    system = System(
+        cue=cue,
+        table=table,
+        balls={
+            "cue": cue_ball,
+            "1": one_ball,
+        },
+    )
+
+    direct = ball_ball_collision_time_2d(
+        rvw1=cue_ball.state.rvw,
+        rvw2=one_ball.state.rvw,
+        s1=cue_ball.state.s,
+        s2=one_ball.state.s,
+        mu1=cue_ball.params.u_r,
+        mu2=one_ball.params.u_r,
+        m1=cue_ball.params.m,
+        m2=one_ball.params.m,
+        g1=cue_ball.params.g,
+        g2=one_ball.params.g,
+        R=cue_ball.params.R,
+    )
+    event = get_next_ball_ball_event(system, CollisionCache(), is_3d=is_3d)
+
+    if expected == np.inf:
+        assert direct == np.inf
+        assert event.time == np.inf
+    else:
+        assert direct == expected
+        assert event.time == expected
 
 
 def test_airborne_balls_colliding():
