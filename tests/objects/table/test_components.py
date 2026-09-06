@@ -75,6 +75,36 @@ def test_linear_segment_copy(lin_seg):
     assert lin_seg is copy
 
 
+@pytest.mark.parametrize(
+    "p1, p2",
+    [
+        ([0, 0, 0], [0, 1, 0]),
+        ([0, 0, 0], [1, 0, 0]),
+        ([0, 0, 0], [1, 1, 0]),
+        ([1, 1, 0], [0, 0, 0]),
+        ([2, -1, 0], [-3, 4, 0]),
+    ],
+)
+@pytest.mark.parametrize("side", [+1, -1])
+def test_linear_segment_get_normal_xy_points_toward_xyz(p1, p2, side):
+    seg = LinearCushionSegment(
+        "lt",
+        p1=np.array(p1, dtype=np.float64),
+        p2=np.array(p2, dtype=np.float64),
+        nose_radius=0.005,
+    )
+    axis = seg.p2 - seg.p1
+    perpendicular = np.array([-axis[1], axis[0], 0.0])
+    xyz = (seg.p1 + seg.p2) / 2 + side * 0.3 * perpendicular + np.array([0, 0, 0.5])
+
+    normal = seg.get_normal_xy(xyz)
+
+    assert normal[2] == 0
+    assert np.linalg.norm(normal) == pytest.approx(1)
+    assert np.dot(normal, axis) == pytest.approx(0)
+    assert np.dot(normal, side * perpendicular) > 0
+
+
 def test_circular_segment_creation():
     # center array is length three
     with pytest.raises(AssertionError):
