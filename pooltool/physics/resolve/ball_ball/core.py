@@ -318,8 +318,16 @@ def _constrain_to_table(
     separation set by :meth:`CoreBallBallCollision.make_kiss` survives intact. The
     deeper ball is lifted first, about the other ball's uncorrected position; the second
     lift then pivots on the first ball's corrected position. Each lift moves only one
-    ball, so the second cannot undo the first. The one exception is a pivot too far
-    from the table for any slide to reach height ``R``; see :func:`_lift_vertically`.
+    ball, so the second cannot undo the first.
+
+    A resting ball displaced by the fallback is the exception. Only the fallback can
+    move a resting ball vertically, and it does so along a line of centers that is
+    nearly vertical whenever the displacement is appreciable. Sliding the resting ball
+    back along the sphere would then trade a sub-micron height error for a horizontal
+    move of order ``sqrt(2 * target * dz)``, hundreds of times larger, teleporting a
+    ball that never moved. Instead the resting ball returns straight to the table and
+    the airborne ball, which is free to move, absorbs the correction; see
+    :func:`_lift_vertically`.
 
     Args:
         use_velocity:
@@ -338,7 +346,7 @@ def _constrain_to_table(
         mover, pivot = positions[i], positions[1 - i]
         R = balls[i].params.R
 
-        if abs(R - pivot[2]) > target:
+        if not use_velocity and balls[i].state.s != const.airborne:
             positions[i], positions[1 - i] = _lift_vertically(mover, pivot, target, R)
             continue
 
@@ -356,12 +364,13 @@ def _lift_vertically(
 ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     """Move ``mover`` straight to height ``R`` and re-space ``pivot`` along the line of centers.
 
-    Used when ``pivot`` is further than ``d`` above or below height ``R``, so that no
-    point at height ``R`` is within ``d`` of it and no slide along the sphere can
-    work. This arises when the fallback pushes a resting ball along a near-vertical
-    line of centers. A pivot that far from the table is airborne, so it is free to
-    move: it is placed at distance ``d`` from the lifted mover along the original
-    line of centers.
+    Used for a resting ball that the fallback pushed off the table. Its horizontal
+    position is left untouched and only its height is restored. The other ball must be
+    airborne (two resting balls share a horizontal line of centers and are never pushed
+    vertically), so it is free to move: it is placed at distance ``d`` from the lifted
+    mover along the original line of centers. This also covers the geometry where the
+    pivot sits more than ``d`` above the table, which no slide along the sphere could
+    solve.
     """
     lifted = mover * XY_MASK + R * Z_HAT
     return lifted, lifted + d * ptmath.unit_vector(pivot - lifted)

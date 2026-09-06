@@ -156,7 +156,7 @@ def test_fallback_restores_resting_ball_to_table(penetrance: float) -> None:
     MODEL.make_kiss(cb, ob)
 
     assert_kissing(cb, ob)
-    assert_on_table(ob)
+    assert ob.state.rvw[0, 2] == R
     assert cb.state.rvw[0, 2] >= R
 
 
@@ -216,13 +216,16 @@ def test_both_launched_balls_sink_and_are_both_lifted() -> None:
 
 
 def test_ball_directly_above_resting_ball() -> None:
-    """A vertical line of centers has no horizontal direction to preserve.
+    """A resting ball pulled up toward a ball directly overhead cannot be fixed on the sphere.
 
-    The descending ball is far enough away that the velocity correction shifts the
-    midpoint by more than 5x the spacer, so the fallback pushes the resting ball
-    straight down. Lifting it back pivots on a point directly above it, where the
-    plane of the centers is undefined; an arbitrary horizontal direction must be chosen
-    rather than producing a non-finite position.
+    The descending ball is separated by more than the target, and by enough that the
+    velocity correction shifts the midpoint by more than 5x the spacer, so the fallback
+    pulls the two balls together along the vertical line of centers. That lifts the
+    resting ball off the table and leaves the airborne ball more than a target distance
+    above it, so no point at resting height is within reach of the airborne ball and no
+    slide along the sphere can work. The resting ball must go straight back to the table
+    and the airborne ball must be re-spaced along the line of centers, rather than
+    producing a non-finite position.
     """
     ob = resting_ball()
     cb = make_ball((0.0, 0.0, R + 2 * R + 2e-5), vel=(0.0, 0.0, -1.0), s=airborne)
@@ -232,7 +235,7 @@ def test_ball_directly_above_resting_ball() -> None:
     assert np.all(np.isfinite(cb.state.rvw[0]))
     assert np.all(np.isfinite(ob.state.rvw[0]))
     assert_kissing(cb, ob)
-    assert_on_table(ob)
+    assert ob.state.rvw[0, 2] == R
     assert cb.state.rvw[0, 2] >= R
 
 
@@ -392,3 +395,43 @@ def test_separated_landing_ball_advanced_below_table_is_lifted() -> None:
     assert_on_table(cb)
     assert np.array_equal(ob.state.rvw[0], ob_before.state.rvw[0])
     assert_displaced_within_velocity_plane(cb_before, cb)
+
+
+def test_grazing_over_the_top_does_not_teleport_resting_ball() -> None:
+    """A ball clipping the top of a resting ball must not move the resting ball sideways.
+
+    The airborne ball flies horizontally over the resting ball, passing 0.2 mm off
+    center and clipping its top by 0.1 µm, and is detected with a nanometer of overlap.
+    The relative motion is nearly tangent to the sphere, so the straight-line correction
+    distance is hundreds of microns and the midpoint criterion sends the pair to the
+    fallback. The fallback pushes the resting ball half a spacer into the table along
+    the near-vertical line of centers. Recovering that height by sliding on the sphere
+    around a ball almost directly overhead would cost a horizontal move of order
+    sqrt(2 d dz), hundreds of times larger than the push. The resting ball must instead
+    be left where it was horizontally, with the airborne ball absorbing the correction.
+    The only horizontal motion allowed is the fallback's own push, which is bounded by
+    half the correction and so by the spacer.
+    """
+    off_center = 2e-4
+    clip_depth = 1e-7
+    overlap = 1e-9
+
+    ob = resting_ball()
+    closest_approach = 2 * R - clip_depth
+    height_above_ob = np.sqrt(closest_approach**2 - off_center**2)
+    y_at_detection = -np.sqrt((2 * R - overlap) ** 2 - closest_approach**2)
+    cb = make_ball(
+        (off_center, float(y_at_detection), R + float(height_above_ob)),
+        vel=(0.0, 1.0, 0.0),
+        s=airborne,
+    )
+    ob_before = ob.copy()
+
+    MODEL.make_kiss(cb, ob)
+
+    assert_kissing(cb, ob)
+    assert ob.state.rvw[0, 2] == R
+    horizontal_move = np.linalg.norm((ob.state.rvw[0] - ob_before.state.rvw[0])[:2])
+    assert horizontal_move <= MIN_DIST, (
+        f"resting ball teleported {horizontal_move * 1e6:.1f} µm horizontally"
+    )
