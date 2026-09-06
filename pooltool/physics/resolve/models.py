@@ -14,14 +14,19 @@ class BallBallModel(StrEnum):
                 - This physics of this model is blogged about at
                   https://ekiefl.github.io/2020/04/24/pooltool-theory/#1-elastic-instantaneous-frictionless
 
-        FRICTIONAL_INELASTIC:
+        FRICTIONAL_INELASTIC_3D:
             A simple ball-ball collision model including ball-ball friction, and
-            coefficient of restitution for equal-mass balls.
+            coefficient of restitution for equal-mass balls. Suitable for 3D simulation.
 
             Largely inspired by Dr. David Alciatore's technical proofs
             (https://billiards.colostate.edu/technical_proofs), in particular, TP_A-5, TP_A-6,
             and TP_A-14. These ideas have been extended to include motion of both balls, and a
             more complete analysis of velocity and angular velocity in their vector forms.
+
+        FRICTIONAL_INELASTIC_3D:
+            Same 3D collision math as ``IMPULSE_FRICTIONAL_INELASTIC_3D``, followed by a
+            clamp that zeros the vertical velocity component of the ball. Suitable for
+            2D simulation.
 
         FRICTIONAL_MATHAVAN:
             Ball-ball collision resolver for the Mathavan et al. (2014) collision model.
@@ -64,13 +69,12 @@ class BallLCushionModel(StrEnum):
             An instantaneous/non-smooth, impulse-based collision model. This model includes
             effects of tangential friction and normal coefficient of restitution. The full
             3D collision result is applied to the ball, including any vertical velocity
-            produced by the tilted contact normal. Suitable for a 3D simulation that
-            supports airborne motion.
+            produced by the tilted contact normal. Suitable for 3D simulation.
 
         IMPULSE_FRICTIONAL_INELASTIC_2D:
             Same 3D collision math as ``IMPULSE_FRICTIONAL_INELASTIC_3D``, followed by a
-            clamp that zeros the vertical velocity component of the ball. Suitable for a
-            2D simulation: the ball never leaves the table surface.
+            clamp that zeros the vertical velocity component of the ball. Suitable for
+            2D simulation.
 
         MATHAVAN_2010:
             Ball-cushion collision resolver for the Mathavan et al. (2010) collision model.
@@ -114,8 +118,8 @@ class BallLCushionModel(StrEnum):
 
         STRONGE_COMPLIANT_2D:
             Same 3D collision math as ``STRONGE_COMPLIANT_3D``, followed by a clamp that
-            zeros the vertical velocity component of the ball. Suitable for a 2D
-            simulation: the ball never leaves the table surface.
+            zeros the vertical velocity component of the ball. Suitable for 2D
+            simulation.
     """
 
     MATHAVAN_2010 = auto()
@@ -173,8 +177,7 @@ class StickBallModel(StrEnum):
         INSTANTANEOUS_POINT_3D:
             Instantaneous and point-like stick-ball interaction. The full 3D
             cue-strike result is applied to the ball, including any vertical
-            velocity produced by cue elevation. Suitable for a 3D simulation
-            that supports airborne motion.
+            velocity produced by cue elevation. Suitable for 3D simulation.
 
             A derivation can be found in Dr. Dave Billiard's technical proof
             A-30 (https://billiards.colostate.edu/technical_proofs/new/TP_A-30.pdf).
@@ -184,7 +187,7 @@ class StickBallModel(StrEnum):
         INSTANTANEOUS_POINT_2D:
             Same 3D cue-strike math as ``INSTANTANEOUS_POINT_3D``, followed by
             a clamp that zeros the vertical velocity component of the ball.
-            Suitable for a 2D simulation: the ball never leaves the table
+            Suitable for 2D simulation: the ball never leaves the table
             surface regardless of cue elevation.
     """
 
