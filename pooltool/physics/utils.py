@@ -11,7 +11,28 @@ from pooltool.ptmath.utils import coordinate_rotation, cross, norm3d, unit_vecto
 def surface_velocity_vw(
     v: NDArray[np.float64], w: NDArray[np.float64], d: NDArray[np.float64], R: float
 ) -> NDArray[np.float64]:
-    """Compute velocity of a point on ball's surface (specified by unit direction vector)"""
+    """Velocity of a point on the ball's surface.
+
+    ``d`` is a unit direction from the ball's center, and the point in question is
+    where that direction meets the surface. Its velocity is the ball's translational
+    velocity plus the rigid-body rotation term:
+
+        v + w x (R d)
+
+    This includes any component along ``d``, i.e. motion of the point into or away
+    from whatever it is touching. For the sliding component alone, see
+    :func:`tangent_surface_velocity_vw`.
+
+    Args:
+        v: Translational velocity of the ball's center.
+        w: Angular velocity of the ball.
+        d: Unit vector from the ball's center to the surface point.
+        R: Ball radius.
+
+    Returns:
+        NDArray[np.float64]:
+            Velocity of the surface point.
+    """
     return v + cross(w, R * d)
 
 
@@ -19,7 +40,20 @@ def surface_velocity_vw(
 def surface_velocity(
     rvw: NDArray[np.float64], d: NDArray[np.float64], R: float
 ) -> NDArray[np.float64]:
-    """Compute velocity of a point on ball's surface (specified by unit direction vector)"""
+    """Velocity of a point on the ball's surface, from the ball's kinematic state.
+
+    Unpacks ``v`` and ``w`` from ``rvw`` and delegates to
+    :func:`surface_velocity_vw`.
+
+    Args:
+        rvw: Kinematic state of the ball. See :class:`pooltool.objects.BallState`.
+        d: Unit vector from the ball's center to the surface point.
+        R: Ball radius.
+
+    Returns:
+        NDArray[np.float64]:
+            Velocity of the surface point.
+    """
     _, v, w = rvw
     return surface_velocity_vw(v, w, d, R)
 
@@ -28,7 +62,29 @@ def surface_velocity(
 def tangent_surface_velocity_vw(
     v: NDArray[np.float64], w: NDArray[np.float64], d: NDArray[np.float64], R: float
 ) -> NDArray[np.float64]:
-    """Compute velocity tangent to surface at a point on ball's surface (specified by unit direction vector)"""
+    """Velocity of a point on the ball's surface, projected onto the tangent plane.
+
+    Same as :func:`surface_velocity_vw` but with the component of ``v`` along ``d``
+    removed first:
+
+        (v - (v . d) d) + w x (R d)
+
+    The rotation term is already perpendicular to ``d``, so the result lies entirely
+    in the plane tangent to the surface at the point. This is the velocity with
+    which the surface point slides across a contacting body, with the approach or
+    separation speed along ``d`` discarded. It is the quantity that contact friction
+    acts on.
+
+    Args:
+        v: Translational velocity of the ball's center.
+        w: Angular velocity of the ball.
+        d: Unit vector from the ball's center to the surface point.
+        R: Ball radius.
+
+    Returns:
+        NDArray[np.float64]:
+            Tangential velocity of the surface point.
+    """
     v_t = v - np.sum(v * d) * d
     return v_t + cross(w, R * d)
 
@@ -37,7 +93,20 @@ def tangent_surface_velocity_vw(
 def tangent_surface_velocity(
     rvw: NDArray[np.float64], d: NDArray[np.float64], R: float
 ) -> NDArray[np.float64]:
-    """Compute velocity tangent to surface at a point on ball's surface (specified by unit direction vector)"""
+    """Tangential velocity of a surface point, from the ball's kinematic state.
+
+    Unpacks ``v`` and ``w`` from ``rvw`` and delegates to
+    :func:`tangent_surface_velocity_vw`.
+
+    Args:
+        rvw: Kinematic state of the ball. See :class:`pooltool.objects.BallState`.
+        d: Unit vector from the ball's center to the surface point.
+        R: Ball radius.
+
+    Returns:
+        NDArray[np.float64]:
+            Tangential velocity of the surface point.
+    """
     _, v, w = rvw
     return tangent_surface_velocity_vw(v, w, d, R)
 
@@ -46,7 +115,10 @@ def tangent_surface_velocity(
 def rel_velocity(rvw: NDArray[np.float64], R: float) -> NDArray[np.float64]:
     """Compute velocity of ball's point of contact with the cloth relative to the cloth
 
-    This vector is non-zero whenever the ball is sliding
+    This vector is non-zero whenever the ball is sliding.
+
+    Note:
+        - This is just the :func:`surface_velocity` called with ``d=[0,0,-1]``.
     """
     return surface_velocity(rvw, np.array([0.0, 0.0, -1.0], dtype=np.float64), R)
 
