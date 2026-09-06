@@ -25,20 +25,24 @@ from pooltool.ptmath.roots.core import (
 from pooltool.system.datatypes import Ball, System
 
 
-# @jit(nopython=True, cache=const.use_numba_cache)
+@jit(nopython=True, cache=const.use_numba_cache)
 def select_ball_ball_collision_root(
     sorted_real_positive_roots: NDArray[np.float64], p12: NDArray[np.float64]
 ):
     """Smallest positive real root for which the two balls are moving towards each other"""
 
-    v12: NDArray[np.float64] = np.array([p12[1], 0.5 * p12[2]])
+    v0 = p12[1]
+    v1 = 2 * p12[2]
 
     for t in sorted_real_positive_roots:
         p12_collision = p12[0] + p12[1] * t + p12[2] * t * t
-        v12_collision = v12[0] + v12[1] * t
+        v12_collision = v0 + v1 * t
+
         if np.dot(p12_collision, v12_collision) > 0:
             continue
+
         return t
+
     return np.inf
 
 
