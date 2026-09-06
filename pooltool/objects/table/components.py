@@ -143,19 +143,6 @@ class LinearCushionSegment:
         axis = self.p2 - self.p1
         return axis / ptmath.norm3d(axis)
 
-    @cached_property
-    def normal(self) -> NDArray[np.float64]:
-        """The line's normal vector, with the z-component zeroed prior to normalization.
-
-        Warning:
-            The returned normal vector is arbitrarily directed, meaning it may point
-            away from the table surface, rather than towards it. This nonideality is
-            properly handled in downstream simulation logic, however if you're using
-            this method for custom purposes, you may want to reverse the direction of
-            this vector by negating it.
-        """
-        return ptmath.unit_vector(np.array([self.lx, self.ly, 0]))
-
     def get_normal_xy(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
         """Calculates the normal vector for a ball contacting the cushion.
 
