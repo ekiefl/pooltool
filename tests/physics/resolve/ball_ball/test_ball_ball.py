@@ -4,6 +4,7 @@ import attrs
 import numpy as np
 import pytest
 
+import pooltool.constants as const
 from pooltool import ptmath
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.physics.resolve.ball_ball.core import BallBallCollisionStrategy
@@ -269,3 +270,24 @@ def test_low_relative_surface_velocity(
     assert ptmath.norm3d(cb_v_c_f - ob_v_c_f) < 1e-3, (
         "Final relative contact velocity should be zero"
     )
+
+
+def test_midair_collision_with_no_relative_velocity_stays_airborne():
+    """Two touching balls falling together are still airborne after being resolved.
+
+    Their relative velocity is zero, so the collision changes nothing but the spacing.
+    The final motion state must come from height as well as vertical velocity, or a
+    ball at rest in mid-air would be labeled sliding.
+    """
+    R = Ball.create("x").params.R
+    bottom = Ball.create("1", xy=(0.5, 0.5))
+    bottom.state.rvw[0, 2] = R + 0.3
+    bottom.state.s = const.airborne
+    top = Ball.create("cue", xy=(0.51, 0.5))
+    top.state.rvw[0, 2] = bottom.state.rvw[0, 2] + np.sqrt((2 * R) ** 2 - 0.01**2)
+    top.state.s = const.airborne
+
+    bottom_f, top_f = FrictionalInelastic3D().resolve(bottom, top, inplace=False)
+
+    assert bottom_f.state.s == const.airborne
+    assert top_f.state.s == const.airborne

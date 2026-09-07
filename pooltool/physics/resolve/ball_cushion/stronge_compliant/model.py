@@ -4,7 +4,6 @@ import attrs
 import numpy as np
 from numpy.typing import NDArray
 
-import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import (
@@ -21,14 +20,9 @@ from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
 from pooltool.physics.resolve.stronge_compliant import (
     resolve_collinear_compliant_frictional_inelastic_collision,
 )
-from pooltool.physics.utils import surface_velocity
+from pooltool.physics.utils import final_ball_motion_state, surface_velocity
 
 logger = logging.getLogger(__name__)
-
-
-# TODO: move to common place
-def final_ball_motion_state(rvw: NDArray[np.float64]) -> int:
-    return const.airborne if rvw[1, 2] != 0.0 else const.sliding
 
 
 def _solve(ball: Ball, cushion: Cushion, omega_ratio: float) -> NDArray[np.float64]:
@@ -135,7 +129,7 @@ class StrongeCompliantLinear3D(CoreBallLCushionCollision):
     ) -> tuple[Ball, LinearCushionSegment]:
         rvw = _solve(ball, cushion, self.omega_ratio)
         ball.state.rvw = rvw
-        ball.state.s = final_ball_motion_state(ball.state.rvw)
+        ball.state.s = final_ball_motion_state(ball.state.rvw, ball.params.R)
         return ball, cushion
 
 
@@ -154,7 +148,7 @@ class StrongeCompliantCircular3D(CoreBallCCushionCollision):
     ) -> tuple[Ball, CircularCushionSegment]:
         rvw = _solve(ball, cushion, self.omega_ratio)
         ball.state.rvw = rvw
-        ball.state.s = final_ball_motion_state(ball.state.rvw)
+        ball.state.s = final_ball_motion_state(ball.state.rvw, ball.params.R)
         return ball, cushion
 
 
@@ -177,7 +171,7 @@ class StrongeCompliantLinear2D(CoreBallLCushionCollision):
         rvw = _solve(ball, cushion, self.omega_ratio)
         rvw[1, 2] = 0.0
         ball.state.rvw = rvw
-        ball.state.s = const.sliding
+        ball.state.s = final_ball_motion_state(ball.state.rvw, ball.params.R)
         return ball, cushion
 
 
@@ -197,5 +191,5 @@ class StrongeCompliantCircular2D(CoreBallCCushionCollision):
         rvw = _solve(ball, cushion, self.omega_ratio)
         rvw[1, 2] = 0.0
         ball.state.rvw = rvw
-        ball.state.s = const.sliding
+        ball.state.s = final_ball_motion_state(ball.state.rvw, ball.params.R)
         return ball, cushion

@@ -4,13 +4,22 @@ from numpy.typing import NDArray
 
 from pooltool import constants as const
 
+ABS_OR_REL_CUTOFF = 1e-3
+"""Real-component magnitude above which ``ATOL`` judges realness, below which ``RTOL`` does."""
+
+RTOL = 1e-3
+"""Largest imaginary-to-real ratio for a small root to count as real."""
+
+ATOL = 1e-9
+"""Largest imaginary magnitude for a large root to count as real."""
+
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def is_real_number(
     number: np.complex128,
-    abs_or_rel_cutoff: float = 1e-3,
-    rtol: float = 1e-3,
-    atol: float = 1e-9,
+    abs_or_rel_cutoff: float,
+    rtol: float,
+    atol: float,
 ) -> np.bool:
     imag_mag = abs(number.imag)
     real_mag = abs(number.real)
@@ -24,9 +33,9 @@ def is_real_number(
 @jit(nopython=True, cache=const.use_numba_cache)
 def get_real_positive_smallest_root(
     roots: NDArray[np.complex128],
-    abs_or_rel_cutoff: float = 1e-3,
-    rtol: float = 1e-3,
-    atol: float = 1e-9,
+    abs_or_rel_cutoff: float,
+    rtol: float,
+    atol: float,
 ) -> float:
     """Returns the smallest positive and real root from a set of roots.
 
@@ -70,9 +79,9 @@ def get_real_positive_smallest_root(
 @jit(nopython=True, cache=const.use_numba_cache)
 def get_real_smallest_magnitude_root(
     roots: NDArray[np.complex128],
-    abs_or_rel_cutoff: float = 1e-3,
-    rtol: float = 1e-3,
-    atol: float = 1e-9,
+    abs_or_rel_cutoff: float,
+    rtol: float,
+    atol: float,
 ) -> float:
     """Returns the real root with smallest magnitude (closest to zero) from a set of roots.
 
@@ -107,9 +116,9 @@ def get_real_smallest_magnitude_root(
 @jit(nopython=True, cache=const.use_numba_cache)
 def get_real_positive_smallest_roots(
     roots: NDArray[np.complex128],
-    abs_or_rel_cutoff: float = 1e-3,
-    rtol: float = 1e-3,
-    atol: float = 1e-9,
+    abs_or_rel_cutoff: float,
+    rtol: float,
+    atol: float,
 ) -> NDArray[np.float64]:
     """Returns the smallest postive and real root for each set of roots.
 

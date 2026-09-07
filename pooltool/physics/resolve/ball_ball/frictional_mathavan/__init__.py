@@ -13,6 +13,7 @@ from pooltool.physics.resolve.ball_ball.friction import (
     BallBallFrictionStrategy,
 )
 from pooltool.physics.resolve.models import BallBallModel
+from pooltool.physics.utils import final_ball_motion_state
 
 INF = float("inf")
 Z_LOC = array([0, 0, 1], dtype=np.float64)
@@ -273,7 +274,7 @@ class FrictionalMathavan(CoreBallBallCollision):
             N=self.num_iterations,
         )
 
-        ball1.state = BallState(rvw1, const.sliding)
-        ball2.state = BallState(rvw2, const.sliding)
+        ball1.state = BallState(rvw1, final_ball_motion_state(rvw1, ball1.params.R))
+        ball2.state = BallState(rvw2, final_ball_motion_state(rvw2, ball2.params.R))
 
         return ball1, ball2

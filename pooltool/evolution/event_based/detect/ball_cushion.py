@@ -27,6 +27,9 @@ from pooltool.objects.table.components import LinearCushionSegment
 from pooltool.physics.utils import get_u_vec
 from pooltool.ptmath import quaternion_from_vector_to_vector
 from pooltool.ptmath.roots import (
+    ABS_OR_REL_CUTOFF,
+    ATOL,
+    RTOL,
     get_real_positive_smallest_root,
     is_real_number,
     quadratic,
@@ -37,7 +40,7 @@ from pooltool.system.datatypes import System
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def select_ball_linear_cushion_segment_collision_root(
-    sorted_real_positive_roots: NDArray[np.float64],
+    roots: NDArray[np.complex128],
     p: NDArray[np.float64],
     c: NDArray[np.float64],
     cushion_length: float,
@@ -45,39 +48,43 @@ def select_ball_linear_cushion_segment_collision_root(
     """Smallest root that is a genuine collision with the cushion.
 
     Works in the frame rotated so the cushion axis lies along +z. A root is kept only if
-    the contact point falls within the segment's z-extent and the ball is moving toward
-    the cushion. Roots are sorted ascending, so the first one passing both checks is
-    returned; ``np.inf`` if none do.
+    it is real and positive, the contact point falls within the segment's z-extent, and
+    the ball is moving toward the cushion. Returns ``np.inf`` if no root qualifies.
 
     Args:
-        sorted_real_positive_roots: Candidate collision times, ascending.
+        roots: Candidate collision times, as returned by the polynomial solver.
         p: Ball position polynomial ``p[0] + p[1] * t + p[2] * t**2`` in the rotated
             frame, as a ``(3, 3)`` array of ``(constant, linear, quadratic)`` rows.
         c: Cushion origin (``p1``) in the rotated frame; ``c[2]`` is the segment
             start and ``c[0:2]`` the nose circle center.
         cushion_length: Segment length along the axis.
     """
-
     start_z = c[2]
     end_z = start_z + cushion_length
-
     v0 = p[1]
     v1 = 2 * p[2]
 
-    for t in sorted_real_positive_roots:
+    min_time = np.inf
+    for i in range(len(roots)):
+        root = roots[i]
+        t = root.real
+        if t <= 0.0 or t >= min_time:
+            continue
+        if not is_real_number(root, ABS_OR_REL_CUTOFF, RTOL, ATOL):
+            continue
+
         p_collision = p[0] + p[1] * t + p[2] * t * t
         if not (start_z < p_collision[2] and p_collision[2] < end_z):
             continue
 
         xy_normal = p_collision[0:2] - c[0:2]
         v_collision = v0 + v1 * t
-
         if np.dot(xy_normal, v_collision[0:2]) > 0:
             continue
 
-        return t
+        min_time = t
 
-    return np.inf
+    return min_time
 
 
 def ball_linear_cushion_segment_collision_time(
@@ -118,12 +125,8 @@ def ball_linear_cushion_segment_collision_time(
     else:
         roots = quartic.solve(C[4], C[3], C[2], C[1], C[0])
 
-    sorted_real_positive_roots = np.array(
-        sorted(root.real for root in roots if is_real_number(root) and root.real > 0)
-    )
-
     return select_ball_linear_cushion_segment_collision_root(
-        sorted_real_positive_roots,
+        roots,
         p_rotated,
         cushion_origin_rotated,
         ptmath.norm3d(cushion.p2 - cushion.p1),
@@ -144,17 +147,29 @@ def ball_vertical_plane_collision_time(
     m: float,
     g: float,
     R: float,
+    nose_radius: float,
+    height: float,
 ) -> float:
     """Get time until collision between a ball and a vertical plane.
 
     For ball trajectories limited to the playing surface, this suffices for
-    detecting ball collisions with linear cushion segments.
+    detecting ball collisions with linear cushion segments. The cushion nose is a
+    cylinder of radius ``nose_radius`` whose axis lies at ``height``, so a ball resting
+    on the table touches it when the horizontal distance from its center to the
+    cushion line is ``sqrt((R + nose_radius)**2 - (height - R)**2)``, the same
+    geometry the cushion make_kiss enforces. Roots where the ball is moving away
+    from the cushion are discarded.
 
     Note:
         - This is broken for airborne balls.
     """
     if s == const.spinning or s == const.pocketed or s == const.stationary:
         return np.inf
+
+    contact_squared = (R + nose_radius) ** 2 - (height - R) ** 2
+    if contact_squared <= 0.0:
+        return np.inf
+    contact = np.sqrt(contact_squared)
 
     phi = ptmath.angle(rvw[1])
     v = ptmath.norm3d(rvw[1])
@@ -174,16 +189,16 @@ def ball_vertical_plane_collision_time(
     B = lx * bx + ly * by
 
     if direction == 0:
-        C = l0 + lx * cx + ly * cy + R * np.sqrt(lx * lx + ly * ly)
+        C = l0 + lx * cx + ly * cy + contact * np.sqrt(lx * lx + ly * ly)
         root1, root2 = ptmath.roots.quadratic.solve(A, B, C)
         roots = [root1, root2]
     elif direction == 1:
-        C = l0 + lx * cx + ly * cy - R * np.sqrt(lx * lx + ly * ly)
+        C = l0 + lx * cx + ly * cy - contact * np.sqrt(lx * lx + ly * ly)
         root1, root2 = ptmath.roots.quadratic.solve(A, B, C)
         roots = [root1, root2]
     else:
-        C1 = l0 + lx * cx + ly * cy + R * np.sqrt(lx * lx + ly * ly)
-        C2 = l0 + lx * cx + ly * cy - R * np.sqrt(lx * lx + ly * ly)
+        C1 = l0 + lx * cx + ly * cy + contact * np.sqrt(lx * lx + ly * ly)
+        C2 = l0 + lx * cx + ly * cy - contact * np.sqrt(lx * lx + ly * ly)
         root1, root2 = ptmath.roots.quadratic.solve(A, B, C1)
         root3, root4 = ptmath.roots.quadratic.solve(A, B, C2)
         roots = [root1, root2, root3, root4]
@@ -203,6 +218,14 @@ def ball_vertical_plane_collision_time(
         s_score = -np.dot(p1 - rvw_dtau[0], p2 - p1) / np.dot(p2 - p1, p2 - p1)
 
         if not (0 <= s_score <= 1):
+            continue
+
+        signed_distance = l0 + lx * rvw_dtau[0, 0] + ly * rvw_dtau[0, 1]
+        normal_speed = (lx * rvw_dtau[1, 0] + ly * rvw_dtau[1, 1]) / np.sqrt(
+            lx * lx + ly * ly
+        )
+        approach_speed = -np.sign(signed_distance) * normal_speed
+        if approach_speed <= const.EPS:
             continue
 
         min_time = min(min_time, root.real)
@@ -256,7 +279,9 @@ def ball_vertical_cylinder_collision_time(
         cx * a + cy * b
     )
 
-    return get_real_positive_smallest_root(quartic.solve(A, B, C, D, E))
+    return get_real_positive_smallest_root(
+        quartic.solve(A, B, C, D, E), ABS_OR_REL_CUTOFF, RTOL, ATOL
+    )
 
 
 def get_next_ball_linear_cushion_event(
@@ -298,6 +323,8 @@ def get_next_ball_linear_cushion_event(
                     m=params.m,
                     g=params.g,
                     R=params.R,
+                    nose_radius=cushion.nose_radius,
+                    height=cushion.height,
                 )
 
             cache[obj_ids] = shot.t + dtau_E

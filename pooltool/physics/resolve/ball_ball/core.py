@@ -10,23 +10,6 @@ from pooltool.objects.ball.datatypes import Ball
 from pooltool.physics.dimensionality import Dim
 
 
-# stolen from stick_ball/core.py
-# TODO: move to common place
-def final_ball_motion_state(rvw: NDArray[np.float64], R: float) -> int:
-    """Return the final (post-strike) motion state label.
-
-    If the z-velocity is non-zero the ball is considered airborne, otherwise
-    it is sliding (a struck ball is always kinetic).
-
-    Notes:
-        - A universal ``final_ball_motion_state`` fn could be a good idea.
-    """
-    if rvw[1, 2] != 0.0:
-        return const.airborne
-
-    return const.sliding
-
-
 class _BaseStrategy(Protocol):
     def make_kiss(self, ball1: Ball, ball2: Ball) -> tuple[Ball, Ball]: ...
 
@@ -262,7 +245,12 @@ def _velocity_positions(
     beta = 2 * np.dot(B, C)
     gamma = np.dot(C, C) - target**2
     roots_complex = ptmath.roots.quadratic.solve(alpha, beta, gamma)
-    t = ptmath.roots.get_real_smallest_magnitude_root(roots_complex)
+    t = ptmath.roots.get_real_smallest_magnitude_root(
+        roots_complex,
+        ptmath.roots.ABS_OR_REL_CUTOFF,
+        ptmath.roots.RTOL,
+        ptmath.roots.ATOL,
+    )
 
     if not np.isfinite(t):
         return False, r1, r2

@@ -142,6 +142,13 @@ class BallRender(Render):
         # allow transparency of shadow to change
         shadow_node.setTransparency(TransparencyAttrib.MAlpha)
 
+        # Shadows of different balls are coplanar on the table. If they wrote depth,
+        # whichever drew first at a pixel would block the other's layers there, and
+        # overlapping shadows would break up into patches. Without depth writes they
+        # blend into one combined shadow, while balls and table (which do write
+        # depth) still occlude them correctly.
+        shadow_node.setDepthWrite(False)
+
         for i, scale in enumerate(scales):
             shadow_layer = Global.loader.loadModel(panda_path(shadow_path))
             shadow_layer.reparentTo(shadow_node)

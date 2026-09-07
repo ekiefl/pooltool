@@ -7,11 +7,17 @@ from pathlib import Path
 import numpy as np
 
 import pooltool as pt
+from pooltool.evolution.engine import SimulationEngine
+from pooltool.physics.resolve import Resolver
 
 
 def main(args):
     if args.seed:
         np.random.seed(args.seed)
+
+    engine = SimulationEngine(
+        is_3d=args.three_d, resolver=Resolver.default(is_3d=args.three_d)
+    )
 
     if args.load:
         shot = pt.System.load(args.load)
@@ -34,7 +40,7 @@ def main(args):
         continuize_times = np.zeros(N)
 
         # Burn a run (numba cache loading)
-        pt.simulate(shot, continuous=True)
+        pt.simulate(shot, engine=engine, continuous=True)
 
         for i in range(N):
             # In what follows, copy beforehand and use inplace=True to avoid timing the
@@ -43,7 +49,7 @@ def main(args):
             copy = shot.copy()
 
             with pt.utils.TimeCode(quiet=True) as timer:
-                pt.simulate(copy, inplace=True)
+                pt.simulate(copy, engine=engine, inplace=True)
             simulate_times[i] = timer.time.total_seconds()
 
             with pt.utils.TimeCode(quiet=True) as timer:
@@ -80,20 +86,20 @@ def main(args):
 
         # Burn a run (numba cache loading)
         copy = shot.copy()
-        pt.simulate(copy, inplace=True)
+        pt.simulate(copy, engine=engine, inplace=True)
 
         run = pt.utils.Run()
         run.info("Profiling `simulate` and `continuize` (may take awhile)")
 
         with PProfile(Path("cachegrind.out.simulate")):
-            pt.simulate(shot, inplace=True)
+            pt.simulate(shot, engine=engine, inplace=True)
         with PProfile(Path("cachegrind.out.continuize")):
             pt.continuize(shot, inplace=True)
 
         sys.exit()
 
     # Evolve the shot
-    pt.simulate(shot, inplace=True)
+    pt.simulate(shot, engine=engine, inplace=True)
 
     if not args.no_viz:
         pt.show(shot)
@@ -120,6 +126,12 @@ if __name__ == "__main__":
         type=float,
         default=8,
         help="With what speed should the cue stick strike the cue ball?",
+    )
+    ap.add_argument(
+        "--3d",
+        dest="three_d",
+        action="store_true",
+        help="Simulate in 3D using the resolver_3d.yaml physics file",
     )
     ap.add_argument(
         "--seed",

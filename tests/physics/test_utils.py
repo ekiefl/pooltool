@@ -1,7 +1,9 @@
 import numpy as np
 import pytest
 
+import pooltool.constants as const
 from pooltool.physics.utils import (
+    final_ball_motion_state,
     get_airborne_time,
     surface_velocity,
     tangent_surface_velocity,
@@ -213,3 +215,43 @@ def test_smoke_test(v, w, d, expected_surface, expected_tangent):
 )
 def test_get_airborne_time(rvw, R, g, expected):
     assert np.isclose(get_airborne_time(rvw, R, g), expected)
+
+
+R_BALL = 0.028575
+
+
+def _rvw(z: float, v: tuple, w: tuple) -> np.ndarray:
+    return np.array([[0.0, 0.0, z], v, w], dtype=np.float64)
+
+
+@pytest.mark.parametrize(
+    "rvw, expected",
+    [
+        (_rvw(-0.1, (0, 0, 0), (0, 0, 0)), const.pocketed),
+        (_rvw(R_BALL, (1, 0, 0.5), (0, 0, 0)), const.airborne),
+        (_rvw(R_BALL, (0, 0, -0.5), (0, 0, 0)), const.airborne),
+        (_rvw(2 * R_BALL, (0, 0, 0), (0, 0, 0)), const.airborne),
+        (_rvw(R_BALL, (1, 0, 0), (0, 0, 0)), const.sliding),
+        (_rvw(R_BALL, (0, 0, 0), (0, 5, 0)), const.sliding),
+        (_rvw(R_BALL, (1, 0, 0), (0, 1 / R_BALL, 0)), const.rolling),
+        (_rvw(R_BALL, (1, 0, 0), (0, 1 / R_BALL, 3)), const.rolling),
+        (_rvw(R_BALL, (0, 0, 0), (0, 0, 3)), const.spinning),
+        (_rvw(R_BALL, (0, 0, 0), (0, 0, 0)), const.stationary),
+        (_rvw(R_BALL, (const.EPS / 2, 0, 0), (0, 0, const.EPS / 2)), const.stationary),
+    ],
+    ids=[
+        "below table is pocketed",
+        "upward velocity is airborne",
+        "downward velocity is airborne",
+        "above the table is airborne",
+        "translation without rotation slides",
+        "rotation without translation slides",
+        "matched rotation rolls",
+        "matched rotation with vertical spin rolls",
+        "vertical spin alone spins",
+        "no motion is stationary",
+        "sub-EPS motion is stationary",
+    ],
+)
+def test_final_ball_motion_state(rvw, expected):
+    assert final_ball_motion_state(rvw, R_BALL) == expected

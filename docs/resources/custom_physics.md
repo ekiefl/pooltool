@@ -23,7 +23,7 @@ Below details how you can either **(a)** plug in models that already exist in th
 
 This section guides you on how to switch between existing models within the codebase.
 
-By default, events are resolved according to the default resolver file, which is located at `~/.config/pooltool/physics/resolver.yaml`. Here's an example of what that looks like:
+By default, events are resolved according to the default resolver file, which is located at `~/.config/pooltool/physics/resolver.yaml`. When the **3D Physics** gameplay setting is enabled, the interface instead uses `~/.config/pooltool/physics/resolver_3d.yaml`, which holds the 3D counterparts of the same models. Here's an example of what the 2D file looks like:
 
 ```yaml
 ball_ball:

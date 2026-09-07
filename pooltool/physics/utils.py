@@ -4,7 +4,13 @@ from numpy.typing import NDArray
 
 import pooltool.constants as const
 from pooltool.ptmath.roots import quadratic
-from pooltool.ptmath.utils import coordinate_rotation, cross, norm3d, unit_vector
+from pooltool.ptmath.utils import (
+    coordinate_rotation,
+    cross,
+    norm2d,
+    norm3d,
+    unit_vector,
+)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -141,6 +147,51 @@ def get_u_vec(
 def on_table(rvw: NDArray[np.float64], R: float) -> bool:
     """True when the ball's center is at the table-plane height (z == R)."""
     return rvw[0, 2] == R
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def final_ball_motion_state(rvw: NDArray[np.float64], R: float) -> int:
+    """Classify a ball's motion state from its kinematics after a collision.
+
+    Collision resolvers produce a new kinematic state and need a motion state label to
+    accompany it. This assigns one from the kinematics alone: a ball below the table
+    plane is pocketed; a ball above it, or with any vertical velocity, is airborne; a
+    ball on the plane is sliding if its contact point moves relative to the cloth,
+    rolling if it translates without slipping, spinning if it only rotates about the
+    vertical, and stationary otherwise. Speeds at or below ``EPS`` count as zero.
+
+    For a ball on the table the answer is nearly always sliding, since an impulse
+    changes its velocity without matching its rotation. The other labels arise only
+    when the collision leaves the ball with no motion at all, e.g. an ideal stop shot.
+
+    This is not the transition machinery. Collision-less changes of motion state as a
+    ball decelerates are detected and resolved by
+    :mod:`pooltool.physics.resolve.transition`.
+
+    Args:
+        rvw: Kinematic state of the ball. See :class:`pooltool.objects.BallState`.
+        R: Ball radius.
+
+    Returns:
+        int:
+            One of the motion state labels in :mod:`pooltool.constants`.
+    """
+    if rvw[0, 2] < 0:
+        return const.pocketed
+
+    if rvw[1, 2] != 0.0 or not on_table(rvw, R):
+        return const.airborne
+
+    if norm3d(rel_velocity(rvw, R)) > const.EPS:
+        return const.sliding
+
+    if norm2d(rvw[1]) > const.EPS:
+        return const.rolling
+
+    if abs(rvw[2, 2]) > const.EPS:
+        return const.spinning
+
+    return const.stationary
 
 
 @jit(nopython=True, cache=const.use_numba_cache)

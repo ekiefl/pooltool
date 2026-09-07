@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import traceback
+from collections.abc import Callable
 from pathlib import Path
 
 import attrs
@@ -22,6 +23,7 @@ from pooltool.physics.resolve.ball_ball.friction import (
 )
 from pooltool.physics.resolve.ball_ball.frictional_inelastic import (
     FrictionalInelastic2D,
+    FrictionalInelastic3D,
 )
 from pooltool.physics.resolve.ball_cushion import (
     BallCCushionCollisionStrategy,
@@ -29,7 +31,9 @@ from pooltool.physics.resolve.ball_cushion import (
 )
 from pooltool.physics.resolve.ball_cushion.stronge_compliant.model import (
     StrongeCompliantCircular2D,
+    StrongeCompliantCircular3D,
     StrongeCompliantLinear2D,
+    StrongeCompliantLinear3D,
 )
 from pooltool.physics.resolve.ball_pocket import (
     BallPocketStrategy,
@@ -43,7 +47,10 @@ from pooltool.physics.resolve.serialize import register_serialize_hooks
 from pooltool.physics.resolve.stick_ball import (
     StickBallCollisionStrategy,
 )
-from pooltool.physics.resolve.stick_ball.instantaneous_point import InstantaneousPoint2D
+from pooltool.physics.resolve.stick_ball.instantaneous_point import (
+    InstantaneousPoint2D,
+    InstantaneousPoint3D,
+)
 from pooltool.physics.resolve.transition import (
     BallTransitionStrategy,
     CanonicalTransition,
@@ -53,7 +60,10 @@ from pooltool.system.datatypes import System
 from pooltool.utils import Run
 
 RESOLVER_PATH = pooltool.config.paths.PHYSICS_DIR / "resolver.yaml"
-"""The location of the resolver path YAML."""
+"""The location of the 2D resolver YAML."""
+
+RESOLVER_3D_PATH = pooltool.config.paths.PHYSICS_DIR / "resolver_3d.yaml"
+"""The location of the 3D resolver YAML."""
 
 VERSION: int = 13
 
@@ -62,7 +72,7 @@ run = Run()
 
 
 def default_resolver() -> Resolver:
-    """The default resolver.
+    """The default 2D resolver.
 
     This default resolver will be used and written to the resolver YAML if:
 
@@ -88,6 +98,40 @@ def default_resolver() -> Resolver:
         ),
         ball_pocket=CanonicalBallPocket(),
         stick_ball=InstantaneousPoint2D(
+            english_throttle=1.0,
+            squirt_throttle=1.0,
+        ),
+        ball_table=FrictionalInelasticTable(
+            min_bounce_height=0.005,
+        ),
+        transition=CanonicalTransition(),
+        version=VERSION,
+    )
+
+
+def default_resolver_3d() -> Resolver:
+    """The default 3D resolver.
+
+    The 3D counterpart of :func:`default_resolver`, with the same parameters but
+    strategies that keep vertical motion. It is written to `RESOLVER_3D_PATH` under
+    the same conditions.
+    """
+    return Resolver(
+        ball_ball=FrictionalInelastic3D(
+            friction=AlciatoreBallBallFriction(
+                a=0.009951,
+                b=0.108,
+                c=1.088,
+            ),
+        ),
+        ball_linear_cushion=StrongeCompliantLinear3D(
+            omega_ratio=1.8,
+        ),
+        ball_circular_cushion=StrongeCompliantCircular3D(
+            omega_ratio=1.8,
+        ),
+        ball_pocket=CanonicalBallPocket(),
+        stick_ball=InstantaneousPoint3D(
             english_throttle=1.0,
             squirt_throttle=1.0,
         ),
@@ -176,42 +220,53 @@ class Resolver:
         return conversion.structure_from(path, cls)
 
     @classmethod
-    def default(cls) -> Resolver:
-        """Load ~/.config/pooltool/physics/resolver.yaml if exists, create otherwise"""
+    def default(cls, is_3d: bool = False) -> Resolver:
+        """Load the resolver YAML for the requested dimensionality, creating it if absent.
 
-        if not RESOLVER_PATH.exists():
-            resolver = default_resolver()
-            resolver.save(RESOLVER_PATH)
+        The 2D resolver lives at `RESOLVER_PATH` and the 3D resolver at
+        `RESOLVER_3D_PATH`. A missing, malformed, or out-of-date file is replaced with
+        the corresponding default.
+        """
+        if is_3d:
+            return cls._load_or_reset(RESOLVER_3D_PATH, default_resolver_3d)
+
+        return cls._load_or_reset(RESOLVER_PATH, default_resolver)
+
+    @classmethod
+    def _load_or_reset(cls, path: Path, factory: Callable[[], Resolver]) -> Resolver:
+        if not path.exists():
+            resolver = factory()
+            resolver.save(path)
             return resolver
 
         try:
-            resolver = cls.load(RESOLVER_PATH)
+            resolver = cls.load(path)
         except ClassValidationError:
             full_traceback = traceback.format_exc()
-            dump_path = RESOLVER_PATH.parent / f".{RESOLVER_PATH.name}"
+            dump_path = path.parent / f".{path.name}"
             run.info(
-                f"{RESOLVER_PATH} is malformed and can't be loaded. It is being "
+                f"{path} is malformed and can't be loaded. It is being "
                 f"replaced with a default working version. Your version has been moved to "
                 f"{dump_path} if you want to diagnose it. Here is the error:\n{full_traceback}",
                 style="red",
             )
-            shutil.move(RESOLVER_PATH, dump_path)
-            resolver = default_resolver()
-            resolver.save(RESOLVER_PATH)
+            shutil.move(path, dump_path)
+            resolver = factory()
+            resolver.save(path)
 
         if resolver.version == VERSION:
             return resolver
         else:
-            dump_path = RESOLVER_PATH.parent / f".{RESOLVER_PATH.name}"
+            dump_path = path.parent / f".{path.name}"
             run.info(
-                f"{RESOLVER_PATH} has version {resolver.version}, which is not up to "
+                f"{path} has version {resolver.version}, which is not up to "
                 f"date with the most current version: {VERSION}. It will be replaced with the "
                 f"default. Your version has been moved to {dump_path}.",
                 style="yellow",
             )
-            shutil.move(RESOLVER_PATH, dump_path)
-            resolver = default_resolver()
-            resolver.save(RESOLVER_PATH)
+            shutil.move(path, dump_path)
+            resolver = factory()
+            resolver.save(path)
             return resolver
 
 

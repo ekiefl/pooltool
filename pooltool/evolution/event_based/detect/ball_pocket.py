@@ -9,7 +9,14 @@ import pooltool.ptmath as ptmath
 from pooltool.events import Event, EventType, ball_pocket_collision, null_event
 from pooltool.evolution.event_based.cache import CollisionCache
 from pooltool.physics.utils import get_airborne_time, get_u_vec
-from pooltool.ptmath.roots import get_real_positive_smallest_root, quadratic, quartic
+from pooltool.ptmath.roots import (
+    ABS_OR_REL_CUTOFF,
+    ATOL,
+    RTOL,
+    get_real_positive_smallest_root,
+    quadratic,
+    quartic,
+)
 from pooltool.system.datatypes import System
 
 
@@ -57,7 +64,9 @@ def ball_pocket_collision_time(
     D = bx * (cx - a) + by * (cy - b)
     E = 0.5 * (a * a + b * b + cx * cx + cy * cy - r * r) - (cx * a + cy * b)
 
-    return get_real_positive_smallest_root(quartic.solve(A, B, C, D, E))
+    return get_real_positive_smallest_root(
+        quartic.solve(A, B, C, D, E), ABS_OR_REL_CUTOFF, RTOL, ATOL
+    )
 
 
 @jit(nopython=True, cache=const.use_numba_cache)

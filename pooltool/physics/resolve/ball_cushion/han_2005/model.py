@@ -1,7 +1,6 @@
 import attrs
 import numpy as np
 
-import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.table.components import (
@@ -19,6 +18,7 @@ from pooltool.physics.resolve.ball_cushion.han_2005.properties import (
     get_ball_cushion_restitution,
 )
 from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
+from pooltool.physics.utils import final_ball_motion_state
 
 
 def han2005(rvw, xy_normal, R, m, h, e_c, f_c):
@@ -101,7 +101,7 @@ def _solve(ball: Ball, cushion: Cushion) -> tuple[Ball, Cushion]:
         f_c=ball.params.f_c,
     )
 
-    ball.state = BallState(rvw, const.sliding)
+    ball.state = BallState(rvw, final_ball_motion_state(rvw, ball.params.R))
 
     return ball, cushion
 
