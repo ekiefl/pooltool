@@ -8,26 +8,6 @@ import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.physics.dimensionality import Dim
-from pooltool.physics.utils import on_table
-
-
-# stolen from stick_ball/core.py
-# TODO: move to common place
-def final_ball_motion_state(rvw: NDArray[np.float64], R: float) -> int:
-    """Return the final (post-collision) motion state label.
-
-    If the z-velocity is non-zero or the ball is off the table surface it is
-    considered airborne, otherwise it is sliding (a struck ball is always kinetic).
-    The height test matters for balls that collide mid-air with no relative
-    velocity, e.g. two touching balls falling together.
-
-    Notes:
-        - A universal ``final_ball_motion_state`` fn could be a good idea.
-    """
-    if rvw[1, 2] != 0.0 or not on_table(rvw, R):
-        return const.airborne
-
-    return const.sliding
 
 
 class _BaseStrategy(Protocol):

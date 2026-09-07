@@ -10,9 +10,9 @@ from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.physics.resolve.ball_table.core import (
     CoreBallTableCollision,
     bounce_height,
-    final_ball_motion_state,
 )
 from pooltool.physics.resolve.models import BallTableModel
+from pooltool.physics.utils import final_ball_motion_state
 
 
 @jit(nopython=True, cache=const.use_numba_cache)

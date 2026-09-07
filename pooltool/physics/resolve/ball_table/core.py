@@ -1,13 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Protocol
 
-import numpy as np
-from numpy.typing import NDArray
-
-import pooltool.constants as const
 from pooltool.objects.ball.datatypes import Ball
-from pooltool.physics.utils import on_table, rel_velocity
-from pooltool.ptmath.utils import norm2d, norm3d
 
 
 def bounce_height(vz: float, g: float) -> float:
@@ -16,26 +10,6 @@ def bounce_height(vz: float, g: float) -> float:
     Measured as distance from table to bottom of ball.
     """
     return 0.5 * vz**2 / g
-
-
-def final_ball_motion_state(rvw: NDArray[np.float64], R: float) -> int:
-    """Return the final (post-collision) motion state label for a ball."""
-    if rvw[0, 2] < 0:
-        return const.pocketed
-
-    if rvw[1, 2] != 0.0 or not on_table(rvw, R):
-        return const.airborne
-
-    if norm3d(rel_velocity(rvw, R)) > const.EPS:
-        return const.sliding
-
-    if norm2d(rvw[1]) > const.EPS:
-        return const.rolling
-
-    if rvw[2, 2] != 0.0:
-        return const.spinning
-
-    return const.stationary
 
 
 class _BaseStrategy(Protocol):

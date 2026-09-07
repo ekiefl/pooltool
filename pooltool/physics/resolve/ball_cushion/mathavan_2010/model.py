@@ -18,6 +18,7 @@ from pooltool.physics.resolve.ball_cushion.core import (
     CoreBallLCushionCollision,
 )
 from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
+from pooltool.physics.utils import final_ball_motion_state
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -672,7 +673,7 @@ def solve_mathavan(
 
     rvw_final = ptmath.coordinate_rotation(rvw_R.T, -angle_to_rotate).T
 
-    ball.state = BallState(rvw_final, const.sliding)
+    ball.state = BallState(rvw_final, final_ball_motion_state(rvw_final, ball.params.R))
     return ball, cushion
 
 

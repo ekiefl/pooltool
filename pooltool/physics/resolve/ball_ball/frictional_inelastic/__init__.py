@@ -7,16 +7,13 @@ import pooltool.constants as const
 import pooltool.ptmath as ptmath
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.physics.dimensionality import Dim
-from pooltool.physics.resolve.ball_ball.core import (
-    CoreBallBallCollision,
-    final_ball_motion_state,
-)
+from pooltool.physics.resolve.ball_ball.core import CoreBallBallCollision
 from pooltool.physics.resolve.ball_ball.friction import (
     AlciatoreBallBallFriction,
     BallBallFrictionStrategy,
 )
 from pooltool.physics.resolve.models import BallBallModel
-from pooltool.physics.utils import surface_velocity_vw
+from pooltool.physics.utils import final_ball_motion_state, surface_velocity_vw
 
 
 def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
@@ -158,7 +155,7 @@ class FrictionalInelastic2D(FrictionalInelastic3D):
         # remove any z velocity components for 2D
         ball1.state.rvw[1, 2] = 0.0
         ball2.state.rvw[1, 2] = 0.0
-        ball1.state.s = const.sliding
-        ball2.state.s = const.sliding
+        ball1.state.s = final_ball_motion_state(ball1.state.rvw, ball1.params.R)
+        ball2.state.s = final_ball_motion_state(ball2.state.rvw, ball2.params.R)
 
         return ball1, ball2

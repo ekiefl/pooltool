@@ -6,11 +6,9 @@ from pooltool.objects.ball.datatypes import Ball, BallState
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve.models import StickBallModel
-from pooltool.physics.resolve.stick_ball.core import (
-    CoreStickBallCollision,
-    final_ball_motion_state,
-)
+from pooltool.physics.resolve.stick_ball.core import CoreStickBallCollision
 from pooltool.physics.resolve.stick_ball.squirt import get_squirt_angle
+from pooltool.physics.utils import final_ball_motion_state
 from pooltool.ptmath.utils import coordinate_rotation
 
 
