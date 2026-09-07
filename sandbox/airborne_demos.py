@@ -10,6 +10,7 @@ import argparse
 import attrs
 import numpy as np
 
+from pooltool import aim
 from pooltool import constants as const
 from pooltool.evolution.engine import SimulationEngine
 from pooltool.evolution.event_based.simulate import simulate
@@ -266,6 +267,66 @@ def cushion_lofts() -> System:
     return shot
 
 
+def jump_over_blocker(V0: float = 2.9, theta: float = 39.0) -> System:
+    """Cue ball jumps a blocking ball, lands, and cuts the object ball into a pocket.
+
+    The object ball sits on the diagonal into the top-right pocket. The cue ball is
+    placed so the shot is a 25 degree cut, with the blocker halfway along the cue
+    ball's path to the ghost-ball position. An elevated strike clears the blocker;
+    the cue ball lands short, skips into the object ball, and deflects away from the
+    pocket instead of following the object ball in.
+    """
+    table = Table.default()
+    pocket = table.pockets["rt"].center[:2]
+    R = Ball.create("cue").params.R
+
+    into_pocket = np.array([1.0, 1.0]) / np.sqrt(2)
+    object_xy = pocket - 0.35 * into_pocket
+    ghost_xy = object_xy - 2 * R * into_pocket
+
+    cut_deg = 25.0
+    approach = np.deg2rad(45.0 + cut_deg)
+    cue_xy = ghost_xy - 0.7 * np.array([np.cos(approach), np.sin(approach)])
+    blocker_xy = (cue_xy + ghost_xy) / 2
+
+    cue_ball = Ball.create("cue", xy=tuple(cue_xy))
+    blocker = Ball.create("2", xy=tuple(blocker_xy))
+    object_ball = Ball.create("1", xy=tuple(object_xy))
+
+    shot = System(
+        cue=Cue(cue_ball_id="cue"),
+        table=table,
+        balls=(cue_ball, blocker, object_ball),
+    )
+    shot.set_ballset(BallSet("pooltool_pocket"))
+    phi = aim.at_pos(shot, np.array([ghost_xy[0], ghost_xy[1], R]))
+    shot.strike(V0=V0, phi=phi, theta=theta, a=0.0, b=0.0)
+    return shot
+
+
+def cushion_drops() -> System:
+    """Eight balls dropped from rest straight onto a long cushion's nose.
+
+    The balls share a drop height and are spread along the first half of the table's
+    length. Their centers step from 5 mm inside the cushion line to 5 mm outside it,
+    skipping the dead-center drop, which bounces in place forever.
+    """
+    table = Table.default()
+    ys = np.linspace(0.15, 0.85, 8)
+    offsets = np.linspace(-0.005, 0.005, 8)
+
+    balls = []
+    for i, (y, offset) in enumerate(zip(ys, offsets)):
+        ball = Ball.create(str(i + 1), xy=(table.w + offset, y))
+        ball.state.rvw[0, 2] = ball.params.R + 0.3
+        ball.state.s = const.airborne
+        balls.append(ball)
+
+    shot = System(cue=Cue(cue_ball_id="1"), table=table, balls=balls)
+    shot.set_ballset(BallSet("pooltool_pocket"))
+    return shot
+
+
 _map = {
     "drop": drop,
     "impulse_into": impulse_into,
@@ -274,6 +335,8 @@ _map = {
     "drop_together": drop_together,
     "pocket_collision": airborne_pocket_collision,
     "cushion_lofts": cushion_lofts,
+    "jump_over_blocker": jump_over_blocker,
+    "cushion_drops": cushion_drops,
 }
 
 
