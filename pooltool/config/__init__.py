@@ -242,6 +242,19 @@ class GameplayConfig:
             display_type=DisplayType.CHECKBOX,
         ),
     )
+    three_dimensional: bool = settings_field(
+        default=False,
+        metadata=SettingsMetadata(
+            display_name="3D Physics",
+            description=(
+                "Simulate balls in three dimensions: elevated strikes launch the ball, "
+                "airborne balls bounce off the table, and cushion contacts respect the "
+                "nose height. Uses the resolver_3d.yaml physics file."
+            ),
+            category=SettingsCategory.GAMEPLAY,
+            display_type=DisplayType.CHECKBOX,
+        ),
+    )
     cue_collision: bool = settings_field(
         default=True,
         metadata=SettingsMetadata(

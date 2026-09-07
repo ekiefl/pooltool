@@ -2,10 +2,16 @@ import attrs
 import pytest
 
 import pooltool.constants as const
+import pooltool.physics.resolve.resolver as resolver_module
 from pooltool.error import SimulateError
 from pooltool.events import ball_linear_cushion_collision
+from pooltool.evolution.engine import SimulationEngine
 from pooltool.objects import Ball, LinearCushionSegment
-from pooltool.physics.resolve.resolver import default_resolver
+from pooltool.physics.resolve.resolver import (
+    Resolver,
+    default_resolver,
+    default_resolver_3d,
+)
 from pooltool.system.datatypes import System
 
 ON_TABLE_STATES = [const.stationary, const.spinning, const.sliding, const.rolling]
@@ -83,3 +89,19 @@ def test_resolve_allows_pocketed_ball_below_table(shot: System) -> None:
     resolve_rigged(shot, -0.1, const.pocketed)
 
     assert shot.balls["cue"].state.rvw[0, 2] == -0.1
+
+
+def test_default_resolvers_match_their_engine_dimensionality() -> None:
+    SimulationEngine(is_3d=False, resolver=default_resolver())
+    SimulationEngine(is_3d=True, resolver=default_resolver_3d())
+
+
+def test_default_3d_resolver_is_written_and_reloaded(tmp_path, monkeypatch) -> None:
+    path = tmp_path / "resolver_3d.yaml"
+    monkeypatch.setattr(resolver_module, "RESOLVER_3D_PATH", path)
+
+    created = Resolver.default(is_3d=True)
+
+    assert path.exists()
+    assert Resolver.default(is_3d=True) == created
+    assert created == default_resolver_3d()

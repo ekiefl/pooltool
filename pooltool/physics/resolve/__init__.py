@@ -19,6 +19,7 @@ from pooltool.physics.resolve.ball_pocket import (
     ball_pocket_models,
 )
 from pooltool.physics.resolve.resolver import (
+    RESOLVER_3D_PATH,
     RESOLVER_PATH,
     Resolver,
 )
@@ -75,6 +76,7 @@ def display_models():
 
 
 __all__ = [
+    "RESOLVER_3D_PATH",
     "RESOLVER_PATH",
     "Resolver",
 ]

@@ -8,7 +8,10 @@ from pooltool.ani.constants import rotate_downtime
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.config import settings
 from pooltool.evolution import simulate
+from pooltool.evolution.engine import SimulationEngine
+from pooltool.physics.resolve import Resolver
 from pooltool.system.datatypes import System, multisystem
 
 
@@ -83,8 +86,11 @@ class CalculateMode(BaseMode):
     def run_simulation(self, system: System, task):
         """Run a pool simulation"""
 
+        is_3d = settings.gameplay.three_dimensional
+        engine = SimulationEngine(is_3d=is_3d, resolver=Resolver.default(is_3d=is_3d))
         simulate(
             system,
+            engine=engine,
             continuous=True,
             inplace=True,
         )

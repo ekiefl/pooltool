@@ -27,6 +27,7 @@ from pooltool.physics.resolve.ball_table import (
     ball_table_models,
 )
 from pooltool.physics.resolve.resolver import (
+    RESOLVER_3D_PATH,
     RESOLVER_PATH,
     Resolver,
 )
@@ -51,6 +52,7 @@ from pooltool.physics.utils import (
 )
 
 __all__ = [
+    "RESOLVER_3D_PATH",
     "RESOLVER_PATH",
     "BallBallFrictionModel",
     "BallBallModel",
