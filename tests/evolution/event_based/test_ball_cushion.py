@@ -3,6 +3,7 @@ import pytest
 
 import pooltool.constants as const
 from pooltool.evolution.event_based.detect.ball_cushion import (
+    ball_linear_cushion_segment_collision_time,
     ball_vertical_plane_collision_time,
 )
 from pooltool.objects import Ball
@@ -81,3 +82,48 @@ def test_ball_inside_contact_band_moving_away_is_not_detected():
     ball.state.rvw[0, 0] = 1.0 - _contact_distance(ball, cushion) + 1e-4
 
     assert _collision_time(ball, cushion) == np.inf
+
+
+def _collision_time_3d(ball: Ball, cushion: LinearCushionSegment) -> float:
+    return ball_linear_cushion_segment_collision_time(ball, cushion)
+
+
+def test_3d_detection_matches_nose_cylinder_contact():
+    """The 3D detector also finds contact where the center meets the nose cylinder."""
+    cushion = _cushion(0.001)
+    ball = _ball(0.9, 1.0)
+
+    t = _collision_time_3d(ball, cushion)
+    rvw, _ = evolve_ball_motion(
+        ball.state.s,
+        ball.state.rvw,
+        ball.params.R,
+        ball.params.m,
+        ball.params.u_s,
+        ball.params.u_sp,
+        ball.params.u_r,
+        ball.params.g,
+        t,
+    )
+
+    assert 1.0 - rvw[0, 0] == pytest.approx(_contact_distance(ball, cushion))
+
+
+def test_3d_detection_ignores_the_line_beyond_the_segment():
+    """A ball aimed past the end of a finite segment never collides with it."""
+    cushion = _cushion(0.001)
+    ball = _ball(0.9, 1.0)
+    ball.state.rvw[0, 1] = 1.5
+
+    assert _collision_time_3d(ball, cushion) == np.inf
+
+
+def test_3d_detection_ignores_receding_airborne_ball_inside_nose_cylinder():
+    """An airborne ball just inside the nose cylinder and flying away never collides."""
+    cushion = _cushion(0.001)
+    ball = _ball(1.0, -1.0)
+    ball.state.rvw[0, 0] = 1.0 - (ball.params.R + cushion.nose_radius) + 1e-4
+    ball.state.rvw[0, 2] = cushion.height
+    ball.state.s = const.airborne
+
+    assert _collision_time_3d(ball, cushion) == np.inf

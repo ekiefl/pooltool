@@ -37,7 +37,7 @@ from pooltool.system.datatypes import System
 
 @jit(nopython=True, cache=const.use_numba_cache)
 def select_ball_linear_cushion_segment_collision_root(
-    sorted_real_positive_roots: NDArray[np.float64],
+    roots: NDArray[np.complex128],
     p: NDArray[np.float64],
     c: NDArray[np.float64],
     cushion_length: float,
@@ -45,39 +45,41 @@ def select_ball_linear_cushion_segment_collision_root(
     """Smallest root that is a genuine collision with the cushion.
 
     Works in the frame rotated so the cushion axis lies along +z. A root is kept only if
-    the contact point falls within the segment's z-extent and the ball is moving toward
-    the cushion. Roots are sorted ascending, so the first one passing both checks is
-    returned; ``np.inf`` if none do.
+    it is real and positive, the contact point falls within the segment's z-extent, and
+    the ball is moving toward the cushion. Returns ``np.inf`` if no root qualifies.
 
     Args:
-        sorted_real_positive_roots: Candidate collision times, ascending.
+        roots: Candidate collision times, as returned by the polynomial solver.
         p: Ball position polynomial ``p[0] + p[1] * t + p[2] * t**2`` in the rotated
             frame, as a ``(3, 3)`` array of ``(constant, linear, quadratic)`` rows.
         c: Cushion origin (``p1``) in the rotated frame; ``c[2]`` is the segment
             start and ``c[0:2]`` the nose circle center.
         cushion_length: Segment length along the axis.
     """
-
     start_z = c[2]
     end_z = start_z + cushion_length
-
     v0 = p[1]
     v1 = 2 * p[2]
 
-    for t in sorted_real_positive_roots:
+    min_time = np.inf
+    for i in range(len(roots)):
+        root = roots[i]
+        t = root.real
+        if t <= 0.0 or t >= min_time or not is_real_number(root):
+            continue
+
         p_collision = p[0] + p[1] * t + p[2] * t * t
         if not (start_z < p_collision[2] and p_collision[2] < end_z):
             continue
 
         xy_normal = p_collision[0:2] - c[0:2]
         v_collision = v0 + v1 * t
-
         if np.dot(xy_normal, v_collision[0:2]) > 0:
             continue
 
-        return t
+        min_time = t
 
-    return np.inf
+    return min_time
 
 
 def ball_linear_cushion_segment_collision_time(
@@ -118,12 +120,8 @@ def ball_linear_cushion_segment_collision_time(
     else:
         roots = quartic.solve(C[4], C[3], C[2], C[1], C[0])
 
-    sorted_real_positive_roots = np.array(
-        sorted(root.real for root in roots if is_real_number(root) and root.real > 0)
-    )
-
     return select_ball_linear_cushion_segment_collision_root(
-        sorted_real_positive_roots,
+        roots,
         p_rotated,
         cushion_origin_rotated,
         ptmath.norm3d(cushion.p2 - cushion.p1),
