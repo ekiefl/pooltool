@@ -27,6 +27,9 @@ from pooltool.objects.table.components import LinearCushionSegment
 from pooltool.physics.utils import get_u_vec
 from pooltool.ptmath import quaternion_from_vector_to_vector
 from pooltool.ptmath.roots import (
+    ABS_OR_REL_CUTOFF,
+    ATOL,
+    RTOL,
     get_real_positive_smallest_root,
     is_real_number,
     quadratic,
@@ -65,7 +68,9 @@ def select_ball_linear_cushion_segment_collision_root(
     for i in range(len(roots)):
         root = roots[i]
         t = root.real
-        if t <= 0.0 or t >= min_time or not is_real_number(root):
+        if t <= 0.0 or t >= min_time:
+            continue
+        if not is_real_number(root, ABS_OR_REL_CUTOFF, RTOL, ATOL):
             continue
 
         p_collision = p[0] + p[1] * t + p[2] * t * t
@@ -274,7 +279,9 @@ def ball_vertical_cylinder_collision_time(
         cx * a + cy * b
     )
 
-    return get_real_positive_smallest_root(quartic.solve(A, B, C, D, E))
+    return get_real_positive_smallest_root(
+        quartic.solve(A, B, C, D, E), ABS_OR_REL_CUTOFF, RTOL, ATOL
+    )
 
 
 def get_next_ball_linear_cushion_event(

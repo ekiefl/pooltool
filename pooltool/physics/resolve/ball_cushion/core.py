@@ -98,7 +98,12 @@ class CoreBallLCushionCollision(ABC):
         gamma = np.dot(q0_perp, q0_perp) - target**2
 
         roots_complex = ptmath.roots.quadratic.solve(alpha, beta, gamma)
-        t = ptmath.roots.get_real_smallest_magnitude_root(roots_complex)
+        t = ptmath.roots.get_real_smallest_magnitude_root(
+            roots_complex,
+            ptmath.roots.ABS_OR_REL_CUTOFF,
+            ptmath.roots.RTOL,
+            ptmath.roots.ATOL,
+        )
 
         if not np.isfinite(t):
             return _apply_fallback_positioning_linear(ball, cushion, spacer)
@@ -160,7 +165,12 @@ class CoreBallCCushionCollision(ABC):
         gamma = diff[0] ** 2 + diff[1] ** 2 - target**2
 
         roots_complex = ptmath.roots.quadratic.solve(alpha, beta, gamma)
-        t = ptmath.roots.get_real_smallest_magnitude_root(roots_complex)
+        t = ptmath.roots.get_real_smallest_magnitude_root(
+            roots_complex,
+            ptmath.roots.ABS_OR_REL_CUTOFF,
+            ptmath.roots.RTOL,
+            ptmath.roots.ATOL,
+        )
 
         if ptmath.norm3d(t * v) > FALLBACK_DISPLACEMENT_FACTOR * spacer:
             return _apply_fallback_positioning_circular(ball, cushion, spacer)

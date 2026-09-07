@@ -17,8 +17,14 @@ from pooltool.evolution.event_based.detect.quartic_coefficients import (
     parabola_sphere_distance_quartic_coefficients,
 )
 from pooltool.physics.utils import get_u_vec
-from pooltool.ptmath.roots import quadratic, quartic
-from pooltool.ptmath.roots.core import get_real_positive_smallest_root
+from pooltool.ptmath.roots import (
+    ABS_OR_REL_CUTOFF,
+    ATOL,
+    RTOL,
+    get_real_positive_smallest_root,
+    quadratic,
+    quartic,
+)
 from pooltool.system.datatypes import Ball, System
 
 
@@ -54,9 +60,13 @@ def ball_ball_collision_time(
     if C[4] == 0.0:
         # C[3] must also be 0.0, and this is a quadratic
         assert C[3] == 0.0
-        return get_real_positive_smallest_root(quadratic.solve(C[2], C[1], C[0]))
+        return get_real_positive_smallest_root(
+            quadratic.solve(C[2], C[1], C[0]), ABS_OR_REL_CUTOFF, RTOL, ATOL
+        )
 
-    return get_real_positive_smallest_root(quartic.solve(C[4], C[3], C[2], C[1], C[0]))
+    return get_real_positive_smallest_root(
+        quartic.solve(C[4], C[3], C[2], C[1], C[0]), ABS_OR_REL_CUTOFF, RTOL, ATOL
+    )
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -129,7 +139,9 @@ def ball_ball_collision_time_2d(
     d = 2 * Bx * Cx + 2 * By * Cy
     e = Cx * Cx + Cy * Cy - 4 * R * R
 
-    return get_real_positive_smallest_root(quartic.solve(a, b, c, d, e))
+    return get_real_positive_smallest_root(
+        quartic.solve(a, b, c, d, e), ABS_OR_REL_CUTOFF, RTOL, ATOL
+    )
 
 
 def get_next_ball_ball_event(
