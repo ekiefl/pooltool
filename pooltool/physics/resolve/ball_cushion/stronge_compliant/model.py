@@ -21,14 +21,22 @@ from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
 from pooltool.physics.resolve.stronge_compliant import (
     resolve_collinear_compliant_frictional_inelastic_collision,
 )
-from pooltool.physics.utils import surface_velocity
+from pooltool.physics.utils import on_table, surface_velocity
 
 logger = logging.getLogger(__name__)
 
 
 # TODO: move to common place
-def final_ball_motion_state(rvw: NDArray[np.float64]) -> int:
-    return const.airborne if rvw[1, 2] != 0.0 else const.sliding
+def final_ball_motion_state(rvw: NDArray[np.float64], R: float) -> int:
+    """Return the final (post-collision) motion state label.
+
+    If the z-velocity is non-zero or the ball is off the table surface it is
+    considered airborne, otherwise it is sliding (a struck ball is always kinetic).
+    """
+    if rvw[1, 2] != 0.0 or not on_table(rvw, R):
+        return const.airborne
+
+    return const.sliding
 
 
 def _solve(ball: Ball, cushion: Cushion, omega_ratio: float) -> NDArray[np.float64]:
@@ -135,7 +143,7 @@ class StrongeCompliantLinear3D(CoreBallLCushionCollision):
     ) -> tuple[Ball, LinearCushionSegment]:
         rvw = _solve(ball, cushion, self.omega_ratio)
         ball.state.rvw = rvw
-        ball.state.s = final_ball_motion_state(ball.state.rvw)
+        ball.state.s = final_ball_motion_state(ball.state.rvw, ball.params.R)
         return ball, cushion
 
 
@@ -154,7 +162,7 @@ class StrongeCompliantCircular3D(CoreBallCCushionCollision):
     ) -> tuple[Ball, CircularCushionSegment]:
         rvw = _solve(ball, cushion, self.omega_ratio)
         ball.state.rvw = rvw
-        ball.state.s = final_ball_motion_state(ball.state.rvw)
+        ball.state.s = final_ball_motion_state(ball.state.rvw, ball.params.R)
         return ball, cushion
 
 

@@ -8,18 +8,19 @@ import pooltool.constants as const
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.physics.dimensionality import Dim
+from pooltool.physics.utils import on_table
 
 
 def final_ball_motion_state(rvw: NDArray[np.float64], R: float) -> int:
     """Return the final (post-strike) motion state label.
 
-    If the z-velocity is non-zero the ball is considered airborne, otherwise
-    it is sliding (a struck ball is always kinetic).
+    If the z-velocity is non-zero or the ball is off the table surface it is
+    considered airborne, otherwise it is sliding (a struck ball is always kinetic).
 
     Notes:
         - A universal ``final_ball_motion_state`` fn could be a good idea.
     """
-    if rvw[1, 2] != 0.0:
+    if rvw[1, 2] != 0.0 or not on_table(rvw, R):
         return const.airborne
 
     return const.sliding

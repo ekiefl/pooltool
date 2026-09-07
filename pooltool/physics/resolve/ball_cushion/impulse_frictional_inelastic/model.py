@@ -26,11 +26,20 @@ from pooltool.physics.resolve.models import BallCCushionModel, BallLCushionModel
 from pooltool.physics.resolve.sphere_half_space_collision import (
     resolve_sphere_half_space_collision,
 )
+from pooltool.physics.utils import on_table
 
 
 # TODO: move to common place
-def final_ball_motion_state(rvw: NDArray[np.float64]) -> int:
-    return const.airborne if rvw[1, 2] != 0.0 else const.sliding
+def final_ball_motion_state(rvw: NDArray[np.float64], R: float) -> int:
+    """Return the final (post-collision) motion state label.
+
+    If the z-velocity is non-zero or the ball is off the table surface it is
+    considered airborne, otherwise it is sliding (a struck ball is always kinetic).
+    """
+    if rvw[1, 2] != 0.0 or not on_table(rvw, R):
+        return const.airborne
+
+    return const.sliding
 
 
 def _solve(ball: Ball, cushion: Cushion) -> NDArray[np.float64]:
@@ -110,7 +119,7 @@ class ImpulseFrictionalInelasticLinear3D(CoreBallLCushionCollision):
         self, ball: Ball, cushion: LinearCushionSegment
     ) -> tuple[Ball, LinearCushionSegment]:
         ball.state.rvw = _solve(ball, cushion)
-        ball.state.s = final_ball_motion_state(ball.state.rvw)
+        ball.state.s = final_ball_motion_state(ball.state.rvw, ball.params.R)
         return ball, cushion
 
 
@@ -135,5 +144,5 @@ class ImpulseFrictionalInelasticCircular3D(CoreBallCCushionCollision):
         self, ball: Ball, cushion: CircularCushionSegment
     ) -> tuple[Ball, CircularCushionSegment]:
         ball.state.rvw = _solve(ball, cushion)
-        ball.state.s = final_ball_motion_state(ball.state.rvw)
+        ball.state.s = final_ball_motion_state(ball.state.rvw, ball.params.R)
         return ball, cushion
