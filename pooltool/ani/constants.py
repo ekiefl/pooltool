@@ -40,6 +40,7 @@ ball_highlight = {
 }
 
 model_dir: Path = Path(pooltool.__file__).parent / "models"
+sound_dir: Path = Path(pooltool.__file__).parent / "sounds"
 
 logo_dir = Path(pooltool.__file__).parent / "logo"
 logo_paths = {

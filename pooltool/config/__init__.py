@@ -24,6 +24,7 @@ class SettingsCategory(StrEnum):
     # Members must match the `Settings` attribute names
     GRAPHICS = "graphics"
     GAMEPLAY = "gameplay"
+    AUDIO = "audio"
     SYSTEM = "system"
 
 
@@ -257,10 +258,33 @@ class GameplayConfig:
     )
 
 
+@attrs.define(kw_only=True)
+class AudioConfig:
+    enabled: bool = settings_field(
+        default=True,
+        metadata=SettingsMetadata(
+            display_name="Sound Effects",
+            description="Whether to play sounds for collisions during shot playback.",
+            category=SettingsCategory.AUDIO,
+            display_type=DisplayType.CHECKBOX,
+        ),
+    )
+    volume: float = settings_field(
+        default=1.0,
+        metadata=SettingsMetadata(
+            display_name="Volume",
+            description="Master volume for sound effects, from 0 to 1.",
+            category=SettingsCategory.AUDIO,
+            display_type=DisplayType.FLOAT,
+        ),
+    )
+
+
 @attrs.define
 class Settings:
     graphics: GraphicsConfig
     gameplay: GameplayConfig
+    audio: AudioConfig
     system: SystemConfig
 
     def save(self, path: Path) -> None:
@@ -275,6 +299,7 @@ class Settings:
         return cls(
             GraphicsConfig(),
             GameplayConfig(),
+            AudioConfig(),
             SystemConfig(),
         )
 

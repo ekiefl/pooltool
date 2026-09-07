@@ -4,8 +4,10 @@ from attrs import define
 from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
 from panda3d.direct import HideInterval, ShowInterval
 
+import pooltool.ani.sound as sound
 from pooltool.ani.environment import Environment
 from pooltool.ani.hud import hud
+from pooltool.config import settings
 from pooltool.evolution.continuous import continuize
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.render import CueRender
@@ -146,6 +148,10 @@ class ParallelModeManager:
                 )
                 if len(ball_animation) > 0:
                     all_ball_animations.append(ball_animation)
+
+        all_ball_animations.append(
+            controller.build_sound_sequence(multisystem[active_index])
+        )
 
         # Build stroke animation only for active system
         active_system_render = self.parallel_systems[active_index]
@@ -414,7 +420,8 @@ class SceneController:
         if was_paused:
             self.pause_animation()
 
-        self.shot_animation.set_t(curr_time / factor)
+        with sound.muted():
+            self.shot_animation.set_t(curr_time / factor)
 
     def offset_time(self, dt) -> None:
         old_t = self.shot_animation.get_t()
@@ -486,6 +493,26 @@ class SceneController:
         else:
             self.pause_animation()
 
+    def build_sound_sequence(self, system: System) -> Sequence:
+        """Build the sound effects for ``system``, timed to the ball animations.
+
+        Returns an empty sequence when sound effects are disabled in the settings.
+        """
+        if not settings.audio.enabled:
+            return Sequence()
+
+        return sound.build_sequence(
+            system.events, self.playback_speed, self.ball_animation_time
+        )
+
+    def ball_animation_time(self) -> float:
+        """Seconds of the shot animation elapsed since the cue strike, at playback speed.
+
+        The ball animations follow the stroke animation, so this is the shot animation
+        time offset by the stroke duration. It is negative while the stroke plays.
+        """
+        return self.shot_animation.get_t() - self.stroke_animation.get_duration()
+
     def build_shot_animation(
         self,
         animate_stroke: bool = True,
@@ -502,6 +529,8 @@ class SceneController:
             self.ball_animations.append(
                 ball.get_playback_sequence(playback_speed=self.playback_speed)
             )
+
+        self.ball_animations.append(self.build_sound_sequence(multisystem.active))
 
         if not animate_stroke:
             # Early return, skipping stroke trajectory

@@ -39,3 +39,7 @@ class SettingsMenu(BaseMenu):
                 entry["command"] = _fps_wrap(entry["command"])
 
             self.add_element(element)
+
+        self.add_header(MenuHeader.create(text="Audio"))
+        for element, _ in create_elements_from_dataclass(settings.audio):
+            self.add_element(element)
