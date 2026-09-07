@@ -104,7 +104,7 @@ class PocketTableSpecs:
 
     cushion_width: float = field(default=2 * 2.54 / 100)
     cushion_height: float = field(default=0.64 * 2 * 0.028575)
-    cushion_nose_radius: float = field(default=0.005)
+    cushion_nose_radius: float = field(default=0.001)
     corner_pocket_width: float = field(default=0.118)
     corner_pocket_angle: float = field(default=5.3)  # degrees
     corner_pocket_depth: float = field(default=0.0417)
@@ -140,7 +140,7 @@ class BilliardTableSpecs:
     w: float = field(default=1.42)
     cushion_width: float = field(default=2 * 2.54 / 100)
     cushion_height: float = field(default=0.037)
-    cushion_nose_radius: float = field(default=0.005)
+    cushion_nose_radius: float = field(default=0.001)
 
     # For visualization
     height: float = field(default=0.708)
@@ -176,7 +176,7 @@ class SnookerTableSpecs:
 
     cushion_width: float = field(default=1.55 * 25.4 / 1000)
     cushion_height: float = field(default=0.028)
-    cushion_nose_radius: float = field(default=0.005)
+    cushion_nose_radius: float = field(default=0.001)
     corner_pocket_width: float = field(default=0.083)
     corner_pocket_angle: float = field(default=0)
     corner_pocket_depth: float = field(default=0.036)

@@ -22,6 +22,10 @@ from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve.ball_ball.frictional_inelastic import (
     FrictionalInelastic3D,
 )
+from pooltool.physics.resolve.ball_cushion.stronge_compliant import (
+    StrongeCompliantCircular3D,
+    StrongeCompliantLinear3D,
+)
 from pooltool.physics.resolve.resolver import Resolver
 from pooltool.physics.resolve.stick_ball.instantaneous_point import (
     InstantaneousPoint3D,
@@ -35,8 +39,9 @@ def _build_3d_engine() -> SimulationEngine:
     Every resolver strategy that carries a ``dim`` tag is patched to
     ``Dim.BOTH`` so the engine constructs; the stick-ball strategy is
     swapped to ``InstantaneousPoint3D`` so cue elevation produces real
-    vertical velocity, and the ball-ball strategy to ``FrictionalInelastic3D`` so
-    collisions keep their vertical velocity component.
+    vertical velocity, the ball-ball strategy to ``FrictionalInelastic3D`` so
+    collisions keep their vertical velocity component, and the cushion strategies to
+    the Stronge 3D models so airborne balls rebound off the nose in 3D.
     """
     # Patches all defaults to dim.BOTH so the engine constructs
     resolver = Resolver.default()
@@ -48,6 +53,8 @@ def _build_3d_engine() -> SimulationEngine:
     # Replace all working 3D resolvers
     resolver.stick_ball = InstantaneousPoint3D()
     resolver.ball_ball = FrictionalInelastic3D()
+    resolver.ball_linear_cushion = StrongeCompliantLinear3D()
+    resolver.ball_circular_cushion = StrongeCompliantCircular3D()
 
     return SimulationEngine(resolver=resolver, is_3d=True)
 
@@ -230,6 +237,35 @@ def airborne_pocket_collision() -> System:
     return shot
 
 
+def cushion_lofts() -> System:
+    """Sixteen balls at one x coordinate, all moving +x at the same speed with increasing +z velocity.
+
+    The balls are spread along the table's length in two groups of eight, one per long
+    cushion segment, leaving a gap at the side pockets. The cue ball stays on the table;
+    the rest meet the cushion nose in the air at increasing heights.
+    """
+    table = Table.default()
+    x = 0.75
+    vx = 3.0
+    ys = np.concatenate((np.linspace(0.15, 0.85, 8), np.linspace(1.13, 1.83, 8)))
+    vzs = np.concatenate(([0.0], np.linspace(0.4, 0.85, 15)))
+    ids = ["cue"] + [str(i) for i in range(1, 16)]
+
+    balls = []
+    for ball_id, y, vz in zip(ids, ys, vzs):
+        ball = Ball.create(ball_id, xy=(x, y))
+        ball.state.rvw[1] = [vx, 0.0, vz]
+        if vz > 0:
+            ball.state.s = const.airborne
+        else:
+            ball.state.s = const.sliding
+        balls.append(ball)
+
+    shot = System(cue=Cue(cue_ball_id="cue"), table=table, balls=balls)
+    shot.set_ballset(BallSet("pooltool_pocket"))
+    return shot
+
+
 _map = {
     "drop": drop,
     "impulse_into": impulse_into,
@@ -237,6 +273,7 @@ _map = {
     "drop_onto_ball": drop_onto_ball,
     "drop_together": drop_together,
     "pocket_collision": airborne_pocket_collision,
+    "cushion_lofts": cushion_lofts,
 }
 
 
