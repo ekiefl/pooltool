@@ -19,6 +19,9 @@ from pooltool.objects.ball.sets import BallSet
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.datatypes import Table
 from pooltool.physics.dimensionality import Dim
+from pooltool.physics.resolve.ball_ball.frictional_inelastic import (
+    FrictionalInelastic3D,
+)
 from pooltool.physics.resolve.resolver import Resolver
 from pooltool.physics.resolve.stick_ball.instantaneous_point import (
     InstantaneousPoint3D,
@@ -32,7 +35,8 @@ def _build_3d_engine() -> SimulationEngine:
     Every resolver strategy that carries a ``dim`` tag is patched to
     ``Dim.BOTH`` so the engine constructs; the stick-ball strategy is
     swapped to ``InstantaneousPoint3D`` so cue elevation produces real
-    vertical velocity.
+    vertical velocity, and the ball-ball strategy to ``FrictionalInelastic3D`` so
+    collisions keep their vertical velocity component.
     """
     # Patches all defaults to dim.BOTH so the engine constructs
     resolver = Resolver.default()
@@ -43,6 +47,7 @@ def _build_3d_engine() -> SimulationEngine:
 
     # Replace all working 3D resolvers
     resolver.stick_ball = InstantaneousPoint3D()
+    resolver.ball_ball = FrictionalInelastic3D()
 
     return SimulationEngine(resolver=resolver, is_3d=True)
 
@@ -89,6 +94,57 @@ def jump() -> System:
         cue=cue,
         table=Table.default(),
         balls=(ball,),
+    )
+
+
+def drop_onto_ball() -> System:
+    """A ball at rest directly beneath a second ball dropped from 0.25 m above it."""
+    bottom = Ball.create("1", xy=(0.5, 0.5))
+
+    top = Ball.create("cue", xy=(0.52, 0.5))
+    top.state.rvw[0, 2] = 3 * top.params.R + 0.5
+    top.state.s = const.airborne
+
+    return System(
+        cue=Cue(cue_ball_id="cue"),
+        table=Table.default(),
+        balls=(bottom, top),
+    )
+
+
+def drop_together() -> System:
+    """Two touching balls dropped together from rest, the top one offset 2 cm sideways.
+
+    The pair falls as a unit until the bottom ball meets the table. The tilted line of
+    centers then sends the top ball off to the side. Exhibits an exected event order.
+    """
+    offset = 0.01
+    drop_height = 0.3
+
+    bottom1 = Ball.create("1", xy=(0.5, 0.5))
+    bottom1.state.rvw[0, 2] = bottom1.params.R + drop_height
+    bottom1.state.s = const.airborne
+
+    R = bottom1.params.R
+    top1 = Ball.create("cue", xy=(0.5 + offset, 0.5))
+    top1.state.rvw[0, 2] = (
+        bottom1.state.rvw[0, 2] + np.sqrt((2 * R) ** 2 - offset**2) + 0.1
+    )
+    top1.state.s = const.airborne
+
+    bottom2 = Ball.create("3", xy=(0.5, 0.7))
+    bottom2.state.rvw[0, 2] = bottom2.params.R + drop_height
+    bottom2.state.s = const.airborne
+
+    R = bottom2.params.R
+    top2 = Ball.create("4", xy=(0.5 + offset, 0.7))
+    top2.state.rvw[0, 2] = bottom2.state.rvw[0, 2] + np.sqrt((2 * R) ** 2 - offset**2)
+    top2.state.s = const.airborne
+
+    return System(
+        cue=Cue(cue_ball_id="cue"),
+        table=Table.default(),
+        balls=(bottom1, top1, bottom2, top2),
     )
 
 
@@ -178,6 +234,8 @@ _map = {
     "drop": drop,
     "impulse_into": impulse_into,
     "jump": jump,
+    "drop_onto_ball": drop_onto_ball,
+    "drop_together": drop_together,
     "pocket_collision": airborne_pocket_collision,
 }
 
@@ -185,7 +243,7 @@ _map = {
 def main(name: str) -> None:
     engine = _build_3d_engine()
     shot = _map[name]()
-    simulate(shot, engine=engine, inplace=True)
+    simulate(shot, engine=engine, inplace=True, max_events=5000)
     show(shot)
 
 
