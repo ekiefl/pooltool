@@ -327,6 +327,24 @@ def cushion_drops() -> System:
     return shot
 
 
+def bouncing_collision() -> System:
+    """A jump-shot cue ball that is still bouncing when it reaches the object ball.
+
+    The cue ball is struck at 31 degrees of elevation toward an object ball 40 cm away,
+    so it meets the object ball somewhere in its hop rather than on the cloth.
+    """
+    cue_ball = Ball.create("cue", xy=(0.5, 0.5))
+    one_ball = Ball.create("1", xy=(0.5, 0.9))
+    cue = Cue(cue_ball_id="cue")
+    cue.set_state(V0=2.25, phi=90.0, theta=31.0, a=0.0, b=0.0)
+
+    return System(
+        cue=cue,
+        table=Table.default(),
+        balls=(cue_ball, one_ball),
+    )
+
+
 _map = {
     "drop": drop,
     "impulse_into": impulse_into,
@@ -337,6 +355,7 @@ _map = {
     "cushion_lofts": cushion_lofts,
     "jump_over_blocker": jump_over_blocker,
     "cushion_drops": cushion_drops,
+    "bouncing_collision": bouncing_collision,
 }
 
 
