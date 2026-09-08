@@ -1,13 +1,12 @@
 import numpy as np
 import pytest
-import quaternion
 
 from pooltool.ptmath.utils import (
     angle_between_vectors,
     are_points_on_same_side,
     decompose_normal_tangent,
-    quaternion_from_vector_to_vector,
     rotation_from_vector_to_vector,
+    rotation_matrix_from_vector_to_vector,
     solve_transcendental,
 )
 
@@ -153,34 +152,73 @@ def test_rotation_from_vector_to_vector():
     assert np.allclose(np.linalg.norm(rotated_unit), 1.0)
 
 
-def test_quaternion_from_vector_to_vector():
-    # Test rotation from x-axis to y-axis
-    v1 = np.array([1.0, 0.0, 0.0])
-    v2 = np.array([0.0, 1.0, 0.0])
-    q = quaternion_from_vector_to_vector(v1, v2)
+@pytest.mark.parametrize(
+    "a, b",
+    [
+        # x-axis to y-axis, a 90 degree rotation about z
+        (np.array([1.0, 0.0, 0.0]), np.array([0.0, 1.0, 0.0])),
+        # Parallel vectors of different length, should give the identity
+        (np.array([1.0, 0.0, 0.0]), np.array([2.0, 0.0, 0.0])),
+        # Generic non-unit vectors
+        (np.array([1.0, 2.0, 3.0]), np.array([4.0, 5.0, 6.0])),
+        # x-axis to z-axis, orthogonal vectors
+        (np.array([1.0, 0.0, 0.0]), np.array([0.0, 0.0, 1.0])),
+        # Antiparallel along a coordinate axis, cross product is exactly zero
+        (np.array([0.0, 0.0, 1.0]), np.array([0.0, 0.0, -1.0])),
+        # Antiparallel off-axis, exercises the perpendicular axis selection
+        (np.array([0.3, -0.4, 0.5]), np.array([-0.6, 0.8, -1.0])),
+        # Nearly parallel, a small but non-degenerate rotation
+        (np.array([1.0, 0.0, 0.0]), np.array([1.0, 1e-3, 0.0])),
+    ],
+)
+def test_rotation_matrix_from_vector_to_vector(a, b):
+    m = rotation_matrix_from_vector_to_vector(a, b)
 
-    # Check that it's a valid unit quaternion
-    assert pytest.approx(np.linalg.norm(quaternion.as_float_array(q))) == 1.0
+    assert m @ m.T == pytest.approx(np.eye(3))
+    assert np.linalg.det(m) == pytest.approx(1.0)
 
-    # Test parallel vectors (should give identity quaternion)
-    v1 = np.array([1.0, 0.0, 0.0])
-    v2 = np.array([2.0, 0.0, 0.0])
-    q = quaternion_from_vector_to_vector(v1, v2)
+    rotated = m @ a
+    assert rotated / np.linalg.norm(rotated) == pytest.approx(b / np.linalg.norm(b))
+    assert m.T @ rotated == pytest.approx(a)
 
-    # For parallel vectors, should be close to identity quaternion (1, 0, 0, 0)
-    # The real part should be close to 1
-    assert pytest.approx(abs(q.w)) == 1.0
 
-    # Test that quaternion has unit magnitude
-    v1 = np.array([1.0, 2.0, 3.0])
-    v2 = np.array([4.0, 5.0, 6.0])
-    q = quaternion_from_vector_to_vector(v1, v2)
-    assert pytest.approx(np.linalg.norm(quaternion.as_float_array(q))) == 1.0
+def _rotation_matrix_via_arccos(a, b):
+    """Rodrigues' formula with the angle recovered from arccos of the dot product.
 
-    # Test orthogonal vectors
-    v1 = np.array([1.0, 0.0, 0.0])
-    v2 = np.array([0.0, 0.0, 1.0])
-    q = quaternion_from_vector_to_vector(v1, v2)
+    This is the textbook construction. It is kept here only to demonstrate its loss
+    of precision for small angles, which motivates the sine-cosine formulation used
+    by rotation_matrix_from_vector_to_vector.
+    """
+    angle = np.arccos(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
+    axis = np.cross(a, b)
+    axis = axis / np.linalg.norm(axis)
+    K = np.array(
+        [
+            [0.0, -axis[2], axis[1]],
+            [axis[2], 0.0, -axis[0]],
+            [-axis[1], axis[0], 0.0],
+        ]
+    )
+    return np.eye(3) + np.sin(angle) * K + (1.0 - np.cos(angle)) * K @ K
 
-    # For 90 degree rotation, real part should be cos(pi/4) = sqrt(2)/2
-    assert pytest.approx(abs(q.w), abs=1e-10) == np.sqrt(2) / 2
+
+@pytest.mark.parametrize("small_angle", [1e-8, 1e-9, 1e-10])
+def test_rotation_matrix_small_angle_precision(small_angle):
+    """Rotating a onto a nearly parallel b must be accurate for tiny angles.
+
+    Below roughly 1e-8 radians the cosine of the angle rounds to exactly 1.0, so
+    arccos returns 0 and the textbook construction loses the rotation entirely.
+    Taking sine and cosine directly from the cross and dot products has no such loss.
+    """
+    a = np.array([1.0, 0.0, 0.0])
+    b = np.array([np.cos(small_angle), np.sin(small_angle), 0.0])
+
+    def direction_error(m):
+        rotated = m @ a
+        return np.abs(rotated / np.linalg.norm(rotated) - b).max()
+
+    arccos_error = direction_error(_rotation_matrix_via_arccos(a, b))
+    direct_error = direction_error(rotation_matrix_from_vector_to_vector(a, b))
+
+    assert arccos_error == pytest.approx(small_angle)
+    assert direct_error < 1e-15
