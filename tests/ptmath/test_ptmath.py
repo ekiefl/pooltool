@@ -180,3 +180,45 @@ def test_rotation_matrix_from_vector_to_vector(a, b):
     rotated = m @ a
     assert rotated / np.linalg.norm(rotated) == pytest.approx(b / np.linalg.norm(b))
     assert m.T @ rotated == pytest.approx(a)
+
+
+def _rotation_matrix_via_arccos(a, b):
+    """Rodrigues' formula with the angle recovered from arccos of the dot product.
+
+    This is the textbook construction. It is kept here only to demonstrate its loss
+    of precision for small angles, which motivates the sine-cosine formulation used
+    by rotation_matrix_from_vector_to_vector.
+    """
+    angle = np.arccos(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
+    axis = np.cross(a, b)
+    axis = axis / np.linalg.norm(axis)
+    K = np.array(
+        [
+            [0.0, -axis[2], axis[1]],
+            [axis[2], 0.0, -axis[0]],
+            [-axis[1], axis[0], 0.0],
+        ]
+    )
+    return np.eye(3) + np.sin(angle) * K + (1.0 - np.cos(angle)) * K @ K
+
+
+@pytest.mark.parametrize("small_angle", [1e-8, 1e-9, 1e-10])
+def test_rotation_matrix_small_angle_precision(small_angle):
+    """Rotating a onto a nearly parallel b must be accurate for tiny angles.
+
+    Below roughly 1e-8 radians the cosine of the angle rounds to exactly 1.0, so
+    arccos returns 0 and the textbook construction loses the rotation entirely.
+    Taking sine and cosine directly from the cross and dot products has no such loss.
+    """
+    a = np.array([1.0, 0.0, 0.0])
+    b = np.array([np.cos(small_angle), np.sin(small_angle), 0.0])
+
+    def direction_error(m):
+        rotated = m @ a
+        return np.abs(rotated / np.linalg.norm(rotated) - b).max()
+
+    arccos_error = direction_error(_rotation_matrix_via_arccos(a, b))
+    direct_error = direction_error(rotation_matrix_from_vector_to_vector(a, b))
+
+    assert arccos_error == pytest.approx(small_angle)
+    assert direct_error < 1e-15

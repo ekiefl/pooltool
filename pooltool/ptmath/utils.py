@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from math import acos, cos, sin, sqrt
+from math import sqrt
 
 import numpy as np
 import scipy.spatial.transform as sp_tf
@@ -224,6 +224,10 @@ def rotation_matrix_from_vector_to_vector(
 
     (just-in-time compiled)
 
+    Uses Rodrigues' formula with the sine and cosine of the rotation angle taken
+    directly from the cross and dot products, which stays accurate for arbitrarily
+    small angles where an arccos-based angle loses precision.
+
     The inverse rotation is the transpose of the returned matrix. Antiparallel
     vectors yield a 180 degree rotation about an axis perpendicular to a.
 
@@ -234,36 +238,31 @@ def rotation_matrix_from_vector_to_vector(
     Returns:
         A 3x3 rotation matrix such that ``m @ a`` is parallel to ``b``.
     """
-    cos_angle = (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / (norm3d(a) * norm3d(b))
-    cos_angle = min(1.0, max(-1.0, cos_angle))
-    axis = cross(a, b)
-    if norm3d(axis) == 0.0 and cos_angle < 0.0:
-        axis = _perpendicular_vector(a)
-    axis = unit_vector(axis, True)
-    h = axis * acos(cos_angle) / 2.0
-    h_norm = norm3d(h)
-    if h_norm > 1e-14:
-        s = sin(h_norm) / h_norm
-        w = cos(h_norm)
-        x = s * h[0]
-        y = s * h[1]
-        z = s * h[2]
+    norm_product = norm3d(a) * norm3d(b)
+    v = cross(a, b)
+    v_norm = norm3d(v)
+    c = (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / norm_product
+    if v_norm == 0.0:
+        if c > 0.0:
+            return np.eye(3)
+        k = _perpendicular_vector(a)
+        k = k / norm3d(k)
+        s = 0.0
+        c = -1.0
     else:
-        w = 1.0
-        x = 0.0
-        y = 0.0
-        z = 0.0
-    n = w * w + x * x + y * y + z * z
+        k = v / v_norm
+        s = v_norm / norm_product
+    t = 1.0 - c
     m = np.empty((3, 3))
-    m[0, 0] = 1.0 - 2 * (y * y + z * z) / n
-    m[0, 1] = 2 * (x * y - z * w) / n
-    m[0, 2] = 2 * (x * z + y * w) / n
-    m[1, 0] = 2 * (x * y + z * w) / n
-    m[1, 1] = 1.0 - 2 * (x * x + z * z) / n
-    m[1, 2] = 2 * (y * z - x * w) / n
-    m[2, 0] = 2 * (x * z - y * w) / n
-    m[2, 1] = 2 * (y * z + x * w) / n
-    m[2, 2] = 1.0 - 2 * (x * x + y * y) / n
+    m[0, 0] = c + t * k[0] * k[0]
+    m[0, 1] = t * k[0] * k[1] - s * k[2]
+    m[0, 2] = t * k[0] * k[2] + s * k[1]
+    m[1, 0] = t * k[0] * k[1] + s * k[2]
+    m[1, 1] = c + t * k[1] * k[1]
+    m[1, 2] = t * k[1] * k[2] - s * k[0]
+    m[2, 0] = t * k[0] * k[2] - s * k[1]
+    m[2, 1] = t * k[1] * k[2] + s * k[0]
+    m[2, 2] = c + t * k[2] * k[2]
     return m
 
 
