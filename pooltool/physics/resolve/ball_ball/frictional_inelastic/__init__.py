@@ -1,6 +1,5 @@
 import attrs
 import numpy as np
-import quaternion
 from numba import jit
 
 import pooltool.constants as const
@@ -19,18 +18,14 @@ from pooltool.physics.utils import final_ball_motion_state, surface_velocity_vw
 def _resolve_ball_ball(rvw1, rvw2, R, u_b, e_b):
     unit_x = np.array([1.0, 0.0, 0.0])
     delta_centers = rvw2[0] - rvw1[0]
-    frame_rotation = ptmath.quaternion_from_vector_to_vector(delta_centers, unit_x)
-    v1_prime, w1_prime = quaternion.rotate_vectors(frame_rotation, rvw1[1:3])
-    v2_prime, w2_prime = quaternion.rotate_vectors(frame_rotation, rvw2[1:3])
+    frame_rotation = ptmath.rotation_matrix_from_vector_to_vector(delta_centers, unit_x)
+    v1_prime, w1_prime = ptmath.rotate_vectors(frame_rotation, rvw1[1:3])
+    v2_prime, w2_prime = ptmath.rotate_vectors(frame_rotation, rvw2[1:3])
     v1_prime, w1_prime, v2_prime, w2_prime = _resolve_ball_ball_x_normal(
         v1_prime, w1_prime, v2_prime, w2_prime, R, u_b, e_b
     )
-    rvw1[1:3] = quaternion.rotate_vectors(
-        frame_rotation.conjugate(), np.array([v1_prime, w1_prime])
-    )
-    rvw2[1:3] = quaternion.rotate_vectors(
-        frame_rotation.conjugate(), np.array([v2_prime, w2_prime])
-    )
+    rvw1[1:3] = ptmath.rotate_vectors(frame_rotation.T, np.array([v1_prime, w1_prime]))
+    rvw2[1:3] = ptmath.rotate_vectors(frame_rotation.T, np.array([v2_prime, w2_prime]))
     return rvw1, rvw2
 
 

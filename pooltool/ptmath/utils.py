@@ -1,9 +1,7 @@
 from collections.abc import Callable
-from math import sqrt
-from typing import Any
+from math import acos, cos, sin, sqrt
 
 import numpy as np
-import quaternion
 import scipy.spatial.transform as sp_tf
 from numba import jit
 from numpy.typing import NDArray
@@ -218,21 +216,102 @@ def rotation_from_vector_to_vector(
     return sp_tf.Rotation.from_rotvec(axis * angle)
 
 
-def quaternion_from_vector_to_vector(
+@jit(nopython=True, cache=const.use_numba_cache)
+def rotation_matrix_from_vector_to_vector(
     a: NDArray[np.float64], b: NDArray[np.float64]
-) -> Any:
-    """Compute the quaternion representing the rotation from vector a to vector b
+) -> NDArray[np.float64]:
+    """Compute the rotation matrix that rotates vector a onto vector b
+
+    (just-in-time compiled)
+
+    The inverse rotation is the transpose of the returned matrix. Antiparallel
+    vectors yield a 180 degree rotation about an axis perpendicular to a.
 
     Args:
         a: Initial 3D vector
         b: Target 3D vector
 
     Returns:
-        A quaternion representing the rotation from a to b.
+        A 3x3 rotation matrix such that ``m @ a`` is parallel to ``b``.
     """
-    angle = angle_between_vectors(a, b)
-    axis = unit_vector(cross(a, b), True)
-    return quaternion.from_rotation_vector(axis * angle)
+    cos_angle = (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / (norm3d(a) * norm3d(b))
+    cos_angle = min(1.0, max(-1.0, cos_angle))
+    axis = cross(a, b)
+    if norm3d(axis) == 0.0 and cos_angle < 0.0:
+        axis = _perpendicular_vector(a)
+    axis = unit_vector(axis, True)
+    h = axis * acos(cos_angle) / 2.0
+    h_norm = norm3d(h)
+    if h_norm > 1e-14:
+        s = sin(h_norm) / h_norm
+        w = cos(h_norm)
+        x = s * h[0]
+        y = s * h[1]
+        z = s * h[2]
+    else:
+        w = 1.0
+        x = 0.0
+        y = 0.0
+        z = 0.0
+    n = w * w + x * x + y * y + z * z
+    m = np.empty((3, 3))
+    m[0, 0] = 1.0 - 2 * (y * y + z * z) / n
+    m[0, 1] = 2 * (x * y - z * w) / n
+    m[0, 2] = 2 * (x * z + y * w) / n
+    m[1, 0] = 2 * (x * y + z * w) / n
+    m[1, 1] = 1.0 - 2 * (x * x + z * z) / n
+    m[1, 2] = 2 * (y * z - x * w) / n
+    m[2, 0] = 2 * (x * z - y * w) / n
+    m[2, 1] = 2 * (y * z + x * w) / n
+    m[2, 2] = 1.0 - 2 * (x * x + y * y) / n
+    return m
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def _perpendicular_vector(v: NDArray[np.float64]) -> NDArray[np.float64]:
+    """Return a nonzero vector perpendicular to v
+
+    (just-in-time compiled)
+
+    Crosses v with the coordinate axis it is least aligned with.
+    """
+    i = np.argmin(np.abs(v))
+    e = np.zeros(3)
+    e[i] = 1.0
+    return cross(v, e)
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def rotate_vector(
+    m: NDArray[np.float64], v: NDArray[np.float64]
+) -> NDArray[np.float64]:
+    """Apply rotation matrix m to a single 3D vector
+
+    (just-in-time compiled)
+    """
+    out = np.empty(3)
+    for r in range(3):
+        out[r] = m[r, 0] * v[0] + m[r, 1] * v[1] + m[r, 2] * v[2]
+    return out
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def rotate_vectors(
+    m: NDArray[np.float64], vectors: NDArray[np.float64]
+) -> NDArray[np.float64]:
+    """Apply rotation matrix m to each row of an (N, 3) array of vectors
+
+    (just-in-time compiled)
+    """
+    out = np.empty_like(vectors)
+    for i in range(vectors.shape[0]):
+        for r in range(3):
+            out[i, r] = (
+                m[r, 0] * vectors[i, 0]
+                + m[r, 1] * vectors[i, 1]
+                + m[r, 2] * vectors[i, 2]
+            )
+    return out
 
 
 @jit(nopython=True, cache=const.use_numba_cache)

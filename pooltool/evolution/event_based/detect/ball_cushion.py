@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import numpy as np
-import quaternion
 from numba import jit
 from numpy.typing import NDArray
 
@@ -25,7 +24,6 @@ from pooltool.evolution.event_based.detect.quartic_coefficients import (
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import LinearCushionSegment
 from pooltool.physics.utils import get_u_vec
-from pooltool.ptmath import quaternion_from_vector_to_vector
 from pooltool.ptmath.roots import (
     ABS_OR_REL_CUTOFF,
     ATOL,
@@ -106,10 +104,12 @@ def ball_linear_cushion_segment_collision_time(
         ball.params.g,
     )
 
-    unit_z = np.array([0, 0, 1])
-    frame_rotation = quaternion_from_vector_to_vector(cushion.unit_axis, unit_z)
-    p_rotated = quaternion.rotate_vectors(frame_rotation, p)
-    cushion_origin_rotated = quaternion.rotate_vectors(frame_rotation, cushion.p1)
+    unit_z = np.array([0.0, 0.0, 1.0])
+    frame_rotation = ptmath.rotation_matrix_from_vector_to_vector(
+        cushion.unit_axis, unit_z
+    )
+    p_rotated = ptmath.rotate_vectors(frame_rotation, p)
+    cushion_origin_rotated = ptmath.rotate_vector(frame_rotation, cushion.p1)
 
     C = parabola_circle_distance_2d_quartic_coefficients(
         p_rotated.T[0:2],

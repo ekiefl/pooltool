@@ -1,5 +1,4 @@
 import numpy as np
-import quaternion
 from numba import jit
 
 import pooltool.constants as const
@@ -9,12 +8,12 @@ from pooltool.physics.utils import tangent_surface_velocity_vw
 
 def resolve_sphere_half_space_collision(normal, rvw, R, mu_k, e):
     unit_z = np.array([0.0, 0.0, 1.0])
-    frame_rotation = ptmath.quaternion_from_vector_to_vector(normal, unit_z)
-    v_prime, w_prime = quaternion.rotate_vectors(frame_rotation, rvw[1:3])
+    frame_rotation = ptmath.rotation_matrix_from_vector_to_vector(normal, unit_z)
+    v_prime, w_prime = ptmath.rotate_vectors(frame_rotation, rvw[1:3])
     v_prime, w_prime = resolve_sphere_half_space_collision_z_normal(
         v_prime, w_prime, R=R, mu_k=mu_k, e=e
     )
-    rvw[1:3] = quaternion.rotate_vectors(frame_rotation.conjugate(), [v_prime, w_prime])
+    rvw[1:3] = ptmath.rotate_vectors(frame_rotation.T, np.array([v_prime, w_prime]))
     return rvw
 
 
