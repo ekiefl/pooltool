@@ -141,7 +141,7 @@ def get_lowest_ball(shot: System, when: StateProbe) -> Ball:
     for ball in shot.balls.values():
         if ball.id == "cue":
             continue
-        if _probe_ball_state(ball, when, shot.simulated).s == const.pocketed:
+        if _probe_ball_state(ball, when, shot.simulated).s not in const.on_table:
             continue
         if int(ball.id) < int(lowest.id):
             lowest = ball
@@ -167,7 +167,7 @@ def get_highest_ball(shot: System, at_start: bool) -> Ball:
     for ball in shot.balls.values():
         if ball.id == "cue":
             continue
-        if ball.history[history_idx].s == const.pocketed:
+        if ball.history[history_idx].s not in const.on_table:
             continue
         if int(ball.id) > int(highest.id):
             highest = ball

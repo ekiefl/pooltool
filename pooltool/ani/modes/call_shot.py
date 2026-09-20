@@ -293,7 +293,7 @@ class CallShotMode(BaseMode):
         for ball_id, ball in visual.balls.items():
             if ball_id not in Global.game.shot_constraints.hittable:
                 continue
-            if ball._ball.state.s == c.pocketed:
+            if ball._ball.state.s not in c.on_table:
                 continue
             d = ptmath.norm3d(ball._ball.state.rvw[0] - fixation_pos)
             if d < d_min:
