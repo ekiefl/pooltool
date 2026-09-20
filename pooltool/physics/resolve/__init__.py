@@ -22,14 +22,14 @@ from pooltool.physics.resolve.ball_pocket import (
     BallPocketModel,
     ball_pocket_models,
 )
+from pooltool.physics.resolve.ball_table import (
+    BallTableModel,
+    ball_table_models,
+)
 from pooltool.physics.resolve.resolver import (
     RESOLVER_3D_PATH,
     RESOLVER_PATH,
     Resolver,
-)
-from pooltool.physics.resolve.ball_table import (
-    BallTableModel,
-    ball_table_models,
 )
 from pooltool.physics.resolve.stick_ball import (
     StickBallModel,

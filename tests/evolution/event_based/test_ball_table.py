@@ -79,9 +79,7 @@ def test_landing_on_a_ball_resolves_both_events():
     landing.state.rvw[1] = [1.0, 0.0, -0.5]
     landing.state.s = const.airborne
 
-    shot = System(
-        cue=Cue(cue_ball_id="landing"), table=table, balls=(resting, landing)
-    )
+    shot = System(cue=Cue(cue_ball_id="landing"), table=table, balls=(resting, landing))
     simulate(shot, engine=build_3d_engine(), inplace=True)
 
     first_two = [e.event_type for e in shot.events[1:3]]
