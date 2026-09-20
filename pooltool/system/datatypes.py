@@ -283,8 +283,13 @@ class System:
 
         (1) Setting the velocity and angular velocity vectors of each ball to <0, 0, 0>
         (2) Setting the balls' motion states to stationary (`i.e.` 0)
+
+        Pocketed and off-table balls are left untouched, since they already carry no
+        momentum and their motion states are terminal.
         """
         for ball in self.balls.values():
+            if ball.state.s in const.out_of_play:
+                continue
             ball.state.s = const.stationary
             ball.state.rvw[1] = np.array([0.0, 0.0, 0.0], np.float64)
             ball.state.rvw[2] = np.array([0.0, 0.0, 0.0], np.float64)

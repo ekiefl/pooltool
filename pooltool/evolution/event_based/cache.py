@@ -70,9 +70,14 @@ class TransitionCache:
 
 
 def _next_transition(ball: Ball) -> Event:
-    if ball.state.s in {const.stationary, const.pocketed, const.airborne}:
+    if ball.state.s in {
+        const.stationary,
+        const.pocketed,
+        const.airborne,
+        const.off_table,
+    }:
         # Stationary and airborne states can only be changed via collisions, and
-        # pocketed states can never be changed.
+        # pocketed and off-table states can never be changed.
         return null_event(time=np.inf)
 
     elif ball.state.s == const.spinning:

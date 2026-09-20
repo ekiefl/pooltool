@@ -273,7 +273,8 @@ class Resolver:
 def _verify_ball_height(ball: Ball, event: Event) -> None:
     """Validate and a ball's height after event resolution.
 
-    Non-pocketed balls must sit at or above the table plane.
+    Balls that are neither pocketed nor off the table must sit at or above the table
+    plane.
 
     Args:
         ball: The ball to validate.
@@ -283,7 +284,7 @@ def _verify_ball_height(ball: Ball, event: Event) -> None:
         SimulateError: If the ball intersects with the playing surface, or if a ball in
         an on-table motion state is floating above the table plane.
     """
-    if ball.state.s == const.pocketed:
+    if ball.state.s in const.out_of_play:
         return
 
     R = ball.params.R
