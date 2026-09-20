@@ -44,7 +44,7 @@ def evolve_ball_motion(
     """
     rvw = rvw.copy()
 
-    if state == const.stationary or state == const.pocketed:
+    if state == const.stationary or state == const.pocketed or state == const.off_table:
         return rvw, state
 
     if state == const.airborne:
