@@ -52,8 +52,8 @@ def ball_off_table_time(
     reach it before landing (``t_in <= t_land``). Then the ball leaves the table at
     ``t_out`` rather than ``t_edge``. A pocket the track misses, one the ball has
     already flown past, or one it would only reach after landing changes nothing.
-    A pocket in the interior of the playing surface is always one the ball has
-    already flown past by the time it reaches an edge, so it never opens the
+    A diabolical pocket in the interior of the playing surface is always one the ball
+    has already flown past by the time it reaches an edge, so it never opens the
     boundary.
 
     This function knows nothing about pocketing. A ball that lands or dips into the
