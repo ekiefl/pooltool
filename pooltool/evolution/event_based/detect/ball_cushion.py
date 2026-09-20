@@ -163,7 +163,12 @@ def ball_vertical_plane_collision_time(
     Note:
         - This is broken for airborne balls.
     """
-    if s == const.spinning or s == const.pocketed or s == const.stationary:
+    if (
+        s == const.spinning
+        or s == const.pocketed
+        or s == const.stationary
+        or s == const.off_table
+    ):
         return np.inf
 
     contact_squared = (R + nose_radius) ** 2 - (height - R) ** 2
@@ -254,7 +259,12 @@ def ball_vertical_cylinder_collision_time(
         - This is broken for airborne balls.
     """
 
-    if s == const.spinning or s == const.pocketed or s == const.stationary:
+    if (
+        s == const.spinning
+        or s == const.pocketed
+        or s == const.stationary
+        or s == const.off_table
+    ):
         return np.inf
 
     phi = ptmath.angle(rvw[1])

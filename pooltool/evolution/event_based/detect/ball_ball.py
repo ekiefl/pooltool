@@ -95,7 +95,12 @@ def ball_ball_collision_time_2d(
     c1x, c1y = rvw1[0, 0], rvw1[0, 1]
     c2x, c2y = rvw2[0, 0], rvw2[0, 1]
 
-    if s1 == const.spinning or s1 == const.pocketed or s1 == const.stationary:
+    if (
+        s1 == const.spinning
+        or s1 == const.pocketed
+        or s1 == const.stationary
+        or s1 == const.off_table
+    ):
         a1x, a1y, b1x, b1y = 0, 0, 0, 0
     else:
         phi1 = ptmath.angle(rvw1[1])
@@ -112,7 +117,12 @@ def ball_ball_collision_time_2d(
         b1x = v1 * cos_phi1
         b1y = v1 * sin_phi1
 
-    if s2 == const.spinning or s2 == const.pocketed or s2 == const.stationary:
+    if (
+        s2 == const.spinning
+        or s2 == const.pocketed
+        or s2 == const.stationary
+        or s2 == const.off_table
+    ):
         a2x, a2y, b2x, b2y = 0.0, 0.0, 0.0, 0.0
     else:
         phi2 = ptmath.angle(rvw2[1])
@@ -162,8 +172,8 @@ def get_next_ball_ball_event(
         ball2_params = ball2.params
 
         if (
-            ball1_state.s == const.pocketed
-            or ball2_state.s == const.pocketed
+            ball1_state.s in const.out_of_play
+            or ball2_state.s in const.out_of_play
             or (
                 ball1_state.s in const.nontranslating
                 and ball2_state.s in const.nontranslating
