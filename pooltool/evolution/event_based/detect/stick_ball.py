@@ -14,6 +14,10 @@ def get_next_stick_ball_event(shot: System, collision_cache: CollisionCache) -> 
 
     Stick-ball events fire only at t=0, when the system is at rest, the cue ball is
     in play, and a cue strike is queued (V0 > 0).
+
+    A queued strike is inferred from V0 alone, and the default cue has V0 > 0, so a
+    pocketed or off-table cue ball is skipped rather than treated as an error: a
+    system whose cue ball is pocketed by an event at t=0 must not raise.
     """
     cache = collision_cache.times.setdefault(EventType.STICK_BALL, {})
 
