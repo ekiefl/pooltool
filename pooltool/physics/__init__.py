@@ -18,6 +18,10 @@ from pooltool.physics.resolve.ball_cushion import (
     ball_ccushion_models,
     ball_lcushion_models,
 )
+from pooltool.physics.resolve.ball_off_table import (
+    BallOffTableModel,
+    ball_off_table_models,
+)
 from pooltool.physics.resolve.ball_pocket import (
     BallPocketModel,
     ball_pocket_models,
@@ -58,6 +62,7 @@ __all__ = [
     "BallBallModel",
     "BallCCushionModel",
     "BallLCushionModel",
+    "BallOffTableModel",
     "BallPocketModel",
     "BallTableModel",
     "BallTransitionModel",
@@ -67,6 +72,7 @@ __all__ = [
     "ball_ball_models",
     "ball_ccushion_models",
     "ball_lcushion_models",
+    "ball_off_table_models",
     "ball_pocket_models",
     "ball_table_models",
     "ball_transition_models",

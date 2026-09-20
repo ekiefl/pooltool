@@ -24,7 +24,8 @@ class SimulationEngine:
             ``resolver``.
         resolver:
             Pluggable bundle of event-resolution strategies. Each strategy
-            declares a ``Dim`` capability (except ``ball_table``).
+            declares a ``Dim`` capability (except ``ball_table`` and
+            ``ball_off_table``).
         detector:
             Canonical event detector. Not constructor-passable — built from
             ``is_3d`` automatically.

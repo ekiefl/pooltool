@@ -37,6 +37,11 @@ class EventType(strenum.StrEnum):
             A cue-stick ball collision.
         BALL_TABLE:
             A ball collision into the table surface.
+        BALL_OFF_TABLE:
+            A ball "collision" with the off-table boundary. This marks the moment an
+            airborne ball leaves the table: it crosses one of the vertical planes
+            through the cushion nose axes, unless its flight carries it into a pocket,
+            in which case it is the moment it flies out the far side of the pocket.
         SPINNING_STATIONARY:
             A ball transition from spinning to stationary.
         ROLLING_STATIONARY:
@@ -54,6 +59,7 @@ class EventType(strenum.StrEnum):
     BALL_POCKET = strenum.auto()
     STICK_BALL = strenum.auto()
     BALL_TABLE = strenum.auto()
+    BALL_OFF_TABLE = strenum.auto()
     SPINNING_STATIONARY = strenum.auto()
     ROLLING_STATIONARY = strenum.auto()
     ROLLING_SPINNING = strenum.auto()
@@ -68,6 +74,7 @@ class EventType(strenum.StrEnum):
             EventType.BALL_POCKET,
             EventType.STICK_BALL,
             EventType.BALL_TABLE,
+            EventType.BALL_OFF_TABLE,
         }
 
     def is_transition(self) -> bool:
@@ -90,6 +97,7 @@ class EventType(strenum.StrEnum):
                 EventType.BALL_POCKET,
                 EventType.STICK_BALL,
                 EventType.BALL_TABLE,
+                EventType.BALL_OFF_TABLE,
             }
             or self.is_transition()
         )

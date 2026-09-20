@@ -99,6 +99,22 @@ def stick_ball_collision(
     )
 
 
+def ball_off_table_collision(
+    ball: Ball, time: float, set_initial: bool = False
+) -> Event:
+    """Create a ball-off-table collision.
+
+    Note:
+        - As with :func:`ball_table_collision`, the table is not stored as an agent:
+          the collision changes only the ball.
+    """
+    return Event(
+        event_type=EventType.BALL_OFF_TABLE,
+        agents=(Agent.from_object(ball, set_initial=set_initial),),
+        time=time,
+    )
+
+
 def ball_table_collision(ball: Ball, time: float, set_initial: bool = False) -> Event:
     """Create a ball-table collision.
 

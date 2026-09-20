@@ -63,12 +63,13 @@ def test_dim_both_strategy_accepted_in_3d(engine_3d: SimulationEngine):
     SimulationEngine(resolver=engine_3d.resolver, is_3d=True)
 
 
-def test_ball_table_exempt_from_dim_validation():
-    """Ball-table resolver strategies don't carry a `dim` attribute. The
-    validator skips this field in either mode via SKIP_DIMENSION."""
+@pytest.mark.parametrize("field", ["ball_table", "ball_off_table"])
+def test_airborne_only_strategies_exempt_from_dim_validation(field: str):
+    """Strategies for events that only airborne balls produce don't carry a `dim`
+    attribute. The validator skips these fields in either mode via SKIP_DIMENSION."""
     resolver = SimulationEngine().resolver
 
-    assert not hasattr(resolver.ball_table, "dim")
+    assert not hasattr(getattr(resolver, field), "dim")
 
     SimulationEngine(resolver=resolver, is_3d=False)
 
