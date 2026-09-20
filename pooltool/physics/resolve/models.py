@@ -210,6 +210,18 @@ class BallTableModel(StrEnum):
     FRICTIONAL_INELASTIC = auto()
 
 
+class BallOffTableModel(StrEnum):
+    """An Enum for different ball-off-table collision models
+
+    Attributes:
+        FREEZE:
+            Freezes the ball where it left the table: the position is kept, all
+            momentum is discarded, and the motion state becomes off-table.
+    """
+
+    FREEZE = auto()
+
+
 class BallTransitionModel(StrEnum):
     """An Enum for different transition models
 

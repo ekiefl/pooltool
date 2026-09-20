@@ -35,6 +35,10 @@ from pooltool.physics.resolve.ball_cushion.stronge_compliant.model import (
     StrongeCompliantLinear2D,
     StrongeCompliantLinear3D,
 )
+from pooltool.physics.resolve.ball_off_table import (
+    BallOffTableCollisionStrategy,
+    FreezeOffTable,
+)
 from pooltool.physics.resolve.ball_pocket import (
     BallPocketStrategy,
     CanonicalBallPocket,
@@ -65,7 +69,7 @@ RESOLVER_PATH = pooltool.config.paths.PHYSICS_DIR / "resolver.yaml"
 RESOLVER_3D_PATH = pooltool.config.paths.PHYSICS_DIR / "resolver_3d.yaml"
 """The location of the 3D resolver YAML."""
 
-VERSION: int = 13
+VERSION: int = 14
 
 
 run = Run()
@@ -104,6 +108,7 @@ def default_resolver() -> Resolver:
         ball_table=FrictionalInelasticTable(
             min_bounce_height=0.005,
         ),
+        ball_off_table=FreezeOffTable(),
         transition=CanonicalTransition(),
         version=VERSION,
     )
@@ -138,6 +143,7 @@ def default_resolver_3d() -> Resolver:
         ball_table=FrictionalInelasticTable(
             min_bounce_height=0.005,
         ),
+        ball_off_table=FreezeOffTable(),
         transition=CanonicalTransition(),
         version=VERSION,
     )
@@ -158,6 +164,7 @@ class Resolver:
     ball_pocket: BallPocketStrategy
     stick_ball: StickBallCollisionStrategy
     ball_table: BallTableCollisionStrategy
+    ball_off_table: BallOffTableCollisionStrategy
     transition: BallTransitionStrategy
 
     version: int | None = None
@@ -202,6 +209,10 @@ class Resolver:
         elif event.event_type == EventType.BALL_TABLE:
             ball = shot.balls[ids[0]]
             self.ball_table.resolve(ball, inplace=True)
+            ball.state.t = event.time
+        elif event.event_type == EventType.BALL_OFF_TABLE:
+            ball = shot.balls[ids[0]]
+            self.ball_off_table.resolve(ball, inplace=True)
             ball.state.t = event.time
 
         for agent in event.agents:
