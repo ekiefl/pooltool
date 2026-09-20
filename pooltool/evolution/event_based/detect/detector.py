@@ -13,6 +13,9 @@ from pooltool.evolution.event_based.detect.ball_cushion import (
     get_next_ball_circular_cushion_event,
     get_next_ball_linear_cushion_event,
 )
+from pooltool.evolution.event_based.detect.ball_off_table import (
+    get_next_ball_off_table_event,
+)
 from pooltool.evolution.event_based.detect.ball_pocket import (
     get_next_ball_pocket_event,
 )
@@ -36,7 +39,9 @@ def _get_event_priority(event: Event, shot: System) -> tuple[int, float]:
     Priority tiers:
     - Tier 1: STICK_BALL (always first)
     - Tier 2: Transitions and BALL_POCKET (can resolve without affecting others)
-    - Tier 3: BALL_BALL, ball-cushion collisions, and BALL_TABLE
+    - Tier 3: BALL_OFF_TABLE (likewise, but a ball leaving the table through a
+      pocket at the same instant is pocketed, so it ranks below BALL_POCKET)
+    - Tier 4: BALL_BALL, ball-cushion collisions, and BALL_TABLE
 
     Args:
         event: The event to compute priority for.
@@ -61,6 +66,14 @@ def _get_event_priority(event: Event, shot: System) -> tuple[int, float]:
         )
         return (2, energy)
 
+    if event_type == EventType.BALL_OFF_TABLE:
+        ball_id = event.ids[0]
+        ball = shot.balls[ball_id]
+        energy = get_ball_energy(
+            ball.state.rvw, ball.params.R, ball.params.m, ball.params.g
+        )
+        return (3, energy)
+
     if event_type.is_transition():
         ball_id = event.ids[0]
         ball = shot.balls[ball_id]
@@ -74,7 +87,7 @@ def _get_event_priority(event: Event, shot: System) -> tuple[int, float]:
         v1 = shot.balls[ball1_id].state.rvw[1]
         v2 = shot.balls[ball2_id].state.rvw[1]
         energy = ptmath.squared_norm3d(v1 - v2)
-        return (3, energy)
+        return (4, energy)
 
     if event_type in (EventType.BALL_LINEAR_CUSHION, EventType.BALL_CIRCULAR_CUSHION):
         ball_id = event.ids[0]
@@ -82,7 +95,7 @@ def _get_event_priority(event: Event, shot: System) -> tuple[int, float]:
         energy = get_ball_energy(
             ball.state.rvw, ball.params.R, ball.params.m, ball.params.g
         )
-        return (3, energy)
+        return (4, energy)
 
     # TODO: tier and energy choice for BALL_TABLE has not been well thought
     # through or tested. Mirroring the cushion-collision semantics, but
@@ -95,7 +108,7 @@ def _get_event_priority(event: Event, shot: System) -> tuple[int, float]:
         energy = get_ball_energy(
             ball.state.rvw, ball.params.R, ball.params.m, ball.params.g
         )
-        return (3, energy)
+        return (4, energy)
 
     return (99, 0.0)
 
@@ -158,6 +171,7 @@ class EventDetector:
         )
         if self.is_3d:
             candidates.append(get_next_ball_table_event(shot, collision_cache))
+            candidates.append(get_next_ball_off_table_event(shot, collision_cache))
 
         min_time = min(event.time for event in candidates)
 

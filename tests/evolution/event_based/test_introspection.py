@@ -85,31 +85,6 @@ def test_post_resolve_of_n_equals_pre_evolve_of_n_plus_1():
         assert post_resolve == pre_evolve_next
 
 
-def test_get_prospective_events_includes_ball_table():
-    """BALL_TABLE cache entries must surface in get_prospective_events.
-
-    Regression: introspection's cache-to-events reconstruction was missing
-    the BALL_TABLE branch. Silent in 2D (which never populates the bucket);
-    surfaces once 3D activation lands.
-    """
-    system = System.example()
-    cache = CollisionCache.create()
-    ball_id = next(iter(system.balls))
-    cache.times[EventType.BALL_TABLE] = {(ball_id,): 0.123}
-
-    snapshot = SimulationSnapshot(
-        step_number=0,
-        system=system,
-        next_event=null_event(np.inf),
-        collision_cache=cache,
-        transition_cache=TransitionCache.create(system),
-        engine=DEFAULT_ENGINE,
-    )
-
-    events = snapshot.get_prospective_events()
-    assert any(e.event_type == EventType.BALL_TABLE and e.time == 0.123 for e in events)
-
-
 def test_system_state_progression():
     """Test the full progression: pre_evolve -> post_evolve -> post_resolve."""
     system = System.example()

@@ -37,7 +37,12 @@ def ball_pocket_collision_time(
     Contains branching logic depending on whether the ball is airborne.
     """
 
-    if s == const.spinning or s == const.pocketed or s == const.stationary:
+    if (
+        s == const.spinning
+        or s == const.pocketed
+        or s == const.stationary
+        or s == const.off_table
+    ):
         return np.inf
 
     if s == const.airborne:

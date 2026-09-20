@@ -5,6 +5,7 @@ from pooltool.events import (
     ball_ball_collision,
     ball_circular_cushion_collision,
     ball_linear_cushion_collision,
+    ball_off_table_collision,
     ball_pocket_collision,
     null_event,
     sliding_rolling_transition,
@@ -38,6 +39,7 @@ def _make_events(s: System) -> dict[str, Event]:
             time=0,
         ),
         "transition": sliding_rolling_transition(s.balls["cue"], time=0),
+        "off_table": ball_off_table_collision(s.balls["cue"], time=0),
         "ball_ball": ball_ball_collision(s.balls["cue"], s.balls["1"], time=0),
         "linear_cushion": ball_linear_cushion_collision(
             ball=s.balls["cue"],
@@ -67,3 +69,14 @@ def test_event_priority_sorts_by_tier(system):
     assert tiers == sorted(tiers), "tiers should be non-decreasing"
     assert sorted_events[0] is events["stick_ball"]
     assert sorted_events[-1] is events["none"]
+
+
+def test_pocket_outranks_off_table_for_the_same_ball(system):
+    """A ball leaving the table through a pocket at the same instant is pocketed."""
+    events = _make_events(system)
+
+    pocket_tier, pocket_energy = _get_event_priority(events["pocket"], system)
+    off_tier, off_energy = _get_event_priority(events["off_table"], system)
+
+    assert pocket_energy == off_energy
+    assert pocket_tier < off_tier

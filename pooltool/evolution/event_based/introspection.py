@@ -29,6 +29,7 @@ from pooltool.events import (
     ball_ball_collision,
     ball_circular_cushion_collision,
     ball_linear_cushion_collision,
+    ball_off_table_collision,
     ball_pocket_collision,
     ball_table_collision,
     stick_ball_collision,
@@ -108,6 +109,15 @@ def _get_collision_events_from_cache(
         for (ball_id,), time in cache.times[EventType.BALL_TABLE].items():
             events.append(
                 ball_table_collision(
+                    ball=system.balls[ball_id],
+                    time=time,
+                )
+            )
+
+    if EventType.BALL_OFF_TABLE in cache.times:
+        for (ball_id,), time in cache.times[EventType.BALL_OFF_TABLE].items():
+            events.append(
+                ball_off_table_collision(
                     ball=system.balls[ball_id],
                     time=time,
                 )
