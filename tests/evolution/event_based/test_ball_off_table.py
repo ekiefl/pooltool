@@ -28,7 +28,9 @@ from pooltool.physics.resolve import Resolver
 from pooltool.system.datatypes import System
 
 
-def _launch(ball: Ball, xy: tuple[float, float], height: float, v: tuple[float, float, float]) -> None:
+def _launch(
+    ball: Ball, xy: tuple[float, float], height: float, v: tuple[float, float, float]
+) -> None:
     ball.state.rvw[0] = [xy[0], xy[1], ball.params.R + height]
     ball.state.rvw[1] = v
     ball.state.s = const.airborne

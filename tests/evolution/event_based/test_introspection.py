@@ -1,16 +1,11 @@
 import tempfile
 from pathlib import Path
 
-import numpy as np
-
-from pooltool.events import EventType, null_event
-from pooltool.evolution.event_based.cache import CollisionCache, TransitionCache
 from pooltool.evolution.event_based.introspection import (
-    SimulationSnapshot,
     SimulationSnapshotSequence,
     simulate_with_snapshots,
 )
-from pooltool.evolution.event_based.simulate import DEFAULT_ENGINE, simulate
+from pooltool.evolution.event_based.simulate import simulate
 from pooltool.system.datatypes import System
 
 

@@ -12,9 +12,7 @@ _ball_off_table_model_registry: tuple[type[BallOffTableCollisionStrategy], ...] 
     FreezeOffTable,
 )
 
-ball_off_table_models: dict[
-    BallOffTableModel, type[BallOffTableCollisionStrategy]
-] = {
+ball_off_table_models: dict[BallOffTableModel, type[BallOffTableCollisionStrategy]] = {
     cast(BallOffTableModel, attrs.fields_dict(cls)["model"].default): cls
     for cls in _ball_off_table_model_registry
 }
