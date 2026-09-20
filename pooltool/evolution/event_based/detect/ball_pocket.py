@@ -85,7 +85,9 @@ def ball_pocket_collision_time_if_airborne(
     Strategy 1: The xy-coordinates of where the ball lands are calculated. If that falls
     within the pocket circle, a collision is returned. The collision time is chosen to
     be just less than the collision time for the table collision, to guarantee temporal
-    precedence over the table collision.
+    precedence over the table collision. When the landing is immediate the time is zero
+    instead, and precedence falls to event priority, which ranks pocket events ahead of
+    table collisions.
 
     Strategy 2: Otherwise, the influx and outflux collision times are calculated between
     the ball center and a vertical cylinder that extends from the pocket's circle.
@@ -122,7 +124,7 @@ def ball_pocket_collision_time_if_airborne(
     y = rvw[0, 1] + by * airborne_time
 
     if (x - a) ** 2 + (y - b) ** 2 < r * r:
-        return float(airborne_time - const.EPS)
+        return max(float(airborne_time - const.EPS), 0.0)
 
     # Strategy 2: does the ball's xy trajectory cross the pocket cylinder?
     cx, cy = rvw[0, 0], rvw[0, 1]

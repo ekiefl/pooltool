@@ -98,3 +98,35 @@ def test_detector_skips_when_no_pockets():
 
     event = get_next_ball_pocket_event(shot, CollisionCache())
     assert event.time == np.inf
+
+
+def test_immediate_landing_inside_pocket_is_not_scheduled_in_the_past():
+    """A ball at cloth height moving down over a pocket lands now, so the time is zero.
+
+    Regression: subtracting the precedence epsilon from a zero landing time produced a
+    negative time, which the simulation rejects as scheduled in the past.
+    """
+    a, b, r = 0.0, 0.0, 0.05
+    rvw = _airborne_rvw(0.3 * r, 0.0, R_DEFAULT, vx=0.2)
+    rvw[1, 2] = -1e-3
+
+    t = ball_pocket_collision_time_if_airborne(rvw, a, b, r, G_DEFAULT, R_DEFAULT)
+
+    assert t == 0.0
+
+
+def test_ball_landing_in_pocket_immediately_is_pocketed():
+    """End-to-end: the pocket event outranks the simultaneous table collision."""
+    table = Table.default()
+    pocket = next(iter(table.pockets.values()))
+
+    ball = Ball.create("cue")
+    ball.state.rvw[0] = [pocket.a + 0.3 * pocket.radius, pocket.b, ball.params.R]
+    ball.state.rvw[1] = [0.2, 0.0, -1e-3]
+    ball.state.s = const.airborne
+
+    shot = System(cue=Cue(cue_ball_id="cue"), table=table, balls=(ball,))
+    simulate(shot, engine=build_3d_engine(), inplace=True)
+
+    assert shot.events[1].event_type == EventType.BALL_POCKET
+    assert shot.balls["cue"].state.s == const.pocketed
