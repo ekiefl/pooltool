@@ -10,6 +10,7 @@ from panda3d.core import (
 )
 
 from pooltool.ani.globals import Global
+from pooltool.ani.table_box import TableBox
 from pooltool.config import settings
 from pooltool.objects.datatypes import Render
 from pooltool.objects.table.datatypes import Table, TableModelDescr, TableType
@@ -47,9 +48,7 @@ class TableRender(Render):
 
         assert self._table.model_descr is not None
         return Global.loader.loadModel(
-            self._table.model_descr.get_path(
-                settings.graphics.physical_based_rendering
-            )
+            self._table.model_descr.get_path(settings.graphics.physical_based_rendering)
         )
 
     def init_table(self):
@@ -67,6 +66,50 @@ class TableRender(Render):
 
         self.nodes["table"] = node
         self.collision_nodes = {}
+
+    def bounding_box(self) -> TableBox:
+        """The table model's outer extent, with the floor at the table's height below"""
+        low, high = self._load_model().getTightBounds()
+        return TableBox(
+            x_min=low[0],
+            x_max=high[0],
+            y_min=low[1],
+            y_max=high[1],
+            top=high[2],
+            floor=-self._table.height,
+        )
+
+    def init_bounding_box(self):
+        """Draw the edges of the table's bounding box, for debugging
+
+        The box is what an off-table ball is animated against (see
+        :mod:`pooltool.ani.off_table`), so this shows where its rail landings and
+        floor bounces come from.
+        """
+        box = self.bounding_box()
+        drawer = LineSegs()
+        drawer.setThickness(2)
+        drawer.setColor(1, 0.5, 0)
+
+        xs = (box.x_min, box.x_max)
+        ys = (box.y_min, box.y_max)
+        zs = (box.floor, box.top)
+        for z in zs:
+            drawer.moveTo(xs[0], ys[0], z)
+            drawer.drawTo(xs[1], ys[0], z)
+            drawer.drawTo(xs[1], ys[1], z)
+            drawer.drawTo(xs[0], ys[1], z)
+            drawer.drawTo(xs[0], ys[0], z)
+        for x in xs:
+            for y in ys:
+                drawer.moveTo(x, y, zs[0])
+                drawer.drawTo(x, y, zs[1])
+
+        node = self.nodes["table"].attachNewNode(drawer.create())
+        node.setLightOff()
+        node.setDepthTest(False)
+        node.setBin("fixed", 0)
+        self.nodes["bounding_box"] = node
 
     def init_collisions(self):
         if not settings.gameplay.cue_collision:
@@ -174,6 +217,9 @@ class TableRender(Render):
             self.init_pockets()
 
         self.init_collisions()
+
+        if settings.graphics.debug:
+            self.init_bounding_box()
 
     def draw_circle(self, drawer, center, radius, num_points):
         center_x, center_y, height = center
