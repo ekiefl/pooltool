@@ -1,5 +1,13 @@
 import numpy as np
-from panda3d.core import CollisionNode, CollisionPlane, LineSegs, Plane, Point3, Vec3
+from panda3d.core import (
+    CollisionNode,
+    CollisionPlane,
+    LineSegs,
+    NodePath,
+    Plane,
+    Point3,
+    Vec3,
+)
 
 from pooltool.ani.globals import Global
 from pooltool.config import settings
@@ -14,28 +22,46 @@ class TableRender(Render):
         self._table = table
         Render.__init__(self)
 
-    def init_table(self):
-        if (
+    @property
+    def _uses_null_model(self) -> bool:
+        """Whether the table is drawn as a bare playing surface instead of a real model"""
+        return (
             not self._table.model_descr
             or self._table.model_descr == TableModelDescr.null()
             or not settings.graphics.table
-        ):
-            # Rectangular playing surface (not a real table)
+        )
+
+    def _load_model(self) -> NodePath:
+        """Load the table model, scaled to the table's dimensions when it is the null plane
+
+        Panda3D caches loaded models, so this is cheap to call repeatedly.
+        """
+        if self._uses_null_model:
             model = Global.loader.loadModel(
                 TableModelDescr.null().get_path(
                     settings.graphics.physical_based_rendering
                 )
             )
+            model.setScale(self._table.w, self._table.l, 1)
+            return model
+
+        assert self._table.model_descr is not None
+        return Global.loader.loadModel(
+            self._table.model_descr.get_path(
+                settings.graphics.physical_based_rendering
+            )
+        )
+
+    def init_table(self):
+        model = self._load_model()
+
+        if self._uses_null_model:
+            # Rectangular playing surface (not a real table)
             node = Global.render.find("scene").attachNewNode("table")
             model.reparentTo(node)
-            model.setScale(self._table.w, self._table.l, 1)
         else:
             # Real table
-            node = Global.loader.loadModel(
-                self._table.model_descr.get_path(
-                    settings.graphics.physical_based_rendering
-                )
-            )
+            node = model
             node.reparentTo(Global.render.find("scene"))
             node.setName("table")
 
