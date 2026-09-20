@@ -187,7 +187,7 @@ class BallInHandMode(BaseMode):
                             [
                                 b
                                 for b in self.scene.balls.values()
-                                if b._ball.state.s != c.pocketed
+                                if b._ball.state.s in c.on_table
                             ]
                         )
                     else:
@@ -338,8 +338,8 @@ class BallInHandMode(BaseMode):
         movable = Global.game.shot_constraints.movable
 
         for ball_id, ball in self.scene.balls.items():
-            # Skip pocketed balls
-            if ball._ball.state.s == c.pocketed:
+            # Skip pocketed and off-table balls
+            if ball._ball.state.s not in c.on_table:
                 continue
 
             # If there is a list of movable balls, skip balls not in that list

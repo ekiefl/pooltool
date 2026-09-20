@@ -115,7 +115,7 @@ class PickBallMode(BaseMode):
         for ball_id, ball in self.scene.balls.items():
             if ball_id not in Global.game.active_player.can_cue:
                 continue
-            if ball._ball.state.s == c.pocketed:
+            if ball._ball.state.s not in c.on_table:
                 continue
             d = ptmath.norm3d(ball._ball.state.rvw[0] - cam_fixation)
             if d < d_min:

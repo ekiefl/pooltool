@@ -40,7 +40,7 @@ class _RulelessMode(Ruleset):
     def respot_balls(self, shot: System):
         """No balls respotted in this variant of 8-ball"""
         for ball_id, ball in shot.balls.items():
-            if ball_id == shot.cue.cue_ball_id and ball.state.s == const.pocketed:
+            if ball_id == shot.cue.cue_ball_id and ball.state.s in const.out_of_play:
                 respot(
                     shot,
                     ball_id,
