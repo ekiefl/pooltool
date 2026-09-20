@@ -112,6 +112,16 @@ class BallRender(Render):
         self.set_render_state(self._ball.state.rvw[0])
 
     def init_collision(self, cue: Cue):
+        """Attach the solid that tells cue avoidance this ball may be in the stick's way
+
+        The cue stick is represented by a zero-thickness segment along its axis, so the
+        ball is inflated by the shaft radius at the tip: a segment touching a sphere of
+        radius ``R + shaft_radius`` is equivalent to the real stick touching the real
+        ball. The solid is a capsule (pill) of that radius stretched one ball radius
+        above and below the center rather than a sphere, so a stick descending toward
+        the ball is caught early. The capsule is just a trigger volume, not the actual
+        avoidance volume.
+        """
         R = self._ball.params.R
         collision_node = self.nodes["ball"].attachNewNode(
             CollisionNode(f"ball_csphere_{self._ball.id}")
