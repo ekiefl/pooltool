@@ -54,6 +54,14 @@ Important:
     This state includes balls at z=R moving downward; the label routes them to
     ball-table detection.
 """
+off_table: int = 6
+"""The off-table motion state label
+
+A ball with this motion state has left the playing surface by flying over the cushions.
+It takes part in no further physics. Its position is frozen where it crossed the table
+boundary and its velocity and angular velocity are zero. This state exists only in 3D
+simulations.
+"""
 
 state_dict: dict[int, str] = {
     0: "stationary",
@@ -62,8 +70,10 @@ state_dict: dict[int, str] = {
     3: "rolling",
     4: "pocketed",
     5: "airborne",
+    6: "off_table",
 }
 
 on_table = {stationary, spinning, sliding, rolling}
-nontranslating = {stationary, spinning, pocketed}
+nontranslating = {stationary, spinning, pocketed, off_table}
+out_of_play = {pocketed, off_table}
 energetic = {spinning, sliding, rolling, airborne}
