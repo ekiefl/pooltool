@@ -8,9 +8,11 @@ from direct.interval.IntervalGlobal import (
     Parallel,
     Sequence,
 )
+from numpy.typing import NDArray
 from panda3d.core import (
     CollisionCapsule,
     CollisionNode,
+    Quat,
     SamplerState,
     TransparencyAttrib,
 )
@@ -35,7 +37,7 @@ class BallRender(Render):
     def __init__(self, ball: Ball):
         self._ball = ball
         self.history: BallHistory = BallHistory()
-        self.quats: list = []
+        self.quats: NDArray[np.float64] = np.empty((0, 4))
         Render.__init__(self)
 
     @property
@@ -186,7 +188,7 @@ class BallRender(Render):
         )
 
         if quat is not None:
-            self.nodes["pos"].setQuat(quat)
+            self.nodes["pos"].setQuat(Quat(*quat))
 
     def set_render_state_from_history(self, i: int):
         """Set the position of the rendered ball based on an index into its history
@@ -209,7 +211,7 @@ class BallRender(Render):
         """
         self.history = history
         if history.empty:
-            self.quats = []
+            self.quats = np.empty((0, 4))
             return
 
         rvws, _, ts = history.vectorize()
@@ -242,6 +244,7 @@ class BallRender(Render):
             return Sequence()
 
         xyzs = autils.get_list_of_Vec3s_from_array(xyzs)
+        quats = self.quats.tolist()
 
         # Init the animation sequences
         ball_sequence = Sequence()
@@ -251,7 +254,7 @@ class BallRender(Render):
 
         if hold > 0:
             x0, y0, z0 = xyzs[0]
-            Qm0, Qx0, Qy0, Qz0 = self.quats[0]
+            Qm0, Qx0, Qy0, Qz0 = quats[0]
             ball_sequence.append(
                 LerpPosQuatInterval(
                     nodePath=self.nodes["pos"],
@@ -275,7 +278,7 @@ class BallRender(Render):
         energetic = False
         for i in range(len(playback_dts)):
             x, y, z = xyzs[i]
-            Qm, Qx, Qy, Qz = self.quats[i]
+            Qm, Qx, Qy, Qz = quats[i]
 
             stationary_to_stationary = (
                 not energetic
@@ -292,7 +295,7 @@ class BallRender(Render):
 
             if stationary_to_energetic or stationary_to_stationary:
                 xi, yi, zi = xyzs[j]
-                Qmi, Qxi, Qyi, Qzi = self.quats[j]
+                Qmi, Qxi, Qyi, Qzi = quats[j]
                 dur = playback_dts[j:i].sum()
 
                 ball_sequence.append(
@@ -358,7 +361,7 @@ class BallRender(Render):
     def get_final_orientation(self) -> BallOrientation:
         """Get the ball's quaternions of the final state in the history"""
         return BallOrientation(
-            pos=tuple([float(x) for x in self.quats[-1]]),
+            pos=tuple(self.quats[-1].tolist()),
             sphere=tuple([float(x) for x in self.nodes["sphere"].getQuat()]),
         )
 

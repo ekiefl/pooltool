@@ -188,8 +188,8 @@ class ShotMode(BaseMode):
             if system.simulated:
                 system.reset_balls()
             for ball_render in self.scene.balls.values():
-                if ball_render.quats:
-                    ball_render.get_node("pos").setQuat(ball_render.quats[0])
+                if len(ball_render.quats):
+                    ball_render.set_render_state_from_history(0)
                 ball_render.set_render_state_as_object_state()
             system.reset_history()
             self.scene.system.resample(RENDER_DT)
