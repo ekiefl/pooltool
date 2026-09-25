@@ -293,15 +293,17 @@ class BallHistory:
         See Also:
             - :meth:`vectorize`
         """
-        history = BallHistory()
-
         if vectorization is None:
-            return history
+            return BallHistory()
 
-        for args in zip(*vectorization):
-            history.add(BallState(*args))
-
-        return history
+        rvws, ss, ts = vectorization
+        states = [
+            BallState(rvw, s, t)
+            for rvw, s, t in zip(
+                rvws, np.asarray(ss).astype(int).tolist(), np.asarray(ts).tolist()
+            )
+        ]
+        return BallHistory(states)
 
     @staticmethod
     def factory() -> BallHistory:
