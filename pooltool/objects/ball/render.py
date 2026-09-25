@@ -210,8 +210,16 @@ class BallRender(Render):
         ws = rvws[:, 2, :]
         self.quats = autils.as_quaternion(ws, ts)
 
-    def get_playback_sequence(self, playback_speed: float = 1.0) -> MetaInterval:
-        """Creates the motion sequences of the ball for a given playback speed"""
+    def get_playback_sequence(self, playback_speed: float, hold: float) -> MetaInterval:
+        """Creates the motion sequences of the ball for a given playback speed
+
+        Args:
+            playback_speed:
+                Simulation seconds per second of playback.
+            hold:
+                Seconds of playback the ball is pinned at its initial state before
+                its motion starts, so that it sits still while the cue stroke plays.
+        """
         if self._ball.history_cts.empty:
             return Sequence()
 
@@ -239,6 +247,28 @@ class BallRender(Render):
         shadow_sequence = Sequence()
 
         self.set_render_state_from_history(self._ball.history_cts, 0)
+
+        if hold > 0:
+            x0, y0, z0 = xyzs[0]
+            Qm0, Qx0, Qy0, Qz0 = self.quats[0]
+            ball_sequence.append(
+                LerpPosQuatInterval(
+                    nodePath=self.nodes["pos"],
+                    duration=hold,
+                    startPos=(x0, y0, z0),
+                    pos=(x0, y0, z0),
+                    startQuat=(Qm0, Qx0, Qy0, Qz0),
+                    quat=(Qm0, Qx0, Qy0, Qz0),
+                )
+            )
+            shadow_sequence.append(
+                LerpPosInterval(
+                    nodePath=self.nodes["shadow"],
+                    duration=hold,
+                    startPos=(x0, y0, min(0, z0 - self._ball.params.R)),
+                    pos=(x0, y0, min(0, z0 - self._ball.params.R)),
+                )
+            )
 
         j = 0
         energetic = False

@@ -4,6 +4,7 @@ from attrs import define
 from direct.interval.IntervalGlobal import Parallel, Sequence
 from panda3d.direct import HideInterval, ShowInterval
 
+import pooltool.ani.tasks as tasks
 from pooltool.ani.environment import Environment
 from pooltool.ani.hud import hud
 from pooltool.ani.playback import PlaybackState, ShotPlayback
@@ -30,6 +31,8 @@ class SceneComponents(StrEnum):
 
 PARALLEL_TRAILING_BUFFER = 0.5
 """Seconds of downtime after the balls settle in parallel mode."""
+
+TICK_TASK = "shot_playback_tick"
 
 
 @define
@@ -137,19 +140,6 @@ class ParallelModeManager:
 
         self._update_system_opacities(active_index)
 
-        # Build all ball animations
-        all_ball_animations = Parallel()
-        for system_render in self.parallel_systems.values():
-            for ball in system_render.balls.values():
-                # Set quaternions for animation.
-                ball.set_quats(ball._ball.history_cts)
-
-                ball_animation = ball.get_playback_sequence(
-                    playback_speed=controller.playback_speed
-                )
-                if len(ball_animation) > 0:
-                    all_ball_animations.append(ball_animation)
-
         # Build stroke animation only for active system
         active_system_render = self.parallel_systems[active_index]
         stroke_sequence = active_system_render.cue.get_stroke_sequence()
@@ -166,11 +156,27 @@ class ParallelModeManager:
                 HideInterval(active_system_render.cue.get_node("cue_stick")),
             )
 
+        # Build all ball animations
+        hold = stroke_animation.get_duration()
+        all_ball_animations = Parallel()
+        for system_render in self.parallel_systems.values():
+            for ball in system_render.balls.values():
+                # Set quaternions for animation.
+                ball.set_quats(ball._ball.history_cts)
+
+                ball_animation = ball.get_playback_sequence(
+                    controller.playback_speed, hold
+                )
+                if len(ball_animation) > 0:
+                    all_ball_animations.append(ball_animation)
+
         controller.playback = ShotPlayback.from_parts(
             stroke_animation,
             all_ball_animations,
             trailing_buffer=PARALLEL_TRAILING_BUFFER,
             loop=True,
+            speed=controller.playback_speed,
+            events={idx: multisystem[idx].events for idx in self.parallel_systems},
         )
 
     def _update_system_opacities(self, active_index: int) -> None:
@@ -288,10 +294,18 @@ class SceneController:
         if SceneComponents.ENVIRONMENT in components:
             self.environment.init(self.system.table._table)
 
+        tasks.add(self._tick_task, TICK_TASK)
+
+    def _tick_task(self, task):
+        if self.playback is not None:
+            self.playback.tick()
+        return task.cont
+
     def teardown(self, components: list[SceneComponents] | None = None) -> None:
         """Stop animations and remove all nodes"""
         components = list(SceneComponents) if components is None else components
         self.reset_animation()
+        tasks.remove(TICK_TASK)
 
         was_in_parallel_mode = self.parallel_manager.is_active
         if self.parallel_manager.is_active:
@@ -382,9 +396,10 @@ class SceneController:
         if was_paused:
             self.playback.pause()
 
-        self.playback.seek(curr_time / factor)
+        self.playback.seek(curr_time)
 
-    def offset_time(self, dt) -> None:
+    def offset_time(self, dt: float) -> None:
+        """Move the animation by ``dt`` simulation seconds, if it is not playing"""
         assert self.playback is not None
         self.playback.step(dt)
 
@@ -397,9 +412,9 @@ class SceneController:
         self.playback.resume()
 
     def advance_to_end_of_stroke(self):
-        """Sets shot animation time to immediately after the stroke animation"""
+        """Sets shot animation time to the cue strike, immediately after the stroke"""
         assert self.playback is not None
-        self.playback.seek(self.playback.stroke_duration)
+        self.playback.seek(0.0)
 
     def setup_parallel_mode(self) -> None:
         """Setup all systems for parallel visualization with synchronized animations"""
@@ -458,16 +473,6 @@ class SceneController:
         The playback starts stopped, in single-pass mode.
         """
 
-        # This takes ~90% of this method's execution time
-        ball_animations = Parallel()
-        for ball in self.system.balls.values():
-            if not ball.rendered:
-                ball.render()
-
-            ball_animations.append(
-                ball.get_playback_sequence(playback_speed=self.playback_speed)
-            )
-
         if animate_stroke:
             if not self.system.cue.rendered:
                 self.system.cue.render()
@@ -484,11 +489,27 @@ class SceneController:
             self.system.cue.hide_nodes()
             stroke_animation = Sequence()
 
+        # This takes ~90% of this method's execution time
+        hold = stroke_animation.get_duration()
+        ball_animations = Parallel()
+        for ball in self.system.balls.values():
+            if not ball.rendered:
+                ball.render()
+
+            ball_animations.append(
+                ball.get_playback_sequence(self.playback_speed, hold)
+            )
+
+        active_index = multisystem.active_index
+        assert active_index is not None
+
         self.playback = ShotPlayback.from_parts(
             stroke_animation,
             ball_animations,
             trailing_buffer=trailing_buffer,
             loop=False,
+            speed=self.playback_speed,
+            events={active_index: multisystem.active.events},
         )
 
 
