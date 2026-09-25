@@ -29,6 +29,15 @@ PARALLEL_INACTIVE_ALPHA = 0.3
 """Opacity of the balls of a system playing alongside the active one."""
 
 TICK_TASK = "shot_playback_tick"
+RESUME_TASK = "shot_playback_resume"
+
+REBUILD_HOLD = 0.25
+"""Seconds a playing animation holds after a rebuild before it resumes.
+
+Panda3D stamps a resumed interval with the current frame's time, so resuming in the
+frame that built the animation would play the build's stall through as a skip. Any
+hold that reaches the next frame prevents that.
+"""
 
 RENDER_DT = 0.01
 """Simulation seconds between render samples at unit playback speed."""
@@ -143,6 +152,7 @@ class SceneController:
         components = list(SceneComponents) if components is None else components
         self.reset_animation()
         tasks.remove(TICK_TASK)
+        tasks.remove(RESUME_TASK)
         self._unrender_inactive_systems()
 
         if SceneComponents.TABLE in components:
@@ -266,7 +276,11 @@ class SceneController:
             self.playback.pause()
 
     def rebuild_animation(self) -> None:
-        """Rebuild the shot animation, keeping the current time, state, and loop mode"""
+        """Rebuild the shot animation, keeping the current time, state, and loop mode
+
+        A playing animation comes back paused at its time and resumes after
+        ``REBUILD_HOLD`` seconds.
+        """
         playback = self.playback
         if playback is None:
             self.build_shot_animation()
@@ -279,13 +293,25 @@ class SceneController:
         assert self.playback is not None
         self.playback.loop = loop
 
-        if state is PlaybackState.PLAYING:
-            self.playback.play()
-        elif state is PlaybackState.PAUSED:
+        if state in (PlaybackState.PLAYING, PlaybackState.PAUSED):
             self.playback.play()
             self.playback.pause()
 
         self.playback.seek(t)
+
+        if state is PlaybackState.PLAYING:
+            tasks.add_later(
+                REBUILD_HOLD,
+                self._resume_rebuilt,
+                RESUME_TASK,
+                extraArgs=[self.playback],
+                appendTask=True,
+            )
+
+    def _resume_rebuilt(self, playback: ShotPlayback, task):
+        if self.playback is playback:
+            playback.resume()
+        return task.done
 
     def build_shot_animation(
         self,
