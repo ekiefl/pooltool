@@ -158,3 +158,4 @@ install-log.txt
 errors.txt
 
 **/.claude/settings.local.json
+.claude/worktrees/
