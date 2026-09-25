@@ -9,8 +9,7 @@ from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
-from pooltool.ani.scene import PlaybackMode, visual
-from pooltool.objects.ball.datatypes import BallHistory
+from pooltool.ani.scene import RENDER_DT, PlaybackMode, visual
 from pooltool.system.datatypes import multisystem
 
 
@@ -147,11 +146,7 @@ class ShotMode(BaseMode):
                     # the most recent shot we want to advance from. So we render it as
                     # an intermediate step.
                     visual.switch_rendered_system(multisystem_idx=-1)
-
-                    # self.quats is a vestige held in BallRender. We need to calculate
-                    # it so we know the final orientation of each ball.
-                    for ball_render in visual.balls.values():
-                        ball_render.set_quats(ball_render._ball.history_cts)
+                    visual.system.resample(RENDER_DT)
 
                 new_system = multisystem.active.copy()
 
@@ -184,14 +179,15 @@ class ShotMode(BaseMode):
                 visual.reset_animation()
 
             cam.load_saved_state(Global.mode_mgr.mode_stroked_from)
+            system = multisystem.active
+            if system.simulated:
+                system.reset_balls()
             for ball_render in visual.balls.values():
-                ball = ball_render._ball
-                if not ball.history.empty:
-                    ball.state = ball.history[0]
+                if ball_render.quats:
                     ball_render.get_node("pos").setQuat(ball_render.quats[0])
                 ball_render.set_render_state_as_object_state()
-                ball.history = BallHistory()
-                ball.history_cts = BallHistory()
+            system.reset_history()
+            visual.system.resample(RENDER_DT)
 
         tasks.remove("shot_view_task")
         tasks.remove("shot_animation_task")

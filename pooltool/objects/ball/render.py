@@ -34,6 +34,7 @@ FALLBACK_PATH = FALLBACK_BALLSET.ball_path(FALLBACK_ID)
 class BallRender(Render):
     def __init__(self, ball: Ball):
         self._ball = ball
+        self.history: BallHistory = BallHistory()
         self.quats: list = []
         Render.__init__(self)
 
@@ -187,8 +188,8 @@ class BallRender(Render):
         if quat is not None:
             self.nodes["pos"].setQuat(quat)
 
-    def set_render_state_from_history(self, ball_history: BallHistory, i: int):
-        """Set the position of the rendered ball based on history index
+    def set_render_state_from_history(self, i: int):
+        """Set the position of the rendered ball based on an index into its history
 
         Parameters
         ==========
@@ -198,17 +199,21 @@ class BallRender(Render):
         """
 
         quat = self.quats[i] if len(self.quats) else None
-        self.set_render_state(ball_history[i].rvw[0], quat)
+        self.set_render_state(self.history[i].rvw[0], quat)
 
-    def set_quats(self, history):
-        """Set self.quats based on history
+    def set_history(self, history: BallHistory) -> None:
+        """Set the history the ball is animated from, and the quaternions along it
 
-        Quaternions are not calculated in the rvw state vector, so this method provides
-        an opportunity to calculate all the quaternions from the ball's history
+        Quaternions are not part of the state vector, so they are integrated here from
+        the angular velocities along the history.
         """
+        self.history = history
+        if history.empty:
+            self.quats = []
+            return
+
         rvws, _, ts = history.vectorize()
-        ws = rvws[:, 2, :]
-        self.quats = autils.as_quaternion(ws, ts)
+        self.quats = autils.as_quaternion(rvws[:, 2, :], ts)
 
     def get_playback_sequence(self, playback_speed: float, hold: float) -> MetaInterval:
         """Creates the motion sequences of the ball for a given playback speed
@@ -220,12 +225,10 @@ class BallRender(Render):
                 Seconds of playback the ball is pinned at its initial state before
                 its motion starts, so that it sits still while the cue stroke plays.
         """
-        if self._ball.history_cts.empty:
+        if self.history.empty:
             return Sequence()
 
-        vectors = self._ball.history_cts.vectorize()
-
-        rvws, motion_states, ts = vectors
+        rvws, motion_states, ts = self.history.vectorize()
 
         dts = np.diff(ts)
         playback_dts = dts / playback_speed
@@ -236,17 +239,15 @@ class BallRender(Render):
 
         if (xyzs == xyzs[0, :]).all() and (ws == ws[0, :]).all():
             # Ball has no motion. No need to create Lerp intervals
-            self.quats = autils.as_quaternion(ws, ts)
             return Sequence()
 
         xyzs = autils.get_list_of_Vec3s_from_array(xyzs)
-        self.quats = autils.as_quaternion(ws, ts)
 
         # Init the animation sequences
         ball_sequence = Sequence()
         shadow_sequence = Sequence()
 
-        self.set_render_state_from_history(self._ball.history_cts, 0)
+        self.set_render_state_from_history(0)
 
         if hold > 0:
             x0, y0, z0 = xyzs[0]

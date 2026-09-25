@@ -8,7 +8,6 @@ import pooltool.ani.tasks as tasks
 from pooltool.ani.environment import Environment
 from pooltool.ani.hud import hud
 from pooltool.ani.playback import PlaybackState, ShotPlayback
-from pooltool.evolution.continuous import continuize
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.render import CueRender
 from pooltool.objects.table.render import TableRender
@@ -33,6 +32,9 @@ PARALLEL_TRAILING_BUFFER = 0.5
 """Seconds of downtime after the balls settle in parallel mode."""
 
 TICK_TASK = "shot_playback_tick"
+
+RENDER_DT = 0.01
+"""Simulation seconds between render samples at unit playback speed."""
 
 
 @define
@@ -68,9 +70,6 @@ class ParallelModeManager:
             if idx == current_index:
                 self.parallel_systems[idx] = current_system
                 continue
-
-            if system.simulated and not system.continuized:
-                continuize(system, inplace=True)
 
             self.parallel_systems[idx] = SystemRender.from_system(system)
 
@@ -160,10 +159,8 @@ class ParallelModeManager:
         hold = stroke_animation.get_duration()
         all_ball_animations = Parallel()
         for system_render in self.parallel_systems.values():
+            system_render.resample(RENDER_DT * controller.playback_speed)
             for ball in system_render.balls.values():
-                # Set quaternions for animation.
-                ball.set_quats(ball._ball.history_cts)
-
                 ball_animation = ball.get_playback_sequence(
                     controller.playback_speed, hold
                 )
@@ -194,17 +191,12 @@ class ParallelModeManager:
                     ball.set_alpha(0.3)
                 system_render.cue.hide_nodes()
 
-    def rebuild_animations_for_speed_change(
-        self, controller: SceneController, active_index: int, new_speed: float
+    def rebuild_animations(
+        self, controller: SceneController, active_index: int
     ) -> None:
-        """Rebuilds animations with new playback speed."""
+        """Rebuilds animations at the controller's current playback speed."""
         if not self.is_active:
             return
-
-        for idx in self.parallel_systems:
-            system = multisystem[idx]
-            if system.simulated:
-                continuize(system, dt=0.01 * new_speed, inplace=True)
 
         self._build_animations(controller, active_index)
 
@@ -383,11 +375,8 @@ class SceneController:
 
         if self.parallel_manager.is_active:
             assert multisystem.active_index is not None
-            self.parallel_manager.rebuild_animations_for_speed_change(
-                self, multisystem.active_index, self.playback_speed
-            )
+            self.parallel_manager.rebuild_animations(self, multisystem.active_index)
         else:
-            continuize(multisystem.active, dt=0.01 * self.playback_speed, inplace=True)
             self.build_shot_animation()
 
         assert self.playback is not None
@@ -490,6 +479,7 @@ class SceneController:
             stroke_animation = Sequence()
 
         # This takes ~90% of this method's execution time
+        self.system.resample(RENDER_DT * self.playback_speed)
         hold = stroke_animation.get_duration()
         ball_animations = Parallel()
         for ball in self.system.balls.values():

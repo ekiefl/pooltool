@@ -26,7 +26,6 @@ from pooltool.ani.mouse import mouse
 from pooltool.ani.scene import PlaybackMode, visual
 from pooltool.config import settings
 from pooltool.evolution import simulate
-from pooltool.evolution.continuous import continuize
 from pooltool.layouts import get_rack
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.collection import prebuilt_specs
@@ -260,8 +259,6 @@ class FrameStepper(Interface):
         size: tuple[int, int] = (int(1.6 * 720), 720),
         fps: float = 30.0,
     ) -> Generator:
-        continuize(system, dt=1 / fps, inplace=True)
-
         multisystem.reset()
         multisystem.append(system)
 
@@ -276,9 +273,7 @@ class FrameStepper(Interface):
         if cam.fixation_object is not None:
             cam.fixation_object.removeNode()
 
-        # Set quaternions for each ball
-        for ball in visual.balls.values():
-            ball.set_quats(ball._ball.history_cts)
+        visual.system.resample(1 / fps)
 
         frames = int(system.events[-1].time * fps) + 1
 
@@ -286,8 +281,7 @@ class FrameStepper(Interface):
 
         for frame in range(frames):
             for ball in visual.balls.values():
-                ball.set_render_state_from_history(ball._ball.history_cts, frame)
-                ball._ball.state = ball._ball.history_cts[frame]
+                ball.set_render_state_from_history(frame)
 
             Global.task_mgr.step()
 
@@ -298,10 +292,8 @@ class FrameStepper(Interface):
 
         Args:
             shot:
-                The shot you would like to iterate through. It should already by
-                simulated. It is OK if you have continuized the shot (you can check with
-                shot.continuized), but the continuization will be overwritten to match
-                the `fps` chosen in this method.
+                The shot you would like to iterate through. It should already be
+                simulated. It is not modified; it is sampled at `fps` for rendering.
             size:
                 The number of pixels in x and y. If x:y != 1.6, the aspect ratio will
                 look distorted.
