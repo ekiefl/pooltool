@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from attrs import define
-from direct.interval.IntervalGlobal import Func, Parallel, Sequence, Wait
+from direct.interval.IntervalGlobal import Parallel, Sequence
 from panda3d.direct import HideInterval, ShowInterval
 
 from pooltool.ani.environment import Environment
 from pooltool.ani.hud import hud
+from pooltool.ani.playback import PlaybackState, ShotPlayback
 from pooltool.evolution.continuous import continuize
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.render import CueRender
@@ -18,7 +19,6 @@ from pooltool.utils.strenum import StrEnum, auto
 class PlaybackMode(StrEnum):
     LOOP = auto()
     SINGLE = auto()
-    PARALLEL = auto()
 
 
 class SceneComponents(StrEnum):
@@ -26,6 +26,10 @@ class SceneComponents(StrEnum):
     CUE = auto()
     BALLS = auto()
     ENVIRONMENT = auto()
+
+
+PARALLEL_TRAILING_BUFFER = 0.5
+"""Seconds of downtime after the balls settle in parallel mode."""
 
 
 @define
@@ -45,7 +49,7 @@ class ParallelModeManager:
 
         # Preserve playing state before reset
         was_playing = not controller.paused
-        controller.reset_animation(force_pause=True)
+        controller.reset_animation()
 
         self.is_active = True
         self.parallel_systems = {}
@@ -72,8 +76,6 @@ class ParallelModeManager:
         # Restore playing state if animation was playing before
         if was_playing:
             controller.animate(PlaybackMode.LOOP)
-        else:
-            controller.playback(PlaybackMode.LOOP)
 
     def exit(self, controller: SceneController) -> SystemRender | None:
         """Exit parallel mode and return the active system."""
@@ -83,7 +85,7 @@ class ParallelModeManager:
         was_playing = not controller.paused
 
         # Clear animation before removing nodes.
-        controller.reset_animation(force_pause=True)
+        controller.reset_animation()
 
         active_idx = multisystem.active_index
         assert active_idx is not None, "Unknown control flow"
@@ -105,9 +107,10 @@ class ParallelModeManager:
 
         # Rebuild animation for active system only.
         controller.build_shot_animation()
+        controller.set_playback_mode(PlaybackMode.LOOP)
 
         if was_playing:
-            controller.animate(PlaybackMode.LOOP)
+            controller.animate()
 
         return active_system
 
@@ -163,14 +166,11 @@ class ParallelModeManager:
                 HideInterval(active_system_render.cue.get_node("cue_stick")),
             )
 
-        # Combine stroke animation with all ball animations.
-        controller.stroke_animation = stroke_animation
-        controller.ball_animations = all_ball_animations
-        controller.shot_animation = Sequence(
-            Func(controller.restart_ball_animations),
+        controller.playback = ShotPlayback.from_parts(
             stroke_animation,
             all_ball_animations,
-            Wait(duration=0.5),  # Add a small downtime buffer at the end.
+            trailing_buffer=PARALLEL_TRAILING_BUFFER,
+            loop=True,
         )
 
     def _update_system_opacities(self, active_index: int) -> None:
@@ -207,12 +207,8 @@ class SceneController:
     def __init__(self) -> None:
         self.system: SystemRender
         self.environment: Environment = Environment()
-        self.stroke_animation: Sequence = Sequence()
-        self.ball_animations: Parallel = Parallel()
-        self.shot_animation: Sequence = Sequence()
-        self.paused: bool = True
+        self.playback: ShotPlayback | None = None
         self.playback_speed: float = 1
-        self.playback_mode: PlaybackMode = PlaybackMode.SINGLE
         self.parallel_manager: ParallelModeManager = ParallelModeManager.create()
 
     @property
@@ -231,45 +227,32 @@ class SceneController:
     def is_parallel_mode(self) -> bool:
         return self.parallel_manager.is_active
 
+    @property
+    def paused(self) -> bool:
+        """Whether the shot animation is not playing"""
+        return self.playback is None or self.playback.state is not PlaybackState.PLAYING
+
+    @property
+    def animation_finished(self) -> bool:
+        """Whether a non-looping animation has played to its end.
+
+        Never true in parallel mode.
+        """
+        if self.parallel_manager.is_active:
+            return False
+
+        return self.playback is not None and self.playback.finished
+
     def attach_system(self, system: System) -> None:
         self.system = SystemRender.from_system(system)
 
-    def reset_animation(self, force_pause: bool = True) -> None:
-        """Set objects to initial states, pause, and remove animations
+    def reset_animation(self) -> None:
+        """Set objects to initial states and remove the animation"""
+        if self.playback is None:
+            return
 
-        Args:
-            force_pause:
-                If True, self.paused is set to True, otherwise its state is left
-                unaffected.
-        """
-        if not self.parallel_manager.is_active:
-            self.playback_mode = PlaybackMode.SINGLE
-
-        if force_pause:
-            self.paused = True
-
-        self.shot_animation.clearToInitial()
-        self.stroke_animation.clearToInitial()
-        self.ball_animations.clearToInitial()
-
-        self.stroke_animation = Sequence()
-        self.ball_animations = Parallel()
-        self.shot_animation = Sequence()
-
-    @property
-    def animation_finished(self):
-        """Returns whether or not the animation is finished.
-
-        Returns:
-            True if the animation has stopped and is in the final state of its sequence.
-            A paused animation returns False. The animation is never finished if it's
-            playing in a loop or in parallel mode.
-        """
-        # Never consider animation finished in LOOP mode or in parallel mode
-        if self.playback_mode == PlaybackMode.LOOP or self.parallel_manager.is_active:
-            return False
-
-        return not self.shot_animation.isPlaying() and not self.paused
+        self.playback.destroy()
+        self.playback = None
 
     def render_table(self) -> None:
         self.system.table.render()
@@ -334,56 +317,41 @@ class SceneController:
         visual.attach_system(multisystem.active)
         visual.buildup(components_to_refresh)
 
-    def playback(self, mode: PlaybackMode) -> None:
-        """Sets the playback mode."""
-        self.playback_mode = mode
+    def set_playback_mode(self, mode: PlaybackMode) -> None:
+        assert self.playback is not None, "Must build the shot animation first"
+        self.playback.loop = mode is PlaybackMode.LOOP
 
-    def animate(self, mode: PlaybackMode | None = None):
-        """Starts the animation."""
+    def animate(self, mode: PlaybackMode | None = None) -> None:
+        """Starts the animation, optionally setting the playback mode first.
 
-        assert len(self.shot_animation), "Must populate shot_animation"
+        Parallel mode always loops.
+        """
+        assert self.playback is not None, "Must build the shot animation first"
 
         if mode is not None:
-            self.playback(mode)
+            self.set_playback_mode(mode)
 
-        # In parallel mode, always use LOOP behavior
-        if self.playback_mode == PlaybackMode.LOOP or self.parallel_manager.is_active:
-            self.shot_animation.loop()
-        elif self.playback_mode == PlaybackMode.SINGLE:
-            self.shot_animation.start()
-        else:
-            raise NotImplementedError()
+        if self.parallel_manager.is_active:
+            self.playback.loop = True
 
-        self.paused = False
+        self.playback.play()
 
     def restart_animation(self) -> None:
         """Sets the animation to t=0.
 
         This is the full shot animation, including stroke.
         """
-        # If animation is completed (in final state), clear it before setting time. This
-        # avoids stdout warnings from Panda3D like:
-        # :interval(warning): CLerpNodePathInterval::priv_step() called for LerpPosQuatInterval-1 in state final.
-        if not self.shot_animation.isPlaying() and not self.paused:
-            self.shot_animation.clearToInitial()
-
-        self.shot_animation.set_t(0)
-
-    def restart_ball_animations(self) -> None:
-        """Sets the ball animations to t=0."""
-        # If animation is completed (in final state), clear it before setting time. This
-        # avoids stdout warnings from Panda3D like:
-        # :interval(warning): CLerpNodePathInterval::priv_step() called for LerpPosQuatInterval-1 in state final.
-        if not self.ball_animations.isPlaying() and not self.paused:
-            self.ball_animations.clearToInitial()
-
-        self.ball_animations.set_t(0)
+        assert self.playback is not None
+        self.playback.restart()
 
     def toggle_pause(self) -> None:
-        if self.shot_animation.isPlaying():
-            self.pause_animation()
+        if self.playback is None:
+            return
+
+        if self.playback.state is PlaybackState.PLAYING:
+            self.playback.pause()
         else:
-            self.resume_animation()
+            self.playback.play()
 
     def slow_down(self):
         self.change_speed(0.5)
@@ -392,10 +360,11 @@ class SceneController:
         self.change_speed(2.0)
 
     def change_speed(self, factor):
-        curr_time = self.shot_animation.get_t()
+        assert self.playback is not None
+        curr_time = self.playback.t
         was_paused = self.paused
 
-        self.reset_animation(force_pause=False)
+        self.reset_animation()
         self.playback_speed *= factor
 
         if self.parallel_manager.is_active:
@@ -407,34 +376,30 @@ class SceneController:
             continuize(multisystem.active, dt=0.01 * self.playback_speed, inplace=True)
             self.build_shot_animation()
 
-        self.shot_animation.setPlayRate(factor * self.shot_animation.getPlayRate())
-
+        assert self.playback is not None
         self.animate(PlaybackMode.LOOP)
 
         if was_paused:
-            self.pause_animation()
+            self.playback.pause()
 
-        self.shot_animation.set_t(curr_time / factor)
+        self.playback.seek(curr_time / factor)
 
     def offset_time(self, dt) -> None:
-        old_t = self.shot_animation.get_t()
-        new_t = max(0, min(old_t + dt, self.shot_animation.duration))
-        self.shot_animation.set_t(new_t)
+        assert self.playback is not None
+        self.playback.step(dt)
 
     def pause_animation(self) -> None:
-        self.shot_animation.pause()
-        self.paused = True
+        assert self.playback is not None
+        self.playback.pause()
 
     def resume_animation(self) -> None:
-        self.shot_animation.resume()
-        self.paused = False
+        assert self.playback is not None
+        self.playback.resume()
 
     def advance_to_end_of_stroke(self):
         """Sets shot animation time to immediately after the stroke animation"""
-        if not len(self.stroke_animation):
-            return
-
-        self.shot_animation.set_t(self.stroke_animation.get_duration())
+        assert self.playback is not None
+        self.playback.seek(self.playback.stroke_duration)
 
     def setup_parallel_mode(self) -> None:
         """Setup all systems for parallel visualization with synchronized animations"""
@@ -478,12 +443,9 @@ class SceneController:
 
         # Changing to a different shot is considered advanced maneuvering, so we enter
         # loop mode
-        self.playback_mode = PlaybackMode.LOOP
-        self.shot_animation.loop()
+        self.animate(PlaybackMode.LOOP)
 
-        if was_playing:
-            self.resume_animation()
-        else:
+        if not was_playing:
             self.pause_animation()
 
     def build_shot_animation(
@@ -491,45 +453,42 @@ class SceneController:
         animate_stroke: bool = True,
         trailing_buffer: float = 0.0,
     ) -> None:
-        """From the SystemRender, build the shot animation"""
+        """From the SystemRender, build the shot animation
+
+        The playback starts stopped, in single-pass mode.
+        """
 
         # This takes ~90% of this method's execution time
-        self.ball_animations = Parallel()
+        ball_animations = Parallel()
         for ball in self.system.balls.values():
             if not ball.rendered:
                 ball.render()
 
-            self.ball_animations.append(
+            ball_animations.append(
                 ball.get_playback_sequence(playback_speed=self.playback_speed)
             )
 
-        if not animate_stroke:
-            # Early return, skipping stroke trajectory
+        if animate_stroke:
+            if not self.system.cue.rendered:
+                self.system.cue.render()
+
+            # Hide cue stick initially - it will be shown when animation starts
             self.system.cue.hide_nodes()
-            self.stroke_animation = Sequence()
-            self.shot_animation = Sequence(
-                Func(self.restart_ball_animations),
-                self.ball_animations,
-                Wait(trailing_buffer),
+
+            stroke_animation = Sequence(
+                ShowInterval(self.system.cue.get_node("cue_stick")),
+                self.system.cue.get_stroke_sequence(),
+                HideInterval(self.system.cue.get_node("cue_stick")),
             )
-            return
+        else:
+            self.system.cue.hide_nodes()
+            stroke_animation = Sequence()
 
-        if not self.system.cue.rendered:
-            self.system.cue.render()
-
-        # Hide cue stick initially - it will be shown when animation starts
-        self.system.cue.hide_nodes()
-
-        self.stroke_animation = Sequence(
-            ShowInterval(self.system.cue.get_node("cue_stick")),
-            self.system.cue.get_stroke_sequence(),
-            HideInterval(self.system.cue.get_node("cue_stick")),
-        )
-        self.shot_animation = Sequence(
-            Func(self.restart_ball_animations),
-            self.stroke_animation,
-            self.ball_animations,
-            Wait(trailing_buffer),
+        self.playback = ShotPlayback.from_parts(
+            stroke_animation,
+            ball_animations,
+            trailing_buffer=trailing_buffer,
+            loop=False,
         )
 
 

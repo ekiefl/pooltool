@@ -48,15 +48,21 @@ class ShotMode(BaseMode):
         ==========
         build_animations : bool, False
             If True, the shot animations are built with visual.build_shot_animation.
+            Without a playback_mode, the built animation plays once, skipping the
+            stroke, which is how a shot just taken in the game is shown.
+        playback_mode : PlaybackMode | None, None
+            If given, the animation is played in this mode.
         """
         mouse.mode(MouseMode.RELATIVE)
 
         if build_animations:
             visual.build_shot_animation()
-            visual.animate(PlaybackMode.SINGLE)
-            visual.advance_to_end_of_stroke()
-
-        if playback_mode is not None:
+            if playback_mode is None:
+                visual.animate(PlaybackMode.SINGLE)
+                visual.advance_to_end_of_stroke()
+            else:
+                visual.animate(playback_mode)
+        elif playback_mode is not None:
             visual.animate(playback_mode)
 
         self._update_hud()
