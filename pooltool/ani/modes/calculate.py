@@ -88,12 +88,7 @@ class CalculateMode(BaseMode):
 
         is_3d = settings.gameplay.three_dimensional
         engine = SimulationEngine(is_3d=is_3d, resolver=Resolver.default(is_3d=is_3d))
-        simulate(
-            system,
-            engine=engine,
-            continuous=True,
-            inplace=True,
-        )
+        simulate(system, engine=engine, inplace=True)
 
         tasks.remove("run_simulation")
 
