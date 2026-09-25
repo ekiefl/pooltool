@@ -241,12 +241,10 @@ class ShotMode(BaseMode):
             self.playback.restart()
 
         elif self.keymap[Action.rewind]:
-            dt = 0.008 if self.keymap[Action.fine_control] else 0.03
-            self.playback.step(-dt)
+            self.playback.step(-self._scrub_seconds())
 
         elif self.keymap[Action.fast_forward]:
-            dt = 0.008 if self.keymap[Action.fine_control] else 0.03
-            self.playback.step(dt)
+            self.playback.step(self._scrub_seconds())
 
         elif self.keymap[Action.undo_shot]:
             Global.mode_mgr.change_mode(
@@ -277,6 +275,15 @@ class ShotMode(BaseMode):
             cue_avoid.init_collisions()
 
         return task.cont
+
+    def _scrub_seconds(self) -> float:
+        """Simulation seconds one frame of rewind or fast forward moves
+
+        Scrubbing moves a fixed amount of playback per frame, so it slows down and
+        speeds up with the playback speed.
+        """
+        playback_seconds = 0.008 if self.keymap[Action.fine_control] else 0.03
+        return playback_seconds * self.playback.speed
 
     def _update_hud(self) -> None:
         """Update HUD with current system's cue and cue ball"""

@@ -2,8 +2,10 @@ from collections.abc import Callable
 
 import numpy as np
 import pytest
+from panda3d.core import PythonTask
 
 import pooltool.ani.tasks as tasks
+from pooltool.ani.action import Action
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import Mode
 from pooltool.ani.modes.shot import ShotMode
@@ -139,3 +141,27 @@ def test_view_mode_hides_the_cue_and_aim_mode_shows_it(scene: SceneController):
 
     Global.mode_mgr.end_mode()
     assert not tasks.has("view_task")
+
+
+def test_scrubbing_while_paused_moves_with_the_playback_speed(scene: SceneController):
+    mode = _enter_shot_mode(build_animations=True)
+    task = PythonTask(mode.shot_animation_task)
+    messenger = Global.base.messenger
+
+    messenger.send("space")
+    t = mode.playback.t
+    mode.keymap[Action.fast_forward] = True
+    mode.shot_animation_task(task)
+    full_speed_step = mode.playback.t - t
+    assert full_speed_step > 0
+
+    messenger.send("arrow_down")
+    assert mode.playback.state is PlaybackState.PAUSED
+    t = mode.playback.t
+    mode.shot_animation_task(task)
+    assert mode.playback.t - t == pytest.approx(full_speed_step / 2)
+
+    mode.keymap[Action.fast_forward] = False
+    mode.keymap[Action.rewind] = True
+    mode.shot_animation_task(task)
+    assert mode.playback.t == pytest.approx(t)
