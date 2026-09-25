@@ -95,8 +95,8 @@ def test_ball_history_equality():
     state2 = BallState.default()
     state2.rvw[0] = [2, 2, 2]
 
-    history1 = BallHistory(states=[state1])
-    history2 = BallHistory(states=[state2])
+    history1 = BallHistory.from_states([state1])
+    history2 = BallHistory.from_states([state2])
 
     assert history1 == history1  # noqa: PLR0124
     assert history2 == history2  # noqa: PLR0124
@@ -151,8 +151,8 @@ def test_ball_history_copy():
     assert copy == history
 
     # Modifying original does not modify copy
-    history.states[0].t = 100
-    history.states[0].rvw[0] = [0, 0, 0]
+    history.ts[0] = 100
+    history.rvws[0, 0] = [0, 0, 0]
     assert copy != history
 
 
@@ -169,18 +169,16 @@ def test_ball_history_add():
     history.add(state)
     assert not history.empty
 
-    # `add` appends the state directly, just list how lists append. So verify they are
-    # the same objects
-    assert history[0] is state
-
-    # Therefore modifying the state modifies the history
-    state.t = 2
+    # `add` copies the state's values into the history, so the state can change
+    # without the history following
     assert history[0] == state
+    state.t = 2
+    assert history[0] != state
 
     # You can't add a state with a time less than the last entry
     with pytest.raises(AssertionError):
         new_state = state.copy()
-        new_state.t = 1
+        new_state.t = 0
         history.add(new_state)
 
     # Making time of state greater than the last entry works

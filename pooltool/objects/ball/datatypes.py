@@ -138,68 +138,110 @@ class BallState:
         )
 
 
-@define
+@define(eq=False, repr=False)
 class BallHistory:
-    """A container of BallState objects
+    """A time-increasing sequence of ball states, stored as arrays
 
-    Attributes:
-        states:
-            A list of time-increasing BallState objects (*default* = ``[]``).
+    The kinematic states, motion states, and times are held in one array each, which
+    makes copying, comparing, and serializing a long history cheap. Indexing returns a
+    :class:`BallState` whose ``rvw`` is a view of the history's storage.
     """
 
-    states: list[BallState] = field(factory=list)
-    """A list of time-increasing BallState objects (*default* = ``[]``)"""
+    _rvws: NDArray[np.float64] = field(init=False, factory=lambda: np.empty((0, 3, 3)))
+    _ss: NDArray[np.float64] = field(init=False, factory=lambda: np.empty(0))
+    _ts: NDArray[np.float64] = field(init=False, factory=lambda: np.empty(0))
+    _len: int = field(init=False, default=0)
+
+    @property
+    def rvws(self) -> NDArray[np.float64]:
+        """The kinematic states, shape ``(N, 3, 3)``, viewing the history's storage"""
+        return self._rvws[: self._len]
+
+    @property
+    def ss(self) -> NDArray[np.float64]:
+        """The motion states, shape ``(N,)``, viewing the history's storage"""
+        return self._ss[: self._len]
+
+    @property
+    def ts(self) -> NDArray[np.float64]:
+        """The times, shape ``(N,)``, viewing the history's storage"""
+        return self._ts[: self._len]
 
     def __getitem__(self, idx: int) -> BallState:
-        return self.states[idx]
+        i = range(self._len)[idx]
+        return BallState(self._rvws[i], self._ss[i], self._ts[i])
 
     def __len__(self) -> int:
-        return len(self.states)
+        return self._len
 
     def __iter__(self) -> Iterator[BallState]:
-        yield from self.states
+        for i in range(self._len):
+            yield self[i]
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, BallHistory):
+            return NotImplemented
+        return (
+            len(self) == len(other)
+            and np.array_equal(self.rvws, other.rvws, equal_nan=True)
+            and np.array_equal(self.ss, other.ss)
+            and np.array_equal(self.ts, other.ts)
+        )
+
+    def __repr__(self) -> str:
+        return f"BallHistory(len={self._len})"
 
     @property
     def empty(self) -> bool:
         """Returns whether or not the ball history is empty
 
         Returns:
-            bool: True if :attr:`states` has no length else False
+            bool: True if the history holds no states else False
         """
-        return not bool(len(self.states))
+        return self._len == 0
 
     def add(self, state: BallState) -> None:
         """Append a state to the history
 
+        The state's values are copied into the history, so later changes to the state
+        do not reach the history.
+
         Raises:
-            AssertionError: If ``state.t < self.states[-1]``
-
-        Notes:
-            - This appends ``state`` to :attr:`states`
-            - ``state`` is not copied before appending to the history, so they
-              share the same memory address.
+            AssertionError: If ``state.t < self[-1].t``
         """
-        if not self.empty:
-            assert state.t >= self.states[-1].t
+        if self._len:
+            assert state.t >= self._ts[self._len - 1]
 
-        self.states.append(state)
+        if self._len == len(self._ts):
+            self._grow()
+
+        self._rvws[self._len] = state.rvw
+        self._ss[self._len] = state.s
+        self._ts[self._len] = state.t
+        self._len += 1
+
+    def _grow(self) -> None:
+        capacity = max(16, 2 * len(self._ts))
+        rvws = np.empty((capacity, 3, 3))
+        ss = np.empty(capacity)
+        ts = np.empty(capacity)
+        rvws[: self._len] = self.rvws
+        ss[: self._len] = self.ss
+        ts[: self._len] = self.ts
+        self._rvws, self._ss, self._ts = rvws, ss, ts
 
     def copy(self) -> BallHistory:
         """Create a copy"""
-        history = BallHistory()
-        for state in self.states:
-            history.add(state.copy())
-
-        return history
+        return BallHistory.from_vectorization((self.rvws, self.ss, self.ts))
 
     def vectorize(
         self,
     ) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
         """Compile the attribute from each ball state into arrays
 
-        This method unzips each :class:`pooltool.objects.BallState` in :attr:`states`,
-        resulting in an array of :attr:`pooltool.objects.BallState.rvw` values, an array
-        of :attr:`pooltool.objects.BallState.s` values, and an array of
+        This method returns copies of the history's arrays: an array of
+        :attr:`pooltool.objects.BallState.rvw` values, an array of
+        :attr:`pooltool.objects.BallState.s` values, and an array of
         :attr:`pooltool.objects.BallState.t` values.
 
         The vectors have the following properties:
@@ -248,18 +290,7 @@ class BallHistory:
                 "forgotten to continuize your shot (`pt.continuize(shot, inplace=True)`."
             )
 
-        num_states = len(self.states)
-
-        rvws = np.empty((num_states, 3, 3), dtype=np.float64)
-        ss = np.empty(num_states, dtype=np.float64)
-        ts = np.empty(num_states, dtype=np.float64)
-
-        for idx, state in enumerate(self.states):
-            rvws[idx] = state.rvw
-            ss[idx] = state.s
-            ts[idx] = state.t
-
-        return rvws, ss, ts
+        return self.rvws.copy(), self.ss.copy(), self.ts.copy()
 
     @staticmethod
     def from_vectorization(
@@ -270,7 +301,7 @@ class BallHistory:
     ) -> BallHistory:
         """Zips a vectorization into a BallHistory
 
-        An inverse method of :meth:`vectorize`.
+        An inverse method of :meth:`vectorize`. The arrays are copied.
 
         Returns:
             BallHistory: A BallHistory constructed from the input vectors.
@@ -297,19 +328,29 @@ class BallHistory:
         See Also:
             - :meth:`vectorize`
         """
+        history = BallHistory()
+
         if vectorization is None:
-            return BallHistory()
+            return history
 
         rvws, ss, ts = vectorization
-        ts = np.asarray(ts, dtype=np.float64)
-        if np.any(np.diff(ts) < 0):
+        history._rvws = np.array(rvws, dtype=np.float64).reshape(-1, 3, 3)
+        history._ss = np.array(ss, dtype=np.float64).reshape(-1)
+        history._ts = np.array(ts, dtype=np.float64).reshape(-1)
+        if np.any(np.diff(history._ts) < 0):
             raise ValueError("History times must be nondecreasing")
+        history._len = len(history._ts)
 
-        states = [
-            BallState(rvw, s, t)
-            for rvw, s, t in zip(rvws, np.asarray(ss).astype(int).tolist(), ts.tolist())
-        ]
-        return BallHistory(states)
+        return history
+
+    @staticmethod
+    def from_states(states: Sequence[BallState]) -> BallHistory:
+        """Build a history by adding each state in turn"""
+        history = BallHistory()
+        for state in states:
+            history.add(state)
+
+        return history
 
     @staticmethod
     def factory() -> BallHistory:
@@ -325,6 +366,18 @@ conversion.register_structure_hook(
     BallHistory,
     lambda v, _: BallHistory.from_vectorization(v),
     which=(SerializeFormat.MSGPACK,),
+)
+conversion.register_unstructure_hook(
+    BallHistory,
+    lambda v: {"states": [{"rvw": s.rvw.tolist(), "s": s.s, "t": s.t} for s in v]},
+    which=(SerializeFormat.JSON, SerializeFormat.YAML),
+)
+conversion.register_structure_hook(
+    BallHistory,
+    lambda v, _: BallHistory.from_states(
+        [BallState(np.array(d["rvw"]), d["s"], d["t"]) for d in v["states"]]
+    ),
+    which=(SerializeFormat.JSON, SerializeFormat.YAML),
 )
 
 
