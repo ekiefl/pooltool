@@ -209,8 +209,6 @@ def continuize_ball(ball: Ball, events: list[Event], dt: float) -> BallHistory:
     # uniformly spaced timestamps
     history.add(ball.history[-1])
 
-    history.add(ball.history[-1])
-
     return history
 
 

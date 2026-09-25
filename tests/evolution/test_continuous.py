@@ -53,6 +53,16 @@ def test_continuize_ball_is_the_per_ball_work_of_continuize():
         assert ball.history_cts.empty
 
 
+def test_continuize_ball_ends_with_a_single_final_state():
+    system = simulate(System.example())
+    ball = system.balls["cue"]
+
+    history = continuize_ball(ball, system.events, 0.01)
+
+    assert history[-1] == ball.history[-1]
+    assert history[-2].t < history[-1].t
+
+
 def test_interpolate_ball_states_exact_match():
     """Test interpolation at exact timestamps from history."""
     # Simulate and continuize a system
