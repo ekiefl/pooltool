@@ -278,11 +278,11 @@ class SceneController:
             if idx == self.active:
                 for ball in system_render.balls.values():
                     ball.set_alpha(1.0)
-                system_render.cue.show_nodes()
+                system_render.cue.show_node("cue_stick_model")
             else:
                 for ball in system_render.balls.values():
                     ball.set_alpha(PARALLEL_INACTIVE_ALPHA)
-                system_render.cue.hide_nodes()
+                system_render.cue.hide_node("cue_stick_model")
 
     def switch_to_shot(self, shot_index: int) -> None:
         """Switch to a different system in the system collection"""
@@ -337,9 +337,9 @@ class SceneController:
         """Build the shot animation over the rendered systems
 
         Every system's stroke is in the tree, delayed so that all strikes land at
-        t=0, and its balls hold their initial state until then. The playback starts
-        stopped, in single-pass mode. In parallel mode the trailing buffer is
-        ``PARALLEL_TRAILING_BUFFER``.
+        t=0, and its balls hold their initial state until then. Each cue is hidden
+        until its stroke plays. The playback starts stopped, in single-pass mode. In
+        parallel mode the trailing buffer is ``PARALLEL_TRAILING_BUFFER``.
 
         Args:
             animate_stroke:
@@ -360,8 +360,10 @@ class SceneController:
             if not system_render.cue.rendered:
                 system_render.cue.render()
 
-            # Hide cue stick initially - it will be shown when animation starts
-            system_render.cue.hide_nodes()
+            # Hide cue stick initially - it will be shown when animation starts. The
+            # model under it stays shown so that showing the stick reveals the cue.
+            system_render.cue.hide_node("cue_stick")
+            system_render.cue.show_node("cue_stick_model")
 
             strokes[idx] = Sequence(
                 ShowInterval(system_render.cue.get_node("cue_stick")),

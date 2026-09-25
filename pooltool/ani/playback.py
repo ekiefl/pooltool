@@ -200,8 +200,7 @@ class ShotPlayback:
             self._tree.clearToInitial()
             self._start_tree(0.0)
         else:
-            self._tree.set_t(0.0)
-            self._mark()
+            self._seek_root(0.0)
 
     def seek(self, t: float) -> None:
         """Move to ``t``, clamped to the playback. A finished playback becomes paused."""
@@ -209,8 +208,7 @@ class ShotPlayback:
         if self.state is PlaybackState.FINISHED:
             self._tree.clearToInitial()
             self._state = PlaybackState.PAUSED
-        self._tree.set_t(self._to_root(t))
-        self._mark()
+        self._seek_root(self._to_root(t))
 
     def step(self, dt: float) -> None:
         """Move by ``dt`` simulation seconds. Does nothing while playing."""
@@ -235,18 +233,25 @@ class ShotPlayback:
         self._last_t = self.t
         self._cursor = bisect_right(self._times, self._last_t)
 
-    def _start_tree(self, root_t: float) -> None:
-        """Start the tree in the current loop mode, positioned at ``root_t``.
+    def _seek_root(self, root_t: float) -> None:
+        """Move the tree to ``root_t`` seconds of playback.
 
-        Panda3D only honors a seek on a paused interval, so the tree is started, paused,
-        moved, and resumed.
+        Panda3D discards a seek on a playing interval that has not been stepped since
+        it was started or resumed, so a playing tree is paused around the seek.
         """
+        if self.state is PlaybackState.PLAYING:
+            self._tree.pause()
+            self._tree.set_t(root_t)
+            self._tree.resume()
+        else:
+            self._tree.set_t(root_t)
+        self._mark()
+
+    def _start_tree(self, root_t: float) -> None:
+        """Start the tree in the current loop mode, positioned at ``root_t``."""
         if self._loop:
             self._tree.loop()
         else:
             self._tree.start()
-        self._tree.pause()
-        self._tree.set_t(root_t)
-        self._tree.resume()
         self._state = PlaybackState.PLAYING
-        self._mark()
+        self._seek_root(root_t)

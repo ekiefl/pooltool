@@ -177,6 +177,30 @@ def test_play_from_stopped_starts_at_seeked_time(advance):
     assert playback.t == pytest.approx(0.5 + DT)
 
 
+@pytest.mark.parametrize("start", [PlaybackState.STOPPED, PlaybackState.PAUSED])
+def test_seek_right_after_play_is_honored(advance, start):
+    playback = _bring_to(start, advance)
+    playback.play()
+    playback.seek(0.5)
+    advance(1)
+    assert playback.t == pytest.approx(0.5 + DT)
+
+
+def test_seek_while_playing_is_honored(advance):
+    playback = _bring_to(PlaybackState.PLAYING, advance)
+    playback.seek(0.5)
+    advance(1)
+    assert playback.t == pytest.approx(0.5 + DT)
+
+
+def test_restart_right_after_play_is_honored(advance):
+    playback = _bring_to(PlaybackState.PAUSED, advance)
+    playback.play()
+    playback.restart()
+    advance(1)
+    assert playback.t == pytest.approx(DT)
+
+
 def test_play_after_finished_starts_over(advance):
     playback = _bring_to(PlaybackState.FINISHED, advance)
     playback.play()
