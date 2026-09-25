@@ -10,14 +10,9 @@ from pooltool.ani.playback import PlaybackState, ShotPlayback
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.cue.render import CueRender
 from pooltool.objects.table.render import TableRender
-from pooltool.system.datatypes import multisystem
+from pooltool.system.datatypes import MultiSystem, multisystem
 from pooltool.system.render import SystemRender
 from pooltool.utils.strenum import StrEnum, auto
-
-
-class PlaybackMode(StrEnum):
-    LOOP = auto()
-    SINGLE = auto()
 
 
 class SceneComponents(StrEnum):
@@ -42,13 +37,18 @@ RENDER_DT = 0.01
 class SceneController:
     """Owns which systems are rendered and the playback of their shot animation
 
-    The systems rendered are kept in ``systems``, keyed by their index in
-    ``multisystem``. One of them, ``active``, owns the table and the environment and
-    is drawn at full opacity. Any others play alongside it at reduced opacity, which is
-    parallel mode.
+    The systems rendered are drawn from ``multisystem`` and kept in ``systems``, keyed
+    by their index in it. One of them, ``active``, owns the table and the environment
+    and is drawn at full opacity. Any others play alongside it at reduced opacity,
+    which is parallel mode.
+
+    While a playback exists, the visibility of each cue is a function of the playback
+    time: hidden except while its stroke plays. Modes show and hide the cue only
+    when there is no playback.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, multisystem: MultiSystem) -> None:
+        self.multisystem = multisystem
         self.systems: dict[int, SystemRender] = {}
         self.active: int = 0
         self.environment: Environment = Environment()
@@ -75,19 +75,9 @@ class SceneController:
     def is_parallel_mode(self) -> bool:
         return len(self.systems) > 1
 
-    @property
-    def paused(self) -> bool:
-        """Whether the shot animation is not playing"""
-        return self.playback is None or self.playback.state is not PlaybackState.PLAYING
-
-    @property
-    def animation_finished(self) -> bool:
-        """Whether a non-looping animation has played to its end"""
-        return self.playback is not None and self.playback.finished
-
     def attach_system(self, index: int) -> None:
         """Make the system at ``index`` in ``multisystem`` the only one rendered"""
-        self.systems = {index: SystemRender.from_system(multisystem[index])}
+        self.systems = {index: SystemRender.from_system(self.multisystem[index])}
         self.active = index
 
     def reset_animation(self) -> None:
@@ -159,69 +149,17 @@ class SceneController:
         """Convenience method for switching which system in ``multisystem`` is rendered."""
         components_to_refresh = [SceneComponents.CUE, SceneComponents.BALLS]
         self.teardown(components_to_refresh)
-        multisystem.set_active(multisystem_idx)
-        self.attach_system(multisystem.active_index)
+        self.multisystem.set_active(multisystem_idx)
+        self.attach_system(self.multisystem.active_index)
         self.buildup(components_to_refresh)
-
-    def set_playback_mode(self, mode: PlaybackMode) -> None:
-        assert self.playback is not None, "Must build the shot animation first"
-        self.playback.loop = mode is PlaybackMode.LOOP
-
-    def animate(self, mode: PlaybackMode | None = None) -> None:
-        """Starts the animation, optionally setting the playback mode first."""
-        assert self.playback is not None, "Must build the shot animation first"
-
-        if mode is not None:
-            self.set_playback_mode(mode)
-
-        self.playback.play()
-
-    def restart_animation(self) -> None:
-        """Sets the animation to t=0.
-
-        This is the full shot animation, including stroke.
-        """
-        assert self.playback is not None
-        self.playback.restart()
-
-    def toggle_pause(self) -> None:
-        if self.playback is None:
-            return
-
-        if self.playback.state is PlaybackState.PLAYING:
-            self.playback.pause()
-        else:
-            self.playback.play()
-
-    def slow_down(self):
-        self.change_speed(0.5)
-
-    def speed_up(self):
-        self.change_speed(2.0)
 
     def change_speed(self, factor: float) -> None:
         """Rebuild the animation at a new speed, keeping its time and entering loop mode"""
         self.playback_speed *= factor
         self.rebuild_animation()
-        self.set_playback_mode(PlaybackMode.LOOP)
 
-    def offset_time(self, dt: float) -> None:
-        """Move the animation by ``dt`` simulation seconds, if it is not playing"""
         assert self.playback is not None
-        self.playback.step(dt)
-
-    def pause_animation(self) -> None:
-        assert self.playback is not None
-        self.playback.pause()
-
-    def resume_animation(self) -> None:
-        assert self.playback is not None
-        self.playback.resume()
-
-    def advance_to_end_of_stroke(self):
-        """Sets shot animation time to the cue strike, immediately after the stroke"""
-        assert self.playback is not None
-        self.playback.seek(0.0)
+        self.playback.loop = True
 
     def enter_parallel_mode(self) -> None:
         """Render every eligible system in ``multisystem`` and play them together
@@ -233,10 +171,10 @@ class SceneController:
         if self.is_parallel_mode:
             return
 
-        for idx, system in enumerate(multisystem):
+        for idx, system in enumerate(self.multisystem):
             if idx == self.active:
                 continue
-            if not system.simulated and idx != multisystem.max_index:
+            if not system.simulated and idx != self.multisystem.max_index:
                 continue
 
             system_render = SystemRender.from_system(system)
@@ -247,7 +185,9 @@ class SceneController:
 
         self._update_opacities()
         self.rebuild_animation()
-        self.set_playback_mode(PlaybackMode.LOOP)
+
+        assert self.playback is not None
+        self.playback.loop = True
 
     def exit_parallel_mode(self) -> None:
         """Remove every system but the active one and rebuild its animation"""
@@ -285,8 +225,12 @@ class SceneController:
                 system_render.cue.hide_node("cue_stick_model")
 
     def switch_to_shot(self, shot_index: int) -> None:
-        """Switch to a different system in the system collection"""
-        multisystem.set_active(shot_index)
+        """Switch to a different system in the system collection
+
+        Outside parallel mode the shot's animation is built and played in loop mode,
+        paused if the animation being left was not playing.
+        """
+        self.multisystem.set_active(shot_index)
 
         if self.is_parallel_mode:
             self.set_parallel_active(shot_index)
@@ -295,17 +239,22 @@ class SceneController:
         state = PlaybackState.STOPPED if self.playback is None else self.playback.state
         self.reset_animation()
 
-        self.switch_rendered_system(multisystem.active_index)
-        system_cue = multisystem.active.cue
-        hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
+        self.switch_rendered_system(self.multisystem.active_index)
+        system_cue = self.multisystem.active.cue
+        hud.update_cue(
+            system_cue, self.multisystem.active.balls[system_cue.cue_ball_id]
+        )
 
         # Changing to a different shot is considered advanced maneuvering, so we enter
         # loop mode
         self.build_shot_animation()
-        self.animate(PlaybackMode.LOOP)
+
+        assert self.playback is not None
+        self.playback.loop = True
+        self.playback.play()
 
         if state is not PlaybackState.PLAYING:
-            self.pause_animation()
+            self.playback.pause()
 
     def rebuild_animation(self) -> None:
         """Rebuild the shot animation, keeping the current time, state, and loop mode"""
@@ -338,12 +287,12 @@ class SceneController:
 
         Every system's stroke is in the tree, delayed so that all strikes land at
         t=0, and its balls hold their initial state until then. Each cue is hidden
-        until its stroke plays. The playback starts stopped, in single-pass mode. In
-        parallel mode the trailing buffer is ``PARALLEL_TRAILING_BUFFER``.
+        except while its stroke plays. The playback starts stopped, in single-pass
+        mode. In parallel mode the trailing buffer is ``PARALLEL_TRAILING_BUFFER``.
 
         Args:
             animate_stroke:
-                If False, no strokes are built and the cues are hidden.
+                If False, no strokes are built and the cues stay hidden.
             trailing_buffer:
                 Seconds of downtime appended after the balls come to rest.
         """
@@ -352,23 +301,20 @@ class SceneController:
 
         strokes: dict[int, Sequence] = {}
         for idx, system_render in self.systems.items():
-            if not animate_stroke:
-                system_render.cue.hide_nodes()
-                strokes[idx] = Sequence()
-                continue
-
             if not system_render.cue.rendered:
                 system_render.cue.render()
 
-            # Hide cue stick initially - it will be shown when animation starts. The
-            # model under it stays shown so that showing the stick reveals the cue.
-            system_render.cue.hide_node("cue_stick")
-            system_render.cue.show_node("cue_stick_model")
+            system_render.cue.hide()
 
+            if not animate_stroke:
+                strokes[idx] = Sequence()
+                continue
+
+            cue_stick = system_render.cue.get_node("cue_stick")
             strokes[idx] = Sequence(
-                ShowInterval(system_render.cue.get_node("cue_stick")),
+                ShowInterval(cue_stick),
                 system_render.cue.get_stroke_sequence(),
-                HideInterval(system_render.cue.get_node("cue_stick")),
+                HideInterval(cue_stick),
             )
 
         hold = max(stroke.get_duration() for stroke in strokes.values())
@@ -397,8 +343,8 @@ class SceneController:
             trailing_buffer=trailing_buffer,
             loop=False,
             speed=self.playback_speed,
-            events={idx: multisystem[idx].events for idx in self.systems},
+            events={idx: self.multisystem[idx].events for idx in self.systems},
         )
 
 
-visual = SceneController()
+visual = SceneController(multisystem)

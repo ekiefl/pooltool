@@ -6,7 +6,7 @@ from typing import ClassVar
 import pooltool.ani.tasks as tasks
 from pooltool.ani.action import Action
 from pooltool.ani.globals import Global, require_showbase
-from pooltool.system.datatypes import multisystem
+from pooltool.ani.scene import SceneController
 from pooltool.utils.strenum import StrEnum, auto
 
 
@@ -31,7 +31,7 @@ class BaseMode(ABC):
     default_keymap: ClassVar[dict[Action, bool]] = {}
     name: Mode = Mode.none
 
-    def __init__(self):
+    def __init__(self, scene: SceneController):
         if not len(self.default_keymap):
             raise NotImplementedError(
                 "Subclasses of BaseMode must have non-empty default_keymap"
@@ -42,6 +42,7 @@ class BaseMode(ABC):
                 "Subclasses of BaseMode must have 'name' attribute"
             )
 
+        self.scene = scene
         self.keymap: dict[Action, bool] = copy.deepcopy(self.default_keymap)
 
     def shared_task(self, task):
@@ -52,7 +53,7 @@ class BaseMode(ABC):
 
         elif self.keymap.get(Action.introspect):
             self.keymap[Action.introspect] = False
-            shot = multisystem.active  # noqa: F841
+            shot = self.scene.multisystem.active  # noqa: F841
             pdb.set_trace()  # noqa: T100
 
         elif self.keymap.get(Action.show_help):
@@ -87,8 +88,9 @@ class BaseMode(ABC):
 
 
 class ModeManager:
-    def __init__(self, mode_classes):
+    def __init__(self, mode_classes, scene: SceneController):
         self.mode_classes = mode_classes
+        self.scene = scene
 
         self.baseline_events = []
 
@@ -100,7 +102,9 @@ class ModeManager:
     @require_showbase
     def init_modes(self):
         """Initialize the modes"""
-        self.modes = {name: mode() for name, mode in self.mode_classes.items()}
+        self.modes = {
+            name: mode(self.scene) for name, mode in self.mode_classes.items()
+        }
 
     def update_event_baseline(self):
         """Update events that are listened to independent of mode

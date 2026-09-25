@@ -1,33 +1,14 @@
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 
 import pytest
-from direct.interval.IntervalGlobal import Parallel, Sequence, Wait, ivalMgr
-from panda3d.core import ClockObject
+from direct.interval.IntervalGlobal import Parallel, Sequence, Wait
 
+from ani._helpers import DT
 from pooltool.ani.playback import PlaybackState, ShotPlayback
 from pooltool.events.datatypes import Event, EventType
 from pooltool.events.factory import null_event
 
-DT = 0.1
 DURATION = 1.0
-
-
-@pytest.fixture
-def advance() -> Iterator[Callable[[int], None]]:
-    """Advance the interval manager by frames of ``DT`` seconds."""
-    clock = ClockObject.get_global_clock()
-    mode = clock.get_mode()
-    clock.set_mode(ClockObject.M_non_real_time)
-    clock.set_dt(DT)
-
-    def _advance(frames: int) -> None:
-        for _ in range(frames):
-            clock.tick()
-            ivalMgr.step()
-
-    yield _advance
-
-    clock.set_mode(mode)
 
 
 def _playback(loop: bool = False) -> ShotPlayback:

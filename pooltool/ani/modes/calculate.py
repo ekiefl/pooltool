@@ -12,7 +12,7 @@ from pooltool.config import settings
 from pooltool.evolution import simulate
 from pooltool.evolution.engine import SimulationEngine
 from pooltool.physics.resolve import Resolver
-from pooltool.system.datatypes import System, multisystem
+from pooltool.system.datatypes import System
 
 
 class CalculateMode(BaseMode):
@@ -36,7 +36,7 @@ class CalculateMode(BaseMode):
         tasks.add(
             self.run_simulation,
             "run_simulation",
-            extraArgs=[multisystem.active],
+            extraArgs=[self.scene.multisystem.active],
             taskChain="simulation",
             appendTask=True,
         )

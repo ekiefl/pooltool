@@ -6,6 +6,7 @@ import pooltool as pt
 from pooltool.ani.animate import ShotViewer
 from pooltool.ani.globals import Global
 from pooltool.ani.modes import ModeManager, all_modes
+from pooltool.ani.scene import visual
 
 
 def main(args):
@@ -31,7 +32,7 @@ def main(args):
             sys.exit()
 
     interface = ShotViewer()
-    Global.register_mode_mgr(TimedModeManager(all_modes))
+    Global.register_mode_mgr(TimedModeManager(all_modes, visual))
     Global.mode_mgr.init_modes()
     interface.show(shot)
 

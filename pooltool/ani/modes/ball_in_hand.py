@@ -14,7 +14,7 @@ from pooltool.ani.constants import ball_highlight
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
-from pooltool.ani.scene import visual
+from pooltool.ani.scene import SceneController
 from pooltool.ruleset.datatypes import BallInHandOptions
 from pooltool.utils import panda_path
 
@@ -29,8 +29,8 @@ class BallInHandMode(BaseMode):
         Action.next: False,
     }
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, scene: SceneController):
+        super().__init__(scene)
 
         self.trans_ball = None
         self.grab_ball_node = None
@@ -72,7 +72,9 @@ class BallInHandMode(BaseMode):
             )
             self.instruction_message.show()
         elif len(Global.game.shot_constraints.movable) == 1:
-            self.grabbed_ball = visual.balls[Global.game.shot_constraints.movable[0]]
+            self.grabbed_ball = self.scene.balls[
+                Global.game.shot_constraints.movable[0]
+            ]
             self.grab_ball_node = self.grabbed_ball.get_node("pos")
             self.grab_ball_shadow_node = self.grabbed_ball.get_node("shadow")
             self.picking = "placement"
@@ -184,7 +186,7 @@ class BallInHandMode(BaseMode):
                         movable_count = len(
                             [
                                 b
-                                for b in visual.balls.values()
+                                for b in self.scene.balls.values()
                                 if b._ball.state.s != c.pocketed
                             ]
                         )
@@ -251,7 +253,7 @@ class BallInHandMode(BaseMode):
             np.array(self.grab_ball_node.getPos()),
         )
 
-        for ball in visual.balls.values():
+        for ball in self.scene.balls.values():
             if ball == self.grabbed_ball:
                 continue
             if ptmath.norm3d(ball._ball.state.rvw[0] - pos) <= (
@@ -335,7 +337,7 @@ class BallInHandMode(BaseMode):
         closest = None
         movable = Global.game.shot_constraints.movable
 
-        for ball_id, ball in visual.balls.items():
+        for ball_id, ball in self.scene.balls.items():
             # Skip pocketed balls
             if ball._ball.state.s == c.pocketed:
                 continue

@@ -20,11 +20,10 @@ from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
-from pooltool.ani.scene import visual
+from pooltool.ani.scene import SceneController
 from pooltool.config import settings
 from pooltool.physics.utils import tip_contact_offset
 from pooltool.ptmath.utils import norm2d
-from pooltool.system.datatypes import multisystem
 
 
 class AimMode(BaseMode):
@@ -52,8 +51,8 @@ class AimMode(BaseMode):
         Action.introspect: False,
     }
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, scene: SceneController):
+        super().__init__(scene)
 
         # In this state, the cue sticks to the cue_avoid.min_theta
         self.magnet_theta = True
@@ -64,18 +63,18 @@ class AimMode(BaseMode):
     def enter(self, load_prev_cam=False):
         mouse.mode(MouseMode.RELATIVE)
 
-        if not visual.cue.has_focus:
-            ball_id = multisystem.active.cue.cue_ball_id
-            visual.cue.init_focus(visual.balls[ball_id])
+        if not self.scene.cue.has_focus:
+            ball_id = self.scene.multisystem.active.cue.cue_ball_id
+            self.scene.cue.init_focus(self.scene.balls[ball_id])
         else:
-            visual.cue.match_ball_position()
+            self.scene.cue.match_ball_position()
 
-        visual.cue.show_nodes(ignore=("cue_cseg",))
-        visual.cue.get_node("cue_stick").setX(0)
+        self.scene.cue.show()
+        self.scene.cue.get_node("cue_stick").setX(0)
 
         # Fixate the camera onto the cueing ball
-        cueing_ball_id = multisystem.active.cue.cue_ball_id
-        cam.move_fixation(visual.balls[cueing_ball_id].get_node("pos").getPos())
+        cueing_ball_id = self.scene.multisystem.active.cue.cue_ball_id
+        cam.move_fixation(self.scene.balls[cueing_ball_id].get_node("pos").getPos())
 
         if load_prev_cam:
             cam.load_saved_state(Mode.aim)
@@ -153,13 +152,13 @@ class AimMode(BaseMode):
             self.keymap[Action.exec_shot] = False
             if Global.game.shot_constraints.can_shoot():
                 Global.mode_mgr.mode_stroked_from = Mode.aim
-                visual.cue.set_object_state_as_render_state(skip_V0=True)
-                multisystem.active.strike()
+                self.scene.cue.set_object_state_as_render_state(skip_V0=True)
+                self.scene.multisystem.active.strike()
                 Global.mode_mgr.change_mode(Mode.calculate)
         elif self.keymap[Action.prev_shot]:
             self.keymap[Action.prev_shot] = False
-            if len(multisystem) > 1:
-                visual.switch_to_shot(multisystem.active_index - 1)
+            if len(self.scene.multisystem) > 1:
+                self.scene.switch_to_shot(self.scene.multisystem.active_index - 1)
                 self._update_hud()
                 Global.mode_mgr.change_mode(Mode.shot)
                 return task.done
@@ -180,14 +179,16 @@ class AimMode(BaseMode):
         self.cue_avoidance()
 
     def cue_avoidance(self):
-        _, _, theta, *_ = visual.cue.get_render_state()
+        _, _, theta, *_ = self.scene.cue.get_render_state()
 
         if (theta < cue_avoid.min_theta) or self.magnet_theta:
             theta = cue_avoid.min_theta
-            system_cue = multisystem.active.cue
+            system_cue = self.scene.multisystem.active.cue
             system_cue.set_state(theta=theta)
-            system_cue_ball = multisystem.active.balls[system_cue.cue_ball_id]
-            visual.cue.set_render_state_as_object_state()
+            system_cue_ball = self.scene.multisystem.active.balls[
+                system_cue.cue_ball_id
+            ]
+            self.scene.cue.set_render_state_as_object_state()
             hud.update_cue(system_cue, system_cue_ball)
 
         if cam.theta < theta + min_camera:
@@ -195,22 +196,22 @@ class AimMode(BaseMode):
 
     def fix_cue_stick_to_camera(self):
         phi = (cam.fixation.getH() + 180) % 360
-        multisystem.active.cue.set_state(phi=phi)
-        visual.cue.set_render_state_as_object_state()
+        self.scene.multisystem.active.cue.set_state(phi=phi)
+        self.scene.cue.set_render_state_as_object_state()
 
     def aim_apply_power(self):
         with mouse:
             dy = mouse.get_dy()
 
-        V0 = multisystem.active.cue.V0 + dy * power_sensitivity
+        V0 = self.scene.multisystem.active.cue.V0 + dy * power_sensitivity
         V0 = max(V0, min_stroke_speed)
         V0 = min(V0, max_stroke_speed)
 
-        multisystem.active.cue.set_state(V0=V0)
+        self.scene.multisystem.active.cue.set_state(V0=V0)
         self._update_hud()
 
     def aim_elevate_cue(self):
-        cue = visual.cue.get_node("cue_stick_focus")
+        cue = self.scene.cue.get_node("cue_stick_focus")
 
         with mouse:
             delta_elevation = mouse.get_dy() * elevate_sensitivity
@@ -231,17 +232,17 @@ class AimMode(BaseMode):
         if cam.theta < (new_elevation + min_camera):
             cam.rotate(theta=new_elevation + min_camera)
 
-        multisystem.active.cue.set_state(theta=new_elevation)
+        self.scene.multisystem.active.cue.set_state(theta=new_elevation)
         self._update_hud()
 
     def apply_english(self):
         with mouse:
             dx, dy = mouse.get_dx(), mouse.get_dy()
 
-        cue = visual.cue.get_node("cue_stick")
-        cue_focus = visual.cue.get_node("cue_stick_focus")
+        cue = self.scene.cue.get_node("cue_stick")
+        cue_focus = self.scene.cue.get_node("cue_stick_focus")
 
-        R = visual.cue.follow._ball.params.R
+        R = self.scene.cue.follow._ball.params.R
 
         delta_y, delta_z = dx * english_sensitivity, dy * english_sensitivity
 
@@ -253,7 +254,7 @@ class AimMode(BaseMode):
             np.array([-new_y, new_z]) / R
         )  # components normalized to ball radius
         contact_point_offset = tip_contact_offset(
-            cue_axis_offset, multisystem.active.cue.specs.tip_radius, R
+            cue_axis_offset, self.scene.multisystem.active.cue.specs.tip_radius, R
         )
 
         norm = norm2d(contact_point_offset)
@@ -278,7 +279,7 @@ class AimMode(BaseMode):
         if cam.theta < (new_theta := -cue_focus.getR() + min_camera):
             cam.rotate(theta=new_theta)
 
-        multisystem.active.cue.set_state(
+        self.scene.multisystem.active.cue.set_state(
             a=contact_point_offset[0],
             b=contact_point_offset[1],
             theta=-cue_focus.getR(),
@@ -288,5 +289,7 @@ class AimMode(BaseMode):
 
     def _update_hud(self) -> None:
         """Update HUD with current system's cue and cue ball"""
-        system_cue = multisystem.active.cue
-        hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
+        system_cue = self.scene.multisystem.active.cue
+        hud.update_cue(
+            system_cue, self.scene.multisystem.active.balls[system_cue.cue_ball_id]
+        )

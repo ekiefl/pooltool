@@ -255,6 +255,22 @@ class CueRender(Render):
 
         return V0, phi, theta, a, b, ball_id
 
+    @property
+    def visible(self) -> bool:
+        return not self.get_node("cue_stick").is_hidden()
+
+    def show(self) -> None:
+        """Draw the cue
+
+        Visibility is switched on the stick node alone, which is the node the stroke
+        animation shows and hides, so a mode and a playback never disagree on it.
+        """
+        self.get_node("cue_stick").show()
+
+    def hide(self) -> None:
+        """Stop drawing the cue"""
+        self.get_node("cue_stick").hide()
+
     def render(self):
         super().render()
         self.init_model()

@@ -6,6 +6,7 @@ from pooltool.ani.action import Action
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
+from pooltool.ani.scene import SceneController
 from pooltool.config import settings
 
 
@@ -32,8 +33,8 @@ class PurgatoryMode(BaseMode):
         Action.regain_control: False,
     }
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, scene: SceneController):
+        super().__init__(scene)
 
         self.is_window_active = None
 

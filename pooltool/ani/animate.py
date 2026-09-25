@@ -23,7 +23,7 @@ from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.menu import MenuRegistry
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
-from pooltool.ani.scene import PlaybackMode, visual
+from pooltool.ani.scene import visual
 from pooltool.config import settings
 from pooltool.evolution import simulate
 from pooltool.layouts import get_rack
@@ -144,7 +144,7 @@ class Interface(ShowBase):
         Global.clock.setMode(ClockObject.MLimited)
         Global.clock.setFrameRate(settings.graphics.fps)
 
-        Global.register_mode_mgr(ModeManager(all_modes))
+        Global.register_mode_mgr(ModeManager(all_modes, visual))
         assert Global.mode_mgr is not None
         Global.mode_mgr.init_modes()
 
@@ -417,7 +417,7 @@ class ShotViewer(Interface):
 
         params = {
             "build_animations": True,
-            "playback_mode": PlaybackMode.LOOP,
+            "loop": True,
         }
         Global.mode_mgr.update_event_baseline()
         Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
@@ -478,7 +478,7 @@ class Game(Interface):
 
         MenuRegistry.hide_all()
         self.create_scene()
-        visual.cue.hide_nodes()
+        visual.cue.hide()
         cue_avoid.init_collisions()
 
         if settings.graphics.hud:
