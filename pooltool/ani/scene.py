@@ -295,9 +295,10 @@ class SceneController:
         """Build the shot animation over the rendered systems
 
         Every system's stroke is in the tree, delayed so that all strikes land at
-        t=0, and its balls hold their initial state until then. Each cue is hidden
-        except while its stroke plays. The playback starts stopped, in single-pass
-        mode. In parallel mode the trailing buffer is ``PARALLEL_TRAILING_BUFFER``.
+        t=0, and its balls hold their initial state until then. Each cue is posed at
+        its shot's cue ball and hidden except while its stroke plays. The playback
+        starts stopped, in single-pass mode. In parallel mode the trailing buffer is
+        ``PARALLEL_TRAILING_BUFFER``.
 
         Args:
             animate_stroke:
@@ -308,11 +309,19 @@ class SceneController:
         if self.is_parallel_mode:
             trailing_buffer = PARALLEL_TRAILING_BUFFER
 
+        for system_render in self.systems.values():
+            system_render.resample(RENDER_DT * self.playback_speed)
+            for ball in system_render.balls.values():
+                if not ball.rendered:
+                    ball.render()
+            system_render.place_balls_initially()
+
         strokes: dict[int, Sequence] = {}
         for idx, system_render in self.systems.items():
             if not system_render.cue.rendered:
                 system_render.cue.render()
 
+            system_render.pose_cue()
             system_render.cue.hide()
 
             if not animate_stroke:
@@ -338,11 +347,7 @@ class SceneController:
         # This takes ~90% of this method's execution time
         ball_animations = Parallel()
         for system_render in self.systems.values():
-            system_render.resample(RENDER_DT * self.playback_speed)
             for ball in system_render.balls.values():
-                if not ball.rendered:
-                    ball.render()
-
                 ball_animation = ball.get_playback_sequence(self.playback_speed, hold)
                 if len(ball_animation) > 0:
                     ball_animations.append(ball_animation)

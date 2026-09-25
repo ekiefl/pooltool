@@ -190,3 +190,17 @@ def test_shot_taken_without_stroking_replays_without_a_stroke(scene: SceneContro
     mode = _enter_shot_mode(build_animations=True, loop=True)
 
     assert mode.playback.start == 0.0
+
+
+def test_replayed_cue_is_posed_at_its_shots_cue_ball(scene: SceneController):
+    _record_stroke(scene)
+    scene.switch_to_shot(1)
+    scene.switch_to_shot(0)
+
+    shot = scene.multisystem.active
+    cue_ball = shot.balls[shot.cue.cue_ball_id]
+    focus = scene.cue.get_node("cue_stick_focus")
+
+    assert focus.getH() % 360 == pytest.approx((shot.cue.phi + 180) % 360)
+    assert -focus.getR() == pytest.approx(shot.cue.theta)
+    assert np.array(focus.getPos()) == pytest.approx(cue_ball.history[0].rvw[0])
