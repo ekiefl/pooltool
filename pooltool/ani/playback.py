@@ -10,7 +10,7 @@ from __future__ import annotations
 from bisect import bisect_right
 from collections.abc import Callable, Mapping
 
-from direct.interval.IntervalGlobal import Parallel, Sequence, Wait
+from direct.interval.IntervalGlobal import MetaInterval, Parallel, Sequence, Wait
 
 from pooltool.events.datatypes import Event
 from pooltool.utils.strenum import StrEnum, auto
@@ -75,8 +75,8 @@ class ShotPlayback:
     @classmethod
     def from_parts(
         cls,
-        stroke: Sequence,
-        balls: Parallel,
+        stroke: MetaInterval,
+        balls: MetaInterval,
         trailing_buffer: float,
         loop: bool,
         speed: float,
@@ -89,7 +89,8 @@ class ShotPlayback:
 
         Args:
             stroke:
-                The cue stroke, in seconds of playback. May be empty.
+                The cue strokes, in seconds of playback, ending together at the
+                strike. May be empty.
             balls:
                 The motion of every ball, in seconds of playback.
             trailing_buffer:

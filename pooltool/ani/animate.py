@@ -187,7 +187,7 @@ class Interface(ShowBase):
         """Create a scene from multisystem"""
         Global.render.attachNewNode("scene")
 
-        visual.attach_system(multisystem.active)
+        visual.attach_system(multisystem.active_index)
         visual.buildup()
 
         R = max([ball.params.R for ball in multisystem.active.balls.values()])
@@ -266,23 +266,21 @@ class FrameStepper(Interface):
 
         self.create_scene()
 
-        # We don't want the cue in this
-        visual.cue.hide_nodes()
-
-        # Or the camera fixation point object
+        # We don't want the camera fixation point object in this
         if cam.fixation_object is not None:
             cam.fixation_object.removeNode()
 
-        visual.system.resample(1 / fps)
+        # Nor the cue, so the playback starts at the strike
+        visual.build_shot_animation(animate_stroke=False)
+        playback = visual.playback
+        assert playback is not None
 
-        frames = int(system.events[-1].time * fps) + 1
+        frames = int(playback.duration * fps) + 1
 
         yield frames
 
         for frame in range(frames):
-            for ball in visual.balls.values():
-                ball.set_render_state_from_history(frame)
-
+            playback.seek(frame / fps)
             Global.task_mgr.step()
 
             yield frame
@@ -299,7 +297,8 @@ class FrameStepper(Interface):
                 look distorted.
             fps:
                 This is the rate (in frames per second) that the shot is iterated
-                through.
+                through. The animation is sampled at `RENDER_DT` and interpolated
+                between samples.
 
         Returns:
             iterator:

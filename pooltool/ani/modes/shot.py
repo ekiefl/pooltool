@@ -251,7 +251,7 @@ class ShotMode(BaseMode):
             if visual.is_parallel_mode:
                 visual.exit_parallel_mode()
             else:
-                visual.setup_parallel_mode()
+                visual.enter_parallel_mode()
 
         elif self.keymap[Action.prev_shot]:
             self.keymap[Action.prev_shot] = False
