@@ -33,8 +33,8 @@ EventHook = Callable[[Event, int], None]
 class ShotPlayback:
     """The interval tree of a shot animation and its playback state.
 
-    ``state`` is the only playback state. A non-looping playback that runs off the end
-    of the tree reports ``FINISHED`` the next time its state is read.
+    ``state`` is the only playback state. A non-looping playback that has run off the
+    end of the tree reports ``FINISHED``.
 
     Time is simulation seconds with the cue strike at zero. The stroke, if animated,
     plays in negative time, and ``duration`` runs to the end of the trailing buffer.
@@ -110,7 +110,7 @@ class ShotPlayback:
     @property
     def state(self) -> PlaybackState:
         if self._state is PlaybackState.PLAYING and not self._tree.isPlaying():
-            self._state = PlaybackState.FINISHED
+            return PlaybackState.FINISHED
         return self._state
 
     @property
