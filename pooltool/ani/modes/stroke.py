@@ -75,6 +75,7 @@ class StrokeMode(BaseMode):
             if self.stroke_cue_stick():
                 # The cue stick has contacted the cue ball
                 self.scene.cue.set_object_state_as_render_state()
+                self.scene.record_stroke(self.scene.cue.stroke)
                 self.scene.multisystem.active.strike()
                 Global.mode_mgr.change_mode(Mode.calculate)
                 return
@@ -110,11 +111,11 @@ class StrokeMode(BaseMode):
 
         if newX < 0:
             newX = 0
-            collision = bool(self.scene.cue.is_shot())
+            collision = self.scene.cue.stroke.is_shot()
         else:
             collision = False
 
         cue_stick_node.setX(newX)
         self.scene.cue.append_stroke_data()
 
-        return bool(collision)
+        return collision

@@ -168,6 +168,7 @@ class Interface(ShowBase):
             visual.exit_parallel_mode()
 
         visual.teardown()
+        visual.strokes.clear()
 
         scene_node = Global.render.find("scene")
         if not scene_node.isEmpty():

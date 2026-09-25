@@ -11,15 +11,16 @@ from pooltool.ani.modes.datatypes import Mode
 from pooltool.ani.modes.shot import ShotMode
 from pooltool.ani.playback import PlaybackState
 from pooltool.ani.scene import SceneController
-from pooltool.objects.cue.render import CueRender
+from pooltool.objects.cue.render import StrokeRecording
 
 STROKE_SECONDS = 0.6
 
 
-def _record_stroke(cue: CueRender) -> None:
-    """Give the cue the stroke data a player would have produced in stroke mode."""
-    cue.stroke_pos = [0.0, 0.05, 0.1, 0.15, 0.2, 0.15, 0.1, 0.05, 0.0, -0.02]
-    cue.stroke_time = list(np.linspace(0, STROKE_SECONDS, len(cue.stroke_pos)))
+def _record_stroke(scene: SceneController) -> None:
+    """Record the stroke a player would have traced for the active shot."""
+    positions = [0.0, 0.05, 0.1, 0.15, 0.2, 0.15, 0.1, 0.05, 0.0, -0.02]
+    times = list(np.linspace(0, STROKE_SECONDS, len(positions)))
+    scene.record_stroke(StrokeRecording(positions, times))
 
 
 def _enter_shot_mode(**enter_kwargs) -> ShotMode:
@@ -30,7 +31,7 @@ def _enter_shot_mode(**enter_kwargs) -> ShotMode:
 def test_taken_shot_plays_once_from_the_strike(
     scene: SceneController, advance: Callable[[int], None]
 ):
-    _record_stroke(scene.cue)
+    _record_stroke(scene)
     mode = _enter_shot_mode(build_animations=True)
     advance(1)
 
@@ -43,7 +44,7 @@ def test_taken_shot_plays_once_from_the_strike(
 def test_viewed_shot_loops_from_the_start_of_the_stroke(
     scene: SceneController, advance: Callable[[int], None]
 ):
-    _record_stroke(scene.cue)
+    _record_stroke(scene)
     mode = _enter_shot_mode(build_animations=True, loop=True)
 
     assert mode.playback.loop
@@ -60,7 +61,7 @@ def test_cue_hidden_by_a_mode_is_shown_by_the_replayed_stroke(
     Global.mode_mgr.change_mode(Mode.view)
     assert not scene.cue.visible
 
-    _record_stroke(scene.cue)
+    _record_stroke(scene)
     mode = _enter_shot_mode(build_animations=True, loop=True)
     advance(1)
     assert scene.cue.visible
@@ -165,3 +166,27 @@ def test_scrubbing_while_paused_moves_with_the_playback_speed(scene: SceneContro
     mode.keymap[Action.rewind] = True
     mode.shot_animation_task(task)
     assert mode.playback.t == pytest.approx(t)
+
+
+def test_recorded_stroke_replays_after_switching_shots(scene: SceneController):
+    _record_stroke(scene)
+
+    scene.switch_to_shot(1)
+    assert scene.playback is not None
+    assert scene.playback.start == 0.0
+
+    scene.switch_to_shot(0)
+    assert scene.playback is not None
+    assert scene.playback.start == pytest.approx(-STROKE_SECONDS, abs=0.01)
+
+    scene.playback.seek(scene.playback.start + 0.1)
+    assert scene.cue.visible
+
+
+def test_shot_taken_without_stroking_replays_without_a_stroke(scene: SceneController):
+    _record_stroke(scene)
+    scene.record_stroke(StrokeRecording())
+
+    mode = _enter_shot_mode(build_animations=True, loop=True)
+
+    assert mode.playback.start == 0.0

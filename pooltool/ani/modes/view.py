@@ -21,6 +21,7 @@ from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
 from pooltool.ani.scene import SceneController
 from pooltool.config import settings
+from pooltool.objects.cue.render import StrokeRecording
 from pooltool.physics.utils import tip_contact_offset
 from pooltool.ptmath.utils import norm2d
 
@@ -141,6 +142,7 @@ class ViewMode(BaseMode):
             if Global.game.shot_constraints.can_shoot():
                 Global.mode_mgr.mode_stroked_from = Mode.aim
                 self.scene.cue.set_object_state_as_render_state(skip_V0=True)
+                self.scene.record_stroke(StrokeRecording())
                 self.scene.multisystem.active.strike()
                 Global.mode_mgr.change_mode(Mode.calculate)
         elif self.keymap[Action.prev_shot]:

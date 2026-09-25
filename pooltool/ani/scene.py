@@ -8,7 +8,7 @@ from pooltool.ani.environment import Environment
 from pooltool.ani.hud import hud
 from pooltool.ani.playback import PlaybackState, ShotPlayback
 from pooltool.objects.ball.render import BallRender
-from pooltool.objects.cue.render import CueRender
+from pooltool.objects.cue.render import CueRender, StrokeRecording
 from pooltool.objects.table.render import TableRender
 from pooltool.system.datatypes import MultiSystem, multisystem
 from pooltool.system.render import SystemRender
@@ -45,11 +45,16 @@ class SceneController:
     While a playback exists, the visibility of each cue is a function of the playback
     time: hidden except while its stroke plays. Modes show and hide the cue only
     when there is no playback.
+
+    The stroke a player traced for a shot is kept in ``strokes``, keyed like
+    ``systems``, so it outlives the cue render it was traced on and replays after
+    switching shots.
     """
 
     def __init__(self, multisystem: MultiSystem) -> None:
         self.multisystem = multisystem
         self.systems: dict[int, SystemRender] = {}
+        self.strokes: dict[int, StrokeRecording] = {}
         self.active: int = 0
         self.environment: Environment = Environment()
         self.playback: ShotPlayback | None = None
@@ -79,6 +84,10 @@ class SceneController:
         """Make the system at ``index`` in ``multisystem`` the only one rendered"""
         self.systems = {index: SystemRender.from_system(self.multisystem[index])}
         self.active = index
+
+    def record_stroke(self, stroke: StrokeRecording) -> None:
+        """Keep ``stroke`` as the stroke of the active shot"""
+        self.strokes[self.multisystem.active_index] = stroke
 
     def reset_animation(self) -> None:
         """Set objects to initial states and remove the animation"""
@@ -311,9 +320,10 @@ class SceneController:
                 continue
 
             cue_stick = system_render.cue.get_node("cue_stick")
+            stroke = self.strokes.get(idx, StrokeRecording())
             strokes[idx] = Sequence(
                 ShowInterval(cue_stick),
-                system_render.cue.get_stroke_sequence(),
+                system_render.cue.get_stroke_sequence(stroke),
                 HideInterval(cue_stick),
             )
 
