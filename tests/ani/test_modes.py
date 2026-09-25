@@ -5,13 +5,12 @@ import pytest
 from panda3d.core import PythonTask
 
 import pooltool.ani.tasks as tasks
-from ani._helpers import DT
 from pooltool.ani.action import Action
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import Mode
 from pooltool.ani.modes.shot import ShotMode
 from pooltool.ani.playback import PlaybackState
-from pooltool.ani.scene import REBUILD_HOLD, SceneController
+from pooltool.ani.scene import SceneController
 from pooltool.objects.cue.render import StrokeRecording
 
 STROKE_SECONDS = 0.6
@@ -207,7 +206,7 @@ def test_replayed_cue_is_posed_at_its_shots_cue_ball(scene: SceneController):
     assert np.array(focus.getPos()) == pytest.approx(cue_ball.history[0].rvw[0])
 
 
-def test_speed_change_while_playing_holds_then_resumes_at_the_same_time(
+def test_speed_change_while_playing_resumes_next_frame_at_the_same_time(
     scene: SceneController, advance: Callable[[int], None]
 ):
     scene.build_shot_animation()
@@ -220,12 +219,6 @@ def test_speed_change_while_playing_holds_then_resumes_at_the_same_time(
     scene.change_speed(2.0)
     rebuilt = scene.playback
     assert rebuilt is not None
-    assert rebuilt.state is PlaybackState.PAUSED
-    assert rebuilt.t == pytest.approx(t)
-
-    frames_in_hold = int(REBUILD_HOLD / DT)
-    for _ in range(frames_in_hold):
-        Global.task_mgr.step()
     assert rebuilt.state is PlaybackState.PAUSED
     assert rebuilt.t == pytest.approx(t)
 

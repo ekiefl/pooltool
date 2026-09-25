@@ -31,14 +31,6 @@ PARALLEL_INACTIVE_ALPHA = 0.3
 TICK_TASK = "shot_playback_tick"
 RESUME_TASK = "shot_playback_resume"
 
-REBUILD_HOLD = 0.25
-"""Seconds a playing animation holds after a rebuild before it resumes.
-
-Panda3D stamps a resumed interval with the current frame's time, so resuming in the
-frame that built the animation would play the build's stall through as a skip. Any
-hold that reaches the next frame prevents that.
-"""
-
 RENDER_DT = 0.01
 """Simulation seconds between render samples at unit playback speed."""
 
@@ -278,8 +270,10 @@ class SceneController:
     def rebuild_animation(self) -> None:
         """Rebuild the shot animation, keeping the current time, state, and loop mode
 
-        A playing animation comes back paused at its time and resumes after
-        ``REBUILD_HOLD`` seconds.
+        A playing animation comes back paused at its time and resumes on the next
+        frame. Panda3D stamps a resumed interval with the current frame's time, so
+        resuming in the frame that built the animation would play the build's stall
+        through as a skip.
         """
         playback = self.playback
         if playback is None:
@@ -301,7 +295,7 @@ class SceneController:
 
         if state is PlaybackState.PLAYING:
             tasks.add_later(
-                REBUILD_HOLD,
+                0,
                 self._resume_rebuilt,
                 RESUME_TASK,
                 extraArgs=[self.playback],
