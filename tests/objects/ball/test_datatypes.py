@@ -187,6 +187,40 @@ def test_ball_history_add():
     assert len(history) == 2
 
 
+def test_ball_history_grows_by_doubling_and_keeps_its_states():
+    history = BallHistory()
+    assert history.capacity == 0
+
+    def add(i: int) -> None:
+        state = BallState.default()
+        state.rvw[0] = [i, i, i]
+        state.t = i
+        history.add(state)
+
+    add(0)
+    assert history.capacity == 16
+
+    for i in range(1, 16):
+        add(i)
+    assert len(history) == 16
+    assert history.capacity == 16
+
+    add(16)
+    assert len(history) == 17
+    assert history.capacity == 32
+
+    for i in range(17, 33):
+        add(i)
+    assert len(history) == 33
+    assert history.capacity == 64
+
+    assert np.array_equal(history.ts, np.arange(33))
+    assert np.array_equal(history.rvws[:, 0, 0], np.arange(33))
+    assert history[-1].t == 32
+    assert len(history.vectorize()[2]) == 33
+    assert len(history.copy()) == 33
+
+
 # ------ BallParams
 
 

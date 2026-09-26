@@ -167,6 +167,17 @@ class BallHistory:
         """The times, shape ``(N,)``, viewing the history's storage"""
         return self._ts[: self._len]
 
+    @property
+    def capacity(self) -> int:
+        """The number of states the storage can hold before it must grow
+
+        Storage is allocated in blocks and doubled when full, so the capacity runs
+        ahead of ``len(self)`` and only the first ``len(self)`` rows hold states.
+        This system is in place because Numpy arrays can't be appended to in place, so
+        growing by one row per :meth:`add` would copy the whole history every time.
+        """
+        return len(self._ts)
+
     def __getitem__(self, idx: int) -> BallState:
         i = range(self._len)[idx]
         return BallState(self._rvws[i], self._ss[i], self._ts[i])
