@@ -14,10 +14,9 @@ from pooltool.ani.constants import ball_highlight
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
-from pooltool.ani.scene import visual
+from pooltool.ani.scene import SceneController
 from pooltool.objects.ball.render import BallRender
 from pooltool.objects.table.components import Pocket
-from pooltool.system.datatypes import multisystem
 from pooltool.utils import panda_path
 
 FONT_OPACITY = 0.95
@@ -31,8 +30,8 @@ class CallShotMode(BaseMode):
         Action.next: False,
     }
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, scene: SceneController):
+        super().__init__(scene)
 
         self.head_raise = 0
 
@@ -216,7 +215,7 @@ class CallShotMode(BaseMode):
         fixation_pos = cam.fixation.getPos()
         d_min = np.inf
         closest = None
-        for pocket in multisystem.active.table.pockets.values():
+        for pocket in self.scene.multisystem.active.table.pockets.values():
             d = ptmath.norm3d(pocket.center - fixation_pos)
             if d < d_min:
                 d_min, closest = d, pocket
@@ -290,7 +289,7 @@ class CallShotMode(BaseMode):
 
         closest = None
 
-        for ball_id, ball in visual.balls.items():
+        for ball_id, ball in self.scene.balls.items():
             if ball_id not in Global.game.shot_constraints.hittable:
                 continue
             if ball._ball.state.s == c.pocketed:

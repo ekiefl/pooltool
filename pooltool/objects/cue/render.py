@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import numpy as np
+from attrs import define, field
 from direct.interval.IntervalGlobal import LerpPosInterval, Sequence
 from panda3d.core import ClockObject, CollisionNode, CollisionSegment, Vec3
 
@@ -12,6 +15,82 @@ from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.datatypes import Render
 from pooltool.physics.utils import tip_center_offset, tip_contact_offset
 
+MAX_STROKE_SECONDS = 1.0
+"""How much of a recorded stroke, counted back from the strike, is animated."""
+
+V0_WINDOW_SECONDS = 0.1
+"""The window before the strike that the stroke's speed is averaged over."""
+
+
+@define
+class StrokeRecording:
+    """The cue stick positions a player traced in stroke mode, with their times
+
+    Positions are the stick's offset from the cue ball along its axis, positive when
+    drawn back, and the last one is the strike. An empty recording is a shot taken
+    without stroking, which animates as no stroke.
+    """
+
+    positions: list[float] = field(factory=list)
+    times: list[float] = field(factory=list)
+
+    def key_times(self) -> tuple[float, float, float]:
+        """Times of the start of the backswing, its apex, and the strike
+
+        All zero for an empty recording.
+        """
+        if not self.positions:
+            return (0.0, 0.0, 0.0)
+
+        # Find the index of the apex (highest point in the backswing)
+        apex_index = self.positions.index(max(self.positions))
+
+        # Find the index of the backstroke start (lowest point before the apex)
+        backstroke_index = self.positions.index(min(self.positions[: apex_index + 1]))
+
+        # The last position in the list is considered the strike
+        return (self.times[backstroke_index], self.times[apex_index], self.times[-1])
+
+    def is_shot(self) -> bool:
+        """Whether the recording is a full stroke rather than an incidental contact"""
+        if len(self.times) < 10:
+            # There is only a handful of frames
+            return False
+
+        if not any(x > 0 for x in self.positions):
+            # No backstroke
+            return False
+
+        backstroke_time, _, strike_time = self.key_times()
+        return strike_time - backstroke_time >= 0.3
+
+    def V0(self) -> float:
+        """The stick's average speed over ``V0_WINDOW_SECONDS`` before the strike
+
+        Raises:
+            StrokeError: The apex of the backswing is inside the window, so the
+                average would span the change of direction.
+        """
+        _, apex_time, strike_time = self.key_times()
+        if strike_time - apex_time < V0_WINDOW_SECONDS:
+            raise StrokeError("Unresolved edge case")
+
+        for position, time in zip(self.positions[::-1], self.times[::-1]):
+            if strike_time - time > V0_WINDOW_SECONDS:
+                return position / V0_WINDOW_SECONDS
+
+        raise StrokeError("Unresolved edge case")
+
+    def trimmed(self, seconds: float) -> StrokeRecording:
+        """The recording from ``seconds`` before the strike, or all of it if shorter"""
+        _, _, strike_time = self.key_times()
+        if strike_time <= seconds:
+            return self
+
+        cutoff = strike_time - seconds
+        start = min(range(len(self.times)), key=lambda i: abs(self.times[i] - cutoff))
+        return StrokeRecording(self.positions[start:], self.times[start:])
+
 
 class CueRender(Render):
     def __init__(self, cue: Cue):
@@ -23,8 +102,7 @@ class CueRender(Render):
         self.stroke_clock = ClockObject()
         self.has_focus = False
 
-        self.stroke_pos: list[float] = []
-        self.stroke_time: list[float] = []
+        self.stroke = StrokeRecording()
 
     def set_object_state_as_render_state(self, skip_V0=False):
         (
@@ -114,35 +192,25 @@ class CueRender(Render):
         return bounds[1][0] - bounds[0][0]
 
     def track_stroke(self):
-        """Initialize variables for storing cue position during stroke"""
-        self.stroke_pos = []
-        self.stroke_time = []
+        """Start a new stroke recording"""
+        self.stroke = StrokeRecording()
         self.stroke_clock.reset()
 
     def append_stroke_data(self):
-        """Append current cue position and timestamp to the cue tracking data"""
-        self.stroke_pos.append(self.get_node("cue_stick").getX())
-        self.stroke_time.append(self.stroke_clock.getRealTime())
+        """Append current cue position and timestamp to the stroke recording"""
+        self.stroke.positions.append(self.get_node("cue_stick").getX())
+        self.stroke.times.append(self.stroke_clock.getRealTime())
 
-    def get_stroke_sequence(self) -> Sequence:
-        """Init a stroke sequence based off of self.stroke_pos and self.stroke_time"""
+    def get_stroke_sequence(self, stroke: StrokeRecording) -> Sequence:
+        """Animate the stick along ``stroke``, from ``MAX_STROKE_SECONDS`` before the strike"""
 
         cue_stick = self.get_node("cue_stick")
         stroke_sequence = Sequence()
 
-        # If the stroke is longer than max_time seconds, truncate to max_time
-        max_time = 1.0
-        _, _, strike_time = self.get_stroke_times()
-        if strike_time > max_time:
-            idx = min(
-                range(len(self.stroke_pos)),
-                key=lambda i: abs(self.stroke_pos[i] - (strike_time - max_time)),
-            )
-            self.stroke_pos = self.stroke_pos[idx:]
-            self.stroke_time = self.stroke_time[idx:]
-
-        xs = np.array(self.stroke_pos)
-        dts = np.diff(np.array(self.stroke_time))
+        # If the stroke is longer than MAX_STROKE_SECONDS, truncate to MAX_STROKE_SECONDS
+        stroke = stroke.trimmed(MAX_STROKE_SECONDS)
+        xs = np.array(stroke.positions)
+        dts = np.diff(np.array(stroke.times))
 
         y, z = cue_stick.getY(), cue_stick.getZ()
 
@@ -154,76 +222,6 @@ class CueRender(Render):
             )
 
         return stroke_sequence
-
-    def get_stroke_times(self, as_index=False):
-        """Get key moments in the trajectory of the stroke
-
-        Args:
-            as_index:
-                See Returns
-
-        Returns:
-            (backstroke, apex, strike):
-                Returns a 3-ple of times (or indices of the lists self.stroke_time and
-                self.stroke_pos if as_index is True) that describe three critical
-                moments in the cue stick. backstroke is start of the backswing, apex is
-                when the cue is at the peak of the backswing, and strike is when the cue
-                makes contact.
-        """
-        if not self.stroke_pos:
-            return (0, 0, 0)
-
-        # Find the index of the apex (highest point in the backswing)
-        apex_index = self.stroke_pos.index(max(self.stroke_pos))
-        apex_time = self.stroke_time[apex_index]
-
-        # Find the index of the backstroke start (lowest point before the apex)
-        backstroke_index = self.stroke_pos.index(min(self.stroke_pos[: apex_index + 1]))
-        backstroke_time = self.stroke_time[backstroke_index]
-
-        # The last position in the list is considered the strike
-        strike_index = len(self.stroke_pos) - 1
-        strike_time = self.stroke_time[strike_index]
-
-        if as_index:
-            return (backstroke_index, apex_index, strike_index)
-        else:
-            return (backstroke_time, apex_time, strike_time)
-
-    def is_shot(self):
-        if len(self.stroke_time) < 10:
-            # There is only a handful of frames
-            return False
-
-        if not any(x > 0 for x in self.stroke_pos):
-            # No backstroke
-            return False
-
-        backstroke_time, _, strike_time = self.get_stroke_times()
-
-        stroke_duration = strike_time - backstroke_time
-        return stroke_duration >= 0.3
-
-    def calc_V0_from_stroke(self):
-        """Calculates V0 from the stroke sequence
-
-        Takes the average velocity calculated over the 0.1 seconds preceding the shot.
-        If the time between the cue strike and apex of the stroke is less than 0.1
-        seconds, calculate the average velocity since the apex
-        """
-
-        try:
-            _, apex_time, strike_time = self.get_stroke_times()
-        except IndexError:
-            raise StrokeError("Unresolved edge case")
-
-        max_time = 0.1
-        if (strike_time - apex_time) < max_time:
-            raise StrokeError("Unresolved edge case")
-
-        for i, t in enumerate(self.stroke_time[::-1]):
-            if strike_time - t > max_time:
-                return self.stroke_pos[::-1][i] / max_time
 
     def match_ball_position(self):
         """Update the cue stick's position to match the cueing ball's position"""
@@ -238,11 +236,9 @@ class CueRender(Render):
         phi = (cue_stick_focus.getH() + 180) % 360
 
         try:
-            V0 = self.calc_V0_from_stroke()
+            V0 = self.stroke.V0()
         except StrokeError:
             V0 = 0.1
-
-        assert V0 is not None
 
         theta = -cue_stick_focus.getR()
         a, b = tip_contact_offset(
@@ -254,6 +250,22 @@ class CueRender(Render):
         ball_id = self.follow._ball.id
 
         return V0, phi, theta, a, b, ball_id
+
+    @property
+    def visible(self) -> bool:
+        return not self.get_node("cue_stick").is_hidden()
+
+    def show(self) -> None:
+        """Draw the cue
+
+        Visibility is switched on the stick node alone, which is the node the stroke
+        animation shows and hides, so a mode and a playback never disagree on it.
+        """
+        self.get_node("cue_stick").show()
+
+    def hide(self) -> None:
+        """Stop drawing the cue"""
+        self.get_node("cue_stick").hide()
 
     def render(self):
         super().render()

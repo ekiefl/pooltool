@@ -19,11 +19,11 @@ from pooltool.ani.globals import Global
 from pooltool.ani.hud import hud
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
-from pooltool.ani.scene import visual
+from pooltool.ani.scene import SceneController
 from pooltool.config import settings
+from pooltool.objects.cue.render import StrokeRecording
 from pooltool.physics.utils import tip_contact_offset
 from pooltool.ptmath.utils import norm2d
-from pooltool.system.datatypes import multisystem
 
 
 class ViewMode(BaseMode):
@@ -50,8 +50,8 @@ class ViewMode(BaseMode):
         Action.exec_shot: False,
     }
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, scene: SceneController):
+        super().__init__(scene)
 
         # In this state, the cue sticks to the cue_avoid.min_theta
         self.magnet_theta = True
@@ -62,8 +62,8 @@ class ViewMode(BaseMode):
     def enter(self, move_active=False, load_prev_cam=False):
         mouse.mode(MouseMode.RELATIVE)
 
-        if multisystem.active is not None:
-            visual.cue.hide_nodes(ignore=("cue_cseg",))
+        if self.scene.multisystem.active is not None:
+            self.scene.cue.hide()
 
         if load_prev_cam:
             cam.load_saved_state(Mode.view)
@@ -127,8 +127,8 @@ class ViewMode(BaseMode):
             self.keymap[Action.english] = False
             self.keymap[Action.elevation] = False
             self.keymap[Action.power] = False
-            if multisystem.active is not None:
-                visual.cue.hide_nodes(ignore=("cue_cseg",))
+            if self.scene.multisystem.active is not None:
+                self.scene.cue.hide()
         elif self.keymap[Action.elevation]:
             self.view_elevate_cue()
         elif self.keymap[Action.english]:
@@ -141,13 +141,14 @@ class ViewMode(BaseMode):
             self.keymap[Action.exec_shot] = False
             if Global.game.shot_constraints.can_shoot():
                 Global.mode_mgr.mode_stroked_from = Mode.aim
-                visual.cue.set_object_state_as_render_state(skip_V0=True)
-                multisystem.active.strike()
+                self.scene.cue.set_object_state_as_render_state(skip_V0=True)
+                self.scene.record_stroke(StrokeRecording())
+                self.scene.multisystem.active.strike()
                 Global.mode_mgr.change_mode(Mode.calculate)
         elif self.keymap[Action.prev_shot]:
             self.keymap[Action.prev_shot] = False
-            if len(multisystem) > 1:
-                visual.switch_to_shot(multisystem.active_index - 1)
+            if len(self.scene.multisystem) > 1:
+                self.scene.switch_to_shot(self.scene.multisystem.active_index - 1)
                 self._update_hud()
                 Global.mode_mgr.change_mode(
                     Mode.shot, enter_kwargs={"build_animations": False}
@@ -159,22 +160,22 @@ class ViewMode(BaseMode):
         return task.cont
 
     def view_apply_power(self):
-        visual.cue.show_nodes(ignore=("cue_cseg",))
+        self.scene.cue.show()
 
         with mouse:
             dy = mouse.get_dy()
 
-        V0 = multisystem.active.cue.V0 + dy * power_sensitivity
+        V0 = self.scene.multisystem.active.cue.V0 + dy * power_sensitivity
         V0 = max(V0, min_stroke_speed)
         V0 = min(V0, max_stroke_speed)
 
-        multisystem.active.cue.set_state(V0=V0)
+        self.scene.multisystem.active.cue.set_state(V0=V0)
         self._update_hud()
 
     def view_elevate_cue(self):
-        visual.cue.show_nodes(ignore=("cue_cseg",))
+        self.scene.cue.show()
 
-        cue = visual.cue.get_node("cue_stick_focus")
+        cue = self.scene.cue.get_node("cue_stick_focus")
 
         with mouse:
             delta_elevation = mouse.get_dy() * elevate_sensitivity
@@ -192,18 +193,18 @@ class ViewMode(BaseMode):
 
         cue.setR(-new_elevation)
 
-        multisystem.active.cue.set_state(theta=new_elevation)
+        self.scene.multisystem.active.cue.set_state(theta=new_elevation)
         self._update_hud()
 
     def view_apply_english(self):
-        visual.cue.show_nodes(ignore=("cue_cseg",))
+        self.scene.cue.show()
 
         with mouse:
             dx, dy = mouse.get_dx(), mouse.get_dy()
 
-        cue = visual.cue.get_node("cue_stick")
-        cue_focus = visual.cue.get_node("cue_stick_focus")
-        R = visual.cue.follow._ball.params.R
+        cue = self.scene.cue.get_node("cue_stick")
+        cue_focus = self.scene.cue.get_node("cue_stick_focus")
+        R = self.scene.cue.follow._ball.params.R
 
         delta_y, delta_z = dx * english_sensitivity, dy * english_sensitivity
 
@@ -216,7 +217,7 @@ class ViewMode(BaseMode):
             np.array([-new_y, new_z]) / R
         )  # components normalized to ball radius
         contact_point_offset = tip_contact_offset(
-            cue_axis_offset, multisystem.active.cue.specs.tip_radius, R
+            cue_axis_offset, self.scene.multisystem.active.cue.specs.tip_radius, R
         )
 
         norm = norm2d(contact_point_offset)
@@ -238,15 +239,17 @@ class ViewMode(BaseMode):
         ):
             cue_focus.setR(-cue_avoid.min_theta)
 
-        multisystem.active.cue.set_state(
+        self.scene.multisystem.active.cue.set_state(
             a=contact_point_offset[0],
             b=contact_point_offset[1],
-            theta=-visual.cue.get_node("cue_stick_focus").getR(),
+            theta=-self.scene.cue.get_node("cue_stick_focus").getR(),
         )
 
         self._update_hud()
 
     def _update_hud(self) -> None:
         """Update HUD with current system's cue and cue ball"""
-        system_cue = multisystem.active.cue
-        hud.update_cue(system_cue, multisystem.active.balls[system_cue.cue_ball_id])
+        system_cue = self.scene.multisystem.active.cue
+        hud.update_cue(
+            system_cue, self.scene.multisystem.active.balls[system_cue.cue_ball_id]
+        )

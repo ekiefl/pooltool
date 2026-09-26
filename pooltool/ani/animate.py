@@ -23,10 +23,9 @@ from pooltool.ani.hud import HUDElement, hud
 from pooltool.ani.menu import MenuRegistry
 from pooltool.ani.modes import Mode, ModeManager, all_modes
 from pooltool.ani.mouse import mouse
-from pooltool.ani.scene import PlaybackMode, visual
+from pooltool.ani.scene import visual
 from pooltool.config import settings
 from pooltool.evolution import simulate
-from pooltool.evolution.continuous import continuize
 from pooltool.layouts import get_rack
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.table.collection import prebuilt_specs
@@ -145,7 +144,7 @@ class Interface(ShowBase):
         Global.clock.setMode(ClockObject.MLimited)
         Global.clock.setFrameRate(settings.graphics.fps)
 
-        Global.register_mode_mgr(ModeManager(all_modes))
+        Global.register_mode_mgr(ModeManager(all_modes, visual))
         assert Global.mode_mgr is not None
         Global.mode_mgr.init_modes()
 
@@ -169,6 +168,7 @@ class Interface(ShowBase):
             visual.exit_parallel_mode()
 
         visual.teardown()
+        visual.strokes.clear()
 
         scene_node = Global.render.find("scene")
         if not scene_node.isEmpty():
@@ -188,7 +188,7 @@ class Interface(ShowBase):
         """Create a scene from multisystem"""
         Global.render.attachNewNode("scene")
 
-        visual.attach_system(multisystem.active)
+        visual.attach_system(multisystem.active_index)
         visual.buildup()
 
         R = max([ball.params.R for ball in multisystem.active.balls.values()])
@@ -260,8 +260,6 @@ class FrameStepper(Interface):
         size: tuple[int, int] = (int(1.6 * 720), 720),
         fps: float = 30.0,
     ) -> Generator:
-        continuize(system, dt=1 / fps, inplace=True)
-
         multisystem.reset()
         multisystem.append(system)
 
@@ -269,26 +267,21 @@ class FrameStepper(Interface):
 
         self.create_scene()
 
-        # We don't want the cue in this
-        visual.cue.hide_nodes()
-
-        # Or the camera fixation point object
+        # We don't want the camera fixation point object in this
         if cam.fixation_object is not None:
             cam.fixation_object.removeNode()
 
-        # Set quaternions for each ball
-        for ball in visual.balls.values():
-            ball.set_quats(ball._ball.history_cts)
+        # Nor the cue, so the playback starts at the strike
+        visual.build_shot_animation(animate_stroke=False)
+        playback = visual.playback
+        assert playback is not None
 
-        frames = int(system.events[-1].time * fps) + 1
+        frames = int(playback.duration * fps) + 1
 
         yield frames
 
         for frame in range(frames):
-            for ball in visual.balls.values():
-                ball.set_render_state_from_history(ball._ball.history_cts, frame)
-                ball._ball.state = ball._ball.history_cts[frame]
-
+            playback.seek(frame / fps)
             Global.task_mgr.step()
 
             yield frame
@@ -298,16 +291,15 @@ class FrameStepper(Interface):
 
         Args:
             shot:
-                The shot you would like to iterate through. It should already by
-                simulated. It is OK if you have continuized the shot (you can check with
-                shot.continuized), but the continuization will be overwritten to match
-                the `fps` chosen in this method.
+                The shot you would like to iterate through. It should already be
+                simulated. It is not modified; it is sampled at `fps` for rendering.
             size:
                 The number of pixels in x and y. If x:y != 1.6, the aspect ratio will
                 look distorted.
             fps:
                 This is the rate (in frames per second) that the shot is iterated
-                through.
+                through. The animation is sampled at `RENDER_DT` and interpolated
+                between samples.
 
         Returns:
             iterator:
@@ -426,7 +418,7 @@ class ShotViewer(Interface):
 
         params = {
             "build_animations": True,
-            "playback_mode": PlaybackMode.LOOP,
+            "loop": True,
         }
         Global.mode_mgr.update_event_baseline()
         Global.mode_mgr.change_mode(Mode.shot, enter_kwargs=params)
@@ -487,7 +479,7 @@ class Game(Interface):
 
         MenuRegistry.hide_all()
         self.create_scene()
-        visual.cue.hide_nodes()
+        visual.cue.hide()
         cue_avoid.init_collisions()
 
         if settings.graphics.hud:

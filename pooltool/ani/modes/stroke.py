@@ -12,8 +12,7 @@ from pooltool.ani.constants import (
 from pooltool.ani.globals import Global
 from pooltool.ani.modes.datatypes import BaseMode, Mode
 from pooltool.ani.mouse import MouseMode, mouse
-from pooltool.ani.scene import visual
-from pooltool.system.datatypes import multisystem
+from pooltool.ani.scene import SceneController
 
 
 class StrokeMode(BaseMode):
@@ -23,16 +22,16 @@ class StrokeMode(BaseMode):
         Action.stroke: True,
     }
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, scene: SceneController):
+        super().__init__(scene)
         self.call_shot_message = None
 
     def enter(self):
         mouse.mode(MouseMode.RELATIVE)
         Global.mode_mgr.mode_stroked_from = Global.mode_mgr.last_mode
 
-        visual.cue.track_stroke()
-        visual.cue.show_nodes(ignore=("cue_cseg",))
+        self.scene.cue.track_stroke()
+        self.scene.cue.show()
 
         self.register_keymap_event("f", Action.fine_control, True)
         self.register_keymap_event("f-up", Action.fine_control, False)
@@ -75,8 +74,9 @@ class StrokeMode(BaseMode):
 
             if self.stroke_cue_stick():
                 # The cue stick has contacted the cue ball
-                visual.cue.set_object_state_as_render_state()
-                multisystem.active.strike()
+                self.scene.cue.set_object_state_as_render_state()
+                self.scene.record_stroke(self.scene.cue.stroke)
+                self.scene.multisystem.active.strike()
                 Global.mode_mgr.change_mode(Mode.calculate)
                 return
         else:
@@ -85,8 +85,8 @@ class StrokeMode(BaseMode):
                 self.call_shot_message.hide()
                 self.call_shot_message = None
 
-            visual.cue.get_node("cue_stick").setX(0)
-            visual.cue.hide_nodes(ignore=("cue_cseg",))
+            self.scene.cue.get_node("cue_stick").setX(0)
+            self.scene.cue.hide()
             Global.mode_mgr.change_mode(Global.mode_mgr.last_mode)
             return
 
@@ -95,7 +95,7 @@ class StrokeMode(BaseMode):
     def stroke_cue_stick(self):
         max_speed_mouse = max_stroke_speed / stroke_sensitivity  # [px/s]
         max_backstroke = (
-            multisystem.active.cue.specs.length * backstroke_fraction
+            self.scene.multisystem.active.cue.specs.length * backstroke_fraction
         )  # [m]
 
         with mouse:
@@ -106,16 +106,16 @@ class StrokeMode(BaseMode):
         if speed_mouse > max_speed_mouse:
             dx *= max_speed_mouse / speed_mouse
 
-        cue_stick_node = visual.cue.get_node("cue_stick")
+        cue_stick_node = self.scene.cue.get_node("cue_stick")
         newX = min(max_backstroke, cue_stick_node.getX() - dx * stroke_sensitivity)
 
         if newX < 0:
             newX = 0
-            collision = bool(visual.cue.is_shot())
+            collision = self.scene.cue.stroke.is_shot()
         else:
             collision = False
 
         cue_stick_node.setX(newX)
-        visual.cue.append_stroke_data()
+        self.scene.cue.append_stroke_data()
 
-        return bool(collision)
+        return collision

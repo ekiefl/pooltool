@@ -1,7 +1,11 @@
 import numpy as np
 import pytest
 
-from pooltool.evolution.continuous import continuize, interpolate_ball_states
+from pooltool.evolution.continuous import (
+    continuize,
+    continuize_ball,
+    interpolate_ball_states,
+)
 from pooltool.evolution.event_based.simulate import simulate
 from pooltool.system import System
 
@@ -33,6 +37,30 @@ def test_continuize_inplace():
 
     # They are the same object
     assert continuized_system is system
+
+
+def test_continuize_ball_is_the_per_ball_work_of_continuize():
+    system = simulate(System.example())
+    reference = continuize(system, dt=0.01)
+
+    for ball_id, ball in system.balls.items():
+        history = continuize_ball(ball, system.events, 0.01)
+        rvws, ss, ts = history.vectorize()
+        expected = reference.balls[ball_id].history_cts.vectorize()
+        assert np.array_equal(rvws, expected[0])
+        assert np.array_equal(ss, expected[1])
+        assert np.array_equal(ts, expected[2])
+        assert ball.history_cts.empty
+
+
+def test_continuize_ball_ends_with_a_single_final_state():
+    system = simulate(System.example())
+    ball = system.balls["cue"]
+
+    history = continuize_ball(ball, system.events, 0.01)
+
+    assert history[-1] == ball.history[-1]
+    assert history[-2].t < history[-1].t
 
 
 def test_interpolate_ball_states_exact_match():
