@@ -554,6 +554,7 @@ class LogWindow(BaseHUDElement):
         self.scale1 = 0.04  # latest message
         self.scale2 = 0.04
         self.on_screen = deque([])
+        self.fades: dict[autils.CustomOnscreenText, LerpFunc] = {}
 
         self.colors = {
             "bad": (0.8, 0.2, 0.2, 1),
@@ -582,10 +583,19 @@ class LogWindow(BaseHUDElement):
         )
 
     def destroy(self):
-        """Delete the on screen text nodes"""
+        """Delete the on screen text nodes, stopping any fade still running on them"""
         while self.on_screen:
-            on_screen_text = self.on_screen.pop()
-            on_screen_text.removeNode()
+            self._remove_message(self.on_screen.pop())
+
+    def _remove_message(self, on_screen_text) -> None:
+        """Remove a message's node after stopping its fade-in
+
+        The fade-in keeps calling into the node every frame until it finishes, so a
+        node removed mid-fade would leave it calling into an empty NodePath.
+        """
+        if (fade := self.fades.pop(on_screen_text, None)) is not None:
+            fade.pause()
+        on_screen_text.removeNode()
 
     def show(self):
         for on_screen_text in self.on_screen:
@@ -597,8 +607,7 @@ class LogWindow(BaseHUDElement):
 
     def broadcast_msg(self, msg, color=None):
         if len(self.on_screen) >= self.on_screen_max:
-            off_screen = self.on_screen.pop()
-            off_screen.removeNode()
+            self._remove_message(self.on_screen.pop())
 
         # Add the new message to the screen and set its alpha scale to 0 to make it invisible
         new_message = self.init_text_object(0, msg=msg, color=color)
@@ -620,6 +629,7 @@ class LogWindow(BaseHUDElement):
             toData=1,  # End with an alpha of 1 (completely opaque)
             duration=0.6,  # Duration of the fade-in animation
         )
+        self.fades[new_message] = fade_in
         fade_in.start()
 
 
