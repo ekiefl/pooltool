@@ -44,7 +44,7 @@ def test_continuize_ball_is_the_per_ball_work_of_continuize():
     reference = continuize(system, dt=0.01)
 
     for ball_id, ball in system.balls.items():
-        history = continuize_ball(ball, system.events, 0.01)
+        history = continuize_ball(ball, 0.01)
         rvws, ss, ts = history.vectorize()
         expected = reference.balls[ball_id].history_cts.vectorize()
         assert np.array_equal(rvws, expected[0])
@@ -57,7 +57,7 @@ def test_continuize_ball_ends_with_a_single_final_state():
     system = simulate(System.example())
     ball = system.balls["cue"]
 
-    history = continuize_ball(ball, system.events, 0.01)
+    history = continuize_ball(ball, 0.01)
 
     assert history[-1] == ball.history[-1]
     assert history[-2].t < history[-1].t

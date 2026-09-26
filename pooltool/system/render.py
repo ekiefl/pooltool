@@ -54,9 +54,7 @@ class SystemRender:
         """
         for ball_id, ball_render in self.balls.items():
             if self.system.simulated:
-                history = continuize_ball(
-                    self.system.balls[ball_id], self.system.events, dt
-                )
+                history = continuize_ball(self.system.balls[ball_id], dt)
             else:
                 history = BallHistory()
             ball_render.set_history(history)

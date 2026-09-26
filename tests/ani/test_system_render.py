@@ -51,4 +51,4 @@ def test_unsimulated_system_gives_empty_histories():
 
     for ball_render in render.balls.values():
         assert ball_render.history.empty
-        assert ball_render.quats == []
+        assert len(ball_render.quats) == 0

@@ -7,6 +7,8 @@ from direct.gui.DirectGui import (
 )
 from direct.gui.DirectGuiBase import DirectGuiWidget
 from direct.gui.OnscreenText import OnscreenText
+from numba import jit
+from numpy.typing import NDArray
 from panda3d.core import (
     LVector3,
     NodePath,
@@ -17,7 +19,7 @@ from panda3d.core import (
     Vec4,
 )
 
-import pooltool.ptmath as ptmath
+import pooltool.constants as const
 from pooltool.ani.fonts import load_font
 from pooltool.ani.globals import Global
 
@@ -111,57 +113,51 @@ def get_list_of_Vec3s_from_array(array):
     return vec3s
 
 
-def as_quaternion(w, t, dQ_0=None) -> list:
-    """Convert angular velocities to quaternions
+@jit(nopython=True, cache=const.use_numba_cache)
+def as_quaternion(
+    w: NDArray[np.float64], t: NDArray[np.float64]
+) -> NDArray[np.float64]:
+    """Integrate angular velocities into orientation quaternions
 
-    Notes
-    =====
-    - This mathematics is taken from the following stackexchange answer:
-      https://stackoverflow.com/questions/23503151/how-to-update-quaternion-based-on-3d-gyro-data/41226401
-      Though as pointed out by jrichner, the correct quaternions are produced
-      only after reversing the order of multiplication.
+    Args:
+        w:
+            Angular velocities along a trajectory, shape ``(N, 3)``.
+        t:
+            The timestamps of the angular velocities, shape ``(N,)``.
+
+    Returns:
+        Unit quaternions as ``(r, i, j, k)`` rows, shape ``(N, 4)``. The first is the
+        identity, and each following row is the previous orientation rotated by its
+        angular velocity over the time elapsed since the previous timestamp.
+
+    Notes:
+        - This mathematics is taken from the following stackexchange answer:
+          https://stackoverflow.com/questions/23503151/how-to-update-quaternion-based-on-3d-gyro-data/41226401
+          Though as pointed out by jrichner, the correct quaternions are produced only
+          after reversing the order of multiplication.
     """
-    dquats = get_infinitesimal_quaternions(w, t, dQ_0)
-    dquats = get_quaternion_list_from_array(dquats)
+    num = len(t)
+    quats = np.empty((num, 4))
+    quats[0, 0] = 1.0
+    quats[0, 1:] = 0.0
 
-    quats = [dquats[0]]
-    for i in range(1, len(dquats)):
-        quats.append(quats[i - 1] * dquats[i])
+    for i in range(1, num):
+        wx, wy, wz = w[i, 0], w[i, 1], w[i, 2]
+        norm = np.sqrt(wx * wx + wy * wy + wz * wz)
+        if norm == 0.0:
+            quats[i] = quats[i - 1]
+            continue
 
-    return quats
+        half = 0.5 * norm * (t[i] - t[i - 1])
+        scale = np.sin(half) / norm
+        dr, di, dj, dk = np.cos(half), wx * scale, wy * scale, wz * scale
+        r, a, b, c = quats[i - 1]
 
-
-def get_infinitesimal_quaternions(w, t, dQ_0=None):
-    w_norm = np.linalg.norm(w, axis=1)
-    w_unit = ptmath.unit_vector_slow(w, handle_zero=True)
-
-    dt = np.diff(t)
-    theta = w_norm[1:] * dt
-
-    # Quaternion looks like m + xi + yj + zk
-    dQ_m = np.cos(theta / 2)[:, None]
-    dQ_xyz = w_unit[1:] * np.sin(theta / 2)[:, None]
-    dQ = np.hstack([dQ_m, dQ_xyz])
-
-    # Since the time elapsed is calculated from a difference of timestamps
-    # there is one less datapoint than needed. I remedy this by adding the
-    # identity quaternion as the first point
-    if dQ_0 is None:
-        dQ_0 = np.array([1, 0, 0, 0])
-    else:
-        dQ_0 = np.array(dQ_0)
-    dQ_0 = get_quat_from_vector(dQ_0)
-
-    dQ = np.vstack([dQ_0, dQ])
-
-    return dQ
-
-
-def get_quaternion_list_from_array(array):
-    """array is shape (N, 4)"""
-    quats = []
-    for i in range(array.shape[0]):
-        quats.append(get_quat_from_vector(array[i, :]))
+        quats[i, 0] = dr * r - di * a - dj * b - dk * c
+        quats[i, 1] = dr * a + di * r + dj * c - dk * b
+        quats[i, 2] = dr * b - di * c + dj * r + dk * a
+        quats[i, 3] = dr * c + di * b - dj * a + dk * r
+        quats[i] /= np.sqrt((quats[i] ** 2).sum())
 
     return quats
 

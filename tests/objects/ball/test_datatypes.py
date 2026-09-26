@@ -127,6 +127,15 @@ def test_ball_history_vectorize():
     assert BallHistory.from_vectorization(history.vectorize()) == history
 
 
+def test_ball_history_from_vectorization_rejects_decreasing_times():
+    rvws = np.zeros((3, 3, 3))
+    ss = np.zeros(3)
+    ts = np.array([0.0, 2.0, 1.0])
+
+    with pytest.raises(ValueError, match="nondecreasing"):
+        BallHistory.from_vectorization((rvws, ss, ts))
+
+
 def test_ball_history_copy():
     # Create a history of 10 states
     history = BallHistory()

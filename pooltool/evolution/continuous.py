@@ -6,11 +6,11 @@ For an explanation, see :func:`continuize` and :func:`interpolate_ball_states`
 from collections.abc import Sequence
 
 import numpy as np
+from numba import jit
 from numpy.typing import NDArray
 
+import pooltool.constants as const
 import pooltool.physics.evolve as evolve
-from pooltool.events import filter_ball
-from pooltool.events.datatypes import Event
 from pooltool.objects.ball.datatypes import Ball, BallHistory, BallState
 from pooltool.system.datatypes import System
 
@@ -107,22 +107,19 @@ def continuize(system: System, dt: float = 0.01, inplace: bool = False) -> Syste
         system = system.copy()
 
     for ball in system.balls.values():
-        ball.history_cts = continuize_ball(ball, system.events, dt)
+        ball.history_cts = continuize_ball(ball, dt)
 
     return system
 
 
-def continuize_ball(ball: Ball, events: list[Event], dt: float) -> BallHistory:
-    """Build a ball's time-dense history from the events of its shot
+def continuize_ball(ball: Ball, dt: float) -> BallHistory:
+    """Build a ball's time-dense history from its event-based history
 
     This is the per-ball work of :func:`continuize`. The ball is not modified.
 
     Args:
         ball:
             A ball whose :attr:`pooltool.objects.Ball.history` spans the shot.
-        events:
-            The events of the shot, in time order, including those the ball took no
-            part in.
         dt:
             Simulation seconds between timestamps.
 
@@ -130,86 +127,73 @@ def continuize_ball(ball: Ball, events: list[Event], dt: float) -> BallHistory:
         A history holding the ball's initial state, a state every ``dt`` seconds, and
         its final state, which is within ``dt`` of the last timestamp.
     """
-    # This is the exact number of timepoints that the ball history will contain
-    num_timestamps = int(events[-1].time // dt) + 1
-
-    # Create a new history and add the zeroth event
-    history = BallHistory()
-    history.add(ball.history[0])
-
-    rvw, s = ball.history[0].rvw, ball.history[0].s
-
-    # Get all events that the ball is involved in, even the null_event events
-    # that mark the start and end times
-    ball_events = filter_ball(events, ball.id, keep_nonevent=True)
-
-    # Tracks which event is currently being handled
-    count = 0
-
-    # The elapsed simulation time (as of the last timepoint)
-    elapsed = 0.0
-
-    for n in range(num_timestamps):
-        if n == (num_timestamps - 1):
-            # We made it to the end. the difference between the final time and
-            # the elapsed time should be < dt
-            assert ball_events[-1].time - elapsed < dt
-            break
-
-        if ball_events[count + 1].time - elapsed > dt:
-            # This is the easy case. There is no upcoming event so we simply
-            # evolve the state an amount dt
-            evolve_time = dt
-
-        else:
-            # The next event (and perhaps an arbitrary number of subsequent
-            # events) occurs before the next timestamp. Find the last event
-            # between the current timestamp and the next timestamp. This will be
-            # used as a launching point to simulate the ball state to the next
-            # timestamp
-
-            while True:
-                count += 1
-
-                if ball_events[count + 1].time - elapsed > dt:
-                    # OK, we found the last event between the current timestamp
-                    # and the next timestamp. It is ball_events[count].
-                    break
-
-            # We need to get the ball's outgoing state from the event. We'll
-            # evolve the system from this state.
-            state = ball_events[count].get_ball(ball.id, initial=False).state.copy()
-
-            rvw, s = state.rvw, state.s
-
-            # Since this event occurs between two timestamps, we won't be
-            # evolving a full dt. Instead, we evolve this much:
-            evolve_time = elapsed + dt - ball_events[count].time
-
-        # Whether it was the hard path or the easy path, the ball state is
-        # properly defined and we know how much we need to simulate.
-        rvw, s = evolve.evolve_ball_motion(
-            state=s,
-            rvw=rvw,
-            R=ball.params.R,
-            m=ball.params.m,
-            u_s=ball.params.u_s,
-            u_sp=ball.params.u_sp,
-            u_r=ball.params.u_r,
-            g=ball.params.g,
-            t=evolve_time,
+    params = ball.params
+    rvws, ss, ts = ball.history.vectorize()
+    return BallHistory.from_vectorization(
+        _continuize_states(
+            rvws,
+            ss,
+            ts,
+            params.R,
+            params.m,
+            params.u_s,
+            params.u_sp,
+            params.u_r,
+            params.g,
+            dt,
         )
+    )
 
-        history.add(BallState(rvw, s, elapsed + dt))
-        elapsed += dt
 
-    # There is a finale. The final state is missing from the continuous history,
-    # whose final state is within dt of the true final state. We add the final
-    # state to the continous history even though this breaks the promise of
-    # uniformly spaced timestamps
-    history.add(ball.history[-1])
+@jit(nopython=True, cache=const.use_numba_cache)
+def _continuize_states(
+    rvws: NDArray[np.float64],
+    ss: NDArray[np.float64],
+    ts: NDArray[np.float64],
+    R: float,
+    m: float,
+    u_s: float,
+    u_sp: float,
+    u_r: float,
+    g: float,
+    dt: float,
+) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
+    """Evolve an event-based history onto a uniform time grid
 
-    return history
+    Each timestamp is evolved from the last event state at or before it. Motion state
+    transitions are events, so a ball's motion state never changes between an event
+    state and the timestamps evolved from it. The grid starts at the first state's
+    time and steps by ``dt``; the final event state is appended after it.
+    """
+    num_events = len(ts)
+    num_uniform = int((ts[-1] - ts[0]) // dt) + 1
+    num_states = num_uniform + 1
+
+    out_rvws = np.empty((num_states, 3, 3))
+    out_ss = np.empty(num_states)
+    out_ts = np.empty(num_states)
+
+    out_rvws[0] = rvws[0]
+    out_ss[0] = ss[0]
+    out_ts[0] = ts[0]
+
+    ref = 0
+    for n in range(1, num_uniform):
+        t = ts[0] + n * dt
+        while ref + 1 < num_events and ts[ref + 1] <= t:
+            ref += 1
+        rvw, s = evolve.evolve_ball_motion(
+            int(ss[ref]), rvws[ref], R, m, u_s, u_sp, u_r, g, t - ts[ref]
+        )
+        out_rvws[n] = rvw
+        out_ss[n] = s
+        out_ts[n] = t
+
+    out_rvws[-1] = rvws[-1]
+    out_ss[-1] = ss[-1]
+    out_ts[-1] = ts[-1]
+
+    return out_rvws, out_ss, out_ts
 
 
 def interpolate_ball_states(
