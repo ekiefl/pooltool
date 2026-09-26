@@ -113,6 +113,7 @@ def get_list_of_Vec3s_from_array(array):
     return vec3s
 
 
+@jit(nopython=True, cache=const.use_numba_cache)
 def as_quaternion(
     w: NDArray[np.float64], t: NDArray[np.float64]
 ) -> NDArray[np.float64]:
@@ -129,20 +130,12 @@ def as_quaternion(
         identity, and each following row is the previous orientation rotated by its
         angular velocity over the time elapsed since the previous timestamp.
 
-    Notes
-    =====
-    - This mathematics is taken from the following stackexchange answer:
-      https://stackoverflow.com/questions/23503151/how-to-update-quaternion-based-on-3d-gyro-data/41226401
-      Though as pointed out by jrichner, the correct quaternions are produced
-      only after reversing the order of multiplication.
+    Notes:
+        - This mathematics is taken from the following stackexchange answer:
+          https://stackoverflow.com/questions/23503151/how-to-update-quaternion-based-on-3d-gyro-data/41226401
+          Though as pointed out by jrichner, the correct quaternions are produced only
+          after reversing the order of multiplication.
     """
-    return _integrate_quaternions(w, t)
-
-
-@jit(nopython=True, cache=const.use_numba_cache)
-def _integrate_quaternions(
-    w: NDArray[np.float64], t: NDArray[np.float64]
-) -> NDArray[np.float64]:
     num = len(t)
     quats = np.empty((num, 4))
     quats[0, 0] = 1.0
