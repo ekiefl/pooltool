@@ -275,6 +275,10 @@ class BallHistory:
         Returns:
             BallHistory: A BallHistory constructed from the input vectors.
 
+        Raises:
+            ValueError:
+                If the times are not nondecreasing.
+
         Example:
 
             This illustrates a round-trip with :meth:`vectorize` and
@@ -297,11 +301,13 @@ class BallHistory:
             return BallHistory()
 
         rvws, ss, ts = vectorization
+        ts = np.asarray(ts, dtype=np.float64)
+        if np.any(np.diff(ts) < 0):
+            raise ValueError("History times must be nondecreasing")
+
         states = [
             BallState(rvw, s, t)
-            for rvw, s, t in zip(
-                rvws, np.asarray(ss).astype(int).tolist(), np.asarray(ts).tolist()
-            )
+            for rvw, s, t in zip(rvws, np.asarray(ss).astype(int).tolist(), ts.tolist())
         ]
         return BallHistory(states)
 
