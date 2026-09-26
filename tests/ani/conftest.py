@@ -1,3 +1,4 @@
+import os
 from collections.abc import Callable, Iterator
 
 import pytest
@@ -35,8 +36,13 @@ def advance() -> Iterator[Callable[[int], None]]:
 def interface() -> Interface:
     """An offscreen interface, made once because Panda3D allows one ShowBase per process.
 
-    Skips the tests that need it where no offscreen graphics pipe can be opened.
+    Skips the tests that need it in CI, whose runners have no GPU-backed offscreen
+    pipe, and anywhere else the pipe can't be opened. CI skips before Panda3D tries to
+    open anything, because a failed attempt hangs the Windows runners at exit.
     """
+    if os.environ.get("CI"):
+        pytest.skip("No offscreen graphics pipe in CI")
+
     try:
         interface = Interface(DEFAULT_FBF_CONFIG)
     except Exception as error:
