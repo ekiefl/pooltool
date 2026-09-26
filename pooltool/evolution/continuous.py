@@ -245,14 +245,14 @@ def interpolate_ball_states(
     if history.empty:
         raise ValueError("Cannot interpolate from empty history")
 
-    if not isinstance(timestamps, np.ndarray):
-        timestamps = np.array(timestamps, dtype=np.float64)
+    timestamps = np.asarray(timestamps, dtype=np.float64)
 
     if not np.all(np.diff(timestamps) >= 0):
         raise ValueError("Timestamps must be in ascending order")
 
-    min_time = history[0].t
-    max_time = history[-1].t
+    rvws, ss, ts = history.rvws, history.ss, history.ts
+    min_time = ts[0]
+    max_time = ts[-1]
 
     if not extrapolate and (timestamps[0] < min_time or timestamps[-1] > max_time):
         raise ValueError(
@@ -260,46 +260,33 @@ def interpolate_ball_states(
         )
 
     result_states = []
-    history_array = history.states
-    history_len = len(history_array)
-
-    idx = 0
 
     for t in timestamps:
         if t < min_time:
-            result_states.append(history_array[0].copy())
+            result_states.append(history[0].copy())
             continue
         elif t > max_time:
-            result_states.append(history_array[-1].copy())
+            result_states.append(history[-1].copy())
             continue
 
-        # Find the nearest preceding state in history
-        while idx < history_len - 1 and history_array[idx + 1].t <= t:
-            idx += 1
+        # The last state at or before t is the reference state to evolve from
+        idx = int(np.searchsorted(ts, t, side="right")) - 1
 
-        # Go back one step if we've advanced too far
-        if history_array[idx].t > t and idx > 0:
-            idx -= 1
-
-        # Get the reference state to evolve from
-        ref_state = history_array[idx]
-
-        if abs(ref_state.t - t) < 1e-10:
+        if abs(ts[idx] - t) < 1e-10:
             # The timestamp exactly matches a history state, use it directly
-            result_states.append(ref_state.copy())
+            result_states.append(history[idx].copy())
             continue
 
-        evolve_time = t - ref_state.t
         rvw, s = evolve.evolve_ball_motion(
-            state=ref_state.s,
-            rvw=ref_state.rvw,
+            state=int(ss[idx]),
+            rvw=rvws[idx],
             R=params.R,
             m=params.m,
             u_s=params.u_s,
             u_sp=params.u_sp,
             u_r=params.u_r,
             g=params.g,
-            t=evolve_time,
+            t=t - ts[idx],
         )
 
         result_states.append(BallState(rvw=rvw, s=s, t=t))
