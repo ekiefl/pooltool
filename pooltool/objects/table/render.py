@@ -1,8 +1,12 @@
+from pathlib import Path
+
 import numpy as np
 from panda3d.core import (
     CollisionNode,
     CollisionPlane,
+    Filename,
     LineSegs,
+    Loader,
     NodePath,
     Plane,
     Point3,
@@ -32,24 +36,26 @@ class TableRender(Render):
             or not settings.graphics.table
         )
 
+    def _model_path(self) -> Path:
+        if self._uses_null_model:
+            return TableModelDescr.null().get_path(
+                settings.graphics.physical_based_rendering
+            )
+
+        assert self._table.model_descr is not None
+        return self._table.model_descr.get_path(
+            settings.graphics.physical_based_rendering
+        )
+
     def _load_model(self) -> NodePath:
         """Load the table model, scaled to the table's dimensions when it is the null plane
 
         Panda3D caches loaded models, so this is cheap to call repeatedly.
         """
+        model = Global.loader.loadModel(self._model_path())
         if self._uses_null_model:
-            model = Global.loader.loadModel(
-                TableModelDescr.null().get_path(
-                    settings.graphics.physical_based_rendering
-                )
-            )
             model.setScale(self._table.w, self._table.l, 1)
-            return model
-
-        assert self._table.model_descr is not None
-        return Global.loader.loadModel(
-            self._table.model_descr.get_path(settings.graphics.physical_based_rendering)
-        )
+        return model
 
     def init_table(self):
         model = self._load_model()
@@ -68,9 +74,22 @@ class TableRender(Render):
         self.collision_nodes = {}
 
     def bounding_box(self) -> TableBox:
-        """The table model's outer extent, with the floor at the table's height below"""
-        low, high = self._load_model().getTightBounds()
+        """The table model's outer extent, with the floor at the table's height below
+
+        The model is measured through Panda3D's core loader, which shares its cache
+        with the scene loader and needs no window, so this works without a ShowBase.
+        """
+        model = NodePath(
+            Loader.get_global_ptr().load_sync(
+                Filename.from_os_specific(str(self._model_path()))
+            )
+        )
+        if self._uses_null_model:
+            model.setScale(self._table.w, self._table.l, 1)
+        low, high = model.getTightBounds()
         return TableBox(
+            w=self._table.w,
+            l=self._table.l,
             x_min=low[0],
             x_max=high[0],
             y_min=low[1],

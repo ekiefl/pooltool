@@ -2,6 +2,7 @@ from pathlib import Path
 
 import numpy as np
 from direct.interval.IntervalGlobal import (
+    LerpFunc,
     LerpPosInterval,
     LerpPosQuatInterval,
     MetaInterval,
@@ -21,7 +22,14 @@ import pooltool.ani.tasks as tasks
 import pooltool.ani.utils as autils
 import pooltool.constants as c
 from pooltool.ani.globals import Global
-from pooltool.objects.ball.datatypes import Ball, BallHistory, BallOrientation
+from pooltool.ani.off_table import FADE_START, TAIL_DURATION
+from pooltool.ani.table_box import TableBox
+from pooltool.objects.ball.datatypes import (
+    Ball,
+    BallHistory,
+    BallOrientation,
+    BallState,
+)
 from pooltool.objects.ball.sets import get_ballset
 from pooltool.objects.cue.datatypes import Cue
 from pooltool.objects.datatypes import Render
@@ -37,6 +45,9 @@ class BallRender(Render):
         self._ball = ball
         self.history: BallHistory = BallHistory()
         self.quats: NDArray[np.float64] = np.empty((0, 4))
+        self.shadow_zs: NDArray[np.float64] = np.empty(0)
+        self.left_table_at: float | None = None
+        self.base_alpha: float = 1.0
         Render.__init__(self)
 
     @property
@@ -206,23 +217,30 @@ class BallRender(Render):
             An index from the history. e.g. 0 refers to initial state, -1 refers to
             final state
         """
+        x, y, z = self.history[i].rvw[0]
+        self.set_render_state((x, y, z), self.quats[i])
+        self.nodes["shadow"].setPos(x, y, self.shadow_zs[i])
 
-        quat = self.quats[i] if len(self.quats) else None
-        self.set_render_state(self.history[i].rvw[0], quat)
-
-    def set_history(self, history: BallHistory) -> None:
-        """Set the history the ball is animated from, and the quaternions along it
+    def set_history(
+        self, history: BallHistory, box: TableBox, left_table_at: float | None
+    ) -> None:
+        """Set the history the ball is animated from, and what is derived from it
 
         Quaternions are not part of the state vector, so they are integrated here from
-        the angular velocities along the history.
+        the angular velocities along the history. The shadow heights are the surfaces
+        under each position in the table box. ``left_table_at`` is the time the ball
+        left the table, if it did during this history, which schedules its fade.
         """
         self.history = history
+        self.left_table_at = left_table_at
         if history.empty:
             self.quats = np.empty((0, 4))
+            self.shadow_zs = np.empty(0)
             return
 
         rvws, _, ts = history.vectorize()
         self.quats = autils.as_quaternion(rvws[:, 2, :], ts)
+        self.shadow_zs = box.surface_heights(rvws[:, 0, :], self._ball.params.R)
 
     def get_playback_sequence(self, playback_speed: float, hold: float) -> MetaInterval:
         """Creates the motion sequences of the ball for a given playback speed
@@ -252,6 +270,7 @@ class BallRender(Render):
 
         xyzs = autils.get_list_of_Vec3s_from_array(xyzs)
         quats = self.quats.tolist()
+        shadow_zs = self.shadow_zs.tolist()
 
         # Init the animation sequences
         ball_sequence = Sequence()
@@ -276,8 +295,8 @@ class BallRender(Render):
                 LerpPosInterval(
                     nodePath=self.nodes["shadow"],
                     duration=hold,
-                    startPos=(x0, y0, min(0, z0 - self._ball.params.R)),
-                    pos=(x0, y0, min(0, z0 - self._ball.params.R)),
+                    startPos=(x0, y0, shadow_zs[0]),
+                    pos=(x0, y0, shadow_zs[0]),
                 )
             )
 
@@ -319,8 +338,8 @@ class BallRender(Render):
                     LerpPosInterval(
                         nodePath=self.nodes["shadow"],
                         duration=dur,
-                        startPos=(xi, yi, min(0, zi - self._ball.params.R)),
-                        pos=(xi, yi, min(0, zi - self._ball.params.R)),
+                        startPos=(xi, yi, shadow_zs[j]),
+                        pos=(xi, yi, shadow_zs[j]),
                     )
                 )
 
@@ -337,7 +356,7 @@ class BallRender(Render):
                     LerpPosInterval(
                         nodePath=self.nodes["shadow"],
                         duration=playback_dts[i],
-                        pos=(x, y, min(0, z - self._ball.params.R)),
+                        pos=(x, y, shadow_zs[i]),
                     )
                 )
 
@@ -345,15 +364,42 @@ class BallRender(Render):
                     energetic = False
                     j = i
 
-        return Parallel(
-            ball_sequence,
-            shadow_sequence,
-        )
+        if self.left_table_at is None:
+            return Parallel(ball_sequence, shadow_sequence)
 
-    def set_alpha(self, alpha):
+        # Alpha is driven for the whole sequence, not only while fading, so that a
+        # looping playback comes back at full opacity instead of where the fade ended
+        fade_sequence = Sequence(
+            LerpFunc(
+                self._set_fade,
+                fromData=0.0,
+                toData=0.0,
+                duration=hold
+                + (self.left_table_at + FADE_START - ts[0]) / playback_speed,
+            ),
+            LerpFunc(
+                self._set_fade,
+                fromData=0.0,
+                toData=1.0,
+                duration=(TAIL_DURATION - FADE_START) / playback_speed,
+            ),
+        )
+        return Parallel(ball_sequence, shadow_sequence, fade_sequence)
+
+    def set_alpha(self, alpha: float) -> None:
+        """Set the opacity the ball is drawn at when not faded"""
+        self.base_alpha = alpha
         self.get_node("pos").setTransparency(TransparencyAttrib.MAlpha)
         self.get_node("pos").setAlphaScale(alpha)
         self.get_node("shadow").setAlphaScale(alpha)
+
+    def _set_fade(self, fraction: float) -> None:
+        """Fade the ball out by ``fraction`` of its opacity
+
+        The shadow follows the ball's opacity through its update task.
+        """
+        self.get_node("pos").setTransparency(TransparencyAttrib.MAlpha)
+        self.get_node("pos").setAlphaScale(self.base_alpha * (1.0 - fraction))
 
     def randomize_orientation(self):
         self.get_node("sphere").setHpr(*np.random.uniform(-180, 180, size=3))
@@ -399,13 +445,19 @@ class BallRender(Render):
         position and (2) leads to crashes.
         """
         shadow_node = self.nodes["shadow"]
+        pos_node = self.nodes["pos"]
 
-        z = self.nodes["pos"].getZ()
+        if pos_node.is_hidden():
+            shadow_node.hide()
+            return task.cont
+
         R = self._ball.params.R
 
         max_bottom_height = 0.13
 
-        bottom_height = max(z - R, 0)
+        # The shadow node sits on the surface it is cast onto, so its height is the
+        # reference for how far the ball is above that surface
+        bottom_height = max(pos_node.getZ() - R - shadow_node.getZ(), 0)
         if bottom_height >= max_bottom_height:
             shadow_node.hide()
         else:
@@ -414,7 +466,7 @@ class BallRender(Render):
 
             f = bottom_height / max_bottom_height
 
-            alpha = np.exp(-5 * f)
+            alpha = np.exp(-5 * f) * pos_node.getColorScale()[3]
             scale = 1 + 2.0 * f
 
             shadow_node.setScale(scale)
@@ -428,7 +480,15 @@ class BallRender(Render):
     def render(self):
         super().render()
         self.init_sphere()
+        if self._initial_state().s == c.off_table:
+            self.nodes["pos"].hide()
+            self.nodes["shadow"].hide()
         tasks.add(self._shadow_update_task, self._shadow_task_name())
+
+    def _initial_state(self) -> BallState:
+        """The ball's state at the start of the shot being rendered"""
+        history = self._ball.history
+        return self._ball.state if history.empty else history[0]
 
     def remove_nodes(self):
         tasks.remove(self._shadow_task_name())

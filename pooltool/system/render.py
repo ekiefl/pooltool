@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from attrs import define
 
+import pooltool.ani.off_table as off_table
 from pooltool.evolution.continuous import continuize_ball
 from pooltool.objects.ball.datatypes import BallHistory
 from pooltool.objects.ball.render import BallRender
@@ -50,11 +51,23 @@ class SystemRender:
     def resample(self, dt: float) -> None:
         """Derive each ball's render history from the system, one state every ``dt``
 
-        An unsimulated system leaves every ball with an empty history.
+        A ball that left the table during the shot has its frozen off-table states
+        replaced by the animated tail of :mod:`pooltool.ani.off_table`. An unsimulated
+        system leaves every ball with an empty history.
         """
+        box = self.table.bounding_box()
         for ball_id, ball_render in self.balls.items():
-            if self.system.simulated:
-                history = continuize_ball(self.system.balls[ball_id], dt)
-            else:
-                history = BallHistory()
-            ball_render.set_history(history)
+            if not self.system.simulated:
+                ball_render.set_history(BallHistory(), box, None)
+                continue
+
+            ball = self.system.balls[ball_id]
+            history = continuize_ball(ball, dt)
+            crossing = off_table.crossing_event(self.system, ball_id)
+            left_table_at = None
+            if crossing is not None:
+                history = off_table.with_tail(
+                    history, off_table.exit_state(crossing), ball.params, box, dt
+                )
+                left_table_at = crossing.time
+            ball_render.set_history(history, box, left_table_at)

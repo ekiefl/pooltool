@@ -267,7 +267,7 @@ def cushion_lofts() -> System:
     return shot
 
 
-def jump_over_blocker(V0: float = 2.9, theta: float = 39.0) -> System:
+def jump_over_blocker(V0: float = 3.6, theta: float = 39.0) -> System:
     """Cue ball jumps a blocking ball, lands, and cuts the object ball into a pocket.
 
     The object ball sits on the diagonal into the top-right pocket. The cue ball is
@@ -300,7 +300,7 @@ def jump_over_blocker(V0: float = 2.9, theta: float = 39.0) -> System:
     )
     shot.set_ballset(BallSet("pooltool_pocket"))
     phi = aim.at_pos(shot, np.array([ghost_xy[0], ghost_xy[1], R]))
-    shot.strike(V0=V0, phi=phi, theta=theta, a=0.0, b=0.0)
+    shot.strike(V0=V0, phi=phi, theta=theta, a=0.0, b=-0.2)
     return shot
 
 
