@@ -218,7 +218,7 @@ def ball_ids_occluding_ballpath(
         if ball.id == _ball.id:
             continue
 
-        if ball.state.s == const.pocketed:
+        if ball.state.s not in const.on_table:
             continue
 
         p0 = _ball.xyz[:2]

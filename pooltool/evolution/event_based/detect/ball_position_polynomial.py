@@ -33,7 +33,7 @@ def ball_position_polynomial(
     p[0] = rvw[0]
     p[1] = rvw[1]
 
-    if s == const.stationary or s == const.spinning or s == const.pocketed:
+    if s in (const.stationary, const.spinning, const.pocketed, const.off_table):
         p[2] = np.zeros(3)
     elif s == const.rolling:
         p[2] = 0.5 * u_r * g * -(rvw[1] / ptmath.norm3d(rvw[1]))
@@ -44,6 +44,6 @@ def ball_position_polynomial(
     elif s == const.airborne:
         p[2] = 0.5 * np.array([0, 0, -g])
     else:
-        raise ValueError("'{s}' is an unknown motion state")
+        raise ValueError(f"'{s}' is an unknown motion state")
 
     return p

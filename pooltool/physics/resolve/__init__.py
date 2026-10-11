@@ -14,9 +14,17 @@ from pooltool.physics.resolve.ball_cushion import (
     ball_ccushion_models,
     ball_lcushion_models,
 )
+from pooltool.physics.resolve.ball_off_table import (
+    BallOffTableModel,
+    ball_off_table_models,
+)
 from pooltool.physics.resolve.ball_pocket import (
     BallPocketModel,
     ball_pocket_models,
+)
+from pooltool.physics.resolve.ball_table import (
+    BallTableModel,
+    ball_table_models,
 )
 from pooltool.physics.resolve.resolver import (
     RESOLVER_3D_PATH,
@@ -70,6 +78,12 @@ def display_models():
     print("\nball_pocket models:")
     for model in BallPocketModel:
         _display_model(ball_pocket_models[model], model)
+    print("\nball_table models:")
+    for model in BallTableModel:
+        _display_model(ball_table_models[model], model)
+    print("\nball_off_table models:")
+    for model in BallOffTableModel:
+        _display_model(ball_off_table_models[model], model)
     print("\nball_transition models:")
     for model in BallTransitionModel:
         _display_model(ball_transition_models[model], model)

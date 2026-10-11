@@ -1,7 +1,21 @@
+from pathlib import Path
+
 import numpy as np
-from panda3d.core import CollisionNode, CollisionPlane, LineSegs, Plane, Point3, Vec3
+from direct.showbase.Loader import Loader as ShowBaseLoader
+from panda3d.core import (
+    CollisionNode,
+    CollisionPlane,
+    Filename,
+    LineSegs,
+    Loader,
+    NodePath,
+    Plane,
+    Point3,
+    Vec3,
+)
 
 from pooltool.ani.globals import Global
+from pooltool.ani.table_box import TableBox
 from pooltool.config import settings
 from pooltool.objects.datatypes import Render
 from pooltool.objects.table.datatypes import Table, TableModelDescr, TableType
@@ -14,33 +28,111 @@ class TableRender(Render):
         self._table = table
         Render.__init__(self)
 
-    def init_table(self):
-        if (
+    @property
+    def _uses_null_model(self) -> bool:
+        """Whether the table is drawn as a bare playing surface instead of a real model"""
+        return (
             not self._table.model_descr
             or self._table.model_descr == TableModelDescr.null()
             or not settings.graphics.table
-        ):
-            # Rectangular playing surface (not a real table)
-            model = Global.loader.loadModel(
-                TableModelDescr.null().get_path(
-                    settings.graphics.physical_based_rendering
-                )
+        )
+
+    def _model_path(self) -> Path:
+        if self._uses_null_model:
+            return TableModelDescr.null().get_path(
+                settings.graphics.physical_based_rendering
             )
+
+        assert self._table.model_descr is not None
+        return self._table.model_descr.get_path(
+            settings.graphics.physical_based_rendering
+        )
+
+    def _load_model(self) -> NodePath:
+        """Load the table model, scaled to the table's dimensions when it is the null plane
+
+        Panda3D caches loaded models, so this is cheap to call repeatedly.
+        """
+        model = Global.loader.loadModel(self._model_path())
+        if self._uses_null_model:
+            model.setScale(self._table.w, self._table.l, 1)
+        return model
+
+    def init_table(self):
+        model = self._load_model()
+
+        if self._uses_null_model:
+            # Rectangular playing surface (not a real table)
             node = Global.render.find("scene").attachNewNode("table")
             model.reparentTo(node)
-            model.setScale(self._table.w, self._table.l, 1)
         else:
             # Real table
-            node = Global.loader.loadModel(
-                self._table.model_descr.get_path(
-                    settings.graphics.physical_based_rendering
-                )
-            )
+            node = model
             node.reparentTo(Global.render.find("scene"))
             node.setName("table")
 
         self.nodes["table"] = node
         self.collision_nodes = {}
+
+    def bounding_box(self) -> TableBox:
+        """The table model's outer extent, with the floor at the table's height below
+
+        The model is measured through Panda3D's core loader, which shares its cache
+        with the scene loader and needs no window, so this works without a ShowBase.
+        The glTF loader is a Python plugin that ShowBase registers with the core
+        loader on startup; without a ShowBase it is registered here.
+        """
+        ShowBaseLoader._loadPythonFileTypes()
+        model = NodePath(
+            Loader.get_global_ptr().load_sync(
+                Filename.from_os_specific(str(self._model_path()))
+            )
+        )
+        if self._uses_null_model:
+            model.setScale(self._table.w, self._table.l, 1)
+        low, high = model.getTightBounds()
+        return TableBox(
+            w=self._table.w,
+            l=self._table.l,
+            x_min=low[0],
+            x_max=high[0],
+            y_min=low[1],
+            y_max=high[1],
+            top=high[2],
+            floor=-self._table.height,
+        )
+
+    def init_bounding_box(self):
+        """Draw the edges of the table's bounding box, for debugging
+
+        The box is what an off-table ball is animated against (see
+        :mod:`pooltool.ani.off_table`), so this shows where its rail landings and
+        floor bounces come from.
+        """
+        box = self.bounding_box()
+        drawer = LineSegs()
+        drawer.setThickness(2)
+        drawer.setColor(1, 0.5, 0)
+
+        xs = (box.x_min, box.x_max)
+        ys = (box.y_min, box.y_max)
+        zs = (box.floor, box.top)
+        for z in zs:
+            drawer.moveTo(xs[0], ys[0], z)
+            drawer.drawTo(xs[1], ys[0], z)
+            drawer.drawTo(xs[1], ys[1], z)
+            drawer.drawTo(xs[0], ys[1], z)
+            drawer.drawTo(xs[0], ys[0], z)
+        for x in xs:
+            for y in ys:
+                drawer.moveTo(x, y, zs[0])
+                drawer.drawTo(x, y, zs[1])
+
+        node = self.nodes["table"].attachNewNode(drawer.create())
+        node.setLightOff()
+        node.setDepthTest(False)
+        node.setBin("fixed", 0)
+        self.nodes["bounding_box"] = node
 
     def init_collisions(self):
         if not settings.gameplay.cue_collision:
@@ -148,6 +240,9 @@ class TableRender(Render):
             self.init_pockets()
 
         self.init_collisions()
+
+        if settings.graphics.debug:
+            self.init_bounding_box()
 
     def draw_circle(self, drawer, center, radius, num_points):
         center_x, center_y, height = center

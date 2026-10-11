@@ -96,6 +96,8 @@ class BallState:
                 2 = sliding
                 3 = rolling
                 4 = pocketed
+                5 = airborne
+                6 = off_table
         t (float):
             The simulated time.
     """

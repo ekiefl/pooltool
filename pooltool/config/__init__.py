@@ -170,7 +170,7 @@ class GraphicsConfig:
         metadata=SettingsMetadata(
             display_name="Debug Visualizations",
             description=(
-                "Show collision shapes and debug wireframes for balls, table, and cue."
+                "Show collision shapes and debug wireframes for the table and cue."
             ),
             category=SettingsCategory.GRAPHICS,
             display_type=DisplayType.CHECKBOX,

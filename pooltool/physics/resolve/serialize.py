@@ -19,6 +19,10 @@ from pooltool.physics.resolve.ball_cushion import (
     ball_ccushion_models,
     ball_lcushion_models,
 )
+from pooltool.physics.resolve.ball_off_table import (
+    BallOffTableCollisionStrategy,
+    ball_off_table_models,
+)
 from pooltool.physics.resolve.ball_pocket import (
     BallPocketStrategy,
     ball_pocket_models,
@@ -47,6 +51,7 @@ _model_map: Mapping[Any, Mapping[Any, type]] = {
     BallTransitionStrategy: ball_transition_models,
     BallBallFrictionStrategy: ball_ball_friction_models,
     BallTableCollisionStrategy: ball_table_models,
+    BallOffTableCollisionStrategy: ball_off_table_models,
 }
 
 
