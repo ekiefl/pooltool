@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import numpy as np
+from direct.showbase.Loader import Loader as ShowBaseLoader
 from panda3d.core import (
     CollisionNode,
     CollisionPlane,
@@ -78,7 +79,10 @@ class TableRender(Render):
 
         The model is measured through Panda3D's core loader, which shares its cache
         with the scene loader and needs no window, so this works without a ShowBase.
+        The glTF loader is a Python plugin that ShowBase registers with the core
+        loader on startup; without a ShowBase it is registered here.
         """
+        ShowBaseLoader._loadPythonFileTypes()
         model = NodePath(
             Loader.get_global_ptr().load_sync(
                 Filename.from_os_specific(str(self._model_path()))
