@@ -267,14 +267,13 @@ def cushion_lofts() -> System:
     return shot
 
 
-def jump_over_blocker(V0: float = 3.6, theta: float = 39.0) -> System:
-    """Cue ball jumps a blocking ball, lands, and cuts the object ball into a pocket.
+def _blocker_layout() -> tuple[System, np.ndarray, float]:
+    """A cue ball, a blocker, and an object ball on the line into the top-right pocket.
 
-    The object ball sits on the diagonal into the top-right pocket. The cue ball is
-    placed so the shot is a 25 degree cut, with the blocker halfway along the cue
-    ball's path to the ghost-ball position. An elevated strike clears the blocker;
-    the cue ball lands short, skips into the object ball, and deflects away from the
-    pocket instead of following the object ball in.
+    The object ball sits on the diagonal into the pocket. The cue ball is placed so
+    the shot is a 25 degree cut, with the blocker halfway along the cue ball's path to
+    the ghost-ball position. Returns the shot, the ghost-ball position, and the ball
+    radius.
     """
     table = Table.default()
     pocket = table.pockets["rt"].center[:2]
@@ -299,6 +298,31 @@ def jump_over_blocker(V0: float = 3.6, theta: float = 39.0) -> System:
         balls=(cue_ball, blocker, object_ball),
     )
     shot.set_ballset(BallSet("pooltool_pocket"))
+    return shot, ghost_xy, R
+
+
+def jump_over_blocker(V0: float = 2.9, theta: float = 39.0) -> System:
+    """Cue ball jumps a blocking ball, lands, and cuts the object ball into a pocket.
+
+    An elevated strike clears the blocker; the cue ball lands short, skips into the
+    object ball, and deflects away from the pocket instead of following the object
+    ball in.
+    """
+    shot, ghost_xy, R = _blocker_layout()
+    phi = aim.at_pos(shot, np.array([ghost_xy[0], ghost_xy[1], R]))
+    shot.strike(V0=V0, phi=phi, theta=theta, a=0.0, b=0.0)
+    return shot
+
+
+def bounces_off_table(V0: float = 3.6, theta: float = 39.0) -> System:
+    """Cue ball jumps a blocking ball and flies off the table.
+
+    The layout of :func:`jump_over_blocker` struck harder and with draw. The cue ball
+    clears the blocker and the object ball, clips the top of the far cushion, and
+    carries over it. The simulation freezes it at the table boundary; the animation
+    continues it onto the rail and floor and fades it out.
+    """
+    shot, ghost_xy, R = _blocker_layout()
     phi = aim.at_pos(shot, np.array([ghost_xy[0], ghost_xy[1], R]))
     shot.strike(V0=V0, phi=phi, theta=theta, a=0.0, b=-0.2)
     return shot
@@ -354,6 +378,7 @@ _map = {
     "pocket_collision": airborne_pocket_collision,
     "cushion_lofts": cushion_lofts,
     "jump_over_blocker": jump_over_blocker,
+    "bounces_off_table": bounces_off_table,
     "cushion_drops": cushion_drops,
     "bouncing_collision": bouncing_collision,
 }
