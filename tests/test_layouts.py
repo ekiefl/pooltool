@@ -236,3 +236,11 @@ def test_rack_no_overlapping_balls(game_type: GameType):
                 ), (
                     f"Balls {ball1.id} and {ball2.id} are overlapping in {game_type} rack"
                 )
+
+
+def test_snooker_rack_yellow_right_of_green():
+    """Viewed from the baulk end, yellow sits on the right (+x) corner of the D."""
+    table = Table.from_game_type(GameType.SNOOKER)
+    rack = get_rack(GameType.SNOOKER, table)
+
+    assert rack["yellow"].xyz[0] > rack["green"].xyz[0]
