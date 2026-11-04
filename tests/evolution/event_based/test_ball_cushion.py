@@ -4,10 +4,14 @@ import pytest
 import pooltool.constants as const
 from pooltool.evolution.event_based.detect.ball_cushion import (
     ball_linear_cushion_segment_collision_time,
+    ball_vertical_cylinder_collision_time,
     ball_vertical_plane_collision_time,
 )
 from pooltool.objects import Ball
-from pooltool.objects.table.components import LinearCushionSegment
+from pooltool.objects.table.components import (
+    CircularCushionSegment,
+    LinearCushionSegment,
+)
 from pooltool.physics.evolve import evolve_ball_motion
 
 HEIGHT = 0.64 * 2 * 0.028575
@@ -127,3 +131,59 @@ def test_3d_detection_ignores_receding_airborne_ball_inside_nose_cylinder():
     ball.state.s = const.airborne
 
     assert _collision_time_3d(ball, cushion) == np.inf
+
+
+def _circular_cushion(nose_radius: float) -> CircularCushionSegment:
+    return CircularCushionSegment(
+        id="j",
+        center=np.array([1.0, 0.5, HEIGHT]),
+        radius=0.02,
+        nose_radius=nose_radius,
+    )
+
+
+def _circular_collision_time(ball: Ball, cushion: CircularCushionSegment) -> float:
+    return ball_vertical_cylinder_collision_time(
+        rvw=ball.state.rvw,
+        s=ball.state.s,
+        a=cushion.a,
+        b=cushion.b,
+        r=cushion.radius,
+        mu=ball.params.u_s,
+        m=ball.params.m,
+        g=ball.params.g,
+        R=ball.params.R,
+        nose_radius=cushion.nose_radius,
+        height=cushion.height,
+    )
+
+
+@pytest.mark.parametrize("nose_radius", [0.001, 0.005])
+def test_circular_detection_matches_torus_contact(nose_radius: float):
+    """A ball on the table is detected when its center is R + nose_radius from the core circle."""
+    cushion = _circular_cushion(nose_radius)
+    ball = _ball(0.9, 1.0)
+
+    t = _circular_collision_time(ball, cushion)
+    rvw, _ = evolve_ball_motion(
+        ball.state.s,
+        ball.state.rvw,
+        ball.params.R,
+        ball.params.m,
+        ball.params.u_s,
+        ball.params.u_sp,
+        ball.params.u_r,
+        ball.params.g,
+        t,
+    )
+
+    core = cushion.nearest_core_point(rvw[0])
+    assert np.linalg.norm(rvw[0] - core) == pytest.approx(ball.params.R + nose_radius)
+
+
+def test_circular_detection_ignores_ball_passing_wide():
+    cushion = _circular_cushion(0.001)
+    ball = _ball(0.9, 1.0)
+    ball.state.rvw[0, 1] = 0.5 + cushion.radius + ball.params.R + 0.01
+
+    assert _circular_collision_time(ball, cushion) == np.inf

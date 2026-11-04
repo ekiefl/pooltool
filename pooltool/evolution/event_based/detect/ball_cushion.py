@@ -249,11 +249,17 @@ def ball_vertical_cylinder_collision_time(
     m: float,
     g: float,
     R: float,
+    nose_radius: float,
+    height: float,
 ) -> float:
-    """Get the time until collision between a ball and a vertical cylinder.
+    """Get the time until collision between a ball on the table and a circular cushion.
 
-    For ball trajectories limited to the playing surface, this suffices for
-    detecting ball collisions with circular cushion segments.
+    The cushion is a torus: the core circle of radius ``r`` wrapped in a nose of
+    radius ``nose_radius`` at ``height``. A ball rolling or sliding on the table
+    touches it when the horizontal distance from its center to the axis is
+    ``r + sqrt((R + nose_radius)**2 - (height - R)**2)``, the same geometry the
+    circular make_kiss enforces. That reduces the torus to a vertical cylinder of
+    this effective radius, whose contact time is a single quartic.
 
     Note:
         - This is broken for airborne balls.
@@ -266,6 +272,11 @@ def ball_vertical_cylinder_collision_time(
         or s == const.off_table
     ):
         return np.inf
+
+    contact_squared = (R + nose_radius) ** 2 - (height - R) ** 2
+    if contact_squared <= 0.0:
+        return np.inf
+    r_eff = r + np.sqrt(contact_squared)
 
     phi = ptmath.angle(rvw[1])
     v = ptmath.norm3d(rvw[1])
@@ -285,9 +296,7 @@ def ball_vertical_cylinder_collision_time(
     B = ax * bx + ay * by
     C = ax * (cx - a) + ay * (cy - b) + 0.5 * (bx * bx + by * by)
     D = bx * (cx - a) + by * (cy - b)
-    E = 0.5 * (a * a + b * b + cx * cx + cy * cy - (r + R) * (r + R)) - (
-        cx * a + cy * b
-    )
+    E = 0.5 * (a * a + b * b + cx * cx + cy * cy - r_eff * r_eff) - (cx * a + cy * b)
 
     return get_real_positive_smallest_root(
         quartic.solve(A, B, C, D, E), ABS_OR_REL_CUTOFF, RTOL, ATOL
@@ -385,6 +394,8 @@ def get_next_ball_circular_cushion_event(
                     m=params.m,
                     g=params.g,
                     R=params.R,
+                    nose_radius=cushion.nose_radius,
+                    height=cushion.height,
                 )
 
             cache[obj_ids] = shot.t + dtau_E
