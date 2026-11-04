@@ -272,8 +272,24 @@ class CircularCushionSegment:
         normal[2] = 0  # remove z-component
         return ptmath.unit_vector(normal)
 
+    def nearest_core_point(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
+        """The point on the core circle closest to ``xyz``.
+
+        A point on the axis is equidistant from the whole circle; the core point in
+        the +x direction is returned.
+        """
+        radial = np.array([xyz[0] - self.center[0], xyz[1] - self.center[1], 0.0])
+        norm = ptmath.norm3d(radial)
+        direction = radial / norm if norm > 0 else np.array([1.0, 0.0, 0.0])
+        return self.center + self.radius * direction
+
     def get_normal_3d(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
         """Calculates the 3D normal vector for a point contacting the cushion.
+
+        The cushion surface is a torus around the core circle, so the normal points
+        from the nearest core point toward ``xyz``. For a ball resting on the table
+        this tilts downward, like the nose cylinder of a linear segment. A point on
+        the axis gets a vertical normal, since every core point is equally near.
 
         Args:
             xyz:
@@ -283,7 +299,9 @@ class CircularCushionSegment:
             NDArray[np.float64]:
                 The 3D normal vector pointing outward from the cushion surface.
         """
-        return ptmath.unit_vector(xyz - self.center)
+        if xyz[0] == self.center[0] and xyz[1] == self.center[1]:
+            return np.array([0.0, 0.0, 1.0 if xyz[2] >= self.center[2] else -1.0])
+        return ptmath.unit_vector(xyz - self.nearest_core_point(xyz))
 
     def copy(self) -> CircularCushionSegment:
         """Create a copy"""

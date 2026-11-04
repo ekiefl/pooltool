@@ -235,3 +235,26 @@ def test_cushion_segments_id_clash(lin_seg, circ_seg):
         CushionSegments(linear={lin_seg.id: lin_seg}, circular={"wrong": circ_seg})
     with pytest.raises(AssertionError):
         CushionSegments(linear={":(": lin_seg}, circular={"wrong": circ_seg})
+
+
+def test_circular_segment_nearest_core_point(circ_seg):
+    xyz = np.array([3.0, 4.0, 2.0])
+    assert circ_seg.nearest_core_point(xyz) == pytest.approx([0.6, 0.8, 0.0])
+
+
+def test_circular_segment_normal_points_from_nearest_core_point(circ_seg):
+    xyz = np.array([3.0, 4.0, 2.0])
+    expected = np.array([2.4, 3.2, 2.0]) / np.linalg.norm([2.4, 3.2, 2.0])
+    assert circ_seg.get_normal_3d(xyz) == pytest.approx(expected)
+
+
+def test_circular_segment_normal_tilts_down_for_center_below_core(circ_seg):
+    normal = circ_seg.get_normal_3d(np.array([1.5, 0.0, -0.3]))
+    assert normal == pytest.approx(np.array([0.5, 0.0, -0.3]) / np.hypot(0.5, 0.3))
+
+
+def test_circular_segment_normal_on_axis_is_vertical(circ_seg):
+    assert circ_seg.get_normal_3d(np.array([0.0, 0.0, 0.5])) == pytest.approx([0, 0, 1])
+    assert circ_seg.get_normal_3d(np.array([0.0, 0.0, -0.5])) == pytest.approx(
+        [0, 0, -1]
+    )
