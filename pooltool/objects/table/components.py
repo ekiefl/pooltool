@@ -217,12 +217,18 @@ class CircularCushionSegment:
             z-coordinates of the cushion's center. The circle is assumed to be parallel to
             the XY plane, which makes ``center[2]`` is the height of the cushion.
         radius:
-            The radius of the cushion segment.
+            The radius of the core circle.
+        nose_radius:
+            The radius of the cushion nose wrapped around the core circle. The
+            cushion surface is the torus swept by a circle of this radius, so a ball
+            of radius ``R`` touches it when its center is ``R + nose_radius`` from
+            the core circle.
     """
 
     id: str
     center: NDArray[np.float64]
     radius: float
+    nose_radius: float
 
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
@@ -289,7 +295,10 @@ class CircularCushionSegment:
     @staticmethod
     def dummy() -> CircularCushionSegment:
         return CircularCushionSegment(
-            id="dummy", center=np.array([0, 0, 0], dtype=np.float64), radius=10.0
+            id="dummy",
+            center=np.array([0, 0, 0], dtype=np.float64),
+            radius=10.0,
+            nose_radius=0.005,
         )
 
 
