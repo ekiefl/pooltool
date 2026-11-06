@@ -67,3 +67,10 @@ These compare against the reference simulator using absolute bounds of
 50 ns in time, 0.5 µm in position, 0.5 µm/s in velocity and 0.0001 rad/s in
 spin, with exact event categories, participants and order. These bounds
 describe software comparisons.
+
+`make test-coverage` runs the full suite with Numba enabled, then reruns
+the compiled-backend tests in a separate Python process with JIT disabled.
+That second pass traces execution of the same kernel source and contributes
+only lines from the compiled backend package. Its coverage context is
+`compiled-fp64-interpreted`. The combined line report includes both modes,
+while the native run verifies the compiled implementation.
