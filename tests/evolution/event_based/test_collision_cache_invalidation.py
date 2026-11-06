@@ -125,13 +125,15 @@ def test_malformed_key_still_raises_before_deleting_from_its_category(kind):
 def _cushion_tie():
     table = pt.Table.default()
     balls = [
-        pt.Ball.create(ball_id, xy=(x * table.w, 0.2 * table.l))
-        for ball_id, x in (("cue", 0.25), ("target", 0.65))
+        pt.Ball.create("cue", xy=(0.25, 0.5)),
+        pt.Ball.create("target", xy=(table.w - 0.25, 1.25)),
     ]
-    for ball in balls:
+    # Identical distances and speeds toward opposite long cushions. The balls
+    # occupy separate lanes, so each collision is independent of the other.
+    for ball, speed in zip(balls, (-1.0, 1.0), strict=True):
         ball.state.s = const.rolling
-        ball.state.rvw[1, 1] = -1.0
-        ball.state.rvw[2, 0] = 1.0 / ball.params.R
+        ball.state.rvw[1, 0] = speed
+        ball.state.rvw[2, 1] = speed / ball.params.R
     cue = pt.Cue.default()
     cue.set_state(V0=0)
     return pt.System(cue=cue, table=table, balls=balls)
