@@ -9,6 +9,7 @@ from pooltool.evolution.event_based.cache import CollisionCache
 from pooltool.evolution.event_based.detect.ball_ball import (
     ball_ball_collision_time_2d,
     get_next_ball_ball_event,
+    get_smallest_approaching_root,
 )
 from pooltool.physics.evolve import evolve_ball_motion
 from pooltool.physics.utils import get_airborne_time
@@ -190,6 +191,53 @@ def test_tangent_parallel_rolling_balls_only_collide_when_closing(
     else:
         assert direct == expected
         assert event.time == expected
+
+
+@pytest.mark.parametrize(
+    ("x0", "v0", "q", "expected"),
+    [
+        pytest.param(0.5, -1.0, 0.0, 0.25, id="approaching-keeps-entry-not-exit"),
+        pytest.param(0.1, -1.0, 0.0, np.inf, id="overlapping-only-exit-remains"),
+        pytest.param(0.25, 1.0, 0.0, np.inf, id="touching-moving-apart"),
+        pytest.param(0.25, -1.0, 0.0, 0.0, id="touching-moving-together"),
+        pytest.param(0.2, -1.0, 2.0, np.inf, id="exit-while-accelerating"),
+    ],
+)
+def test_get_smallest_approaching_root(x0: float, v0: float, q: float, expected: float):
+    """Only roots where the balls are moving toward each other are collisions.
+
+    The relative position moves along x as ``x0 + v0 * t + q * t**2`` and contact
+    happens at ``|x| = 0.25``.
+    """
+    contact = 0.25
+    p12 = np.array([[x0, 0.0], [v0, 0.0], [q, 0.0]])
+    roots = np.roots(
+        np.polysub(np.polymul([q, v0, x0], [q, v0, x0]), [contact**2])
+    ).astype(np.complex128)
+
+    assert get_smallest_approaching_root(roots, p12) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("is_3d", [True, False])
+def test_touching_balls_moving_apart_do_not_collide(is_3d: bool):
+    """A ball spinning away from the ball it touches is not a collision.
+
+    The radius is a power of two so the balls are exactly ``2R`` apart.
+    """
+    R = 2.0**-5
+    cue_ball = Ball.create("cue", xy=(0.5, 0.5), R=R)
+    cue_ball.state.rvw[2] = np.array([30.0, 0.0, 0.0])
+    cue_ball.state.s = const.sliding
+    one_ball = Ball.create("1", xy=(0.5, 0.5 + 2 * R), R=R)
+
+    system = System(
+        cue=Cue.default(),
+        table=Table.default(),
+        balls={"cue": cue_ball, "1": one_ball},
+    )
+
+    event = get_next_ball_ball_event(system, CollisionCache(), is_3d=is_3d)
+    assert event.time == np.inf
 
 
 def test_airborne_balls_colliding():
