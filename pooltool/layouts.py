@@ -422,8 +422,8 @@ def _get_sum_to_three_rack(
 
 snooker_color_locs: dict[str, BallPos] = {
     "white": BallPos([], (7 / 12, 0.2045), {"white"}),
-    "yellow": BallPos([], (0.333, 0.2045), {"yellow"}),
-    "green": BallPos([], (0.666, 0.2045), {"green"}),
+    "yellow": BallPos([], (0.666, 0.2045), {"yellow"}),
+    "green": BallPos([], (0.333, 0.2045), {"green"}),
     "brown": BallPos([], (0.5, 0.2045), {"brown"}),
     "blue": BallPos([], (0.5, 0.5), {"blue"}),
     "black": BallPos([], (0.5, 10 / 11), {"black"}),
