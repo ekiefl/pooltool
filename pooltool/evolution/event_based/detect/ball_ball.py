@@ -21,18 +21,64 @@ from pooltool.ptmath.roots import (
     ABS_OR_REL_CUTOFF,
     ATOL,
     RTOL,
-    get_real_positive_smallest_root,
+    is_real_number,
     quadratic,
     quartic,
 )
 from pooltool.system.datatypes import Ball, System
 
 
+@jit(nopython=True, cache=const.use_numba_cache)
+def get_smallest_approaching_root(
+    roots: NDArray[np.complex128], p12: NDArray[np.float64]
+) -> float:
+    """Smallest root at which the two balls are moving toward each other.
+
+    Each root is a time when the ball centers are exactly in contact, which happens
+    both when the balls come together and when they come apart. Only the former is a
+    collision, so a root is kept only if it is real, non-negative, and the relative
+    position and velocity point opposite ways (``dot(r, v) < 0``).
+
+    Args:
+        roots: Candidate collision times, as returned by the polynomial solver.
+        p12: Relative position polynomial of the two ball centers, as a ``(3, n)``
+            array whose rows are the ``(constant, linear, quadratic)`` coefficients,
+            each an ``n``-dimensional vector. See :func:`ball_position_polynomial`.
+
+    Returns:
+        The collision time, or ``np.inf`` if no root qualifies.
+    """
+    min_time = np.inf
+    for i in range(len(roots)):
+        root = roots[i]
+        t = root.real
+        if not (0.0 <= t < min_time):
+            continue
+        if not is_real_number(root, ABS_OR_REL_CUTOFF, RTOL, ATOL):
+            continue
+
+        closing = 0.0
+        for k in range(p12.shape[1]):
+            r = p12[0, k] + p12[1, k] * t + p12[2, k] * t * t
+            v = p12[1, k] + 2 * p12[2, k] * t
+            closing += r * v
+        if closing >= 0.0:
+            continue
+
+        min_time = t
+
+    return min_time
+
+
 def ball_ball_collision_time(
     ball1: Ball,
     ball2: Ball,
 ) -> float:
-    """Get the time until collision between two balls."""
+    """Get the time until collision between two balls.
+
+    Roots at which the balls are moving apart are discarded. See
+    :func:`get_smallest_approaching_root`.
+    """
     p1: NDArray[np.float64] = ball_position_polynomial(
         ball1.state.s,
         ball1.state.rvw,
@@ -60,13 +106,11 @@ def ball_ball_collision_time(
     if C[4] == 0.0:
         # C[3] must also be 0.0, and this is a quadratic
         assert C[3] == 0.0
-        return get_real_positive_smallest_root(
-            quadratic.solve(C[2], C[1], C[0]), ABS_OR_REL_CUTOFF, RTOL, ATOL
-        )
+        roots = quadratic.solve(C[2], C[1], C[0])
+    else:
+        roots = quartic.solve(C[4], C[3], C[2], C[1], C[0])
 
-    return get_real_positive_smallest_root(
-        quartic.solve(C[4], C[3], C[2], C[1], C[0]), ABS_OR_REL_CUTOFF, RTOL, ATOL
-    )
+    return get_smallest_approaching_root(roots, p12)
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
@@ -84,6 +128,9 @@ def ball_ball_collision_time_2d(
     R: float,
 ) -> float:
     """Get the time until collision between two balls.
+
+    Roots at which the balls are moving apart are discarded. See
+    :func:`get_smallest_approaching_root`.
 
     Note:
         - TODO(Evan) This is a legacy function used for detecting ball-ball collisions
@@ -149,9 +196,21 @@ def ball_ball_collision_time_2d(
     d = 2 * Bx * Cx + 2 * By * Cy
     e = Cx * Cx + Cy * Cy - 4 * R * R
 
-    return get_real_positive_smallest_root(
-        quartic.solve(a, b, c, d, e), ABS_OR_REL_CUTOFF, RTOL, ATOL
-    )
+    if a == 0.0:
+        # If relative acceleration is zero, the cubic term must also be zero and the
+        # distance equation reduces to a quadratic.
+        assert b == 0.0
+        roots = quadratic.solve(c, d, e)
+    else:
+        roots = quartic.solve(a, b, c, d, e)
+
+    # Relative position C + B*t + A*t**2 in the row layout of ball_position_polynomial.
+    # Filled row by row because np.array([[...]]) costs ~1 µs per call in numba.
+    p12 = np.empty((3, 2), dtype=np.float64)
+    p12[0] = Cx, Cy
+    p12[1] = Bx, By
+    p12[2] = Ax, Ay
+    return get_smallest_approaching_root(roots, p12)
 
 
 def get_next_ball_ball_event(
