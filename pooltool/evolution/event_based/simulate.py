@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 import attrs
 import numpy as np
 
@@ -115,6 +117,8 @@ def simulate(
     t_final: float | None = None,
     include: set[EventType] = INCLUDED_EVENTS,
     max_events: int = 0,
+    *,
+    backend: Literal["reference", "compiled_fp64"] = "reference",
 ) -> System:
     """Run a simulation on a system and return it
 
@@ -146,6 +150,11 @@ def simulate(
         max_events:
             If this is greater than 0, and the shot has more than this many events, the
             simulation is stopped and the balls are set to stationary.
+        backend:
+            Explicitly select ``"compiled_fp64"`` for the supported stock 2D
+            physics configuration. The default ``"reference"`` accepts all existing
+            engine and event inclusion choices. The compiled backend rejects
+            unsupported inputs before modifying the system and does not fall back.
 
     Returns:
         System: The simulated system.
@@ -192,6 +201,22 @@ def simulate(
     See Also:
         - :func:`pooltool.evolution.continuize`
     """
+    if backend == "compiled_fp64":
+        from pooltool.evolution.event_based.compiled_fp64 import simulate_compiled
+
+        return simulate_compiled(
+            shot,
+            engine or DEFAULT_ENGINE,
+            inplace,
+            continuous,
+            dt,
+            t_final,
+            include,
+            max_events,
+        )
+    if backend != "reference":
+        raise ValueError(f"Unknown simulation backend: {backend!r}")
+
     if not inplace:
         shot = shot.copy()
 
