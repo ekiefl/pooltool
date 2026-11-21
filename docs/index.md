@@ -28,6 +28,7 @@ Pooltool is peer-reviewed and published in the **Journal of Open Source Software
    getting_started/install 
    getting_started/interface
    getting_started/hello_world
+   getting_started/compiled_fp64
 ```
 
 ```{eval-rst}

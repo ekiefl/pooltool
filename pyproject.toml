@@ -10,7 +10,10 @@ description = "A sandbox billiards game that emphasizes realistic physics."
 authors = [{name = "Evan Kiefl", email = "kiefl.evan@gmail.com"}]
 maintainers = [{name = "Evan Kiefl", email = "kiefl.evan@gmail.com"}]
 license = "Apache-2.0"
-license-files = ["LICENSE.txt"]
+license-files = [
+    "LICENSE.txt",
+    "pooltool/evolution/event_based/compiled_fp64/SCIPY-LICENSE.txt",
+]
 readme = "README.md"
 requires-python = ">=3.10,<3.14"
 keywords = ["simulation", "physics", "pool", "billiards", "panda3d", "snooker", "eight-ball"]

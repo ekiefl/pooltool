@@ -52,7 +52,13 @@ test:
 
 .PHONY: test-coverage
 test-coverage:
-	uv run pytest --cov=pooltool --cov-report=xml --cov-report=term
+	NUMBA_DISABLE_JIT=0 uv run pytest --cov=pooltool --cov-report=
+	# Trace the kernel source in Python after running the native suite.
+	NUMBA_DISABLE_JIT=1 uv run coverage run --append --context=compiled-fp64-interpreted \
+		--source=pooltool/evolution/event_based/compiled_fp64 \
+		-m pytest tests/evolution/event_based/test_compiled_fp64.py
+	uv run coverage xml
+	uv run coverage report
 
 # ========================================
 # Build and Publish
