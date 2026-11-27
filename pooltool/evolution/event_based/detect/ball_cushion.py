@@ -21,6 +21,7 @@ from pooltool.evolution.event_based.detect.ball_position_polynomial import (
 from pooltool.evolution.event_based.detect.quartic_coefficients import (
     parabola_circle_distance_2d_quartic_coefficients,
 )
+from pooltool.evolution.event_based.detect.torus import parabola_torus_contact_time
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import LinearCushionSegment
 from pooltool.physics.utils import get_u_vec
@@ -262,7 +263,8 @@ def ball_vertical_cylinder_collision_time(
     this effective radius, whose contact time is a single quartic.
 
     Note:
-        - This is broken for airborne balls.
+        - This is broken for airborne balls, which use
+          :func:`pooltool.evolution.event_based.detect.torus.parabola_torus_contact_time`.
     """
 
     if (
@@ -360,7 +362,12 @@ def get_next_ball_linear_cushion_event(
 def get_next_ball_circular_cushion_event(
     shot: System, collision_cache: CollisionCache
 ) -> Event:
-    """Detect the next ball-vs-circular-cushion collision in 2D mode."""
+    """Detect the next ball-vs-circular-cushion collision.
+
+    Balls on the table use the vertical-cylinder quartic at the nose tube's effective
+    contact radius; airborne balls use the enclosing-quadric iteration against the
+    full torus.
+    """
     if not shot.table.has_circular_cushions:
         return null_event(np.inf)
 
@@ -381,8 +388,18 @@ def get_next_ball_circular_cushion_event(
                 continue
 
             if ball.state.s == const.airborne:
-                # TODO
-                dtau_E = np.inf
+                # FIXME: The whole nose circle counts as cushion, but only the arc
+                # between the rail tangent points is physical. A ball on the table
+                # cannot reach the rest of the ring, but an airborne ball can, e.g.
+                # dropping into the pocket past the jaw, and would bounce off
+                # nothing. Restrict airborne contacts to the physical arc.
+                dtau_E = parabola_torus_contact_time(
+                    state.rvw[0] - cushion.center,
+                    state.rvw[1],
+                    params.g,
+                    cushion.radius,
+                    params.R + cushion.nose_radius,
+                )
             else:
                 dtau_E = ball_vertical_cylinder_collision_time(
                     rvw=state.rvw,
