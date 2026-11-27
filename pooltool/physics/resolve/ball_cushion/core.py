@@ -20,6 +20,9 @@ If the velocity-based correction would move the ball more than
 falls back to positioning along the cushion normal instead.
 """
 
+NEWTON_MAX_ITER = 10
+NEWTON_TOL = 1e-12
+
 
 class _BaseLinearStrategy(Protocol):
     def make_kiss(self, ball: Ball, cushion: LinearCushionSegment) -> Ball: ...
@@ -141,41 +144,54 @@ class CoreBallCCushionCollision(ABC):
     def make_kiss(self, ball: Ball, cushion: CircularCushionSegment) -> Ball:
         """Translate the ball along its velocity so it nearly touches the cushion.
 
-        Solves a quadratic equation for the time offset t such that the ball's
-        XY distance to the cushion center equals R + radius + spacer, then moves
-        the ball to r + t * v. The smallest-magnitude real root is chosen.
+        The cushion nose is a tube of radius ``cushion.nose_radius`` around the nose
+        circle of radius ``cushion.radius``. Newton's method on the time
+        offset t finds where the distance from the ball's center to the nose circle
+        equals ``R + nose_radius + spacer``, then the ball moves to ``r + t * v``.
+        Starting from t = 0 selects the nearest such offset. A ball on the table has
+        no vertical velocity, so for it this is the horizontal rewind to the
+        effective contact radius the detector uses.
 
-        If the ball is nontranslating or the displacement would exceed 5 * spacer,
-        falls back to positioning along the radial direction.
+        If the ball is nontranslating, if Newton does not converge (velocity nearly
+        tangent to the surface), or if the displacement would exceed
+        FALLBACK_DISPLACEMENT_FACTOR * spacer, falls back to positioning along the
+        surface normal.
         """
         r = ball.state.rvw[0]
         v = ball.state.rvw[1]
         R = ball.params.R
         spacer = const.MIN_DIST
+        target = R + cushion.nose_radius + spacer
 
         if ball.state.s in const.nontranslating:
             return _apply_fallback_positioning_circular(ball, cushion, spacer)
 
-        c = np.array([cushion.center[0], cushion.center[1], r[2]])
-        diff = r - c
-        target = R + cushion.radius + spacer
+        t = 0.0
+        converged = False
+        for _ in range(NEWTON_MAX_ITER):
+            pos = r + t * v
+            offset = pos - cushion.nearest_nose_point(pos)
+            dist = ptmath.norm3d(offset)
+            if dist == 0.0:
+                break
+            residual = dist - target
+            if abs(residual) < NEWTON_TOL:
+                converged = True
+                break
+            slope = np.dot(offset, v) / dist
+            if slope == 0.0:
+                break
+            t -= residual / slope
 
-        alpha = v[0] ** 2 + v[1] ** 2
-        beta = 2 * (diff[0] * v[0] + diff[1] * v[1])
-        gamma = diff[0] ** 2 + diff[1] ** 2 - target**2
-
-        roots_complex = ptmath.roots.quadratic.solve(alpha, beta, gamma)
-        t = ptmath.roots.get_real_smallest_magnitude_root(
-            roots_complex,
-            ptmath.roots.ABS_OR_REL_CUTOFF,
-            ptmath.roots.RTOL,
-            ptmath.roots.ATOL,
-        )
+        if not converged:
+            return _apply_fallback_positioning_circular(ball, cushion, spacer)
 
         if ptmath.norm3d(t * v) > FALLBACK_DISPLACEMENT_FACTOR * spacer:
             return _apply_fallback_positioning_circular(ball, cushion, spacer)
 
-        ball.state.rvw[0] = r + t * v
+        ball.state.rvw[0] = _constrain_to_table_circular(
+            r + t * v, cushion, R, target, airborne=ball.state.s == const.airborne
+        )
 
         return ball
 
@@ -256,13 +272,53 @@ def _constrain_to_table(
 def _apply_fallback_positioning_circular(
     ball: Ball, cushion: CircularCushionSegment, spacer: float
 ) -> Ball:
-    """Place the ball at R + radius + spacer from the cushion center along the radial.
+    """Place the ball R + nose_radius + spacer from the nose circle along the surface normal.
 
-    Used when the ball is nontranslating (no velocity to trace back along) or
-    when the velocity-based correction would produce an excessive displacement.
+    Used when the ball is nontranslating (no velocity to trace back along) or when
+    the velocity-based correction fails or would produce an excessive displacement.
     """
-    c = np.array([cushion.center[0], cushion.center[1], ball.state.rvw[0, 2]])
-    direction = ptmath.unit_vector(ball.state.rvw[0] - c)
-    ball.state.rvw[0] = c + (ball.params.R + cushion.radius + spacer) * direction
+    R = ball.params.R
+    target = R + cushion.nose_radius + spacer
+    pos = ball.state.rvw[0]
+    candidate = cushion.nearest_nose_point(pos) + target * cushion.get_normal_3d(pos)
+    ball.state.rvw[0] = _constrain_to_table_circular(
+        candidate, cushion, R, target, airborne=ball.state.s == const.airborne
+    )
 
     return ball
+
+
+def _constrain_to_table_circular(
+    pos: np.ndarray,
+    cushion: CircularCushionSegment,
+    R: float,
+    target: float,
+    airborne: bool,
+) -> np.ndarray:
+    """Rotate ``pos`` about the nose circle to enforce the ball's table constraint.
+
+    For non-airborne balls, the constraint is ``z == R`` exactly: the ball must rest on
+    the table. The surface normal tilts downward for a ball on the table, so the
+    fallback can place the candidate above or below R, and both directions need
+    correcting.
+
+    For airborne balls, the constraint is ``z >= R``: only lift when below R.
+
+    The rotation is in the meridian plane, so it preserves the ball's azimuth and its
+    distance ``target`` to the nose circle: the ball lands at height ``R`` at the
+    horizontal distance from the core where a center at that height is ``target``
+    away, on the outer side of the ring.
+    """
+    if airborne and pos[2] >= R:
+        return pos
+
+    if pos[2] == R:
+        return pos
+
+    radial = np.array([pos[0] - cushion.center[0], pos[1] - cushion.center[1], 0.0])
+    norm = ptmath.norm3d(radial)
+    direction = radial / norm if norm > 0 else np.array([1.0, 0.0, 0.0])
+    horizontal = cushion.radius + np.sqrt(target**2 - (R - cushion.height) ** 2)
+    placed = cushion.center + horizontal * direction
+    placed[2] = R
+    return placed
