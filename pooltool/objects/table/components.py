@@ -217,12 +217,12 @@ class CircularCushionSegment:
             z-coordinates of the cushion's center. The circle is assumed to be parallel to
             the XY plane, which makes ``center[2]`` is the height of the cushion.
         radius:
-            The radius of the core circle.
+            The radius of the nose circle, the horizontal circle the cushion nose
+            runs along.
         nose_radius:
-            The radius of the cushion nose wrapped around the core circle. The
-            cushion surface is the torus swept by a circle of this radius, so a ball
-            of radius ``R`` touches it when its center is ``R + nose_radius`` from
-            the core circle.
+            The radius of the cushion nose, the tube wrapped around the nose circle.
+            A ball of radius ``R`` touches it when its center is ``R + nose_radius``
+            from the nose circle.
     """
 
     id: str
@@ -272,10 +272,10 @@ class CircularCushionSegment:
         normal[2] = 0  # remove z-component
         return ptmath.unit_vector(normal)
 
-    def nearest_core_point(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
-        """The point on the core circle closest to ``xyz``.
+    def nearest_nose_point(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
+        """The point on the nose circle closest to ``xyz``.
 
-        A point on the axis is equidistant from the whole circle; the core point in
+        A point on the axis is equidistant from the whole circle; the nose point in
         the +x direction is returned.
         """
         radial = np.array([xyz[0] - self.center[0], xyz[1] - self.center[1], 0.0])
@@ -286,10 +286,10 @@ class CircularCushionSegment:
     def get_normal_3d(self, xyz: NDArray[np.float64]) -> NDArray[np.float64]:
         """Calculates the 3D normal vector for a point contacting the cushion.
 
-        The cushion surface is a torus around the core circle, so the normal points
-        from the nearest core point toward ``xyz``. For a ball resting on the table
+        The cushion nose is a tube around the nose circle, so the normal points
+        from the nearest nose point toward ``xyz``. For a ball resting on the table
         this tilts downward, like the nose cylinder of a linear segment. A point on
-        the axis gets a vertical normal, since every core point is equally near.
+        the axis gets a vertical normal, since every nose point is equally near.
 
         Args:
             xyz:
@@ -301,7 +301,7 @@ class CircularCushionSegment:
         """
         if xyz[0] == self.center[0] and xyz[1] == self.center[1]:
             return np.array([0.0, 0.0, 1.0 if xyz[2] >= self.center[2] else -1.0])
-        return ptmath.unit_vector(xyz - self.nearest_core_point(xyz))
+        return ptmath.unit_vector(xyz - self.nearest_nose_point(xyz))
 
     def copy(self) -> CircularCushionSegment:
         """Create a copy"""

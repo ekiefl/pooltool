@@ -254,11 +254,11 @@ def ball_vertical_cylinder_collision_time(
 ) -> float:
     """Get the time until collision between a ball on the table and a circular cushion.
 
-    The cushion is a torus: the core circle of radius ``r`` wrapped in a nose of
-    radius ``nose_radius`` at ``height``. A ball rolling or sliding on the table
+    The cushion nose is a tube of radius ``nose_radius`` around the nose circle of
+    radius ``r`` at ``height``. A ball rolling or sliding on the table
     touches it when the horizontal distance from its center to the axis is
     ``r + sqrt((R + nose_radius)**2 - (height - R)**2)``, the same geometry the
-    circular make_kiss enforces. That reduces the torus to a vertical cylinder of
+    circular make_kiss enforces. That reduces the tube to a vertical cylinder of
     this effective radius, whose contact time is a single quartic.
 
     Note:

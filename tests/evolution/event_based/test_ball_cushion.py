@@ -159,8 +159,8 @@ def _circular_collision_time(ball: Ball, cushion: CircularCushionSegment) -> flo
 
 
 @pytest.mark.parametrize("nose_radius", [0.001, 0.005])
-def test_circular_detection_matches_torus_contact(nose_radius: float):
-    """A ball on the table is detected when its center is R + nose_radius from the core circle."""
+def test_circular_detection_matches_nose_tube_contact(nose_radius: float):
+    """A ball on the table is detected when its center is R + nose_radius from the nose circle."""
     cushion = _circular_cushion(nose_radius)
     ball = _ball(0.9, 1.0)
 
@@ -177,8 +177,10 @@ def test_circular_detection_matches_torus_contact(nose_radius: float):
         t,
     )
 
-    core = cushion.nearest_core_point(rvw[0])
-    assert np.linalg.norm(rvw[0] - core) == pytest.approx(ball.params.R + nose_radius)
+    nose_point = cushion.nearest_nose_point(rvw[0])
+    assert np.linalg.norm(rvw[0] - nose_point) == pytest.approx(
+        ball.params.R + nose_radius
+    )
 
 
 def test_circular_detection_ignores_ball_passing_wide():
