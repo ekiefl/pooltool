@@ -18,6 +18,7 @@ from pooltool.interact import show
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.ball.sets import BallSet
 from pooltool.objects.cue.datatypes import Cue
+from pooltool.objects.table.components import CircularCushionSegment
 from pooltool.objects.table.datatypes import Table
 from pooltool.physics.dimensionality import Dim
 from pooltool.physics.resolve.ball_ball.frictional_inelastic import (
@@ -369,6 +370,106 @@ def bouncing_collision() -> System:
     )
 
 
+def _jaw_frame(
+    table: Table, jaw: CircularCushionSegment
+) -> tuple[np.ndarray, np.ndarray]:
+    """Horizontal unit vectors from the jaw axis toward its pocket and into the table.
+
+    The inward direction is the 45 degree diagonal for a corner pocket and the
+    perpendicular to the rail for a side pocket, the lines along which balls are
+    aimed at pockets.
+    """
+    pocket = min(
+        table.pockets.values(),
+        key=lambda p: np.linalg.norm(p.center[:2] - jaw.center[:2]),
+    )
+    to_pocket = pocket.center[:2] - jaw.center[:2]
+    to_pocket /= np.linalg.norm(to_pocket)
+
+    inward = np.sign(np.array([table.w / 2, table.l / 2]) - pocket.center[:2])
+    if abs(pocket.center[1] - table.l / 2) < 0.1:
+        inward[1] = 0.0
+    inward /= np.linalg.norm(inward)
+
+    return to_pocket, inward
+
+
+def _aimed_at_jaw(
+    ball_id: str,
+    table: Table,
+    jaw: CircularCushionSegment,
+    lateral: float,
+    dist: float,
+    speed: float,
+    vz: float,
+) -> Ball:
+    """A ball ``dist`` out along the pocket line, heading in at ``speed``.
+
+    Its horizontal path passes ``lateral`` from the jaw axis on the pocket side,
+    between the end of the rail and the pocket mouth, so it meets the jaw and not the
+    rail. A nonzero ``vz`` makes it airborne.
+    """
+    to_pocket, inward = _jaw_frame(table, jaw)
+    start = jaw.center[:2] + lateral * to_pocket + dist * inward
+    ball = Ball.create(ball_id, xy=tuple(start))
+    ball.state.rvw[1] = [-speed * inward[0], -speed * inward[1], vz]
+    ball.state.s = const.airborne if vz > 0 else const.sliding
+    return ball
+
+
+def _dropped_on_jaw(
+    ball_id: str,
+    table: Table,
+    jaw: CircularCushionSegment,
+    lateral: float,
+    height: float,
+) -> Ball:
+    """A ball at rest ``height`` above the table, ``lateral`` from the jaw axis toward the pocket."""
+    to_pocket, _ = _jaw_frame(table, jaw)
+    ball = Ball.create(ball_id, xy=tuple(jaw.center[:2] + lateral * to_pocket))
+    ball.state.rvw[0, 2] = ball.params.R + height
+    ball.state.s = const.airborne
+    return ball
+
+
+def jaw_collisions() -> System:
+    """Twelve balls, one per pocket jaw, meeting the jaw nose in different ways.
+
+    Corner jaws take a ball on the table, a ball lofted into the nose at three
+    heights, a ball that lands short and hops into the nose, and a ball dropped from
+    rest onto the nose. Side jaws take a ball on the table, two lofts and a drop. Lofts
+    above about 0.9 m/s clear the jaw, so the highest loft clips its top.
+    """
+    table = Table.default()
+    jaws = table.cushion_segments.circular
+
+    corner_dist = 0.4
+    corner_lateral = 0.06
+    side_lateral = 0.025
+    speed = 2.0
+
+    balls = [
+        _aimed_at_jaw(
+            "cue", table, jaws["1t"], corner_lateral, corner_dist, speed, 0.0
+        ),
+        _aimed_at_jaw("1", table, jaws["2t"], 0.055, corner_dist, speed, 0.0),
+        _aimed_at_jaw("2", table, jaws["7t"], corner_lateral, corner_dist, speed, 0.3),
+        _aimed_at_jaw("3", table, jaws["8t"], corner_lateral, corner_dist, speed, 0.6),
+        _aimed_at_jaw("4", table, jaws["10t"], corner_lateral, corner_dist, speed, 0.9),
+        _aimed_at_jaw("5", table, jaws["11t"], corner_lateral, 0.8, speed, 0.8),
+        _aimed_at_jaw("6", table, jaws["16t"], corner_lateral, 0.8, speed, 1.2),
+        _dropped_on_jaw("7", table, jaws["17t"], 0.01, 0.3),
+        _aimed_at_jaw("8", table, jaws["4t"], side_lateral, corner_dist, speed, 0.0),
+        _aimed_at_jaw("9", table, jaws["5t"], side_lateral, corner_dist, speed, 0.3),
+        _aimed_at_jaw("10", table, jaws["13t"], side_lateral, corner_dist, speed, 0.6),
+        _dropped_on_jaw("11", table, jaws["14t"], 0.005, 0.3),
+    ]
+
+    shot = System(cue=Cue(cue_ball_id="cue"), table=table, balls=balls)
+    shot.set_ballset(BallSet("pooltool_pocket"))
+    return shot
+
+
 _map = {
     "drop": drop,
     "impulse_into": impulse_into,
@@ -381,6 +482,7 @@ _map = {
     "bounces_off_table": bounces_off_table,
     "cushion_drops": cushion_drops,
     "bouncing_collision": bouncing_collision,
+    "jaw_collisions": jaw_collisions,
 }
 
 
