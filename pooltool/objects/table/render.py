@@ -190,10 +190,15 @@ class TableRender(Render):
         center_x, center_y, center_z = cushion.center
         height = center_z
 
-        circle = self.draw_circle(
-            self.cushion_drawer, (center_x, center_y, height), radius, 30
+        arc = self.draw_arc(
+            self.cushion_drawer,
+            (center_x, center_y, height),
+            radius,
+            cushion.arc_start,
+            cushion.arc_span,
+            30,
         )
-        node = Global.render.find("scene").find("table").attachNewNode(circle)
+        node = Global.render.find("scene").find("table").attachNewNode(arc)
         node.set_shader_auto(True)
         self.nodes[f"cushion_{cushion_id}"] = node
 
@@ -245,9 +250,12 @@ class TableRender(Render):
             self.init_bounding_box()
 
     def draw_circle(self, drawer, center, radius, num_points):
+        return self.draw_arc(drawer, center, radius, 0.0, 2 * np.pi, num_points)
+
+    def draw_arc(self, drawer, center, radius, start, span, num_points):
         center_x, center_y, height = center
 
-        thetas = np.linspace(0, 2 * np.pi, num_points)
+        thetas = np.linspace(start, start + span, num_points)
         for i in range(1, len(thetas)):
             curr_theta, prev_theta = thetas[i], thetas[i - 1]
 
