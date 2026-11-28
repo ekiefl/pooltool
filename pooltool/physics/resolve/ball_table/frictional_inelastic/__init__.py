@@ -50,7 +50,11 @@ def _resolve_ball_table(
         D_v_parallel_no_slip
     ) <= ptmath.squared_norm3d(D_v_parallel_slip):
         rvw[1] = rvw[1] + D_v_perpendicular + D_v_parallel_no_slip
-        rvw[2] = rvw[2] + (5.0 / 7.0) * (-w_i + ptmath.cross(unit_z, v_i) / R)
+        # The contact impulse acts at -R*z and has no moment about z: only the
+        # horizontal spin is brought to rolling, w_z is unchanged.
+        rvw[2, :2] = rvw[2, :2] + (5.0 / 7.0) * (
+            -w_i[:2] + ptmath.cross(unit_z, v_i)[:2] / R
+        )
     else:
         rvw[1] = rvw[1] + D_v_perpendicular + D_v_parallel_slip
         rvw[2] = rvw[2] + (2.5 / R) * ptmath.norm3d(D_v_parallel_slip) * ptmath.cross(
