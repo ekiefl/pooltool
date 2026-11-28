@@ -419,12 +419,36 @@ def _aimed_at_jaw(
 
 def _dropped_on_jaw(
     ball_id: str,
+    jaw: CircularCushionSegment,
+    lateral: float,
+    height: float,
+) -> Ball:
+    """A ball at rest ``height`` above the table, ``lateral`` beyond the nose crown.
+
+    The drop is at the middle of the jaw's arc, so the nose tilts the bounce toward
+    the table.
+    """
+    mid = jaw.arc_start + jaw.arc_span / 2
+    outward = np.array([np.cos(mid), np.sin(mid)])
+    xy = jaw.center[:2] + (jaw.radius + lateral) * outward
+    ball = Ball.create(ball_id, xy=tuple(xy))
+    ball.state.rvw[0, 2] = ball.params.R + height
+    ball.state.s = const.airborne
+    return ball
+
+
+def _dropped_beside_jaw(
+    ball_id: str,
     table: Table,
     jaw: CircularCushionSegment,
     lateral: float,
     height: float,
 ) -> Ball:
-    """A ball at rest ``height`` above the table, ``lateral`` from the jaw axis toward the pocket."""
+    """A ball at rest ``height`` above the ring, ``lateral`` toward the pocket.
+
+    That part of the ring lies inside the rail and is not cushion, so the ball falls
+    past it.
+    """
     to_pocket, _ = _jaw_frame(table, jaw)
     ball = Ball.create(ball_id, xy=tuple(jaw.center[:2] + lateral * to_pocket))
     ball.state.rvw[0, 2] = ball.params.R + height
@@ -437,8 +461,10 @@ def jaw_collisions() -> System:
 
     Corner jaws take a ball on the table, a ball lofted into the nose at three
     heights, a ball that lands short and hops into the nose, and a ball dropped from
-    rest onto the nose. Side jaws take a ball on the table, two lofts and a drop. Lofts
-    above about 0.9 m/s clear the jaw, so the highest loft clips its top.
+    rest beside the nose onto the part of the ring inside the rail, which it falls
+    straight past. Side jaws take a ball on the table, two lofts and a ball dropped
+    from rest onto the nose. Lofts above about 0.9 m/s clear the jaw, so the highest
+    loft clips its top.
     """
     table = Table.default()
     jaws = table.cushion_segments.circular
@@ -458,11 +484,11 @@ def jaw_collisions() -> System:
         _aimed_at_jaw("4", table, jaws["10t"], corner_lateral, corner_dist, speed, 0.9),
         _aimed_at_jaw("5", table, jaws["11t"], corner_lateral, 0.8, speed, 0.8),
         _aimed_at_jaw("6", table, jaws["16t"], corner_lateral, 0.8, speed, 1.2),
-        _dropped_on_jaw("7", table, jaws["17t"], 0.01, 0.3),
+        _dropped_beside_jaw("7", table, jaws["17t"], 0.01, 0.3),
         _aimed_at_jaw("8", table, jaws["4t"], side_lateral, corner_dist, speed, 0.0),
         _aimed_at_jaw("9", table, jaws["5t"], side_lateral, corner_dist, speed, 0.3),
         _aimed_at_jaw("10", table, jaws["13t"], side_lateral, corner_dist, speed, 0.6),
-        _dropped_on_jaw("11", table, jaws["14t"], 0.005, 0.3),
+        _dropped_on_jaw("11", jaws["14t"], 0.005, 0.3),
     ]
 
     shot = System(cue=Cue(cue_ball_id="cue"), table=table, balls=balls)
