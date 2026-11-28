@@ -223,12 +223,22 @@ class CircularCushionSegment:
             The radius of the cushion nose, the tube wrapped around the nose circle.
             A ball of radius ``R`` touches it when its center is ``R + nose_radius``
             from the nose circle.
+        arc_start:
+            The azimuth, in radians counterclockwise from the +x axis about ``center``,
+            at which the physical part of the nose circle begins.
+        arc_span:
+            The counterclockwise angular extent, in radians, of the physical part of
+            the nose circle. A pocket jaw spans the arc between the points where its two
+            neighboring linear segments meet the nose circle, and the rest of the ring
+            lies inside the rail. ``2 * np.pi`` makes the whole ring cushion.
     """
 
     id: str
     center: NDArray[np.float64]
     radius: float
     nose_radius: float
+    arc_start: float
+    arc_span: float
 
     def __eq__(self, other):
         return are_dataclasses_equal(self, other)
@@ -317,6 +327,8 @@ class CircularCushionSegment:
             center=np.array([0, 0, 0], dtype=np.float64),
             radius=10.0,
             nose_radius=0.005,
+            arc_start=0.0,
+            arc_span=2 * np.pi,
         )
 
 

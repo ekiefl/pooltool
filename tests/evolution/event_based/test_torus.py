@@ -16,6 +16,7 @@ import pytest
 from scipy.optimize import brentq, minimize_scalar
 
 from pooltool.evolution.event_based.detect.torus import (
+    arc_intervals,
     parabola_torus_contact_time,
     torus_contact_windows,
     torus_residual,
@@ -26,6 +27,7 @@ POOL_R = 0.028575
 SNOOKER_R = 0.02625
 NOSE = 0.001
 TABLE_Z = POOL_R - 0.037
+FULL_RING = 2 * np.pi
 
 JAWS = {
     "pool_corner": (0.02095, POOL_R + NOSE),
@@ -243,7 +245,7 @@ def test_matches_brute_force_reference(jaw):
     for family in FAMILIES:
         for p0, v in _cases(rng, family, r, D, 120):
             expected = _reference_contact(p0, v, r, D)
-            actual = parabola_torus_contact_time(p0, v, G, r, D)
+            actual = parabola_torus_contact_time(p0, v, G, r, D, 0.0, FULL_RING)
             assert np.isfinite(actual) == np.isfinite(expected), (
                 family.__name__,
                 p0,
@@ -267,7 +269,7 @@ def test_matches_octic_reference(jaw):
     for family in FAMILIES:
         for p0, v in _cases(rng, family, r, D, 120):
             expected = _octic_contact(p0, v, r, D)
-            actual = parabola_torus_contact_time(p0, v, G, r, D)
+            actual = parabola_torus_contact_time(p0, v, G, r, D, 0.0, FULL_RING)
             assert np.isfinite(actual) == np.isfinite(expected), (
                 family.__name__,
                 p0,
@@ -287,7 +289,7 @@ def test_detected_contact_is_on_the_surface_and_approaching():
     r, D = JAWS["pool_corner"]
     rng = np.random.default_rng(1)
     for p0, v in _cases(rng, _aimed, r, D, 200):
-        t = parabola_torus_contact_time(p0, v, G, r, D)
+        t = parabola_torus_contact_time(p0, v, G, r, D, 0.0, FULL_RING)
         if not np.isfinite(t):
             continue
         assert _residual(t, p0, v, r, D) == pytest.approx(0.0, abs=1e-12)
@@ -317,7 +319,7 @@ def test_penetrating_graze_is_detected():
         tau = 0.03
         p0 = point - v * tau - np.array([0.0, 0.0, 0.5 * G * tau**2])
         v = v + np.array([0.0, 0.0, G * tau])
-        t = parabola_torus_contact_time(p0, v, G, r, D)
+        t = parabola_torus_contact_time(p0, v, G, r, D, 0.0, FULL_RING)
         assert np.isfinite(t)
         assert t <= tau + 1e-9
         found += 1
@@ -327,8 +329,9 @@ def test_penetrating_graze_is_detected():
 def test_receding_ball_inside_window_is_not_detected():
     r, D = JAWS["pool_corner"]
     p0 = np.array([r + D + 1e-6, 0.0, 0.0])
-    assert parabola_torus_contact_time(p0, np.array([1.0, 0.0, 0.0]), G, r, D) == np.inf
-    approaching = parabola_torus_contact_time(p0, np.array([-1.0, 0.0, 0.0]), G, r, D)
+    receding = np.array([1.0, 0.0, 0.0])
+    assert parabola_torus_contact_time(p0, receding, G, r, D, 0.0, FULL_RING) == np.inf
+    approaching = parabola_torus_contact_time(p0, -receding, G, r, D, 0.0, FULL_RING)
     assert approaching == pytest.approx(1e-6, rel=1e-3)
 
 
@@ -338,7 +341,7 @@ def test_no_window_means_no_contact():
     v = np.array([0.0, 1.0, 0.0])
     count = torus_contact_windows(p0[0], p0[1], p0[2], v[0], v[1], v[2], G, r, D)[0]
     assert count == 0
-    assert parabola_torus_contact_time(p0, v, G, r, D) == np.inf
+    assert parabola_torus_contact_time(p0, v, G, r, D, 0.0, FULL_RING) == np.inf
 
 
 def test_ball_above_the_band_gets_two_windows():
@@ -351,3 +354,56 @@ def test_ball_above_the_band_gets_two_windows():
     )
     assert count == 2
     assert lo0 == 0.0 and hi0 < lo1 < hi1
+
+
+def test_arc_intervals_narrow_wedge_is_one_bounded_interval():
+    """Along ``y = 1`` the azimuth is between 45 and 90 degrees for ``x`` in [0, 1]."""
+    count, lo, hi, _, _ = arc_intervals(-3.0, 1.0, 1.0, 0.0, np.pi / 4, np.pi / 4)
+    assert count == 1
+    assert lo == pytest.approx(3.0)
+    assert hi == pytest.approx(4.0)
+
+
+def test_arc_intervals_wide_arc_is_everything_but_the_gap():
+    count, lo, hi, _, _ = arc_intervals(-3.0, 1.0, 1.0, 0.0, np.pi / 2, 1.5 * np.pi)
+    assert count == 1
+    assert lo == -np.inf
+    assert hi == pytest.approx(3.0)
+
+    count, lo0, hi0, lo1, hi1 = arc_intervals(
+        -3.0, 1.0, 1.0, 0.0, np.pi / 2, 1.75 * np.pi
+    )
+    assert count == 2
+    assert lo0 == -np.inf
+    assert hi0 == pytest.approx(3.0)
+    assert lo1 == pytest.approx(4.0)
+    assert hi1 == np.inf
+
+
+def test_arc_intervals_full_ring_is_unbounded():
+    count, lo, hi, _, _ = arc_intervals(0.3, -0.2, 1.0, 2.0, 1.0, FULL_RING)
+    assert count == 1
+    assert lo == -np.inf
+    assert hi == np.inf
+
+
+def test_arc_intervals_path_missing_the_wedge_is_empty():
+    count = arc_intervals(-3.0, -1.0, 1.0, 0.0, np.pi / 4, np.pi / 4)[0]
+    assert count == 0
+
+
+def test_contact_outside_the_arc_yields_to_the_next_one():
+    """A ball crossing a ring torus meets the arc on the far side from the inside."""
+    r, D = JAWS["snooker_corner"]
+    p0 = np.array([r + D + 0.05, 0.0, 0.0])
+    v = np.array([-10.0, 0.0, 0.0])
+    arc_start, arc_span = 0.75 * np.pi, np.pi / 2
+
+    phantom = parabola_torus_contact_time(p0, v, G, r, D, 0.0, FULL_RING)
+    t = parabola_torus_contact_time(p0, v, G, r, D, arc_start, arc_span)
+
+    assert phantom == pytest.approx(0.005, abs=1e-6)
+    assert phantom < t < np.inf
+    assert _residual(t, p0, v, r, D) == pytest.approx(0.0, abs=1e-12)
+    x = p0[0] + v[0] * t
+    assert -r < x < 0

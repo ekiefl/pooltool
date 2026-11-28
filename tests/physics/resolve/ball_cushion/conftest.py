@@ -29,6 +29,8 @@ def cushion_circular() -> CircularCushionSegment:
         center=np.array([0.0, 0.0, specs.cushion_height], dtype=np.float64),
         radius=0.01,
         nose_radius=specs.cushion_nose_radius,
+        arc_start=0.0,
+        arc_span=2 * np.pi,
     )
 
 
@@ -47,4 +49,6 @@ def cushion_ring() -> CircularCushionSegment:
         center=np.array([0.0, 0.0, specs.cushion_height], dtype=np.float64),
         radius=0.05,
         nose_radius=specs.cushion_nose_radius,
+        arc_start=0.0,
+        arc_span=2 * np.pi,
     )

@@ -27,6 +27,8 @@ def circ_seg():
         center=np.array([0, 0, 0]),
         radius=1,
         nose_radius=0.05,
+        arc_start=0.0,
+        arc_span=2 * np.pi,
     )
 
 
@@ -114,6 +116,8 @@ def test_circular_segment_creation():
             center=np.array([0, 0]),
             radius=1,
             nose_radius=0.05,
+            arc_start=0.0,
+            arc_span=2 * np.pi,
         )
 
 

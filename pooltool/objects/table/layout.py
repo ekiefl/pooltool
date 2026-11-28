@@ -21,6 +21,31 @@ def _arr(*args) -> NDArray[np.float64]:
     return np.array(args, dtype=np.float64)
 
 
+def _jaw_arc(
+    center: NDArray[np.float64],
+    radius: float,
+    linear: dict[str, LinearCushionSegment],
+) -> tuple[float, float]:
+    """The start azimuth and span of a jaw's nose circle between its two rail ends.
+
+    Exactly two linear segment endpoints lie on the nose circle, one from the rail
+    and one from the pocket facing. The physical nose is the shorter arc between
+    them, measured counterclockwise from its start.
+    """
+    azimuths = [
+        np.arctan2(p[1] - center[1], p[0] - center[0])
+        for segment in linear.values()
+        for p in (segment.p1, segment.p2)
+        if abs(np.hypot(p[0] - center[0], p[1] - center[1]) - radius) < 1e-9
+    ]
+    assert len(azimuths) == 2, f"{len(azimuths)} rail ends on the nose circle"
+    start, end = azimuths
+    span = (end - start) % (2 * np.pi)
+    if span > np.pi:
+        start, span = end, 2 * np.pi - span
+    return start, span
+
+
 def create_billiard_table_cushion_segments(
     specs: BilliardTableSpecs,
 ) -> CushionSegments:
@@ -77,253 +102,211 @@ def create_pocket_table_cushion_segments(
     dc = specs.corner_jaw_radius / np.tan((np.pi / 2 + ca) / 2)
     ds = specs.side_jaw_radius / np.tan((np.pi / 2 + sa) / 2)
 
-    return CushionSegments(
-        linear={
-            # long segments
-            "3": LinearCushionSegment(
-                "3",
-                p1=_arr(0, pw * np.cos(np.pi / 4) + dc, h),
-                p2=_arr(0, (specs.l - sw) / 2 - ds, h),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE2,
+    linear = {
+        # long segments
+        "3": LinearCushionSegment(
+            "3",
+            p1=_arr(0, pw * np.cos(np.pi / 4) + dc, h),
+            p2=_arr(0, (specs.l - sw) / 2 - ds, h),
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE2,
+        ),
+        "6": LinearCushionSegment(
+            "6",
+            p1=_arr(0, (specs.l + sw) / 2 + ds, h),
+            p2=_arr(0, -pw * np.cos(np.pi / 4) + specs.l - dc, h),
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE2,
+        ),
+        "15": LinearCushionSegment(
+            "15",
+            p1=_arr(specs.w, pw * np.cos(np.pi / 4) + dc, h),
+            p2=_arr(specs.w, (specs.l - sw) / 2 - ds, h),
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE1,
+        ),
+        "12": LinearCushionSegment(
+            "12",
+            p1=_arr(specs.w, (specs.l + sw) / 2 + ds, h),
+            p2=_arr(specs.w, -pw * np.cos(np.pi / 4) + specs.l - dc, h),
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE1,
+        ),
+        "18": LinearCushionSegment(
+            "18",
+            p1=_arr(pw * np.cos(np.pi / 4) + dc, 0, h),
+            p2=_arr(-pw * np.cos(np.pi / 4) + specs.w - dc, 0, h),
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE2,
+        ),
+        "9": LinearCushionSegment(
+            "9",
+            p1=_arr(pw * np.cos(np.pi / 4) + dc, specs.l, h),
+            p2=_arr(-pw * np.cos(np.pi / 4) + specs.w - dc, specs.l, h),
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE1,
+        ),
+        # side jaw segments
+        "5": LinearCushionSegment(
+            "5",
+            p1=_arr(-cw, (specs.l + sw) / 2 - cw * np.sin(sa), h),
+            p2=_arr(-ds * np.cos(sa), (specs.l + sw) / 2 - ds * np.sin(sa), h),
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE1,
+        ),
+        "4": LinearCushionSegment(
+            "4",
+            p1=_arr(-cw, (specs.l - sw) / 2 + cw * np.sin(sa), h),
+            p2=_arr(-ds * np.cos(sa), (specs.l - sw) / 2 + ds * np.sin(sa), h),
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE2,
+        ),
+        "13": LinearCushionSegment(
+            "13",
+            p1=_arr(specs.w + cw, (specs.l + sw) / 2 - cw * np.sin(sa), h),
+            p2=_arr(
+                specs.w + ds * np.cos(sa),
+                (specs.l + sw) / 2 - ds * np.sin(sa),
+                h,
             ),
-            "6": LinearCushionSegment(
-                "6",
-                p1=_arr(0, (specs.l + sw) / 2 + ds, h),
-                p2=_arr(0, -pw * np.cos(np.pi / 4) + specs.l - dc, h),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE2,
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE1,
+        ),
+        "14": LinearCushionSegment(
+            "14",
+            p1=_arr(specs.w + cw, (specs.l - sw) / 2 + cw * np.sin(sa), h),
+            p2=_arr(
+                specs.w + ds * np.cos(sa),
+                (specs.l - sw) / 2 + ds * np.sin(sa),
+                h,
             ),
-            "15": LinearCushionSegment(
-                "15",
-                p1=_arr(specs.w, pw * np.cos(np.pi / 4) + dc, h),
-                p2=_arr(specs.w, (specs.l - sw) / 2 - ds, h),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE1,
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE2,
+        ),
+        # corner jaw segments
+        "1": LinearCushionSegment(
+            "1",
+            p1=_arr(pw * np.cos(np.pi / 4) - cw * np.tan(ca), -cw, h),
+            p2=_arr(pw * np.cos(np.pi / 4) - dc * np.sin(ca), -dc * np.cos(ca), h),
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE2,
+        ),
+        "2": LinearCushionSegment(
+            "2",
+            p1=_arr(-cw, pw * np.cos(np.pi / 4) - cw * np.tan(ca), h),
+            p2=_arr(-dc * np.cos(ca), pw * np.cos(np.pi / 4) - dc * np.sin(ca), h),
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE1,
+        ),
+        "8": LinearCushionSegment(
+            "8",
+            p1=_arr(pw * np.cos(np.pi / 4) - cw * np.tan(ca), cw + specs.l, h),
+            p2=_arr(
+                pw * np.cos(np.pi / 4) - dc * np.sin(ca),
+                specs.l + dc * np.cos(ca),
+                h,
             ),
-            "12": LinearCushionSegment(
-                "12",
-                p1=_arr(specs.w, (specs.l + sw) / 2 + ds, h),
-                p2=_arr(specs.w, -pw * np.cos(np.pi / 4) + specs.l - dc, h),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE1,
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE1,
+        ),
+        "7": LinearCushionSegment(
+            "7",
+            p1=_arr(-cw, -pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.l, h),
+            p2=_arr(
+                -dc * np.cos(ca),
+                -pw * np.cos(np.pi / 4) + specs.l + dc * np.sin(ca),
+                h,
             ),
-            "18": LinearCushionSegment(
-                "18",
-                p1=_arr(pw * np.cos(np.pi / 4) + dc, 0, h),
-                p2=_arr(-pw * np.cos(np.pi / 4) + specs.w - dc, 0, h),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE2,
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE2,
+        ),
+        "11": LinearCushionSegment(
+            "11",
+            p1=_arr(
+                cw + specs.w,
+                -pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.l,
+                h,
             ),
-            "9": LinearCushionSegment(
-                "9",
-                p1=_arr(pw * np.cos(np.pi / 4) + dc, specs.l, h),
-                p2=_arr(-pw * np.cos(np.pi / 4) + specs.w - dc, specs.l, h),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE1,
+            p2=_arr(
+                specs.w + dc * np.cos(ca),
+                -pw * np.cos(np.pi / 4) + specs.l + dc * np.sin(ca),
+                h,
             ),
-            # side jaw segments
-            "5": LinearCushionSegment(
-                "5",
-                p1=_arr(-cw, (specs.l + sw) / 2 - cw * np.sin(sa), h),
-                p2=_arr(-ds * np.cos(sa), (specs.l + sw) / 2 - ds * np.sin(sa), h),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE1,
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE2,
+        ),
+        "10": LinearCushionSegment(
+            "10",
+            p1=_arr(
+                -pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.w,
+                cw + specs.l,
+                h,
             ),
-            "4": LinearCushionSegment(
-                "4",
-                p1=_arr(-cw, (specs.l - sw) / 2 + cw * np.sin(sa), h),
-                p2=_arr(-ds * np.cos(sa), (specs.l - sw) / 2 + ds * np.sin(sa), h),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE2,
+            p2=_arr(
+                -pw * np.cos(np.pi / 4) + specs.w + dc * np.sin(ca),
+                specs.l + dc * np.cos(ca),
+                h,
             ),
-            "13": LinearCushionSegment(
-                "13",
-                p1=_arr(specs.w + cw, (specs.l + sw) / 2 - cw * np.sin(sa), h),
-                p2=_arr(
-                    specs.w + ds * np.cos(sa),
-                    (specs.l + sw) / 2 - ds * np.sin(sa),
-                    h,
-                ),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE1,
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE1,
+        ),
+        "16": LinearCushionSegment(
+            "16",
+            p1=_arr(cw + specs.w, +pw * np.cos(np.pi / 4) - cw * np.tan(ca), h),
+            p2=_arr(
+                specs.w + dc * np.cos(ca),
+                pw * np.cos(np.pi / 4) - dc * np.sin(ca),
+                h,
             ),
-            "14": LinearCushionSegment(
-                "14",
-                p1=_arr(specs.w + cw, (specs.l - sw) / 2 + cw * np.sin(sa), h),
-                p2=_arr(
-                    specs.w + ds * np.cos(sa),
-                    (specs.l - sw) / 2 + ds * np.sin(sa),
-                    h,
-                ),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE2,
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE1,
+        ),
+        "17": LinearCushionSegment(
+            "17",
+            p1=_arr(-pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.w, -cw, h),
+            p2=_arr(
+                -pw * np.cos(np.pi / 4) + specs.w + dc * np.sin(ca),
+                -dc * np.cos(ca),
+                h,
             ),
-            # corner jaw segments
-            "1": LinearCushionSegment(
-                "1",
-                p1=_arr(pw * np.cos(np.pi / 4) - cw * np.tan(ca), -cw, h),
-                p2=_arr(pw * np.cos(np.pi / 4) - dc * np.sin(ca), -dc * np.cos(ca), h),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE2,
-            ),
-            "2": LinearCushionSegment(
-                "2",
-                p1=_arr(-cw, pw * np.cos(np.pi / 4) - cw * np.tan(ca), h),
-                p2=_arr(-dc * np.cos(ca), pw * np.cos(np.pi / 4) - dc * np.sin(ca), h),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE1,
-            ),
-            "8": LinearCushionSegment(
-                "8",
-                p1=_arr(pw * np.cos(np.pi / 4) - cw * np.tan(ca), cw + specs.l, h),
-                p2=_arr(
-                    pw * np.cos(np.pi / 4) - dc * np.sin(ca),
-                    specs.l + dc * np.cos(ca),
-                    h,
-                ),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE1,
-            ),
-            "7": LinearCushionSegment(
-                "7",
-                p1=_arr(-cw, -pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.l, h),
-                p2=_arr(
-                    -dc * np.cos(ca),
-                    -pw * np.cos(np.pi / 4) + specs.l + dc * np.sin(ca),
-                    h,
-                ),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE2,
-            ),
-            "11": LinearCushionSegment(
-                "11",
-                p1=_arr(
-                    cw + specs.w,
-                    -pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.l,
-                    h,
-                ),
-                p2=_arr(
-                    specs.w + dc * np.cos(ca),
-                    -pw * np.cos(np.pi / 4) + specs.l + dc * np.sin(ca),
-                    h,
-                ),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE2,
-            ),
-            "10": LinearCushionSegment(
-                "10",
-                p1=_arr(
-                    -pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.w,
-                    cw + specs.l,
-                    h,
-                ),
-                p2=_arr(
-                    -pw * np.cos(np.pi / 4) + specs.w + dc * np.sin(ca),
-                    specs.l + dc * np.cos(ca),
-                    h,
-                ),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE1,
-            ),
-            "16": LinearCushionSegment(
-                "16",
-                p1=_arr(cw + specs.w, +pw * np.cos(np.pi / 4) - cw * np.tan(ca), h),
-                p2=_arr(
-                    specs.w + dc * np.cos(ca),
-                    pw * np.cos(np.pi / 4) - dc * np.sin(ca),
-                    h,
-                ),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE1,
-            ),
-            "17": LinearCushionSegment(
-                "17",
-                p1=_arr(-pw * np.cos(np.pi / 4) + cw * np.tan(ca) + specs.w, -cw, h),
-                p2=_arr(
-                    -pw * np.cos(np.pi / 4) + specs.w + dc * np.sin(ca),
-                    -dc * np.cos(ca),
-                    h,
-                ),
-                nose_radius=specs.cushion_nose_radius,
-                direction=CushionDirection.SIDE2,
-            ),
-        },
-        circular={
-            "1t": CircularCushionSegment(
-                "1t",
-                center=_arr(pw * np.cos(np.pi / 4) + dc, -rc, h),
-                radius=rc,
-                nose_radius=specs.cushion_nose_radius,
-            ),
-            "2t": CircularCushionSegment(
-                "2t",
-                center=_arr(-rc, pw * np.cos(np.pi / 4) + dc, h),
-                radius=rc,
-                nose_radius=specs.cushion_nose_radius,
-            ),
-            "4t": CircularCushionSegment(
-                "4t",
-                center=_arr(-rs, specs.l / 2 - sw / 2 - ds, h),
-                radius=rs,
-                nose_radius=specs.cushion_nose_radius,
-            ),
-            "5t": CircularCushionSegment(
-                "5t",
-                center=_arr(-rs, specs.l / 2 + sw / 2 + ds, h),
-                radius=rs,
-                nose_radius=specs.cushion_nose_radius,
-            ),
-            "7t": CircularCushionSegment(
-                "7t",
-                center=_arr(-rc, specs.l - (pw * np.cos(np.pi / 4) + dc), h),
-                radius=rc,
-                nose_radius=specs.cushion_nose_radius,
-            ),
-            "8t": CircularCushionSegment(
-                "8t",
-                center=_arr(pw * np.cos(np.pi / 4) + dc, specs.l + rc, h),
-                radius=rc,
-                nose_radius=specs.cushion_nose_radius,
-            ),
-            "10t": CircularCushionSegment(
-                "10t",
-                center=_arr(specs.w - pw * np.cos(np.pi / 4) - dc, specs.l + rc, h),
-                radius=rc,
-                nose_radius=specs.cushion_nose_radius,
-            ),
-            "11t": CircularCushionSegment(
-                "11t",
-                center=_arr(specs.w + rc, specs.l - (pw * np.cos(np.pi / 4) + dc), h),
-                radius=rc,
-                nose_radius=specs.cushion_nose_radius,
-            ),
-            "13t": CircularCushionSegment(
-                "13t",
-                center=_arr(specs.w + rs, specs.l / 2 + sw / 2 + ds, h),
-                radius=rs,
-                nose_radius=specs.cushion_nose_radius,
-            ),
-            "14t": CircularCushionSegment(
-                "14t",
-                center=_arr(specs.w + rs, specs.l / 2 - sw / 2 - ds, h),
-                radius=rs,
-                nose_radius=specs.cushion_nose_radius,
-            ),
-            "16t": CircularCushionSegment(
-                "16t",
-                center=_arr(specs.w + rc, pw * np.cos(np.pi / 4) + dc, h),
-                radius=rc,
-                nose_radius=specs.cushion_nose_radius,
-            ),
-            "17t": CircularCushionSegment(
-                "17t",
-                center=_arr(specs.w - pw * np.cos(np.pi / 4) - dc, -rc, h),
-                radius=rc,
-                nose_radius=specs.cushion_nose_radius,
-            ),
-        },
-    )
+            nose_radius=specs.cushion_nose_radius,
+            direction=CushionDirection.SIDE2,
+        ),
+    }
+
+    def jaw(
+        jaw_id: str, center: NDArray[np.float64], radius: float
+    ) -> CircularCushionSegment:
+        arc_start, arc_span = _jaw_arc(center, radius, linear)
+        return CircularCushionSegment(
+            jaw_id,
+            center=center,
+            radius=radius,
+            nose_radius=specs.cushion_nose_radius,
+            arc_start=arc_start,
+            arc_span=arc_span,
+        )
+
+    circular = {
+        "1t": jaw("1t", _arr(pw * np.cos(np.pi / 4) + dc, -rc, h), rc),
+        "2t": jaw("2t", _arr(-rc, pw * np.cos(np.pi / 4) + dc, h), rc),
+        "4t": jaw("4t", _arr(-rs, specs.l / 2 - sw / 2 - ds, h), rs),
+        "5t": jaw("5t", _arr(-rs, specs.l / 2 + sw / 2 + ds, h), rs),
+        "7t": jaw("7t", _arr(-rc, specs.l - (pw * np.cos(np.pi / 4) + dc), h), rc),
+        "8t": jaw("8t", _arr(pw * np.cos(np.pi / 4) + dc, specs.l + rc, h), rc),
+        "10t": jaw(
+            "10t", _arr(specs.w - pw * np.cos(np.pi / 4) - dc, specs.l + rc, h), rc
+        ),
+        "11t": jaw(
+            "11t", _arr(specs.w + rc, specs.l - (pw * np.cos(np.pi / 4) + dc), h), rc
+        ),
+        "13t": jaw("13t", _arr(specs.w + rs, specs.l / 2 + sw / 2 + ds, h), rs),
+        "14t": jaw("14t", _arr(specs.w + rs, specs.l / 2 - sw / 2 - ds, h), rs),
+        "16t": jaw("16t", _arr(specs.w + rc, pw * np.cos(np.pi / 4) + dc, h), rc),
+        "17t": jaw("17t", _arr(specs.w - pw * np.cos(np.pi / 4) - dc, -rc, h), rc),
+    }
+
+    return CushionSegments(linear=linear, circular=circular)
 
 
 def create_pocket_table_pockets(

@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from pooltool.ani.table_box import TableBox
+from pooltool.config import settings
 from pooltool.objects.table.datatypes import Table
 from pooltool.objects.table.render import TableRender
 
@@ -42,7 +43,8 @@ def test_shadow_beyond_the_rails_is_on_the_floor():
     assert heights == pytest.approx([BOX.floor, BOX.floor])
 
 
-def test_bounding_box_is_measured_without_a_window():
+def test_bounding_box_is_measured_without_a_window(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(settings.graphics, "table", True)
     table = Table.default()
     box = TableRender(table).bounding_box()
 
