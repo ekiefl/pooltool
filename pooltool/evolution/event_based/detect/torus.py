@@ -210,6 +210,65 @@ def _contact_time_in_window(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def _half_line(f0: float, f1: float) -> tuple[float, float]:
+    """The interval of ``t`` on which ``f0 + f1 t >= 0``; empty is ``(inf, -inf)``."""
+    if f1 > 0.0:
+        return -f0 / f1, np.inf
+    if f1 < 0.0:
+        return -np.inf, -f0 / f1
+    if f0 >= 0.0:
+        return -np.inf, np.inf
+    return np.inf, -np.inf
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def _wedge_interval(
+    X0: float, Y0: float, vx: float, vy: float, start: float, span: float
+) -> tuple[float, float]:
+    """Times at which the horizontal path lies in a wedge of at most a half turn.
+
+    The wedge opens counterclockwise from azimuth ``start`` through ``span``. It is
+    the intersection of two half-planes, counterclockwise of the start ray and
+    clockwise of the end ray, and a straight path crosses each boundary at most once.
+    """
+    cs, ss = np.cos(start), np.sin(start)
+    ce, se = np.cos(start + span), np.sin(start + span)
+    lo_s, hi_s = _half_line(cs * Y0 - ss * X0, cs * vy - ss * vx)
+    lo_e, hi_e = _half_line(se * X0 - ce * Y0, se * vx - ce * vy)
+    return max(lo_s, lo_e), min(hi_s, hi_e)
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
+def arc_intervals(
+    X0: float, Y0: float, vx: float, vy: float, arc_start: float, arc_span: float
+) -> tuple[int, float, float, float, float]:
+    """Time intervals in which the horizontal path has an azimuth on the arc.
+
+    An arc of at most a half turn is a convex wedge, which a straight path occupies
+    for one interval. A wider arc has a convex complement, so the path is on the arc
+    except for one interval, giving up to two. The whole ring gives one unbounded
+    interval. Returns ``(count, lo0, hi0, lo1, hi1)``; unused entries are ``np.inf``.
+    """
+    if arc_span >= 2.0 * np.pi:
+        return 1, -np.inf, np.inf, np.inf, np.inf
+    if arc_span <= np.pi:
+        lo, hi = _wedge_interval(X0, Y0, vx, vy, arc_start, arc_span)
+        if lo < hi:
+            return 1, lo, hi, np.inf, np.inf
+        return 0, np.inf, np.inf, np.inf, np.inf
+    lo, hi = _wedge_interval(
+        X0, Y0, vx, vy, arc_start + arc_span, 2.0 * np.pi - arc_span
+    )
+    if lo >= hi:
+        return 1, -np.inf, np.inf, np.inf, np.inf
+    if lo == -np.inf:
+        return 1, hi, np.inf, np.inf, np.inf
+    if hi == np.inf:
+        return 1, -np.inf, lo, np.inf, np.inf
+    return 2, -np.inf, lo, hi, np.inf
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def parabola_torus_contact_time(
     p0: NDArray[np.float64],
     v: NDArray[np.float64],

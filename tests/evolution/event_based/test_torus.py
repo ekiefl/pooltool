@@ -16,6 +16,7 @@ import pytest
 from scipy.optimize import brentq, minimize_scalar
 
 from pooltool.evolution.event_based.detect.torus import (
+    arc_intervals,
     parabola_torus_contact_time,
     torus_contact_windows,
     torus_residual,
@@ -26,6 +27,7 @@ POOL_R = 0.028575
 SNOOKER_R = 0.02625
 NOSE = 0.001
 TABLE_Z = POOL_R - 0.037
+FULL_RING = 2 * np.pi
 
 JAWS = {
     "pool_corner": (0.02095, POOL_R + NOSE),
@@ -351,3 +353,39 @@ def test_ball_above_the_band_gets_two_windows():
     )
     assert count == 2
     assert lo0 == 0.0 and hi0 < lo1 < hi1
+
+
+def test_arc_intervals_narrow_wedge_is_one_bounded_interval():
+    """Along ``y = 1`` the azimuth is between 45 and 90 degrees for ``x`` in [0, 1]."""
+    count, lo, hi, _, _ = arc_intervals(-3.0, 1.0, 1.0, 0.0, np.pi / 4, np.pi / 4)
+    assert count == 1
+    assert lo == pytest.approx(3.0)
+    assert hi == pytest.approx(4.0)
+
+
+def test_arc_intervals_wide_arc_is_everything_but_the_gap():
+    count, lo, hi, _, _ = arc_intervals(-3.0, 1.0, 1.0, 0.0, np.pi / 2, 1.5 * np.pi)
+    assert count == 1
+    assert lo == -np.inf
+    assert hi == pytest.approx(3.0)
+
+    count, lo0, hi0, lo1, hi1 = arc_intervals(
+        -3.0, 1.0, 1.0, 0.0, np.pi / 2, 1.75 * np.pi
+    )
+    assert count == 2
+    assert lo0 == -np.inf
+    assert hi0 == pytest.approx(3.0)
+    assert lo1 == pytest.approx(4.0)
+    assert hi1 == np.inf
+
+
+def test_arc_intervals_full_ring_is_unbounded():
+    count, lo, hi, _, _ = arc_intervals(0.3, -0.2, 1.0, 2.0, 1.0, FULL_RING)
+    assert count == 1
+    assert lo == -np.inf
+    assert hi == np.inf
+
+
+def test_arc_intervals_path_missing_the_wedge_is_empty():
+    count = arc_intervals(-3.0, -1.0, 1.0, 0.0, np.pi / 4, np.pi / 4)[0]
+    assert count == 0
