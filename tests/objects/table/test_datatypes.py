@@ -59,3 +59,21 @@ def test_set_cushion_height(table):
 
         # x,y coordinates unchanged
         assert np.array_equal(segment.center[:2], initial_circular[id]["center"][:2])
+
+
+def test_jaw_arcs_run_between_the_rail_ends(table):
+    """Each jaw's arc starts and ends where a linear segment meets its nose circle."""
+    ends = np.array(
+        [
+            p[:2]
+            for segment in table.cushion_segments.linear.values()
+            for p in (segment.p1, segment.p2)
+        ]
+    )
+    for jaw in table.cushion_segments.circular.values():
+        assert 0 < jaw.arc_span < np.pi
+        for azimuth in (jaw.arc_start, jaw.arc_start + jaw.arc_span):
+            point = jaw.center[:2] + jaw.radius * np.array(
+                [np.cos(azimuth), np.sin(azimuth)]
+            )
+            assert np.linalg.norm(ends - point, axis=1).min() < 1e-9

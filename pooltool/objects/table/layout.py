@@ -21,6 +21,31 @@ def _arr(*args) -> NDArray[np.float64]:
     return np.array(args, dtype=np.float64)
 
 
+def _jaw_arc(
+    center: NDArray[np.float64],
+    radius: float,
+    linear: dict[str, LinearCushionSegment],
+) -> tuple[float, float]:
+    """The start azimuth and span of a jaw's nose circle between its two rail ends.
+
+    Exactly two linear segment endpoints lie on the nose circle, one from the rail
+    and one from the pocket facing. The physical nose is the shorter arc between
+    them, measured counterclockwise from its start.
+    """
+    azimuths = [
+        np.arctan2(p[1] - center[1], p[0] - center[0])
+        for segment in linear.values()
+        for p in (segment.p1, segment.p2)
+        if abs(np.hypot(p[0] - center[0], p[1] - center[1]) - radius) < 1e-9
+    ]
+    assert len(azimuths) == 2, f"{len(azimuths)} rail ends on the nose circle"
+    start, end = azimuths
+    span = (end - start) % (2 * np.pi)
+    if span > np.pi:
+        start, span = end, 2 * np.pi - span
+    return start, span
+
+
 def create_billiard_table_cushion_segments(
     specs: BilliardTableSpecs,
 ) -> CushionSegments:
@@ -252,11 +277,14 @@ def create_pocket_table_cushion_segments(
     def jaw(
         jaw_id: str, center: NDArray[np.float64], radius: float
     ) -> CircularCushionSegment:
+        arc_start, arc_span = _jaw_arc(center, radius, linear)
         return CircularCushionSegment(
             jaw_id,
             center=center,
             radius=radius,
             nose_radius=specs.cushion_nose_radius,
+            arc_start=arc_start,
+            arc_span=arc_span,
         )
 
     circular = {
