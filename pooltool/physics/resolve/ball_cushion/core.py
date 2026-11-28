@@ -306,8 +306,8 @@ def _constrain_to_table_circular(
 
     The rotation is in the meridian plane, so it preserves the ball's azimuth and its
     distance ``target`` to the nose circle: the ball lands at height ``R`` at the
-    horizontal distance from the core where a center at that height is ``target``
-    away, on the outer side of the ring.
+    horizontal distance from the axis where a center at that height is ``target``
+    away, on whichever side of the nose circle the ball already is.
     """
     if airborne and pos[2] >= R:
         return pos
@@ -318,7 +318,10 @@ def _constrain_to_table_circular(
     radial = np.array([pos[0] - cushion.center[0], pos[1] - cushion.center[1], 0.0])
     norm = ptmath.norm3d(radial)
     direction = radial / norm if norm > 0 else np.array([1.0, 0.0, 0.0])
-    horizontal = cushion.radius + np.sqrt(target**2 - (R - cushion.height) ** 2)
+    reach = np.sqrt(target**2 - (R - cushion.height) ** 2)
+    horizontal = (
+        cushion.radius - reach if norm < cushion.radius else cushion.radius + reach
+    )
     placed = cushion.center + horizontal * direction
     placed[2] = R
     return placed

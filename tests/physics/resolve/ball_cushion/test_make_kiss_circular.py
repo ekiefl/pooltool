@@ -182,3 +182,35 @@ def test_airborne_ball_rewound_below_table_is_placed_on_table(
     assert dist_to_nose_circle(ball, cushion_circular) == pytest.approx(
         expected_post_kiss_dist(cushion_circular), abs=1e-12
     )
+
+
+def test_airborne_ball_on_inner_face_rewound_below_table_stays_inside(
+    cushion_ring: CircularCushionSegment,
+) -> None:
+    """Rising into the underside of the nose from inside the ring lands inside the ring.
+
+    The table constraint rotates the ball in the meridian plane, which must keep it on
+    the side of the nose circle it started on. Placing it on the outer side instead
+    moves it clear across the ring.
+    """
+    touch = touch_distance(cushion_ring)
+    polar_deg = 180 - np.degrees(np.arcsin((R + 1e-7 - cushion_ring.height) / touch))
+    ball = ball_at(
+        cushion_ring, polar_deg=polar_deg, penetrance=1e-7, vel=(0.0, 0.0, 1.0)
+    )
+    ball_before = ball.copy()
+    assert ball.state.rvw[0, 2] > R
+    assert np.hypot(*ball.state.rvw[0, :2]) < cushion_ring.radius
+
+    make_kiss_circular(ball, cushion_ring)
+
+    target = expected_post_kiss_dist(cushion_ring)
+    inner_horizontal = cushion_ring.radius - np.sqrt(
+        target**2 - (R - cushion_ring.height) ** 2
+    )
+    assert ball.state.rvw[0, 2] == R
+    assert dist_to_nose_circle(ball, cushion_ring) == pytest.approx(target, abs=1e-12)
+    assert np.hypot(*ball.state.rvw[0, :2]) == pytest.approx(
+        inner_horizontal, abs=1e-12
+    )
+    assert ptmath.norm3d(ball.state.rvw[0] - ball_before.state.rvw[0]) < 1e-3
