@@ -22,10 +22,11 @@ def cushion() -> LinearCushionSegment:
 
 @pytest.fixture
 def cushion_circular() -> CircularCushionSegment:
-    h = PocketTableSpecs().cushion_height
+    specs = PocketTableSpecs()
 
     return CircularCushionSegment(
         "pocket_cushion",
-        center=np.array([0.0, 0.0, h], dtype=np.float64),
+        center=np.array([0.0, 0.0, specs.cushion_height], dtype=np.float64),
         radius=0.01,
+        nose_radius=specs.cushion_nose_radius,
     )

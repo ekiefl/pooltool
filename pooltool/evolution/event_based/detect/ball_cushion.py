@@ -21,6 +21,7 @@ from pooltool.evolution.event_based.detect.ball_position_polynomial import (
 from pooltool.evolution.event_based.detect.quartic_coefficients import (
     parabola_circle_distance_2d_quartic_coefficients,
 )
+from pooltool.evolution.event_based.detect.torus import parabola_torus_contact_time
 from pooltool.objects.ball.datatypes import Ball
 from pooltool.objects.table.components import LinearCushionSegment
 from pooltool.physics.utils import get_u_vec
@@ -249,14 +250,21 @@ def ball_vertical_cylinder_collision_time(
     m: float,
     g: float,
     R: float,
+    nose_radius: float,
+    height: float,
 ) -> float:
-    """Get the time until collision between a ball and a vertical cylinder.
+    """Get the time until collision between a ball on the table and a circular cushion.
 
-    For ball trajectories limited to the playing surface, this suffices for
-    detecting ball collisions with circular cushion segments.
+    The cushion nose is a tube of radius ``nose_radius`` around the nose circle of
+    radius ``r`` at ``height``. A ball rolling or sliding on the table
+    touches it when the horizontal distance from its center to the axis is
+    ``r + sqrt((R + nose_radius)**2 - (height - R)**2)``, the same geometry the
+    circular make_kiss enforces. That reduces the tube to a vertical cylinder of
+    this effective radius, whose contact time is a single quartic.
 
     Note:
-        - This is broken for airborne balls.
+        - This is broken for airborne balls, which use
+          :func:`pooltool.evolution.event_based.detect.torus.parabola_torus_contact_time`.
     """
 
     if (
@@ -266,6 +274,11 @@ def ball_vertical_cylinder_collision_time(
         or s == const.off_table
     ):
         return np.inf
+
+    contact_squared = (R + nose_radius) ** 2 - (height - R) ** 2
+    if contact_squared <= 0.0:
+        return np.inf
+    r_eff = r + np.sqrt(contact_squared)
 
     phi = ptmath.angle(rvw[1])
     v = ptmath.norm3d(rvw[1])
@@ -285,9 +298,7 @@ def ball_vertical_cylinder_collision_time(
     B = ax * bx + ay * by
     C = ax * (cx - a) + ay * (cy - b) + 0.5 * (bx * bx + by * by)
     D = bx * (cx - a) + by * (cy - b)
-    E = 0.5 * (a * a + b * b + cx * cx + cy * cy - (r + R) * (r + R)) - (
-        cx * a + cy * b
-    )
+    E = 0.5 * (a * a + b * b + cx * cx + cy * cy - r_eff * r_eff) - (cx * a + cy * b)
 
     return get_real_positive_smallest_root(
         quartic.solve(A, B, C, D, E), ABS_OR_REL_CUTOFF, RTOL, ATOL
@@ -351,7 +362,12 @@ def get_next_ball_linear_cushion_event(
 def get_next_ball_circular_cushion_event(
     shot: System, collision_cache: CollisionCache
 ) -> Event:
-    """Detect the next ball-vs-circular-cushion collision in 2D mode."""
+    """Detect the next ball-vs-circular-cushion collision.
+
+    Balls on the table use the vertical-cylinder quartic at the nose tube's effective
+    contact radius; airborne balls use the enclosing-quadric iteration against the
+    full torus.
+    """
     if not shot.table.has_circular_cushions:
         return null_event(np.inf)
 
@@ -372,8 +388,18 @@ def get_next_ball_circular_cushion_event(
                 continue
 
             if ball.state.s == const.airborne:
-                # TODO
-                dtau_E = np.inf
+                # FIXME: The whole nose circle counts as cushion, but only the arc
+                # between the rail tangent points is physical. A ball on the table
+                # cannot reach the rest of the ring, but an airborne ball can, e.g.
+                # dropping into the pocket past the jaw, and would bounce off
+                # nothing. Restrict airborne contacts to the physical arc.
+                dtau_E = parabola_torus_contact_time(
+                    state.rvw[0] - cushion.center,
+                    state.rvw[1],
+                    params.g,
+                    cushion.radius,
+                    params.R + cushion.nose_radius,
+                )
             else:
                 dtau_E = ball_vertical_cylinder_collision_time(
                     rvw=state.rvw,
@@ -385,6 +411,8 @@ def get_next_ball_circular_cushion_event(
                     m=params.m,
                     g=params.g,
                     R=params.R,
+                    nose_radius=cushion.nose_radius,
+                    height=cushion.height,
                 )
 
             cache[obj_ids] = shot.t + dtau_E
