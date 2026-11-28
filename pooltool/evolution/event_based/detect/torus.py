@@ -29,6 +29,12 @@ monotonically and stops there, since a fixed point has ``g_c = g``. No root is a
 certificate of no contact. A prefilter on the bounding cylinder ``rho <= r + D`` and
 height band ``|z| <= D`` bounds the search and rejects most pairs with two
 quadratics.
+
+Only an arc of the nose circle is cushion; the rest of a pocket jaw's ring lies
+inside the rail. The nearest nose point shares the ball center's azimuth, so the
+contact is physical exactly when the center's azimuth is on the arc. The horizontal
+path is a straight line, so the times at which it lies in the arc's wedge are one or
+two intervals, and the search windows are clipped to them before iterating.
 """
 
 import numpy as np
@@ -269,26 +275,69 @@ def arc_intervals(
 
 
 @jit(nopython=True, cache=const.use_numba_cache)
+def _contact_time_in_arc_window(
+    lo: float,
+    hi: float,
+    m: int,
+    a0: float,
+    b0: float,
+    a1: float,
+    b1: float,
+    X0: float,
+    Y0: float,
+    Z0: float,
+    vx: float,
+    vy: float,
+    vz: float,
+    g: float,
+    r: float,
+    D: float,
+) -> float:
+    """The iteration on one window clipped to each arc interval in turn."""
+    l0, h0 = max(lo, a0), min(hi, b0)
+    if l0 < h0:
+        t = _contact_time_in_window(l0, h0, X0, Y0, Z0, vx, vy, vz, g, r, D)
+        if t < np.inf:
+            return t
+    if m == 1:
+        return np.inf
+    l1, h1 = max(lo, a1), min(hi, b1)
+    if l1 < h1:
+        return _contact_time_in_window(l1, h1, X0, Y0, Z0, vx, vy, vz, g, r, D)
+    return np.inf
+
+
+@jit(nopython=True, cache=const.use_numba_cache)
 def parabola_torus_contact_time(
     p0: NDArray[np.float64],
     v: NDArray[np.float64],
     g: float,
     r: float,
     D: float,
+    arc_start: float,
+    arc_span: float,
 ) -> float:
-    """Time until a parabolic trajectory first comes within ``D`` of the nose circle.
+    """Time until a parabolic trajectory first comes within ``D`` of the nose arc.
 
     The trajectory is ``p0 + v t - (g / 2) t**2 z_hat`` with ``p0`` relative to the
     torus center, whose nose circle of radius ``r`` lies in the plane ``z = 0``. Only
-    approaching contacts count, so a center already within ``D`` and moving away is
-    not reported. Returns ``np.inf`` when there is no contact.
+    the arc of ``arc_span`` radians counterclockwise from azimuth ``arc_start`` is
+    cushion, and only approaching contacts count, so a center already within ``D``
+    and moving away is not reported. Returns ``np.inf`` when there is no contact.
     """
     X0, Y0, Z0 = p0[0], p0[1], p0[2]
     vx, vy, vz = v[0], v[1], v[2]
     n, lo0, hi0, lo1, hi1 = torus_contact_windows(X0, Y0, Z0, vx, vy, vz, g, r, D)
     if n == 0:
         return np.inf
-    t = _contact_time_in_window(lo0, hi0, X0, Y0, Z0, vx, vy, vz, g, r, D)
+    m, a0, b0, a1, b1 = arc_intervals(X0, Y0, vx, vy, arc_start, arc_span)
+    if m == 0:
+        return np.inf
+    t = _contact_time_in_arc_window(
+        lo0, hi0, m, a0, b0, a1, b1, X0, Y0, Z0, vx, vy, vz, g, r, D
+    )
     if t < np.inf or n == 1:
         return t
-    return _contact_time_in_window(lo1, hi1, X0, Y0, Z0, vx, vy, vz, g, r, D)
+    return _contact_time_in_arc_window(
+        lo1, hi1, m, a0, b0, a1, b1, X0, Y0, Z0, vx, vy, vz, g, r, D
+    )

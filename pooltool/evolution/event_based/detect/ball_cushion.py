@@ -365,8 +365,10 @@ def get_next_ball_circular_cushion_event(
     """Detect the next ball-vs-circular-cushion collision.
 
     Balls on the table use the vertical-cylinder quartic at the nose tube's effective
-    contact radius; airborne balls use the enclosing-quadric iteration against the
-    full torus.
+    contact radius against the whole nose circle, since the table and the neighboring
+    linear segments keep them off its unphysical part. Airborne balls can reach any
+    of the ring, so they use the enclosing-quadric iteration against the torus
+    restricted to the physical arc.
     """
     if not shot.table.has_circular_cushions:
         return null_event(np.inf)
@@ -388,17 +390,14 @@ def get_next_ball_circular_cushion_event(
                 continue
 
             if ball.state.s == const.airborne:
-                # FIXME: The whole nose circle counts as cushion, but only the arc
-                # between the rail tangent points is physical. A ball on the table
-                # cannot reach the rest of the ring, but an airborne ball can, e.g.
-                # dropping into the pocket past the jaw, and would bounce off
-                # nothing. Restrict airborne contacts to the physical arc.
                 dtau_E = parabola_torus_contact_time(
                     state.rvw[0] - cushion.center,
                     state.rvw[1],
                     params.g,
                     cushion.radius,
                     params.R + cushion.nose_radius,
+                    cushion.arc_start,
+                    cushion.arc_span,
                 )
             else:
                 dtau_E = ball_vertical_cylinder_collision_time(

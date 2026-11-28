@@ -491,7 +491,7 @@ def detect_quadric_nowindow(X0, Y0, Z0, vx, vy, vz, G, r, D):
 def detect_production(X0, Y0, Z0, vx, vy, vz, G, r, D):
     """The detector shipped in pooltool, for benchmarking against the candidates."""
     t = parabola_torus_contact_time(
-        np.array([X0, Y0, Z0]), np.array([vx, vy, vz]), G, r, D
+        np.array([X0, Y0, Z0]), np.array([vx, vy, vz]), G, r, D, 0.0, 2 * np.pi
     )
     return t, 0
 
